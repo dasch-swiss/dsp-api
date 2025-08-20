@@ -1,0 +1,270 @@
+/*
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.knora.webapi.e2e.v2
+
+import sttp.client4.UriContext
+import zio.*
+import zio.test.*
+import org.knora.webapi.E2EZSpec
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.RdfModel
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.testservices.RequestsUpdates
+import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
+import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.TestApiClient
+import org.knora.webapi.util.TestDataFileUtil
+
+object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
+
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+    RdfDataObject(
+      path = "test_data/project_data/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula",
+    ),
+    RdfDataObject(path = "test_data/project_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
+    RdfDataObject(
+      path = "test_data/project_ontologies/books-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/books",
+    ),
+    RdfDataObject(path = "test_data/project_data/books-data.ttl", name = "http://www.knora.org/data/0001/books"),
+    RdfDataObject(
+      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl",
+      name = "http://www.knora.org/data/admin",
+    ),
+    RdfDataObject(
+      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl",
+      name = "http://www.knora.org/ontology/0666/gravsearchtest1",
+    ),
+    RdfDataObject(
+      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl",
+      name = "http://www.knora.org/data/0666/gravsearchtest1",
+    ),
+  )
+
+  private def loadFile(filename: String) = TestDataFileUtil.readTestData("searchR2RV2", filename)
+
+  override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended")(
+    test("perform a Gravsearch query using simple schema which allows to sort the results by external link") {
+      val query =
+        """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?res knora-api:isMainResource true .
+          |  ?res anything:hasUri ?exLink .
+          |} WHERE {
+          |  ?res a knora-api:Resource .
+          |  ?res a anything:Thing .
+          |  ?res anything:hasUri ?exLink .
+          |}
+          |ORDER BY (?exLink)""".stripMargin
+
+      TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200).as(assertCompletes)
+    },
+    test("perform a Gravsearch query using complex schema which allows to sort the results by external link") {
+      val query =
+        """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |
+          |CONSTRUCT {
+          |  ?res knora-api:isMainResource true .
+          |  ?res anything:hasUri ?exLink .
+          |} WHERE {
+          |  ?res a knora-api:Resource .
+          |  ?res a anything:Thing .
+          |  ?res anything:hasUri ?exLink .
+          |}
+          |ORDER BY (?exLink)""".stripMargin
+
+      TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200).as(assertCompletes)
+    },
+    test("perform a Gravsearch query for an anything:Thing with an optional date and sort by date") {
+      val query =
+        """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |  ?thing anything:hasDate ?date .
+          |} WHERE {
+          |
+          |  ?thing a knora-api:Resource .
+          |  ?thing a anything:Thing .
+          |
+          |  OPTIONAL {
+          |    ?thing anything:hasDate ?date .
+          |    anything:hasDate knora-api:objectType knora-api:Date .
+          |    ?date a knora-api:Date .
+          |  }
+          |
+          |  MINUS {
+          |    ?thing anything:hasInteger ?intVal .
+          |    anything:hasInteger knora-api:objectType xsd:integer .
+          |    ?intVal a xsd:integer .
+          |    FILTER(?intVal = 123454321 || ?intVal = 999999999)
+          |  }
+          |}
+          |ORDER BY DESC(?date)""".stripMargin
+
+      for {
+        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
+        expected <- loadFile("thingWithOptionalDateSortedDesc.jsonld")
+      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+    },
+    test(
+      "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |    ?book knora-api:isMainResource true .
+          |    ?book incunabula:title ?title .
+          |
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |    ?book a knora-api:Resource .
+          |
+          |    ?book incunabula:title ?title .
+          |    incunabula:title knora-api:objectType xsd:string .
+          |
+          |    ?title a xsd:string .
+          |
+          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+          |
+          |}""".stripMargin
+      for {
+        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
+        expected <- loadFile("ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
+      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+    },
+    test(
+      "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX dcterms: <http://purl.org/dc/terms/>
+          |
+          |CONSTRUCT {
+          |
+          |    ?book knora-api:isMainResource true .
+          |    ?book dcterms:title ?title .
+          |
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |    ?book a knora-api:Resource .
+          |
+          |    ?book dcterms:title ?title .
+          |    dcterms:title knora-api:objectType xsd:string .
+          |
+          |    ?title a xsd:string .
+          |
+          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+          |
+          |}""".stripMargin
+      for {
+        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
+        expected <- loadFile("ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
+      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+    },
+    test(
+      "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |    ?book knora-api:isMainResource true .
+          |    ?book incunabula:title ?title .
+          |
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |    ?book a knora-api:Resource .
+          |
+          |    ?book incunabula:title ?title .
+          |    incunabula:title knora-api:objectType xsd:string .
+          |
+          |    ?title a xsd:string .
+          |
+          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+          |
+          |}""".stripMargin
+      for {
+        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query, addSimpleSchemaHeader).flatMap(_.assert200)
+        expected <- loadFile("ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
+      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+    },
+    test(
+      "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX dcterms: <http://purl.org/dc/terms/>
+          |
+          |CONSTRUCT {
+          |
+          |    ?book knora-api:isMainResource true .
+          |    ?book dcterms:title ?title .
+          |
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |    ?book a knora-api:Resource .
+          |
+          |    ?book dcterms:title ?title .
+          |    dcterms:title knora-api:objectType xsd:string .
+          |
+          |    ?title a xsd:string .
+          |
+          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+          |
+          |}""".stripMargin
+      for {
+        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query, addSimpleSchemaHeader).flatMap(_.assert200)
+        expected <- loadFile("ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
+      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+    },
+    test(
+      "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |    ?book a knora-api:Resource .
+          |
+          |    ?book incunabula:title ?title .
+          |    incunabula:title knora-api:objectType xsd:string .
+          |
+          |    ?title a xsd:string .
+          |
+          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+          |
+          |}""".stripMargin
+      for {
+        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
+        expected <- loadFile("ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld")
+      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+    },
+  )
+}

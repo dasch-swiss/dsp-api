@@ -125,71 +125,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkCountResponse(actual, 44)
     }
 
-    "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |        ?book a knora-api:Resource .
-          |
-          |        ?book incunabula:title ?title .
-          |        incunabula:title knora-api:objectType xsd:string .
-          |
-          |        ?title a xsd:string .
-          |
-          |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery))
-          .addHeader(SchemaHeader.simple),
-      )
-      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX dcterms: <http://purl.org/dc/terms/>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book dcterms:title ?title .
-          |
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |        ?book a knora-api:Resource .
-          |
-          |        ?book dcterms:title ?title .
-          |        dcterms:title knora-api:objectType xsd:string .
-          |
-          |        ?title a xsd:string .
-          |
-          |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery))
-          .addHeader(SchemaHeader.simple),
-      )
-      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -221,38 +156,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
         ),
       )
       checkCountResponse(actual, 2)
-    }
-
-    "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |        ?book a knora-api:Resource .
-          |
-          |        ?book incunabula:title ?title .
-          |        incunabula:title knora-api:objectType xsd:string .
-          |
-          |        ?title a xsd:string .
-          |
-          |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that do not have the title 'Zeitglöcklein des Lebens'" in {
