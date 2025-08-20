@@ -15,6 +15,8 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
+import org.knora.webapi.testservices.RequestsUpdates.addAcceptHeaderRdfXml
+import org.knora.webapi.testservices.RequestsUpdates.addAcceptHeaderTurtle
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.FileUtil.*
@@ -54,7 +56,7 @@ object ListsEndpointsE2ESpec extends E2EZSpec {
       val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/73d0ec0302")
       val expected = readAsTurtle(Paths.get("test_data/generated_test_data/listsR2RV2/imagesList.ttl"))
       TestApiClient
-        .getAsString(uri"/v2/lists/$listIri", _.header("Accept", "text/turtle"))
+        .getAsString(uri"/v2/lists/$listIri", addAcceptHeaderTurtle)
         .flatMap(_.assert200)
         .mapAttempt(RdfModel.fromTurtle)
         .map(actual => assertTrue(actual == expected))
@@ -63,7 +65,7 @@ object ListsEndpointsE2ESpec extends E2EZSpec {
       val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/73d0ec0302")
       val expected = readAsRdfXml(Paths.get("test_data/generated_test_data/listsR2RV2/imagesList.rdf"))
       TestApiClient
-        .getAsString(uri"/v2/lists/$listIri", _.header("Accept", "application/rdf+xml"))
+        .getAsString(uri"/v2/lists/$listIri", addAcceptHeaderRdfXml)
         .flatMap(_.assert200)
         .mapAttempt(RdfModel.fromRdfXml)
         .map(actual => assertTrue(actual == expected))
@@ -88,7 +90,7 @@ object ListsEndpointsE2ESpec extends E2EZSpec {
       val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/4348fb82f2")
       val expected = readAsTurtle(Paths.get("test_data/generated_test_data/listsR2RV2/imagesListNode.ttl"))
       TestApiClient
-        .getAsString(uri"/v2/node/$listIri", _.header("Accept", "text/turtle"))
+        .getAsString(uri"/v2/node/$listIri", addAcceptHeaderTurtle)
         .flatMap(_.assert200)
         .mapAttempt(RdfModel.fromTurtle)
         .map(actual => assertTrue(actual == expected))
@@ -97,7 +99,7 @@ object ListsEndpointsE2ESpec extends E2EZSpec {
       val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/4348fb82f2")
       val expected = readAsRdfXml(Paths.get("test_data/generated_test_data/listsR2RV2/imagesListNode.rdf"))
       TestApiClient
-        .getAsString(uri"/v2/node/$listIri", _.header("Accept", "application/rdf+xml"))
+        .getAsString(uri"/v2/node/$listIri", addAcceptHeaderRdfXml)
         .flatMap(_.assert200)
         .mapAttempt(RdfModel.fromRdfXml)
         .map(actual => assertTrue(actual == expected))

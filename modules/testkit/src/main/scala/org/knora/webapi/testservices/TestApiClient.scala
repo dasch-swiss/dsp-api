@@ -274,7 +274,7 @@ object TestApiClient {
 
   def getJson[A: JsonDecoder](
     relativeUri: Uri,
-    f: Request[Either[String, A]] => Request[Either[String, A]],
+    f: Request[Either[String, A]] => Request[Either[String, A]] = identity,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJson(relativeUri, f))
 
