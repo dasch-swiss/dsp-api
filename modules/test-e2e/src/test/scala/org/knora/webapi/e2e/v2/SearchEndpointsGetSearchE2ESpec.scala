@@ -8,13 +8,13 @@ package org.knora.webapi.e2e.v2
 import sttp.client4.UriContext
 import zio.*
 import zio.test.*
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.SearchEndpointsGetSearchE2ESpec.suite
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
@@ -74,7 +74,7 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
         test("perform a fulltext search for 'Dinge' (in the simple schema)") {
           for {
             actual <- TestApiClient
-                        .getJsonLd(uri"/v2/search/Dinge", anythingUser1, _.header("x-knora-accept-schema", "simple"))
+                        .getJsonLd(uri"/v2/search/Dinge", anythingUser1, addSimpleSchemaHeader)
                         .flatMap(_.assert200)
             expected <- loadFile("DingeFulltextSearchSimple.jsonld")
           } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
