@@ -5,13 +5,10 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko.http.scaladsl.model.HttpEntity
 import sttp.client4.UriContext
 import zio.*
 import zio.test.*
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.RdfMediaTypes
-import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForResourcesResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
