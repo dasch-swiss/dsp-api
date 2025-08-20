@@ -480,7 +480,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
   private def getResource(resourceIri: IRI): ReadResourceV2 = {
     val response = UnsafeZioRun.runOrThrow(
       ZIO.serviceWithZIO[ResourcesResponderV2](
-        _.getResourcesV2(
+        _.getResourcesWithDeletedResource(
           resourceIris = Seq(resourceIri),
           targetSchema = ApiV2Complex,
           schemaOptions = Set.empty,
@@ -547,7 +547,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcesV2(
+          _.getResourcesWithDeletedResource(
             resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
             versionDate = None,
             targetSchema = ApiV2Complex,
@@ -568,7 +568,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcePreviewV2(
+          _.getResourcePreviewWithDeletedResource(
             resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
             targetSchema = ApiV2Complex,
             requestingUser = incunabulaUserProfile,
@@ -587,7 +587,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcesV2(
+          _.getResourcesWithDeletedResource(
             resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
             versionDate = None,
             targetSchema = ApiV2Complex,
@@ -608,7 +608,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcesV2(
+          _.getResourcesWithDeletedResource(
             resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
             versionDate = None,
             targetSchema = ApiV2Complex,
@@ -629,7 +629,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcePreviewV2(
+          _.getResourcePreviewWithDeletedResource(
             resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
             targetSchema = ApiV2Complex,
             requestingUser = incunabulaUserProfile,
@@ -648,7 +648,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcesV2(
+          _.getResourcesWithDeletedResource(
             resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
             versionDate = None,
             targetSchema = ApiV2Complex,
@@ -669,7 +669,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcesV2(
+          _.getResourcesWithDeletedResource(
             resourceIris =
               Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
             versionDate = None,
@@ -734,7 +734,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcesV2(
+          _.getResourcesWithDeletedResource(
             resourceIris = Seq(resourceIri),
             versionDate = Some(VersionDate.fromInstant(versionDate)),
             targetSchema = ApiV2Complex,
@@ -794,7 +794,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
     "get the latest version of a value, given its UUID" in {
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcesV2(
+          _.getResourcesWithDeletedResource(
             resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
             valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
             targetSchema = ApiV2Complex,
@@ -813,7 +813,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
     "get a past version of a value, given its UUID and a timestamp" in {
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcesV2(
+          _.getResourcesWithDeletedResource(
             resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
             valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
             versionDate = Some(VersionDate.fromInstant(Instant.parse("2019-02-12T09:05:10Z"))),
@@ -1844,7 +1844,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val getResponse = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcesV2(
+          _.getResourcesWithDeletedResource(
             resourceIris = Seq(createdResourceIri),
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
@@ -1879,7 +1879,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcesV2(
+          _.getResourcesWithDeletedResource(
             resourceIris = Seq(resourceIri),
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
@@ -2285,7 +2285,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       // Verify the resource is marked as deleted.
       val getDeletedResponse = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourcesV2(
+          _.getResourcesWithDeletedResource(
             resourceIris = Seq(createdResourceIri),
             withDeleted = true,
             targetSchema = ApiV2Complex,

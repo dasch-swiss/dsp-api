@@ -47,11 +47,17 @@ object RequestsUpdates {
 
   private val schemaQueryKey           = "schema"
   private val simpleSchemaValue        = "simple"
-  private val xKnoraAcceptSchemaHeader = "x-knora-accept-schema"
+  private val xKnoraAcceptSchemaHeader = "X-Knora-Accept-Schema"
 
   def addSimpleSchemaHeader[A]: RequestUpdate[A] =
     _.header(xKnoraAcceptSchemaHeader, simpleSchemaValue)
 
   def addSimpleQueryParam[A]: RequestUpdate[A] =
     r => r.copy(uri = r.uri.addParam(schemaQueryKey, simpleSchemaValue))
+
+  def addVersionQueryParam[A](version: String): RequestUpdate[A] =
+    r => r.copy(uri = r.uri.addParam("version", version))
+
+  def addAcceptHeader[A](accept: String): RequestUpdate[A] =
+    _.header("Accept", accept)
 }

@@ -72,7 +72,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
 
 trait GetResources {
-  def getResourcesV2(
+  def getResourcesWithDeletedResource(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
@@ -84,7 +84,7 @@ trait GetResources {
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2]
 
-  def getResourcePreviewV2(
+  def getResourcePreviewWithDeletedResource(
     resourceIris: Seq[IRI],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
@@ -143,7 +143,7 @@ final case class ResourcesResponderV2(
           schemaOptions,
           requestingUser,
         ) =>
-      getResourcesV2(
+      getResourcesWithDeletedResource(
         resIris,
         propertyIri,
         valueUuid,
@@ -160,7 +160,7 @@ final case class ResourcesResponderV2(
           targetSchema,
           requestingUser,
         ) =>
-      getResourcePreviewV2(resIris, withDeletedResource, targetSchema, requestingUser)
+      getResourcePreviewWithDeletedResource(resIris, withDeletedResource, targetSchema, requestingUser)
 
     case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 =>
       getResourceHistoryV2(resourceHistoryRequest)
@@ -215,7 +215,7 @@ final case class ResourcesResponderV2(
     def makeTaskFuture: Task[UpdateResourceMetadataResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
-        resourcesSeq <- getResourcePreviewV2(
+        resourcesSeq <- getResourcePreviewWithDeletedResource(
                           resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
                           targetSchema = ApiV2Complex,
                           requestingUser = updateResourceMetadataRequestV2.requestingUser,
@@ -272,7 +272,7 @@ final case class ResourcesResponderV2(
         // Verify that the resource was updated correctly.
 
         updatedResourcesSeq <-
-          getResourcePreviewV2(
+          getResourcePreviewWithDeletedResource(
             resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
             targetSchema = ApiV2Complex,
             requestingUser = updateResourceMetadataRequestV2.requestingUser,
@@ -331,7 +331,7 @@ final case class ResourcesResponderV2(
     val deleteTask: Task[SuccessResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
-        resourcesSeq <- getResourcePreviewV2(
+        resourcesSeq <- getResourcePreviewWithDeletedResource(
                           resourceIris = Seq(deleteResourceV2.resourceIri),
                           targetSchema = ApiV2Complex,
                           requestingUser = deleteResourceV2.requestingUser,
@@ -465,14 +465,13 @@ final case class ResourcesResponderV2(
     val eraseTask: Task[SuccessResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
-        resourcesSeq <- getResourcePreviewV2(
+        resourcesSeq <- getResourcePreview(
                           resourceIris = Seq(eraseResourceV2.resourceIri),
                           targetSchema = ApiV2Complex,
                           requestingUser = eraseResourceV2.requestingUser,
                         )
 
         resource: ReadResourceV2 = resourcesSeq.toResource(eraseResourceV2.resourceIri)
-        isResourceDeleted        = resource.deletionInfo.isDefined
 
         // Ensure that the requesting user is a system admin, or an admin of this project.
         _ <- ZIO.when(
@@ -485,9 +484,7 @@ final case class ResourcesResponderV2(
         internalResourceClassIri = eraseResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
 
         // Make sure that the resource's class is what the client thinks it is.
-        // Validation is skipped for deleted resources because getResourcePreviewV2
-        // returns the resource as type of knora-base:DeletedResource
-        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri && !isResourceDeleted) {
+        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
                val msg =
                  s"Resource <${resource.resourceIri}> is not a member of class <${eraseResourceV2.resourceClassIri}>"
                ZIO.fail(BadRequestException(msg))
@@ -565,7 +562,7 @@ final case class ResourcesResponderV2(
   }
 
   /**
-   * Get one or several resources and return them as a sequence.
+   * Get one or several resources and return them as a sequence with deleted resources replaced.
    *
    * @param resourceIris         the IRIs of the resources to be queried.
    * @param propertyIri          if defined, requests only the values of the specified explicit property.
@@ -579,7 +576,54 @@ final case class ResourcesResponderV2(
    * @param requestingUser       the user making the request.
    * @return a [[ReadResourcesSequenceV2]].
    */
-  def getResourcesV2(
+  def getResourcesWithDeletedResource(
+    resourceIris: Seq[IRI],
+    propertyIri: Option[SmartIri] = None,
+    valueUuid: Option[UUID] = None,
+    versionDate: Option[VersionDate] = None,
+    withDeleted: Boolean = true,
+    showDeletedValues: Boolean = false,
+    targetSchema: ApiV2Schema,
+    schemaOptions: Set[Rendering],
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2] =
+    getResources(
+      resourceIris,
+      propertyIri,
+      valueUuid,
+      versionDate,
+      withDeleted,
+      showDeletedValues,
+      targetSchema,
+      schemaOptions,
+      requestingUser,
+    ).map { apiResponse =>
+      // BR: Deleted resources are to be replaced with DeletedResource.
+      apiResponse.copy(resources = apiResponse.resources.map { resource =>
+        resource.deletionInfo match {
+          case Some(_) => resource.asDeletedResource()
+          case None =>
+            if (showDeletedValues) resource
+            else resource.withDeletedValues(versionDate)
+        }
+      })
+    }
+
+  /**
+   * Get one or several resources and return them as a sequence.
+   *
+   * @param resourceIris      the IRIs of the resources to be queried.
+   * @param propertyIri       if defined, requests only the values of the specified explicit property.
+   * @param valueUuid         if defined, requests only the value with the specified UUID.
+   * @param versionDate       if defined, requests the state of the resources at the specified time in the past.
+   * @param withDeleted       if defined, indicates if the deleted resource and values should be returned or not.
+   * @param showDeletedValues if false, deleted values will be shown as DeletedValue
+   * @param targetSchema      the target API schema.
+   * @param schemaOptions     the schema options submitted with the request.
+   * @param requestingUser    the user making the request.
+   * @return a [[ReadResourcesSequenceV2]].
+   */
+  def getResources(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
@@ -590,7 +634,7 @@ final case class ResourcesResponderV2(
     schemaOptions: Set[Rendering],
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
-    // eliminate duplicate Iris
+
     val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
     // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -648,42 +692,51 @@ final case class ResourcesResponderV2(
              case None => ZIO.unit
            }
 
-      // Check if resources are deleted, if so, replace them with DeletedResource
-      deletedResourcesReplaced =
-        apiResponse.resources.map { resource =>
-          resource.deletionInfo match {
-            // Resource deleted -> return DeletedResource instead
-            case Some(_) => resource.asDeletedResource(versionDate)
-            // Resource not deleted -> return resource
-            case None =>
-              // deleted values should be shown -> resource can be returned
-              if (showDeletedValues) resource
-              // deleted Values should not be shown -> replace them with generic DeletedValue
-              else resource.withDeletedValues(versionDate)
-          }
-        }
-      responseWithDeletedResourcesReplaced = apiResponse.copy(resources = deletedResourcesReplaced)
-    } yield responseWithDeletedResourcesReplaced
+    } yield apiResponse
   }
 
   /**
-   * Get the preview of a resource.
+   * Get the preview of a resource with deleted resources replaced.
    *
    * @param resourceIris         the resource to query for.
    * @param withDeleted          indicates if the deleted resource should be returned or not.
    *
-   * @param requestingUser       the the user making the request.
+   * @param requestingUser       the user making the request.
    * @return a [[ReadResourcesSequenceV2]].
    */
-  def getResourcePreviewV2(
+  def getResourcePreviewWithDeletedResource(
+    resourceIris: Seq[IRI],
+    withDeleted: Boolean = true,
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2] =
+    getResourcePreview(resourceIris, withDeleted, targetSchema, requestingUser).map { apiResponse =>
+      // BR: Deleted resources are to be replaced with DeletedResource.
+      apiResponse.copy(resources = apiResponse.resources.map { resource =>
+        resource.deletionInfo match {
+          case Some(_) => resource.asDeletedResource()
+          case None    => resource.withDeletedValues()
+        }
+      })
+    }
+
+  /**
+   * Get the preview of a resource as it is in the triplestore.
+   *
+   * @param resourceIris   the resource to query for.
+   * @param withDeleted    indicates if the deleted resource should be returned or not.
+   *
+   * @param requestingUser the user making the request.
+   * @return a [[ReadResourcesSequenceV2]].
+   */
+  private def getResourcePreview(
     resourceIris: Seq[IRI],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
 
-    // eliminate duplicate Iris
-    val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
+    val resourceIrisWithoutDuplicates: Seq[IRI] = resourceIris.distinct
 
     for {
       mainResourcesAndValueRdfData <- getResourcesFromTriplestore(
@@ -697,7 +750,7 @@ final case class ResourcesResponderV2(
 
       apiResponse <- constructResponseUtilV2.createApiResponse(
                        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                       orderByResourceIri = resourceIrisDistinct,
+                       orderByResourceIri = resourceIrisWithoutDuplicates,
                        pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
                        mappings = Map.empty[IRI, MappingAndXSLTransformation],
                        queryStandoff = false,
@@ -709,33 +762,13 @@ final case class ResourcesResponderV2(
 
       _ <- apiResponse.checkResourceIris(resourceIris.toSet, apiResponse)
 
-      // Check if resources are deleted, if so, replace them with DeletedResource
-      responseWithDeletedResourcesReplaced = apiResponse.resources match {
-                                               case resourceList =>
-                                                 if (resourceList.nonEmpty) {
-                                                   val resourceListWithDeletedResourcesReplaced = resourceList.map {
-                                                     resource =>
-                                                       resource.deletionInfo match {
-                                                         case Some(_) => resource.asDeletedResource()
-                                                         case None    => resource.withDeletedValues()
-                                                       }
-                                                   }
-                                                   apiResponse.copy(resources =
-                                                     resourceListWithDeletedResourcesReplaced,
-                                                   )
-                                                 } else {
-                                                   apiResponse
-                                                 }
-                                             }
-
-    } yield responseWithDeletedResourcesReplaced
+    } yield apiResponse
   }
 
   /**
    * Obtains a Gravsearch template from Sipi.
    *
    * @param gravsearchTemplateIri the Iri of the resource representing the Gravsearch template.
-   *
    * @param requestingUser        the user making the request.
    * @return the Gravsearch template.
    */
@@ -745,7 +778,7 @@ final case class ResourcesResponderV2(
   ): Task[String] = {
 
     val gravsearchUrlTask = for {
-      resources <- getResourcesV2(
+      resources <- getResourcesWithDeletedResource(
                      resourceIris = Vector(gravsearchTemplateIri),
                      targetSchema = ApiV2Complex,
                      schemaOptions = Set(MarkupRendering.Standoff),
@@ -929,7 +962,7 @@ final case class ResourcesResponderV2(
                  }
 
             // get requested resource
-            resource <- getResourcesV2(
+            resource <- getResourcesWithDeletedResource(
                           resourceIris = Vector(resourceIri),
                           targetSchema = ApiV2Complex,
                           schemaOptions = SchemaOptions.ForStandoffWithTextValues,
@@ -1366,7 +1399,7 @@ final case class ResourcesResponderV2(
     for {
       // Get the resource preview, to make sure the user has permission to see the resource, and to get
       // its creation date.
-      resourcePreviewResponse <- getResourcePreviewV2(
+      resourcePreviewResponse <- getResourcePreviewWithDeletedResource(
                                    resourceIris = Seq(resourceHistoryRequest.resourceIri),
                                    withDeleted = resourceHistoryRequest.withDeletedResource,
                                    targetSchema = ApiV2Complex,
@@ -1684,7 +1717,7 @@ final case class ResourcesResponderV2(
     requestingUser: User,
   ): Task[(ResourceHistoryEntry, ReadResourceV2)] =
     for {
-      resourceFullRepAtCreationTime <- getResourcesV2(
+      resourceFullRepAtCreationTime <- getResourcesWithDeletedResource(
                                          resourceIris = Seq(resourceIri),
                                          versionDate = Some(VersionDate.fromInstant(versionHist.versionDate)),
                                          showDeletedValues = true,

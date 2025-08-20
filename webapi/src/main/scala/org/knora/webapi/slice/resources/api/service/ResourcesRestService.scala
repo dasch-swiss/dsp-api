@@ -42,7 +42,7 @@ final case class ResourcesRestService(
   ): Task[(RenderedResponse, MediaType)] =
     ensureIris(resourceIris) *>
       resourcesService
-        .getResourcePreviewV2(resourceIris, withDeleted = true, formatOptions.schema, user)
+        .getResourcePreviewWithDeletedResource(resourceIris, withDeleted = true, formatOptions.schema, user)
         .flatMap(renderer.render(_, formatOptions))
 
   def getResourcesProjectHistoryEvents(
@@ -94,7 +94,7 @@ final case class ResourcesRestService(
   ): Task[(RenderedResponse, MediaType)] =
     ensureIris(resourceIris) *>
       resourcesService
-        .getResourcesV2(
+        .getResourcesWithDeletedResource(
           resourceIris,
           propertyIri = None,
           valueUuid = None,

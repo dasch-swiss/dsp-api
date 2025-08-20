@@ -1191,7 +1191,7 @@ final case class ValuesResponderV2(
     // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
     // so we can see objects that the user doesn't have permission to see.
     resourceInfo <- resourcesResponder
-                      .getResourcesV2(
+                      .getResources(
                         resourceIris = Seq(deleteValue.resourceIri.toString),
                         targetSchema = ApiV2Complex,
                         schemaOptions = Set.empty,

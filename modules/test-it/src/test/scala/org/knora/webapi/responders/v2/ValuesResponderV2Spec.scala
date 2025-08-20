@@ -238,7 +238,7 @@ class ValuesResponderV2Spec extends E2ESpec with ImplicitSender {
   ): Unit = {
     val getResponse = UnsafeZioRun.runOrThrow(
       ZIO.serviceWithZIO[ResourcesResponderV2](
-        _.getResourcesV2(
+        _.getResourcesWithDeletedResource(
           resourceIris = Seq(resourceIri.toString),
           targetSchema = ApiV2Complex,
           schemaOptions = Set.empty,
@@ -346,7 +346,7 @@ class ValuesResponderV2Spec extends E2ESpec with ImplicitSender {
   private def getResourceLastModificationDate(resourceIri: IRI, requestingUser: User): Option[Instant] = {
     val previewResponse = UnsafeZioRun.runOrThrow(
       ZIO.serviceWithZIO[ResourcesResponderV2](
-        _.getResourcePreviewV2(
+        _.getResourcePreviewWithDeletedResource(
           resourceIris = Seq(resourceIri),
           targetSchema = ApiV2Complex,
           requestingUser = requestingUser,
