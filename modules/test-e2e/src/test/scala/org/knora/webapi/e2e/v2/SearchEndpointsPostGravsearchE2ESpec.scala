@@ -8,7 +8,6 @@ package org.knora.webapi.e2e.v2
 import sttp.client4.UriContext
 import zio.*
 import zio.test.*
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
@@ -545,6 +544,38 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |} ORDER BY ?pubdate
           |""".stripMargin
       verifyQueryResult(query, "BooksNotPublishedOnDate.jsonld")
+    },
+    test("perform a Gravsearch query for books that have been published before 1497 (Julian Calendar)") {
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?book incunabula:pubdate ?pubdate .
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |    ?book a knora-api:Resource .
+          |
+          |    ?book incunabula:title ?title .
+          |    incunabula:title knora-api:objectType xsd:string .
+          |
+          |    ?title a xsd:string .
+          |
+          |    ?book incunabula:pubdate ?pubdate .
+          |    incunabula:pubdate knora-api:objectType knora-api:Date .
+          |
+          |    ?pubdate a knora-api:Date .
+          |    FILTER(?pubdate < "JULIAN:1497"^^knora-api:Date)
+          |
+          |} ORDER BY ?pubdate
+          |""".stripMargin
+      verifyQueryResult(query, "BooksPublishedBeforeDate.jsonld")
     },
   )
 }
