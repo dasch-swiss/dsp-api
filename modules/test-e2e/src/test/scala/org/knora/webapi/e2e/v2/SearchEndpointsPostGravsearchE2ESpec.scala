@@ -512,5 +512,39 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
 
       verifyQueryResult(query, "BooksNotPublishedOnDate.jsonld")
     },
+    test(
+      "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) 2",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?book incunabula:pubdate ?pubdate .
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |    ?book a knora-api:Resource .
+          |
+          |    ?book incunabula:title ?title .
+          |    incunabula:title knora-api:objectType xsd:string .
+          |
+          |    ?title a xsd:string .
+          |
+          |    ?book incunabula:pubdate ?pubdate .
+          |    incunabula:pubdate knora-api:objectType knora-api:Date .
+          |
+          |    ?pubdate a knora-api:Date .
+          |
+          |     FILTER(?pubdate < "JULIAN:1497-03-01"^^knora-api:Date || ?pubdate > "JULIAN:1497-03-01"^^knora-api:Date)
+          |
+          |} ORDER BY ?pubdate
+          |""".stripMargin
+      verifyQueryResult(query, "BooksNotPublishedOnDate.jsonld")
+    },
   )
 }
