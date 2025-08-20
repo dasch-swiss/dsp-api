@@ -25,6 +25,7 @@ import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.testservices.RequestsUpdates.addAcceptHeader
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.*
@@ -118,7 +119,7 @@ object OntologyFormatsE2ESpec extends E2EZSpec {
     )
 
   private def getResponse(uri: Uri, mediaType: MediaType) =
-    TestApiClient.getAsString(uri, _.header("Accept", mediaType.toString())).flatMap(_.assert200)
+    TestApiClient.getAsString(uri, addAcceptHeader(mediaType)).flatMap(_.assert200)
 
   private object TestCases {
     private val knoraApiOntologySimple =

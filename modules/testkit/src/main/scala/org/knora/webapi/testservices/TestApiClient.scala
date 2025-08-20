@@ -23,8 +23,8 @@ import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
-import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
+import org.knora.webapi.testservices.ResponseOps.assert200
 
 final case class TestApiClient(
   private val apiConfig: KnoraApi,

@@ -20,6 +20,11 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.testservices.RequestsUpdates.addAcceptHeaderRdfXml
+import org.knora.webapi.testservices.RequestsUpdates.addAcceptHeaderTurtle
+import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
+import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaQueryParam
+import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.TestDataFileUtil
@@ -61,7 +66,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
     test("for the book 'Reise ins Heilige Land' using the complex schema in Turtle") {
       for {
         actual <- TestApiClient
-                    .getAsString(uri"/v2/resources/$reiseInsHeiligeLandIri", _.header("Accept", "text/turtle"))
+                    .getAsString(uri"/v2/resources/$reiseInsHeiligeLandIri", addAcceptHeaderTurtle)
                     .flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "BookReiseInsHeiligeLand.ttl")
       } yield assertTrue(RdfModel.fromTurtle(actual) == RdfModel.fromTurtle(expected))
@@ -69,7 +74,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
     test("for the book 'Reise ins Heilige Land' using the complex schema in RDF/XML") {
       for {
         actual <- TestApiClient
-                    .getAsString(uri"/v2/resources/$reiseInsHeiligeLandIri", _.header("Accept", "application/rdf+xml"))
+                    .getAsString(uri"/v2/resources/$reiseInsHeiligeLandIri", addAcceptHeaderRdfXml)
                     .flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "BookReiseInsHeiligeLand.rdf")
       } yield assertTrue(RdfModel.fromRdfXml(actual) == RdfModel.fromRdfXml(expected))
@@ -77,10 +82,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
     test("for the book 'Reise ins Heilige Land' using the simple schema (query) in JSON-LD") {
       for {
         actual <- TestApiClient
-                    .getAsString(
-                      uri"/v2/resources/$reiseInsHeiligeLandIri",
-                      r => r.copy(uri = r.uri.addParam("schema", "simple")),
-                    )
+                    .getAsString(uri"/v2/resources/$reiseInsHeiligeLandIri", addSimpleSchemaQueryParam)
                     .flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "BookReiseInsHeiligeLandSimple.jsonld")
         _        <- instanceChecker.check(actual, bookSimpleResourceClassIri.smartIri)
@@ -92,7 +94,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       for {
         actual <-
           TestApiClient
-            .getAsString(uri"/v2/resources/$reiseInsHeiligeLandIri", _.header("X-Knora-Accept-Schema", "simple"))
+            .getAsString(uri"/v2/resources/$reiseInsHeiligeLandIri", addSimpleSchemaHeader)
             .flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "BookReiseInsHeiligeLandSimple.jsonld")
         _        <- instanceChecker.check(actual, bookSimpleResourceClassIri.smartIri)
@@ -106,7 +108,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
           TestApiClient
             .getAsString(
               uri"/v2/resources/$reiseInsHeiligeLandIri",
-              _.header("X-Knora-Accept-Schema", "simple").header("Accept", "application/rdf+xml"),
+              addSimpleSchemaHeader.andThen(addAcceptHeaderRdfXml),
             )
             .flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "BookReiseInsHeiligeLandSimple.rdf")
@@ -157,7 +159,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_list_value".toSmartIri)
       for {
         actual <- TestApiClient
-                    .getAsString(uri"/v2/resources/$resourceIri", _.header("X-Knora-Accept-Schema", "simple"))
+                    .getAsString(uri"/v2/resources/$resourceIri", addSimpleSchemaHeader)
                     .flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithListValueSimple.jsonld")
       } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
@@ -174,7 +176,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ".toSmartIri)
       for {
         actual <- TestApiClient
-                    .getAsString(uri"/v2/resources/$resourceIri", _.header("X-Knora-Accept-Schema", "simple"))
+                    .getAsString(uri"/v2/resources/$resourceIri", addSimpleSchemaHeader)
                     .flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithLinkSimple.jsonld")
         _        <- instanceChecker.check(actual, thingSimpleResourceClassIri.smartIri)
@@ -192,7 +194,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage".toSmartIri)
       for {
         actual <- TestApiClient
-                    .getAsString(uri"/v2/resources/$resourceIri", _.header("X-Knora-Accept-Schema", "simple"))
+                    .getAsString(uri"/v2/resources/$resourceIri", addSimpleSchemaHeader)
                     .flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithTextLangSimple.jsonld")
         _        <- instanceChecker.check(actual, thingSimpleResourceClassIri.smartIri)
@@ -244,10 +246,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       val version = "2019-02-12T08:05:10.351Z"
       for {
         actual <- TestApiClient
-                    .getAsString(
-                      uri"/v2/resources/$aThingWithHistoryIri",
-                      r => r.copy(uri = r.uri.addParam("version", version)),
-                    )
+                    .getAsString(uri"/v2/resources/$aThingWithHistoryIri", addVersionQueryParam(version))
                     .flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithVersionHistory.jsonld")
       } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
@@ -258,10 +257,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       val version = "20190212T080510351Z"
       for {
         actual <- TestApiClient
-                    .getAsString(
-                      uri"/v2/resources/$aThingWithHistoryIri",
-                      r => r.copy(uri = r.uri.addParam("version", version)),
-                    )
+                    .getAsString(uri"/v2/resources/$aThingWithHistoryIri", addVersionQueryParam(version))
                     .flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithVersionHistory.jsonld")
       } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
