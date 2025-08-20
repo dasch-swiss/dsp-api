@@ -40,3 +40,18 @@ object ResponseOps {
 
   }
 }
+
+object RequestsUpdates {
+
+  type RequestUpdate[A] = Request[Either[String, A]] => Request[Either[String, A]]
+
+  private val schemaQueryKey           = "schema"
+  private val simpleSchemaValue        = "simple"
+  private val xKnoraAcceptSchemaHeader = "x-knora-accept-schema"
+
+  def addSimpleSchemaHeader[A]: RequestUpdate[A] =
+    _.header(xKnoraAcceptSchemaHeader, simpleSchemaValue)
+
+  def addSimpleQueryParam[A]: RequestUpdate[A] =
+    r => r.copy(uri = r.uri.addParam(schemaQueryKey, simpleSchemaValue))
+}

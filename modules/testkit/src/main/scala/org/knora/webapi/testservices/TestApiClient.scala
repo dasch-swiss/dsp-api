@@ -24,6 +24,7 @@ import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
 import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
 
 final case class TestApiClient(
   private val apiConfig: KnoraApi,
@@ -241,9 +242,20 @@ final case class TestApiClient(
         .response(asString)
         .send(backend)
     }
+
+  def postSparql(
+    relativeUri: Uri,
+    sparqlQuery: String,
+    f: RequestUpdate[String],
+  ): Task[Response[Either[String, String]]] =
+    f(basicRequest.post(relativeUri).body(sparqlQuery))
+      .contentType(MediaType.unsafeApply("application", "sparql-query"))
+      .response(asString)
+      .send(backend)
 }
 
 object TestApiClient {
+
   val getRootToken: ZIO[TestApiClient, Throwable, String] =
     TestApiClient
       .postJson[TokenResponse, LoginPayload](
@@ -361,6 +373,13 @@ object TestApiClient {
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.postMultiPart[A](relativeUri, body, user))
+
+  def postSparql(
+    relativeUri: Uri,
+    sparqlQuery: String,
+    f: RequestUpdate[String] = identity,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postSparql(relativeUri, sparqlQuery, f))
 
   val layer = ZLayer.derive[TestApiClient]
 }
