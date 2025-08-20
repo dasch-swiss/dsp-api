@@ -330,5 +330,37 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
         expected <- loadFile("PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld")
       } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
     },
+    test("perform a Gravsearch query for the page of a book whose seqnum equals 10, returning only the seqnum") {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?page knora-api:isMainResource true .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |} WHERE {
+          |
+          |    ?page a incunabula:page .
+          |    ?page a knora-api:Resource .
+          |
+          |    ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+          |    knora-api:isPartOf knora-api:objectType knora-api:Resource .
+          |
+          |    <http://rdfh.ch/0803/b6b5ff1eb703> a knora-api:Resource .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |    incunabula:seqnum knora-api:objectType xsd:integer .
+          |
+          |    FILTER(?seqnum = 10)
+          |
+          |    ?seqnum a xsd:integer .
+          |
+          |}""".stripMargin
+      for {
+        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
+        expected <- loadFile("PageWithSeqnum10OnlySeqnuminAnswer.jsonld")
+      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+    },
   )
 }
