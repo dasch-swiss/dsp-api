@@ -5,11 +5,13 @@
 
 package org.knora.webapi.e2e.v2
 
+import org.apache.pekko.http.scaladsl.model.HttpEntity
 import sttp.client4.UriContext
 import zio.*
 import zio.test.*
-
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.RdfMediaTypes
+import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForResourcesResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -407,6 +409,39 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |} ORDER BY ?seqnum
           |""".stripMargin
       verifyQueryResult(query, "PagesOfNarrenschiffOrderedBySeqnum.jsonld")
+    },
+    test(
+      "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum and get the next OFFSET",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?page knora-api:isMainResource true .
+          |
+          |    ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |} WHERE {
+          |
+          |    ?page a incunabula:page .
+          |    ?page a knora-api:Resource .
+          |
+          |    ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+          |    knora-api:isPartOf knora-api:objectType knora-api:Resource .
+          |
+          |    <http://rdfh.ch/0803/b6b5ff1eb703> a knora-api:Resource .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |    incunabula:seqnum knora-api:objectType xsd:integer .
+          |
+          |    ?seqnum a xsd:integer .
+          |
+          |} ORDER BY ?seqnum
+          |OFFSET 1
+          |""".stripMargin
+      verifyQueryResult(query, "PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld")
     },
   )
 }
