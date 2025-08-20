@@ -394,7 +394,41 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |""".stripMargin
       for {
         actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
-        expected <- loadFile("pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.json")
+        expected <- loadFile("pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonLd")
+      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+    },
+    test("perform a Gravsearch query for the pages of a book and return them ordered by their seqnum") {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?page knora-api:isMainResource true .
+          |
+          |    ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |} WHERE {
+          |
+          |    ?page a incunabula:page .
+          |    ?page a knora-api:Resource .
+          |
+          |    ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+          |    knora-api:isPartOf knora-api:objectType knora-api:Resource .
+          |
+          |    <http://rdfh.ch/0803/b6b5ff1eb703> a knora-api:Resource .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |    incunabula:seqnum knora-api:objectType xsd:integer .
+          |
+          |    ?seqnum a xsd:integer .
+          |
+          |} ORDER BY ?seqnum
+          |""".stripMargin
+
+      for {
+        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
+        expected <- loadFile("PagesOfNarrenschiffOrderedBySeqnum.jsonld")
       } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
     },
   )
