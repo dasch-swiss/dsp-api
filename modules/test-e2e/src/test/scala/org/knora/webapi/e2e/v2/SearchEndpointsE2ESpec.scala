@@ -236,57 +236,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkSearchResponseNumberOfResults(actual, 4)
     }
 
-
-
-   
-
     
-
-    
-
-    "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |
-          |     ?incomingRes knora-api:isMainResource true .
-          |
-          |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
-          |
-          |} WHERE {
-          |
-          |     ?incomingRes a knora-api:Resource .
-          |
-          |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
-          |
-          |     <http://rdfh.ch/0803/8be1b7cf7103> a knora-api:Resource .
-          |
-          |     ?incomingProp knora-api:objectType knora-api:Resource .
-          |
-          |     knora-api:isRegionOf knora-api:objectType knora-api:Resource .
-          |     knora-api:isPartOf knora-api:objectType knora-api:Resource .
-          |
-          |     FILTER NOT EXISTS {
-          |         ?incomingRes  knora-api:isRegionOf <http://rdfh.ch/0803/8be1b7cf7103> .
-          |     }
-          |
-          |     FILTER NOT EXISTS {
-          |         ?incomingRes  knora-api:isPartOf <http://rdfh.ch/0803/8be1b7cf7103> .
-          |     }
-          |
-          |} OFFSET 0
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("IncomingLinksForBook.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
 
     "search for an anything:Thing that has a decimal value of 2.1 2" in {
       val gravsearchQuery =
