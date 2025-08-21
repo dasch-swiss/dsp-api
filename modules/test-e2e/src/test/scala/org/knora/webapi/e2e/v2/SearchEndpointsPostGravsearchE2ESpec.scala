@@ -1442,5 +1442,31 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
                 """.stripMargin
       verifyQueryResult(query, "foafPerson.jsonld", anythingUser1)
     },
+    test("run a Gravsearch query that searches for a single resource specified by its IRI") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true ;
+          |         anything:hasText ?text ;
+          |         anything:hasInteger ?integer .
+          |
+          |} WHERE {
+          |     BIND(<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> AS ?thing)
+          |
+          |     ?thing a knora-api:Resource .
+          |     ?thing a anything:Thing .
+          |     ?thing anything:hasText ?text .
+          |     anything:hasText knora-api:objectType xsd:string .
+          |     ?text a xsd:string .
+          |     ?thing anything:hasInteger ?integer .
+          |     anything:hasInteger knora-api:objectType xsd:integer .
+          |     ?integer a xsd:integer.
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ThingByIriWithRequestedValues.jsonld", anythingUser1)
+    },
   )
 }
