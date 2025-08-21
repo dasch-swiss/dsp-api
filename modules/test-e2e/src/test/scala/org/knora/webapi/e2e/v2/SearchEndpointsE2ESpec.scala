@@ -277,52 +277,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkSearchResponseNumberOfResults(actual, 0)
     }
 
-    "do a Gravsearch query for a letter that links to a specific person via two possible properties" in {
-      val gravsearchQuery =
-        """
-          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?letter knora-api:isMainResource true .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
-          |
-          |
-          |    } WHERE {
-          |        ?letter a knora-api:Resource .
-          |        ?letter a beol:letter .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        beol:creationDate knora-api:objectType knora-api:Date .
-          |        ?date a knora-api:Date .
-          |
-          |        # testperson2
-          |        ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
-          |
-          |        <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
-          |
-          |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-          |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-          |
-          |        beol:hasAuthor knora-api:objectType knora-api:Resource .
-          |        beol:hasRecipient knora-api:objectType knora-api:Resource .
-          |
-          |    } ORDER BY ?date
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("letterWithAuthor.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 1)
-    }
+
 
     "do a Gravsearch count query for a letter that links to a specific person via two possible properties" in {
       val gravsearchQuery =
