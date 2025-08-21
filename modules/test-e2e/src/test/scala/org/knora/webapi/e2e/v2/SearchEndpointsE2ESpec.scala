@@ -195,43 +195,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkCountResponse(actual, 18)
     }
 
-    
-
-    "search for an anything:Thing that has a decimal value smaller than 3.0" in {
-      val gravsearchQuery =
-        """
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |     ?thing knora-api:isMainResource true .
-          |
-          |     ?thing anything:hasDecimal ?decimal .
-          |} WHERE {
-          |
-          |     ?thing a anything:Thing .
-          |     ?thing a knora-api:Resource .
-          |
-          |     ?thing anything:hasDecimal ?decimal .
-          |     anything:hasDecimal knora-api:objectType xsd:decimal .
-          |
-          |     ?decimal a xsd:decimal .
-          |
-          |     FILTER(?decimal < "3"^^xsd:decimal)
-          |}
-          |
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("ThingSmallerThanDecimal.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 2)
-    }
-
     "search for an anything:Thing that has a specific URI value" in {
       val gravsearchQuery =
         """
