@@ -85,6 +85,13 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
         test("perform a fulltext search for 'Bonjour'") {
           verifySearchResult("Bonjour", "LanguageFulltextSearch.jsonld", Some(anythingUser1))
         },
+        test("do a fulltext search for the term 'text' marked up as a paragraph") {
+          verifySearchResult(
+            "text",
+            "ThingWithRichtextWithTermTextInParagraph.jsonld",
+            f = addQueryParam("limitToStandoffClass", "http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag"),
+          )
+        },
         test("perform a fulltext query for a search value containing a single character wildcard") {
           verifySearchResult("Unif?rm", "ThingUniform.jsonld", Some(anythingUser1))
         },
