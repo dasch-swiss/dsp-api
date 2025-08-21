@@ -1090,5 +1090,31 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |}""".stripMargin
       verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
     },
+    test("search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |CONSTRUCT {
+          |
+          |   ?mainRes knora-api:isMainResource true .
+          |
+          |   ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
+          |
+          |} WHERE {
+          |
+          |   ?mainRes a knora-api:Resource .
+          |
+          |   ?mainRes a <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book> .
+          |
+          |   ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
+          |   <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+          |   ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
+          |
+          |   FILTER knora-api:matchText(?propVal0, "Zeitglöcklein AND Lebens")
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+    },
   )
 }
