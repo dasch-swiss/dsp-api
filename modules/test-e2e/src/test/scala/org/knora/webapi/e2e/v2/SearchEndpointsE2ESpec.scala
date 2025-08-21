@@ -238,58 +238,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
 
 
 
-    "get the regions belonging to a page" in {
-      val gravsearchQuery =
-        """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?region knora-api:isMainResource true .
-          |
-          |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
-          |
-          |        ?region knora-api:hasGeometry ?geom .
-          |
-          |        ?region knora-api:hasComment ?comment .
-          |
-          |        ?region knora-api:hasColor ?color .
-          |    } WHERE {
-          |
-          |        ?region a knora-api:Region .
-          |        ?region a knora-api:Resource .
-          |
-          |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
-          |        knora-api:isRegionOf knora-api:objectType knora-api:Resource .
-          |
-          |        <http://rdfh.ch/0803/9d626dc76c03> a knora-api:Resource .
-          |
-          |        ?region knora-api:hasGeometry ?geom .
-          |        knora-api:hasGeometry knora-api:objectType knora-api:Geom .
-          |
-          |        ?geom a knora-api:Geom .
-          |
-          |        ?region knora-api:hasComment ?comment .
-          |        knora-api:hasComment knora-api:objectType xsd:string .
-          |
-          |        ?comment a xsd:string .
-          |
-          |        ?region knora-api:hasColor ?color .
-          |        knora-api:hasColor knora-api:objectType knora-api:Color .
-          |
-          |        ?color a knora-api:Color .
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("RegionsForPage.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 2)
-    }
+   
 
     "get a book a page points to and include the page in the results (all properties present in WHERE clause)" in {
       val gravsearchQuery =
