@@ -905,5 +905,27 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "ThingSmallerThanDecimal.jsonld", anythingUser1)
     },
+    test("search for an anything:Thing that has a specific URI value") {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasUri ?uri .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |     ?thing a knora-api:Resource .
+          |
+          |     ?thing anything:hasUri ?uri .
+          |
+          |     FILTER(?uri = "http://www.google.ch"^^xsd:anyURI)
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "thingWithURI.jsonld", anythingUser1)
+    },
   )
 }
