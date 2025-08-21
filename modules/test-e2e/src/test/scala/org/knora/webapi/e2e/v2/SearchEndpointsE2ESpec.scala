@@ -195,14 +195,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkCountResponse(actual, 18)
     }
 
-    "perform a fulltext search for 'Bonjour'" in {
-      val actual = getResponseAsString(
-        Get(s"$baseApiUrl/v2/search/Bonjour") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("LanguageFulltextSearch.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "do a fulltext search for the term 'text' marked up as a paragraph" in {
       val actual = getResponseAsString(
         Get(

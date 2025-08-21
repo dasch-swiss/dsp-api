@@ -82,6 +82,9 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
         test("perform a fulltext search for 'Dinge' (in the simple schema)") {
           verifySearchResult("Dinge", "DingeFulltextSearchSimple.jsonld", Some(anythingUser1), addSimpleSchemaHeader)
         },
+        test("perform a fulltext search for 'Bonjour'") {
+          verifySearchResult("Bonjour", "LanguageFulltextSearch.jsonld", Some(anythingUser1))
+        },
         test("perform a fulltext query for a search value containing a single character wildcard") {
           verifySearchResult("Unif?rm", "ThingUniform.jsonld", Some(anythingUser1))
         },
