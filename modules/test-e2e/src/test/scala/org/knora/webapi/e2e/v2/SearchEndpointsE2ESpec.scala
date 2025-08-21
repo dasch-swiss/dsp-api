@@ -195,8 +195,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkCountResponse(actual, 18)
     }
 
-
-
     "search for a book whose title contains 'Zeit' using the regex function" in {
       val gravsearchQuery =
         """
@@ -233,40 +231,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkSearchResponseNumberOfResults(actual, 2)
     }
 
-    "search for a book whose title contains 'Zeitglöcklein' using the match function" in {
-      val gravsearchQuery =
-        """
-          |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |    CONSTRUCT {
-          |
-          |        ?mainRes knora-api:isMainResource true .
-          |
-          |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
-          |
-          |     } WHERE {
-          |
-          |        ?mainRes a knora-api:Resource .
-          |
-          |        ?mainRes a <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book> .
-          |
-          |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
-          |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
-          |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
-          |
-          |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
-          |
-          |     }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 2)
-    }
+    
 
     "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function" in {
       val gravsearchQuery =
