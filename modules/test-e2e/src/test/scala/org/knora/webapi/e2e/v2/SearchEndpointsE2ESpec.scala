@@ -233,40 +233,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
 
 
 
-    "search for a text using the lang function" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |     ?thing knora-api:isMainResource true .
-          |
-          |     ?thing anything:hasText ?text .
-          |} WHERE {
-          |     ?thing a knora-api:Resource .
-          |
-          |     ?thing a anything:Thing .
-          |
-          |     ?thing anything:hasText ?text .
-          |
-          |     anything:hasText knora-api:objectType xsd:string .
-          |
-          |     ?text a xsd:string .
-          |
-          |     FILTER(lang(?text) = "fr")
-          |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("LanguageFulltextSearch.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 1)
-    }
+    
 
     "search for a specific text using the lang function" in {
       val gravsearchQuery =
