@@ -195,8 +195,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkCountResponse(actual, 18)
     }
 
-   
-
     "perform a fulltext search for 'Bonjour'" in {
       val actual = getResponseAsString(
         Get(s"$baseApiUrl/v2/search/Bonjour") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
@@ -277,46 +275,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       )
       // there is no single italic element that contains both 'interesting' and 'boring':
       checkSearchResponseNumberOfResults(actual, 0)
-    }
-
-    "do a Gravsearch query for link objects that link to an incunabula book" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |CONSTRUCT {
-          |     ?linkObj knora-api:isMainResource true .
-          |
-          |     ?linkObj knora-api:hasLinkTo ?book .
-          |
-          |} WHERE {
-          |     ?linkObj a knora-api:Resource .
-          |     ?linkObj a knora-api:LinkObj .
-          |
-          |     ?linkObj knora-api:hasLinkTo ?book .
-          |     knora-api:hasLinkTo knora-api:objectType knora-api:Resource .
-          |
-          |     ?book a knora-api:Resource .
-          |     ?book a incunabula:book .
-          |
-          |     ?book incunabula:title ?title .
-          |
-          |     incunabula:title knora-api:objectType xsd:string .
-          |
-          |     ?title a xsd:string .
-          |
-          |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("LinkObjectsToBooks.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 3)
     }
 
     "do a Gravsearch query for a letter that links to a specific person via two possible properties" in {

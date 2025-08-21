@@ -1245,5 +1245,36 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
     },
+    test("do a Gravsearch query for link objects that link to an incunabula book") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |
+          |CONSTRUCT {
+          |     ?linkObj knora-api:isMainResource true .
+          |
+          |     ?linkObj knora-api:hasLinkTo ?book .
+          |
+          |} WHERE {
+          |     ?linkObj a knora-api:Resource .
+          |     ?linkObj a knora-api:LinkObj .
+          |
+          |     ?linkObj knora-api:hasLinkTo ?book .
+          |     knora-api:hasLinkTo knora-api:objectType knora-api:Resource .
+          |
+          |     ?book a knora-api:Resource .
+          |     ?book a incunabula:book .
+          |
+          |     ?book incunabula:title ?title .
+          |
+          |     incunabula:title knora-api:objectType xsd:string .
+          |
+          |     ?title a xsd:string .
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "LinkObjectsToBooks.jsonld", anythingUser1)
+    },
   )
 }
