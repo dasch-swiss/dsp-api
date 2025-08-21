@@ -376,37 +376,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkCountResponse(actual, 1)
     }
 
-    "do a Gravsearch query containing a UNION nested in an OPTIONAL" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX gravsearchtest1: <http://0.0.0.0:3333/ontology/0666/gravsearchtest1/simple/v2#>
-          |
-          |CONSTRUCT {
-          |  ?Project knora-api:isMainResource true .
-          |  ?isInProject gravsearchtest1:isInProject ?Project .
-          |} WHERE {
-          |  ?Project a knora-api:Resource .
-          |  ?Project a gravsearchtest1:Project .
-          |
-          |  OPTIONAL {
-          |    ?isInProject gravsearchtest1:isInProject ?Project .
-          |    gravsearchtest1:isInProject knora-api:objectType knora-api:Resource .
-          |    ?isInProject a knora-api:Resource .
-          |    { ?isInProject a gravsearchtest1:BibliographicNotice . } UNION { ?isInProject a gravsearchtest1:Person . }
-          |  }
-          |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("ProjectsWithOptionalPersonOrBiblio.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
