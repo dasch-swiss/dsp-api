@@ -36,6 +36,8 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaQueryParam
+import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.ResponseOps.assert404
@@ -165,11 +167,13 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
       } yield assertCompletes
     },
     test(
-      "perform a resource preview request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header)",
+      "perform a resource preview request for the book 'Reise ins Heilige Land' using the simple schema (specified in query)",
     ) {
       for {
         responseAsString <-
-          TestApiClient.getJsonLd(uri"/v2/resourcespreview/$reiseInsHeiligeLandIri?schema=simple").flatMap(_.assert200)
+          TestApiClient
+            .getJsonLd(uri"/v2/resourcespreview/$reiseInsHeiligeLandIri", addSimpleSchemaQueryParam)
+            .flatMap(_.assert200)
         expectedAnswerJSONLD <-
           readFile("BookReiseInsHeiligeLandSimplePreview.jsonld")
         _ <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
@@ -217,7 +221,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                    arkTimestamp <- ZIO.succeed(sf.formatArkTimestamp(versionDate))
                    versionResponseAsString <-
                      TestApiClient
-                       .getJsonLd(uri"/v2/resources/$aThingWithHistoryIri?version=$arkTimestamp")
+                       .getJsonLd(uri"/v2/resources/$aThingWithHistoryIri", addVersionQueryParam(arkTimestamp))
                        .flatMap(_.assert200)
                    expectedAnswerJSONLD <-
                      readFile(s"ThingWithVersionHistory$arkTimestamp.jsonld")

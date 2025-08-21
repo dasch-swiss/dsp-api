@@ -23,6 +23,7 @@ import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
+import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
 import org.knora.webapi.testservices.ResponseOps.assert200
 
 final case class TestApiClient(
@@ -71,25 +72,14 @@ final case class TestApiClient(
   def getJson[A: JsonDecoder](relativeUri: Uri, user: User): Task[Response[Either[String, A]]] =
     jwtFor(user).flatMap(jwt => getJson(relativeUri, _.auth.bearer(jwt)))
 
-  def getJsonLd(relativeUri: Uri): Task[Response[Either[String, String]]] =
-    basicRequest
-      .get(relativeUri)
-      .contentType(MediaType.unsafeApply("application", "ld+json"))
-      .response(asString)
-      .send(backend)
-
   def getJsonLd(
     relativeUri: Uri,
     f: Request[Either[String, String]] => Request[Either[String, String]],
-  ): Task[Response[Either[String, String]]] = {
-    val request: Request[Either[String, String]] = f(
-      basicRequest
-        .get(relativeUri)
-        .contentType(MediaType.unsafeApply("application", "ld+json"))
-        .response(asString),
-    )
-    request.send(backend)
-  }
+  ): Task[Response[Either[String, String]]] =
+    f(basicRequest.get(relativeUri))
+      .contentType(MediaType.unsafeApply("application", "ld+json"))
+      .response(asString)
+      .send(backend)
 
   def getJsonLd(
     relativeUri: Uri,
@@ -241,9 +231,28 @@ final case class TestApiClient(
         .response(asString)
         .send(backend)
     }
+
+  def postSparql(
+    relativeUri: Uri,
+    sparqlQuery: String,
+    f: RequestUpdate[String],
+  ): Task[Response[Either[String, String]]] =
+    f(basicRequest.post(relativeUri).body(sparqlQuery))
+      .contentType(MediaType.unsafeApply("application", "sparql-query"))
+      .response(asString)
+      .send(backend)
+
+  def postSparql(
+    relativeUri: Uri,
+    sparqlQuery: String,
+    user: User,
+    f: RequestUpdate[String],
+  ): Task[Response[Either[String, String]]] =
+    jwtFor(user).flatMap(jwt => postSparql(relativeUri, sparqlQuery, f.andThen(_.auth.bearer(jwt))))
 }
 
 object TestApiClient {
+
   val getRootToken: ZIO[TestApiClient, Throwable, String] =
     TestApiClient
       .postJson[TokenResponse, LoginPayload](
@@ -255,7 +264,7 @@ object TestApiClient {
 
   def getAsString(
     relativeUri: Uri,
-    f: Request[Either[String, String]] => Request[Either[String, String]],
+    f: Request[Either[String, String]] => Request[Either[String, String]] = identity,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getAsString(relativeUri, f))
 
@@ -273,7 +282,7 @@ object TestApiClient {
 
   def getJson[A: JsonDecoder](
     relativeUri: Uri,
-    f: Request[Either[String, A]] => Request[Either[String, A]],
+    f: Request[Either[String, A]] => Request[Either[String, A]] = identity,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJson(relativeUri, f))
 
@@ -286,12 +295,9 @@ object TestApiClient {
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJson[A](relativeUri, user))
 
-  def getJsonLd(relativeUri: Uri): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri))
-
   def getJsonLd(
     relativeUri: Uri,
-    f: Request[Either[String, String]] => Request[Either[String, String]],
+    f: Request[Either[String, String]] => Request[Either[String, String]] = identity,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri, f))
 
@@ -361,6 +367,19 @@ object TestApiClient {
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.postMultiPart[A](relativeUri, body, user))
+
+  def postSparql(
+    relativeUri: Uri,
+    sparqlQuery: String,
+    user: Option[User] = None,
+    f: RequestUpdate[String] = identity,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](http =>
+      user match {
+        case Some(u) => http.postSparql(relativeUri, sparqlQuery, u, f)
+        case None    => http.postSparql(relativeUri, sparqlQuery, f)
+      },
+    )
 
   val layer = ZLayer.derive[TestApiClient]
 }
