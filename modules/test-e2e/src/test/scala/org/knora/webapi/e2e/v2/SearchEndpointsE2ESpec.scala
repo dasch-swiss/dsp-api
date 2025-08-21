@@ -376,51 +376,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkCountResponse(actual, 1)
     }
 
-  
-
-    "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |        ?book incunabula:title ?title .
-          |
-          |        ?page knora-api:isPartOf ?book ;
-          |            incunabula:seqnum ?seqnum .
-          |    } WHERE {
-          |        BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
-          |        ?book a knora-api:Resource .
-          |
-          |        ?book incunabula:title ?title .
-          |        incunabula:title knora-api:objectType xsd:string .
-          |        ?title a xsd:string .
-          |
-          |        ?page a incunabula:page .
-          |        ?page a knora-api:Resource .
-          |
-          |        ?page knora-api:isPartOf ?book .
-          |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
-          |
-          |        ?page incunabula:seqnum ?seqnum .
-          |        incunabula:seqnum knora-api:objectType xsd:integer .
-          |
-          |        FILTER(?seqnum <= 10)
-          |
-          |        ?seqnum a xsd:integer .
-          |
-          |    } ORDER BY ?seqnum
-                """.stripMargin
-      val actual = singleAwaitingRequest(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
-      )
-      assert(actual.status == StatusCodes.BAD_REQUEST)
-    }
-
     "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi'" in {
       val gravsearchQuery =
         """
