@@ -1406,40 +1406,40 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |} ORDER BY ?date
           |""".stripMargin
-      verifyQueryResult(query, "letterWithPersonWithName2.jsonld", anythingUser1)
+      verifyQueryResult(query, "letterWithPersonWithName2.jsonld")
     },
     test("run a Gravsearch query that searches for a person using foaf classes and properties") {
       val query =
         """
-          |      PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-          |      PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |      PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
           |
-          |      CONSTRUCT {
-          |          ?person knora-api:isMainResource true .
+          |CONSTRUCT {
+          |    ?person knora-api:isMainResource true .
           |
-          |          ?person foaf:familyName ?familyName .
+          |    ?person foaf:familyName ?familyName .
           |
-          |          ?person foaf:givenName ?givenName .
+          |    ?person foaf:givenName ?givenName .
           |
-          |      } WHERE {
-          |          ?person a knora-api:Resource .
-          |          ?person a foaf:Person .
+          |} WHERE {
+          |    ?person a knora-api:Resource .
+          |    ?person a foaf:Person .
           |
-          |          ?person foaf:familyName ?familyName .
-          |          foaf:familyName knora-api:objectType xsd:string .
+          |    ?person foaf:familyName ?familyName .
+          |    foaf:familyName knora-api:objectType xsd:string .
           |
-          |          ?familyName a xsd:string .
+          |    ?familyName a xsd:string .
           |
-          |          ?person foaf:givenName ?givenName .
-          |          foaf:givenName knora-api:objectType xsd:string .
+          |    ?person foaf:givenName ?givenName .
+          |    foaf:givenName knora-api:objectType xsd:string .
           |
-          |          ?givenName a xsd:string .
+          |    ?givenName a xsd:string .
           |
-          |          FILTER(?familyName = "Meier")
+          |    FILTER(?familyName = "Meier")
           |
-          |      }
-                """.stripMargin
+          |}
+          |""".stripMargin
       verifyQueryResult(query, "foafPerson.jsonld", anythingUser1)
     },
     test("run a Gravsearch query that searches for a single resource specified by its IRI") {
