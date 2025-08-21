@@ -232,44 +232,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     }
 
 
-
-    
-
-    "search for 'Zeitglöcklein des Lebens' using dcterms:title" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |    PREFIX dcterms: <http://purl.org/dc/terms/>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book dcterms:title ?title .
-          |
-          |    } WHERE {
-          |        ?book a knora-api:Resource .
-          |
-          |        ?book dcterms:title ?title .
-          |
-          |        dcterms:title knora-api:objectType xsd:string .
-          |
-          |        ?title a xsd:string .
-          |
-          |        FILTER(?title = 'Zeitglöcklein des Lebens und Leidens Christi')
-          |
-          |    } OFFSET 0
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 2)
-    }
-
     "search for an anything:Thing with a list value" in {
       val gravsearchQuery =
         """

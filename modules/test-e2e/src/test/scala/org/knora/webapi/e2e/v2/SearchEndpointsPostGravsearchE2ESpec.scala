@@ -1116,5 +1116,31 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
     },
+    test("search for 'Zeitglöcklein des Lebens' using dcterms:title") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |    PREFIX dcterms: <http://purl.org/dc/terms/>
+          |
+          |    CONSTRUCT {
+          |        ?book knora-api:isMainResource true .
+          |
+          |        ?book dcterms:title ?title .
+          |
+          |    } WHERE {
+          |        ?book a knora-api:Resource .
+          |
+          |        ?book dcterms:title ?title .
+          |
+          |        dcterms:title knora-api:objectType xsd:string .
+          |
+          |        ?title a xsd:string .
+          |
+          |        FILTER(?title = 'Zeitglöcklein des Lebens und Leidens Christi')
+          |
+          |    } OFFSET 0
+                """.stripMargin
+      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+    },
   )
 }
