@@ -8,16 +8,18 @@ package org.knora.webapi.e2e.v2
 import sttp.client4.UriContext
 import zio.*
 import zio.test.*
+
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointsGetSearchE2ESpec.suite
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
 import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
 import org.knora.webapi.testservices.RequestsUpdates.addQueryParam
+import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
@@ -99,12 +101,24 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
             f = addQueryParam("limitToStandoffClass", "http://api.knora.org/ontology/standoff/v2#StandoffItalicTag"),
           )
         },
-        test("do a fulltext search for the terms 'interesting' and 'text' marked up as italic"){
+        test("do a fulltext search for the terms 'interesting' and 'text' marked up as italic") {
           verifySearchResult(
             "interesting text",
             "ThingWithRichtextWithTermTextInParagraph.jsonld",
             f = addQueryParam("limitToStandoffClass", "http://api.knora.org/ontology/standoff/v2#StandoffItalicTag"),
           )
+        },
+        test("do a fulltext search for the terms 'interesting' and 'boring' marked up as italic") {
+          val searchTerm = "interesting boring"
+          TestApiClient
+            .getJsonLd(
+              uri"/v2/search/$searchTerm",
+              addQueryParam("limitToStandoffClass", "http://api.knora.org/ontology/standoff/v2#StandoffItalicTag"),
+            )
+            .flatMap(_.assert200)
+            // there is no single italic element that contains both 'interesting' and 'boring':
+            .mapAttempt(checkSearchResponseNumberOfResults(_, 0))
+            .as(assertCompletes)
         },
         test("perform a fulltext query for a search value containing a single character wildcard") {
           verifySearchResult("Unif?rm", "ThingUniform.jsonld", Some(anythingUser1))

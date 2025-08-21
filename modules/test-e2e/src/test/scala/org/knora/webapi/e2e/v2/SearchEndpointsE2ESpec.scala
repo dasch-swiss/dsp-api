@@ -215,27 +215,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkCountResponse(actual, 1)
     }
 
-    "do a fulltext search count query for the terms 'interesting' and 'text' marked up as italic" in {
-      val actual = getResponseAsString(
-        Get(
-          s"$baseApiUrl/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder
-            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-        ),
-      )
-      checkSearchResponseNumberOfResults(actual, 1)
-    }
-
-    "do a fulltext search for the terms 'interesting' and 'boring' marked up as italic" in {
-      val actual = getResponseAsString(
-        Get(
-          s"$baseApiUrl/v2/search/interesting%20boring?limitToStandoffClass=" + URLEncoder
-            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-        ),
-      )
-      // there is no single italic element that contains both 'interesting' and 'boring':
-      checkSearchResponseNumberOfResults(actual, 0)
-    }
-
     "do a Gravsearch count query for a letter that links to a specific person via two possible properties" in {
       val gravsearchQuery =
         """
