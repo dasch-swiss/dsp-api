@@ -8,14 +8,16 @@ package org.knora.webapi.e2e.v2
 import sttp.client4.UriContext
 import zio.*
 import zio.test.*
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.SearchEndpointsGetSearchE2ESpec.suite
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
+import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
+import org.knora.webapi.testservices.RequestsUpdates.addQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
@@ -51,52 +53,43 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
 
   private def loadFile(name: String) = TestDataFileUtil.readTestData("searchR2RV2", name)
 
+  private def verifySearchResult(
+    searchTerm: String,
+    expectedFile: String,
+    user: Option[User] = None,
+    f: RequestUpdate[String] = identity,
+  ) = for {
+    response <- user match {
+                  case None    => TestApiClient.getJsonLd(uri"/v2/search/$searchTerm", f)
+                  case Some(u) => TestApiClient.getJsonLd(uri"/v2/search/$searchTerm", u, f)
+                }
+    actual   <- response.assert200.mapAttempt(RdfModel.fromJsonLD)
+    expected <- loadFile(expectedFile).mapAttempt(RdfModel.fromJsonLD)
+  } yield assertTrue(actual == expected)
+
   override def e2eSpec =
     suite("SearchEndpoints")(
       suite("GET /v2/search")(
         test("perform a fulltext search for 'Narr'") {
-          for {
-            actual   <- TestApiClient.getJsonLd(uri"/v2/search/Narr").flatMap(_.assert200)
-            expected <- loadFile("NarrFulltextSearch.jsonld")
-          } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+          verifySearchResult("Narr", "NarrFulltextSearch.jsonld")
         },
         test("perform a fulltext search for 'Ding'") {
-          for {
-            actual   <- TestApiClient.getJsonLd(uri"/v2/search/Ding").flatMap(_.assert200)
-            expected <- loadFile("searchResponseWithHiddenResource.jsonld")
-          } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+          verifySearchResult("Ding", "searchResponseWithHiddenResource.jsonld")
         },
         test("perform a fulltext search for 'Dinge' (in the complex schema)") {
-          for {
-            actual   <- TestApiClient.getJsonLd(uri"/v2/search/Dinge", anythingUser1).flatMap(_.assert200)
-            expected <- loadFile("DingeFulltextSearch.jsonld")
-          } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+          verifySearchResult("Dinge", "DingeFulltextSearch.jsonld", Some(anythingUser1))
         },
         test("perform a fulltext search for 'Dinge' (in the simple schema)") {
-          for {
-            actual <- TestApiClient
-                        .getJsonLd(uri"/v2/search/Dinge", anythingUser1, addSimpleSchemaHeader)
-                        .flatMap(_.assert200)
-            expected <- loadFile("DingeFulltextSearchSimple.jsonld")
-          } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+          verifySearchResult("Dinge", "DingeFulltextSearchSimple.jsonld", Some(anythingUser1), addSimpleSchemaHeader)
         },
         test("perform a fulltext query for a search value containing a single character wildcard") {
-          for {
-            actual   <- TestApiClient.getJsonLd(uri"/v2/search/Unif%3Frm", anythingUser1).flatMap(_.assert200)
-            expected <- loadFile("ThingUniform.jsonld")
-          } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+          verifySearchResult("Unif?rm", "ThingUniform.jsonld", Some(anythingUser1))
         },
         test("perform a fulltext query for a search value containing a multiple character wildcard") {
-          for {
-            actual   <- TestApiClient.getJsonLd(uri"/v2/search/Unif*m", anythingUser1).flatMap(_.assert200)
-            expected <- loadFile("ThingUniform.jsonld")
-          } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+          verifySearchResult("Unif*m", "ThingUniform.jsonld", Some(anythingUser1))
         },
         test("return files attached to full-text search results") {
-          for {
-            actual   <- TestApiClient.getJsonLd(uri"/v2/search/p7v?returnFiles=true").flatMap(_.assert200)
-            expected <- loadFile("FulltextSearchWithImage.jsonld")
-          } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+          verifySearchResult("p7v", "FulltextSearchWithImage.jsonld", f = addQueryParam("returnFiles", "true"))
         },
         test("not accept a fulltext query containing http://api.knora.org") {
           val invalidSearchString = "PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>"

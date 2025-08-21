@@ -21,7 +21,9 @@ object RequestsUpdates {
     r => r.copy(uri = r.uri.addParam(schemaQueryKey, simpleSchemaValue))
 
   def addVersionQueryParam[A](version: String): RequestUpdate[A] =
-    r => r.copy(uri = r.uri.addParam("version", version))
+    addQueryParam("version", version)
+  def addQueryParam[A](key: String, value: String): RequestUpdate[A] =
+    r => r.copy(uri = r.uri.addParam(key, value))
 
   def addAcceptHeader[A](accept: MediaType): RequestUpdate[A] =
     addAcceptHeader(accept.toString)
