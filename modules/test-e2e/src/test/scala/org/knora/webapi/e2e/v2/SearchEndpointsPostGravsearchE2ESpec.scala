@@ -953,5 +953,40 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "ThingWithBoolean.jsonld", anythingUser1)
     },
+    test("search for an anything:Thing that may have a Boolean value that is true") {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasBoolean ?boolean .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |     ?thing a knora-api:Resource .
+          |
+          |     OPTIONAL {
+          |
+          |         ?thing anything:hasBoolean ?boolean .
+          |         anything:hasBoolean knora-api:objectType xsd:boolean .
+          |
+          |         ?boolean a xsd:boolean .
+          |
+          |         FILTER(?boolean = true)
+          |     }
+          |
+          |     MINUS {
+          |         ?thing anything:hasInteger ?intVal .
+          |         anything:hasInteger knora-api:objectType xsd:integer .
+          |         ?intVal a xsd:integer .
+          |         FILTER(?intVal = 123454321 || ?intVal = 999999999)
+          |     }
+          |} OFFSET 0
+          |""".stripMargin
+      verifyQueryResult(query, "ThingWithBooleanOptionalOffset0.jsonld", anythingUser1)
+    },
   )
 }
