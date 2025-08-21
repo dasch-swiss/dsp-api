@@ -1515,5 +1515,42 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "letterWithAuthorWithInformation.jsonld")
     },
+    test(
+      "do a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |    ?book incunabula:title ?title .
+          |
+          |    ?page knora-api:isPartOf ?book ;
+          |          incunabula:seqnum  ?seqnum .
+          |} WHERE {
+          |    BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
+          |    ?book a knora-api:Resource .
+          |
+          |    ?book incunabula:title ?title .
+          |    incunabula:title knora-api:objectType xsd:string .
+          |    ?title a xsd:string .
+          |
+          |    ?page a incunabula:page .
+          |    ?page a knora-api:Resource .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |    knora-api:isPartOf knora-api:objectType knora-api:Resource .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |    incunabula:seqnum knora-api:objectType xsd:integer .
+          |
+          |    FILTER(?seqnum <= 10)
+          |
+          |    ?seqnum a xsd:integer .
+          |
+          |}""".stripMargin
+      verifyQueryResult(query, "incomingPagesForBook.jsonld", incunabulaMemberUser)
+    },
   )
 }
