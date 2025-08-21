@@ -1025,5 +1025,44 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
                 """.stripMargin
       verifyQueryResult(query, "ThingWithBooleanOptionalOffset1.jsonld", anythingUser1)
     },
+    test(
+      "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both)",
+    ) {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasBoolean ?boolean .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |     ?thing a knora-api:Resource .
+          |
+          |     {
+          |         ?thing anything:hasBoolean ?boolean .
+          |         anything:hasBoolean knora-api:objectType xsd:boolean .
+          |
+          |         ?boolean a xsd:boolean .
+          |
+          |         FILTER(?boolean = true)
+          |     } UNION {
+          |         ?thing anything:hasDecimal ?decimal .
+          |         anything:hasDecimal knora-api:objectType xsd:decimal .
+          |
+          |         ?decimal a xsd:decimal .
+          |
+          |         FILTER(?decimal = "2.1"^^xsd:decimal)
+          |     }
+          |
+          |} OFFSET 0
+          |""".stripMargin
+      verifyQueryResult(query, "ThingWithBooleanOrDecimal.jsonld", anythingUser1)
+    },
   )
 }
