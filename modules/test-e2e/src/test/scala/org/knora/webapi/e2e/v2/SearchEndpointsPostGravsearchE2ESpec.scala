@@ -715,5 +715,50 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
                 """.stripMargin
       verifyQueryResult(query, "RegionsForPage.jsonld")
     },
+    test(
+      "get a book a page points to and only include the page's partOf link in the results (none of the other properties)",
+    ) {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |    ?book knora-api:isMainResource true .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+          |
+          |} WHERE {
+          |
+          |    ?book a knora-api:Resource .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    incunabula:title knora-api:objectType xsd:string .
+          |
+          |    ?title a xsd:string .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+          |    knora-api:isPartOf knora-api:objectType knora-api:Resource .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> a knora-api:Resource .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+          |    knora-api:seqnum knora-api:objectType xsd:integer .
+          |
+          |    ?seqnum a xsd:integer .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFile ?file .
+          |    knora-api:hasStillImageFile knora-api:objectType knora-api:File .
+          |
+          |    ?file a knora-api:File .
+          |
+          |} OFFSET 0
+          |""".stripMargin
+      verifyQueryResult(query, "bookWithIncomingPagesOnlyLink.jsonld")
+    },
   )
 }
