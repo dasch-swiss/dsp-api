@@ -241,6 +241,14 @@ final case class TestApiClient(
       .contentType(MediaType.unsafeApply("application", "sparql-query"))
       .response(asString)
       .send(backend)
+
+  def postSparql(
+    relativeUri: Uri,
+    sparqlQuery: String,
+    user: User,
+    f: RequestUpdate[String],
+  ): Task[Response[Either[String, String]]] =
+    jwtFor(user).flatMap(jwt => postSparql(relativeUri, sparqlQuery, f.andThen(_.auth.bearer(jwt))))
 }
 
 object TestApiClient {
@@ -363,9 +371,15 @@ object TestApiClient {
   def postSparql(
     relativeUri: Uri,
     sparqlQuery: String,
+    user: Option[User] = None,
     f: RequestUpdate[String] = identity,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.postSparql(relativeUri, sparqlQuery, f))
+    ZIO.serviceWithZIO[TestApiClient](http =>
+      user match {
+        case Some(u) => http.postSparql(relativeUri, sparqlQuery, u, f)
+        case None    => http.postSparql(relativeUri, sparqlQuery, f)
+      },
+    )
 
   val layer = ZLayer.derive[TestApiClient]
 }

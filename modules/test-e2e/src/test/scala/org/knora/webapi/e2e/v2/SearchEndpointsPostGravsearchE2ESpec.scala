@@ -12,12 +12,14 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.testservices.RequestsUpdates
 import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
 import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.TestDataFileUtil
+import sttp.client4.Response
 
 object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
 
@@ -49,17 +51,18 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
 
   private def loadFile(filename: String) = TestDataFileUtil.readTestData("searchR2RV2", filename)
 
-  private def verifyQueryResult(
-    query: String,
-    expectedFile: String,
-    update: RequestUpdate[String] = identity,
-  ) = for {
-    actual <- TestApiClient
-                .postSparql(uri"/v2/searchextended", query, update)
-                .flatMap(_.assert200)
-                .mapAttempt(RdfModel.fromJsonLD)
-    expected <- loadFile(expectedFile).mapAttempt(RdfModel.fromJsonLD)
-  } yield assertTrue(actual == expected)
+  private def verifyQueryResult(query: String, expectedFile: String, f: RequestUpdate[String] = identity) =
+    TestApiClient.postSparql(uri"/v2/searchextended", query, f = f).flatMap(compare(_, expectedFile))
+
+  private def verifyQueryResult(query: String, expectedFile: String, user: User) =
+    TestApiClient.postSparql(uri"/v2/searchextended", query, Some(user)).flatMap(compare(_, expectedFile))
+
+  private def compare(response: Response[Either[String, String]], expectedFile: String) =
+    for {
+      resultJsonLd <- response.assert200
+      actual       <- ZIO.attempt(RdfModel.fromJsonLD(resultJsonLd))
+      expected     <- loadFile(expectedFile).mapAttempt(RdfModel.fromJsonLD)
+    } yield assertTrue(actual == expected)
 
   override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended")(
     test("perform a Gravsearch query using simple schema which allows to sort the results by external link") {
@@ -795,6 +798,56 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |} OFFSET 0
           |""".stripMargin
       verifyQueryResult(query, "IncomingLinksForBook.jsonld")
+    },
+    test("search for an anything:Thing that has a decimal value of 2.1 2") {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |     ?thing a knora-api:Resource .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |     anything:hasDecimal knora-api:objectType xsd:decimal .
+          |
+          |     ?decimal a xsd:decimal .
+          |
+          |     FILTER(?decimal = "2.1"^^xsd:decimal)
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ThingEqualsDecimal.jsonld", anythingUser1)
+    },
+    test("search for an anything:Thing that has a decimal value bigger than 2.0") {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |     ?thing a knora-api:Resource .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |     anything:hasDecimal knora-api:objectType xsd:decimal .
+          |
+          |     ?decimal a xsd:decimal .
+          |
+          |     FILTER(?decimal > "2"^^xsd:decimal)
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ThingBiggerThanDecimal.jsonld", anythingUser1)
     },
   )
 }
