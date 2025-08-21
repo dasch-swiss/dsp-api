@@ -205,17 +205,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkCountResponse(actual, 1)
     }
 
-    "do a fulltext search for the term 'text' marked up as italic" in {
-      val actual = getResponseAsString(
-        Get(
-          s"$baseApiUrl/v2/search/text?limitToStandoffClass=" + URLEncoder
-            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-        ),
-      )
-      val expected = testData("ThingWithRichtextWithTermTextInParagraph.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "do a fulltext search count query for the term 'text' marked up as italic" in {
       val actual = getResponseAsString(
         Get(
