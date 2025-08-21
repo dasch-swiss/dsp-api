@@ -1218,5 +1218,32 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "LanguageFulltextSearch.jsonld", anythingUser1)
     },
+    test("search for a book whose title contains 'Zeit' using the regex function") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |CONSTRUCT {
+          |
+          |   ?mainRes knora-api:isMainResource true .
+          |
+          |   ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
+          |
+          |} WHERE {
+          |
+          |   ?mainRes a knora-api:Resource .
+          |
+          |   ?mainRes a <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book> .
+          |
+          |
+          |   ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
+          |   <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+          |   ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
+          |
+          |   FILTER regex(?propVal0, "Zeit", "i")
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
+    },
   )
 }
