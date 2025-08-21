@@ -376,7 +376,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |} ORDER BY ?seqnum
           |""".stripMargin
-      verifyQueryResult(query, "pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonLd")
+      verifyQueryResult(query, "PagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld")
     },
     test("perform a Gravsearch query for the pages of a book and return them ordered by their seqnum") {
       val query =
