@@ -12,6 +12,7 @@ import zio.test.*
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointsGetSearchE2ESpec.suite
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfModel
@@ -68,6 +69,17 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
     actual   <- response.assert200.mapAttempt(RdfModel.fromJsonLD)
     expected <- loadFile(expectedFile).mapAttempt(RdfModel.fromJsonLD)
   } yield assertTrue(actual == expected)
+
+  private def verifySearchCount(
+    searchTerm: String,
+    expectedCount: Int,
+    user: Option[User] = None,
+    f: RequestUpdate[JsonLDDocument] = identity,
+  ) = for {
+    response    <- TestApiClient.getJsonLdDocument(uri"/v2/search/count/$searchTerm", user, f)
+    jsonLd      <- response.assert200
+    actualCount <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
+  } yield assertTrue(actualCount == expectedCount)
 
   override def e2eSpec =
     suite("SearchEndpoints")(
@@ -141,24 +153,13 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
             )
         },
       ),
-      suite("GET /v2/search/count")(
+      suite("GET ")(
         test("perform a count query for a fulltext search for 'Narr'") {
-          TestApiClient
-            .getJsonLdDocument(uri"/v2/search/count/Narr")
-            .flatMap(assert200)
-            .flatMap(getCount)
-            .map(actual => assertTrue(actual == 136))
+          verifySearchCount("Narr", 136)
         },
         test("perform a count query for a fulltext search for 'Dinge'") {
-          TestApiClient
-            .getJsonLdDocument(uri"/v2/search/count/Dinge", anythingUser1)
-            .flatMap(assert200)
-            .flatMap(getCount)
-            .map(actual => assertTrue(actual == 1))
+          verifySearchCount("Dinge", 1, Some(anythingUser1))
         },
       ),
     )
-
-  private def getCount(jsonLd: JsonLDDocument) =
-    ZIO.fromEither(jsonLd.body.getRequiredInt("http://schema.org/numberOfItems"))
 }

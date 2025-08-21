@@ -111,23 +111,25 @@ final case class TestApiClient(
       )
       request.send(backend)
     }
-  def getJsonLdDocument(relativeUri: Uri): Task[Response[Either[String, JsonLDDocument]]] =
-    basicRequest
-      .get(relativeUri)
-      .contentType(MediaType.unsafeApply("application", "ld+json"))
-      .response(asJsonLdDocument)
-      .send(backend)
 
-  def getJsonLdDocument(relativeUri: Uri, user: User): Task[Response[Either[String, JsonLDDocument]]] =
-    jwtFor(user).flatMap { jwt =>
+  def getJsonLdDocument(
+    relativeUri: Uri,
+    user: Option[User],
+    update: RequestUpdate[JsonLDDocument],
+  ): Task[Response[Either[String, JsonLDDocument]]] = {
+    val request: Request[Either[String, JsonLDDocument]] = update(
       basicRequest
         .get(relativeUri)
         .contentType(MediaType.unsafeApply("application", "ld+json"))
-        .auth
-        .bearer(jwt)
-        .response(asJsonLdDocument)
-        .send(backend)
-    }
+        .response(asJsonLdDocument),
+    )
+    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+  }
+
+  private def addAuthIfNeeded[A](user: Option[User], request: Request[Either[String, A]]) = user match {
+    case Some(u) => jwtFor(u).map(jwt => request.auth.bearer(jwt))
+    case None    => ZIO.succeed(request)
+  }
 
   def postJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,
@@ -172,18 +174,18 @@ final case class TestApiClient(
   def postJsonLdDocument(
     relativeUri: Uri,
     jsonLdBody: String,
-    user: User,
-  ): Task[Response[Either[String, JsonLDDocument]]] =
-    jwtFor(user).flatMap { jwt =>
+    user: Option[User],
+    update: RequestUpdate[JsonLDDocument],
+  ): Task[Response[Either[String, JsonLDDocument]]] = {
+    val request: Request[Either[String, JsonLDDocument]] = update(
       basicRequest
         .post(relativeUri)
         .body(jsonLdBody)
         .contentType(MediaType.unsafeApply("application", "ld+json"))
-        .auth
-        .bearer(jwt)
-        .response(asJsonLdDocument)
-        .send(backend)
-    }
+        .response(asJsonLdDocument),
+    )
+    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+  }
 
   def postMultiPart[A: JsonDecoder](
     relativeUri: Uri,
@@ -302,13 +304,19 @@ object TestApiClient {
     ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri, f))
 
   def getJsonLdDocument(relativeUri: Uri): ZIO[TestApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.getJsonLdDocument(relativeUri))
+    getJsonLdDocument(relativeUri, None, r => r)
 
   def getJsonLdDocument(
     relativeUri: Uri,
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.getJsonLdDocument(relativeUri, user))
+    getJsonLdDocument(relativeUri, Some(user), r => r)
+
+  def getJsonLdDocument(
+    relativeUri: Uri,
+    user: Option[User],
+    update: RequestUpdate[JsonLDDocument],
+  ) = ZIO.serviceWithZIO[TestApiClient](_.getJsonLdDocument(relativeUri, user, update))
 
   def getJsonLd(relativeUri: Uri, user: User): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri, user))
@@ -345,7 +353,14 @@ object TestApiClient {
     jsonLdBody: String,
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.postJsonLdDocument(relativeUri, jsonLdBody, user))
+    ZIO.serviceWithZIO[TestApiClient](_.postJsonLdDocument(relativeUri, jsonLdBody, Some(user), r => r))
+
+  def postJsonLdDocument(
+    relativeUri: Uri,
+    jsonLdBody: String,
+    user: Option[User] = None,
+    update: RequestUpdate[JsonLDDocument] = identity,
+  ) = ZIO.serviceWithZIO[TestApiClient](_.postJsonLdDocument(relativeUri, jsonLdBody, user, update))
 
   def putJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,
