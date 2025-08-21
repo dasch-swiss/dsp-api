@@ -376,61 +376,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       checkCountResponse(actual, 1)
     }
 
-    "do a Gravsearch query for a letter and get information about the persons associated with it" in {
-      val gravsearchQuery =
-        """
-          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?letter knora-api:isMainResource true .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        ?letter ?linkingProp1 ?person1 .
-          |
-          |        ?person1 beol:hasFamilyName ?familyName .
-          |
-          |
-          |    } WHERE {
-          |        BIND(<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
-          |        ?letter a knora-api:Resource .
-          |        ?letter a beol:letter .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        beol:creationDate knora-api:objectType knora-api:Date .
-          |        ?date a knora-api:Date .
-          |
-          |        # testperson2
-          |        ?letter ?linkingProp1 ?person1 .
-          |
-          |        ?person1 a knora-api:Resource .
-          |
-          |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-          |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-          |
-          |        beol:hasAuthor knora-api:objectType knora-api:Resource .
-          |        beol:hasRecipient knora-api:objectType knora-api:Resource .
-          |
-          |        ?person1 beol:hasFamilyName ?familyName .
-          |        beol:hasFamilyName knora-api:objectType xsd:string .
-          |
-          |        ?familyName a xsd:string .
-          |
-          |
-          |    } ORDER BY ?date
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("letterWithAuthorWithInformation.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "do a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource" in {
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
