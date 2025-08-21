@@ -153,20 +153,27 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
             )
         },
       ),
-      suite("GET ")(
+      suite("GET /v2/search/count/:term")(
         test("perform a count query for a fulltext search for 'Narr'") {
           verifySearchCount("Narr", 136)
         },
         test("perform a count query for a fulltext search for 'Dinge'") {
           verifySearchCount("Dinge", 1, Some(anythingUser1))
         },
-        test( "do a fulltext search count query for the term 'text' marked up as a paragraph"){
+        test("do a fulltext search count query for the term 'text' marked up as a paragraph") {
           verifySearchCount(
             "text",
             1,
             f = addQueryParam("limitToStandoffClass", "http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag"),
           )
-        }
+        },
+        test("do a fulltext search count query for the term 'text' marked up as italic") {
+          verifySearchCount(
+            "text",
+            1,
+            f = addQueryParam("limitToStandoffClass", "http://api.knora.org/ontology/standoff/v2#StandoffItalicTag"),
+          )
+        },
       ),
     )
 }
