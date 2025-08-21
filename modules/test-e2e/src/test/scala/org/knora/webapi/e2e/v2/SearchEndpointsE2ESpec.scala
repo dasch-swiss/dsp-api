@@ -2434,7 +2434,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
           HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
         ),
       )
-      val expected = testData("pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld")
+      val expected = testData("PagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld")
       compareJSONLDForResourcesResponse(expected, actual)
     }
 
@@ -4259,7 +4259,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       val actual = getResponseAsString(
         Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
       )
-      val expected = testData("pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld")
+      val expected = testData("PagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld")
       compareJSONLDForResourcesResponse(expected, actual)
     }
 
