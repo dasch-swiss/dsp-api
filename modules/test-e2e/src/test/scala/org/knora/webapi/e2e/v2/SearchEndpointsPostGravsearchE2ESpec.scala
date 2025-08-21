@@ -1142,5 +1142,29 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
                 """.stripMargin
       verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
     },
+    test("search for an anything:Thing with a list value") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |    CONSTRUCT {
+          |        ?thing knora-api:isMainResource true .
+          |
+          |        ?thing anything:hasListItem ?listItem .
+          |
+          |    } WHERE {
+          |        ?thing a knora-api:Resource .
+          |
+          |        ?thing anything:hasListItem ?listItem .
+          |
+          |        anything:hasListItem knora-api:objectType knora-api:ListNode .
+          |
+          |        ?listItem a knora-api:ListNode .
+          |
+          |    } OFFSET 0
+                """.stripMargin
+      verifyQueryResult(query, "ThingWithListValue.jsonld", anythingUser1)
+    },
   )
 }
