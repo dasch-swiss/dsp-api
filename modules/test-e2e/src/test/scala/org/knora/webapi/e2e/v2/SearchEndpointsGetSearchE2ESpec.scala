@@ -8,10 +8,8 @@ package org.knora.webapi.e2e.v2
 import sttp.client4.UriContext
 import zio.*
 import zio.test.*
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
-import org.knora.webapi.e2e.v2.SearchEndpointsGetSearchE2ESpec.suite
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
@@ -77,6 +75,17 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
     jsonLd      <- response.assert200
     actualCount <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
   } yield assertTrue(actualCount == expectedCount)
+
+  private def verifySearchByLabel(
+    label: String,
+    expectedFile: String,
+    user: Option[User] = None,
+    f: RequestUpdate[String] = identity,
+  ) = for {
+    response <- TestApiClient.getJsonLd(uri"/v2/searchbylabel/$label", user, f)
+    actual   <- response.assert200.mapAttempt(RdfModel.fromJsonLD)
+    expected <- loadFile(expectedFile).mapAttempt(RdfModel.fromJsonLD)
+  } yield assertTrue(actual == expected)
 
   override def e2eSpec =
     suite("SearchEndpoints")(
@@ -169,6 +178,18 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
             "text",
             1,
             f = addQueryParam("limitToStandoffClass", "http://api.knora.org/ontology/standoff/v2#StandoffItalicTag"),
+          )
+        },
+      ),
+      suite("GET /v2/searchbylabel/:label")(
+        test("perform a searchbylabel search for the label 'Treasure Island' with search string 'Treasure Island'") {
+          verifySearchByLabel(
+            "Treasure Island",
+            "SearchbylabelSimple.jsonld",
+            None,
+            addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book")
+              andThen
+                addQueryParam("offset", "0"),
           )
         },
       ),
