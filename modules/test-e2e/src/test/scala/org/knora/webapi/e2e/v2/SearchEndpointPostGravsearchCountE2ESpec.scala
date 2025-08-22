@@ -8,10 +8,11 @@ package org.knora.webapi.e2e.v2
 import sttp.client4.UriContext
 import zio.ZIO
 import zio.test.*
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingUser1
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
@@ -43,14 +44,14 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
     ),
   )
 
-  private def verifySearchCountResult(query: String, expectedCount: Int) = for {
-    response    <- TestApiClient.postJsonLdDocument(uri"/v2/searchextended/count", query)
+  private def verifySearchCountResult(query: String, expectedCount: Int, user: Option[User] = None) = for {
+    response    <- TestApiClient.postJsonLdDocument(uri"/v2/searchextended/count", query, user)
     jsonLd      <- response.assert200
     actualCount <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
   } yield assertTrue(actualCount == expectedCount)
 
   override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended/count")(
-    suite("without type inference")(
+    suite("Without type inference")(
       test("perform a Gravsearch count query for an anything:Thing with an optional date used as a sort criterion") {
         val query =
           """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -226,7 +227,7 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
         verifySearchCountResult(query, 1)
       },
     ),
-    suite("with type inference")(
+    suite("With type inference")(
       test(
         "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (with type inference)",
       ) {
@@ -446,6 +447,43 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
              |}
              |ORDER BY (?int)""".stripMargin
         verifySearchCountResult(query, 1)
+      },
+      test("count anything:Thing that doesn't have a boolean property (MINUS)") {
+        val query =
+          """
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |
+            |CONSTRUCT {
+            |  ?thing knora-api:isMainResource true .
+            |} WHERE {
+            |  ?thing a anything:Thing .
+            |  ?thing a knora-api:Resource .
+            |  MINUS {
+            |    ?thing anything:hasBoolean ?bool .
+            |  }
+            |}
+            |""".stripMargin
+        verifySearchCountResult(query, 52, Some(anythingUser1))
+      },
+      test("count anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)") {
+        val query =
+          """
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |
+            |CONSTRUCT {
+            |  ?thing knora-api:isMainResource true .
+            |} WHERE {
+            |  ?thing a anything:Thing .
+            |  ?thing a knora-api:Resource .
+            |  FILTER NOT EXISTS {
+            |    ?thing anything:hasBoolean ?bool .
+            |  }
+            |}
+            |
+            """.stripMargin
+        verifySearchCountResult(query, 50, Some(anythingUser1))
       },
     ),
   )

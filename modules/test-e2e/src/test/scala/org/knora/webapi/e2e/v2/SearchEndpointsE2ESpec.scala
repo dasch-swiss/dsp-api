@@ -4981,65 +4981,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expected, actual)
     }
 
-    "count anything:Thing that doesn't have a boolean property (MINUS)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |  ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |  ?thing a anything:Thing .
-          |  ?thing a knora-api:Resource .
-          |  MINUS {
-          |    ?thing anything:hasBoolean ?bool .
-          |  }
-          |}
-          |
-        """.stripMargin
-
-      val actual = getResponseAsJsonLD(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val numberOfResults = actual.body
-        .getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
-        .fold(e => throw AssertionError(e), identity)
-      assert(numberOfResults != 0)
-    }
-
-    "count anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |  ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |  ?thing a anything:Thing .
-          |  ?thing a knora-api:Resource .
-          |  FILTER NOT EXISTS {
-          |    ?thing anything:hasBoolean ?bool .
-          |  }
-          |}
-          |
-            """.stripMargin
-      val actual = getResponseAsJsonLD(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val numberOfResults = actual.body
-        .getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
-        .fold(e => throw AssertionError(e), identity)
-      assert(numberOfResults != 0)
-    }
-
     "search for anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)" in {
       val gravsearchQuery =
         """
