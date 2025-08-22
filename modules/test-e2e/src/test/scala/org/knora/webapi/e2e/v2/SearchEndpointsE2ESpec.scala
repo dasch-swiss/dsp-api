@@ -4882,24 +4882,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expected, actual)
     }
 
-    "perform a searchbylabel search for a label that starts with a slash `/`" in {
-      val searchValueUriEncoded: String = "%5C%2Fslashes"
-      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
-        "http://0.0.0.0:3333/ontology/0001/books/v2#Book",
-        "UTF-8",
-      )
-      val offset: Int = 0
-
-      val request =
-        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
-          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
-          "&offset=" + offset
-
-      val actual   = getResponseAsString(Get(request))
-      val expected = testData("SearchbylabelSlashes.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "perform a searchbylabel search for the label 'Treasure Island' but providing the wrong class" in {
       val searchValueUriEncoded: String = URLEncoder.encode(
         "Treasure",

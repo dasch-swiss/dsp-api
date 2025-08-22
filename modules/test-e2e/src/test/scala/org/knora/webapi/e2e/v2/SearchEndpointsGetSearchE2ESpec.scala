@@ -83,10 +83,14 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
     user: Option[User] = None,
     f: RequestUpdate[String] = identity,
   ) = for {
-    response <- TestApiClient.getJsonLd(uri"/v2/searchbylabel/$label", user, f)
-    actual   <- response.assert200.mapAttempt(RdfModel.fromJsonLD)
+    actual   <- searchByLabel(label, user, f)
     expected <- loadFile(expectedFile).mapAttempt(RdfModel.fromJsonLD)
   } yield assertTrue(actual == expected)
+
+  private def searchByLabel(label: String, user: Option[User] = None, f: RequestUpdate[String]) = for {
+    response <- TestApiClient.getJsonLd(uri"/v2/searchbylabel/$label", user, f)
+    model    <- response.assert200.mapAttempt(RdfModel.fromJsonLD)
+  } yield model
 
   override def e2eSpec =
     suite("SearchEndpoints")(
@@ -188,9 +192,8 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
             "Treasure Island",
             "SearchbylabelSimple.jsonld",
             None,
-            addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book")
-              andThen
-                addQueryParam("offset", "0"),
+            addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book") andThen
+              addQueryParam("offset", "0"),
           )
         },
         test("perform a searchbylabel search for the label 'Treasure Island' with search string 'Treasure'") {
@@ -198,22 +201,28 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
             "Treasure",
             "SearchbylabelSimple.jsonld",
             None,
-            addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book")
-              andThen
-                addQueryParam("offset", "0"),
+            addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book") andThen
+              addQueryParam("offset", "0"),
           )
         },
         test("perform a searchbylabel search for a label with special characters") {
-          // the characters that have a special meaning in the lucene query parser syntax need to be escaped like so:
-          val label =
+          val label = // the characters that have a special meaning in the lucene query parser syntax need to be escaped like so:
             """this .,\:; is \+ a \- test & with \\ special \( characters \) in \[\] \{\} | the \|\| label\?\!"""
           verifySearchByLabel(
             label,
             "SearchbylabelSpecialCharacters.jsonld",
             None,
-            addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book")
-              andThen
-                addQueryParam("offset", "0"),
+            addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book") andThen
+              addQueryParam("offset", "0"),
+          )
+        },
+        test("perform a searchbylabel search for a label that starts with a slash `/`") {
+          verifySearchByLabel(
+            """\/slashes""",
+            "SearchbylabelSlashes.jsonld",
+            None,
+            addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book") andThen
+              addQueryParam("offset", "0"),
           )
         },
       ),
