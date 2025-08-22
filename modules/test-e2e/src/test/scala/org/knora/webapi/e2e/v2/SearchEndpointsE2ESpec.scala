@@ -4882,29 +4882,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expected, actual)
     }
 
-    "perform a searchbylabel search for a label with special characters" in {
-      // the characters that have a special meaning in the lucene query parser syntax need to be escaped like so:
-      // this .,\:; is \+ a \- test & with \\ special \( characters \) in \[\] \{\} | the \|\| label\?\!
-      // then, the search value needs to be encoded (a useful tool for this is: https://meyerweb.com/eric/tools/dencoder/)
-      val searchValueUriEncoded =
-        "this%20.%2C%5C%3A%3B%20is%20%5C%2B%20a%20%5C-%20test%20%26%20with%20%5C%5C%20special%20%5C(%20characters%20%5C)%20in%20%5C%5B%5C%5D%20%5C%7B%5C%7D%20%7C%20the%20%5C%7C%5C%7C%20label%5C%3F%5C!"
-
-      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
-        "http://0.0.0.0:3333/ontology/0001/books/v2#Book",
-        "UTF-8",
-      )
-      val offset: Int = 0
-
-      val request =
-        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
-          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
-          "&offset=" + offset
-
-      val actual   = getResponseAsString(Get(request))
-      val expected = testData("SearchbylabelSpecialCharacters.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "perform a searchbylabel search for a label that starts with a slash `/`" in {
       val searchValueUriEncoded: String = "%5C%2Fslashes"
       val limitToResourceClassUriEncoded: String = URLEncoder.encode(
