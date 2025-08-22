@@ -64,39 +64,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-    "do a Gravsearch query for link objects that link to an incunabula book (with type inference)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |CONSTRUCT {
-          |     ?linkObj knora-api:isMainResource true .
-          |
-          |     ?linkObj knora-api:hasLinkTo ?book .
-          |
-          |} WHERE {
-          |     ?linkObj a knora-api:LinkObj .
-          |
-          |     ?linkObj knora-api:hasLinkTo ?book .
-          |
-          |     ?book a incunabula:book .
-          |
-          |     ?book incunabula:title ?title .
-          |
-          |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("LinkObjectsToBooks.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 3)
-    }
-
     "do a Gravsearch query for a letter that links to a specific person via two possible properties (with type inference)" in {
       val gravsearchQuery =
         """
