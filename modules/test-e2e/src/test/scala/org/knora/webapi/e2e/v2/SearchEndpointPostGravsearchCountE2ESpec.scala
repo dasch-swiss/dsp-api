@@ -279,6 +279,30 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
         // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
         verifySearchCountResult(query, 18)
       },
+      test("do a Gravsearch count query that searches for a list node (with type inference)") {
+        val query =
+          """
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+            |
+            |CONSTRUCT {
+            |
+            |?mainRes knora-api:isMainResource true .
+            |
+            |?mainRes anything:hasListItem ?propVal0 .
+            |
+            |} WHERE {
+            |
+            |?mainRes anything:hasListItem ?propVal0 .
+            |
+            |FILTER(?propVal0 = "Tree list node 02"^^knora-api:ListNode)
+            |
+            |}
+            |
+            |OFFSET 0
+            |""".stripMargin
+        verifySearchCountResult(query, 1)
+      },
     ),
   )
 }
