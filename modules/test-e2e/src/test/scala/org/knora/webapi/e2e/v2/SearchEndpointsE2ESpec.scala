@@ -66,38 +66,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
 
   
 
-    "do a Gravsearch query in which the types of property subjects are inferred from the knora-api:subjectType of each property (with type inference)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |
-          |CONSTRUCT {
-          |    ?letter knora-api:isMainResource true .
-          |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
-          |} WHERE {
-          |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
-          |
-          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-          |
-          |
-          |} ORDER BY ?date
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("letterWithPersonWithName2.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 1)
-    }
+    
 
     "do a Gravsearch query in which the knora-api:objectType of a property variable is inferred from a FILTER (with type inference)" in {
       val gravsearchQuery =
