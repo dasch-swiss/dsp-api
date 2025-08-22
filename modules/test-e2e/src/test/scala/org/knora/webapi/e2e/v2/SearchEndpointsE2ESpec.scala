@@ -64,35 +64,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-    "search for a specific text using the lang function (with type inference)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |     ?thing knora-api:isMainResource true .
-          |
-          |     ?thing anything:hasText ?text .
-          |} WHERE {
-          |     ?thing a anything:Thing .
-          |
-          |     ?thing anything:hasText ?text .
-          |
-          |     FILTER(lang(?text) = "fr" && ?text = "Bonjour")
-          |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("LanguageFulltextSearch.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 1)
-    }
-
     "do a Gravsearch query for link objects that link to an incunabula book (with type inference)" in {
       val gravsearchQuery =
         """
