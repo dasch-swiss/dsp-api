@@ -1057,5 +1057,28 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "ThingWithBooleanOrDecimal.jsonld", anythingUser1)
     },
+    test("search for a book whose title contains 'Zeit' using the regex function (with type inference)") {
+      val query =
+        """
+          |REFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |REFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |ONSTRUCT {
+          |
+          |   ?mainRes knora-api:isMainResource true .
+          |
+          |   ?mainRes incunabula:title ?propVal0 .
+          |
+          |} WHERE {
+          |
+          |   ?mainRes a incunabula:book .
+          |
+          |   ?mainRes incunabula:title ?propVal0 .
+          |
+          |   FILTER regex(?propVal0, "Zeit", "i")
+          |
+          |}""".stripMargin
+      verifyQueryResult(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
+    },
   )
 }
