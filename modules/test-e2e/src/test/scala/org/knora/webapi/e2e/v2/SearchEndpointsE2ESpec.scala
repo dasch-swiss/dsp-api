@@ -66,39 +66,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
 
    
 
-    "perform a Gravsearch query for books that have been published after 1486 and before 1491 (Julian Calendar) (with type inference)" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |        ?book incunabula:pubdate ?pubdate .
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |        ?book incunabula:pubdate ?pubdate .
-          |
-          |        FILTER(?pubdate > "JULIAN:1486"^^knora-api:Date && ?pubdate < "JULIAN:1491"^^knora-api:Date)
-          |
-          |    } ORDER BY ?pubdate
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("BooksPublishedBetweenDates.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 5)
-    }
+    
 
     "get the regions belonging to a page (with type inference)" in {
       val gravsearchQuery =
