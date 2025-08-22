@@ -50,131 +50,181 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
   } yield assertTrue(actualCount == expectedCount)
 
   override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended/count")(
-    test("perform a Gravsearch count query for an anything:Thing with an optional date used as a sort criterion") {
-      val query =
-        """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |  ?thing knora-api:isMainResource true .
-          |  ?thing anything:hasDate ?date .
-          |} WHERE {
-          |  ?thing a knora-api:Resource .
-          |  ?thing a anything:Thing .
-          |
-          |  OPTIONAL {
-          |    ?thing anything:hasDate ?date .
-          |    anything:hasDate knora-api:objectType knora-api:Date .
-          |    ?date a knora-api:Date .
-          |  }
-          |
-          |  MINUS {
-          |    ?thing anything:hasInteger ?intVal .
-          |    anything:hasInteger knora-api:objectType xsd:integer .
-          |    ?intVal a xsd:integer .
-          |    FILTER(?intVal = 123454321 || ?intVal = 999999999)
-          |  }
-          |}
-          |ORDER BY DESC(?date)
-          |""".stripMargin
-      verifySearchCountResult(query, 44)
-    },
-    test(
-      "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer",
-    ) {
-      val query =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |
-          |    ?book incunabula:title ?title .
-          |
-          |} WHERE {
-          |
-          |    ?book a incunabula:book .
-          |    ?book a knora-api:Resource .
-          |
-          |    ?book incunabula:title ?title .
-          |    incunabula:title knora-api:objectType xsd:string .
-          |
-          |    ?title a xsd:string .
-          |
-          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |}
-          |""".stripMargin
-      verifySearchCountResult(query, 2)
-    },
-    test("perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens'") {
-      val query =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |
-          |    ?book incunabula:title ?title .
-          |
-          |} WHERE {
-          |
-          |    ?book a incunabula:book .
-          |    ?book a knora-api:Resource .
-          |
-          |    ?book incunabula:title ?title .
-          |    incunabula:title knora-api:objectType xsd:string .
-          |
-          |    ?title a xsd:string .
-          |
-          |    FILTER(?title != "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |}
-          |""".stripMargin
-      // 19 - 2 = 18 :-)
-      // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
-      // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
-      // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
-      verifySearchCountResult(query, 18)
-    },
-    test("do a Gravsearch count query for a letter that links to a specific person via two possible properties") {
-      val query =
-        """
-          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?letter knora-api:isMainResource true .
-          |
-          |    ?letter beol:creationDate ?date .
-          |
-          |    ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
-          |
-          |
-          |} WHERE {
-          |    ?letter a knora-api:Resource .
-          |    ?letter a beol:letter .
-          |
-          |    ?letter beol:creationDate ?date .
-          |
-          |    beol:creationDate knora-api:objectType knora-api:Date .
-          |    ?date a knora-api:Date .
-          |
-          |    # testperson2
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
-          |
-          |    <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
-          |
-          |    ?linkingProp1 knora-api:objectType knora-api:Resource .
-          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-          |
-          |    beol:hasAuthor knora-api:objectType knora-api:Resource .
-          |    beol:hasRecipient knora-api:objectType knora-api:Resource .
-          |
-          |}
-          |ORDER BY ?date
-          |""".stripMargin
-      verifySearchCountResult(query, 1)
-    },
+    suite("without type inference")(
+      test("perform a Gravsearch count query for an anything:Thing with an optional date used as a sort criterion") {
+        val query =
+          """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+            |
+            |CONSTRUCT {
+            |  ?thing knora-api:isMainResource true .
+            |  ?thing anything:hasDate ?date .
+            |} WHERE {
+            |  ?thing a knora-api:Resource .
+            |  ?thing a anything:Thing .
+            |
+            |  OPTIONAL {
+            |    ?thing anything:hasDate ?date .
+            |    anything:hasDate knora-api:objectType knora-api:Date .
+            |    ?date a knora-api:Date .
+            |  }
+            |
+            |  MINUS {
+            |    ?thing anything:hasInteger ?intVal .
+            |    anything:hasInteger knora-api:objectType xsd:integer .
+            |    ?intVal a xsd:integer .
+            |    FILTER(?intVal = 123454321 || ?intVal = 999999999)
+            |  }
+            |}
+            |ORDER BY DESC(?date)
+            |""".stripMargin
+        verifySearchCountResult(query, 44)
+      },
+      test(
+        "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer",
+      ) {
+        val query =
+          """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |
+            |CONSTRUCT {
+            |    ?book knora-api:isMainResource true .
+            |
+            |    ?book incunabula:title ?title .
+            |
+            |} WHERE {
+            |
+            |    ?book a incunabula:book .
+            |    ?book a knora-api:Resource .
+            |
+            |    ?book incunabula:title ?title .
+            |    incunabula:title knora-api:objectType xsd:string .
+            |
+            |    ?title a xsd:string .
+            |
+            |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+            |
+            |}
+            |""".stripMargin
+        verifySearchCountResult(query, 2)
+      },
+      test("perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens'") {
+        val query =
+          """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |
+            |CONSTRUCT {
+            |    ?book knora-api:isMainResource true .
+            |
+            |    ?book incunabula:title ?title .
+            |
+            |} WHERE {
+            |
+            |    ?book a incunabula:book .
+            |    ?book a knora-api:Resource .
+            |
+            |    ?book incunabula:title ?title .
+            |    incunabula:title knora-api:objectType xsd:string .
+            |
+            |    ?title a xsd:string .
+            |
+            |    FILTER(?title != "Zeitglöcklein des Lebens und Leidens Christi")
+            |
+            |}
+            |""".stripMargin
+        // 19 - 2 = 18 :-)
+        // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
+        // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
+        // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
+        verifySearchCountResult(query, 18)
+      },
+      test("do a Gravsearch count query for a letter that links to a specific person via two possible properties") {
+        val query =
+          """
+            |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |
+            |CONSTRUCT {
+            |    ?letter knora-api:isMainResource true .
+            |
+            |    ?letter beol:creationDate ?date .
+            |
+            |    ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+            |
+            |
+            |} WHERE {
+            |    ?letter a knora-api:Resource .
+            |    ?letter a beol:letter .
+            |
+            |    ?letter beol:creationDate ?date .
+            |
+            |    beol:creationDate knora-api:objectType knora-api:Date .
+            |    ?date a knora-api:Date .
+            |
+            |    # testperson2
+            |    ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+            |
+            |    <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
+            |
+            |    ?linkingProp1 knora-api:objectType knora-api:Resource .
+            |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+            |
+            |    beol:hasAuthor knora-api:objectType knora-api:Resource .
+            |    beol:hasRecipient knora-api:objectType knora-api:Resource .
+            |
+            |}
+            |ORDER BY ?date
+            |""".stripMargin
+        verifySearchCountResult(query, 1)
+      },
+      test("do a Gravsearch count query for a letter that links to a person with a specified name") {
+        val query =
+          """
+            |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |
+            |CONSTRUCT {
+            |    ?letter knora-api:isMainResource true .
+            |
+            |    ?letter beol:creationDate ?date .
+            |
+            |    ?letter ?linkingProp1  ?person1 .
+            |
+            |    ?person1 beol:hasFamilyName ?name .
+            |
+            |} WHERE {
+            |    ?letter a knora-api:Resource .
+            |    ?letter a beol:letter .
+            |
+            |    ?letter beol:creationDate ?date .
+            |
+            |    beol:creationDate knora-api:objectType knora-api:Date .
+            |    ?date a knora-api:Date .
+            |
+            |    ?letter ?linkingProp1 ?person1 .
+            |
+            |    ?person1 a knora-api:Resource .
+            |
+            |    ?linkingProp1 knora-api:objectType knora-api:Resource .
+            |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+            |
+            |    beol:hasAuthor knora-api:objectType knora-api:Resource .
+            |    beol:hasRecipient knora-api:objectType knora-api:Resource .
+            |
+            |    ?person1 beol:hasFamilyName ?name .
+            |
+            |    beol:hasFamilyName knora-api:objectType xsd:string .
+            |    ?name a xsd:string .
+            |
+            |    FILTER(?name = "Meier")
+            |
+            |
+            |}
+            |ORDER BY ?date
+            |""".stripMargin
+        verifySearchCountResult(query, 1)
+      },
+    ),
   )
 }
