@@ -576,25 +576,52 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
           |
-          |        ?book incunabula:title ?title .
+          |    ?book incunabula:title ?title .
           |
-          |        ?book incunabula:pubdate ?pubdate .
-          |    } WHERE {
+          |    ?book incunabula:pubdate ?pubdate .
+          |} WHERE {
           |
-          |        ?book a incunabula:book .
+          |    ?book a incunabula:book .
           |
-          |        ?book incunabula:title ?title .
+          |    ?book incunabula:title ?title .
           |
-          |        ?book incunabula:pubdate ?pubdate .
+          |    ?book incunabula:pubdate ?pubdate .
           |
-          |        FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date)
+          |    FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date)
           |
-          |    } ORDER BY ?pubdate
-                """.stripMargin
+          |} ORDER BY ?pubdate
+          |""".stripMargin
       verifyQueryResult(query, "BooksPublishedOnDate.jsonld")
+    },
+    test(
+      "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) (with type inference)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?book incunabula:pubdate ?pubdate .
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?book incunabula:pubdate ?pubdate .
+          |
+          |    FILTER(?pubdate != "JULIAN:1497-03-01"^^knora-api:Date)
+          |
+          |} ORDER BY ?pubdate
+          |""".stripMargin
+      verifyQueryResult(query, "BooksNotPublishedOnDate.jsonld")
     },
   )
 }
