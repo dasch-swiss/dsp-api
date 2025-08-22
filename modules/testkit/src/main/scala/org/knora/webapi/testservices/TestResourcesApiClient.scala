@@ -45,7 +45,7 @@ final case class TestResourcesApiClient(private val apiClient: TestApiClient) {
   }
 
   def getResource(resourceIri: ResourceIri): Task[Response[Either[String, JsonLDDocument]]] =
-    apiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri")
+    apiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri", None, r => r)
 }
 
 object TestResourcesApiClient {

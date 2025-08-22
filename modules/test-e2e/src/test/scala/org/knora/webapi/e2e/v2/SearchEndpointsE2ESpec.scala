@@ -12,7 +12,6 @@ import org.xmlunit.diff.Diff
 import spray.json.*
 import zio.ZIO
 
-import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
 
@@ -88,293 +87,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
   "The Search v2 Endpoint" should {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries without type inference
-
-    "perform a Gravsearch count query for an anything:Thing with an optional date used as a sort criterion" in {
-      val gravsearchQuery =
-        """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |  ?thing knora-api:isMainResource true .
-          |  ?thing anything:hasDate ?date .
-          |} WHERE {
-          |  ?thing a knora-api:Resource .
-          |  ?thing a anything:Thing .
-          |
-          |  OPTIONAL {
-          |    ?thing anything:hasDate ?date .
-          |    anything:hasDate knora-api:objectType knora-api:Date .
-          |    ?date a knora-api:Date .
-          |  }
-          |
-          |  MINUS {
-          |    ?thing anything:hasInteger ?intVal .
-          |    anything:hasInteger knora-api:objectType xsd:integer .
-          |    ?intVal a xsd:integer .
-          |    FILTER(?intVal = 123454321 || ?intVal = 999999999)
-          |  }
-          |}
-          |ORDER BY DESC(?date)
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      checkCountResponse(actual, 44)
-    }
-
-    "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |        ?book a knora-api:Resource .
-          |
-          |        ?book incunabula:title ?title .
-          |        incunabula:title knora-api:objectType xsd:string .
-          |
-          |        ?title a xsd:string .
-          |
-          |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      checkCountResponse(actual, 2)
-    }
-
-    "perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens'" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |        ?book a knora-api:Resource .
-          |
-          |        ?book incunabula:title ?title .
-          |        incunabula:title knora-api:objectType xsd:string .
-          |
-          |        ?title a xsd:string .
-          |
-          |        FILTER(?title != "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      // 19 - 2 = 18 :-)
-      // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
-      // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
-      // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
-      checkCountResponse(actual, 18)
-    }
-
-    "perform a fulltext search for 'Bonjour'" in {
-      val actual = getResponseAsString(
-        Get(s"$baseApiUrl/v2/search/Bonjour") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("LanguageFulltextSearch.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "do a fulltext search for the term 'text' marked up as a paragraph" in {
-      val actual = getResponseAsString(
-        Get(
-          s"$baseApiUrl/v2/search/text?limitToStandoffClass=" + URLEncoder
-            .encode("http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag", "UTF-8"),
-        ),
-      )
-      val expected = testData("ThingWithRichtextWithTermTextInParagraph.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "do a fulltext search count query for the term 'text' marked up as a paragraph" in {
-      val actual = getResponseAsString(
-        Get(
-          s"$baseApiUrl/v2/search/count/text?limitToStandoffClass=" + URLEncoder
-            .encode("http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag", "UTF-8"),
-        ),
-      )
-      checkCountResponse(actual, 1)
-    }
-
-    "do a fulltext search for the term 'text' marked up as italic" in {
-      val actual = getResponseAsString(
-        Get(
-          s"$baseApiUrl/v2/search/text?limitToStandoffClass=" + URLEncoder
-            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-        ),
-      )
-      val expected = testData("ThingWithRichtextWithTermTextInParagraph.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "do a fulltext search count query for the term 'text' marked up as italic" in {
-      val actual = getResponseAsString(
-        Get(
-          s"$baseApiUrl/v2/search/count/text?limitToStandoffClass=" + URLEncoder
-            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-        ),
-      )
-      checkCountResponse(actual, 1)
-    }
-
-    "do a fulltext search for the terms 'interesting' and 'text' marked up as italic" in {
-      val actual = getResponseAsString(
-        Get(
-          s"$baseApiUrl/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder
-            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-        ),
-      )
-      val expected = testData("ThingWithRichtextWithTermTextInParagraph.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "do a fulltext search count query for the terms 'interesting' and 'text' marked up as italic" in {
-      val actual = getResponseAsString(
-        Get(
-          s"$baseApiUrl/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder
-            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-        ),
-      )
-      checkSearchResponseNumberOfResults(actual, 1)
-    }
-
-    "do a fulltext search for the terms 'interesting' and 'boring' marked up as italic" in {
-      val actual = getResponseAsString(
-        Get(
-          s"$baseApiUrl/v2/search/interesting%20boring?limitToStandoffClass=" + URLEncoder
-            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-        ),
-      )
-      // there is no single italic element that contains both 'interesting' and 'boring':
-      checkSearchResponseNumberOfResults(actual, 0)
-    }
-
-    "do a Gravsearch count query for a letter that links to a specific person via two possible properties" in {
-      val gravsearchQuery =
-        """
-          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?letter knora-api:isMainResource true .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
-          |
-          |
-          |    } WHERE {
-          |        ?letter a knora-api:Resource .
-          |        ?letter a beol:letter .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        beol:creationDate knora-api:objectType knora-api:Date .
-          |        ?date a knora-api:Date .
-          |
-          |        # testperson2
-          |        ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
-          |
-          |        <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
-          |
-          |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-          |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-          |
-          |        beol:hasAuthor knora-api:objectType knora-api:Resource .
-          |        beol:hasRecipient knora-api:objectType knora-api:Resource .
-          |
-          |    } ORDER BY ?date
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      checkCountResponse(actual, 1)
-    }
-
-    "do a Gravsearch count query for a letter that links to a person with a specified name" in {
-      val gravsearchQuery =
-        """
-          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |
-          |    CONSTRUCT {
-          |        ?letter knora-api:isMainResource true .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        ?letter ?linkingProp1  ?person1 .
-          |
-          |        ?person1 beol:hasFamilyName ?name .
-          |
-          |    } WHERE {
-          |        ?letter a knora-api:Resource .
-          |        ?letter a beol:letter .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        beol:creationDate knora-api:objectType knora-api:Date .
-          |        ?date a knora-api:Date .
-          |
-          |        ?letter ?linkingProp1 ?person1 .
-          |
-          |        ?person1 a knora-api:Resource .
-          |
-          |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-          |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-          |
-          |        beol:hasAuthor knora-api:objectType knora-api:Resource .
-          |        beol:hasRecipient knora-api:objectType knora-api:Resource .
-          |
-          |        ?person1 beol:hasFamilyName ?name .
-          |
-          |        beol:hasFamilyName knora-api:objectType xsd:string .
-          |        ?name a xsd:string .
-          |
-          |        FILTER(?name = "Meier")
-          |
-          |
-          |    } ORDER BY ?date
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      checkCountResponse(actual, 1)
-    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
@@ -765,35 +477,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expected, actual)
     }
 
-    "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (with type inference)" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      checkCountResponse(actual, 2)
-    }
-
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer (with type inference)" in {
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -850,39 +533,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       )
       val expected = testData("NotZeitgloeckleinExtendedSearch.jsonld")
       compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens' (with type inference)" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |        FILTER(?title != "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      // 19 - 2 = 18 :-)
-      // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
-      // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
-      // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
-      checkCountResponse(actual, 18)
     }
 
     "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum and the link value (with type inference)" in {
@@ -2365,37 +2015,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expected, actual)
     }
 
-    "do a Gravsearch count query that searches for a list node (with type inference)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |
-          |?mainRes knora-api:isMainResource true .
-          |
-          |?mainRes anything:hasListItem ?propVal0 .
-          |
-          |} WHERE {
-          |
-          |?mainRes anything:hasListItem ?propVal0 .
-          |
-          |FILTER(?propVal0 = "Tree list node 02"^^knora-api:ListNode)
-          |
-          |}
-          |
-          |OFFSET 0
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      checkCountResponse(actual, 1)
-    }
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
 
@@ -2436,44 +2055,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       )
       val expected = testData("thingWithOptionalDateSortedDesc.jsonld")
       compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "perform a Gravsearch count query for an anything:Thing with an optional date used as a sort criterion (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-          |
-          |CONSTRUCT {
-          |  ?thing knora-api:isMainResource true .
-          |  ?thing anything:hasDate ?date .
-          |} WHERE {
-          |
-          |  ?thing a knora-api:Resource .
-          |  ?thing a anything:Thing .
-          |
-          |  OPTIONAL {
-          |    ?thing anything:hasDate ?date .
-          |  }
-          |
-          |  MINUS {
-          |    ?thing anything:hasInteger ?intVal .
-          |    ?intVal knora-api:intValueAsInt 123454321 .
-          |  }
-          |
-          |  MINUS {
-          |    ?thing anything:hasInteger ?intVal .
-          |    ?intVal knora-api:intValueAsInt 999999999 .
-          |  }
-          |}
-          |ORDER BY DESC(?date)
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      checkCountResponse(actual, 44)
     }
 
     "perform a Gravsearch query for an anything:Thing that has an optional decimal value greater than 2 and sort by the decimal value (submitting the complex schema)" in {
@@ -2603,35 +2184,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expected, actual)
     }
 
-    "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |        ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      checkCountResponse(actual, 2)
-    }
-
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer (submitting the complex schema)" in {
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
@@ -2684,41 +2236,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       )
       val expected = testData("NotZeitgloeckleinExtendedSearch.jsonld")
       compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens' (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |        ?title knora-api:valueAsString ?titleStr .
-          |
-          |        FILTER(?titleStr != "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      // 19 - 2 = 18 :-)
-      // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
-      // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
-      // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
-      checkCountResponse(actual, 18)
     }
 
     "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum and the link value (submitting the complex schema)" in {
@@ -4303,37 +3820,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expected, actual)
     }
 
-    "search for a list value that does not refer to a particular list node, performing a count query (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?thing knora-api:isMainResource true .
-          |
-          |        ?thing anything:hasListItem ?listItem .
-          |
-          |    } WHERE {
-          |        ?thing anything:hasListItem ?listItem .
-          |
-          |        FILTER NOT EXISTS {
-          |
-          |         ?listItem knora-api:listValueAsListNode <http://rdfh.ch/lists/0001/treeList02> .
-          |
-          |        }
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
-      )
-      checkCountResponse(actual, 2)
-    }
-
     "search for a list value that refers to a particular list node that has subnodes (submitting the complex schema)" in {
       val gravsearchQuery =
         """
@@ -4954,23 +4440,13 @@ class SearchEndpointsE2ESpec extends E2ESpec {
            |}
            |ORDER BY (?int)""".stripMargin
 
-      val expectedCount = 1
-
-      val actualCount = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      checkCountResponse(actualCount, expectedCount)
-
       val actual = getResponseAsString(
         Post(
           s"$baseApiUrl/v2/searchextended",
           HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
         ),
       )
-      checkSearchResponseNumberOfResults(actual, expectedCount)
+      checkSearchResponseNumberOfResults(actual, 1)
       val expected = testData("ThingFromQueryWithUnion.jsonld")
       compareJSONLDForResourcesResponse(expected, actual)
     }
@@ -5403,164 +4879,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       )
       val expected = testData("LetterNotToSelf.jsonld")
       compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "perform a searchbylabel search for the label 'Treasure Island' with search string 'Treasure Island'" in {
-      val searchValueUriEncoded: String = "Treasure%20Island"
-      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
-        "http://0.0.0.0:3333/ontology/0001/books/v2#Book",
-        "UTF-8",
-      )
-      val offset: Int = 0
-
-      val request =
-        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
-          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
-          "&offset=" + offset
-
-      val actual   = getResponseAsString(Get(request))
-      val expected = testData("SearchbylabelSimple.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "perform a searchbylabel search for the label 'Treasure Island' with search string 'Treasure'" in {
-
-      val searchValueUriEncoded: String = "Treasure"
-      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
-        "http://0.0.0.0:3333/ontology/0001/books/v2#Book",
-        "UTF-8",
-      )
-      val offset: Int = 0
-
-      val request =
-        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
-          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
-          "&offset=" + offset
-
-      val actual   = getResponseAsString(Get(request))
-      val expected = testData("SearchbylabelSimple.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "perform a searchbylabel search for a label with special characters" in {
-      // the characters that have a special meaning in the lucene query parser syntax need to be escaped like so:
-      // this .,\:; is \+ a \- test & with \\ special \( characters \) in \[\] \{\} | the \|\| label\?\!
-      // then, the search value needs to be encoded (a useful tool for this is: https://meyerweb.com/eric/tools/dencoder/)
-      val searchValueUriEncoded =
-        "this%20.%2C%5C%3A%3B%20is%20%5C%2B%20a%20%5C-%20test%20%26%20with%20%5C%5C%20special%20%5C(%20characters%20%5C)%20in%20%5C%5B%5C%5D%20%5C%7B%5C%7D%20%7C%20the%20%5C%7C%5C%7C%20label%5C%3F%5C!"
-
-      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
-        "http://0.0.0.0:3333/ontology/0001/books/v2#Book",
-        "UTF-8",
-      )
-      val offset: Int = 0
-
-      val request =
-        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
-          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
-          "&offset=" + offset
-
-      val actual   = getResponseAsString(Get(request))
-      val expected = testData("SearchbylabelSpecialCharacters.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "perform a searchbylabel search for a label that starts with a slash `/`" in {
-      val searchValueUriEncoded: String = "%5C%2Fslashes"
-      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
-        "http://0.0.0.0:3333/ontology/0001/books/v2#Book",
-        "UTF-8",
-      )
-      val offset: Int = 0
-
-      val request =
-        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
-          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
-          "&offset=" + offset
-
-      val actual   = getResponseAsString(Get(request))
-      val expected = testData("SearchbylabelSlashes.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "perform a searchbylabel search for the label 'Treasure Island' but providing the wrong class" in {
-      val searchValueUriEncoded: String = URLEncoder.encode(
-        "Treasure",
-        "UTF-8",
-      )
-      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
-        "http://0.0.0.0:3333/ontology/0001/books/v2#Page",
-        "UTF-8",
-      )
-      val offset: Int = 0
-
-      val request =
-        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
-          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
-          "&offset=" + offset
-
-      val actual   = getResponseAsString(Get(request))
-      val expected = "{}"
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "count anything:Thing that doesn't have a boolean property (MINUS)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |  ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |  ?thing a anything:Thing .
-          |  ?thing a knora-api:Resource .
-          |  MINUS {
-          |    ?thing anything:hasBoolean ?bool .
-          |  }
-          |}
-          |
-        """.stripMargin
-
-      val actual = getResponseAsJsonLD(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val numberOfResults = actual.body
-        .getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
-        .fold(e => throw AssertionError(e), identity)
-      assert(numberOfResults != 0)
-    }
-
-    "count anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |  ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |  ?thing a anything:Thing .
-          |  ?thing a knora-api:Resource .
-          |  FILTER NOT EXISTS {
-          |    ?thing anything:hasBoolean ?bool .
-          |  }
-          |}
-          |
-            """.stripMargin
-      val actual = getResponseAsJsonLD(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val numberOfResults = actual.body
-        .getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
-        .fold(e => throw AssertionError(e), identity)
-      assert(numberOfResults != 0)
     }
 
     "search for anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)" in {
