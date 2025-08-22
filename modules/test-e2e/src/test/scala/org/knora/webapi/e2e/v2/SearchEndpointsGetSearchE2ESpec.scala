@@ -8,6 +8,7 @@ package org.knora.webapi.e2e.v2
 import sttp.client4.UriContext
 import zio.*
 import zio.test.*
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.messages.OntologyConstants
@@ -185,6 +186,16 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
         test("perform a searchbylabel search for the label 'Treasure Island' with search string 'Treasure Island'") {
           verifySearchByLabel(
             "Treasure Island",
+            "SearchbylabelSimple.jsonld",
+            None,
+            addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book")
+              andThen
+                addQueryParam("offset", "0"),
+          )
+        },
+        test("perform a searchbylabel search for the label 'Treasure Island' with search string 'Treasure'") {
+          verifySearchByLabel(
+            "Treasure",
             "SearchbylabelSimple.jsonld",
             None,
             addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book")

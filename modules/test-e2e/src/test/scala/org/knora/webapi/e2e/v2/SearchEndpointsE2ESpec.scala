@@ -4882,25 +4882,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expected, actual)
     }
 
-    "perform a searchbylabel search for the label 'Treasure Island' with search string 'Treasure'" in {
-
-      val searchValueUriEncoded: String = "Treasure"
-      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
-        "http://0.0.0.0:3333/ontology/0001/books/v2#Book",
-        "UTF-8",
-      )
-      val offset: Int = 0
-
-      val request =
-        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
-          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
-          "&offset=" + offset
-
-      val actual   = getResponseAsString(Get(request))
-      val expected = testData("SearchbylabelSimple.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "perform a searchbylabel search for a label with special characters" in {
       // the characters that have a special meaning in the lucene query parser syntax need to be escaped like so:
       // this .,\:; is \+ a \- test & with \\ special \( characters \) in \[\] \{\} | the \|\| label\?\!
