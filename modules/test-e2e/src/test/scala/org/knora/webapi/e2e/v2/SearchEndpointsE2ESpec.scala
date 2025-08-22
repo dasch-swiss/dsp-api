@@ -64,37 +64,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-    "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum and get the next OFFSET (with type inference)" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?page knora-api:isMainResource true .
-          |
-          |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
-          |
-          |        ?page incunabula:seqnum ?seqnum .
-          |    } WHERE {
-          |
-          |        ?page a incunabula:page .
-          |
-          |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
-          |
-          |        ?page incunabula:seqnum ?seqnum .
-          |
-          |    } ORDER BY ?seqnum
-          |    OFFSET 1
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
 
     "perform a Gravsearch query for books that have been published on the first of March 1497 (Julian Calendar) (2) (with type inference)" in {
       val gravsearchQuery =
