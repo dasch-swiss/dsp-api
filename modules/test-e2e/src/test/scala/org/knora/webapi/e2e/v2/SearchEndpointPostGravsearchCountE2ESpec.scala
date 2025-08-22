@@ -226,5 +226,31 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
         verifySearchCountResult(query, 1)
       },
     ),
+    suite("with type inference")(
+      test(
+        "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (with type inference)",
+      ) {
+        val query =
+          """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |
+            |CONSTRUCT {
+            |    ?book knora-api:isMainResource true .
+            |
+            |    ?book incunabula:title ?title .
+            |
+            |} WHERE {
+            |
+            |    ?book a incunabula:book .
+            |
+            |    ?book incunabula:title ?title .
+            |
+            |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+            |
+            |}
+            |""".stripMargin
+        verifySearchCountResult(query, 2)
+      },
+    ),
   )
 }

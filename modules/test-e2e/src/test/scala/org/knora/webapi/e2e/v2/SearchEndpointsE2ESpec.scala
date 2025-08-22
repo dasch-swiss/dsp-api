@@ -480,34 +480,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expected, actual)
     }
 
-    "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (with type inference)" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      checkCountResponse(actual, 2)
-    }
+    
 
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer (with type inference)" in {
       val gravsearchQuery =
