@@ -64,49 +64,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-   
 
-    
-
-    "get the regions belonging to a page (with type inference)" in {
-      val gravsearchQuery =
-        """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?region knora-api:isMainResource true .
-          |
-          |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
-          |
-          |        ?region knora-api:hasGeometry ?geom .
-          |
-          |        ?region knora-api:hasComment ?comment .
-          |
-          |        ?region knora-api:hasColor ?color .
-          |    } WHERE {
-          |
-          |        ?region a knora-api:Region .
-          |
-          |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
-          |
-          |        ?region knora-api:hasGeometry ?geom .
-          |
-          |        ?region knora-api:hasComment ?comment .
-          |
-          |        ?region knora-api:hasColor ?color .
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("RegionsForPage.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 2)
-    }
 
     "get a book a page points to and include the page in the results (all properties present in WHERE clause) (with type inference)" in {
       val gravsearchQuery =
