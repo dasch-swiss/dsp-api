@@ -952,7 +952,28 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |     FILTER(?decimal > "2"^^xsd:decimal)
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingBiggerThanDecimal.jsonld")
+      verifyQueryResult(query, "ThingBiggerThanDecimal.jsonld", anythingUser1)
+    },
+    test("search for an anything:Thing that has a decimal value smaller than 3.0 (with type inference)") {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |
+          |     FILTER(?decimal < "3"^^xsd:decimal)
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ThingSmallerThanDecimal.jsonld", anythingUser1)
     },
   )
 }
