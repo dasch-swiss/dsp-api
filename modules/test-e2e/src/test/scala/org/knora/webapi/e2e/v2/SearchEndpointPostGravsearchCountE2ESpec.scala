@@ -251,6 +251,34 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
             |""".stripMargin
         verifySearchCountResult(query, 2)
       },
+      test(
+        "perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens' (with type inference)",
+      ) {
+        val query =
+          """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |
+            |    CONSTRUCT {
+            |        ?book knora-api:isMainResource true .
+            |
+            |        ?book incunabula:title ?title .
+            |
+            |    } WHERE {
+            |
+            |        ?book a incunabula:book .
+            |
+            |        ?book incunabula:title ?title .
+            |
+            |        FILTER(?title != "Zeitglöcklein des Lebens und Leidens Christi")
+            |
+            |    }
+                """.stripMargin
+        // 19 - 2 = 18 :-)
+        // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
+        // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
+        // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
+        verifySearchCountResult(query, 18)
+      },
     ),
   )
 }
