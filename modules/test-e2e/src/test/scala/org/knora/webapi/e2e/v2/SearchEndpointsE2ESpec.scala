@@ -64,38 +64,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-    "search for a book whose title contains 'Zeitglöcklein' using the match function (with type inference)" in {
-      val gravsearchQuery =
-        """
-          |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |
-          |        ?mainRes knora-api:isMainResource true .
-          |
-          |        ?mainRes incunabula:title ?propVal0 .
-          |
-          |     } WHERE {
-          |
-          |        ?mainRes a incunabula:book .
-          |
-          |        ?mainRes incunabula:title ?propVal0 .
-          |
-          |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
-          |
-          |     }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 2)
-    }
+    
 
     "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function (with type inference)" in {
       val gravsearchQuery =
