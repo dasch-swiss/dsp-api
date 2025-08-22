@@ -8,6 +8,7 @@ package org.knora.webapi.e2e.v2
 import sttp.client4.UriContext
 import zio.*
 import zio.test.*
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
@@ -1367,6 +1368,27 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |}
           |""".stripMargin
       verifyQueryResult(query, "foafPerson.jsonld", anythingUser1)
+    },
+    test("run a Gravsearch query that searches for a single resource specified by its IRI (with type inference)") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true ;
+          |         anything:hasText ?text ;
+          |         anything:hasInteger ?integer .
+          |
+          |} WHERE {
+          |     BIND(<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> AS ?thing)
+          |
+          |     ?thing a anything:Thing .
+          |     ?thing anything:hasText ?text .
+          |     ?thing anything:hasInteger ?integer .
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ThingByIriWithRequestedValues.jsonld", anythingUser1)
     },
   )
 }

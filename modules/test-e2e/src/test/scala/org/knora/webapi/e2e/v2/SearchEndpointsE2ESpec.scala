@@ -64,39 +64,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-
-
- 
-
-    "run a Gravsearch query that searches for a single resource specified by its IRI (with type inference)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |     ?thing knora-api:isMainResource true ;
-          |         anything:hasText ?text ;
-          |         anything:hasInteger ?integer .
-          |
-          |} WHERE {
-          |     BIND(<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> AS ?thing)
-          |
-          |     ?thing a anything:Thing .
-          |     ?thing anything:hasText ?text .
-          |     ?thing anything:hasInteger ?integer .
-          |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("ThingByIriWithRequestedValues.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "do a Gravsearch query for a letter and get information about the persons associated with it (with type inference)" in {
       val gravsearchQuery =
         """
