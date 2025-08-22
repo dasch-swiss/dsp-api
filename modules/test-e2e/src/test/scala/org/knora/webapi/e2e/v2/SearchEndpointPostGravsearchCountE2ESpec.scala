@@ -5,14 +5,15 @@
 
 package org.knora.webapi.e2e.v2
 
+import sttp.client4.UriContext
+import zio.ZIO
+import zio.test.*
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import zio.test.*
-import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.ResponseOps.assert200
-import sttp.client4.UriContext
-import zio.ZIO
+import org.knora.webapi.testservices.TestApiClient
 
 object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
 
@@ -135,6 +136,45 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
       // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
       // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
       verifySearchCountResult(query, 18)
+    },
+    test("do a Gravsearch count query for a letter that links to a specific person via two possible properties") {
+      val query =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |
+          |    ?letter beol:creationDate ?date .
+          |
+          |    ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+          |
+          |
+          |} WHERE {
+          |    ?letter a knora-api:Resource .
+          |    ?letter a beol:letter .
+          |
+          |    ?letter beol:creationDate ?date .
+          |
+          |    beol:creationDate knora-api:objectType knora-api:Date .
+          |    ?date a knora-api:Date .
+          |
+          |    # testperson2
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+          |
+          |    <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
+          |
+          |    ?linkingProp1 knora-api:objectType knora-api:Resource .
+          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+          |
+          |    beol:hasAuthor knora-api:objectType knora-api:Resource .
+          |    beol:hasRecipient knora-api:objectType knora-api:Resource .
+          |
+          |}
+          |ORDER BY ?date
+          |""".stripMargin
+      verifySearchCountResult(query, 1)
     },
   )
 }
