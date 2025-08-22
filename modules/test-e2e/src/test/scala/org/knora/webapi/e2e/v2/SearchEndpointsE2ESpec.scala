@@ -64,41 +64,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-    "perform a Gravsearch query for books that have been published 1497 or later (Julian Calendar) (with type inference)" in {
-      val gravsearchQuery =
-        """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |        ?book incunabula:pubdate ?pubdate .
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |        ?book incunabula:pubdate ?pubdate .
-          |
-          |        FILTER(?pubdate >= "JULIAN:1497"^^knora-api:Date)
-          |
-          |    } ORDER BY ?pubdate
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("BooksPublishedAfterOrOnDate.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
-      checkSearchResponseNumberOfResults(actual, 4)
-    }
-
     "perform a Gravsearch query for books that have been published after 1497 (Julian Calendar) (with type inference)" in {
       val gravsearchQuery =
         """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
