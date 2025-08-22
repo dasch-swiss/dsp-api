@@ -1336,5 +1336,37 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "letterWithPersonWithName2.jsonld")
     },
+    test("run a Gravsearch query that searches for a person using foaf classes and propertie (with type inference)") {
+      val query =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |
+          |CONSTRUCT {
+          |    ?person knora-api:isMainResource true .
+          |
+          |    ?person foaf:familyName ?familyName .
+          |
+          |    ?person foaf:givenName ?givenName .
+          |
+          |} WHERE {
+          |    ?person a knora-api:Resource .
+          |    ?person a foaf:Person .
+          |
+          |    ?person foaf:familyName ?familyName .
+          |
+          |    ?familyName a xsd:string .
+          |
+          |    ?person foaf:givenName ?givenName .
+          |
+          |    ?givenName a xsd:string .
+          |
+          |    FILTER(?familyName = "Meier")
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "foafPerson.jsonld", anythingUser1)
+    },
   )
 }
