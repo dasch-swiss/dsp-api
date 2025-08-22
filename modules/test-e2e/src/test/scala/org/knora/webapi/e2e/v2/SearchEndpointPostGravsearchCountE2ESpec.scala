@@ -1,0 +1,110 @@
+/*
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.knora.webapi.e2e.v2
+
+import org.knora.webapi.E2EZSpec
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import zio.test.*
+import org.knora.webapi.testservices.TestApiClient
+import org.knora.webapi.testservices.ResponseOps.assert200
+import sttp.client4.UriContext
+import zio.ZIO
+
+object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
+
+  override val rdfDataObjects: List[RdfDataObject] = List(
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+    RdfDataObject(
+      path = "test_data/project_data/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula",
+    ),
+    RdfDataObject(path = "test_data/project_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
+    RdfDataObject(
+      path = "test_data/project_ontologies/books-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/books",
+    ),
+    RdfDataObject(path = "test_data/project_data/books-data.ttl", name = "http://www.knora.org/data/0001/books"),
+    RdfDataObject(
+      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl",
+      name = "http://www.knora.org/data/admin",
+    ),
+    RdfDataObject(
+      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl",
+      name = "http://www.knora.org/ontology/0666/gravsearchtest1",
+    ),
+    RdfDataObject(
+      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl",
+      name = "http://www.knora.org/data/0666/gravsearchtest1",
+    ),
+  )
+
+  private def verifySearchCountResult(query: String, expectedCount: Int) = for {
+    response    <- TestApiClient.postJsonLdDocument(uri"/v2/searchextended/count", query)
+    jsonLd      <- response.assert200
+    actualCount <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
+  } yield assertTrue(actualCount == expectedCount)
+
+  override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended/count")(
+    test("perform a Gravsearch count query for an anything:Thing with an optional date used as a sort criterion") {
+      val query =
+        """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |  ?thing anything:hasDate ?date .
+          |} WHERE {
+          |  ?thing a knora-api:Resource .
+          |  ?thing a anything:Thing .
+          |
+          |  OPTIONAL {
+          |    ?thing anything:hasDate ?date .
+          |    anything:hasDate knora-api:objectType knora-api:Date .
+          |    ?date a knora-api:Date .
+          |  }
+          |
+          |  MINUS {
+          |    ?thing anything:hasInteger ?intVal .
+          |    anything:hasInteger knora-api:objectType xsd:integer .
+          |    ?intVal a xsd:integer .
+          |    FILTER(?intVal = 123454321 || ?intVal = 999999999)
+          |  }
+          |}
+          |ORDER BY DESC(?date)
+          |""".stripMargin
+      verifySearchCountResult(query, 44)
+    },
+    test(
+      "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |    ?book a knora-api:Resource .
+          |
+          |    ?book incunabula:title ?title .
+          |    incunabula:title knora-api:objectType xsd:string .
+          |
+          |    ?title a xsd:string .
+          |
+          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+          |
+          |}
+          |""".stripMargin
+      verifySearchCountResult(query, 2)
+    },
+  )
+}
