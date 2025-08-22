@@ -63,39 +63,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
   "The Search v2 Endpoint" should {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
-
-    "do a Gravsearch query that finds all the books that have a page with seqnum 100, inferring types (with type inference)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |
-          |  ?book knora-api:isMainResource true .
-          |
-          |  ?page incunabula:partOf ?book ;
-          |    incunabula:seqnum ?seqnum .
-          |
-          |} WHERE {
-          |
-          |  ?page incunabula:partOf ?book ;
-          |    incunabula:seqnum ?seqnum .
-          |
-          |  FILTER(?seqnum = 100)
-          |
-          |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("booksWithPage100.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "do a Gravsearch query that finds all the letters sent by someone called Meier, ordered by date, inferring types (with type inference)" in {
       val gravsearchQuery =
         """

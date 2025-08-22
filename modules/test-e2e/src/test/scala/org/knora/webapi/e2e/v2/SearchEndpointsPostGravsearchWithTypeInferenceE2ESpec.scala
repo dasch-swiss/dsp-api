@@ -207,5 +207,31 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "letterWithPersonWithoutName.jsonld")
     },
+    test(
+      "do a Gravsearch query that finds all the books that have a page with seqnum 100, inferring types (with type inference)",
+    ) {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |  ?book knora-api:isMainResource true .
+          |
+          |  ?page incunabula:partOf ?book ;
+          |    incunabula:seqnum ?seqnum .
+          |
+          |} WHERE {
+          |
+          |  ?page incunabula:partOf ?book ;
+          |    incunabula:seqnum ?seqnum .
+          |
+          |  FILTER(?seqnum = 100)
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "booksWithPage100.jsonld")
+    },
   )
 }
