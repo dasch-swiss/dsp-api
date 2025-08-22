@@ -1236,5 +1236,36 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "LinkObjectsToBooks.jsonld", anythingUser1)
     },
+    test(
+      "do a Gravsearch query for a letter that links to a specific person via two possible properties (with type inference)",
+    ) {
+      val query =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |
+          |    ?letter beol:creationDate ?date .
+          |
+          |    ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+          |
+          |
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |
+          |    ?letter beol:creationDate ?date .
+          |
+          |    # testperson2
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+          |
+          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+          |
+          |
+          |} ORDER BY ?date
+          |""".stripMargin
+      verifyQueryResult(query, "letterWithAuthor.jsonld", anythingUser1)
+    },
   )
 }
