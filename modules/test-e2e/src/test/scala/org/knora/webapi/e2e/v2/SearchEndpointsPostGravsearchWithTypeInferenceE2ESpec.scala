@@ -1172,5 +1172,25 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "ThingWithListValue.jsonld", anythingUser1)
     },
+    test("search for a text using the lang function (with type inference)") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasText ?text .
+          |} WHERE {
+          |     ?thing a anything:Thing .
+          |
+          |     ?thing anything:hasText ?text .
+          |
+          |     FILTER(lang(?text) = "fr")
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "LanguageFulltextSearch.jsonld", anythingUser1)
+    },
   )
 }
