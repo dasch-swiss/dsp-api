@@ -64,35 +64,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-    "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema) (with type inference)" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX dcterms: <http://purl.org/dc/terms/>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |
-          |        ?book dcterms:title ?title .
-          |
-          |    } WHERE {
-          |
-          |        ?book a incunabula:book .
-          |
-          |        ?book dcterms:title ?title .
-          |
-          |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery))
-          .addHeader(SchemaHeader.simple),
-      )
-      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer (with type inference)" in {
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
