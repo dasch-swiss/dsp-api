@@ -5,12 +5,16 @@
 
 package org.knora.webapi.e2e.v2
 
+import sttp.client4.UriContext
 import zio.*
 import zio.test.*
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
+import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.TestApiClient
 
 object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
 
@@ -431,6 +435,37 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |}
           |""".stripMargin
       verifyQueryResult(query, "PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld")
+    },
+    test(
+      "perform a Gravsearch count query for the page of a book whose seqnum equals 10, returning the seqnum and the link value (with type inference)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?page knora-api:isMainResource true .
+          |
+          |    ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |} WHERE {
+          |
+          |    ?page a incunabula:page .
+          |
+          |    ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |
+          |    FILTER(?seqnum = 10)
+          |
+          |}
+          |""".stripMargin
+      for {
+        response <- TestApiClient.postSparql(uri"/v2/searchextended", query)
+        jsonLd   <- response.assert200
+        _        <- ZIO.attempt(checkSearchResponseNumberOfResults(jsonLd, 1))
+      } yield assertCompletes
     },
   )
 }
