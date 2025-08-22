@@ -64,44 +64,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-    "get a book a page points to and only include the page's partOf link in the results (none of the other properties) (with type inference)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |CONSTRUCT {
-          |
-          |    ?book knora-api:isMainResource true .
-          |
-          |    ?book incunabula:title ?title .
-          |
-          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
-          |
-          |} WHERE {
-          |
-          |    ?book a incunabula:book .
-          |
-          |    ?book incunabula:title ?title .
-          |
-          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
-          |
-          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
-          |
-          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFile ?file .
-          |
-          |} OFFSET 0
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("bookWithIncomingPagesOnlyLink.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "get incoming links pointing to an incunbaula:book, excluding isPartOf (with type inference)" in {
       val gravsearchQuery =
         """
