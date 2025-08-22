@@ -816,5 +816,41 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "RegionsForPage.jsonld")
     },
+    test(
+      "get a book a page points to and include the page in the results (all properties present in WHERE clause) (with type inference)",
+    ) {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |    ?book knora-api:isMainResource true .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFile ?file .
+          |
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFile ?file .
+          |
+          |} OFFSET 0
+          |""".stripMargin
+      verifyQueryResult(query, "bookWithIncomingPagesWithAllRequestedProps.jsonld")
+    },
   )
 }
