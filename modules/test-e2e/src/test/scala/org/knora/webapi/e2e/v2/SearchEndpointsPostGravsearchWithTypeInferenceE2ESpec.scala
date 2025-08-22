@@ -975,5 +975,27 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "ThingSmallerThanDecimal.jsonld", anythingUser1)
     },
+    test("search for an anything:Thing that has a Boolean value that is true 2 (with type inference)") {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasBoolean ?boolean .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |
+          |     ?thing anything:hasBoolean ?boolean .
+          |
+          |     FILTER(?boolean = true)
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ThingWithBoolean.jsonld", anythingUser1)
+    },
   )
 }

@@ -64,37 +64,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-    "search for an anything:Thing that has a Boolean value that is true 2 (with type inference)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |     ?thing knora-api:isMainResource true .
-          |
-          |     ?thing anything:hasBoolean ?boolean .
-          |} WHERE {
-          |
-          |     ?thing a anything:Thing .
-          |
-          |     ?thing anything:hasBoolean ?boolean .
-          |
-          |     FILTER(?boolean = true)
-          |
-          |}
-          |
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("ThingWithBoolean.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 2)
-    }
+    
 
     "search for an anything:Thing that may have a Boolean value that is true (with type inference)" in {
       // set OFFSET to 1 to get "Testding for extended search"
