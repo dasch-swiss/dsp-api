@@ -12,7 +12,6 @@ import org.xmlunit.diff.Diff
 import spray.json.*
 import zio.ZIO
 
-import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
 
@@ -4879,27 +4878,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
         Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
       )
       val expected = testData("LetterNotToSelf.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "perform a searchbylabel search for the label 'Treasure Island' but providing the wrong class" in {
-      val searchValueUriEncoded: String = URLEncoder.encode(
-        "Treasure",
-        "UTF-8",
-      )
-      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
-        "http://0.0.0.0:3333/ontology/0001/books/v2#Page",
-        "UTF-8",
-      )
-      val offset: Int = 0
-
-      val request =
-        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
-          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
-          "&offset=" + offset
-
-      val actual   = getResponseAsString(Get(request))
-      val expected = "{}"
       compareJSONLDForResourcesResponse(expected, actual)
     }
 

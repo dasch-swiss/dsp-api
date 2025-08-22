@@ -80,15 +80,14 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
   private def verifySearchByLabel(
     label: String,
     expectedFile: String,
-    user: Option[User] = None,
-    f: RequestUpdate[String] = identity,
+    f: RequestUpdate[String],
   ) = for {
-    actual   <- searchByLabel(label, user, f)
+    actual   <- searchByLabel(label, f)
     expected <- loadFile(expectedFile).mapAttempt(RdfModel.fromJsonLD)
   } yield assertTrue(actual == expected)
 
-  private def searchByLabel(label: String, user: Option[User] = None, f: RequestUpdate[String]) = for {
-    response <- TestApiClient.getJsonLd(uri"/v2/searchbylabel/$label", user, f)
+  private def searchByLabel(label: String, f: RequestUpdate[String]) = for {
+    response <- TestApiClient.getJsonLd(uri"/v2/searchbylabel/$label", None, f)
     model    <- response.assert200.mapAttempt(RdfModel.fromJsonLD)
   } yield model
 
@@ -191,7 +190,6 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
           verifySearchByLabel(
             "Treasure Island",
             "SearchbylabelSimple.jsonld",
-            None,
             addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book") andThen
               addQueryParam("offset", "0"),
           )
@@ -200,7 +198,6 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
           verifySearchByLabel(
             "Treasure",
             "SearchbylabelSimple.jsonld",
-            None,
             addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book") andThen
               addQueryParam("offset", "0"),
           )
@@ -211,7 +208,6 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
           verifySearchByLabel(
             label,
             "SearchbylabelSpecialCharacters.jsonld",
-            None,
             addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book") andThen
               addQueryParam("offset", "0"),
           )
@@ -220,10 +216,18 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
           verifySearchByLabel(
             """\/slashes""",
             "SearchbylabelSlashes.jsonld",
-            None,
             addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book") andThen
               addQueryParam("offset", "0"),
           )
+        },
+        test("perform a searchbylabel search for the label 'Treasure Island' but providing the wrong class") {
+          for {
+            actual <- searchByLabel(
+                        "Treasure",
+                        addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Page") andThen
+                          addQueryParam("offset", "0"),
+                      )
+          } yield assertTrue(actual == RdfModel.fromJsonLD("{}"))
         },
       ),
     )
