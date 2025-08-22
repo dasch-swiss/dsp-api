@@ -10,6 +10,7 @@ import zio.test.*
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
+import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
 
 object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
 
@@ -309,6 +310,29 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |}
           |""".stripMargin
       verifyQueryResult(query, "ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
+    },
+    test(
+      "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema) (with type inference)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+          |
+          |}""".stripMargin
+      verifyQueryResult(query, "ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld", addSimpleSchemaHeader)
     },
   )
 }
