@@ -304,5 +304,64 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
         verifySearchCountResult(query, 1)
       },
     ),
+    suite("Queries that submit the complex schema")(
+      test(
+        "perform a Gravsearch count query for an anything:Thing with an optional date used as a sort criterion (submitting the complex schema)",
+      ) {
+        val query =
+          """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+            |
+            |CONSTRUCT {
+            |  ?thing knora-api:isMainResource true .
+            |  ?thing anything:hasDate ?date .
+            |} WHERE {
+            |
+            |  ?thing a knora-api:Resource .
+            |  ?thing a anything:Thing .
+            |
+            |  OPTIONAL {
+            |    ?thing anything:hasDate ?date .
+            |  }
+            |
+            |  MINUS {
+            |    ?thing anything:hasInteger ?intVal .
+            |    ?intVal knora-api:intValueAsInt 123454321 .
+            |  }
+            |
+            |  MINUS {
+            |    ?thing anything:hasInteger ?intVal .
+            |    ?intVal knora-api:intValueAsInt 999999999 .
+            |  }
+            |}
+            |ORDER BY DESC(?date)
+            |""".stripMargin
+        verifySearchCountResult(query, 44)
+      },
+      test(
+        "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (submitting the complex schema)",
+      ) {
+        val query =
+          """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+            |
+            |CONSTRUCT {
+            |    ?book knora-api:isMainResource true .
+            |
+            |    ?book incunabula:title ?title .
+            |
+            |} WHERE {
+            |
+            |    ?book a incunabula:book .
+            |
+            |    ?book incunabula:title ?title .
+            |
+            |    ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
+            |
+            |}
+            |""".stripMargin
+        verifySearchCountResult(query, 2)
+      },
+    ),
   )
 }
