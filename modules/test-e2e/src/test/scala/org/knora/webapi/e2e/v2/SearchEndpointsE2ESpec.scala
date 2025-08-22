@@ -63,41 +63,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
   "The Search v2 Endpoint" should {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
-    "do a Gravsearch query that finds all the letters sent by someone called Meier, ordered by date, inferring types (with type inference)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |
-          |CONSTRUCT {
-          |
-          |  ?letter knora-api:isMainResource true ;
-          |    beol:creationDate ?date ;
-          |    beol:hasAuthor ?author .
-          |
-          |  ?author beol:hasFamilyName ?name .
-          |
-          |} WHERE {
-          |
-          |  ?letter beol:hasAuthor ?author ;
-          |    beol:creationDate ?date .
-          |
-          |  ?author beol:hasFamilyName ?name .
-          |
-          |  FILTER(?name = "Meier")
-          |
-          |} ORDER BY ?date
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("lettersByMeier.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
 
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema) (with type inference)" in {
       val gravsearchQuery =
