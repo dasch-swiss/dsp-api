@@ -62,10 +62,7 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
     user: Option[User] = None,
     f: RequestUpdate[String] = identity,
   ) = for {
-    response <- user match {
-                  case None    => TestApiClient.getJsonLd(uri"/v2/search/$searchTerm", f)
-                  case Some(u) => TestApiClient.getJsonLd(uri"/v2/search/$searchTerm", u, f)
-                }
+    response <- TestApiClient.getJsonLd(uri"/v2/search/$searchTerm", user, f)
     actual   <- response.assert200.mapAttempt(RdfModel.fromJsonLD)
     expected <- loadFile(expectedFile).mapAttempt(RdfModel.fromJsonLD)
   } yield assertTrue(actual == expected)
