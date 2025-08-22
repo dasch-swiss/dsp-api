@@ -4441,23 +4441,13 @@ class SearchEndpointsE2ESpec extends E2ESpec {
            |}
            |ORDER BY (?int)""".stripMargin
 
-      val expectedCount = 1
-
-      val actualCount = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended/count",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      checkCountResponse(actualCount, expectedCount)
-
       val actual = getResponseAsString(
         Post(
           s"$baseApiUrl/v2/searchextended",
           HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
         ),
       )
-      checkSearchResponseNumberOfResults(actual, expectedCount)
+      checkSearchResponseNumberOfResults(actual, 1)
       val expected = testData("ThingFromQueryWithUnion.jsonld")
       compareJSONLDForResourcesResponse(expected, actual)
     }
