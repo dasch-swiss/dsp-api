@@ -5,18 +5,14 @@
 
 package org.knora.webapi.e2e.v2
 
-import sttp.client4.Response
 import sttp.client4.UriContext
 import zio.*
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.testservices.RequestsUpdates
-import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
 import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
@@ -25,48 +21,9 @@ import org.knora.webapi.util.TestDataFileUtil
 
 object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(
-      path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula",
-    ),
-    RdfDataObject(path = "test_data/project_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
-    RdfDataObject(
-      path = "test_data/project_ontologies/books-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/books",
-    ),
-    RdfDataObject(path = "test_data/project_data/books-data.ttl", name = "http://www.knora.org/data/0001/books"),
-    RdfDataObject(
-      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl",
-      name = "http://www.knora.org/data/admin",
-    ),
-    RdfDataObject(
-      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl",
-      name = "http://www.knora.org/ontology/0666/gravsearchtest1",
-    ),
-    RdfDataObject(
-      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl",
-      name = "http://www.knora.org/data/0666/gravsearchtest1",
-    ),
-  )
+  override lazy val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
 
-  private def loadFile(filename: String) = TestDataFileUtil.readTestData("searchR2RV2", filename)
-
-  private def verifyQueryResult(query: String, expectedFile: String, f: RequestUpdate[String] = identity) =
-    TestApiClient.postSparql(uri"/v2/searchextended", query, f = f).flatMap(compare(_, expectedFile))
-
-  private def verifyQueryResult(query: String, expectedFile: String, user: User) =
-    TestApiClient.postSparql(uri"/v2/searchextended", query, Some(user)).flatMap(compare(_, expectedFile))
-
-  private def compare(response: Response[Either[String, String]], expectedFile: String) =
-    for {
-      resultJsonLd <- response.assert200
-      actual       <- ZIO.attempt(RdfModel.fromJsonLD(resultJsonLd))
-      expected     <- loadFile(expectedFile).mapAttempt(RdfModel.fromJsonLD)
-    } yield assertTrue(actual == expected)
-
-  override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended")(
+  override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended (without type inference)")(
     test("perform a Gravsearch query using simple schema which allows to sort the results by external link") {
       val query =
         """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>

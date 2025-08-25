@@ -19,31 +19,7 @@ import org.knora.webapi.testservices.TestApiClient
 
 object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
 
-  override val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(
-      path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula",
-    ),
-    RdfDataObject(path = "test_data/project_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
-    RdfDataObject(
-      path = "test_data/project_ontologies/books-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/books",
-    ),
-    RdfDataObject(path = "test_data/project_data/books-data.ttl", name = "http://www.knora.org/data/0001/books"),
-    RdfDataObject(
-      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl",
-      name = "http://www.knora.org/data/admin",
-    ),
-    RdfDataObject(
-      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl",
-      name = "http://www.knora.org/ontology/0666/gravsearchtest1",
-    ),
-    RdfDataObject(
-      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl",
-      name = "http://www.knora.org/data/0666/gravsearchtest1",
-    ),
-  )
+  override val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
 
   private def verifySearchCountResult(query: String, expectedCount: Int, user: Option[User] = None) = for {
     response    <- TestApiClient.postJsonLdDocument(uri"/v2/searchextended/count", query, user)
