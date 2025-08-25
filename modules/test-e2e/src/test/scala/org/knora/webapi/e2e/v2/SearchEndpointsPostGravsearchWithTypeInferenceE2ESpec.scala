@@ -1522,5 +1522,25 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "regionsOfZeitgloecklein.jsonld", incunabulaMemberUser)
     },
+    test("do a Gravsearch query containing a UNION nested in an OPTIONAL (with type inference)") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX gravsearchtest1: <http://0.0.0.0:3333/ontology/0666/gravsearchtest1/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?Project knora-api:isMainResource true .
+          |  ?isInProject gravsearchtest1:isInProject ?Project .
+          |} WHERE {
+          |  ?Project a gravsearchtest1:Project .
+          |
+          |  OPTIONAL {
+          |    ?isInProject gravsearchtest1:isInProject ?Project .
+          |    { ?isInProject a gravsearchtest1:BibliographicNotice . } UNION { ?isInProject a gravsearchtest1:Person . }
+          |  }
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ProjectsWithOptionalPersonOrBiblio.jsonld")
+    },
   )
 }
