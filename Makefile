@@ -84,7 +84,6 @@ stack-up-fast: docker-build-dsp-api-image ## starts the dsp-stack by skipping re
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-up-ci
-stack-up-ci: KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME := dsp-repo
 stack-up-ci: docker-build ## starts the dsp-stack using 'dsp-repo' repository: fuseki, sipi, api.
 	docker-compose -f docker-compose.yml up -d
 

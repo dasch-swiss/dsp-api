@@ -53,13 +53,6 @@ if [[ -z "${PASSWORD}" ]]; then
   PASSWORD="test"
 fi
 
-clean-fuseki-volumes() {
-  docker compose down db
-  docker volume rm dsp-api_db-home
-  docker volume rm dsp-api_db-import
-  docker compose up -d db
-}
-
 upload-graph() {
   STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USER_NAME}:${PASSWORD} -H "Content-Type:text/turtle; charset=utf-8" --data-binary @$1 -X PUT http://${HOST}/${REPOSITORY}/data\?graph\="$2")
 
