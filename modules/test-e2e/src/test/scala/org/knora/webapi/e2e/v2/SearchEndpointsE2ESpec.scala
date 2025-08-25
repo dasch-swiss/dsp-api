@@ -64,34 +64,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-    "do a Gravsearch query that searches for a list node (with type inference)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |
-          |?mainRes knora-api:isMainResource true .
-          |
-          |?mainRes anything:hasListItem ?propVal0 .
-          |
-          |} WHERE {
-          |
-          |?mainRes anything:hasListItem ?propVal0 .
-          |
-          |FILTER(?propVal0 = "Tree list node 02"^^knora-api:ListNode)
-          |
-          |}
-          |
-          |OFFSET 0
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
-      )
-      val expected = testData("ThingWithListNodeLabel.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
+ 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema

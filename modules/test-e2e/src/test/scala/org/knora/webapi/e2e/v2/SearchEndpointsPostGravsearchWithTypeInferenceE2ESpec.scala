@@ -22,7 +22,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
 
-  override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended (with type inference)")(
+  override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended (with type inference, simple schema)")(
     test(
       "do a Gravsearch query in which 'rdf:type knora-api:Resource' is inferred from a more specific rdf:type (with type inference)",
     ) {
@@ -1541,6 +1541,29 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |}
           |""".stripMargin
       verifyQueryResult(query, "ProjectsWithOptionalPersonOrBiblio.jsonld")
+    },
+    test("do a Gravsearch query that searches for a list node (with type inference)") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |  ?mainRes knora-api:isMainResource true .
+          |
+          |  ?mainRes anything:hasListItem ?propVal0 .
+          |
+          |} WHERE {
+          |
+          |  ?mainRes anything:hasListItem ?propVal0 .
+          |
+          |  FILTER(?propVal0 = "Tree list node 02"^^knora-api:ListNode)
+          |
+          |}
+          |OFFSET 0
+          |""".stripMargin
+      verifyQueryResult(query, "ThingWithListNodeLabel.jsonld")
     },
   )
 }
