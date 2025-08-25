@@ -9,7 +9,6 @@ import zio.*
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
-//import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 //import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -143,7 +142,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |  ?name knora-api:valueAsString "Meier" .
           |
           |} ORDER BY ?date
-                """.stripMargin
+          |""".stripMargin
       verifyQueryResult(query, "lettersByMeier.jsonld")
     },
   )
