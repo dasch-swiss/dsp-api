@@ -29,6 +29,7 @@ import zio.test.Assertion.hasMessage
 import zio.test.Assertion.isSubtype
 
 import java.io.IOException
+import scala.language.implicitConversions
 
 object StillImageServiceLiveSpec extends ZIOSpecDefault {
 

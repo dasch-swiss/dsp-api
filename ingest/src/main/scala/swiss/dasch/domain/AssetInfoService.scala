@@ -10,15 +10,24 @@ import eu.timepit.refined.auto.autoUnwrap
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.domain.AugmentedPath.Conversions.given
-import swiss.dasch.domain.SupportedFileType.{MovingImage, OtherFiles, StillImage}
-import zio.json.interop.refined.{decodeRefined, encodeRefined}
-import zio.json.{DeriveJsonCodec, JsonCodec}
-import zio.nio.file.{Files, Path}
+import swiss.dasch.domain.SupportedFileType.MovingImage
+import swiss.dasch.domain.SupportedFileType.OtherFiles
+import swiss.dasch.domain.SupportedFileType.StillImage
+import zio.IO
+import zio.Task
+import zio.UIO
+import zio.ZIO
+import zio.ZLayer
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
+import zio.json.interop.refined.decodeRefined
+import zio.json.interop.refined.encodeRefined
+import zio.nio.file.Files
+import zio.nio.file.Path
 import zio.stream.ZStream
-import scala.language.implicitConversions
-import zio.{IO, Task, UIO, ZIO, ZLayer}
 
 import java.io.FileNotFoundException
+import scala.language.implicitConversions
 
 type PositiveInt    = Int Refined Positive
 type PositiveDouble = Double Refined Positive

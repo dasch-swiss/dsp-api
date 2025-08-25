@@ -8,7 +8,6 @@ package swiss.dasch.domain
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
-import scala.language.implicitConversions
 import swiss.dasch.domain.Asset.MovingImageAsset
 import swiss.dasch.domain.Asset.StillImageAsset
 import swiss.dasch.domain.AugmentedPath.AssetFolder
@@ -29,6 +28,7 @@ import zio.nio.file.Files
 import zio.nio.file.Path
 
 import java.io.IOException
+import scala.language.implicitConversions
 
 trait IngestService {
   def ingestFile(fileToIngest: Path, project: ProjectShortcode): Task[Asset]

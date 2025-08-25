@@ -6,7 +6,6 @@
 package swiss.dasch.domain
 
 import org.apache.commons.io.FileUtils
-import scala.language.implicitConversions
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.AugmentedPath.AssetFolder
 import swiss.dasch.domain.AugmentedPath.AssetsBaseFolder
@@ -33,6 +32,7 @@ import java.text.ParseException
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import scala.language.implicitConversions
 
 trait StorageService {
   def createProjectFolder(projectShortcode: ProjectShortcode): IO[IOException, ProjectFolder]

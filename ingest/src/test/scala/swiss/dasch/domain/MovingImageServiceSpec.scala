@@ -20,6 +20,7 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import java.io.IOException
+import scala.language.implicitConversions
 
 object MovingImageServiceSpec extends ZIOSpecDefault {
 

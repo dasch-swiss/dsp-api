@@ -5,7 +5,6 @@
 
 package swiss.dasch.domain
 
-import scala.language.implicitConversions
 import swiss.dasch.api.ActionName
 import swiss.dasch.domain
 import swiss.dasch.domain.AugmentedPath.*
@@ -23,6 +22,7 @@ import zio.stream.ZSink
 import zio.stream.ZStream
 
 import java.io.IOException
+import scala.language.implicitConversions
 
 trait MaintenanceActions {
   def updateAssetMetadata(projects: Iterable[ProjectFolder]): Task[Unit]

@@ -23,6 +23,7 @@ import zio.test.assertCompletes
 import zio.test.assertTrue
 
 import java.io.IOException
+import scala.language.implicitConversions
 
 object BulkIngestServiceSpec extends ZIOSpecDefault {
   // accessor functions for testing

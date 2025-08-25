@@ -43,6 +43,7 @@ import zio.test.assertTrue
 
 import java.net.URLDecoder
 import java.text.Normalizer
+import scala.language.implicitConversions
 
 object ProjectsEndpointSpec extends ZIOSpecDefault {
   private def executeRequest(request: Request) = for {

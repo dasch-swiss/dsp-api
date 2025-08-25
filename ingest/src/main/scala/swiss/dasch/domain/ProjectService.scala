@@ -5,7 +5,6 @@
 
 package swiss.dasch.domain
 
-import scala.language.implicitConversions
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
 import zio.*
@@ -17,6 +16,7 @@ import zio.stream.ZStream
 
 import java.io.IOException
 import java.sql.SQLException
+import scala.language.implicitConversions
 
 final case class ProjectService(
   private val assetInfos: AssetInfoService,
