@@ -38,7 +38,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 FILE="$1"
 
 if [[ -z "${REPOSITORY}" ]]; then
-  REPOSITORY="knora-test"
+  REPOSITORY="dsp-repo"
 fi
 
 if [[ -z "${HOST}" ]]; then
@@ -53,29 +53,11 @@ if [[ -z "${PASSWORD}" ]]; then
   PASSWORD="test"
 fi
 
-delete-repository() {
-  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USER_NAME}:${PASSWORD} -X DELETE http://${HOST}/\$/datasets/${REPOSITORY})
-
-  if [ "${STATUS}" -eq 200 ]; then
-    echo "==> delete repository done"
-    return 0
-  else
-    echo "==> delete repository failed"
-    return 1
-  fi
-}
-
-create-repository() {
-  REPOSITORY_CONFIG=$(sed "s/@REPOSITORY@/${REPOSITORY}/g" ./fuseki-repository-config.ttl.template)
-  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USER_NAME}:${PASSWORD} -H "Content-Type:text/turtle; charset=utf-8" --data-raw "${REPOSITORY_CONFIG}" -X POST http://${HOST}/\$/datasets)
-
-  if [ "${STATUS}" -eq 200 ]; then
-    echo "==> create repository done"
-    return 0
-  else
-    echo "==> create repository failed"
-    return 1
-  fi
+clean-fuseki-volumes() {
+  docker compose down db
+  docker volume rm dsp-api_db-home
+  docker volume rm dsp-api_db-import
+  docker compose up -d db
 }
 
 upload-graph() {

@@ -4,10 +4,8 @@
 source fuseki-functions.sh
 
 # Name of the repository
-REPOSITORY="knora-test"
+REPOSITORY="dsp-repo"
 
-# delete-repository // delete dos not work correctly. need to delete database manually.
-create-repository
 upload-graph ../../webapi/src/main/resources/knora-ontologies/knora-admin.ttl http://www.knora.org/ontology/knora-admin
 upload-graph ../../webapi/src/main/resources/knora-ontologies/knora-base.ttl http://www.knora.org/ontology/knora-base
 upload-graph ../../webapi/src/main/resources/knora-ontologies/standoff-onto.ttl http://www.knora.org/ontology/standoff

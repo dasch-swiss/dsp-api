@@ -84,8 +84,8 @@ stack-up-fast: docker-build-dsp-api-image ## starts the dsp-stack by skipping re
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-up-ci
-stack-up-ci: KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME := knora-test-unit
-stack-up-ci: docker-build ## starts the dsp-stack using 'knora-test-unit' repository: fuseki, sipi, api.
+stack-up-ci: KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME := dsp-repo
+stack-up-ci: docker-build ## starts the dsp-stack using 'dsp-repo' repository: fuseki, sipi, api.
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-restart
@@ -192,17 +192,17 @@ test-e2e: docker-build-sipi-image ## runs end-to-end (HTTP) tests
 #################################
 
 .PHONY: init-db-test
-init-db-test: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository
+init-db-test: stack-down-delete-volumes stack-db-only ## initializes the dsp-repo repository
 	@echo $@
 	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test.sh
 
 .PHONY: init-db-test-minimal
-init-db-test-minimal: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
+init-db-test-minimal: stack-down-delete-volumes stack-db-only ## initializes the dsp-repo repository with minimal data
 	@echo $@
 	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test-minimal.sh
 
 .PHONY: init-db-test-empty
-init-db-test-empty: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
+init-db-test-empty: stack-down-delete-volumes stack-db-only ## initializes the dsp-repo repository with minimal data
 	@echo $@
 	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test-empty.sh
 
@@ -267,8 +267,8 @@ init-db-from-dump-file: ## init local database from a specified dump file. Use a
 	@echo $@
 	@echo dump file: ${DUMP}
 	${MAKE} init-db-test-empty
-	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
-	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/${DUMP}" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/dsp-repo"
+	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/${DUMP}" -u "admin:test" "http://localhost:3030/dsp-repo"
 
 .PHONY: init-db-from-env
 init-db-from-env: ## ## Dump data from an env and upload it to the local DB. Use as `make init-db-from-env PW=database-password ENV=db.0000-test-server.dasch.swiss`

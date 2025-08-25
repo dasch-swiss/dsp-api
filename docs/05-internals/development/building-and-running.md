@@ -18,7 +18,7 @@ With Docker installed and configured,
    make init-db-test
    ```
 
-   to create the knora-test repository and initialize it with loading some test data into the triplestore (Fuseki).
+   to create the dsp-repo repository and initialize it with loading some test data into the triplestore (Fuseki).
 
 1. Start the entire knora-stack (fuseki (db), sipi, api, salsah1) with the following command:
 
