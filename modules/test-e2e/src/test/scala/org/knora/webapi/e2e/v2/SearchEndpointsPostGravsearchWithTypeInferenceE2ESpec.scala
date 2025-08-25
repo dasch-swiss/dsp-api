@@ -5,7 +5,6 @@
 
 package org.knora.webapi.e2e.v2
 
-import sttp.client4.UriContext
 import zio.*
 import zio.test.*
 
@@ -464,7 +463,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |}
           |""".stripMargin
       for {
-        response <- TestApiClient.postSparql(uri"/v2/searchextended", query)
+        response <- postGravsearchQuery(query)
         jsonLd   <- response.assert200
         _        <- ZIO.attempt(checkSearchResponseNumberOfResults(jsonLd, 1))
       } yield assertCompletes
@@ -1424,6 +1423,37 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |} ORDER BY ?date
           |""".stripMargin
       verifyQueryResult(query, "letterWithAuthorWithInformation.jsonld")
+    },
+    test(
+      "do a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource (with type inference)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |    ?book incunabula:title ?title .
+          |
+          |    ?page knora-api:isPartOf ?book ;
+          |        incunabula:seqnum ?seqnum .
+          |} WHERE {
+          |    BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?page a incunabula:page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |
+          |    FILTER(?seqnum <= 10)
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "incomingPagesForBook.jsonld", incunabulaMemberUser)
     },
   )
 }
