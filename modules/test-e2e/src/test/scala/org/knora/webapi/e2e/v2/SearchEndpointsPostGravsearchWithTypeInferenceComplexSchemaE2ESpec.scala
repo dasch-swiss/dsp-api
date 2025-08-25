@@ -54,5 +54,67 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |ORDER BY DESC(?date)""".stripMargin
       verifyQueryResult(query, "thingWithOptionalDateSortedDesc.jsonld")
     },
+    test(
+      "perform a Gravsearch query for an anything:Thing that has an optional decimal value greater than 2 and sort by the decimal value (submitting the complex schema)",
+    ) {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |     ?thing a knora-api:Resource .
+          |
+          |     OPTIONAL {
+          |        ?thing anything:hasDecimal ?decimal .
+          |        ?decimal knora-api:decimalValueAsDecimal ?decimalVal .
+          |        FILTER(?decimalVal > "1"^^xsd:decimal)
+          |     }
+          |
+          |     MINUS {
+          |        ?thing anything:hasInteger ?intVal .
+          |        ?intVal knora-api:intValueAsInt 123454321 .
+          |     }
+          |
+          |     MINUS {
+          |       ?thing anything:hasInteger ?intVal .
+          |       ?intVal knora-api:intValueAsInt 999999999 .
+          |     }
+          |} ORDER BY DESC(?decimal)
+          |""".stripMargin
+      verifyQueryResult(query, "ThingsWithOptionalDecimalGreaterThan1.jsonld")
+    },
+    test(
+      "do a Gravsearch query that finds all the books that have a page with seqnum 100 (submitting the complex schema)",
+    ) {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |  ?book knora-api:isMainResource true .
+          |
+          |  ?page incunabula:partOf ?book ;
+          |    incunabula:seqnum ?seqnum .
+          |
+          |} WHERE {
+          |
+          |  ?page incunabula:partOf ?book ;
+          |    incunabula:seqnum ?seqnum .
+          |
+          |  ?seqnum knora-api:intValueAsInt 100 .
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "booksWithPage100.jsonld")
+    },
   )
 }
