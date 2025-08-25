@@ -203,7 +203,6 @@ init-db-test-minimal: stack-down-delete-volumes stack-db-only ## initializes the
 .PHONY: init-db-test-empty
 init-db-test-empty: stack-down-delete-volumes stack-db-only ## initializes the dsp-repo repository with minimal data
 	@echo $@
-	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test-empty.sh
 
 .PHONY: init-db-from-test
 init-db-from-test: ## init local database with data from test server. Use as `make init-db-from-test PW=database-password`
