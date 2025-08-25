@@ -216,5 +216,32 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "NotZeitgloeckleinExtendedSearch.jsonld")
     },
+    test(
+      "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum and the link value (submitting the complex schema)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?page knora-api:isMainResource true .
+          |
+          |    ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |} WHERE {
+          |
+          |    ?page a incunabula:page .
+          |
+          |    ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |
+          |    ?seqnum knora-api:intValueAsInt 10 .
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld")
+    },
   )
 }
