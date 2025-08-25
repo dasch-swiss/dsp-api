@@ -164,11 +164,11 @@ final case class Triplestore(
 
 final case class Fuseki(
   port: Int,
-  repositoryName: String = "dsp-repo",
   username: String,
   password: String,
   queryLoggingThreshold: Duration = Duration.ofMillis(1000),
   allowCompaction: Boolean = false,
+  repositoryName: String = "dsp-repo",
 )
 
 final case class InstrumentationServerConfig(
