@@ -62,22 +62,6 @@ jobs:
       - name: Build docs with just
         run: just docs-build
 
-  integration-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout current branch
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-          cache: sbt
-      - name: Run integration tests
-        run: export DOCKER_BUILDKIT=1;./sbtx Docker/publishLocal;./sbtx integration/test
-
   publish-docker-image:
     if: (github.ref == 'refs/heads/main' && github.event_name != 'release') || startsWith(github.ref, 'refs/tags/')
     name: Publish docker images to Docker Hub
