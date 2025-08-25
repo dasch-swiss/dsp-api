@@ -1486,5 +1486,41 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |""".stripMargin
       postGravsearchQuery(query, Some(incunabulaMemberUser)).flatMap(_.assert400).as(assertCompletes)
     },
+    test(
+      "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi (with type inference)'",
+    ) {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?region knora-api:isMainResource true .
+          |
+          |    ?region knora-api:isRegionOf ?page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |} WHERE {
+          |	   ?region a knora-api:Region .
+          |
+          |	   ?region knora-api:isRegionOf ?page .
+          |
+          |    ?page a incunabula:page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "regionsOfZeitgloecklein.jsonld", incunabulaMemberUser)
+    },
   )
 }

@@ -64,47 +64,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
-    "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi (with type inference)'" in {
-      val gravsearchQuery =
-        """
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?region knora-api:isMainResource true .
-          |
-          |    ?region knora-api:isRegionOf ?page .
-          |
-          |    ?page knora-api:isPartOf ?book .
-          |
-          |    ?book incunabula:title ?title .
-          |
-          |} WHERE {
-          |	   ?region a knora-api:Region .
-          |
-          |	   ?region knora-api:isRegionOf ?page .
-          |
-          |    ?page a incunabula:page .
-          |
-          |    ?page knora-api:isPartOf ?book .
-          |
-          |    ?book a incunabula:book .
-          |
-          |    ?book incunabula:title ?title .
-          |
-          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
-      )
-      val expected = testData("regionsOfZeitgloecklein.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
+    
 
     "do a Gravsearch query containing a UNION nested in an OPTIONAL (with type inference)" in {
       val gravsearchQuery =
