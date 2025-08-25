@@ -18,7 +18,7 @@ With Docker installed and configured,
    make init-db-test
    ```
 
-   to initialize Fuseki's dsp-repo data set with loading some test data into the triplestore 
+   to initialize Fuseki's dsp-repo dataset with loading some test data into the triplestore 
 
 1. Start the entire knora-stack (fuseki (db), sipi, api, salsah1) with the following command:
 
