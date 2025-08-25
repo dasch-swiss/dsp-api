@@ -64,49 +64,8 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
 
- 
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
-
-    "perform a Gravsearch query for an anything:Thing with an optional date and sort by date (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-          |
-          |CONSTRUCT {
-          |  ?thing knora-api:isMainResource true .
-          |  ?thing anything:hasDate ?date .
-          |} WHERE {
-          |
-          |  ?thing a knora-api:Resource .
-          |  ?thing a anything:Thing .
-          |
-          |  OPTIONAL {
-          |    ?thing anything:hasDate ?date .
-          |  }
-          |
-          |  MINUS {
-          |    ?thing anything:hasInteger ?intVal .
-          |    ?intVal knora-api:intValueAsInt 123454321 .
-          |  }
-          |
-          |  MINUS {
-          |    ?thing anything:hasInteger ?intVal .
-          |    ?intVal knora-api:intValueAsInt 999999999 .
-          |  }
-          |}
-          |ORDER BY DESC(?date)
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("thingWithOptionalDateSortedDesc.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
 
     "perform a Gravsearch query for an anything:Thing that has an optional decimal value greater than 2 and sort by the decimal value (submitting the complex schema)" in {
       val gravsearchQuery =

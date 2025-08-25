@@ -16,9 +16,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
-import org.knora.webapi.testservices.TestApiClient
 
-object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
+object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends E2EZSpec {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
 
