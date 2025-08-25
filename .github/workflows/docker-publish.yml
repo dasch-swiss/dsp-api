@@ -18,14 +18,10 @@ jobs:
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v2
-      - name: Build and publish dsp-api image to Dockerhub
+      - name: Build and publish dsp-api/dsp-ingest/sipi image to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          make docker-publish-dsp-api-image
-      - name: Build and publish sipi images to Dockerhub
-        run: |
-          echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          make docker-publish-sipi-image
+          make docker-publish
       - name: Output docker image tag
         id: output_docker_image_tag
         run: echo "tag=$(make docker-image-tag | tr -d '\n')" >> "$GITHUB_OUTPUT"
