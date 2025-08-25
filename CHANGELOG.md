@@ -1,5 +1,21 @@
 # Changelog
 
+## [31.21.2](https://github.com/dasch-swiss/dsp-api/compare/v31.21.1...v31.21.2) (2025-08-25)
+
+
+### Maintenances
+
+* Migrate ResourcesRouteV2E2ESpec to zio test ([#3735](https://github.com/dasch-swiss/dsp-api/issues/3735)) ([a4e0772](https://github.com/dasch-swiss/dsp-api/commit/a4e07721e2ad98e1584b5d32ac6d392ed551d860))
+* Split ResourcesEndpointsE2ESpec, extract GET /v2/resources tests ([#3739](https://github.com/dasch-swiss/dsp-api/issues/3739)) ([6550dc0](https://github.com/dasch-swiss/dsp-api/commit/6550dc0e21a722a8dce3a43e22798c2c9638c574))
+* Split SearchEndpointE2ESpec ([#3740](https://github.com/dasch-swiss/dsp-api/issues/3740)) ([18042a1](https://github.com/dasch-swiss/dsp-api/commit/18042a17207b66fdd9d5a1bd2dbe26a4e0f0131d))
+* Split SearchEndpointE2ESpec further ([#3742](https://github.com/dasch-swiss/dsp-api/issues/3742)) ([ce677f1](https://github.com/dasch-swiss/dsp-api/commit/ce677f18501aefd79dd9125db811e528a0e1faa5))
+* Split SearchEndpointsE2ESpec pt 2 ([#3741](https://github.com/dasch-swiss/dsp-api/issues/3741)) ([df0db7f](https://github.com/dasch-swiss/dsp-api/commit/df0db7f6de1de1859a0e1cddadf7eb5931920456))
+
+
+### Bug Fixes
+
+* Erase value from deleted resource ([#3736](https://github.com/dasch-swiss/dsp-api/issues/3736)) ([6ea54ce](https://github.com/dasch-swiss/dsp-api/commit/6ea54ce98811a4188366eb593efc8ea00c613ff0))
+
 ## [31.21.1](https://github.com/dasch-swiss/dsp-api/compare/v31.21.0...v31.21.1) (2025-08-18)
 
 
