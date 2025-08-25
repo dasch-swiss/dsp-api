@@ -47,10 +47,10 @@ A number of core settings is additionally configurable through system environmen
 | app.ark.assigned-number                | KNORA_WEBAPI_ARK_NAAN                           | 72163                   |
 | app.salsah1.base-url                   | KNORA_WEBAPI_SALSAH1_BASE_URL                   | <http://localhost:3335> |
 | app.triplestore.dbtype                 | KNORA_WEBAPI_TRIPLESTORE_DBTYPE                 | fuseki                  |
-| app.triplestore.fuseki.repository-name | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME | knora-test              |
 | app.triplestore.use-https              | KNORA_WEBAPI_TRIPLESTORE_USE_HTTPS              | false                   |
 | app.triplestore.host                   | KNORA_WEBAPI_TRIPLESTORE_HOST                   | localhost               |
 | app.triplestore.fuseki.port            | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PORT            | 3030                    |
+| app.triplestore.fuseki.repository-name | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME | knora-test              |
 | app.triplestore.fuseki.username        | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME        | admin                   |
 | app.triplestore.fuseki.password        | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD        | test                    |
 
