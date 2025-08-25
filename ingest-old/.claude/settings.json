@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(just run-integration-tests:*)",
+      "Bash(./sbtx integration/test)",
+      "Bash(just build-docker:*)",
+      "mcp__linear__list_teams"
+    ],
+    "deny": []
+  }
+}
