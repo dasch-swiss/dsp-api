@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-
-# Including fuseki-funcions.sh implementing delete, create, and upload.
 source fuseki-functions.sh
 
 # Load data
