@@ -168,9 +168,8 @@ final case class Fuseki(
   password: String,
   queryLoggingThreshold: Duration = Duration.ofMillis(1000),
   allowCompaction: Boolean = false,
-) {
-  val repositoryName: String = "dsp-repo"
-}
+  repositoryName: String = "dsp-repo",
+)
 
 final case class InstrumentationServerConfig(
   port: Int,
