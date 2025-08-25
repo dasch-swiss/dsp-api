@@ -442,3 +442,12 @@ lazy val ingest = {
       },
     )
 }
+
+lazy val integration = (project in file("modules/test-ingest-integration"))
+  .dependsOn(ingest)
+  .settings(
+    publish / skip := true,
+    headerLicense  := projectLicense,
+    libraryDependencies ++= Dependencies.ingestTest ++ Seq(Dependencies.testcontainers),
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+  )
