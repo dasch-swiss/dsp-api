@@ -7,6 +7,11 @@ while [[ $# -gt 0 ]]; do
   key="$1"
 
   case $key in
+  -r | --repository)
+    REPOSITORY="$2"
+    shift # past argument
+    shift # past value
+    ;;
   -u | --username)
     USER_NAME="$2"
     shift # past argument
@@ -32,7 +37,9 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 FILE="$1"
 
-REPOSITORY="dsp-repo"
+if [[ -z "${REPOSITORY}" ]]; then
+  REPOSITORY="dsp-repo"
+fi
 
 if [[ -z "${HOST}" ]]; then
   HOST="localhost:3030"
