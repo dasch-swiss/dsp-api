@@ -259,7 +259,7 @@ case class TriplestoreServiceLive(
     ZIO
       .ifZIO(checkTriplestoreInitialized())(
         ZIO.succeed(Available),
-        ZIO.succeed(NotInitialized(s"Dataset `${fusekiConfig.repositoryName} not found in triplestore.")),
+        ZIO.succeed(NotInitialized(s"Dataset ${fusekiConfig.repositoryName} not found in triplestore.")),
       )
       .catchAll(ex => ZIO.succeed(Unavailable(s"Triplestore not available: ${ex.getMessage}")))
 
