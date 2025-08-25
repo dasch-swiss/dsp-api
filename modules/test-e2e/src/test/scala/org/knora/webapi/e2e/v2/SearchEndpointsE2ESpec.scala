@@ -67,39 +67,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
 
-    "do a Gravsearch query that finds all the letters sent by someone called Meier, ordered by date (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |
-          |CONSTRUCT {
-          |
-          |  ?letter knora-api:isMainResource true ;
-          |    beol:creationDate ?date ;
-          |    beol:hasAuthor ?author .
-          |
-          |  ?author beol:hasFamilyName ?name .
-          |
-          |} WHERE {
-          |
-          |  ?letter beol:hasAuthor ?author ;
-          |    beol:creationDate ?date .
-          |
-          |  ?author beol:hasFamilyName ?name .
-          |
-          |  ?name knora-api:valueAsString "Meier" .
-          |
-          |} ORDER BY ?date
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
-      )
-      val expected = testData("lettersByMeier.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (submitting the complex schema)" in {
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>

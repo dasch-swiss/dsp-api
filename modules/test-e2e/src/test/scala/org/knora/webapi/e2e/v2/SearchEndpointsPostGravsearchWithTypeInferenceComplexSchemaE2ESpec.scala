@@ -116,5 +116,35 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "booksWithPage100.jsonld")
     },
+    test(
+      "do a Gravsearch query that finds all the letters sent by someone called Meier, ordered by date (submitting the complex schema)",
+    ) {
+      val query =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |
+          |CONSTRUCT {
+          |
+          |  ?letter knora-api:isMainResource true ;
+          |    beol:creationDate ?date ;
+          |    beol:hasAuthor ?author .
+          |
+          |  ?author beol:hasFamilyName ?name .
+          |
+          |} WHERE {
+          |
+          |  ?letter beol:hasAuthor ?author ;
+          |    beol:creationDate ?date .
+          |
+          |  ?author beol:hasFamilyName ?name .
+          |
+          |  ?name knora-api:valueAsString "Meier" .
+          |
+          |} ORDER BY ?date
+                """.stripMargin
+      verifyQueryResult(query, "lettersByMeier.jsonld")
+    },
   )
 }
