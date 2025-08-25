@@ -182,10 +182,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies,
   )
   .settings(
-    // add needed files to production jar
-    Compile / packageBin / mappings ++= Seq(
-      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template", // needed for initialization of triplestore
-    ),
     // use packaged jars (through packageBin) on classpaths instead of class directories for production
     Compile / exportJars := true,
   )

@@ -21,7 +21,6 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 object ProjectImportServiceIT extends ZIOSpecDefault {
 
   private val projectImportService = ZIO.serviceWithZIO[ProjectImportService]
-  private val repositoryName       = "knora-test"
 
   private val storageServiceLayer: Layer[IOException, ProjectExportStorageServiceLive] = ZLayer.fromZIO {
     for {
@@ -43,10 +42,8 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
           queryTimeout = java.time.Duration.ofSeconds(5),
           maintenanceTimeout = java.time.Duration.ofSeconds(5),
           gravsearchTimeout = java.time.Duration.ofSeconds(5),
-          autoInit = false,
           fuseki = Fuseki(
             port = container.getFirstMappedPort,
-            repositoryName = repositoryName,
             username = "admin",
             password = "test",
           ),
@@ -70,8 +67,6 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
     suite("ImportService")(test("should import a trig file into a named graph and the default graph") {
       ZIO.scoped {
         for {
-          _ <- FusekiTestContainer.initializeWithDataset(repositoryName)
-
           filePath <- FileTestUtil.createTempTextFileScoped(trigContent, ".trig")
           _        <- projectImportService(_.importTrigFile(filePath))
           nrResultsInNamedGraph <- projectImportService(

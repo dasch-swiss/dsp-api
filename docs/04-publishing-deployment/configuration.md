@@ -17,7 +17,7 @@ The relevant sections for tuning are:
 A number of core settings is additionally configurable through system environment variables. These are:
 
 | key in application.conf                | environment variable                            | default value           |
-| -------------------------------------- | ----------------------------------------------- | ----------------------- |
+|----------------------------------------|-------------------------------------------------|-------------------------|
 | pekko.log-config-on-start              | KNORA_AKKA_LOG_CONFIG_ON_START                  | off                     |
 | pekko.loglevel                         | KNORA_AKKA_LOGLEVEL                             | INFO                    |
 | pekko.stdout-loglevel                  | KNORA_AKKA_STDOUT_LOGLEVEL                      | INFO                    |
@@ -49,9 +49,8 @@ A number of core settings is additionally configurable through system environmen
 | app.triplestore.dbtype                 | KNORA_WEBAPI_TRIPLESTORE_DBTYPE                 | fuseki                  |
 | app.triplestore.use-https              | KNORA_WEBAPI_TRIPLESTORE_USE_HTTPS              | false                   |
 | app.triplestore.host                   | KNORA_WEBAPI_TRIPLESTORE_HOST                   | localhost               |
-| app.triplestore.auto-init              | KNORA_WEBAPI_TRIPLESTORE_AUTOINIT               | false                   |
 | app.triplestore.fuseki.port            | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PORT            | 3030                    |
-| app.triplestore.fuseki.repository-name | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME | knora-test              |
+| app.triplestore.fuseki.repository-name | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME | dsp-repo                |
 | app.triplestore.fuseki.username        | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME        | admin                   |
 | app.triplestore.fuseki.password        | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD        | test                    |
 
