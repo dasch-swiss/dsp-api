@@ -10,18 +10,18 @@ import sttp.model.headers.ContentRange
 import sttp.tapir.ztapir.ZServerEndpoint
 import swiss.dasch.FetchAssetPermissions
 import swiss.dasch.api.ApiProblem.*
-import swiss.dasch.api.ProjectsEndpointsResponses.{
-  AssetCheckResultResponse,
-  AssetInfoResponse,
-  ProjectResponse,
-  UploadResponse,
-}
+import swiss.dasch.api.ProjectsEndpointsResponses.AssetCheckResultResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.UploadResponse
 import swiss.dasch.config.Configuration.Features
 import swiss.dasch.domain.*
-import swiss.dasch.domain.BulkIngestError.{BulkIngestInProgress, ImportFolderDoesNotExist}
+import swiss.dasch.domain.BulkIngestError.BulkIngestInProgress
+import swiss.dasch.domain.BulkIngestError.ImportFolderDoesNotExist
 import zio.*
 import zio.nio.file.Files
-import zio.stream.{ZSink, ZStream}
+import zio.stream.ZSink
+import zio.stream.ZStream
 
 import java.io.IOException
 import java.net.URLEncoder

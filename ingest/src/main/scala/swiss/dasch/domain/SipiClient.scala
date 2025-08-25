@@ -5,8 +5,11 @@
 
 package swiss.dasch.domain
 
-import swiss.dasch.domain.SipiCommand.{FormatArgument, QueryArgument, TopLeftArgument}
-import swiss.dasch.infrastructure.{CommandExecutor, ProcessOutput}
+import swiss.dasch.domain.SipiCommand.FormatArgument
+import swiss.dasch.domain.SipiCommand.QueryArgument
+import swiss.dasch.domain.SipiCommand.TopLeftArgument
+import swiss.dasch.infrastructure.CommandExecutor
+import swiss.dasch.infrastructure.ProcessOutput
 import zio.*
 import zio.metrics.Metric
 import zio.nio.file.Path

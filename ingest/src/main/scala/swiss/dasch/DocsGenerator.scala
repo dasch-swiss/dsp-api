@@ -12,8 +12,12 @@ import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import swiss.dasch.api.*
 import swiss.dasch.config.Configuration
 import swiss.dasch.version.BuildInfo
-import zio.nio.file.{Files, Path}
-import zio.{Chunk, ZIO, ZIOAppArgs, ZIOAppDefault}
+import zio.Chunk
+import zio.ZIO
+import zio.ZIOAppArgs
+import zio.ZIOAppDefault
+import zio.nio.file.Files
+import zio.nio.file.Path
 
 object DocsGenerator extends ZIOAppDefault {
   private val interp: OpenAPIDocsInterpreter = OpenAPIDocsInterpreter()

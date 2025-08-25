@@ -13,7 +13,9 @@ import swiss.dasch.FetchAssetPermissions.PermissionResponse
 import swiss.dasch.config.Configuration
 import swiss.dasch.domain.AssetInfo
 import zio.*
-import zio.json.{DecoderOps, DeriveJsonDecoder, JsonDecoder}
+import zio.json.DecoderOps
+import zio.json.DeriveJsonDecoder
+import zio.json.JsonDecoder
 
 import scala.concurrent.duration.*
 

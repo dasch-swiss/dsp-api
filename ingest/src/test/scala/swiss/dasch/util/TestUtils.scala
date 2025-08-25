@@ -8,10 +8,17 @@ package swiss.dasch.util
 import io.getquill.SnakeCase
 import io.getquill.jdbczio.Quill
 import swiss.dasch.config.Configuration.DbConfig
-import swiss.dasch.db.{Db, DbMigrator}
-import zio.{RIO, Random, UIO, ULayer, ZIO, ZLayer}
+import swiss.dasch.db.Db
+import swiss.dasch.db.DbMigrator
+import zio.RIO
+import zio.Random
+import zio.UIO
+import zio.ULayer
+import zio.ZIO
+import zio.ZLayer
 
-import java.nio.file.{Files, Paths}
+import java.nio.file.Files
+import java.nio.file.Paths
 import javax.sql.DataSource
 
 object TestUtils {

@@ -6,12 +6,17 @@
 package swiss.dasch.domain
 
 import org.apache.commons.io.FilenameUtils
+import scala.language.implicitConversions
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.MovingImageDerivativeFile
 import swiss.dasch.infrastructure.CommandExecutor
-import zio.json.{DecoderOps, DeriveJsonDecoder, JsonDecoder}
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+import zio.json.DecoderOps
+import zio.json.DeriveJsonDecoder
+import zio.json.JsonDecoder
 import zio.nio.file.Path
-import zio.{Task, ZIO, ZLayer}
 
 case class MovingImageService(storage: StorageService, executor: CommandExecutor, mimeTypeGuesser: MimeTypeGuesser) {
 

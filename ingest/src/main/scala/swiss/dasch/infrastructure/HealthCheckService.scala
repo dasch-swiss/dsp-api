@@ -5,7 +5,11 @@
 
 package swiss.dasch.infrastructure
 
-import zio.{Chunk, UIO, URIO, ZIO, ZLayer}
+import zio.Chunk
+import zio.UIO
+import zio.URIO
+import zio.ZIO
+import zio.ZLayer
 
 trait HealthCheckService {
   def check: UIO[AggregatedHealth]

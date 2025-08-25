@@ -7,7 +7,10 @@ package swiss.dasch.db
 
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.output.MigrateErrorResult
-import zio.{RIO, Task, ZIO, ZLayer}
+import zio.RIO
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
 
 import javax.sql.DataSource
 

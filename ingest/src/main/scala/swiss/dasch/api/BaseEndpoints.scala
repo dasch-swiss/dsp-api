@@ -7,10 +7,12 @@ package swiss.dasch.api
 
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
+import sttp.tapir.Codec
+import sttp.tapir.EndpointOutput
+import sttp.tapir.PublicEndpoint
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
-import sttp.tapir.{Codec, EndpointOutput, PublicEndpoint}
 import swiss.dasch.api.ApiProblem.Unauthorized
 import swiss.dasch.api.BaseEndpoints.defaultErrorOutputs
 import zio.*

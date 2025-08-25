@@ -5,9 +5,13 @@
 
 package swiss.dasch.domain
 
+import zio.URIO
+import zio.ZIO
 import zio.nio.file.Path
-import zio.test.{Gen, ZIOSpecDefault, assertTrue, check}
-import zio.{URIO, ZIO}
+import zio.test.Gen
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+import zio.test.check
 
 object MimeTypeGuesserSpec extends ZIOSpecDefault {
 

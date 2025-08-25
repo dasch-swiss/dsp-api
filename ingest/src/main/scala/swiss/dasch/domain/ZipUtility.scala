@@ -9,7 +9,9 @@ import zio.*
 import zio.nio.file.*
 
 import java.io.*
-import java.util.zip.{ZipEntry, ZipInputStream, ZipOutputStream}
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 
 object ZipUtility {
 

@@ -10,9 +10,11 @@ import sttp.tapir.Codec
 import sttp.tapir.CodecFormat.TextPlain
 import sttp.tapir.ztapir.*
 import swiss.dasch.domain.ProjectShortcode
-import zio.json.{DeriveJsonCodec, JsonCodec}
-import zio.schema.{DeriveSchema, Schema}
 import zio.ZLayer
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
+import zio.schema.DeriveSchema
+import zio.schema.Schema
 
 final case class MappingEntry(internalFilename: String, originalFilename: String)
 

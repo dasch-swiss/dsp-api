@@ -9,18 +9,24 @@ import eu.timepit.refined.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.*
 import eu.timepit.refined.numeric.Greater.greaterValidate
+import swiss.dasch.api.SipiClientMock
+import swiss.dasch.api.SipiClientMockMethodInvocation
 import swiss.dasch.api.SipiClientMockMethodInvocation.ApplyTopLeftCorrection
-import swiss.dasch.api.{SipiClientMock, SipiClientMockMethodInvocation}
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
-import swiss.dasch.domain.AugmentedPath.{JpxDerivativeFile, OrigFile}
+import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile
+import swiss.dasch.domain.AugmentedPath.OrigFile
 import swiss.dasch.domain.Exif.Image.OrientationValue
 import swiss.dasch.domain.RefinedHelper.positiveFrom
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*
 import zio.Exit
-import zio.nio.file.{Files, Path}
+import zio.nio.file.Files
+import zio.nio.file.Path
 import zio.test.*
-import zio.test.Assertion.{equalTo, fails, hasMessage, isSubtype}
+import zio.test.Assertion.equalTo
+import zio.test.Assertion.fails
+import zio.test.Assertion.hasMessage
+import zio.test.Assertion.isSubtype
 
 import java.io.IOException
 

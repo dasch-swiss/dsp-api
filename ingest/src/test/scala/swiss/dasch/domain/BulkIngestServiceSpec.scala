@@ -8,13 +8,19 @@ package swiss.dasch.domain
 import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.domain.Asset.StillImageAsset
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
-import swiss.dasch.domain.AugmentedPath.{JpxDerivativeFile, OrigFile}
+import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile
+import swiss.dasch.domain.AugmentedPath.OrigFile
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.util.TestUtils
 import zio.*
-import zio.nio.file.{Files, Path}
+import zio.nio.file.Files
+import zio.nio.file.Path
 import zio.stream.ZStream
-import zio.test.{TestAspect, TestClock, ZIOSpecDefault, assertCompletes, assertTrue}
+import zio.test.TestAspect
+import zio.test.TestClock
+import zio.test.ZIOSpecDefault
+import zio.test.assertCompletes
+import zio.test.assertTrue
 
 import java.io.IOException
 

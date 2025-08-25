@@ -12,7 +12,9 @@ import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.util.TestUtils
 import zio.ZIO
 import zio.nio.file.Files
-import zio.test.{Spec, ZIOSpecDefault, assertTrue}
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 object IngestServiceSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Any] = suite("IngestService")(test("should ingest a simple csv file") {

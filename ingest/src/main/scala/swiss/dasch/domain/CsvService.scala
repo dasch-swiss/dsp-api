@@ -6,9 +6,13 @@
 package swiss.dasch.domain
 
 import com.github.tototoshi.csv.CSVWriter
-import swiss.dasch.domain.SupportedFileType.{Audio, MovingImage, OtherFiles, StillImage}
+import swiss.dasch.domain.SupportedFileType.Audio
+import swiss.dasch.domain.SupportedFileType.MovingImage
+import swiss.dasch.domain.SupportedFileType.OtherFiles
+import swiss.dasch.domain.SupportedFileType.StillImage
+import zio.Task
+import zio.ZIO
 import zio.nio.file.Path
-import zio.{Task, ZIO}
 
 object AssetOverviewReportRowBuilder {
   private def getFileSize(key: SupportedFileType, f: SizeInBytesPerType => FileSize): AssetOverviewReport => Number =

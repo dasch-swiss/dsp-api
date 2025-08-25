@@ -9,15 +9,17 @@ import swiss.dasch.domain.AugmentedPath.*
 import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile.given
 import swiss.dasch.domain.AugmentedPath.MovingImageDerivativeFile.given
 import swiss.dasch.domain.AugmentedPath.ProjectFolder.given
-import swiss.dasch.domain.AugmentedPathSpec.ExpectedErrorMessages.{
-  hiddenFile,
-  noAssetIdInFilename,
-  notAProjectFolder,
-  unsupportedFileType,
-}
+import swiss.dasch.domain.AugmentedPathSpec.ExpectedErrorMessages.hiddenFile
+import swiss.dasch.domain.AugmentedPathSpec.ExpectedErrorMessages.noAssetIdInFilename
+import swiss.dasch.domain.AugmentedPathSpec.ExpectedErrorMessages.notAProjectFolder
+import swiss.dasch.domain.AugmentedPathSpec.ExpectedErrorMessages.unsupportedFileType
 import swiss.dasch.test.SpecConstants
 import zio.nio.file.Path
-import zio.test.{Gen, Spec, ZIOSpecDefault, assertTrue, check}
+import zio.test.Gen
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+import zio.test.check
 
 object AugmentedPathSpec extends ZIOSpecDefault {
 

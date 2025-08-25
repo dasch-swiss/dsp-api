@@ -5,11 +5,14 @@
 
 package swiss.dasch.db
 
-import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.getquill.*
 import io.getquill.jdbczio.*
 import swiss.dasch.config.Configuration.DbConfig
-import zio.{URLayer, ZIO, ZLayer}
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
 
 import javax.sql.DataSource
 

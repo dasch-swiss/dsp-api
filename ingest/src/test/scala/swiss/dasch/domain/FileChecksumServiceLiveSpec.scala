@@ -8,7 +8,8 @@ package swiss.dasch.domain
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.AssetRefs.*
 import swiss.dasch.test.SpecPaths.pathFromResource
-import zio.test.{ZIOSpecDefault, assertTrue}
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 object FileChecksumServiceLiveSpec extends ZIOSpecDefault {
 

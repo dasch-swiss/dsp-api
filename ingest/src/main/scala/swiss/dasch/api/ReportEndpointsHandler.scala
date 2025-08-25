@@ -7,8 +7,9 @@ package swiss.dasch.api
 
 import sttp.tapir.ztapir.ZServerEndpoint
 import swiss.dasch.domain.*
+import zio.ZIO
+import zio.ZLayer
 import zio.stream.ZStream
-import zio.{ZIO, ZLayer}
 
 final class ReportEndpointsHandler(
   reportEndpoints: ReportEndpoints,

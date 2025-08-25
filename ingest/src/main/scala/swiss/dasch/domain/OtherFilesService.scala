@@ -5,8 +5,11 @@
 
 package swiss.dasch.domain
 
-import swiss.dasch.domain.AugmentedPath.{AudioDerivativeFile, OtherDerivativeFile}
-import zio.{UIO, ZIO, ZLayer}
+import swiss.dasch.domain.AugmentedPath.AudioDerivativeFile
+import swiss.dasch.domain.AugmentedPath.OtherDerivativeFile
+import zio.UIO
+import zio.ZIO
+import zio.ZLayer
 
 final case class OtherFilesService(mimeTypeGuesser: MimeTypeGuesser) {
   def extractMetadata(original: Original, derivative: OtherDerivativeFile | AudioDerivativeFile): UIO[OtherMetadata] =

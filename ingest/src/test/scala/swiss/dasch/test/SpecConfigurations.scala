@@ -6,9 +6,15 @@
 package swiss.dasch.test
 
 import org.apache.commons.io.FileUtils
-import swiss.dasch.config.Configuration.{IngestConfig, JwtConfig, SipiConfig, StorageConfig}
+import swiss.dasch.config.Configuration.IngestConfig
+import swiss.dasch.config.Configuration.JwtConfig
+import swiss.dasch.config.Configuration.SipiConfig
+import swiss.dasch.config.Configuration.StorageConfig
+import zio.Layer
+import zio.ULayer
+import zio.ZIO
+import zio.ZLayer
 import zio.nio.file.Files
-import zio.{Layer, ULayer, ZIO, ZLayer}
 
 import java.io.IOException
 

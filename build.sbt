@@ -368,7 +368,7 @@ lazy val ingest = {
     .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
     .settings(
       scalacOptions ++= Seq("-old-syntax", "-rewrite"),
-      scalacOptions ++= Seq("-Xmax-inlines", "50"),
+      scalacOptions ++= customScalacOptions,
       buildInfoKeys := Seq[BuildInfoKey](
         name,
         version,

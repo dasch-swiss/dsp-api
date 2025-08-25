@@ -7,7 +7,8 @@ package swiss.dasch.infrastructure
 
 import swiss.dasch.infrastructure.Health.Status
 import zio.Chunk
-import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
 final case class AggregatedHealth(status: Status, components: Option[Map[HealthIndicatorName, Health]]) {
   def isHealthy: Boolean = status == Status.UP

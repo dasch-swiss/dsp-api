@@ -11,15 +11,17 @@ import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*
 import swiss.dasch.test.SpecConstants.Projects.existingProject
 import zio.*
-import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 import zio.nio.file.Files
 import zio.test.*
 import zio.test.Assertion.failsWithA
 
 import java.nio.file.NoSuchFileException
 import java.text.ParseException
+import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.time.{ZoneId, ZoneOffset}
 
 object StorageServiceLiveSpec extends ZIOSpecDefault {
 

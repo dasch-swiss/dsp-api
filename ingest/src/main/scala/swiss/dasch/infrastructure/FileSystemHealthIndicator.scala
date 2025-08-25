@@ -6,8 +6,13 @@
 package swiss.dasch.infrastructure
 
 import swiss.dasch.config.Configuration.StorageConfig
+import zio.IO
+import zio.RIO
+import zio.UIO
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
 import zio.nio.file.Files
-import zio.{IO, RIO, UIO, URLayer, ZIO, ZLayer}
 
 trait FileSystemHealthIndicator extends HealthIndicator {
   def checkExpectedFoldersExist(): UIO[Boolean]

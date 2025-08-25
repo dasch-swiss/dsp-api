@@ -8,7 +8,9 @@ package swiss.dasch.api
 import swiss.dasch.api.ApiProblem.Unauthorized
 import swiss.dasch.config.Configuration.JwtConfig
 import swiss.dasch.domain.ProjectShortcode
-import zio.{IO, ZIO, ZLayer}
+import zio.IO
+import zio.ZIO
+import zio.ZLayer
 
 trait AuthorizationHandler {
   def ensureAdminScope(userSession: Principal): IO[ApiProblem, Unit]

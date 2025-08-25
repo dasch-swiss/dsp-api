@@ -7,8 +7,11 @@ package swiss.dasch
 
 import swiss.dasch.api.*
 import swiss.dasch.config.Configuration
-import swiss.dasch.config.Configuration.{JwtConfig, ServiceConfig, StorageConfig}
-import swiss.dasch.db.{Db, DbMigrator}
+import swiss.dasch.config.Configuration.JwtConfig
+import swiss.dasch.config.Configuration.ServiceConfig
+import swiss.dasch.config.Configuration.StorageConfig
+import swiss.dasch.db.Db
+import swiss.dasch.db.DbMigrator
 import swiss.dasch.domain.*
 import swiss.dasch.infrastructure.*
 import zio.*

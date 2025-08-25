@@ -5,7 +5,10 @@
 
 package swiss.dasch.infrastructure
 
-import zio.{Duration, UIO, ZIO, ZLayer}
+import zio.Duration
+import zio.UIO
+import zio.ZIO
+import zio.ZLayer
 
 import javax.sql.DataSource
 

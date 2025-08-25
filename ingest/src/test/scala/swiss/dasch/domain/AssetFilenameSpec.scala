@@ -5,7 +5,10 @@
 
 package swiss.dasch.domain
 
-import zio.test.{Gen, ZIOSpecDefault, assertTrue, check}
+import zio.test.Gen
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+import zio.test.check
 
 object AssetFilenameSpec extends ZIOSpecDefault {
   val spec = suite("AssetFilenameSpec")(

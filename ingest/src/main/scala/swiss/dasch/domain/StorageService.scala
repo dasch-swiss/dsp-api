@@ -6,21 +6,33 @@
 package swiss.dasch.domain
 
 import org.apache.commons.io.FileUtils
+import scala.language.implicitConversions
 import swiss.dasch.config.Configuration.StorageConfig
+import swiss.dasch.domain.AugmentedPath.AssetFolder
+import swiss.dasch.domain.AugmentedPath.AssetsBaseFolder
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
-import swiss.dasch.domain.AugmentedPath.{AssetFolder, AssetsBaseFolder, ProjectFolder, TempFolder}
+import swiss.dasch.domain.AugmentedPath.ProjectFolder
+import swiss.dasch.domain.AugmentedPath.TempFolder
 import zio.*
-import zio.json.{DecoderOps, EncoderOps, JsonDecoder, JsonEncoder}
-import zio.nio.file.{Files, Path}
+import zio.json.DecoderOps
+import zio.json.EncoderOps
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
+import zio.nio.file.Files
+import zio.nio.file.Path
 import zio.stream.ZStream
 
 import java.io.IOException
+import java.nio.file.CopyOption
+import java.nio.file.DirectoryNotEmptyException
+import java.nio.file.OpenOption
+import java.nio.file.StandardOpenOption
 import java.nio.file.StandardOpenOption.*
 import java.nio.file.attribute.FileAttribute
-import java.nio.file.{CopyOption, DirectoryNotEmptyException, OpenOption, StandardOpenOption}
 import java.text.ParseException
+import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.time.{ZoneId, ZoneOffset}
 
 trait StorageService {
   def createProjectFolder(projectShortcode: ProjectShortcode): IO[IOException, ProjectFolder]

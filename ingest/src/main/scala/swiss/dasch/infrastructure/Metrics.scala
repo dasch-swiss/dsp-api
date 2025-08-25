@@ -5,10 +5,12 @@
 
 package swiss.dasch.infrastructure
 
+import zio.ZLayer
+import zio.durationInt
+import zio.metrics.connectors.MetricsConfig
+import zio.metrics.connectors.prometheus
 import zio.metrics.connectors.prometheus.PrometheusPublisher
-import zio.metrics.connectors.{MetricsConfig, prometheus}
 import zio.metrics.jvm.DefaultJvmMetrics
-import zio.{ZLayer, durationInt}
 
 object Metrics {
   val layer: ZLayer[Any, Nothing, PrometheusPublisher] =

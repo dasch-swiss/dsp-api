@@ -8,12 +8,16 @@ package swiss.dasch.infrastructure
 import swiss.dasch.config.Configuration.SipiConfig
 import swiss.dasch.domain.StorageService
 import swiss.dasch.version.BuildInfo
-import zio.{IO, UIO, ZIO, ZLayer}
-import zio.json._
+import zio.IO
+import zio.UIO
+import zio.ZIO
+import zio.ZLayer
+import zio.json.*
 import zio.json.ast.Json
 
 import java.io.IOException
-import scala.sys.process.{ProcessLogger, stringSeqToProcess}
+import scala.sys.process.ProcessLogger
+import scala.sys.process.stringSeqToProcess
 
 final case class ProcessOutput(stdout: String, stderr: String, exitCode: Int)
 final case class Command private[infrastructure] (cmd: List[String])

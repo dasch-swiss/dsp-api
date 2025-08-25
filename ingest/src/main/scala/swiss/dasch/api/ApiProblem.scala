@@ -7,10 +7,13 @@ package swiss.dasch.api
 
 import swiss.dasch.api.ApiProblem.BadRequest.Argument
 import swiss.dasch.domain.ProjectShortcode
+import swiss.dasch.infrastructure.AggregatedHealth
+import swiss.dasch.infrastructure.Health
 import swiss.dasch.infrastructure.Health.Status
-import swiss.dasch.infrastructure.{AggregatedHealth, Health}
-import zio.json.{DeriveJsonCodec, JsonCodec}
-import zio.schema.{DeriveSchema, Schema}
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
+import zio.schema.DeriveSchema
+import zio.schema.Schema
 
 sealed trait ApiProblem
 

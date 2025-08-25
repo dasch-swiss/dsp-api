@@ -5,7 +5,8 @@
 
 package swiss.dasch.domain
 
-import eu.timepit.refined.api.{Refined, RefinedTypeOps}
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.string.MatchesRegex
 import zio.json.JsonCodec
 import zio.schema.Schema

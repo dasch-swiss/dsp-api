@@ -10,9 +10,15 @@ import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*
 import swiss.dasch.test.SpecConstants.Projects.*
 import swiss.dasch.util.TestUtils
+import zio.Chunk
+import zio.Scope
+import zio.ZIO
+import zio.ZLayer
 import zio.nio.file.Path
-import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
-import zio.{Chunk, Scope, ZIO, ZLayer}
+import zio.test.Spec
+import zio.test.TestEnvironment
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 object ProjectServiceSpec extends ZIOSpecDefault {
 

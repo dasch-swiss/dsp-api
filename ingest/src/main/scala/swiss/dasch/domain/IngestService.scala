@@ -8,13 +8,25 @@ package swiss.dasch.domain
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
-import swiss.dasch.domain.Asset.{MovingImageAsset, StillImageAsset}
+import scala.language.implicitConversions
+import swiss.dasch.domain.Asset.MovingImageAsset
+import swiss.dasch.domain.Asset.StillImageAsset
+import swiss.dasch.domain.AugmentedPath.AssetFolder
+import swiss.dasch.domain.AugmentedPath.AudioDerivativeFile
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
-import swiss.dasch.domain.AugmentedPath.{AssetFolder, AudioDerivativeFile, OrigFile, OtherDerivativeFile}
+import swiss.dasch.domain.AugmentedPath.OrigFile
+import swiss.dasch.domain.AugmentedPath.OtherDerivativeFile
 import swiss.dasch.domain.PathOps.fileExtension
-import swiss.dasch.domain.SupportedFileType.{Audio, MovingImage, OtherFiles, StillImage}
-import zio.nio.file.{Files, Path}
-import zio.{IO, Task, ZIO, ZLayer}
+import swiss.dasch.domain.SupportedFileType.Audio
+import swiss.dasch.domain.SupportedFileType.MovingImage
+import swiss.dasch.domain.SupportedFileType.OtherFiles
+import swiss.dasch.domain.SupportedFileType.StillImage
+import zio.IO
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+import zio.nio.file.Files
+import zio.nio.file.Path
 
 import java.io.IOException
 

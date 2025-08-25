@@ -8,12 +8,16 @@ package swiss.dasch.domain
 import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.OrigFile
-import swiss.dasch.infrastructure.{CommandExecutor, CommandExecutorMock, ProcessOutput}
+import swiss.dasch.infrastructure.CommandExecutor
+import swiss.dasch.infrastructure.CommandExecutorMock
+import swiss.dasch.infrastructure.ProcessOutput
 import swiss.dasch.test.SpecConfigurations
+import zio.Exit
+import zio.ZIO
+import zio.ZLayer
 import zio.nio.file.Files
 import zio.test.*
 import zio.test.Assertion.*
-import zio.{Exit, ZIO, ZLayer}
 
 import java.io.IOException
 

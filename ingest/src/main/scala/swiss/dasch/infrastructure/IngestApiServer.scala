@@ -5,11 +5,13 @@
 
 package swiss.dasch.infrastructure
 
-import sttp.tapir.server.ziohttp
-import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
+import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSConfig.AllowedOrigin
-import sttp.tapir.server.interceptor.cors.{CORSConfig, CORSInterceptor}
+import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.metrics.zio.ZioMetrics
+import sttp.tapir.server.ziohttp
+import sttp.tapir.server.ziohttp.ZioHttpInterpreter
+import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import swiss.dasch.Endpoints
 import swiss.dasch.config.Configuration.ServiceConfig
 import swiss.dasch.version.BuildInfo

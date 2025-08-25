@@ -4,13 +4,16 @@
  */
 
 package swiss.dasch.domain
+
+import scala.language.implicitConversions
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
+import zio.*
+import zio.nio.file.Files
 import zio.nio.file.Files.newDirectoryStream
-import zio.nio.file.{Files, Path}
+import zio.nio.file.Path
 import zio.prelude.ForEachOps
 import zio.stream.ZStream
-import zio.{IO, *}
 
 import java.io.IOException
 import java.sql.SQLException

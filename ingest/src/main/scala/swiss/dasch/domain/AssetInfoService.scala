@@ -15,6 +15,7 @@ import zio.json.interop.refined.{decodeRefined, encodeRefined}
 import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.nio.file.{Files, Path}
 import zio.stream.ZStream
+import scala.language.implicitConversions
 import zio.{IO, Task, UIO, ZIO, ZLayer}
 
 import java.io.FileNotFoundException

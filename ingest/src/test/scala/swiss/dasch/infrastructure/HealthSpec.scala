@@ -5,7 +5,8 @@
 
 package swiss.dasch.infrastructure
 
-import zio.test.{ZIOSpecDefault, assertTrue}
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 object HealthSpec extends ZIOSpecDefault {
   val spec = suite("Health")(test("aggregation") {

@@ -5,8 +5,10 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.api.ApiProblem.{InternalServerError, NotFound}
-import swiss.dasch.domain.{AssetRef, ProjectShortcode}
+import swiss.dasch.api.ApiProblem.InternalServerError
+import swiss.dasch.api.ApiProblem.NotFound
+import swiss.dasch.domain.AssetRef
+import swiss.dasch.domain.ProjectShortcode
 
 trait HandlerFunctions {
   def projectNotFoundOrServerError(mayBeError: Option[Throwable], shortcode: ProjectShortcode): ApiProblem =

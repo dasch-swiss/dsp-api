@@ -7,7 +7,8 @@ package swiss.dasch.infrastructure
 
 import swiss.dasch.infrastructure.Health.Status
 import zio.Chunk
-import zio.test.{ZIOSpecDefault, assertTrue}
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 object AggregatedHealthSpec extends ZIOSpecDefault {
   val spec = suite("AggregatedHealth")(test("aggregates Health") {

@@ -5,17 +5,22 @@
 
 package swiss.dasch.domain
 
+import scala.language.implicitConversions
 import swiss.dasch.api.ActionName
 import swiss.dasch.domain
 import swiss.dasch.domain.AugmentedPath.*
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.FileFilters.isJpeg2000
 import zio.*
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
+import zio.json.JsonEncoder
 import zio.json.interop.refined.*
-import zio.json.{DeriveJsonCodec, JsonCodec, JsonEncoder}
 import zio.nio.file
-import zio.nio.file.{Files, Path}
-import zio.stream.{ZSink, ZStream}
+import zio.nio.file.Files
+import zio.nio.file.Path
+import zio.stream.ZSink
+import zio.stream.ZStream
 
 import java.io.IOException
 

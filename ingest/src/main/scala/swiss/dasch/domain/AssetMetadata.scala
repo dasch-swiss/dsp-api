@@ -8,8 +8,10 @@ package swiss.dasch.domain
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
-import zio.json.interop.refined.{decodeRefined, encodeRefined}
-import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
+import zio.json.interop.refined.decodeRefined
+import zio.json.interop.refined.encodeRefined
 
 sealed trait AssetMetadata {
   def internalMimeType: Option[MimeType]

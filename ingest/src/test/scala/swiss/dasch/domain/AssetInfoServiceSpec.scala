@@ -9,7 +9,10 @@ import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.domain.AssetInfoFileTestHelper.*
 import swiss.dasch.test.SpecConfigurations
 import zio.Scope
-import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
+import zio.test.Spec
+import zio.test.TestEnvironment
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 object AssetInfoServiceSpec extends ZIOSpecDefault {
   private val findByAssetRefSuite = {

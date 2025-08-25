@@ -5,12 +5,14 @@
 
 package swiss.dasch.domain
 
-import eu.timepit.refined.api.{Refined, RefinedTypeOps}
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.string.MatchesRegex
 import zio.*
 import zio.nio.file.Path
 
-import java.io.{FileInputStream, FileNotFoundException}
+import java.io.FileInputStream
+import java.io.FileNotFoundException
 
 type Sha256Hash = String Refined MatchesRegex["^[A-Fa-f0-9]{64}$"]
 object Sha256Hash extends RefinedTypeOps[Sha256Hash, String]

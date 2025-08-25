@@ -6,12 +6,14 @@
 package swiss.dasch.infrastructure
 
 import swiss.dasch.config.Configuration.SipiConfig
-import swiss.dasch.domain.{StorageService, StorageServiceLive}
+import swiss.dasch.domain.StorageService
+import swiss.dasch.domain.StorageServiceLive
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.version.BuildInfo
-import zio.ZLayer
-import zio.test.{ZIOSpecDefault, assertTrue}
 import zio.ZIO
+import zio.ZLayer
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 object CommandExecutorLiveSpec extends ZIOSpecDefault {
   val devLayer = ZLayer.succeed(SipiConfig(useLocalDev = true)) >>> CommandExecutorLive.layer

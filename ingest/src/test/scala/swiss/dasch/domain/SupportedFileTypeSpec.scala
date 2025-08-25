@@ -6,7 +6,10 @@
 package swiss.dasch.domain
 
 import zio.nio.file.Path
-import zio.test.{Gen, ZIOSpecDefault, assertTrue, check}
+import zio.test.Gen
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+import zio.test.check
 
 object SupportedFileTypeSpec extends ZIOSpecDefault {
   private def withUpperCase(lower: Seq[String]): Seq[String] = lower ++ lower.map(_.toUpperCase)

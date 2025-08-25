@@ -7,13 +7,17 @@ package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.config.Configuration.StorageConfig
-import swiss.dasch.domain.PathOps.{fileExtension, isHidden}
+import swiss.dasch.domain.PathOps.fileExtension
+import swiss.dasch.domain.PathOps.isHidden
 import swiss.dasch.domain.SipiImageFormat.Jpx
-import swiss.dasch.domain.SupportedFileType.{Audio, MovingImage, OtherFiles}
+import swiss.dasch.domain.SupportedFileType.Audio
+import swiss.dasch.domain.SupportedFileType.MovingImage
+import swiss.dasch.domain.SupportedFileType.OtherFiles
 import zio.IO
 import zio.nio.file.Path
 
-import java.io.{File, IOError}
+import java.io.File
+import java.io.IOError
 import scala.util.Left
 
 trait AugmentedPathBuilder[A <: AugmentedPath] {

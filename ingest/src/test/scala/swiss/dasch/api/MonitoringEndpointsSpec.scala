@@ -5,15 +5,31 @@
 
 package swiss.dasch.api
 
-import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
-import swiss.dasch.infrastructure.{AggregatedHealth, Health, HealthCheckService, Metrics}
+import sttp.tapir.server.ziohttp.ZioHttpInterpreter
+import sttp.tapir.server.ziohttp.ZioHttpServerOptions
+import swiss.dasch.infrastructure.AggregatedHealth
+import swiss.dasch.infrastructure.Health
+import swiss.dasch.infrastructure.HealthCheckService
+import swiss.dasch.infrastructure.Metrics
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.version.BuildInfo
-import zio.http.{Path, Request, Status, URL}
+import zio.Ref
+import zio.Scope
+import zio.UIO
+import zio.ULayer
+import zio.ZIO
+import zio.ZLayer
+import zio.http.Path
+import zio.http.Request
+import zio.http.Status
+import zio.http.URL
+import zio.json.DecoderOps
+import zio.json.EncoderOps
 import zio.json.ast.Json
-import zio.json.{DecoderOps, EncoderOps}
-import zio.test.{Spec, TestResult, ZIOSpecDefault, assertTrue}
-import zio.{Ref, UIO, ULayer, Scope, ZIO, ZLayer}
+import zio.test.Spec
+import zio.test.TestResult
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 object MonitoringEndpointsSpec extends ZIOSpecDefault {
   def testWithScope[E, Err](label: String)(assertion: => ZIO[E & Scope, Err, TestResult]): Spec[E, Err] =

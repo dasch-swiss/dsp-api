@@ -11,9 +11,13 @@ import swiss.dasch.api.ProjectsEndpointsResponses.UploadResponse
 import swiss.dasch.config.Configuration.IngestConfig
 import swiss.dasch.domain.BulkIngestError.*
 import zio.*
-import zio.nio.file.{Files, Path}
-import zio.stm.{TMap, TSemaphore, ZSTM}
-import zio.stream.{ZSink, ZStream}
+import zio.nio.file.Files
+import zio.nio.file.Path
+import zio.stm.TMap
+import zio.stm.TSemaphore
+import zio.stm.ZSTM
+import zio.stream.ZSink
+import zio.stream.ZStream
 
 import java.io.IOException
 import java.nio.file.StandardOpenOption

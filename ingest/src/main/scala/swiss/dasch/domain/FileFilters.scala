@@ -8,7 +8,8 @@ package swiss.dasch.domain
 import swiss.dasch.domain.PathOps.fileExtension
 import swiss.dasch.domain.SipiImageFormat.Jpx
 import zio.*
-import zio.nio.file.{Files, Path}
+import zio.nio.file.Files
+import zio.nio.file.Path
 
 import java.io.IOException
 

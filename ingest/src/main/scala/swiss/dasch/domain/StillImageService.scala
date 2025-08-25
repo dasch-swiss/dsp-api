@@ -8,10 +8,12 @@ package swiss.dasch.domain
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
-import swiss.dasch.domain.AugmentedPath.{JpxDerivativeFile, OrigFile}
+import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile
+import swiss.dasch.domain.AugmentedPath.OrigFile
 import swiss.dasch.domain.SipiImageFormat.Jpx
 import zio.*
-import zio.nio.file.{Files, Path}
+import zio.nio.file.Files
+import zio.nio.file.Path
 
 import java.io.IOException
 

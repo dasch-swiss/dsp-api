@@ -5,14 +5,17 @@
 
 package swiss.dasch.domain
 
-import eu.timepit.refined.api.{Refined, RefinedTypeOps}
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.string.MatchesRegex
 import eu.timepit.refined.types.string.NonEmptyString
-import swiss.dasch.domain.AugmentedPath.{JpxDerivativeFile, OrigFile}
+import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile
+import swiss.dasch.domain.AugmentedPath.OrigFile
 import swiss.dasch.infrastructure.Base62
+import zio.Random
+import zio.UIO
 import zio.json.JsonCodec
 import zio.nio.file.Path
-import zio.{Random, UIO}
 
 type AssetId = String Refined MatchesRegex["^[a-zA-Z0-9-_]{4,}$"]
 
