@@ -13,6 +13,10 @@ import zio.test.*
 
 import java.nio.file.Paths
 
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
+import org.xmlunit.diff.Diff
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
@@ -2011,6 +2015,84 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           "One or more variables used in a filter have not been bound in the same UNION block: ?richtext",
         ),
       )
+    },
+    test("search for a resource containing a time value tag") {
+      // Create a resource containing a time value.
+      val xmlStr =
+        """<?xml version="1.0" encoding="UTF-8"?>
+          |<text documentType="html">
+          |    <p>The timestamp for this test is <span class="timestamp" data-timestamp="2020-01-27T08:31:51.503187Z">27 January 2020</span>.</p>
+          |</text>
+          |""".stripMargin
+
+      val createResourceJsonLd = Json.Obj(
+        ("@type", Json.Str("anything:Thing")),
+        (
+          "anything:hasText",
+          Json.Obj(
+            ("@type", Json.Str("knora-api:TextValue")),
+            ("knora-api:textValueAsXml", Json.Str(xmlStr)),
+            (
+              "knora-api:textValueHasMapping",
+              Json.Obj(
+                ("@id", Json.Str(s"$anythingProjectIri/mappings/HTMLMapping")),
+              ),
+            ),
+          ),
+        ),
+        (
+          "knora-api:attachedToProject",
+          Json.Obj(
+            ("@id", Json.Str("http://rdfh.ch/projects/0001")),
+          ),
+        ),
+        ("rdfs:label", Json.Str("thing with timestamp in markup")),
+        (
+          "@context",
+          Json.Obj(
+            ("rdf", Json.Str("http://www.w3.org/1999/02/22-rdf-syntax-ns#")),
+            ("knora-api", Json.Str("http://api.knora.org/ontology/knora-api/v2#")),
+            ("rdfs", Json.Str("http://www.w3.org/2000/01/rdf-schema#")),
+            ("xsd", Json.Str("http://www.w3.org/2001/XMLSchema#")),
+            ("anything", Json.Str("http://0.0.0.0:3333/ontology/0001/anything/v2#")),
+          ),
+        ),
+      )
+      for {
+        resourceIri <- TestApiClient
+                         .postJsonLdDocument(uri"/v2/resources", createResourceJsonLd.toString, anythingUser1)
+                         .flatMap(_.assert200)
+                         .flatMap(doc => ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)))
+
+        // Search for the resource.
+        gravsearchQuery =
+          """
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+            |
+            |CONSTRUCT {
+            |    ?thing knora-api:isMainResource true .
+            |    ?thing anything:hasText ?text .
+            |} WHERE {
+            |    ?thing a anything:Thing .
+            |    ?thing anything:hasText ?text .
+            |    ?text knora-api:textValueHasStandoff ?standoffTag .
+            |    ?standoffTag a knora-api:StandoffTimeTag .
+            |    ?standoffTag knora-api:timeValueAsTimeStamp ?timeStamp .
+            |    FILTER(?timeStamp > "2020-01-27T08:31:51Z"^^xsd:dateTimeStamp && ?timeStamp < "2020-01-27T08:31:52Z"^^xsd:dateTimeStamp)
+            |}
+            |""".stripMargin
+        actualResponse <- postGravsearchQuery(gravsearchQuery, Some(anythingUser1))
+                            .flatMap(_.assert200)
+                            .mapAttempt(JsonLDUtil.parseJsonLD)
+        actualResourceIri <- ZIO.fromEither(actualResponse.body.getRequiredString(JsonLDKeywords.ID))
+        xmlFromResponse <- ZIO.fromEither(
+                             actualResponse.body
+                               .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText")
+                               .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)),
+                           )
+        xmlDiff = DiffBuilder.compare(Input.fromString(xmlStr)).withTest(Input.fromString(xmlFromResponse)).build()
+      } yield assertTrue(actualResourceIri == resourceIri, !xmlDiff.hasDifferences)
     },
   )
 }
