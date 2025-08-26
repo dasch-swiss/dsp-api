@@ -1527,5 +1527,29 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "thingReferringToSpecificListNodeWithSubnodes.jsonld", incunabulaMemberUser)
     },
+    test(
+      "search for a beol:letter with list value that refers to a particular list node (submitting the complex schema)",
+    ) {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |
+          |    ?letter beol:hasSubject ?subject .
+          |
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |
+          |    ?letter beol:hasSubject ?subject .
+          |
+          |    ?subject knora-api:listValueAsListNode <http://rdfh.ch/lists/0801/logarithmic_curves> .
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "letterWithSubject.jsonld", incunabulaMemberUser)
+    },
   )
 }
