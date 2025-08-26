@@ -352,5 +352,31 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "PagesOfNarrenschiffOrderedBySeqnum.jsonld")
     },
+    test(
+      "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum and get the next OFFSET (submitting the complex schema)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?page knora-api:isMainResource true .
+          |
+          |    ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |} WHERE {
+          |
+          |    ?page a incunabula:page .
+          |
+          |    ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |
+          |} ORDER BY ?seqnum
+          |OFFSET 1
+          |""".stripMargin
+      verifyQueryResult(query, "PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld")
+    },
   )
 }
