@@ -1009,5 +1009,25 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "ThingWithListValue.jsonld", anythingUser1)
     },
+    test("search for a text in a particular language (submitting the complex schema)") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasText ?text .
+          |} WHERE {
+          |     ?thing a anything:Thing .
+          |
+          |     ?thing anything:hasText ?text .
+          |
+          |     ?text knora-api:textValueHasLanguage "fr" .
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "LanguageFulltextSearch.jsonld", anythingUser1)
+    },
   )
 }

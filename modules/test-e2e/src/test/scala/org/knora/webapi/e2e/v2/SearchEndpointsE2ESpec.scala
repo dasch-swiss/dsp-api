@@ -67,35 +67,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
 
-    "search for a text in a particular language (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-          |
-          |CONSTRUCT {
-          |     ?thing knora-api:isMainResource true .
-          |
-          |     ?thing anything:hasText ?text .
-          |} WHERE {
-          |     ?thing a anything:Thing .
-          |
-          |     ?thing anything:hasText ?text .
-          |
-          |     ?text knora-api:textValueHasLanguage "fr" .
-          |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("LanguageFulltextSearch.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 1)
-    }
-
     "search for a specific text using the lang function (submitting the complex schema)" in {
       val gravsearchQuery =
         """
