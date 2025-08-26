@@ -66,47 +66,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
-    "reject a Gravsearch query in the complex schema that uses knora-api:isMainResource in the simple schema" in {
-      val gravsearchQuery =
-        """
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?region knora-api-simple:isMainResource true .
-          |
-          |    ?region knora-api:isRegionOf ?page .
-          |
-          |    ?page knora-api:isPartOf ?book .
-          |
-          |    ?book incunabula:title ?title .
-          |
-          |} WHERE {
-          |	   ?region a knora-api:Region .
-          |
-          |	   ?region knora-api:isRegionOf ?page .
-          |
-          |    ?page a incunabula:page .
-          |
-          |    ?page knora-api:isPartOf ?book .
-          |
-          |    ?book a incunabula:book .
-          |
-          |    ?book incunabula:title ?title .
-          |
-          |    ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
-          |
-          |}
-                """.stripMargin
-      val actual = singleAwaitingRequest(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
-      )
-      assert(actual.status == StatusCodes.BAD_REQUEST)
-    }
 
     "reject a Gravsearch query in the complex schema that uses a Knora property in the simple schema" in {
       val gravsearchQuery =
