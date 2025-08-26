@@ -1372,5 +1372,41 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
       postGravsearchQuery(query, Some(incunabulaMemberUser))
         .map(response => assertTrue(response.code == StatusCode.BadRequest))
     },
+    test("reject a Gravsearch query in the complex schema that uses a Knora property in the simple schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX incunabula-simple: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?region knora-api:isMainResource true .
+          |
+          |    ?region knora-api:isRegionOf ?page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |} WHERE {
+          |	   ?region a knora-api:Region .
+          |
+          |	   ?region knora-api:isRegionOf ?page .
+          |
+          |    ?page a incunabula:page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula-simple:title ?title .
+          |
+          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+          |
+          |}
+          |""".stripMargin
+      postGravsearchQuery(query, Some(incunabulaMemberUser))
+        .map(response => assertTrue(response.code == StatusCode.BadRequest))
+    },
   )
 }
