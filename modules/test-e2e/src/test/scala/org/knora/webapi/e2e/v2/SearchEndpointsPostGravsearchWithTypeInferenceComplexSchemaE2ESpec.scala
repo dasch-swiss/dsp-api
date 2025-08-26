@@ -808,5 +808,17 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |}""".stripMargin
       verifyQueryResult(query, "ThingWithLinkToStart.jsonld", anythingUser1)
     },
+    test("return a page of anything:Thing resources") {
+      val query =
+        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |}""".stripMargin
+      verifyQueryResult(query, "PageOfThings.jsonld", anythingUser1)
+    },
   )
 }
