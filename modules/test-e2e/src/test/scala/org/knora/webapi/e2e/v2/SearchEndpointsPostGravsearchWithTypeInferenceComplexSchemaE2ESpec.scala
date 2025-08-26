@@ -7,14 +7,13 @@ package org.knora.webapi.e2e.v2
 
 import zio.*
 import zio.test.*
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
-//import org.knora.webapi.testservices.ResponseOps.assert400
+import sttp.model.StatusCode
 
 object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extends E2EZSpec {
 
@@ -1266,6 +1265,39 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |}
           |""".stripMargin
       verifyQueryResult(query, "incomingPagesForBook.jsonld", incunabulaMemberUser)
+    },
+    test(
+      "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY (submitting the complex schema)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |    ?book incunabula:title ?title .
+          |
+          |    ?page knora-api:isPartOf ?book ;
+          |        incunabula:seqnum ?seqnum .
+          |} WHERE {
+          |    BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?page a incunabula:page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |
+          |    ?seqnum knora-api:intValueAsInt ?seqnumInt .
+          |
+          |    FILTER(?seqnumInt <= 10)
+          |
+          |} ORDER BY ?seqnum
+          |""".stripMargin
+      postGravsearchQuery(query, Some(incunabulaMemberUser))
+        .map(response => assertTrue(response.code == StatusCode.BadRequest))
     },
   )
 }
