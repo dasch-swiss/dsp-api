@@ -12,6 +12,7 @@ import zio.json.ast.Json
 import zio.test.*
 
 import java.nio.file.Paths
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
@@ -1886,6 +1887,28 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
            |}
            |""".stripMargin
       verifyQueryResult(query, "ThingWithTimeStamp.jsonld", anythingUser1)
+    },
+    test("get a resource with a link to another resource that the user doesn't have permission to see") {
+      val query =
+        s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+           |
+           |CONSTRUCT {
+           |    ?mainThing knora-api:isMainResource true .
+           |    ?mainThing anything:hasOtherThing ?hiddenThing .
+           |    ?hiddenThing anything:hasInteger ?intValInHiddenThing .
+           |    ?mainThing anything:hasOtherThing ?visibleThing .
+           |    ?visibleThing anything:hasInteger ?intValInVisibleThing .
+           |} WHERE {
+           |    ?mainThing a anything:Thing .
+           |    ?mainThing anything:hasOtherThing ?hiddenThing .
+           |    ?hiddenThing anything:hasInteger ?intValInHiddenThing .
+           |    ?intValInHiddenThing knora-api:intValueAsInt 123454321 .
+           |    ?mainThing anything:hasOtherThing ?visibleThing .
+           |    ?visibleThing anything:hasInteger ?intValInVisibleThing .
+           |    ?intValInVisibleThing knora-api:intValueAsInt 543212345 .
+           |}""".stripMargin
+      verifyQueryResult(query, "ThingWithHiddenThing.jsonld")
     },
   )
 }

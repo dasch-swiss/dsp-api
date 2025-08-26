@@ -133,33 +133,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       xmlDiff.hasDifferences should be(false)
     }
 
-    "get a resource with a link to another resource that the user doesn't have permission to see" in {
-      val gravsearchQuery =
-        s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-           |
-           |CONSTRUCT {
-           |    ?mainThing knora-api:isMainResource true .
-           |    ?mainThing anything:hasOtherThing ?hiddenThing .
-           |    ?hiddenThing anything:hasInteger ?intValInHiddenThing .
-           |    ?mainThing anything:hasOtherThing ?visibleThing .
-           |    ?visibleThing anything:hasInteger ?intValInVisibleThing .
-           |} WHERE {
-           |    ?mainThing a anything:Thing .
-           |    ?mainThing anything:hasOtherThing ?hiddenThing .
-           |    ?hiddenThing anything:hasInteger ?intValInHiddenThing .
-           |    ?intValInHiddenThing knora-api:intValueAsInt 123454321 .
-           |    ?mainThing anything:hasOtherThing ?visibleThing .
-           |    ?visibleThing anything:hasInteger ?intValInVisibleThing .
-           |    ?intValInVisibleThing knora-api:intValueAsInt 543212345 .
-           |}""".stripMargin
-      val actual = getResponseAsString(
-        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
-      )
-      val expected = testData("ThingWithHiddenThing.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "not return duplicate results when there are UNION branches with different variables" in {
       val gravsearchQuery =
         s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
