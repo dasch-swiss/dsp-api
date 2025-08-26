@@ -434,5 +434,33 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "BooksNotPublishedOnDate.jsonld")
     },
+    test(
+      "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) 2 (submitting the complex schema)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?book incunabula:pubdate ?pubdate .
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?book incunabula:pubdate ?pubdate .
+          |
+          |    FILTER(knora-api:toSimpleDate(?pubdate) < "JULIAN:1497-03-01"^^knora-api-simple:Date || knora-api:toSimpleDate(?pubdate) > "JULIAN:1497-03-01"^^knora-api-simple:Date)
+          |
+          |} ORDER BY ?pubdate
+          |""".stripMargin
+      verifyQueryResult(query, "BooksNotPublishedOnDate.jsonld")
+    },
   )
 }
