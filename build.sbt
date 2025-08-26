@@ -361,9 +361,6 @@ lazy val e2e: Project = Project(id = "test-e2e", base = file("modules/test-e2e")
 lazy val ingest = {
   import Dependencies._
 
-  // TODO: is this present in a non-hardcoded way?
-  val knoraSipiVersion = "v31.20.0"
-
   Project(id = "ingest", file("ingest"))
     .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
     .settings(
@@ -374,7 +371,7 @@ lazy val ingest = {
         version,
         scalaVersion,
         sbtVersion,
-        BuildInfoKey("knoraSipiVersion", knoraSipiVersion),
+        BuildInfoKey("knoraSipiVersion", Dependencies.knoraSipiVersion),
         BuildInfoKey.action("gitCommit")(gitCommit),
       ),
       buildInfoOptions += BuildInfoOption.BuildTime,
@@ -419,11 +416,11 @@ lazy val ingest = {
       // Install Temurin Java 21 https://adoptium.net/de/installation/linux/
       dockerCommands += Cmd(
         "RUN",
-        "apt-get update && apt install -y wget apt-transport-https && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null && rm -rf /var/lib/apt/lists/*",
+        "apt-get update && apt install -y wget apt-transport-https gpg && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null",
       ),
       dockerCommands += Cmd(
         "RUN",
-        "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt-get update && apt-get install -y temurin-21-jre && rm -rf /var/lib/apt/lists/*",
+        "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt-get update && apt-get install -y temurin-24-jre && rm -rf /var/lib/apt/lists/*",
       ),
       // Add Opentelemetry java agent and Grafana Pyroscope extension
       dockerCommands += Cmd(

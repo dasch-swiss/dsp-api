@@ -97,6 +97,7 @@ docs-serve: docs-build-dependent
 
 docs-build: docs-build-dependent
     mkdocs build --strict
+    # todo ingest
 
 markdownlint:
     docker run \
