@@ -5,16 +5,23 @@
 
 package org.knora.webapi.e2e.v2
 
+import sttp.client4.*
 import sttp.model.StatusCode
 import zio.*
+import zio.json.ast.Json
 import zio.test.*
+
+import java.nio.file.Paths
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.TestApiClient
+import org.knora.webapi.util.FileUtil
 
 object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extends E2EZSpec {
 
@@ -1662,6 +1669,82 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |}
           |""".stripMargin
       verifyQueryResult(query, "ThingWithRichtextWithTermTextInParagraph.jsonld")
+    },
+    test("search for a standoff date tag indicating a date in a particular range (submitting the complex schema)") {
+      // First, we will create a standoff-to-XML mapping that can handle standoff date tags.
+      val jsonPart =
+        s"""
+           |{
+           |    "knora-api:mappingHasName": "HTMLMapping",
+           |    "knora-api:attachedToProject": {
+           |      "@id": "$anythingProjectIri"
+           |    },
+           |    "rdfs:label": "mapping for HTML",
+           |    "@context": {
+           |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+           |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
+           |    }
+           |}""".stripMargin
+      val xmlPart = Paths.get("test_data/test_route/texts/mappingForHTML.xml")
+      val createStandoffMappingBody = Seq(
+        multipart("json", jsonPart).contentType("application/json"),
+        multipartFile("xml", xmlPart).contentType("text/xml(UTF-8)"),
+      )
+
+      // Next, create a resource with a text value containing a standoff date tag.
+      val xmlForJson = FileUtil.readTextFile(Paths.get("test_data/test_route/texts/HTML.xml"))
+      val createValueBody = Json.Obj(
+        ("@id", Json.Str("http://rdfh.ch/0001/a-thing")),
+        ("@type", Json.Str("anything:Thing")),
+        (
+          "anything:hasText",
+          Json.Obj(
+            ("@type", Json.Str("knora-api:TextValue")),
+            ("knora-api:textValueAsXml", Json.Str(xmlForJson)),
+            (
+              "knora-api:textValueHasMapping",
+              Json.Obj(
+                ("@id", Json.Str(s"$anythingProjectIri/mappings/HTMLMapping")),
+              ),
+            ),
+          ),
+        ),
+        (
+          "@context",
+          Json.Obj(
+            ("knora-api", Json.Str("http://api.knora.org/ontology/knora-api/v2#")),
+            ("anything", Json.Str("http://0.0.0.0:3333/ontology/0001/anything/v2#")),
+          ),
+        ),
+      )
+
+      // Finally, do a Gravsearch query that finds the date tag.
+      val gravsearchQuery =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |    ?thing anything:hasText ?text .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |    ?thing anything:hasText ?text .
+          |    ?text knora-api:textValueHasStandoff ?standoffEventTag .
+          |    ?standoffEventTag a anything:StandoffEventTag .
+          |    FILTER(knora-api:toSimpleDate(?standoffEventTag) = "GREGORIAN:2016-12 CE"^^knora-api-simple:Date)
+          |}""".stripMargin
+
+      for {
+        _ <- TestApiClient // create the new mapping
+               .postMultiPart[Json](uri"/v2/mapping", createStandoffMappingBody, anythingUser1)
+               .flatMap(_.assert200)
+        _ <- TestApiClient // create the new value
+               .postJsonLd(uri"/v2/values", createValueBody.toString, anythingUser1)
+               .flatMap(_.assert200)
+        actual <- postGravsearchQuery(gravsearchQuery, Some(anythingUser1)).flatMap(_.assert200)
+      } yield assertTrue(actual.contains("we will have a party"))
     },
   )
 }
