@@ -2244,5 +2244,24 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
       // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
       verifyQueryResult(query, "LetterNotToSelf.jsonld")
     },
+    test("perform a search that compares two variables representing resources (in the complex schema)") {
+      val query =
+        """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter beol:hasRecipient ?person2 .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter beol:hasRecipient ?person2 .
+          |    FILTER(?person1 != ?person2) .
+          |}
+          |OFFSET 0
+          |""".stripMargin
+      verifyQueryResult(query, "LetterNotToSelf.jsonld")
+    },
   )
 }
