@@ -876,5 +876,40 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "ThingWithBooleanOptionalOffset1.jsonld", anythingUser1)
     },
+    test(
+      "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both) (submitting the complex schema)",
+    ) {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasBoolean ?boolean .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |
+          |     {
+          |         ?thing anything:hasBoolean ?boolean .
+          |
+          |         ?boolean knora-api:booleanValueAsBoolean ?booleanBool .
+          |
+          |         FILTER(?booleanBool = true)
+          |     } UNION {
+          |         ?thing anything:hasDecimal ?decimal .
+          |
+          |         ?decimal knora-api:decimalValueAsDecimal "2.1"^^xsd:decimal .
+          |     }
+          |
+          |} OFFSET 0
+          |
+          |""".stripMargin
+      verifyQueryResult(query, "ThingWithBooleanOrDecimal.jsonld", anythingUser1)
+    },
   )
 }
