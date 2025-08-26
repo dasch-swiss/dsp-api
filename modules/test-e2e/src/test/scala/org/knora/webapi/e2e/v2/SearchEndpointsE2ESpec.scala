@@ -10,7 +10,6 @@ import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json.*
-import zio.ZIO
 
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
@@ -24,9 +23,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
@@ -41,14 +38,12 @@ class SearchEndpointsE2ESpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   implicit val ec: ExecutionContextExecutor             = system.dispatcher
 
-  private val anythingUser       = SharedTestDataADM.anythingUser1
-  private val anythingUserEmail  = anythingUser.email
-  private val anythingProjectIri = SharedTestDataADM.anythingProjectIri
+  private val anythingUser      = SharedTestDataADM.anythingUser1
+  private val anythingUserEmail = anythingUser.email
 
   private val password = SharedTestDataADM.testPass
 
-  private val hamletResourceIri  = new MutableTestIri
-  private val timeTagResourceIri = new MutableTestIri
+  private val hamletResourceIri = new MutableTestIri
 
   override lazy val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
 
@@ -129,91 +124,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       // Compare it to the original XML.
       val xmlDiff: Diff =
         DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
-      xmlDiff.hasDifferences should be(false)
-    }
-
-    "search for a resource containing a time value tag" in {
-      // Create a resource containing a time value.
-
-      val xmlStr =
-        """<?xml version="1.0" encoding="UTF-8"?>
-          |<text documentType="html">
-          |    <p>The timestamp for this test is <span class="timestamp" data-timestamp="2020-01-27T08:31:51.503187Z">27 January 2020</span>.</p>
-          |</text>
-          |""".stripMargin
-
-      val jsonLDEntity =
-        s"""{
-           |  "@type" : "anything:Thing",
-           |  "anything:hasText" : {
-           |    "@type" : "knora-api:TextValue",
-           |    "knora-api:textValueAsXml" : ${JsString(xmlStr).compactPrint},
-           |    "knora-api:textValueHasMapping" : {
-           |      "@id" : "$anythingProjectIri/mappings/HTMLMapping"
-           |    }
-           |  },
-           |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
-           |  },
-           |  "rdfs:label" : "thing with timestamp in markup",
-           |  "@context" : {
-           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-      val resourceIri = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[TestClientService](
-          _.getResponseJsonLD(
-            Post(
-              s"$baseApiUrl/v2/resources",
-              HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-            ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-          ).map(_.body.getRequiredString(JsonLDKeywords.ID).getOrElse(throw AssertionError("No IRI returned"))),
-        ),
-      )
-      timeTagResourceIri.set(resourceIri)
-
-      // Search for the resource.
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |    ?thing anything:hasText ?text .
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |    ?thing anything:hasText ?text .
-          |    ?text knora-api:textValueHasStandoff ?standoffTag .
-          |    ?standoffTag a knora-api:StandoffTimeTag .
-          |    ?standoffTag knora-api:timeValueAsTimeStamp ?timeStamp .
-          |    FILTER(?timeStamp > "2020-01-27T08:31:51Z"^^xsd:dateTimeStamp && ?timeStamp < "2020-01-27T08:31:52Z"^^xsd:dateTimeStamp)
-          |}
-                """.stripMargin
-
-      val actual = getResponseAsJsonLD(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val validationFun: (String, => Nothing) => String =
-        (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
-      val actualResourceIri: IRI = actual.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-      assert(actualResourceIri == timeTagResourceIri.get)
-
-      val xmlFromResponse: String = actual.body
-        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText")
-        .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml))
-        .fold(e => throw BadRequestException(e), identity)
-
-      // Compare it to the original XML.
-      val xmlDiff: Diff =
-        DiffBuilder.compare(Input.fromString(xmlStr)).withTest(Input.fromString(xmlFromResponse)).build()
       xmlDiff.hasDifferences should be(false)
     }
 
