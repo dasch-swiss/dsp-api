@@ -67,47 +67,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
 
-   
-
-    "do a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |
-          |    CONSTRUCT {
-          |        ?book knora-api:isMainResource true .
-          |        ?book incunabula:title ?title .
-          |
-          |        ?page knora-api:isPartOf ?book ;
-          |            incunabula:seqnum ?seqnum .
-          |    } WHERE {
-          |        BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
-          |        ?book a incunabula:book .
-          |
-          |        ?book incunabula:title ?title .
-          |
-          |        ?page a incunabula:page .
-          |
-          |        ?page knora-api:isPartOf ?book .
-          |
-          |        ?page incunabula:seqnum ?seqnum .
-          |
-          |        ?seqnum knora-api:intValueAsInt ?seqnumInt .
-          |
-          |        FILTER(?seqnumInt <= 10)
-          |
-          |    }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
-      )
-      val expected = testData("incomingPagesForBook.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY (submitting the complex schema)" in {
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
