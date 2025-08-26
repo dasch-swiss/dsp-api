@@ -602,5 +602,25 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "BooksPublishedBetweenDates.jsonld")
     },
+    test("get the regions belonging to a page (submitting the complex schema)") {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?region knora-api:isMainResource true .
+          |    ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+          |    ?region knora-api:hasGeometry ?geom .
+          |    ?region knora-api:hasComment ?comment .
+          |    ?region knora-api:hasColor ?color .
+          |} WHERE {
+          |    ?region a knora-api:Region .
+          |    ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+          |    ?region knora-api:hasGeometry ?geom .
+          |    ?region knora-api:hasComment ?comment .
+          |    ?region knora-api:hasColor ?color .
+          |}""".stripMargin
+      verifyQueryResult(query, "RegionsForPage.jsonld")
+    },
   )
 }
