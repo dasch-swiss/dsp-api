@@ -794,5 +794,19 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |}""".stripMargin
       verifyQueryResult(query, "ThingSmallerThanDecimal.jsonld", anythingUser1)
     },
+    test("search for an anything:Thing that has a link to a specified other thing") {
+      val query =
+        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
+          |}""".stripMargin
+      verifyQueryResult(query, "ThingWithLinkToStart.jsonld", anythingUser1)
+    },
   )
 }

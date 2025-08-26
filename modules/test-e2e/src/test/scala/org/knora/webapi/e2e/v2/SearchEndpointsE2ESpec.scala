@@ -67,29 +67,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
 
-    "search for an anything:Thing that has a link to a specified other thing" in {
-      val gravsearchQuery =
-        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
-          |}""".stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected: String = testData("ThingWithLinkToStart.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 2)
-    }
-
     "return a page of anything:Thing resources" in {
       val gravsearchQuery =
         """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
