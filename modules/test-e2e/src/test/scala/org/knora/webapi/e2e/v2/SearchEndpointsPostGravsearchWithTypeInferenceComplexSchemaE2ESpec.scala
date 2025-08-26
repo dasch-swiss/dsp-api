@@ -1051,5 +1051,29 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "LanguageFulltextSearch.jsonld", anythingUser1)
     },
+    test("do a Gravsearch query for link objects that link to an incunabula book (submitting the complex schema)") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |
+          |CONSTRUCT {
+          |     ?linkObj knora-api:isMainResource true .
+          |
+          |     ?linkObj knora-api:hasLinkTo ?book .
+          |
+          |} WHERE {
+          |     ?linkObj a knora-api:LinkObj .
+          |
+          |     ?linkObj knora-api:hasLinkTo ?book .
+          |
+          |     ?book a incunabula:book .
+          |
+          |     ?book incunabula:title ?title .
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "LinkObjectsToBooks.jsonld", anythingUser1)
+    },
   )
 }
