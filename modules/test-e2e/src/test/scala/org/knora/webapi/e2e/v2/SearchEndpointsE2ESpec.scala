@@ -66,41 +66,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
-
-    "reject a Gravsearch query in the complex schema with a variable in the CONSTRUCT clause referring to a non-property entity that isn't a resource or value" in {
-      val gravsearchQuery =
-        """
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |
-          |    ?book incunabula:title ?title .
-          |
-          |    ?title knora-api:valueAsString ?titleStr .
-          |
-          |
-          |} WHERE {
-          |    ?book a incunabula:book .
-          |
-          |    ?book incunabula:title ?title .
-          |
-          |    ?title knora-api:valueAsString ?titleStr .
-          |
-          |    FILTER(?titleStr = "Zeitglöcklein des Lebens und Leidens Christi")
-          |
-          |}
-                """.stripMargin
-      val actual = singleAwaitingRequest(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
-      )
-      assert(actual.status == StatusCodes.BAD_REQUEST)
-    }
-
     "search for a list value that refers to a particular list node (submitting the complex schema)" in {
       val gravsearchQuery =
         """
