@@ -1643,5 +1643,25 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "thingsWithStandoffLinksToSpecificThing.jsonld", anythingUser1)
     },
+    test("search for matching words in a particular type of standoff tag (submitting the complex schema)") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |    ?thing anything:hasRichtext ?text .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |    ?thing anything:hasRichtext ?text .
+          |    ?text knora-api:textValueHasStandoff ?standoffTag .
+          |    ?standoffTag a standoff:StandoffItalicTag .
+          |    FILTER knora-api:matchTextInStandoff(?text, ?standoffTag, "interesting text")
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ThingWithRichtextWithTermTextInParagraph.jsonld")
+    },
   )
 }

@@ -67,34 +67,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
 
-    "search for matching words in a particular type of standoff tag (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |    ?thing anything:hasRichtext ?text .
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |    ?thing anything:hasRichtext ?text .
-          |    ?text knora-api:textValueHasStandoff ?standoffTag .
-          |    ?standoffTag a standoff:StandoffItalicTag .
-          |    FILTER knora-api:matchTextInStandoff(?text, ?standoffTag, "interesting text")
-          |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("ThingWithRichtextWithTermTextInParagraph.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "search for a standoff date tag indicating a date in a particular range (submitting the complex schema)" in {
       // First, create a standoff-to-XML mapping that can handle standoff date tags.
       val mappingFileToSend = Paths.get("test_data/test_route/texts/mappingForHTML.xml")
