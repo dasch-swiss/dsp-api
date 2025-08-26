@@ -690,5 +690,31 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "bookWithIncomingPagesOnlyLink.jsonld")
     },
+    test("get incoming links pointing to an incunbaula:book, excluding isPartOf (submitting the complex schema)") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |     ?incomingRes knora-api:isMainResource true .
+          |
+          |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
+          |
+          |} WHERE {
+          |
+          |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
+          |
+          |     <http://rdfh.ch/0803/8be1b7cf7103> a incunabula:book .
+          |
+          |     FILTER NOT EXISTS {
+          |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/0803/8be1b7cf7103> .
+          |     }
+          |
+          |} OFFSET 0
+          |""".stripMargin
+      verifyQueryResult(query, "IncomingLinksForBook.jsonld")
+    },
   )
 }
