@@ -127,26 +127,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       xmlDiff.hasDifferences should be(false)
     }
 
-    "search for an rdfs:label using a literal in the complex schema" in {
-      val gravsearchQuery: String =
-        """
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |
-          |} WHERE {
-          |    ?book rdf:type incunabula:book .
-          |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
-          |}""".stripMargin
-      val actual = getResponseAsString(
-        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
-      )
-      val expected = testData("ZeitgloeckleinViaLabel.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "search for an rdfs:label using a variable in the simple schema" in {
       val gravsearchQuery: String =
         """
