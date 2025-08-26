@@ -80,15 +80,6 @@ abstract class E2ESpec
       ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, timeout, printFailure)),
     )
 
-  protected def getResponseAsString(request: HttpRequest): String =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseString(request)))
-
-  protected def checkResponseOK(request: HttpRequest): Unit =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.checkResponseOK(request)))
-
-  protected def getResponseAsJsonLD(request: HttpRequest): JsonLDDocument =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJsonLD(request)))
-
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] =
       httpResponse.entity.toStrict(FiniteDuration(10L, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8"))
