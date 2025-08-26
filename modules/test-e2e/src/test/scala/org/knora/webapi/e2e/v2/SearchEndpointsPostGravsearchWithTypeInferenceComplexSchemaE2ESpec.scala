@@ -716,5 +716,26 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "IncomingLinksForBook.jsonld")
     },
+    test("search for an anything:Thing that has a decimal value of 2.1 (submitting the complex schema)") {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |
+          |     ?decimal knora-api:decimalValueAsDecimal "2.1"^^xsd:decimal .
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ThingEqualsDecimal.jsonld")
+    },
   )
 }
