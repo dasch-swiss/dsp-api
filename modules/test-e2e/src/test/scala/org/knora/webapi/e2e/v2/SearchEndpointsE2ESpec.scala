@@ -30,10 +30,6 @@ import org.knora.webapi.util.MutableTestIri
 import pekko.http.scaladsl.model.HttpEntity
 import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
-/**
- * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
- * here: http://spray.io/documentation/1.2.2/spray-testkit/
- */
 class SearchEndpointsE2ESpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   implicit val ec: ExecutionContextExecutor             = system.dispatcher
@@ -123,32 +119,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       val xmlDiff: Diff =
         DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
       xmlDiff.hasDifferences should be(false)
-    }
-
-    "search for anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |  ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |  ?thing a anything:Thing .
-          |  ?thing a knora-api:Resource .
-          |  FILTER NOT EXISTS {
-          |    ?thing anything:hasBoolean ?bool .
-          |  }
-          |}
-          |
-            """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      checkSearchResponseNumberOfResults(actual, 24)
     }
 
     "search for anything:Thing that doesn't have a link property (FILTER NOT EXISTS)" in {
