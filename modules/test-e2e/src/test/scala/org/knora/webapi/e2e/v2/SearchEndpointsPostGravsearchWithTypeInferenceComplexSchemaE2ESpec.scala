@@ -12,12 +12,13 @@ import zio.json.ast.Json
 import zio.test.*
 
 import java.nio.file.Paths
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.JsonLDKeywords
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert404
@@ -1795,6 +1796,79 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
       } yield assertTrue(
         actual.contains("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOfValue"),
       )
+    },
+    test("find a resource with two different incoming links") {
+      val createTargetResource =
+        val jsonLd = """{
+                       |  "@type" : "anything:BlueThing",
+                       |  "knora-api:attachedToProject" : {
+                       |    "@id" : "http://rdfh.ch/projects/0001"
+                       |  },
+                       |  "rdfs:label" : "blue thing with incoming links",
+                       |  "@context" : {
+                       |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                       |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                       |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                       |  }
+                       |
+                       |}""".stripMargin
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", jsonLd, anythingUser1)
+          .flatMap(_.assert200)
+          .flatMap(doc => ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)))
+
+      def createLinkedResource(label: String, targetIri: String) =
+        val jsonLd = s"""{
+                        |  "@type" : "anything:BlueThing",
+                        |  "knora-api:attachedToProject" : {
+                        |    "@id" : "http://rdfh.ch/projects/0001"
+                        |  },
+                        |    "anything:hasBlueThingValue" : {
+                        |    "@type" : "knora-api:LinkValue",
+                        |        "knora-api:linkValueHasTargetIri" : {
+                        |        "@id" : "$targetIri"
+                        |    }
+                        |  },
+                        |  "rdfs:label" : "$label",
+                        |  "@context" : {
+                        |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                        |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                        |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                        |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                        |  }
+                        |}
+                        |""".stripMargin
+        TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLd, anythingUser1).flatMap(_.assert200)
+
+      for {
+        targetResourceIri <- createTargetResource
+        _                 <- createLinkedResource("blue thing with link to other blue thing", targetResourceIri)
+        _                 <- createLinkedResource("thing with link to blue thing", targetResourceIri)
+
+        gravsearchQuery =
+          s"""
+             |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+             |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+             |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+             |
+             |CONSTRUCT {
+             |    ?targetThing knora-api:isMainResource true .
+             |    ?firstIncoming anything:hasBlueThing ?targetThing .
+             |    ?secondIncoming anything:hasOtherThing ?targetThing .
+             |} WHERE {
+             |    ?targetThing a anything:BlueThing .
+             |    ?firstIncoming anything:hasBlueThing ?targetThing .
+             |    ?secondIncoming anything:hasOtherThing ?targetThing .
+             |}
+             |""".stripMargin
+        queryResult <- postGravsearchQuery(gravsearchQuery, Some(anythingUser1))
+                         .flatMap(_.assert200)
+                         .mapAttempt(JsonLDUtil.parseJsonLD)
+        searchResultIri <- ZIO.fromEither(queryResult.body.getRequiredString(JsonLDKeywords.ID))
+      } yield assertTrue(searchResultIri == targetResourceIri)
     },
   )
 }
