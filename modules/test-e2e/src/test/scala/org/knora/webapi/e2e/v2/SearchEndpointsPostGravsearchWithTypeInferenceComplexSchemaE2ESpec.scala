@@ -7,12 +7,12 @@ package org.knora.webapi.e2e.v2
 
 import zio.*
 import zio.test.*
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-//import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-//import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
 //import org.knora.webapi.testservices.ResponseOps.assert400
 
@@ -736,6 +736,24 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |}
           |""".stripMargin
       verifyQueryResult(query, "ThingEqualsDecimal.jsonld")
+    },
+    test(
+      "search for an anything:Thing that has a decimal value of 2.1 (submitting the complex schema), without inference",
+    ) {
+      val query =
+        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |    ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |    knora-api:GravsearchOptions knora-api:useInference false .
+          |    ?thing a anything:Thing .
+          |    ?thing anything:hasDecimal ?decimal .
+          |    ?decimal knora-api:decimalValueAsDecimal "2.1"^^xsd:decimal .
+          |}""".stripMargin
+      verifyQueryResult(query, "ThingEqualsDecimal.jsonld", anythingUser1)
     },
   )
 }
