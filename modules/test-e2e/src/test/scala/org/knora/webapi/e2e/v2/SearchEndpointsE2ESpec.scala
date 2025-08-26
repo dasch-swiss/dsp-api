@@ -133,31 +133,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       xmlDiff.hasDifferences should be(false)
     }
 
-    "search for an anything:Thing with a time value (using the simple schema)" in {
-      val gravsearchQuery =
-        s"""
-           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-           |
-           |CONSTRUCT {
-           |    ?thing knora-api:isMainResource true .
-           |    ?thing anything:hasTimeStamp ?timeStamp .
-           |} WHERE {
-           |    ?thing a anything:Thing .
-           |    ?thing anything:hasTimeStamp ?timeStamp .
-           |    FILTER(?timeStamp > "2019-08-30T10:45:26.365863Z"^^xsd:dateTimeStamp)
-           |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("ThingWithTimeStamp.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "get a resource with a link to another resource that the user doesn't have permission to see" in {
       val gravsearchQuery =
         s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>

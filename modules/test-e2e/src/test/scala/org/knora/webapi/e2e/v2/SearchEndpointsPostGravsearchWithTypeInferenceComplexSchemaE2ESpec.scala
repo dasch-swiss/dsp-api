@@ -1870,5 +1870,22 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
         searchResultIri <- ZIO.fromEither(queryResult.body.getRequiredString(JsonLDKeywords.ID))
       } yield assertTrue(searchResultIri == targetResourceIri)
     },
+    test("search for an anything:Thing with a time value (using the simple schema)") {
+      val query =
+        s"""
+           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+           |
+           |CONSTRUCT {
+           |    ?thing knora-api:isMainResource true .
+           |    ?thing anything:hasTimeStamp ?timeStamp .
+           |} WHERE {
+           |    ?thing a anything:Thing .
+           |    ?thing anything:hasTimeStamp ?timeStamp .
+           |    FILTER(?timeStamp > "2019-08-30T10:45:26.365863Z"^^xsd:dateTimeStamp)
+           |}
+           |""".stripMargin
+      verifyQueryResult(query, "ThingWithTimeStamp.jsonld", anythingUser1)
+    },
   )
 }
