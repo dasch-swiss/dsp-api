@@ -1464,5 +1464,25 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
       postGravsearchQuery(query, Some(incunabulaMemberUser))
         .map(response => assertTrue(response.code == StatusCode.BadRequest))
     },
+    test("search for a list value that refers to a particular list node (submitting the complex schema)") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |
+          |    ?thing anything:hasListItem ?listItem .
+          |
+          |} WHERE {
+          |    ?thing anything:hasListItem ?listItem .
+          |
+          |    ?listItem knora-api:listValueAsListNode <http://rdfh.ch/lists/0001/treeList02> .
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "thingReferringToSpecificListNode.jsonld", incunabulaMemberUser)
+    },
   )
 }
