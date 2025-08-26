@@ -911,5 +911,31 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "ThingWithBooleanOrDecimal.jsonld", anythingUser1)
     },
+    test("search for a book whose title contains 'Zeit' using the regex function (submitting the complex schema)") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |    ?mainRes knora-api:isMainResource true .
+          |
+          |    ?mainRes incunabula:title ?title .
+          |
+          |} WHERE {
+          |
+          |    ?mainRes a incunabula:book .
+          |
+          |    ?mainRes incunabula:title ?title .
+          |
+          |    ?title knora-api:valueAsString ?titleStr .
+          |
+          |    FILTER regex(?titleStr, "Zeit", "i")
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
+    },
   )
 }
