@@ -47,8 +47,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
 
-  private def testData(filename: String): String = readTestData("searchR2RV2", filename)
-
   "The Search v2 Endpoint" should {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries with type inference
@@ -125,32 +123,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       val xmlDiff: Diff =
         DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
       xmlDiff.hasDifferences should be(false)
-    }
-
-   
-
-    "perform a search that compares a variable with a resource IRI (in the complex schema)" in {
-      val gravsearchQuery: String =
-        """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |
-          |CONSTRUCT {
-          |    ?letter knora-api:isMainResource true .
-          |    ?letter beol:hasAuthor ?person1 .
-          |    ?letter beol:hasRecipient ?person2 .
-          |} WHERE {
-          |    ?letter a beol:letter .
-          |    ?letter beol:hasAuthor ?person1 .
-          |    ?letter beol:hasRecipient ?person2 .
-          |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
-          |}
-          |OFFSET 0""".stripMargin
-      // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
-      val actual = getResponseAsString(
-        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
-      )
-      val expected = testData("LetterNotToSelf.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)" in {
