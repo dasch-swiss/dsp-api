@@ -2192,5 +2192,21 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
     },
+    test("search for an rdfs:label using the regex function in the simple schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |    FILTER regex(?bookLabel, "Zeit", "i")
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
+    },
   )
 }
