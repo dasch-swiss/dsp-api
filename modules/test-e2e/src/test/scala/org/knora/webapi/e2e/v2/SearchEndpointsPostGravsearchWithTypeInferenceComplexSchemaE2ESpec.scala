@@ -22,6 +22,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.ResponseOps.assert404
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.FileUtil
@@ -1938,6 +1939,43 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
            |}
            |ORDER BY (?int)""".stripMargin
       verifyQueryResult(query, "ThingFromQueryWithUnion.jsonld")
+    },
+    test("reject an ORDER by containing a variable that's not bound at the top level of the WHERE clause") {
+      val query =
+        s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+           |CONSTRUCT {
+           |    ?thing knora-api:isMainResource true .
+           |    ?thing anything:hasInteger ?int .
+           |    ?thing anything:hasRichtext ?richtext .
+           |    ?thing anything:hasText ?text .
+           |} WHERE {
+           |    ?thing a knora-api:Resource .
+           |    ?thing a anything:Thing .
+           |
+           |    {
+           |        ?thing anything:hasRichtext ?richtext .
+           |        FILTER knora-api:matchText(?richtext, "test")
+           |
+           |		?thing anything:hasInteger ?int .
+           |		?int knora-api:intValueAsInt 1 .
+           |    }
+           |    UNION
+           |    {
+           |        ?thing anything:hasText ?text .
+           |        FILTER knora-api:matchText(?text, "test")
+           |
+           |		?thing anything:hasInteger ?int .
+           |		?int knora-api:intValueAsInt 1 .
+           |    }
+           |}
+           |ORDER BY (?int)""".stripMargin
+      for {
+        response <- postGravsearchQuery(query)
+        actual   <- response.assert400
+      } yield assertTrue(
+        actual.contains("Variable ?int is used in ORDER by, but is not bound at the top level of the WHERE clause"),
+      )
     },
   )
 }
