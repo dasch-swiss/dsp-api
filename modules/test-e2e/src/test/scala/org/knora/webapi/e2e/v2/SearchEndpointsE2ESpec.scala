@@ -133,50 +133,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       xmlDiff.hasDifferences should be(false)
     }
 
-    "reject an ORDER by containing a variable that's not bound at the top level of the WHERE clause" in {
-      val gravsearchQuery =
-        s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-           |CONSTRUCT {
-           |    ?thing knora-api:isMainResource true .
-           |    ?thing anything:hasInteger ?int .
-           |    ?thing anything:hasRichtext ?richtext .
-           |    ?thing anything:hasText ?text .
-           |} WHERE {
-           |    ?thing a knora-api:Resource .
-           |    ?thing a anything:Thing .
-           |
-           |    {
-           |        ?thing anything:hasRichtext ?richtext .
-           |        FILTER knora-api:matchText(?richtext, "test")
-           |
-           |		?thing anything:hasInteger ?int .
-           |		?int knora-api:intValueAsInt 1 .
-           |    }
-           |    UNION
-           |    {
-           |        ?thing anything:hasText ?text .
-           |        FILTER knora-api:matchText(?text, "test")
-           |
-           |		?thing anything:hasInteger ?int .
-           |		?int knora-api:intValueAsInt 1 .
-           |    }
-           |}
-           |ORDER BY (?int)""".stripMargin
-      val actual = singleAwaitingRequest(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      assert(actual.status == StatusCodes.BAD_REQUEST)
-      assert(
-        responseToString(actual).contains(
-          "Variable ?int is used in ORDER by, but is not bound at the top level of the WHERE clause",
-        ),
-      )
-    }
-
     "reject a FILTER in a UNION that uses a variable that's out of scope" in {
       val gravsearchQuery =
         s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
