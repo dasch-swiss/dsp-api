@@ -937,5 +937,31 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
     },
+    test(
+      "search for a book whose title contains 'Zeitglöcklein' using the match function (submitting the complex schema)",
+    ) {
+      val query =
+        """
+          |REFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |REFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |ONSTRUCT {
+          |
+          |   ?mainRes knora-api:isMainResource true .
+          |
+          |   ?mainRes incunabula:title ?title .
+          |
+          |} WHERE {
+          |
+          |   ?mainRes a incunabula:book .
+          |
+          |   ?mainRes incunabula:title ?title .
+          |
+          |   FILTER knora-api:matchText(?title, "Zeitglöcklein")
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+    },
   )
 }
