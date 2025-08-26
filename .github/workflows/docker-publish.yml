@@ -42,3 +42,7 @@ jobs:
           curl -f -u "${JENKINS_BASIC_AUTH_USER}:${JENKINS_BASIC_AUTH_PASS}" \
                -X POST "${JENKINS_DEV_WEBHOOK}" \
                -d "Service=api&Version=${IMAGE_TAG}"
+
+          curl -f -u "${JENKINS_BASIC_AUTH_USER}:${JENKINS_BASIC_AUTH_PASS}" \
+               -X POST "${JENKINS_DEV_WEBHOOK}" \
+               -d "Service=ingest&Version=${IMAGE_TAG}"
