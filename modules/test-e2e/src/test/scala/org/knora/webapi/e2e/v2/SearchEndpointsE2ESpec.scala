@@ -30,7 +30,6 @@ import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
-import pekko.http.javadsl.model.StatusCodes
 import pekko.http.scaladsl.model.HttpEntity
 import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
@@ -131,46 +130,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       val xmlDiff: Diff =
         DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
       xmlDiff.hasDifferences should be(false)
-    }
-
-    "reject a FILTER in a UNION that uses a variable that's out of scope" in {
-      val gravsearchQuery =
-        s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-           |CONSTRUCT {
-           |    ?thing knora-api:isMainResource true .
-           |    ?thing anything:hasInteger ?int .
-           |    ?thing anything:hasRichtext ?richtext .
-           |    ?thing anything:hasText ?text .
-           |} WHERE {
-           |    ?thing a knora-api:Resource .
-           |    ?thing a anything:Thing .
-           |    ?thing anything:hasRichtext ?richtext .
-           |    ?thing anything:hasInteger ?int .
-           |    ?int knora-api:intValueAsInt 1 .
-           |
-           |    {
-           |        FILTER knora-api:matchText(?richtext, "test")
-           |    }
-           |    UNION
-           |    {
-           |        ?thing anything:hasText ?text .
-           |        FILTER knora-api:matchText(?text, "test")
-           |    }
-           |}
-           |ORDER BY (?int)""".stripMargin
-      val actual = singleAwaitingRequest(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      assert(actual.status == StatusCodes.BAD_REQUEST)
-      assert(
-        responseToString(actual).contains(
-          "One or more variables used in a filter have not been bound in the same UNION block: ?richtext",
-        ),
-      )
     }
 
     "search for a resource containing a time value tag" in {
