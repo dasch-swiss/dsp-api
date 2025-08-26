@@ -67,48 +67,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
 
-    "do a Gravsearch query for a letter that links to a person with a specified name (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |
-          |    CONSTRUCT {
-          |        ?letter knora-api:isMainResource true .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        ?letter ?linkingProp1  ?person1 .
-          |
-          |        ?person1 beol:hasFamilyName ?name .
-          |
-          |    } WHERE {
-          |        ?letter a beol:letter .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        ?letter ?linkingProp1 ?person1 .
-          |
-          |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-          |
-          |        ?person1 beol:hasFamilyName ?name .
-          |
-          |        ?name knora-api:valueAsString "Meier" .
-          |
-          |    } ORDER BY ?date
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("letterWithPersonWithName.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 1)
-    }
-
     "do a Gravsearch query for a letter that links to another person with a specified name (submitting the complex schema)" in {
       val gravsearchQuery =
         """

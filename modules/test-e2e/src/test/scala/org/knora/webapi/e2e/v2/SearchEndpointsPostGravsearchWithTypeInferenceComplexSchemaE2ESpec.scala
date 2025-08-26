@@ -1106,5 +1106,40 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "letterWithAuthor.jsonld", anythingUser1)
     },
+    test(
+      "do a Gravsearch query for a letter that links to a person with a specified name (submitting the complex schema)",
+    ) {
+      val query =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |
+          |    ?letter beol:creationDate ?date .
+          |
+          |    ?letter ?linkingProp1  ?person1 .
+          |
+          |    ?person1 beol:hasFamilyName ?name .
+          |
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |
+          |    ?letter beol:creationDate ?date .
+          |
+          |    ?letter ?linkingProp1 ?person1 .
+          |
+          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+          |
+          |    ?person1 beol:hasFamilyName ?name .
+          |
+          |    ?name knora-api:valueAsString "Meier" .
+          |
+          |} ORDER BY ?date
+          |""".stripMargin
+      verifyQueryResult(query, "letterWithPersonWithName.jsonld", anythingUser1)
+    },
   )
 }
