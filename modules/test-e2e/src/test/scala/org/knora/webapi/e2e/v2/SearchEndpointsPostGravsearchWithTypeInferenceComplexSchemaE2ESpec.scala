@@ -2122,7 +2122,25 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |} WHERE {
           |    ?book rdf:type incunabula:book .
           |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
-          |}""".stripMargin
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
+    },
+    test("search for an rdfs:label using a variable in the simple schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?label .
+          |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+          |}
+          |""".stripMargin
       verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
     },
   )
