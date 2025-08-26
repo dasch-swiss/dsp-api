@@ -1596,5 +1596,28 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "thingsWithStandoffLinks.jsonld", anythingUser1)
     },
+    test(
+      "search for a standoff link using the knora-api:standoffLink function specifying an Iri for the target resource (submitting the complex schema)",
+    ) {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |    ?thing anything:hasText ?text .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |    ?thing anything:hasText ?text .
+          |    ?text knora-api:textValueHasStandoff ?standoffTag .
+          |    ?standoffTag a knora-api:StandoffLinkTag .
+          |    FILTER knora-api:standoffLink(?thing, ?standoffTag, <http://rdfh.ch/0001/a-thing>)
+          |    <http://rdfh.ch/0001/a-thing> a anything:Thing .
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "thingsWithStandoffLinksToSpecificThing.jsonld", anythingUser1)
+    },
   )
 }
