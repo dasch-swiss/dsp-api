@@ -1910,5 +1910,34 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
            |}""".stripMargin
       verifyQueryResult(query, "ThingWithHiddenThing.jsonld")
     },
+    test("not return duplicate results when there are UNION branches with different variables") {
+      val query =
+        s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+           |
+           |CONSTRUCT {
+           |    ?thing knora-api:isMainResource true .
+           |    ?thing anything:hasInteger ?int .
+           |    ?thing anything:hasRichtext ?richtext .
+           |    ?thing anything:hasText ?text .
+           |} WHERE {
+           |    ?thing a knora-api:Resource .
+           |    ?thing a anything:Thing .
+           |    ?thing anything:hasInteger ?int .
+           |    ?int knora-api:intValueAsInt 1 .
+           |
+           |    {
+           |        ?thing anything:hasRichtext ?richtext .
+           |        FILTER knora-api:matchText(?richtext, "test")
+           |    }
+           |    UNION
+           |    {
+           |        ?thing anything:hasText ?text .
+           |        FILTER knora-api:matchText(?text, "test")
+           |    }
+           |}
+           |ORDER BY (?int)""".stripMargin
+      verifyQueryResult(query, "ThingFromQueryWithUnion.jsonld")
+    },
   )
 }

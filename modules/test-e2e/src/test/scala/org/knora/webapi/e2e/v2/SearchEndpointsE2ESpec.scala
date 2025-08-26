@@ -133,45 +133,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       xmlDiff.hasDifferences should be(false)
     }
 
-    "not return duplicate results when there are UNION branches with different variables" in {
-      val gravsearchQuery =
-        s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-           |
-           |CONSTRUCT {
-           |    ?thing knora-api:isMainResource true .
-           |    ?thing anything:hasInteger ?int .
-           |    ?thing anything:hasRichtext ?richtext .
-           |    ?thing anything:hasText ?text .
-           |} WHERE {
-           |    ?thing a knora-api:Resource .
-           |    ?thing a anything:Thing .
-           |    ?thing anything:hasInteger ?int .
-           |    ?int knora-api:intValueAsInt 1 .
-           |
-           |    {
-           |        ?thing anything:hasRichtext ?richtext .
-           |        FILTER knora-api:matchText(?richtext, "test")
-           |    }
-           |    UNION
-           |    {
-           |        ?thing anything:hasText ?text .
-           |        FILTER knora-api:matchText(?text, "test")
-           |    }
-           |}
-           |ORDER BY (?int)""".stripMargin
-
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      checkSearchResponseNumberOfResults(actual, 1)
-      val expected = testData("ThingFromQueryWithUnion.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "reject an ORDER by containing a variable that's not bound at the top level of the WHERE clause" in {
       val gravsearchQuery =
         s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
