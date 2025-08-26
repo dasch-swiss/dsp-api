@@ -5,15 +5,16 @@
 
 package org.knora.webapi.e2e.v2
 
+import sttp.model.StatusCode
 import zio.*
 import zio.test.*
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
-import sttp.model.StatusCode
 
 object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extends E2EZSpec {
 
@@ -1298,6 +1299,42 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       postGravsearchQuery(query, Some(incunabulaMemberUser))
         .map(response => assertTrue(response.code == StatusCode.BadRequest))
+    },
+    test(
+      "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi' (submitting the complex schema)",
+    ) {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?region knora-api:isMainResource true .
+          |
+          |    ?region knora-api:isRegionOf ?page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |} WHERE {
+          |	   ?region a knora-api:Region .
+          |
+          |	   ?region knora-api:isRegionOf ?page .
+          |
+          |    ?page a incunabula:page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "regionsOfZeitgloecklein.jsonld", incunabulaMemberUser)
     },
   )
 }
