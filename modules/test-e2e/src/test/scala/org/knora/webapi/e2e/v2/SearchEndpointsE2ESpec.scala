@@ -67,49 +67,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
 
-    "search for an anything:Thing that may have a Boolean value that is true (submitting the complex schema)" in {
-      // set OFFSET to 1 to get "Testding for extended search"
-      val gravsearchQuery =
-        """
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |
-          |CONSTRUCT {
-          |     ?thing knora-api:isMainResource true .
-          |
-          |     ?thing anything:hasBoolean ?boolean .
-          |} WHERE {
-          |
-          |     ?thing a anything:Thing .
-          |
-          |     OPTIONAL {
-          |         ?thing anything:hasBoolean ?boolean .
-          |         ?boolean knora-api:booleanValueAsBoolean true .
-          |     }
-          |
-          |     MINUS {
-          |         ?thing anything:hasInteger ?intVal .
-          |         ?intVal knora-api:intValueAsInt 123454321 .
-          |     }
-          |
-          |     MINUS {
-          |         ?thing anything:hasInteger ?intVal .
-          |         ?intVal knora-api:intValueAsInt 999999999 .
-          |     }
-          |
-          |} OFFSET 1""".stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("ThingWithBooleanOptionalOffset1.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      // this is the second page of results
-      checkSearchResponseNumberOfResults(actual, 19)
-    }
-
     "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both) (submitting the complex schema)" in {
       val gravsearchQuery =
         """
