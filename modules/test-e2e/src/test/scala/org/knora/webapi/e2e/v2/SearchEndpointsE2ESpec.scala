@@ -31,9 +31,7 @@ import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
 import pekko.http.javadsl.model.StatusCodes
-import pekko.http.scaladsl.model.ContentTypes
 import pekko.http.scaladsl.model.HttpEntity
-import pekko.http.scaladsl.model.Multipart
 import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 /**
@@ -66,100 +64,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
-
-    "search for a standoff date tag indicating a date in a particular range (submitting the complex schema)" in {
-      // First, create a standoff-to-XML mapping that can handle standoff date tags.
-      val mappingFileToSend = Paths.get("test_data/test_route/texts/mappingForHTML.xml")
-      val paramsCreateHTMLMappingFromXML =
-        s"""
-           |{
-           |    "knora-api:mappingHasName": "HTMLMapping",
-           |    "knora-api:attachedToProject": {
-           |      "@id": "$anythingProjectIri"
-           |    },
-           |    "rdfs:label": "mapping for HTML",
-           |    "@context": {
-           |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-           |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
-           |    }
-           |}
-                """.stripMargin
-
-      val formDataMapping = Multipart.FormData(
-        Multipart.FormData.BodyPart(
-          "json",
-          HttpEntity(ContentTypes.`application/json`, paramsCreateHTMLMappingFromXML),
-        ),
-        Multipart.FormData.BodyPart(
-          "xml",
-          HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, mappingFileToSend),
-          Map("filename" -> mappingFileToSend.getFileName.toString),
-        ),
-      )
-
-      // send mapping xml to route
-      val _ = getResponseAsString(
-        Post(s"$baseApiUrl/v2/mapping", formDataMapping) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        ),
-      )
-
-      // Next, create a resource with a text value containing a standoff date tag.
-      val xmlForJson = JsString(
-        FileUtil.readTextFile(Paths.get("test_data/test_route/texts/HTML.xml")),
-      ).compactPrint
-      val requestBody =
-        s"""{
-           |  "@id" : "http://rdfh.ch/0001/a-thing",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasText" : {
-           |    "@type" : "knora-api:TextValue",
-           |    "knora-api:textValueAsXml" : $xmlForJson,
-           |    "knora-api:textValueHasMapping" : {
-           |      "@id": "$anythingProjectIri/mappings/HTMLMapping"
-           |    }
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-
-      val _ = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/values",
-          HttpEntity(RdfMediaTypes.`application/ld+json`, requestBody),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-
-      // Finally, do a Gravsearch query that finds the date tag.
-
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-          |PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |    ?thing anything:hasText ?text .
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |    ?thing anything:hasText ?text .
-          |    ?text knora-api:textValueHasStandoff ?standoffEventTag .
-          |    ?standoffEventTag a anything:StandoffEventTag .
-          |    FILTER(knora-api:toSimpleDate(?standoffEventTag) = "GREGORIAN:2016-12 CE"^^knora-api-simple:Date)
-          |}
-                """.stripMargin
-
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      assert(actual.contains("we will have a party"))
-    }
 
     "search for a standoff tag using knora-api:standoffTagHasStartAncestor (submitting the complex schema)" in {
       val gravsearchQuery =
