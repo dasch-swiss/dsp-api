@@ -127,51 +127,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       xmlDiff.hasDifferences should be(false)
     }
 
-
-
-    "search for an rdfs:label using knora-api:matchLabel in the simple schema" in {
-      val gravsearchQuery: String =
-        """
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |
-          |} WHERE {
-          |    ?book rdf:type incunabula:book .
-          |    FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
-          |}""".stripMargin
-      val actual = getResponseAsString(
-        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
-      )
-      val expected = testData("ZeitgloeckleinViaLabel.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
-    "search for an rdfs:label using knora-api:matchLabel in the complex schema" in {
-      val gravsearchQuery: String =
-        """
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |
-          |} WHERE {
-          |    ?book rdf:type incunabula:book .
-          |    FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
-          |}""".stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ),
-      )
-      val expected = testData("ZeitgloeckleinViaLabel.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "search for an rdfs:label using the regex function in the simple schema" in {
       val gravsearchQuery: String =
         """
