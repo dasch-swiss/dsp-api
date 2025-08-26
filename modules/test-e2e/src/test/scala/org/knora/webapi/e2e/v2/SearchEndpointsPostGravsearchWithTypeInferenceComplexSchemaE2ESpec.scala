@@ -2302,5 +2302,27 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
       // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
       verifyQueryResult(query, "LetterNotToSelf.jsonld")
     },
+    test("search for anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)") {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |  ?thing a anything:Thing .
+          |  ?thing a knora-api:Resource .
+          |  FILTER NOT EXISTS {
+          |    ?thing anything:hasBoolean ?bool .
+          |  }
+          |}
+          |""".stripMargin
+      for {
+        response <- postGravsearchQuery(query, Some(anythingUser1))
+        actual   <- response.assert200
+        _        <- ZIO.attempt(checkSearchResponseNumberOfResults(actual, 24))
+      } yield assertCompletes
+    },
   )
 }
