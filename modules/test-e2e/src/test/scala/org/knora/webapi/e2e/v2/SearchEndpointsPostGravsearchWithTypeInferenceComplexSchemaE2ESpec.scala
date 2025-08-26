@@ -942,10 +942,10 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
     ) {
       val query =
         """
-          |REFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
-          |REFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
           |
-          |ONSTRUCT {
+          |CONSTRUCT {
           |
           |   ?mainRes knora-api:isMainResource true .
           |
@@ -958,6 +958,32 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |   ?mainRes incunabula:title ?title .
           |
           |   FILTER knora-api:matchText(?title, "Zeitglöcklein")
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+    },
+    test(
+      "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function (submitting the complex schema)",
+    ) {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |   ?mainRes knora-api:isMainResource true .
+          |
+          |   ?mainRes incunabula:title ?title .
+          |
+          |} WHERE {
+          |
+          |   ?mainRes a incunabula:book .
+          |
+          |   ?mainRes incunabula:title ?title .
+          |
+          |   FILTER knora-api:matchText(?title, "Zeitglöcklein AND Lebens")
           |
           |}
           |""".stripMargin

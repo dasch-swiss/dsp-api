@@ -66,38 +66,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
-    "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """
-          |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
-          |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |
-          |    CONSTRUCT {
-          |
-          |        ?mainRes knora-api:isMainResource true .
-          |
-          |        ?mainRes incunabula:title ?title .
-          |
-          |     } WHERE {
-          |
-          |        ?mainRes a incunabula:book .
-          |
-          |        ?mainRes incunabula:title ?title .
-          |
-          |        FILTER knora-api:matchText(?title, "Zeitglöcklein AND Lebens")
-          |
-          |     }
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-      checkSearchResponseNumberOfResults(actual, 2)
-    }
 
     "search for an anything:Thing with a list value (submitting the complex schema)" in {
       val gravsearchQuery =
