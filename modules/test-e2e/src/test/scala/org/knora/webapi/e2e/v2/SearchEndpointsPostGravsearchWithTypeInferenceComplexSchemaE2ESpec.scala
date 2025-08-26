@@ -1408,5 +1408,31 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
       postGravsearchQuery(query, Some(incunabulaMemberUser))
         .map(response => assertTrue(response.code == StatusCode.BadRequest))
     },
+    test("reject a Gravsearch query that uses a string literal in the CONSTRUCT clause") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
+          |
+          |
+          |} WHERE {
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
+          |
+          |}
+          |""".stripMargin
+      postGravsearchQuery(query, Some(incunabulaMemberUser))
+        .map(response => assertTrue(response.code == StatusCode.BadRequest))
+    },
   )
 }
