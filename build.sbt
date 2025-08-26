@@ -440,7 +440,7 @@ lazy val ingest = {
     )
 }
 
-lazy val integration = (project in file("modules/test-ingest-integration"))
+lazy val ingestIntegration = (project in file("modules/test-ingest-integration"))
   .dependsOn(ingest)
   .settings(
     publish / skip := true,

@@ -111,7 +111,7 @@ jobs:
           java-version: 21
           cache: sbt
       - name: Run integration tests
-        run: export DOCKER_BUILDKIT=1; ./sbtx Docker/publishLocal; ./sbtx integration/test
+        run: export DOCKER_BUILDKIT=1; ./sbtx Docker/publishLocal; ./sbtx ingestIntegration/test
 
   test-docs-build:
     name: Test docs
