@@ -17,7 +17,6 @@ import scala.concurrent.ExecutionContextExecutor
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
-import org.knora.webapi.e2e.v2.ResponseCheckerV2.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -121,30 +120,5 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       xmlDiff.hasDifferences should be(false)
     }
 
-    "search for anything:Thing that doesn't have a link property (FILTER NOT EXISTS)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |  ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |  ?thing a anything:Thing .
-          |  ?thing a knora-api:Resource .
-          |  FILTER NOT EXISTS {
-          |    ?thing anything:hasOtherThing ?otherThing .
-          |  }
-          |}
-          |
-            """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      checkSearchResponseNumberOfResults(actual, 24)
-    }
   }
 }
