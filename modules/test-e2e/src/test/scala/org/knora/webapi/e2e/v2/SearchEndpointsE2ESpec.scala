@@ -66,36 +66,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
-
-    "search for a standoff link using the knora-api:standoffLink function (submitting the complex schema)" in {
-      val gravsearchQuery =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |    ?thing anything:hasText ?text .
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |    ?thing anything:hasText ?text .
-          |    ?text knora-api:textValueHasStandoff ?standoffTag .
-          |    ?standoffTag a knora-api:StandoffLinkTag .
-          |    FILTER knora-api:standoffLink(?thing, ?standoffTag, ?otherThing)
-          |    ?otherThing a anything:Thing .
-          |}
-                """.stripMargin
-      val actual = getResponseAsString(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-      )
-      val expected = testData("thingsWithStandoffLinks.jsonld")
-      compareJSONLDForResourcesResponse(expected, actual)
-    }
-
     "search for a standoff link using the knora-api:standoffLink function, referring to the target resource in the function call only (submitting the complex schema)" in {
       val gravsearchQuery =
         """
