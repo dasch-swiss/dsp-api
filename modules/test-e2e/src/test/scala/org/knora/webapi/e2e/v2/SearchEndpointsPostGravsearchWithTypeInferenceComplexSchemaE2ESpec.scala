@@ -622,5 +622,41 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |}""".stripMargin
       verifyQueryResult(query, "RegionsForPage.jsonld")
     },
+    test(
+      "get a book a page points to and include the page in the results (all properties present in WHERE clause) (submitting the complex schema)",
+    ) {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |    ?book knora-api:isMainResource true .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+          |
+          |} WHERE {
+          |
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+          |
+          |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+          |
+          |} OFFSET 0
+          |""".stripMargin
+      verifyQueryResult(query, "bookWithIncomingPagesWithAllRequestedProps.jsonld")
+    },
   )
 }
