@@ -5,6 +5,9 @@
 
 package org.knora.webapi.e2e.v2
 
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
+import org.xmlunit.diff.Diff
 import sttp.client4.*
 import sttp.model.StatusCode
 import zio.*
@@ -12,10 +15,6 @@ import zio.json.ast.Json
 import zio.test.*
 
 import java.nio.file.Paths
-
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
-import org.xmlunit.diff.Diff
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
@@ -2346,5 +2345,70 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
         _        <- ZIO.attempt(checkSearchResponseNumberOfResults(actual, 24))
       } yield assertCompletes
     },
+    test(
+      "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags) " +
+        "and search for the large text and its markup and receive it as XML, and check that it matches the original XML",
+    ) {
+      // Create a resource containing the text of Hamlet.
+      val hamletXml = FileUtil.readTextFile(Paths.get("test_data/generated_test_data/resourcesR2RV2/hamlet.xml"))
+      val createResourceJsonLd = Json.Obj(
+        ("@type", Json.Str("anything:Thing")),
+        (
+          "anything:hasRichtext",
+          Json.Obj(
+            ("@type", Json.Str("knora-api:TextValue")),
+            ("knora-api:textValueAsXml", Json.Str(hamletXml)),
+            (
+              "knora-api:textValueHasMapping",
+              Json.Obj(("@id", Json.Str("http://rdfh.ch/standoff/mappings/StandardMapping"))),
+            ),
+          ),
+        ),
+        ("knora-api:attachedToProject", Json.Obj(("@id", Json.Str("http://rdfh.ch/projects/0001")))),
+        ("rdfs:label", Json.Str("test thing")),
+        (
+          "@context",
+          Json.Obj(
+            ("rdf", Json.Str("http://www.w3.org/1999/02/22-rdf-syntax-ns#")),
+            ("knora-api", Json.Str("http://api.knora.org/ontology/knora-api/v2#")),
+            ("rdfs", Json.Str("http://www.w3.org/2000/01/rdf-schema#")),
+            ("xsd", Json.Str("http://www.w3.org/2001/XMLSchema#")),
+            ("anything", Json.Str("http://0.0.0.0:3333/ontology/0001/anything/v2#")),
+          ),
+        ),
+      )
+
+      for {
+        hamletResourceIri <- TestApiClient
+                               .postJsonLdDocument(uri"/v2/resources", createResourceJsonLd.toString, anythingUser1)
+                               .flatMap(_.assert200)
+                               .flatMap(doc => ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)))
+
+        // Search for the resource.
+        gravsearchQuery =
+          s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+             |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+             |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+             |
+             |CONSTRUCT {
+             |    ?thing knora-api:isMainResource true .
+             |    ?thing anything:hasRichtext ?text .
+             |} WHERE {
+             |    BIND(<$hamletResourceIri> AS ?thing)
+             |    ?thing a anything:Thing .
+             |    ?thing anything:hasRichtext ?text .
+             |}""".stripMargin
+        actualResponse <- postGravsearchQuery(gravsearchQuery, Some(anythingUser1))
+                            .flatMap(_.assert200)
+                            .mapAttempt(JsonLDUtil.parseJsonLD)
+        actualResourceIri <- ZIO.fromEither(actualResponse.body.getRequiredString(JsonLDKeywords.ID))
+        xmlFromResponse <- ZIO.fromEither(
+                             actualResponse.body
+                               .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+                               .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)),
+                           )
+        xmlDiff = DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
+      } yield assertTrue(actualResourceIri == hamletResourceIri, !xmlDiff.hasDifferences)
+    } @@ TestAspect.ignore, // uses too much memory for GitHub CI
   )
 }
