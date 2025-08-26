@@ -20,6 +20,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.ResponseOps.assert404
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.FileUtil
 
@@ -1770,6 +1771,30 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
       for {
         actual <- postGravsearchQuery(query, Some(anythingUser1)).flatMap(_.assert200)
       } yield assertTrue(actual.contains("we will have a party"))
+    },
+    test("reject a link value property in a query in the simple schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |    ?book incunabula:title ?title .
+          |    ?page incunabula:partOfValue ?book .
+          |} WHERE {
+          |    ?book a incunabula:book .
+          |    ?book incunabula:title ?title .
+          |    ?page a incunabula:page .
+          |    ?page incunabula:partOfValue ?book .
+          |}
+          |""".stripMargin
+      for {
+        response <- postGravsearchQuery(query, Some(incunabulaMemberUser))
+        actual   <- response.assert404
+      } yield assertTrue(
+        actual.contains("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOfValue"),
+      )
     },
   )
 }

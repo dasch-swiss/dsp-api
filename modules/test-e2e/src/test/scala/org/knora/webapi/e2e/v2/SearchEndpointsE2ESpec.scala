@@ -46,9 +46,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
   private val anythingUserEmail  = anythingUser.email
   private val anythingProjectIri = SharedTestDataADM.anythingProjectIri
 
-  private val incunabulaUser      = SharedTestDataADM.incunabulaMemberUser
-  private val incunabulaUserEmail = incunabulaUser.email
-
   private val password = SharedTestDataADM.testPass
 
   private val hamletResourceIri  = new MutableTestIri
@@ -64,33 +61,6 @@ class SearchEndpointsE2ESpec extends E2ESpec {
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
-
-    "reject a link value property in a query in the simple schema" in {
-      val gravsearchQuery =
-        """
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |    ?book incunabula:title ?title .
-          |    ?page incunabula:partOfValue ?book .
-          |} WHERE {
-          |    ?book a incunabula:book .
-          |    ?book incunabula:title ?title .
-          |    ?page a incunabula:page .
-          |    ?page incunabula:partOfValue ?book .
-          |}
-                """.stripMargin
-      val actual = singleAwaitingRequest(
-        Post(
-          s"$baseApiUrl/v2/searchextended",
-          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
-      )
-      assert(actual.status == StatusCodes.NOT_FOUND)
-      assert(responseToString(actual).contains("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOfValue"))
-    }
 
     "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
       // Create a resource containing the text of Hamlet.
