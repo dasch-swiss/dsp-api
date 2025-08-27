@@ -7,7 +7,6 @@ package org.knora.webapi.e2e.v2
 
 import sttp.client4.Response
 import sttp.client4.UriContext
-import sttp.model.*
 import zio.*
 import zio.test.*
 
@@ -55,14 +54,21 @@ object SearchEndpointE2ESpecHelper {
     expectedFile: String,
     f: RequestUpdate[String] = identity,
   ): ZIO[TestDataFileUtil & TestApiClient, Throwable, TestResult] =
-    TestApiClient.postSparql(uri"/v2/searchextended", query, f = f).flatMap(compare(_, expectedFile))
+    postGravsearchQuery(query, f = f).flatMap(compare(_, expectedFile))
 
   def verifyQueryResult(
     query: String,
     expectedFile: String,
     user: User,
   ): ZIO[TestDataFileUtil & TestApiClient, Throwable, TestResult] =
-    TestApiClient.postSparql(uri"/v2/searchextended", query, Some(user)).flatMap(compare(_, expectedFile))
+    postGravsearchQuery(query, Some(user)).flatMap(compare(_, expectedFile))
+
+  def postGravsearchQuery(
+    query: String,
+    user: Option[User] = None,
+    f: RequestUpdate[String] = identity,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    TestApiClient.postSparql(uri"/v2/searchextended", query, user, f)
 
   private def compare(response: Response[Either[String, String]], expectedFile: String) =
     for {

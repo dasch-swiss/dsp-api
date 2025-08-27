@@ -38,7 +38,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |  ?res anything:hasUri ?exLink .
           |}
           |ORDER BY (?exLink)""".stripMargin
-      TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200).as(assertCompletes)
+      postGravsearchQuery(query).flatMap(_.assert200).as(assertCompletes)
     },
     test("perform a Gravsearch query using complex schema which allows to sort the results by external link") {
       val query =
@@ -54,7 +54,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |  ?res anything:hasUri ?exLink .
           |}
           |ORDER BY (?exLink)""".stripMargin
-      TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200).as(assertCompletes)
+      postGravsearchQuery(query).flatMap(_.assert200).as(assertCompletes)
     },
     test("perform a Gravsearch query for an anything:Thing with an optional date and sort by date") {
       val query =

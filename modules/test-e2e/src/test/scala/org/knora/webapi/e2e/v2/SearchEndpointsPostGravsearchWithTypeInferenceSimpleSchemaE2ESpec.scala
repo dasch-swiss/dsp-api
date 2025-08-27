@@ -5,7 +5,6 @@
 
 package org.knora.webapi.e2e.v2
 
-import sttp.client4.UriContext
 import zio.*
 import zio.test.*
 
@@ -16,13 +15,13 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
 import org.knora.webapi.testservices.ResponseOps.assert200
-import org.knora.webapi.testservices.TestApiClient
+import org.knora.webapi.testservices.ResponseOps.assert400
 
-object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
+object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends E2EZSpec {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
 
-  override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended (with type inference)")(
+  override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended (with type inference, simple schema)")(
     test(
       "do a Gravsearch query in which 'rdf:type knora-api:Resource' is inferred from a more specific rdf:type (with type inference)",
     ) {
@@ -464,7 +463,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |}
           |""".stripMargin
       for {
-        response <- TestApiClient.postSparql(uri"/v2/searchextended", query)
+        response <- postGravsearchQuery(query)
         jsonLd   <- response.assert200
         _        <- ZIO.attempt(checkSearchResponseNumberOfResults(jsonLd, 1))
       } yield assertCompletes
@@ -1424,6 +1423,146 @@ object SearchEndpointsPostGravsearchWithTypeInferenceE2ESpec extends E2EZSpec {
           |} ORDER BY ?date
           |""".stripMargin
       verifyQueryResult(query, "letterWithAuthorWithInformation.jsonld")
+    },
+    test(
+      "do a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource (with type inference)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |    ?book incunabula:title ?title .
+          |
+          |    ?page knora-api:isPartOf ?book ;
+          |        incunabula:seqnum ?seqnum .
+          |} WHERE {
+          |    BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?page a incunabula:page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |
+          |    FILTER(?seqnum <= 10)
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "incomingPagesForBook.jsonld", incunabulaMemberUser)
+    },
+    test(
+      "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY (with type inference)",
+    ) {
+      val query =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |    ?book incunabula:title ?title .
+          |
+          |    ?page knora-api:isPartOf ?book ;
+          |        incunabula:seqnum ?seqnum .
+          |} WHERE {
+          |    BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    ?page a incunabula:page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?page incunabula:seqnum ?seqnum .
+          |
+          |    FILTER(?seqnum <= 10)
+          |
+          |} ORDER BY ?seqnum
+          |""".stripMargin
+      postGravsearchQuery(query, Some(incunabulaMemberUser)).flatMap(_.assert400).as(assertCompletes)
+    },
+    test(
+      "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi (with type inference)'",
+    ) {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?region knora-api:isMainResource true .
+          |
+          |    ?region knora-api:isRegionOf ?page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |} WHERE {
+          |	   ?region a knora-api:Region .
+          |
+          |	   ?region knora-api:isRegionOf ?page .
+          |
+          |    ?page a incunabula:page .
+          |
+          |    ?page knora-api:isPartOf ?book .
+          |
+          |    ?book a incunabula:book .
+          |
+          |    ?book incunabula:title ?title .
+          |
+          |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+          |
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "regionsOfZeitgloecklein.jsonld", incunabulaMemberUser)
+    },
+    test("do a Gravsearch query containing a UNION nested in an OPTIONAL (with type inference)") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX gravsearchtest1: <http://0.0.0.0:3333/ontology/0666/gravsearchtest1/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?Project knora-api:isMainResource true .
+          |  ?isInProject gravsearchtest1:isInProject ?Project .
+          |} WHERE {
+          |  ?Project a gravsearchtest1:Project .
+          |
+          |  OPTIONAL {
+          |    ?isInProject gravsearchtest1:isInProject ?Project .
+          |    { ?isInProject a gravsearchtest1:BibliographicNotice . } UNION { ?isInProject a gravsearchtest1:Person . }
+          |  }
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ProjectsWithOptionalPersonOrBiblio.jsonld")
+    },
+    test("do a Gravsearch query that searches for a list node (with type inference)") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |
+          |  ?mainRes knora-api:isMainResource true .
+          |
+          |  ?mainRes anything:hasListItem ?propVal0 .
+          |
+          |} WHERE {
+          |
+          |  ?mainRes anything:hasListItem ?propVal0 .
+          |
+          |  FILTER(?propVal0 = "Tree list node 02"^^knora-api:ListNode)
+          |
+          |}
+          |OFFSET 0
+          |""".stripMargin
+      verifyQueryResult(query, "ThingWithListNodeLabel.jsonld")
     },
   )
 }
