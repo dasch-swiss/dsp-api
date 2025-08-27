@@ -44,7 +44,6 @@ import org.knora.webapi.store.triplestore.errors.*
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateAllGraphs
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
-import org.knora.webapi.util.FileUtil
 
 case class TriplestoreServiceLive(
   triplestoreConfig: Triplestore,
@@ -256,28 +255,13 @@ case class TriplestoreServiceLive(
    * Checks the Fuseki triplestore if it is available and configured correctly. If it is not
    * configured, tries to automatically configure (initialize) the required dataset.
    */
-  def checkTriplestore(): Task[TriplestoreStatus] = {
-    val notInitialized =
-      NotInitialized(s"None of the active datasets meet our requirement of name: ${fusekiConfig.repositoryName}")
-
-    def unavailable(cause: String) =
-      Unavailable(s"Triplestore not available: $cause")
-
+  def checkTriplestore(): Task[TriplestoreStatus] =
     ZIO
       .ifZIO(checkTriplestoreInitialized())(
         ZIO.succeed(Available),
-        if (triplestoreConfig.autoInit) {
-          ZIO
-            .ifZIO(initJenaFusekiTriplestore() *> checkTriplestoreInitialized())(
-              ZIO.succeed(Available),
-              ZIO.succeed(notInitialized),
-            )
-        } else {
-          ZIO.succeed(notInitialized)
-        },
+        ZIO.succeed(NotInitialized(s"Dataset ${fusekiConfig.repositoryName} not found in triplestore.")),
       )
-      .catchAll(ex => ZIO.succeed(unavailable(ex.getMessage)))
-  }
+      .catchAll(ex => ZIO.succeed(Unavailable(s"Triplestore not available: ${ex.getMessage}")))
 
   /**
    * Call an endpoint that returns all datasets and check if our required dataset is present.
@@ -321,32 +305,6 @@ case class TriplestoreServiceLive(
       body <- doHttpRequest(authenticatedRequest.get(targetHostUri.addPath(paths.tasks).addPath(taskId)))
       json <- ZIO.fromEither(body.body.merge.fromJson[Json]).mapError(new RuntimeException(_))
     } yield json.get(JsonCursor.field("finished").isString).isRight).orDie
-
-  /**
-   * Initialize the Jena Fuseki triplestore. Currently only works for
-   * 'knora-test' and 'knora-test-unit' repository names. To be used, the
-   * API needs to be started with 'KNORA_WEBAPI_TRIPLESTORE_AUTOINIT' set
-   * to 'true' (appConfig.triplestore.autoInit). This is set to `true` for tests
-   * (`test/resources/test.conf`). Usage is only recommended for automated
-   * testing and not for production use.
-   */
-  private def initJenaFusekiTriplestore(): Task[Unit] =
-    for {
-      configFile <-
-        ZIO.attemptBlocking {
-          FileUtil
-            .readTextResource(s"fuseki-repository-config.ttl.template")
-            .replace("@REPOSITORY@", fusekiConfig.repositoryName)
-        }
-
-      _ <-
-        doHttpRequest(
-          authenticatedRequest
-            .post(targetHostUri.addPath(paths.datasets))
-            .contentType(mimeTypeTextTurtle)
-            .body(configFile),
-        )
-    } yield ()
 
   /**
    * Requests the contents of a named graph, saving the response in a file.
