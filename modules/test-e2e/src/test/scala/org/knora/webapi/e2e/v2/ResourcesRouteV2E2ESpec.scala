@@ -42,6 +42,7 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.ResponseOps.assert404
 import org.knora.webapi.testservices.TestApiClient
+import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.util.*
 
 object ResourcesRouteV2E2ESpec extends E2EZSpec {
@@ -1405,6 +1406,42 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         _ <-
           TestApiClient.putJsonLd(uri"/v2/values", editValue, SharedTestDataADM.anythingAdminUser).flatMap(_.assert200)
       } yield assertTrue(valueAsString == "The new text value")
+    },
+    test(
+      "create a resource with TextValue comment containing linebreaks should store linebreaks as Unicode (DEV-5311)",
+    ) {
+      val commentWithLinebreaks = "This is line one\nThis is line two\nThis is line three"
+      val createJsonLd = Json.Obj(
+        "@type" -> Json.Str("anything:Thing"),
+        "anything:hasText" -> Json.Obj(
+          "@type"                     -> Json.Str("knora-api:TextValue"),
+          "knora-api:valueAsString"   -> Json.Str("Text value with comment containing linebreaks"),
+          "knora-api:valueHasComment" -> Json.Str(commentWithLinebreaks),
+        ),
+        "knora-api:attachedToProject" -> Json.Obj(
+          "@id" -> Json.Str("http://rdfh.ch/projects/0001"),
+        ),
+        "rdfs:label" -> Json.Str("Resource with linebreak comment"),
+        "@context" -> Json.Obj(
+          "rdf"       -> Json.Str("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+          "knora-api" -> Json.Str("http://api.knora.org/ontology/knora-api/v2#"),
+          "rdfs"      -> Json.Str("http://www.w3.org/2000/01/rdf-schema#"),
+          "xsd"       -> Json.Str("http://www.w3.org/2001/XMLSchema#"),
+          "anything"  -> Json.Str("http://0.0.0.0:3333/ontology/0001/anything/v2#"),
+        ),
+      )
+      for {
+        createResponse <-
+          TestApiClient.postJsonLdDocument(uri"/v2/resources", createJsonLd.toJson, anythingUser1).flatMap(_.assert200)
+        resourceIri <-
+          createResponse.body.getRequiredIdValueAsKnoraDataIri.flatMap(sIri => ZIO.fromEither(ResourceIri.from(sIri)))
+        updatedResource <- TestResourcesApiClient.getResource(resourceIri, anythingUser1).flatMap(_.assert200)
+        savedComment <- ZIO.fromEither(
+                          updatedResource.body
+                            .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText")
+                            .flatMap(_.getRequiredString(KnoraApiV2Complex.ValueHasComment)),
+                        )
+      } yield assertTrue(savedComment == commentWithLinebreaks)
     },
   )
 }

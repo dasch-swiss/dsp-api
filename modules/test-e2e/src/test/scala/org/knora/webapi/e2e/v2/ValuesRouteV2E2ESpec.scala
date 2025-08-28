@@ -13,6 +13,11 @@ import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json.JsString
+import sttp.client4.UriContext
+import zio.*
+import zio.json.*
+import zio.json.ast.*
+import zio.test.*
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -31,6 +36,7 @@ import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForResourcesRespon
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
@@ -38,6 +44,12 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.TestApiClient
+import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.util.*
 
 class ValuesRouteV2E2ESpec extends E2ESpec {
@@ -1520,8 +1532,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         """|<?xml version="1.0" encoding="UTF-8"?>
            |<text>
            |  <p>
-           |    Some text with a 
-           |    footnote<footnote content="Text with &lt;a href=&quot;...&quot;&gt;markup&lt;/a&gt;." /> 
+           |    Some text with a
+           |    footnote<footnote content="Text with &lt;a href=&quot;...&quot;&gt;markup&lt;/a&gt;." />
            |    in it.
            |  </p>
            |</text>
@@ -4762,6 +4774,44 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
+    }
+
+    "update a TextValue comment containing linebreaks should store linebreaks as Unicode" in {
+      val resourceIri      = ResourceIri.unsafeFrom(AThing.iri.toSmartIri)
+      val anythingOntology = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
+      val anythinghasText  = anythingOntology.makeProperty("hasText").toString
+      val anythingThing    = anythingOntology.makeClass("Thing").toString
+
+      def valueJsonLd(props: (String, Json.Str)*) =
+        Json.Obj(
+          "@id"   -> Json.Str(resourceIri.toString),
+          "@type" -> Json.Str(anythingThing),
+          anythinghasText -> Json.Obj(
+            Seq("@type" -> Json.Str(KA.TextValue), KA.ValueAsString -> Json.Str("Not important")) ++ props: _*,
+          ),
+        )
+
+      UnsafeZioRun.runOrThrow {
+        for {
+          createdJsonLd <- TestApiClient
+                             .postJsonLdDocument(uri"/v2/values", valueJsonLd().toJson, anythingUser1)
+                             .flatMap(_.assert200)
+          valueIri             <- createdJsonLd.body.getRequiredIdValueAsKnoraDataIri
+          commentWithLinebreaks = "This is line one\nThis is line two\nThis is line three"
+          updateValueJsonLd = valueJsonLd(
+                                "@id"              -> Json.Str(valueIri.toString),
+                                KA.ValueHasComment -> Json.Str(commentWithLinebreaks),
+                              )
+          _        <- TestApiClient.putJsonLd(uri"/v2/values", updateValueJsonLd.toString, anythingUser1).flatMap(_.assert200)
+          resource <- TestResourcesApiClient.getResource(resourceIri, anythingUser1).flatMap(_.assert200)
+          savedComment <- ZIO.fromEither(resource.body.getRequiredArray(anythinghasText).map {
+                            _.value.collect { case obj: JsonLDObject => obj }
+                              .map(_.getRequiredString(KA.ValueHasComment))
+                              .collect { case Right(c) => c }
+                              .head
+                          })
+        } yield assertTrue(savedComment == commentWithLinebreaks)
+      }
     }
   }
 }

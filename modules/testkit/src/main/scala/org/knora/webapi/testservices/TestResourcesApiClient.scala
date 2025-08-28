@@ -15,6 +15,7 @@ import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
 import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 
 final case class TestResourcesApiClient(private val apiClient: TestApiClient) {
@@ -44,8 +45,8 @@ final case class TestResourcesApiClient(private val apiClient: TestApiClient) {
     apiClient.postJsonLd(uri"/v2/resources", jsonLd, user)
   }
 
-  def getResource(resourceIri: ResourceIri): Task[Response[Either[String, JsonLDDocument]]] =
-    apiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri", None, r => r)
+  def getResource(resourceIri: ResourceIri, user: Option[User], update: RequestUpdate[JsonLDDocument]) =
+    apiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri", user, update)
 }
 
 object TestResourcesApiClient {
@@ -77,7 +78,13 @@ object TestResourcesApiClient {
   def getResource(
     resourceIri: ResourceIri,
   ): ZIO[TestResourcesApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
-    ZIO.serviceWithZIO[TestResourcesApiClient](_.getResource(resourceIri))
+    ZIO.serviceWithZIO[TestResourcesApiClient](_.getResource(resourceIri, None, identity))
+
+  def getResource(
+    resourceIri: ResourceIri,
+    user: User,
+  ): ZIO[TestResourcesApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
+    ZIO.serviceWithZIO[TestResourcesApiClient](_.getResource(resourceIri, Some(user), identity))
 
   val layer = ZLayer.derive[TestResourcesApiClient]
 }
