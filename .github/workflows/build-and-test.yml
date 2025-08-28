@@ -117,7 +117,23 @@ jobs:
           java-version: 21
           cache: sbt
       - name: Run integration tests
-        run: export DOCKER_BUILDKIT=1; ./sbtx Docker/publishLocal; ./sbtx ingestIntegration/test
+        run: make test-ingest-integration
+      - name: WebApi Ingest Integration Test Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: WebApi Ingest Integration Test Results
+          path: ./modules/test-ingest-integration/target/test-reports/TEST-*.xml
+          reporter: java-junit
+      - name: Upload coverage data to codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: ./target/scala-3.3.6/coverage-report/cobertura.xml
+      - name: Upload coverage data to codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./target/scala-3.3.6/coverage-report/cobertura.xml
 
   test-docs-build:
     name: Test docs

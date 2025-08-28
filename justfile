@@ -25,6 +25,11 @@ test-it:
 test-e2e:
     ./sbtx "e2e/test"
 
+test-ingest-integration:
+    export DOCKER_BUILDKIT=1
+    ./sbtx Docker/publishLocal
+    ./sbtx ingestIntegration/test
+
 # Start stack
 stack-start:
     @echo "Starting Stack"
