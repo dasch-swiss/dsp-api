@@ -45,7 +45,6 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
@@ -4777,16 +4776,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     }
 
     "update a TextValue comment containing linebreaks should store linebreaks as Unicode" in {
-      val resourceIri      = ResourceIri.unsafeFrom(AThing.iri.toSmartIri)
-      val anythingOntology = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-      val anythinghasText  = anythingOntology.makeProperty("hasText").toString
-      val anythingThing    = anythingOntology.makeClass("Thing").toString
+      val resourceIri     = ResourceIri.unsafeFrom(AThing.iri.toSmartIri)
+      val anythingHasText = anythingOntologyIri.makeProperty("hasText").toString
+      val anythingThing   = anythingOntologyIri.makeClass("Thing").toString
 
       def valueJsonLd(props: (String, Json.Str)*) =
         Json.Obj(
           "@id"   -> Json.Str(resourceIri.toString),
           "@type" -> Json.Str(anythingThing),
-          anythinghasText -> Json.Obj(
+          anythingHasText -> Json.Obj(
             Seq("@type" -> Json.Str(KA.TextValue), KA.ValueAsString -> Json.Str("Not important")) ++ props: _*,
           ),
         )
@@ -4804,7 +4802,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                               )
           _        <- TestApiClient.putJsonLd(uri"/v2/values", updateValueJsonLd.toString, anythingUser1).flatMap(_.assert200)
           resource <- TestResourcesApiClient.getResource(resourceIri, anythingUser1).flatMap(_.assert200)
-          savedComment <- ZIO.fromEither(resource.body.getRequiredArray(anythinghasText).map {
+          savedComment <- ZIO.fromEither(resource.body.getRequiredArray(anythingHasText).map {
                             _.value.collect { case obj: JsonLDObject => obj }
                               .map(_.getRequiredString(KA.ValueHasComment))
                               .collect { case Right(c) => c }
