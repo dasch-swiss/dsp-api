@@ -5,16 +5,30 @@
 
 package org.knora.webapi.e2e.v2
 
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
+import org.xmlunit.diff.Diff
+import sttp.client4.*
 import sttp.model.StatusCode
 import zio.*
+import zio.json.ast.Json
 import zio.test.*
+
+import java.nio.file.Paths
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.JsonLDKeywords
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.ResponseOps.assert400
+import org.knora.webapi.testservices.ResponseOps.assert404
+import org.knora.webapi.testservices.TestApiClient
+import org.knora.webapi.util.FileUtil
 
 object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extends E2EZSpec {
 
@@ -1663,5 +1677,738 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |""".stripMargin
       verifyQueryResult(query, "ThingWithRichtextWithTermTextInParagraph.jsonld")
     },
+    test("search for a standoff date tag indicating a date in a particular range (submitting the complex schema)") {
+      // First, we will create a standoff-to-XML mapping that can handle standoff date tags.
+      val jsonPart =
+        s"""
+           |{
+           |    "knora-api:mappingHasName": "HTMLMapping",
+           |    "knora-api:attachedToProject": {
+           |      "@id": "$anythingProjectIri"
+           |    },
+           |    "rdfs:label": "mapping for HTML",
+           |    "@context": {
+           |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+           |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
+           |    }
+           |}""".stripMargin
+      val xmlPart = Paths.get("test_data/test_route/texts/mappingForHTML.xml")
+      val createStandoffMappingBody = Seq(
+        multipart("json", jsonPart).contentType("application/json"),
+        multipartFile("xml", xmlPart).contentType("text/xml(UTF-8)"),
+      )
+
+      // Next, create a resource with a text value containing a standoff date tag.
+      val xmlForJson = FileUtil.readTextFile(Paths.get("test_data/test_route/texts/HTML.xml"))
+      val createValueBody = Json.Obj(
+        ("@id", Json.Str("http://rdfh.ch/0001/a-thing")),
+        ("@type", Json.Str("anything:Thing")),
+        (
+          "anything:hasText",
+          Json.Obj(
+            ("@type", Json.Str("knora-api:TextValue")),
+            ("knora-api:textValueAsXml", Json.Str(xmlForJson)),
+            (
+              "knora-api:textValueHasMapping",
+              Json.Obj(
+                ("@id", Json.Str(s"$anythingProjectIri/mappings/HTMLMapping")),
+              ),
+            ),
+          ),
+        ),
+        (
+          "@context",
+          Json.Obj(
+            ("knora-api", Json.Str("http://api.knora.org/ontology/knora-api/v2#")),
+            ("anything", Json.Str("http://0.0.0.0:3333/ontology/0001/anything/v2#")),
+          ),
+        ),
+      )
+
+      // Finally, do a Gravsearch query that finds the date tag.
+      val gravsearchQuery =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |    ?thing anything:hasText ?text .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |    ?thing anything:hasText ?text .
+          |    ?text knora-api:textValueHasStandoff ?standoffEventTag .
+          |    ?standoffEventTag a anything:StandoffEventTag .
+          |    FILTER(knora-api:toSimpleDate(?standoffEventTag) = "GREGORIAN:2016-12 CE"^^knora-api-simple:Date)
+          |}""".stripMargin
+
+      for {
+        _ <- TestApiClient // create the new mapping
+               .postMultiPart[Json](uri"/v2/mapping", createStandoffMappingBody, anythingUser1)
+               .flatMap(_.assert200)
+        _ <- TestApiClient // create the new value
+               .postJsonLd(uri"/v2/values", createValueBody.toString, anythingUser1)
+               .flatMap(_.assert200)
+        actual <- postGravsearchQuery(gravsearchQuery, Some(anythingUser1)).flatMap(_.assert200)
+      } yield assertTrue(actual.contains("we will have a party"))
+    },
+    test("search for a standoff tag using knora-api:standoffTagHasStartAncestor (submitting the complex schema)") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |    ?thing anything:hasText ?text .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |    ?thing anything:hasText ?text .
+          |    ?text knora-api:textValueHasStandoff ?standoffDateTag .
+          |    ?standoffDateTag a knora-api:StandoffDateTag .
+          |    FILTER(knora-api:toSimpleDate(?standoffDateTag) = "GREGORIAN:2016-12-24 CE"^^knora-api-simple:Date)
+          |    ?standoffDateTag knora-api:standoffTagHasStartAncestor ?standoffParagraphTag .
+          |    ?standoffParagraphTag a standoff:StandoffParagraphTag .
+          |}
+          |""".stripMargin
+      for {
+        actual <- postGravsearchQuery(query, Some(anythingUser1)).flatMap(_.assert200)
+      } yield assertTrue(actual.contains("we will have a party"))
+    },
+    test("reject a link value property in a query in the simple schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |    ?book incunabula:title ?title .
+          |    ?page incunabula:partOfValue ?book .
+          |} WHERE {
+          |    ?book a incunabula:book .
+          |    ?book incunabula:title ?title .
+          |    ?page a incunabula:page .
+          |    ?page incunabula:partOfValue ?book .
+          |}
+          |""".stripMargin
+      for {
+        response <- postGravsearchQuery(query, Some(incunabulaMemberUser))
+        actual   <- response.assert404
+      } yield assertTrue(
+        actual.contains("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOfValue"),
+      )
+    },
+    test("find a resource with two different incoming links") {
+      val createTargetResource =
+        val jsonLd = """{
+                       |  "@type" : "anything:BlueThing",
+                       |  "knora-api:attachedToProject" : {
+                       |    "@id" : "http://rdfh.ch/projects/0001"
+                       |  },
+                       |  "rdfs:label" : "blue thing with incoming links",
+                       |  "@context" : {
+                       |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                       |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                       |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                       |  }
+                       |
+                       |}""".stripMargin
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", jsonLd, anythingUser1)
+          .flatMap(_.assert200)
+          .flatMap(doc => ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)))
+
+      def createLinkedResource(label: String, targetIri: String) =
+        val jsonLd = s"""{
+                        |  "@type" : "anything:BlueThing",
+                        |  "knora-api:attachedToProject" : {
+                        |    "@id" : "http://rdfh.ch/projects/0001"
+                        |  },
+                        |    "anything:hasBlueThingValue" : {
+                        |    "@type" : "knora-api:LinkValue",
+                        |        "knora-api:linkValueHasTargetIri" : {
+                        |        "@id" : "$targetIri"
+                        |    }
+                        |  },
+                        |  "rdfs:label" : "$label",
+                        |  "@context" : {
+                        |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                        |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                        |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                        |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                        |  }
+                        |}
+                        |""".stripMargin
+        TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLd, anythingUser1).flatMap(_.assert200)
+
+      for {
+        targetResourceIri <- createTargetResource
+        _                 <- createLinkedResource("blue thing with link to other blue thing", targetResourceIri)
+        _                 <- createLinkedResource("thing with link to blue thing", targetResourceIri)
+
+        gravsearchQuery =
+          s"""
+             |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+             |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+             |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+             |
+             |CONSTRUCT {
+             |    ?targetThing knora-api:isMainResource true .
+             |    ?firstIncoming anything:hasBlueThing ?targetThing .
+             |    ?secondIncoming anything:hasOtherThing ?targetThing .
+             |} WHERE {
+             |    ?targetThing a anything:BlueThing .
+             |    ?firstIncoming anything:hasBlueThing ?targetThing .
+             |    ?secondIncoming anything:hasOtherThing ?targetThing .
+             |}
+             |""".stripMargin
+        queryResult <- postGravsearchQuery(gravsearchQuery, Some(anythingUser1))
+                         .flatMap(_.assert200)
+                         .mapAttempt(JsonLDUtil.parseJsonLD)
+        searchResultIri <- ZIO.fromEither(queryResult.body.getRequiredString(JsonLDKeywords.ID))
+      } yield assertTrue(searchResultIri == targetResourceIri)
+    },
+    test("search for an anything:Thing with a time value (using the simple schema)") {
+      val query =
+        s"""
+           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+           |
+           |CONSTRUCT {
+           |    ?thing knora-api:isMainResource true .
+           |    ?thing anything:hasTimeStamp ?timeStamp .
+           |} WHERE {
+           |    ?thing a anything:Thing .
+           |    ?thing anything:hasTimeStamp ?timeStamp .
+           |    FILTER(?timeStamp > "2019-08-30T10:45:26.365863Z"^^xsd:dateTimeStamp)
+           |}
+           |""".stripMargin
+      verifyQueryResult(query, "ThingWithTimeStamp.jsonld", anythingUser1)
+    },
+    test("get a resource with a link to another resource that the user doesn't have permission to see") {
+      val query =
+        s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+           |
+           |CONSTRUCT {
+           |    ?mainThing knora-api:isMainResource true .
+           |    ?mainThing anything:hasOtherThing ?hiddenThing .
+           |    ?hiddenThing anything:hasInteger ?intValInHiddenThing .
+           |    ?mainThing anything:hasOtherThing ?visibleThing .
+           |    ?visibleThing anything:hasInteger ?intValInVisibleThing .
+           |} WHERE {
+           |    ?mainThing a anything:Thing .
+           |    ?mainThing anything:hasOtherThing ?hiddenThing .
+           |    ?hiddenThing anything:hasInteger ?intValInHiddenThing .
+           |    ?intValInHiddenThing knora-api:intValueAsInt 123454321 .
+           |    ?mainThing anything:hasOtherThing ?visibleThing .
+           |    ?visibleThing anything:hasInteger ?intValInVisibleThing .
+           |    ?intValInVisibleThing knora-api:intValueAsInt 543212345 .
+           |}""".stripMargin
+      verifyQueryResult(query, "ThingWithHiddenThing.jsonld")
+    },
+    test("not return duplicate results when there are UNION branches with different variables") {
+      val query =
+        s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+           |
+           |CONSTRUCT {
+           |    ?thing knora-api:isMainResource true .
+           |    ?thing anything:hasInteger ?int .
+           |    ?thing anything:hasRichtext ?richtext .
+           |    ?thing anything:hasText ?text .
+           |} WHERE {
+           |    ?thing a knora-api:Resource .
+           |    ?thing a anything:Thing .
+           |    ?thing anything:hasInteger ?int .
+           |    ?int knora-api:intValueAsInt 1 .
+           |
+           |    {
+           |        ?thing anything:hasRichtext ?richtext .
+           |        FILTER knora-api:matchText(?richtext, "test")
+           |    }
+           |    UNION
+           |    {
+           |        ?thing anything:hasText ?text .
+           |        FILTER knora-api:matchText(?text, "test")
+           |    }
+           |}
+           |ORDER BY (?int)""".stripMargin
+      verifyQueryResult(query, "ThingFromQueryWithUnion.jsonld")
+    },
+    test("reject an ORDER by containing a variable that's not bound at the top level of the WHERE clause") {
+      val query =
+        s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+           |CONSTRUCT {
+           |    ?thing knora-api:isMainResource true .
+           |    ?thing anything:hasInteger ?int .
+           |    ?thing anything:hasRichtext ?richtext .
+           |    ?thing anything:hasText ?text .
+           |} WHERE {
+           |    ?thing a knora-api:Resource .
+           |    ?thing a anything:Thing .
+           |
+           |    {
+           |        ?thing anything:hasRichtext ?richtext .
+           |        FILTER knora-api:matchText(?richtext, "test")
+           |
+           |		?thing anything:hasInteger ?int .
+           |		?int knora-api:intValueAsInt 1 .
+           |    }
+           |    UNION
+           |    {
+           |        ?thing anything:hasText ?text .
+           |        FILTER knora-api:matchText(?text, "test")
+           |
+           |		?thing anything:hasInteger ?int .
+           |		?int knora-api:intValueAsInt 1 .
+           |    }
+           |}
+           |ORDER BY (?int)""".stripMargin
+      for {
+        response <- postGravsearchQuery(query)
+        actual   <- response.assert400
+      } yield assertTrue(
+        actual.contains("Variable ?int is used in ORDER by, but is not bound at the top level of the WHERE clause"),
+      )
+    },
+    test("reject a FILTER in a UNION that uses a variable that's out of scope") {
+      val query =
+        s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+           |CONSTRUCT {
+           |    ?thing knora-api:isMainResource true .
+           |    ?thing anything:hasInteger ?int .
+           |    ?thing anything:hasRichtext ?richtext .
+           |    ?thing anything:hasText ?text .
+           |} WHERE {
+           |    ?thing a knora-api:Resource .
+           |    ?thing a anything:Thing .
+           |    ?thing anything:hasRichtext ?richtext .
+           |    ?thing anything:hasInteger ?int .
+           |    ?int knora-api:intValueAsInt 1 .
+           |
+           |    {
+           |        FILTER knora-api:matchText(?richtext, "test")
+           |    }
+           |    UNION
+           |    {
+           |        ?thing anything:hasText ?text .
+           |        FILTER knora-api:matchText(?text, "test")
+           |    }
+           |}
+           |ORDER BY (?int)""".stripMargin
+      for {
+        response <- postGravsearchQuery(query)
+        actual   <- response.assert400
+      } yield assertTrue(
+        actual.contains(
+          "One or more variables used in a filter have not been bound in the same UNION block: ?richtext",
+        ),
+      )
+    },
+    test("search for a resource containing a time value tag") {
+      // Create a resource containing a time value.
+      val xmlStr =
+        """<?xml version="1.0" encoding="UTF-8"?>
+          |<text documentType="html">
+          |    <p>The timestamp for this test is <span class="timestamp" data-timestamp="2020-01-27T08:31:51.503187Z">27 January 2020</span>.</p>
+          |</text>
+          |""".stripMargin
+
+      val createResourceJsonLd = Json.Obj(
+        ("@type", Json.Str("anything:Thing")),
+        (
+          "anything:hasText",
+          Json.Obj(
+            ("@type", Json.Str("knora-api:TextValue")),
+            ("knora-api:textValueAsXml", Json.Str(xmlStr)),
+            (
+              "knora-api:textValueHasMapping",
+              Json.Obj(
+                ("@id", Json.Str(s"$anythingProjectIri/mappings/HTMLMapping")),
+              ),
+            ),
+          ),
+        ),
+        (
+          "knora-api:attachedToProject",
+          Json.Obj(
+            ("@id", Json.Str("http://rdfh.ch/projects/0001")),
+          ),
+        ),
+        ("rdfs:label", Json.Str("thing with timestamp in markup")),
+        (
+          "@context",
+          Json.Obj(
+            ("rdf", Json.Str("http://www.w3.org/1999/02/22-rdf-syntax-ns#")),
+            ("knora-api", Json.Str("http://api.knora.org/ontology/knora-api/v2#")),
+            ("rdfs", Json.Str("http://www.w3.org/2000/01/rdf-schema#")),
+            ("xsd", Json.Str("http://www.w3.org/2001/XMLSchema#")),
+            ("anything", Json.Str("http://0.0.0.0:3333/ontology/0001/anything/v2#")),
+          ),
+        ),
+      )
+      for {
+        resourceIri <- TestApiClient
+                         .postJsonLdDocument(uri"/v2/resources", createResourceJsonLd.toString, anythingUser1)
+                         .flatMap(_.assert200)
+                         .flatMap(doc => ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)))
+
+        // Search for the resource.
+        gravsearchQuery =
+          """
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+            |
+            |CONSTRUCT {
+            |    ?thing knora-api:isMainResource true .
+            |    ?thing anything:hasText ?text .
+            |} WHERE {
+            |    ?thing a anything:Thing .
+            |    ?thing anything:hasText ?text .
+            |    ?text knora-api:textValueHasStandoff ?standoffTag .
+            |    ?standoffTag a knora-api:StandoffTimeTag .
+            |    ?standoffTag knora-api:timeValueAsTimeStamp ?timeStamp .
+            |    FILTER(?timeStamp > "2020-01-27T08:31:51Z"^^xsd:dateTimeStamp && ?timeStamp < "2020-01-27T08:31:52Z"^^xsd:dateTimeStamp)
+            |}
+            |""".stripMargin
+        actualResponse <- postGravsearchQuery(gravsearchQuery, Some(anythingUser1))
+                            .flatMap(_.assert200)
+                            .mapAttempt(JsonLDUtil.parseJsonLD)
+        actualResourceIri <- ZIO.fromEither(actualResponse.body.getRequiredString(JsonLDKeywords.ID))
+        xmlFromResponse <- ZIO.fromEither(
+                             actualResponse.body
+                               .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText")
+                               .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)),
+                           )
+        xmlDiff = DiffBuilder.compare(Input.fromString(xmlStr)).withTest(Input.fromString(xmlFromResponse)).build()
+      } yield assertTrue(actualResourceIri == resourceIri, !xmlDiff.hasDifferences)
+    },
+    test("search for an rdfs:label using a literal in the simple schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
+    },
+    test("search for an rdfs:label using a literal in the complex schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
+    },
+    test("search for an rdfs:label using a variable in the simple schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?label .
+          |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
+    },
+    test("search for an rdfs:label using a variable in the complex schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?label .
+          |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
+    },
+    test("search for an rdfs:label using knora-api:matchLabel in the simple schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
+    },
+    test("search for an rdfs:label using knora-api:matchLabel in the complex schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
+    },
+    test("search for an rdfs:label using the regex function in the simple schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |    FILTER regex(?bookLabel, "Zeit", "i")
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
+    },
+    test("search for an rdfs:label using the regex function in the complex schema") {
+      val query =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |    FILTER regex(?bookLabel, "Zeit", "i")
+          |}
+          |""".stripMargin
+      verifyQueryResult(query, "ZeitgloeckleinViaLabel.jsonld")
+    },
+    test("perform a search that compares two variables representing resources (in the simple schema)") {
+      val query =
+        """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter beol:hasRecipient ?person2 .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter beol:hasRecipient ?person2 .
+          |    FILTER(?person1 != ?person2) .
+          |}
+          |OFFSET 0
+          |""".stripMargin
+      // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+      verifyQueryResult(query, "LetterNotToSelf.jsonld")
+    },
+    test("perform a search that compares two variables representing resources (in the complex schema)") {
+      val query =
+        """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter beol:hasRecipient ?person2 .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter beol:hasRecipient ?person2 .
+          |    FILTER(?person1 != ?person2) .
+          |}
+          |OFFSET 0
+          |""".stripMargin
+      verifyQueryResult(query, "LetterNotToSelf.jsonld")
+    },
+    test("perform a search that compares a variable with a resource IRI (in the simple schema)") {
+      val query =
+        """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter beol:hasRecipient ?person2 .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter beol:hasRecipient ?person2 .
+          |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+          |}
+          |OFFSET 0
+          |""".stripMargin
+      // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+      verifyQueryResult(query, "LetterNotToSelf.jsonld")
+    },
+    test("perform a search that compares a variable with a resource IRI (in the complex schema)") {
+      val query =
+        """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter beol:hasRecipient ?person2 .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter beol:hasRecipient ?person2 .
+          |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+          |}
+          |OFFSET 0""".stripMargin
+      // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+      verifyQueryResult(query, "LetterNotToSelf.jsonld")
+    },
+    test("search for anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)") {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |  ?thing a anything:Thing .
+          |  ?thing a knora-api:Resource .
+          |  FILTER NOT EXISTS {
+          |    ?thing anything:hasBoolean ?bool .
+          |  }
+          |}
+          |""".stripMargin
+      for {
+        response <- postGravsearchQuery(query, Some(anythingUser1))
+        actual   <- response.assert200
+        _        <- ZIO.attempt(checkSearchResponseNumberOfResults(actual, 24))
+      } yield assertCompletes
+    },
+    test("search for anything:Thing that doesn't have a link property (FILTER NOT EXISTS)") {
+      val query =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |  ?thing a anything:Thing .
+          |  ?thing a knora-api:Resource .
+          |  FILTER NOT EXISTS {
+          |    ?thing anything:hasOtherThing ?otherThing .
+          |  }
+          |}
+          |""".stripMargin
+      for {
+        response <- postGravsearchQuery(query, Some(anythingUser1))
+        actual   <- response.assert200
+        _        <- ZIO.attempt(checkSearchResponseNumberOfResults(actual, 24))
+      } yield assertCompletes
+    },
+    test(
+      "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags) " +
+        "and search for the large text and its markup and receive it as XML, and check that it matches the original XML",
+    ) {
+      // Create a resource containing the text of Hamlet.
+      val hamletXml = FileUtil.readTextFile(Paths.get("test_data/generated_test_data/resourcesR2RV2/hamlet.xml"))
+      val createResourceJsonLd = Json.Obj(
+        ("@type", Json.Str("anything:Thing")),
+        (
+          "anything:hasRichtext",
+          Json.Obj(
+            ("@type", Json.Str("knora-api:TextValue")),
+            ("knora-api:textValueAsXml", Json.Str(hamletXml)),
+            (
+              "knora-api:textValueHasMapping",
+              Json.Obj(("@id", Json.Str("http://rdfh.ch/standoff/mappings/StandardMapping"))),
+            ),
+          ),
+        ),
+        ("knora-api:attachedToProject", Json.Obj(("@id", Json.Str("http://rdfh.ch/projects/0001")))),
+        ("rdfs:label", Json.Str("test thing")),
+        (
+          "@context",
+          Json.Obj(
+            ("rdf", Json.Str("http://www.w3.org/1999/02/22-rdf-syntax-ns#")),
+            ("knora-api", Json.Str("http://api.knora.org/ontology/knora-api/v2#")),
+            ("rdfs", Json.Str("http://www.w3.org/2000/01/rdf-schema#")),
+            ("xsd", Json.Str("http://www.w3.org/2001/XMLSchema#")),
+            ("anything", Json.Str("http://0.0.0.0:3333/ontology/0001/anything/v2#")),
+          ),
+        ),
+      )
+
+      for {
+        hamletResourceIri <- TestApiClient
+                               .postJsonLdDocument(uri"/v2/resources", createResourceJsonLd.toString, anythingUser1)
+                               .flatMap(_.assert200)
+                               .flatMap(doc => ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)))
+
+        // Search for the resource.
+        gravsearchQuery =
+          s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+             |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+             |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+             |
+             |CONSTRUCT {
+             |    ?thing knora-api:isMainResource true .
+             |    ?thing anything:hasRichtext ?text .
+             |} WHERE {
+             |    BIND(<$hamletResourceIri> AS ?thing)
+             |    ?thing a anything:Thing .
+             |    ?thing anything:hasRichtext ?text .
+             |}""".stripMargin
+        actualResponse <- postGravsearchQuery(gravsearchQuery, Some(anythingUser1))
+                            .flatMap(_.assert200)
+                            .mapAttempt(JsonLDUtil.parseJsonLD)
+        actualResourceIri <- ZIO.fromEither(actualResponse.body.getRequiredString(JsonLDKeywords.ID))
+        xmlFromResponse <- ZIO.fromEither(
+                             actualResponse.body
+                               .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+                               .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)),
+                           )
+        xmlDiff = DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
+      } yield assertTrue(actualResourceIri == hamletResourceIri, !xmlDiff.hasDifferences)
+    } @@ TestAspect.ignore, // uses too much memory for GitHub CI
   )
 }

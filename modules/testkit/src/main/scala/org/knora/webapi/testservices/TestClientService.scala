@@ -12,8 +12,6 @@ import org.apache.pekko.http.scaladsl.model.HttpEntity
 import org.apache.pekko.http.scaladsl.model.headers.HttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import zio.*
-import zio.json.*
-import zio.json.ast.Json
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
@@ -32,8 +30,6 @@ final case class TestClientService()(implicit system: ActorSystem)
     with RequestBuilding {
 
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-
-  case class TestClientTimeoutException(msg: String) extends Exception
 
   /**
    * Performs a http request.
@@ -99,15 +95,6 @@ final case class TestClientService()(implicit system: ActorSystem)
    * Performs a http request and does not return the string (only error channel).
    */
   def checkResponseOK(request: pekko.http.scaladsl.model.HttpRequest): Task[Unit] = getResponseString(request).unit
-
-  /**
-   * Performs a http request and tries to parse the response body as Json.
-   */
-  def getResponseJson(request: pekko.http.scaladsl.model.HttpRequest): Task[Json.Obj] =
-    for {
-      body <- getResponseString(request)
-      json <- ZIO.fromEither(body.fromJson[Json.Obj]).mapError(Throwable(_))
-    } yield json
 
   /**
    * Performs a http request and tries to parse the response body as JsonLD.
