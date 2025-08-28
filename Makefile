@@ -183,15 +183,19 @@ test-all: test test-it test-e2e
 
 .PHONY: test
 test: ## runs all unit tests
-	$(SBTX) -v coverage "webapi/test" coverageAggregate
+	$(SBTX) -v coverage webapi/test coverageAggregate
 
 .PHONY: test-it
 test-it: docker-build-sipi-image ## runs integration (service/repo) tests
-	$(SBTX) -v coverage "test-it/test" coverageAggregate
+	$(SBTX) -v coverage test-it/test coverageAggregate
 
 .PHONY: test-e2e
 test-e2e: docker-build-sipi-image ## runs end-to-end (HTTP) tests
-	$(SBTX) -v coverage "test-e2e/test" coverageAggregate
+	$(SBTX) -v coverage test-e2e/test coverageAggregate
+
+.PHONY: test-ingest-integration
+test-e2e: docker-build-ingest-image ## runs end-to-end (HTTP) tests
+	$(SBTX) -v coverage ingestIntegration/test coverageAggregate
 
 
 #################################
