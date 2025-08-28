@@ -371,7 +371,7 @@ lazy val ingest = {
         version,
         scalaVersion,
         sbtVersion,
-        BuildInfoKey("knoraSipiVersion", Dependencies.knoraSipiVersion),
+        BuildInfoKey("knoraSipiVersion", ThisBuild / version),
         BuildInfoKey.action("gitCommit")(gitCommit),
       ),
       buildInfoOptions += BuildInfoOption.BuildTime,
