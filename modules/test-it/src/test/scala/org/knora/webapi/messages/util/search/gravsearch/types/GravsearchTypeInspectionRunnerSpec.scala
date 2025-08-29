@@ -1090,5 +1090,24 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       )
       inspectTypes(queryNonKnoraTypeWithAnnotation).map(actual => assertTrue(actual.entities == expected))
     },
+    test("ignore Gravsearch options") {
+      val queryWithGravsearchOptions: String =
+        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |     knora-api:GravsearchOptions knora-api:useInference false .
+          |     ?thing a anything:Thing .
+          |}""".stripMargin
+      val expected = Map(
+        TypeableVariable(variableName = "thing") -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          isResourceType = true,
+        ),
+      )
+      inspectTypes(queryWithGravsearchOptions).map(actual => assertTrue(actual.entities == expected))
+    },
   )
 }

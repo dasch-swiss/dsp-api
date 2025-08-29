@@ -228,27 +228,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |}
             """.stripMargin
 
-  val QueryWithGravsearchOptions: String =
-    """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-      |
-      |CONSTRUCT {
-      |     ?thing knora-api:isMainResource true .
-      |} WHERE {
-      |     knora-api:GravsearchOptions knora-api:useInference false .
-      |     ?thing a anything:Thing .
-      |}""".stripMargin
-
-  val GravsearchOptionsResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-    entities = Map(
-      TypeableVariable(variableName = "thing") -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        isResourceType = true,
-      ),
-    ),
-    entitiesInferredFromProperties = Map(),
-  )
-
   private def inspectTypes(query: String) = for {
     parsedQuery <- ZIO.attempt(GravsearchParser.parseQuery(query))
     result <- ZIO.serviceWithZIO[GravsearchTypeInspectionRunner](
@@ -454,11 +433,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "ignore Gravsearch options" in {
-      val runZio = inspectTypes(QueryWithGravsearchOptions)
-      assert(UnsafeZioRun.runOrThrow(runZio).entities == GravsearchOptionsResult.entities)
     }
 
     "reject a query with inconsistent types inferred from statements" in {
