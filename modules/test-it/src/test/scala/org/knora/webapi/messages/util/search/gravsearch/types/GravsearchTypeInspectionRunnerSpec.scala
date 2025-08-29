@@ -836,5 +836,44 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       )
       inspectTypes(queryWithRdfsLabelAndVariable).map(actual => assertTrue(actual.entities == expected))
     },
+    test("infer the type of a variable when it is compared with another variable in a FILTER (in the simple schema)") {
+      val queryComparingResourcesInSimpleSchema: String =
+        """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:hasAuthor ?person1 .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |    ?letter beol:hasAuthor ?person1 .
+          |    ?letter ?prop ?person2 .
+          |    FILTER(?person1 != ?person2) .
+          |} OFFSET 0
+          |""".stripMargin
+      val expected = Map(
+        TypeableVariable(variableName = "person2") -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableVariable(variableName = "person1") -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableVariable(variableName = "prop") -> PropertyTypeInfo(
+          objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+          objectIsResourceType = true,
+        ),
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(
+          objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+          objectIsResourceType = true,
+        ),
+      )
+      inspectTypes(queryComparingResourcesInSimpleSchema).map(actual => assertTrue(actual.entities == expected))
+    },
   )
 }
