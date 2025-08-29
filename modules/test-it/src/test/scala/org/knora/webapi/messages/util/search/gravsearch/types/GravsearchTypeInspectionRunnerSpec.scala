@@ -73,5 +73,81 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       inspectTypes(QueryWithInconsistentTypes3)
         .map(actual => assertTrue(actual.entities == expectedResult.entities))
     },
+    test("types resulted from a query with optional") {
+      val queryWithOptional: String =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |
+          |CONSTRUCT {
+          |    ?document knora-api:isMainResource true .
+          |} WHERE {
+          |    ?document rdf:type beol:writtenSource .
+          |    OPTIONAL {
+          |      ?document beol:hasRecipient ?recipient .
+          |      ?recipient beol:hasFamilyName ?familyName .
+          |      FILTER knora-api:matchText(?familyName, "Bernoulli")
+          |    }
+          |}
+          |""".stripMargin
+
+      // From property "beol:hasRecipient" the type of ?document is inferred to be beol:basicLetter, and
+      // since writtenSource is a base class of basicLetter, it is ignored and type "beol:basicLetter" is considered for ?document.
+      // The OPTIONAL would become meaningless here. Therefore, in cases where property is in OPTIONAL block,
+      // the rdf:type statement for ?document must not be removed from query even though ?document is in entitiesInferredFromProperties.
+      val expected: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
+        entities = Map(
+          TypeableVariable(variableName = "document") ->
+            NonPropertyTypeInfo(
+              typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#basicLetter".toSmartIri,
+              isResourceType = true,
+            ),
+          TypeableVariable(variableName = "familyName") ->
+            NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri, isValueType = true),
+          TypeableVariable(variableName = "recipient") ->
+            NonPropertyTypeInfo(
+              typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+              isResourceType = true,
+            ),
+          TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) ->
+            PropertyTypeInfo(
+              objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+              objectIsResourceType = true,
+            ),
+          TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri) ->
+            PropertyTypeInfo(
+              objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
+              objectIsValueType = true,
+            ),
+        ),
+        entitiesInferredFromProperties = Map(
+          TypeableVariable(variableName = "document") -> Set(
+            NonPropertyTypeInfo(
+              typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#basicLetter".toSmartIri,
+              isResourceType = true,
+            ),
+          ),
+          TypeableVariable(variableName = "familyName") ->
+            Set(
+              NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri, isValueType = true),
+            ),
+          TypeableVariable(variableName = "recipient") ->
+            Set(
+              NonPropertyTypeInfo(
+                typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+                isResourceType = true,
+              ),
+            ),
+        ),
+      )
+      inspectTypes(queryWithOptional)
+        .map(actual =>
+          assertTrue(
+            actual.entities == expected.entities,
+            actual.entitiesInferredFromProperties == expected.entitiesInferredFromProperties,
+          ),
+        )
+    },
   )
 }
