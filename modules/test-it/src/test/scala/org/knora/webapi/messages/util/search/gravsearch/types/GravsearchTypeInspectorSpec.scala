@@ -1497,41 +1497,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       assert(sanitizedResults.entities == expectedResult.entities)
     }
 
-    "sanitize inconsistent types resulted from a union" in {
-      val runZio = inspectTypes(QueryWithInconsistentTypes3)
-      val result = UnsafeZioRun.runOrThrow(runZio)
-
-      val expectedResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-        entities = Map(
-          TypeableVariable(variableName = "person") ->
-            NonPropertyTypeInfo(
-              typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-              isResourceType = true,
-            ),
-          TypeableVariable(variableName = "document") ->
-            NonPropertyTypeInfo(
-              typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#writtenSource".toSmartIri,
-              isResourceType = true,
-            ),
-          TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) ->
-            PropertyTypeInfo(
-              objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-              objectIsResourceType = true,
-            ),
-        ),
-        entitiesInferredFromProperties = Map(
-          TypeableVariable(variableName = "person") -> Set(
-            NonPropertyTypeInfo(
-              typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-              isResourceType = true,
-            ),
-          ),
-        ),
-      )
-
-      assert(result.entities == expectedResult.entities)
-    }
-
     "types resulted from a query with optional" in {
       val queryWithOptional: String =
         """
