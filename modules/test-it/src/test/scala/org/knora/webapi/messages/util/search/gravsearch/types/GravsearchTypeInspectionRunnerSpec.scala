@@ -521,5 +521,37 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       inspectTypes(queryNonPropertyVarTypeFromFilterRule)
         .map(actual => assertTrue(actual.entities == expected))
     },
+    test("infer the type of a non-property variable used as the argument of a function in a FILTER") {
+      val queryVarTypeFromFunction: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?mainRes knora-api:isMainResource true .
+          |    ?mainRes incunabula:title ?propVal0 .
+          |} WHERE {
+          |    ?mainRes a incunabula:book .
+          |    ?mainRes ?titleProp ?propVal0 .
+          |
+          |    FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
+          |}
+          |""".stripMargin
+      val expected = Map(
+        TypeableVariable(variableName = "mainRes") -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableVariable(variableName = "titleProp") -> PropertyTypeInfo(
+          objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
+          objectIsValueType = true,
+        ),
+        TypeableVariable(variableName = "propVal0") -> NonPropertyTypeInfo(
+          typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
+          isValueType = true,
+        ),
+      )
+      inspectTypes(queryVarTypeFromFunction).map(actual => assertTrue(actual.entities == expected))
+    },
   )
 }

@@ -134,28 +134,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |} ORDER BY ?date
         """.stripMargin
 
-  val QueryVarTypeFromFunction: String =
-    """
-      |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-      |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |
-      |    CONSTRUCT {
-      |
-      |        ?mainRes knora-api:isMainResource true .
-      |
-      |        ?mainRes incunabula:title ?propVal0 .
-      |
-      |     } WHERE {
-      |
-      |        ?mainRes a incunabula:book .
-      |
-      |        ?mainRes ?titleProp ?propVal0 .
-      |
-      |        FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
-      |
-      |     }
-        """.stripMargin
-
   val QueryNonKnoraTypeWithoutAnnotation: String =
     """
       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -866,23 +844,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
     ),
   )
 
-  val TypeInferenceResult5: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-    entities = Map(
-      TypeableVariable(variableName = "mainRes") -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        isResourceType = true,
-      ),
-      TypeableVariable(variableName = "titleProp") -> PropertyTypeInfo(
-        objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        objectIsValueType = true,
-      ),
-      TypeableVariable(variableName = "propVal0") -> NonPropertyTypeInfo(
-        typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        isValueType = true,
-      ),
-    ),
-  )
-
   val TypeInferenceResult6: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
     entities = Map(
       TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText".toSmartIri) -> PropertyTypeInfo(
@@ -1240,11 +1201,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "infer the type of a non-property variable used as the argument of a function in a FILTER" in {
-      val runZio = inspectTypes(QueryVarTypeFromFunction)
-      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult5.entities)
     }
 
     "infer the type of a non-property IRI used as the argument of a function in a FILTER" in {
