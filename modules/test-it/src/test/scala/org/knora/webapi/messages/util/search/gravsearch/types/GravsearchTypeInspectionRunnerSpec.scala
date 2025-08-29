@@ -4,13 +4,14 @@
  */
 
 package org.knora.webapi.messages.util.search.gravsearch.types
+import dsp.errors.GravsearchException
 import zio.*
 import zio.test.*
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import zio.test.Assertion.failsWithA
 
 object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
 
@@ -1038,6 +1039,24 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
         ),
       )
       inspectTypes(queryWithFilterComparison).map(actual => assertTrue(actual.entities == expected))
+    },
+    test("reject a query with a non-Knora property whose type cannot be inferred") {
+      val queryNonKnoraTypeWithoutAnnotation: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX dcterms: <http://purl.org/dc/terms/>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true ;
+          |          dcterms:title ?title .
+          |} WHERE {
+          |    ?book dcterms:title ?title .
+          |}
+          |""".stripMargin
+      inspectTypes(queryNonKnoraTypeWithoutAnnotation).exit.map(actual =>
+        assert(actual)(failsWithA[GravsearchException]),
+      )
     },
   )
 }

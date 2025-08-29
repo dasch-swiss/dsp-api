@@ -134,22 +134,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |} ORDER BY ?date
         """.stripMargin
 
-  val QueryNonKnoraTypeWithoutAnnotation: String =
-    """
-      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |PREFIX dcterms: <http://purl.org/dc/terms/>
-      |
-      |CONSTRUCT {
-      |    ?book knora-api:isMainResource true ;
-      |        dcterms:title ?title .
-      |
-      |} WHERE {
-      |
-      |    ?book dcterms:title ?title .
-      |}
-        """.stripMargin
-
   val QueryNonKnoraTypeWithAnnotation: String =
     """
       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -506,11 +490,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "reject a query with a non-Knora property whose type cannot be inferred" in {
-      val runZio = inspectTypes(QueryNonKnoraTypeWithoutAnnotation)
-      UnsafeZioRun.run(runZio).causeOption.get.squash mustBe a[GravsearchException]
     }
 
     "accept a query with a non-Knora property whose type can be inferred" in {
