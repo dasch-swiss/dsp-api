@@ -4777,8 +4777,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     "update a TextValue comment containing linebreaks should store linebreaks as Unicode" in {
       val resourceIri     = ResourceIri.unsafeFrom(AThing.iri.toSmartIri)
-      val anythingHasText = anythingOntologyIri.makeProperty("hasText").toString
-      val anythingThing   = anythingOntologyIri.makeClass("Thing").toString
+      val anythingHasText = anythingOntologyIri.makeProperty("hasText").toComplexSchema.toString
+      val anythingThing   = anythingOntologyIri.makeClass("Thing").toComplexSchema.toString
 
       def valueJsonLd(props: (String, Json.Str)*) =
         Json.Obj(
