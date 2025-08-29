@@ -562,38 +562,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
     ),
   )
 
-  val QueryWithRdfsLabelAndVariable: String =
-    """
-      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |
-      |CONSTRUCT {
-      |    ?book knora-api:isMainResource true .
-      |
-      |} WHERE {
-      |    ?book rdf:type incunabula:book .
-      |    ?book rdfs:label ?label .
-      |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
-      |}
-        """.stripMargin
-
-  val RdfsLabelWithVariableResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-    entities = Map(
-      TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        isResourceType = true,
-      ),
-      TypeableIri(iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        objectIsValueType = true,
-      ),
-      TypeableVariable(variableName = "label") -> NonPropertyTypeInfo(
-        typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        isValueType = true,
-      ),
-    ),
-  )
-
   val QueryWithInconsistentTypes3: String =
     """
       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -839,11 +807,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "infer the type of a variable used as the object of rdfs:label" in {
-      val runZio = inspectTypes(QueryWithRdfsLabelAndVariable)
-      assert(UnsafeZioRun.runOrThrow(runZio).entities == RdfsLabelWithVariableResult.entities)
     }
 
     "infer the type of a variable when it is compared with another variable in a FILTER (in the simple schema)" in {
