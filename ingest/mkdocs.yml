@@ -1,0 +1,43 @@
+site_name: Dsp-Ingest
+
+nav:
+  - Overview:
+      - Introduction: index.md
+      - Ingesting Assets: ingest.md
+      - API documentation:
+          - Projects Endpoints: api-endpoints-projects.md
+          - Monitoring Endpoints: api-endpoints-monitoring.md
+          - Maintenance Endpoints: api-endpoints-maintenance.md
+          - Authentication: api-authentication.md
+      - Service documentation:
+          - Configuration: service-configuration.md
+          - Filesystem Setup: service-filesystem-setup.md
+
+plugins:
+  - include-markdown
+  - search
+  - git-revision-date-localized
+  - neoteroi.mkdocsoad:
+      use_pymdownx: true
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - css/mkdocsoad-v1.0.2.css

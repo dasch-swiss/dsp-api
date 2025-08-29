@@ -25,6 +25,9 @@ test-it:
 test-e2e:
     ./sbtx "e2e/test"
 
+test-ingest-integration:
+    ./sbtx ingestIntegration/test
+
 # Start stack
 stack-start:
     @echo "Starting Stack"
@@ -95,8 +98,16 @@ docs-build-dependent:
 docs-serve: docs-build-dependent
     mkdocs serve
 
-docs-build: docs-build-dependent
+docs-build: docs-build-dependent docs-ingest-build
     mkdocs build --strict
+
+# Updates the OpenApi yml files by generating these from the tAPIr specs
+docs-ingest-openapi-generate:
+    rm -f ./ingest/docs/openapi/openapi-*.yml
+    ./sbtx "project ingest" "runMain swiss.dasch.DocsGenerator ./ingest/docs/openapi"
+
+docs-ingest-build: docs-ingest-openapi-generate
+    (cd ingest; mkdocs build --clean)
 
 markdownlint:
     docker run \

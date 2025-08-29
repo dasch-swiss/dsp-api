@@ -58,11 +58,19 @@ docker-build-sipi-image: # build and publish sipi docker image locally
 docker-publish-sipi-image: # publish sipi image to Dockerhub
 	export DOCKER_BUILDKIT=1; $(SBTX) "sipi / Docker / publish"
 
+.PHONY: docker-publish-ingest-image
+docker-publish-ingest-image: # publish ingest image to Dockerhub
+	export DOCKER_BUILDKIT=1; $(SBTX) "ingest / Docker / publish"
+
+.PHONY: docker-build-ingest-image
+docker-build-ingest-image: # publish ingest image to Dockerhub
+	export DOCKER_BUILDKIT=1; $(SBTX) "ingest / Docker / publishLocal"
+
 .PHONY: docker-build
-docker-build: docker-build-dsp-api-image docker-build-sipi-image ## build and publish all Docker images locally
+docker-build: docker-build-dsp-api-image docker-build-sipi-image docker-build-ingest-image ## build and publish all Docker images locally
 
 .PHONY: docker-publish
-docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image ## publish all Docker images to Dockerhub
+docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image docker-publish-ingest-image ## publish all Docker images to Dockerhub
 
 .PHONY: docker-image-tag
 docker-image-tag: ## prints the docker image tag
@@ -175,15 +183,19 @@ test-all: test test-it test-e2e
 
 .PHONY: test
 test: ## runs all unit tests
-	$(SBTX) -v coverage "webapi/test" coverageAggregate
+	$(SBTX) -v coverage webapi/test coverageAggregate
 
 .PHONY: test-it
 test-it: docker-build-sipi-image ## runs integration (service/repo) tests
-	$(SBTX) -v coverage "test-it/test" coverageAggregate
+	$(SBTX) -v coverage test-it/test coverageAggregate
 
 .PHONY: test-e2e
 test-e2e: docker-build-sipi-image ## runs end-to-end (HTTP) tests
-	$(SBTX) -v coverage "test-e2e/test" coverageAggregate
+	$(SBTX) -v coverage test-e2e/test coverageAggregate
+
+.PHONY: test-ingest-integration
+test-ingest-integration: docker-build-sipi-image docker-build-ingest-image ## runs end-to-end (HTTP) tests
+	$(SBTX) -v coverage ingestIntegration/test coverageAggregate
 
 
 #################################
