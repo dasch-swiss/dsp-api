@@ -17,7 +17,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
 object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
 
-  val QueryRdfTypeRule: String =
+  private val queryRdfTypeRule: String =
     """
       |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -44,50 +44,7 @@ object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
       |} ORDER BY ?date
         """.stripMargin
 
-  val TypeInferenceResult1: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-    entities = Map(
-      TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-        objectIsResourceType = true,
-      ),
-      TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(
-        objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-        objectIsResourceType = true,
-      ),
-      TypeableVariable(variableName = "date") -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
-        isValueType = true,
-      ),
-      TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
-        objectIsValueType = true,
-      ),
-      TypeableIri(iri =
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri,
-      ) -> PropertyTypeInfo(
-        objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        objectIsValueType = true,
-      ),
-      TypeableIri(iri = "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-        isResourceType = true,
-      ),
-      TypeableVariable(variableName = "name") -> NonPropertyTypeInfo(
-        typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        isValueType = true,
-      ),
-      TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri,
-        isResourceType = true,
-      ),
-      TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-        objectIsResourceType = true,
-      ),
-    ),
-  )
-
-  val QueryWithInconsistentTypes3: String =
+  private val queryWithInconsistentTypes3: String =
     """
       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -110,7 +67,7 @@ object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
     test("refine the inspected types for each typeableEntity") {
       for {
         typeInspectionRunner <- ZIO.service[InferringGravsearchTypeInspector]
-        parsedQuery           = GravsearchParser.parseQuery(QueryRdfTypeRule)
+        parsedQuery           = GravsearchParser.parseQuery(queryRdfTypeRule)
         result <- typeInspectionRunner.getUsageIndexAndEntityInfos(
                     parsedQuery.whereClause,
                     requestingUser = anythingAdminUser,
@@ -167,7 +124,7 @@ object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
     test("sanitize inconsistent resource types that only have knora-base:Resource as base class in common") {
       for {
         typeInspectionRunner <- ZIO.service[InferringGravsearchTypeInspector]
-        parsedQuery           = GravsearchParser.parseQuery(QueryRdfTypeRule)
+        parsedQuery           = GravsearchParser.parseQuery(queryRdfTypeRule)
         result <- typeInspectionRunner.getUsageIndexAndEntityInfos(
                     parsedQuery.whereClause,
                     requestingUser = anythingAdminUser,
@@ -246,7 +203,7 @@ object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
     test("sanitize inconsistent resource types that have common base classes other than knora-base:Resource") {
       for {
         typeInspectionRunner <- ZIO.service[InferringGravsearchTypeInspector]
-        parsedQuery           = GravsearchParser.parseQuery(QueryWithInconsistentTypes3)
+        parsedQuery           = GravsearchParser.parseQuery(queryWithInconsistentTypes3)
         result <- typeInspectionRunner.getUsageIndexAndEntityInfos(
                     parsedQuery.whereClause,
                     requestingUser = anythingAdminUser,
