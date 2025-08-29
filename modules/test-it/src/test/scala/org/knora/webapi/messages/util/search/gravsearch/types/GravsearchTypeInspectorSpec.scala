@@ -8,7 +8,6 @@ package org.knora.webapi.messages.util.search.gravsearch.types
 import org.scalatest.matchers.must.Matchers.*
 import zio.*
 
-import dsp.errors.GravsearchException
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
@@ -134,24 +133,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |} ORDER BY ?date
         """.stripMargin
 
-  val QueryWithInconsistentTypes2: String =
-    """
-      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |
-      |CONSTRUCT {
-      |    ?book knora-api:isMainResource true ;
-      |        incunabula:title ?title ;
-      |        incunabula:pubdate ?pubdate .
-      |} WHERE {
-      |    ?book a incunabula:book ;
-      |        incunabula:title ?title ;
-      |        incunabula:pubdate ?pubdate .
-      |
-      |  FILTER(?pubdate = "JULIAN:1497-03-01") .
-      |}
-        """.stripMargin
-
   val TypeInferenceResult1: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
     entities = Map(
       TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(
@@ -213,13 +194,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |  { ?document a beol:manuscript . } UNION { ?document a beol:letter .}
       |}
             """.stripMargin
-
-  private def inspectTypes(query: String) = for {
-    parsedQuery <- ZIO.attempt(GravsearchParser.parseQuery(query))
-    result <- ZIO.serviceWithZIO[GravsearchTypeInspectionRunner](
-                _.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser),
-              )
-  } yield result
 
   "The type inspection utility" should {
     "remove the type annotations from a WHERE clause" in {
@@ -419,11 +393,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "reject a query with inconsistent types inferred from a FILTER" in {
-      val runZio = inspectTypes(QueryWithInconsistentTypes2)
-      UnsafeZioRun.run(runZio).causeOption.get.squash mustBe a[GravsearchException]
     }
   }
 }

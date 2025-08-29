@@ -4,14 +4,15 @@
  */
 
 package org.knora.webapi.messages.util.search.gravsearch.types
-import dsp.errors.GravsearchException
 import zio.*
 import zio.test.*
+import zio.test.Assertion.failsWithA
+
+import dsp.errors.GravsearchException
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import zio.test.Assertion.failsWithA
 
 object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
 
@@ -1124,6 +1125,26 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
           |}
           |""".stripMargin
       inspectTypes(queryWithInconsistentTypes1).exit.map(actual => assert(actual)(failsWithA[GravsearchException]))
+    },
+    test("reject a query with inconsistent types inferred from a FILTER") {
+      val queryWithInconsistentTypes2: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true ;
+          |          incunabula:title ?title ;
+          |          incunabula:pubdate ?pubdate .
+          |} WHERE {
+          |    ?book a incunabula:book ;
+          |          incunabula:title ?title ;
+          |          incunabula:pubdate ?pubdate .
+          |
+          |  FILTER(?pubdate = "JULIAN:1497-03-01") .
+          |}
+          |""".stripMargin
+      inspectTypes(queryWithInconsistentTypes2).exit.map(actual => assert(actual)(failsWithA[GravsearchException]))
     },
   )
 }
