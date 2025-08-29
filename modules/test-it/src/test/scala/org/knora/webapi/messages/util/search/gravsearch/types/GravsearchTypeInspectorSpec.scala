@@ -5,10 +5,9 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import org.apache.pekko
 import org.scalatest.matchers.must.Matchers.*
-import zio.RIO
-import zio.ZIO
+import zio.*
+//import zio.test.*
 
 import dsp.errors.GravsearchException
 import org.knora.webapi.*
@@ -18,17 +17,11 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
-import pekko.testkit.ImplicitSender
+class GravsearchTypeInspectorSpec extends E2ESpec {
 
-/**
- * Tests Gravsearch type inspection.
- */
-class GravsearchTypeInspectorSpec extends E2ESpec with ImplicitSender {
-  private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
-
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   val QueryWithExplicitTypeAnnotations: String =
     """
@@ -1299,22 +1292,12 @@ class GravsearchTypeInspectorSpec extends E2ESpec with ImplicitSender {
     entitiesInferredFromProperties = Map(),
   )
 
-  def gravsearchTypeInspectionRunner()
-    : RIO[StringFormatter with MessageRelay with QueryTraverser, GravsearchTypeInspectionRunner] =
-    for {
-      qt <- ZIO.service[QueryTraverser]
-      mr <- ZIO.service[MessageRelay]
-      sf <- ZIO.service[StringFormatter]
-    } yield GravsearchTypeInspectionRunner(qt, mr)(sf)
-
-  def inspectTypes(
-    query: String,
-  ): ZIO[StringFormatter with MessageRelay with QueryTraverser, Throwable, GravsearchTypeInspectionResult] =
-    for {
-      parsedQuery <- ZIO.attempt(GravsearchParser.parseQuery(query))
-      runner      <- gravsearchTypeInspectionRunner()
-      result      <- runner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-    } yield result
+  private def inspectTypes(query: String) = for {
+    parsedQuery <- ZIO.attempt(GravsearchParser.parseQuery(query))
+    result <- ZIO.serviceWithZIO[GravsearchTypeInspectionRunner](
+                _.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser),
+              )
+  } yield result
 
   "The type inspection utility" should {
     "remove the type annotations from a WHERE clause" in {
