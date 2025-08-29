@@ -473,6 +473,58 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         text == "this is text with standoff",
       )
     },
+    test("create a resource with text value containing footnote with apostrophe - should encode apostrophe correctly") {
+      val textValueAsXml: String =
+        """|<?xml version="1.0" encoding="UTF-8"?>
+           |<text>Text <footnote content="Apostrophe start ' end"/> end text</text>
+           |""".stripMargin
+
+      val createResourceWithTextFootnote: String =
+        s"""|{
+            |  "@type" : "anything:Thing",
+            |  "anything:hasRichtext" : {
+            |    "@type" : "knora-api:TextValue",
+            |    "knora-api:textValueAsXml" : ${textValueAsXml.toJson},
+            |    "knora-api:textValueHasMapping" : {
+            |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+            |    }
+            |  },
+            |  "knora-api:attachedToProject" : {
+            |    "@id" : "http://rdfh.ch/projects/0001"
+            |  },
+            |  "rdfs:label" : "test thing with footnote apostrophe",
+            |  "@context" : {
+            |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+            |  }
+            |}""".stripMargin
+      for {
+        responseJsonDoc <- TestApiClient
+                             .postJsonLdDocument(uri"/v2/resources", createResourceWithTextFootnote, anythingUser1)
+                             .flatMap(_.assert200)
+        resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        assertIri        = assertTrue(resourceIri.toSmartIri.isKnoraDataIri)
+
+        // Request the newly created resource and check that the apostrophe is correctly encoded
+        resourceJsonDoc <- TestApiClient
+                             .getJsonLdDocument(uri"/v2/resources/$resourceIri", anythingUser1)
+                             .flatMap(_.assert200)
+
+        textValue: JsonLDObject = resourceJsonDoc.body
+                                    .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+                                    .fold(msg => throw BadRequestException(msg), identity)
+
+        savedTextValueAsXml: String = textValue
+                                        .getRequiredString(KnoraApiV2Complex.TextValueAsXml)
+                                        .fold(msg => throw BadRequestException(msg), identity)
+
+        // The apostrophe should be preserved as-is, not escaped as &apos;
+        assertEncoded = assertTrue(savedTextValueAsXml.contains("Apostrophe start &apos; end"))
+      } yield assertIri && assertEncoded
+    },
     test("create a resource and a property with references to an external ontology (FOAF)") {
       val createResourceWithRefToFoaf: String =
         """{
@@ -507,9 +559,10 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreeTestSubClassOfFoafPerson".toSmartIri,
              )
         // Request the newly created resource in the simple schema, and check that it matches the ontology.
-        resourceSimpleGetResponseAsString <- TestApiClient
-                                               .getJsonLd(uri"/v2/resources/$resourceIri?schema=simple", anythingUser1)
-                                               .flatMap(_.assert200)
+        resourceSimpleGetResponseAsString <-
+          TestApiClient
+            .getJsonLd(uri"/v2/resources/$resourceIri?schema=simple", anythingUser1)
+            .flatMap(_.assert200)
         _ <- instanceChecker.check(
                resourceSimpleGetResponseAsString,
                "http://0.0.0.0:3333/ontology/0001/freetest/simple/v2#FreeTestSubClassOfFoafPerson".toSmartIri,
