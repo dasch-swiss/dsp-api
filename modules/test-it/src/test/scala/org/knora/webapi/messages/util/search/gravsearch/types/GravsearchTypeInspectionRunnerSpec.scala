@@ -40,7 +40,7 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       |}
       |""".stripMargin
 
-  override val e2eSpec = suite("GravsearchTypeInspectionRunnerSpec")(
+  override val e2eSpec = suite("GravsearchTypeInspectionRunner.inspectTypes")(
     test("sanitize inconsistent types resulted from a union") {
       val expectedResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
         entities = Map(
