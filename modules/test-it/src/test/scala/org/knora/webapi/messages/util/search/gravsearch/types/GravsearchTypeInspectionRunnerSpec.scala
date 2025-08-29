@@ -780,5 +780,30 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       )
       inspectTypes(pathologicalQuery).map(actual => assertTrue(actual.entities == expected))
     },
+    test("know the object type of rdfs:label") {
+      val queryWithRdfsLabelAndLiteral: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
+          |}
+          |""".stripMargin
+      val expected = Map(
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableIri(iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri) -> PropertyTypeInfo(
+          objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
+          objectIsValueType = true,
+        ),
+      )
+      inspectTypes(queryWithRdfsLabelAndLiteral).map(actual => assertTrue(actual.entities == expected))
+    },
   )
 }

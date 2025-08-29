@@ -562,20 +562,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
     ),
   )
 
-  val QueryWithRdfsLabelAndLiteral: String =
-    """
-      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |
-      |CONSTRUCT {
-      |    ?book knora-api:isMainResource true .
-      |
-      |} WHERE {
-      |    ?book rdf:type incunabula:book .
-      |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
-      |}
-        """.stripMargin
-
   val QueryWithRdfsLabelAndVariable: String =
     """
       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -590,19 +576,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
       |}
         """.stripMargin
-
-  val RdfsLabelWithLiteralResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-    entities = Map(
-      TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        isResourceType = true,
-      ),
-      TypeableIri(iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        objectIsValueType = true,
-      ),
-    ),
-  )
 
   val RdfsLabelWithVariableResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
     entities = Map(
@@ -866,11 +839,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "know the object type of rdfs:label" in {
-      val runZio = inspectTypes(QueryWithRdfsLabelAndLiteral)
-      assert(UnsafeZioRun.runOrThrow(runZio).entities == RdfsLabelWithLiteralResult.entities)
     }
 
     "infer the type of a variable used as the object of rdfs:label" in {
