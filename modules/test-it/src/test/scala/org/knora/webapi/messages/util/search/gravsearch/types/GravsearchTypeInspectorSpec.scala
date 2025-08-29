@@ -20,92 +20,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
 
   private implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
-  val QueryWithExplicitTypeAnnotations: String =
-    """
-      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |
-      |CONSTRUCT {
-      |    ?letter knora-api:isMainResource true .
-      |
-      |    ?letter knora-api:hasLinkTo <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
-      |    ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
-      |
-      |    ?letter knora-api:hasLinkTo <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
-      |    ?letter ?linkingProp2  <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
-      |
-      |} WHERE {
-      |    ?letter a knora-api:Resource .
-      |    ?letter a beol:letter .
-      |
-      |    # Scheuchzer, Johann Jacob 1672-1733
-      |    ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
-      |    ?linkingProp1 knora-api:objectType knora-api:Resource .
-      |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-      |
-      |    <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> a knora-api:Resource .
-      |
-      |    # Hermann, Jacob 1678-1733
-      |    ?letter ?linkingProp2 <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
-      |    ?linkingProp2 knora-api:objectType knora-api:Resource .
-      |
-      |    FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient)
-      |
-      |    beol:hasAuthor knora-api:objectType knora-api:Resource .
-      |    beol:hasRecipient knora-api:objectType knora-api:Resource .
-      |
-      |    <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> a knora-api:Resource .
-      |}
-        """.stripMargin
-
-  val WhereClauseWithoutAnnotations: WhereClause = WhereClause(
-    patterns = Vector(
-      StatementPattern(
-        obj = IriRef(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri),
-        pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
-        subj = QueryVariable(variableName = "letter"),
-      ),
-      StatementPattern(
-        obj = IriRef(iri = "http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA".toSmartIri),
-        pred = QueryVariable(variableName = "linkingProp1"),
-        subj = QueryVariable(variableName = "letter"),
-      ),
-      StatementPattern(
-        obj = IriRef(iri = "http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA".toSmartIri),
-        pred = QueryVariable(variableName = "linkingProp2"),
-        subj = QueryVariable(variableName = "letter"),
-      ),
-      FilterPattern(expression =
-        OrExpression(
-          rightArg = CompareExpression(
-            rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri),
-            operator = CompareExpressionOperator.EQUALS,
-            leftArg = QueryVariable(variableName = "linkingProp2"),
-          ),
-          leftArg = CompareExpression(
-            rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri),
-            operator = CompareExpressionOperator.EQUALS,
-            leftArg = QueryVariable(variableName = "linkingProp2"),
-          ),
-        ),
-      ),
-      FilterPattern(expression =
-        OrExpression(
-          rightArg = CompareExpression(
-            rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri),
-            operator = CompareExpressionOperator.EQUALS,
-            leftArg = QueryVariable(variableName = "linkingProp1"),
-          ),
-          leftArg = CompareExpression(
-            rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri),
-            operator = CompareExpressionOperator.EQUALS,
-            leftArg = QueryVariable(variableName = "linkingProp1"),
-          ),
-        ),
-      ),
-    ),
-  )
-
   val QueryRdfTypeRule: String =
     """
       |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -193,19 +107,7 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |  ?document a knora-api:Resource .
       |  { ?document a beol:manuscript . } UNION { ?document a beol:letter .}
       |}
-            """.stripMargin
-
-  "The type inspection utility" should {
-    "remove the type annotations from a WHERE clause" in {
-      val whereClauseWithoutAnnotations = UnsafeZioRun.runOrThrow {
-        for {
-          parsedQuery <- ZIO.attempt(GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations))
-          result      <- GravsearchTypeInspectionUtil.removeTypeAnnotations(parsedQuery.whereClause)
-        } yield result
-      }
-      whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
-    }
-  }
+      |""".stripMargin
 
   "The inferring type inspector" should {
 
