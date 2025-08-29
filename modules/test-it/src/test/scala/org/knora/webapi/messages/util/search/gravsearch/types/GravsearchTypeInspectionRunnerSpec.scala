@@ -1005,5 +1005,39 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       )
       inspectTypes(queryComparingResourceIriInComplexSchema).map(actual => assertTrue(actual.entities == expected))
     },
+    test("infer knora-api:Resource as the subject type of a subproperty of knora-api:hasLinkTo") {
+      val queryWithFilterComparison: String =
+        """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?person knora-api:isMainResource true .
+          |  ?document beol:hasAuthor ?person .
+          |} WHERE {
+          |  ?person a beol:person .
+          |  ?document beol:hasAuthor ?person .
+          |  FILTER(?document != <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g>)
+          |}
+          |""".stripMargin
+      val expected = Map(
+        TypeableVariable(variableName = "person") -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableVariable(variableName = "document") -> NonPropertyTypeInfo(
+          typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(
+          objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+          objectIsResourceType = true,
+        ),
+        TypeableIri(iri = "http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g".toSmartIri) -> NonPropertyTypeInfo(
+          typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
+          isResourceType = true,
+        ),
+      )
+      inspectTypes(queryWithFilterComparison).map(actual => assertTrue(actual.entities == expected))
+    },
   )
 }

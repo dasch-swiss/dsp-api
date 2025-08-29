@@ -201,61 +201,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |}
         """.stripMargin
 
-  val QueryWithFilterComparison: String =
-    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-      |
-      |CONSTRUCT {
-      |  ?person knora-api:isMainResource true .
-      |  ?document beol:hasAuthor ?person .
-      |} WHERE {
-      |  ?person a beol:person .
-      |  ?document beol:hasAuthor ?person .
-      |  FILTER(?document != <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g>)
-      |}""".stripMargin
-
-  val QueryWithFilterComparisonResult: GravsearchTypeInspectionResult =
-    GravsearchTypeInspectionResult(
-      entities = Map(
-        TypeableVariable(variableName = "person") -> NonPropertyTypeInfo(
-          typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-          isResourceType = true,
-          isValueType = false,
-        ),
-        TypeableVariable(variableName = "document") -> NonPropertyTypeInfo(
-          typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-          isResourceType = true,
-          isValueType = false,
-        ),
-        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(
-          objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-          objectIsResourceType = true,
-          objectIsValueType = false,
-        ),
-        TypeableIri(iri = "http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g".toSmartIri) -> NonPropertyTypeInfo(
-          typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-          isResourceType = true,
-          isValueType = false,
-        ),
-      ),
-      entitiesInferredFromProperties = Map(
-        TypeableVariable(variableName = "document") -> Set(
-          NonPropertyTypeInfo(
-            typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-            isResourceType = true,
-            isValueType = false,
-          ),
-        ),
-        TypeableVariable(variableName = "person") -> Set(
-          NonPropertyTypeInfo(
-            typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-            isResourceType = true,
-            isValueType = false,
-          ),
-        ),
-      ),
-    )
-
   val TypeInferenceResult1: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
     entities = Map(
       TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(
@@ -561,11 +506,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "infer knora-api:Resource as the subject type of a subproperty of knora-api:hasLinkTo" in {
-      val runZio = inspectTypes(QueryWithFilterComparison)
-      assert(UnsafeZioRun.runOrThrow(runZio).entities == QueryWithFilterComparisonResult.entities)
     }
 
     "reject a query with a non-Knora property whose type cannot be inferred" in {
