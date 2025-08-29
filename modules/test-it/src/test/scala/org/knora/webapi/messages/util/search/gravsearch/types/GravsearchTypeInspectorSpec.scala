@@ -1227,29 +1227,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
     ),
   )
 
-  val QueryWithRedundantTypes: String =
-    """
-      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-      |
-      |CONSTRUCT {
-      |    ?letter knora-api:isMainResource true .
-      |    ?author knora-api:isMainResource true .
-      |} WHERE {
-      |    ?letter rdf:type beol:writtenSource .
-      |
-      |    ?letter rdf:type beol:letter .
-      |
-      |    ?letter beol:hasAuthor ?author .
-      |
-      |    ?author beol:hasFamilyName ?familyName .
-      |
-      |    FILTER knora-api:matchText(?familyName, "Bernoulli")
-      |
-      |} ORDER BY ?date
-        """.stripMargin
-
   val QueryWithInconsistentTypes3: String =
     """
       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1495,13 +1472,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "infer the most specific type from redundant ones given in a query" in {
-      val runZio = inspectTypes(QueryWithRedundantTypes)
-      val result = UnsafeZioRun.runOrThrow(runZio)
-      assert(result.entities.size == 5)
-      result.entitiesInferredFromProperties.keySet should not contain TypeableVariable("letter")
     }
 
     "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and the specified type is a Knora resource class" in {

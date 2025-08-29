@@ -21,7 +21,7 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
               )
   } yield result
 
-  private val QueryWithInconsistentTypes3: String =
+  private val queryWithInconsistentTypes3: String =
     """
       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -70,7 +70,7 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
         ),
       )
 
-      inspectTypes(QueryWithInconsistentTypes3)
+      inspectTypes(queryWithInconsistentTypes3)
         .map(actual => assertTrue(actual.entities == expectedResult.entities))
     },
     test("types resulted from a query with optional") {
@@ -146,6 +146,35 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
           assertTrue(
             actual.entities == expected.entities,
             actual.entitiesInferredFromProperties == expected.entitiesInferredFromProperties,
+          ),
+        )
+    },
+    test("infer the most specific type from redundant ones given in a query") {
+      val queryWithRedundantTypes: String =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?author knora-api:isMainResource true .
+          |} WHERE {
+          |    ?letter rdf:type beol:writtenSource .
+          |    ?letter rdf:type beol:letter .
+          |    ?letter beol:hasAuthor ?author .
+          |
+          |    ?author beol:hasFamilyName ?familyName .
+          |
+          |    FILTER knora-api:matchText(?familyName, "Bernoulli")
+          |
+          |} ORDER BY ?date
+          |""".stripMargin
+      inspectTypes(queryWithRedundantTypes)
+        .map(result =>
+          assertTrue(
+            result.entities.size == 5,
+            !result.entitiesInferredFromProperties.contains(TypeableVariable("letter")),
           ),
         )
     },
