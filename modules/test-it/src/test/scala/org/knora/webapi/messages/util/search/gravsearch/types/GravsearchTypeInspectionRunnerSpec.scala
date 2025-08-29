@@ -474,5 +474,52 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       )
       inspectTypes(queryPropertyVarTypeFromFilterRule).map(actual => assertTrue(actual.entities == expected))
     },
+    test("infer the type of a non-property variable if it's compared to an XSD literal in a FILTER") {
+      val queryNonPropertyVarTypeFromFilterRule: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true ;
+          |        incunabula:title ?title ;
+          |        incunabula:pubdate ?pubdate .
+          |} WHERE {
+          |    ?book a incunabula:book ;
+          |        incunabula:title ?title ;
+          |        incunabula:pubdate ?pubdate .
+          |
+          |  FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date) .
+          |}
+          |""".stripMargin
+      val expected = Map(
+        TypeableIri(iri =
+          "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri,
+        ) -> PropertyTypeInfo(
+          objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
+          objectIsValueType = true,
+        ),
+        TypeableIri(iri =
+          "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate".toSmartIri,
+        ) -> PropertyTypeInfo(
+          objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
+          objectIsValueType = true,
+        ),
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableVariable(variableName = "pubdate") -> NonPropertyTypeInfo(
+          typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
+          isValueType = true,
+        ),
+        TypeableVariable(variableName = "title") -> NonPropertyTypeInfo(
+          typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
+          isValueType = true,
+        ),
+      )
+      inspectTypes(queryNonPropertyVarTypeFromFilterRule)
+        .map(actual => assertTrue(actual.entities == expected))
+    },
   )
 }

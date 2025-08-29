@@ -134,24 +134,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |} ORDER BY ?date
         """.stripMargin
 
-  val QueryNonPropertyVarTypeFromFilterRule: String =
-    """
-      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |
-      |CONSTRUCT {
-      |    ?book knora-api:isMainResource true ;
-      |        incunabula:title ?title ;
-      |        incunabula:pubdate ?pubdate .
-      |} WHERE {
-      |    ?book a incunabula:book ;
-      |        incunabula:title ?title ;
-      |        incunabula:pubdate ?pubdate .
-      |
-      |  FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date) .
-      |}
-        """.stripMargin
-
   val QueryVarTypeFromFunction: String =
     """
       |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -884,33 +866,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
     ),
   )
 
-  val TypeInferenceResult4: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-    entities = Map(
-      TypeableIri(iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        objectIsValueType = true,
-      ),
-      TypeableIri(iri =
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate".toSmartIri,
-      ) -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
-        objectIsValueType = true,
-      ),
-      TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        isResourceType = true,
-      ),
-      TypeableVariable(variableName = "pubdate") -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
-        isValueType = true,
-      ),
-      TypeableVariable(variableName = "title") -> NonPropertyTypeInfo(
-        typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        isValueType = true,
-      ),
-    ),
-  )
-
   val TypeInferenceResult5: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
     entities = Map(
       TypeableVariable(variableName = "mainRes") -> NonPropertyTypeInfo(
@@ -1285,11 +1240,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "infer the type of a non-property variable if it's compared to an XSD literal in a FILTER" in {
-      val runZio = inspectTypes(QueryNonPropertyVarTypeFromFilterRule)
-      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult4.entities)
     }
 
     "infer the type of a non-property variable used as the argument of a function in a FILTER" in {
