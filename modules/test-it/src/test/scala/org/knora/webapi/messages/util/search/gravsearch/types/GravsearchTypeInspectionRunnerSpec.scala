@@ -553,5 +553,54 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       )
       inspectTypes(queryVarTypeFromFunction).map(actual => assertTrue(actual.entities == expected))
     },
+    test("infer the type of a non-property IRI used as the argument of a function in a FILTER") {
+      val queryIriTypeFromFunction: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:hasText ?text .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |    ?letter beol:hasText ?text .
+          |    ?text knora-api:textValueHasStandoff ?standoffLinkTag .
+          |    ?standoffLinkTag a knora-api:StandoffLinkTag .
+          |
+          |    FILTER knora-api:standoffLink(?letter, ?standoffLinkTag, <http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA>)
+          |}
+          |""".stripMargin
+      val expected = Map(
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText".toSmartIri) -> PropertyTypeInfo(
+          objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri,
+          objectIsValueType = true,
+        ),
+        TypeableVariable(variableName = "text") -> NonPropertyTypeInfo(
+          typeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri,
+          isValueType = true,
+        ),
+        TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#letter".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableIri(iri = "http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA".toSmartIri) -> NonPropertyTypeInfo(
+          typeIri = "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableIri(iri =
+          "http://api.knora.org/ontology/knora-api/v2#textValueHasStandoff".toSmartIri,
+        ) -> PropertyTypeInfo(
+          objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri,
+          objectIsStandoffTagType = true,
+        ),
+        TypeableVariable(variableName = "standoffLinkTag") -> NonPropertyTypeInfo(
+          typeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffLinkTag".toSmartIri,
+          isStandoffTagType = true,
+        ),
+      )
+      inspectTypes(queryIriTypeFromFunction).map(actual => assertTrue(actual.entities == expected))
+    },
   )
 }

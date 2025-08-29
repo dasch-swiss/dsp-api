@@ -169,25 +169,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |}
         """.stripMargin
 
-  val QueryIriTypeFromFunction: String =
-    """
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-      |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
-      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
-      |
-      |CONSTRUCT {
-      |    ?letter knora-api:isMainResource true .
-      |    ?letter beol:hasText ?text .
-      |} WHERE {
-      |    ?letter a beol:letter .
-      |    ?letter beol:hasText ?text .
-      |    ?text knora-api:textValueHasStandoff ?standoffLinkTag .
-      |    ?standoffLinkTag a knora-api:StandoffLinkTag .
-      |
-      |    FILTER knora-api:standoffLink(?letter, ?standoffLinkTag, <http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA>)
-      |}
-        """.stripMargin
-
   val QueryWithInconsistentTypes1: String =
     """
       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -844,59 +825,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
     ),
   )
 
-  val TypeInferenceResult6: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-    entities = Map(
-      TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri,
-        objectIsResourceType = false,
-        objectIsValueType = true,
-        objectIsStandoffTagType = false,
-      ),
-      TypeableVariable(variableName = "text") -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri,
-        isResourceType = false,
-        isValueType = true,
-        isStandoffTagType = false,
-      ),
-      TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#letter".toSmartIri,
-        isResourceType = true,
-        isValueType = false,
-        isStandoffTagType = false,
-      ),
-      TypeableIri(iri = "http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA".toSmartIri) -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
-        isResourceType = true,
-        isValueType = false,
-        isStandoffTagType = false,
-      ),
-      TypeableIri(iri =
-        "http://api.knora.org/ontology/knora-api/v2#textValueHasStandoff".toSmartIri,
-      ) -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri,
-        objectIsResourceType = false,
-        objectIsValueType = false,
-        objectIsStandoffTagType = true,
-      ),
-      TypeableVariable(variableName = "standoffLinkTag") -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffLinkTag".toSmartIri,
-        isResourceType = false,
-        isValueType = false,
-        isStandoffTagType = true,
-      ),
-    ),
-    entitiesInferredFromProperties = Map(
-      TypeableVariable(variableName = "text") -> Set(
-        NonPropertyTypeInfo(
-          typeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri,
-          isResourceType = false,
-          isValueType = true,
-          isStandoffTagType = false,
-        ),
-      ),
-    ),
-  )
-
   val QueryWithRdfsLabelAndLiteral: String =
     """
       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -1201,11 +1129,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "infer the type of a non-property IRI used as the argument of a function in a FILTER" in {
-      val runZio = inspectTypes(QueryIriTypeFromFunction)
-      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult6.entities)
     }
 
     "infer the types in a query that requires 6 iterations" in {
