@@ -201,60 +201,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |}
         """.stripMargin
 
-  val QueryComparingResourcesInComplexSchema: String =
-    """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-      |
-      |CONSTRUCT {
-      |    ?letter knora-api:isMainResource true .
-      |    ?letter beol:hasAuthor ?person1 .
-      |} WHERE {
-      |    ?letter a beol:letter .
-      |    ?letter ?prop ?person1 .
-      |    ?letter beol:hasRecipient ?person2 .
-      |    FILTER(?person2 != ?person1) .
-      |}
-      |OFFSET 0""".stripMargin
-
-  val QueryComparingResourcesInComplexSchemaResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-    entities = Map(
-      TypeableVariable(variableName = "person2") -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#person".toSmartIri,
-        isResourceType = true,
-        isValueType = false,
-      ),
-      TypeableVariable(variableName = "person1") -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#person".toSmartIri,
-        isResourceType = true,
-        isValueType = false,
-      ),
-      TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#person".toSmartIri,
-        objectIsResourceType = true,
-        objectIsValueType = false,
-      ),
-      TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#letter".toSmartIri,
-        isResourceType = true,
-        isValueType = false,
-      ),
-      TypeableVariable(variableName = "prop") -> PropertyTypeInfo(
-        objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#person".toSmartIri,
-        objectIsResourceType = true,
-        objectIsValueType = false,
-      ),
-    ),
-    entitiesInferredFromProperties = Map(
-      TypeableVariable(variableName = "person2") -> Set(
-        NonPropertyTypeInfo(
-          typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#person".toSmartIri,
-          isResourceType = true,
-          isValueType = false,
-        ),
-      ),
-    ),
-  )
-
   val QueryComparingResourceIriInSimpleSchema: String =
     """PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -753,11 +699,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "infer the type of a variable when it is compared with another variable in a FILTER (in the complex schema)" in {
-      val runZio = inspectTypes(QueryComparingResourcesInComplexSchema)
-      assert(UnsafeZioRun.runOrThrow(runZio).entities == QueryComparingResourcesInComplexSchemaResult.entities)
     }
 
     "infer the type of a resource IRI when it is compared with a variable in a FILTER (in the simple schema)" in {
