@@ -61,8 +61,7 @@ import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.WithAsIs
 
-private def objectCommentOption(r: Resource): Either[String, Option[String]] =
-  r.objectStringOption(ValueHasComment, str => Iri.toSparqlEncodedString(str).toRight(s"Invalid comment: $str"))
+private def objectCommentOption(r: Resource): Either[String, Option[String]] = r.objectStringOption(ValueHasComment)
 
 /**
  * Represents a successful response to a create value Request.

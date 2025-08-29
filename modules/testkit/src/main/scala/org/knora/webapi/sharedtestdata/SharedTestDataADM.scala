@@ -554,9 +554,7 @@ object SharedTestDataADM {
 
   /**
    * *********************************
-   */
-  /** Anything Admin Data            * */
-  /**
+   * Anything Admin Data             *
    * *********************************
    */
   val anythingProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
