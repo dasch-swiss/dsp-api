@@ -194,7 +194,7 @@ test-e2e: docker-build-sipi-image ## runs end-to-end (HTTP) tests
 	$(SBTX) -v coverage test-e2e/test coverageAggregate
 
 .PHONY: test-ingest-integration
-test-ingest-integration: docker-build-ingest-image ## runs end-to-end (HTTP) tests
+test-ingest-integration: docker-build-sipi-image docker-build-ingest-image ## runs end-to-end (HTTP) tests
 	$(SBTX) -v coverage ingestIntegration/test coverageAggregate
 
 
