@@ -46,7 +46,7 @@ ThisBuild / version := gitVersion
 lazy val buildCommit = ("git rev-parse --short HEAD" !!).trim
 lazy val buildTime   = Instant.now.toString
 
-lazy val knoraSipiVersion = ThisBuild / version
+lazy val knoraSipiVersion = gitVersion
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, testkit, it, e2e)
 
