@@ -7,11 +7,9 @@ package org.knora.webapi.messages.util.search.gravsearch.types
 
 import org.scalatest.matchers.must.Matchers.*
 import zio.*
-//import zio.test.*
 
 import dsp.errors.GravsearchException
 import org.knora.webapi.*
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
@@ -1379,12 +1377,8 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
     }
 
     "refine the inspected types for each typeableEntity" in {
-      val typeInspectionRunner =
-        InferringGravsearchTypeInspector(
-          UnsafeZioRun.service[MessageRelay],
-          UnsafeZioRun.service[QueryTraverser],
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
+      val typeInspectionRunner = UnsafeZioRun.service[InferringGravsearchTypeInspector]
+      val parsedQuery          = GravsearchParser.parseQuery(QueryRdfTypeRule)
       val (_, entityInfo) = UnsafeZioRun.runOrThrow(
         typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser),
       )
@@ -1433,12 +1427,8 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
     }
 
     "sanitize inconsistent resource types that only have knora-base:Resource as base class in common" in {
-      val typeInspectionRunner =
-        InferringGravsearchTypeInspector(
-          UnsafeZioRun.service[MessageRelay],
-          UnsafeZioRun.service[QueryTraverser],
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
+      val typeInspectionRunner = UnsafeZioRun.service[InferringGravsearchTypeInspector]
+      val parsedQuery          = GravsearchParser.parseQuery(QueryRdfTypeRule)
       val (usageIndex, entityInfo) = UnsafeZioRun.runOrThrow(
         typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser),
       )
@@ -1513,12 +1503,8 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
     }
 
     "sanitize inconsistent resource types that have common base classes other than knora-base:Resource" in {
-      val typeInspectionRunner =
-        InferringGravsearchTypeInspector(
-          UnsafeZioRun.service[MessageRelay],
-          UnsafeZioRun.service[QueryTraverser],
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes3)
+      val typeInspectionRunner = UnsafeZioRun.service[InferringGravsearchTypeInspector]
+      val parsedQuery          = GravsearchParser.parseQuery(QueryWithInconsistentTypes3)
       val (usageIndex, entityInfo) = UnsafeZioRun.runOrThrow(
         typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser),
       )

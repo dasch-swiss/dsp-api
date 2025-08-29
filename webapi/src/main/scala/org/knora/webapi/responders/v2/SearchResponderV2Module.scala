@@ -28,10 +28,12 @@ object SearchResponderV2Module {
   type Dependencies = StandoffTagUtilV2 & AppConfig & TriplestoreService & ConstructResponseUtilV2 & OntologyCache &
     OntologyRepo & IriConverter & MessageRelay & StringFormatter & ProjectService
 
-  type Provided = SearchResponderV2Live & OntologyInferencer & QueryTraverser & GravsearchTypeInspectionRunner
+  type Provided = GravsearchTypeInspectionRunner & InferringGravsearchTypeInspector & OntologyInferencer &
+    QueryTraverser & SearchResponderV2Live
 
   val layer: URLayer[Dependencies, Provided] =
     ZLayer.makeSome[Dependencies, Provided](
+      InferringGravsearchTypeInspector.layer,
       GravsearchTypeInspectionRunner.layer,
       ZLayer.derive[SearchResponderV2Live],
       InferenceOptimizationService.layer,
