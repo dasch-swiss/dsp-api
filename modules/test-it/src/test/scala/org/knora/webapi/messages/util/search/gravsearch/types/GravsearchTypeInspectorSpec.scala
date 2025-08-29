@@ -134,25 +134,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |} ORDER BY ?date
         """.stripMargin
 
-  val QueryNonKnoraTypeWithAnnotation: String =
-    """
-      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |PREFIX dcterms: <http://purl.org/dc/terms/>
-      |
-      |CONSTRUCT {
-      |    ?book knora-api:isMainResource true ;
-      |        dcterms:title ?title .
-      |
-      |} WHERE {
-      |
-      |    ?book rdf:type incunabula:book ;
-      |        dcterms:title ?title .
-      |
-      |    ?title a xsd:string .
-      |}
-        """.stripMargin
-
   val QueryWithInconsistentTypes1: String =
     """
       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -224,23 +205,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(
         objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
         objectIsResourceType = true,
-      ),
-    ),
-  )
-
-  val TypeInferenceResult3: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-    entities = Map(
-      TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        isResourceType = true,
-      ),
-      TypeableIri(iri = "http://purl.org/dc/terms/title".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        objectIsValueType = true,
-      ),
-      TypeableVariable(variableName = "title") -> NonPropertyTypeInfo(
-        typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        isValueType = true,
       ),
     ),
   )
@@ -490,11 +454,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "accept a query with a non-Knora property whose type can be inferred" in {
-      val runZio = inspectTypes(QueryNonKnoraTypeWithAnnotation)
-      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult3.entities)
     }
 
     "ignore Gravsearch options" in {

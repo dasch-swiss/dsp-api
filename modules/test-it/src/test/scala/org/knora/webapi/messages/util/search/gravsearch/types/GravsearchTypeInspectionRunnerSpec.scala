@@ -1058,5 +1058,37 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
         assert(actual)(failsWithA[GravsearchException]),
       )
     },
+    test("accept a query with a non-Knora property whose type can be inferred") {
+      val queryNonKnoraTypeWithAnnotation: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX dcterms: <http://purl.org/dc/terms/>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true ;
+          |          dcterms:title ?title .
+          |} WHERE {
+          |    ?book rdf:type incunabula:book ;
+          |          dcterms:title ?title .
+          |    ?title a xsd:string .
+          |}
+          |""".stripMargin
+      val expected = Map(
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableIri(iri = "http://purl.org/dc/terms/title".toSmartIri) -> PropertyTypeInfo(
+          objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
+          objectIsValueType = true,
+        ),
+        TypeableVariable(variableName = "title") -> NonPropertyTypeInfo(
+          typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
+          isValueType = true,
+        ),
+      )
+      inspectTypes(queryNonKnoraTypeWithAnnotation).map(actual => assertTrue(actual.entities == expected))
+    },
   )
 }
