@@ -14,7 +14,6 @@ import scala.annotation.tailrec
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
 import org.knora.webapi.*
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -26,12 +25,13 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResp
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 
 /**
  * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.
  */
 final case class InferringGravsearchTypeInspector(
-  private val messageRelay: MessageRelay,
+  private val ontologyCacheHelpers: OntologyCacheHelpers,
   private val queryTraverser: QueryTraverser,
 )(private implicit val sf: StringFormatter) {
 
@@ -884,7 +884,11 @@ final case class InferringGravsearchTypeInspector(
                                    requestingUser = requestingUser,
                                  )
 
-      initialEntityInfo <- messageRelay.ask[EntityInfoGetResponseV2](initialEntityInfoRequest)
+      initialEntityInfo <- ontologyCacheHelpers.getEntityInfoResponseV2(
+                             initialEntityInfoRequest.classIris,
+                             initialEntityInfoRequest.propertyIris,
+                             requestingUser,
+                           )
 
       // The ontology responder may return the requested information in the internal schema. Convert each entity
       // definition back to the input schema.
@@ -935,7 +939,11 @@ final case class InferringGravsearchTypeInspector(
                                       requestingUser = requestingUser,
                                     )
 
-      additionalEntityInfo <- messageRelay.ask[EntityInfoGetResponseV2](additionalEntityInfoRequest)
+      additionalEntityInfo <- ontologyCacheHelpers.getEntityInfoResponseV2(
+                                additionalEntityInfoRequest.classIris,
+                                additionalEntityInfoRequest.propertyIris,
+                                requestingUser,
+                              )
 
       // Add the additional classes to the usage index.
       usageIndexWithAdditionalClasses = usageIndex.copy(
