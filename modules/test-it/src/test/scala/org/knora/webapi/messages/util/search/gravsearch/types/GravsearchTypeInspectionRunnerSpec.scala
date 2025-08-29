@@ -1109,5 +1109,21 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       )
       inspectTypes(queryWithGravsearchOptions).map(actual => assertTrue(actual.entities == expected))
     },
+    test("reject a query with inconsistent types inferred from statements") {
+      val queryWithInconsistentTypes1: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?page incunabula:title ?book .
+          |}
+          |""".stripMargin
+      inspectTypes(queryWithInconsistentTypes1).exit.map(actual => assert(actual)(failsWithA[GravsearchException]))
+    },
   )
 }

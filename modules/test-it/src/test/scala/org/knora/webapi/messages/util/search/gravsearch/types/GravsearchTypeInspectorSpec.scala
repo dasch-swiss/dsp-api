@@ -134,20 +134,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |} ORDER BY ?date
         """.stripMargin
 
-  val QueryWithInconsistentTypes1: String =
-    """
-      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |
-      |CONSTRUCT {
-      |    ?book knora-api:isMainResource true .
-      |
-      |} WHERE {
-      |    ?book rdf:type incunabula:book .
-      |    ?page incunabula:title ?book .
-      |}
-        """.stripMargin
-
   val QueryWithInconsistentTypes2: String =
     """
       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -433,11 +419,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "reject a query with inconsistent types inferred from statements" in {
-      val runZio = inspectTypes(QueryWithInconsistentTypes1)
-      UnsafeZioRun.run(runZio).causeOption.get.squash mustBe a[GravsearchException]
     }
 
     "reject a query with inconsistent types inferred from a FILTER" in {
