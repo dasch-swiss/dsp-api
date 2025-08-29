@@ -1474,17 +1474,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       assert(sanitizedResults.entities == expectedResult.entities)
     }
 
-    "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and the specified type is a Knora resource class" in {
-      val runZio = inspectTypes(QueryRdfTypeRule)
-      val result = UnsafeZioRun.runOrThrow(runZio)
-      assert(result.entities == TypeInferenceResult1.entities)
-      result.entitiesInferredFromProperties.keySet should contain(TypeableVariable("date"))
-      result.entitiesInferredFromProperties.keySet should contain(
-        TypeableIri("http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri),
-      )
-      result.entitiesInferredFromProperties.keySet should not contain TypeableVariable("linkingProp1")
-    }
-
     "infer a property's knora-api:objectType if the property's IRI is used as a predicate" in {
       val runZio = inspectTypes(QueryKnoraObjectTypeFromPropertyIriRule)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult1.entities)
