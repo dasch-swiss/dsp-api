@@ -5,12 +5,9 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
+import zio.*
 
 import dsp.errors.GravsearchException
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
@@ -21,10 +18,8 @@ import org.knora.webapi.slice.admin.domain.model.User
  */
 final case class GravsearchTypeInspectionRunner(
   private val queryTraverser: QueryTraverser,
-  private val messageRelay: MessageRelay,
-)(implicit private val stringFormatter: StringFormatter) {
-  private val inferringInspector: InferringGravsearchTypeInspector =
-    InferringGravsearchTypeInspector(messageRelay, queryTraverser)
+  private val inferringInspector: InferringGravsearchTypeInspector,
+)(implicit private val sf: StringFormatter) {
   private val annotationReadingInspector: AnnotationReadingGravsearchTypeInspector =
     AnnotationReadingGravsearchTypeInspector(queryTraverser)
 
