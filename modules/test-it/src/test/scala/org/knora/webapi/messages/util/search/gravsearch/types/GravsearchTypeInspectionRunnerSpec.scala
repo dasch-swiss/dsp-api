@@ -419,5 +419,60 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       inspectTypes(queryTypeOfSubjectFromPropertyRule)
         .map(actual => assertTrue(actual.entities == expected))
     },
+    test("infer the knora-api:objectType of a property variable if it's compared to a known property IRI in a FILTER") {
+      val queryPropertyVarTypeFromFilterRule: String =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:creationDate ?date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |} WHERE {
+          |    ?letter beol:creationDate ?date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |
+          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+          |
+          |} ORDER BY ?date
+          |""".stripMargin
+      val expected = Map(
+        TypeableIri(iri =
+          "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri,
+        ) -> PropertyTypeInfo(
+          objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+          objectIsResourceType = true,
+        ),
+        TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(
+          objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+          objectIsResourceType = true,
+        ),
+        TypeableVariable(variableName = "date") -> NonPropertyTypeInfo(
+          typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
+          isValueType = true,
+        ),
+        TypeableIri(iri =
+          "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri,
+        ) -> PropertyTypeInfo(
+          objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
+          objectIsValueType = true,
+        ),
+        TypeableIri(iri = "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
+          typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
+          isResourceType = true,
+        ),
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(
+          objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
+          objectIsResourceType = true,
+        ),
+      )
+      inspectTypes(queryPropertyVarTypeFromFilterRule).map(actual => assertTrue(actual.entities == expected))
+    },
   )
 }

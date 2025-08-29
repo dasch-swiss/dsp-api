@@ -134,25 +134,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       |} ORDER BY ?date
         """.stripMargin
 
-  val QueryPropertyVarTypeFromFilterRule: String =
-    """
-      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-      |
-      |CONSTRUCT {
-      |    ?letter knora-api:isMainResource true .
-      |    ?letter beol:creationDate ?date .
-      |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-      |} WHERE {
-      |    ?letter beol:creationDate ?date .
-      |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-      |
-      |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-      |
-      |} ORDER BY ?date
-        """.stripMargin
-
   val QueryNonPropertyVarTypeFromFilterRule: String =
     """
       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -886,39 +867,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
     ),
   )
 
-  val TypeInferenceResult2: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-    entities = Map(
-      TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-        objectIsResourceType = true,
-      ),
-      TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(
-        objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-        objectIsResourceType = true,
-      ),
-      TypeableVariable(variableName = "date") -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
-        isValueType = true,
-      ),
-      TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
-        objectIsValueType = true,
-      ),
-      TypeableIri(iri = "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(
-        typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-        isResourceType = true,
-      ),
-      TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-        isResourceType = true,
-      ),
-      TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
-        objectIsResourceType = true,
-      ),
-    ),
-  )
-
   val TypeInferenceResult3: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
     entities = Map(
       TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(
@@ -1337,11 +1285,6 @@ class GravsearchTypeInspectorSpec extends E2ESpec {
       )
 
       assert(sanitizedResults.entities == expectedResult.entities)
-    }
-
-    "infer the knora-api:objectType of a property variable if it's compared to a known property IRI in a FILTER" in {
-      val runZio = inspectTypes(QueryPropertyVarTypeFromFilterRule)
-      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult2.entities)
     }
 
     "infer the type of a non-property variable if it's compared to an XSD literal in a FILTER" in {
