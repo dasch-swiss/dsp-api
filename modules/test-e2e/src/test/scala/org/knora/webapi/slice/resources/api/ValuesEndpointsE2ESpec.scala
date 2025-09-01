@@ -25,7 +25,6 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
-import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForResourcesResponse
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.Rdfs
@@ -189,20 +188,19 @@ class ValuesEndpointsE2ESpec extends E2ESpec {
     resourceIri: IRI,
     maybePreviousLastModDate: Option[Instant],
     maybeUpdatedLastModDate: Option[Instant],
-  ): ZIO[Any, AssertionException, Unit] =
-    ZIO
-      .fromOption(maybeUpdatedLastModDate)
-      .mapError(_ => AssertionException(s"Resource $resourceIri has no knora-api:lastModificationDate"))
-      .flatMap { updatedLastModDate =>
-        maybePreviousLastModDate match {
-          case Some(previousLastModDate) =>
-            ZIO
-              .fail(AssertionException(s"Last ModificationDate $updatedLastModDate is before $previousLastModDate"))
-              .when(updatedLastModDate.isBefore(previousLastModDate))
-              .unit
-          case None => ZIO.unit
-        }
+  ): IO[AssertionException, Unit] = ZIO
+    .fromOption(maybeUpdatedLastModDate)
+    .mapError(_ => AssertionException(s"Resource $resourceIri has no knora-api:lastModificationDate"))
+    .flatMap { updatedLastModDate =>
+      maybePreviousLastModDate match {
+        case Some(previousLastModDate) =>
+          ZIO
+            .fail(AssertionException(s"Last ModificationDate $updatedLastModDate is before $previousLastModDate"))
+            .when(updatedLastModDate.isBefore(previousLastModDate))
+            .unit
+        case None => ZIO.unit
       }
+    }
 
   private def getValue(
     resourceIri: IRI,
@@ -636,13 +634,11 @@ class ValuesEndpointsE2ESpec extends E2ESpec {
    * @param valueUuid    the value UUID.
    * @param fileBasename the basename of the test data file.
    */
-  private def testValue(resourceIri: IRI, valueUuid: String, fileBasename: String): Unit = {
-    val responseStr = UnsafeZioRun.runOrThrow(
-      TestApiClient.getJsonLd(uri"/v2/values/$resourceIri/$valueUuid", anythingUser1).flatMap(_.assert200),
-    )
-    val expectedResponseStr = readTestData("valuesE2EV2", s"$fileBasename.jsonld")
-    compareJSONLDForResourcesResponse(expectedJSONLD = expectedResponseStr, receivedJSONLD = responseStr)
-  }
+  private def verifyValueContent(resourceIri: IRI, valueUuid: String, fileBasename: String) =
+    UnsafeZioRun.runOrThrow(for {
+      actual   <- TestApiClient.getJsonLd(uri"/v2/values/$resourceIri/$valueUuid", anythingUser1).flatMap(_.assert200)
+      expected <- TestDataFileUtil.readTestData("valuesE2EV2", s"$fileBasename.jsonld")
+    } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected)))
 
   private val customValueUUID     = "CpO1TIDf1IS55dQbyIuDsA"
   private val customValueIri: IRI = s"http://rdfh.ch/0001/a-thing/values/$customValueUUID"
@@ -669,17 +665,12 @@ class ValuesEndpointsE2ESpec extends E2ESpec {
       )
 
       testDingValues.foreach { case (valueTypeName, valueUuid) =>
-        testValue(
-          resourceIri = TestDing.iri,
-          valueUuid = valueUuid,
-          fileBasename = s"get-$valueTypeName-response",
-        )
+        verifyValueContent(TestDing.iri, valueUuid, s"get-$valueTypeName-response")
       }
-
-      testValue(
-        resourceIri = AThingPicture.iri,
-        valueUuid = AThingPicture.stillImageFileValueUuid,
-        fileBasename = "get-still-image-file-value-response",
+      verifyValueContent(
+        AThingPicture.iri,
+        AThingPicture.stillImageFileValueUuid,
+        "get-still-image-file-value-response",
       )
     }
 
