@@ -5,26 +5,20 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko.http.scaladsl.model.*
-import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.scalatest.compatible.Assertion
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json.JsString
-import sttp.client4.UriContext
+import sttp.client4.*
 import zio.*
 import zio.json.*
 import zio.json.ast.*
 import zio.test.*
 
-import java.net.URLEncoder
 import java.nio.file.Paths
 import java.time.Instant
 import java.util.UUID
-import scala.concurrent.Await
-import scala.concurrent.duration.*
 import scala.xml.XML
 
 import dsp.errors.AssertionException
@@ -47,6 +41,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.util.*
@@ -54,9 +49,6 @@ import org.knora.webapi.util.*
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
-  private val password          = SharedTestDataADM.testPass
 
   private val intValueIri                      = new MutableTestIri
   private val intValueWithCustomPermissionsIri = new MutableTestIri
@@ -86,13 +78,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
   object AThing {
-    val iri: IRI           = "http://rdfh.ch/0001/a-thing"
-    val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
+    val iri: IRI = "http://rdfh.ch/0001/a-thing"
   }
 
   object TestDing {
-    val iri: IRI           = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
-    val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
+    val iri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
 
     val intValueIri: IRI      = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg"
     val decimalValueIri: IRI  = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg"
@@ -128,15 +118,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
   object AThingPicture {
     val iri: IRI                     = "http://rdfh.ch/0001/a-thing-picture"
-    val iriEncoded: String           = URLEncoder.encode(iri, "UTF-8")
     val stillImageFileValueUuid: IRI = "goZ7JFRNSeqF-dNxsqAS7Q"
   }
 
-  private def getResourceWithValues(
-    resourceIri: IRI,
-    propertyIrisForGravsearch: Seq[SmartIri],
-    userEmail: String,
-  ): JsonLDDocument = {
+  private def getResourceWithValues(resourceIri: IRI, propertyIrisForGravsearch: Seq[SmartIri]) = {
     // Make a Gravsearch query from a template.
     val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
       .getResourceWithSpecifiedProperties(
@@ -146,14 +131,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       .toString()
 
     // Run the query.
-
-    val request = Post(
-      baseApiUrl + "/v2/searchextended",
-      HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-    ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
-    val response: HttpResponse = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK, response.toString)
-    responseToJsonLDDocument(response)
+    UnsafeZioRun.runOrThrow(
+      TestApiClient
+        .postSparql(uri"/v2/searchextended", gravsearchQuery, anythingUser1)
+        .flatMap(_.assert200)
+        .mapAttempt(JsonLDUtil.parseJsonLD),
+    )
   }
 
   private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
@@ -203,15 +186,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       }
 
-  private def getResourceLastModificationDate(resourceIri: IRI, userEmail: String): Option[Instant] = {
-    val request = Get(
-      baseApiUrl + s"/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}",
-    ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
-    val response: HttpResponse = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK, response.toString)
-    val resource: JsonLDDocument = responseToJsonLDDocument(response)
-    parseResourceLastModificationDate(resource)
-  }
+  private def getResourceLastModificationDate(resourceIri: IRI) =
+    UnsafeZioRun.runOrThrow(
+      TestApiClient
+        .getJsonLdDocument(uri"/v2/resourcespreview/$resourceIri", anythingUser1)
+        .flatMap(_.assert200)
+        .mapAttempt(parseResourceLastModificationDate),
+    )
 
   private def checkLastModDate(
     resourceIri: IRI,
@@ -234,13 +215,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     propertyIriForGravsearch: SmartIri,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
-    userEmail: String,
-  ): JsonLDObject = {
-    val resource: JsonLDDocument = getResourceWithValues(
-      resourceIri = resourceIri,
-      propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
-      userEmail = userEmail,
-    )
+  ) = {
+    val resource: JsonLDDocument =
+      getResourceWithValues(resourceIri = resourceIri, propertyIrisForGravsearch = Seq(propertyIriForGravsearch))
 
     val receivedResourceIri: IRI = UnsafeZioRun.runOrThrow(resource.body.getRequiredIdValueAsKnoraDataIri).toString
 
@@ -677,16 +654,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
    * @param fileBasename the basename of the test data file.
    */
   private def testValue(resourceIri: IRI, valueUuid: String, fileBasename: String): Unit = {
-    val resourceIriEncoded = URLEncoder.encode(resourceIri, "UTF-8")
-    val request = Get(s"$baseApiUrl/v2/values/$resourceIriEncoded/$valueUuid") ~> addCredentials(
-      BasicHttpCredentials(SharedTestDataADM.anythingUser1.email, SharedTestDataADM.testPass),
+    val responseStr = UnsafeZioRun.runOrThrow(
+      TestApiClient.getJsonLd(uri"/v2/values/$resourceIri/$valueUuid", anythingUser1).flatMap(_.assert200),
     )
-    val response: HttpResponse = singleAwaitingRequest(request)
-    val responseStr            = responseToString(response)
-    assert(response.status == StatusCodes.OK, responseStr)
     val expectedResponseStr = readTestData("valuesE2EV2", s"$fileBasename.jsonld")
     compareJSONLDForResourcesResponse(expectedJSONLD = expectedResponseStr, receivedJSONLD = responseStr)
   }
+
   private val customValueUUID     = "CpO1TIDf1IS55dQbyIuDsA"
   private val customValueIri: IRI = s"http://rdfh.ch/0001/a-thing/values/$customValueUUID"
 
@@ -727,17 +701,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     }
 
     "get a past version of a value, given its UUID and a timestamp" in {
-      val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri)
       val valueUuid   = "pLlW4ODASumZfZFbJdpw1g"
       val timestamp   = "20190212T090510Z"
 
-      val request = Get(baseApiUrl + s"/v2/values/$resourceIri/$valueUuid?version=$timestamp") ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLdDocument(uri"/v2/values/$resourceIri/$valueUuid?version=$timestamp", anythingUser1)
+          .flatMap(_.assert200),
       )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-
       val value: JsonLDObject = getValueFromResource(
         resource = responseJsonDoc,
         propertyIriInResult = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
@@ -754,7 +726,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int                             = 4
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -770,15 +742,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseStr: String    = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseStr)
-      val responseJsonDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       intValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -794,7 +761,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedIntValue: Int = savedValue
@@ -823,14 +789,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIri)
       val valueUUID = responseJsonDoc.body
         .getRequiredString(KnoraApiV2Complex.ValueHasUUID)
@@ -856,15 +818,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
-
-      val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-      val invalidIri: Boolean  = errorMessage.contains(s"IRI: '$customValueIri' already exists, try another one.")
+      val errorMessage: String = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/values", params, anythingUser1).flatMap(_.assert400),
+      )
+      val invalidIri: Boolean = errorMessage.contains(s"IRI: '$customValueIri' already exists, try another one.")
       invalidIri should be(true)
     }
 
@@ -889,14 +846,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueUUID: String = responseJsonDoc.body
         .getRequiredString(KnoraApiV2Complex.ValueHasUUID)
         .fold(msg => throw BadRequestException(msg), identity)
@@ -927,14 +879,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
            |  }
            |}""".stripMargin
-
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "create an integer value with a custom creation date" in {
@@ -961,14 +908,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       intValueForRsyncIri.set(valueIri)
 
@@ -1009,14 +951,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIri)
       val valueUUID = responseJsonDoc.body
         .getRequiredString(KnoraApiV2Complex.ValueHasUUID)
@@ -1047,13 +985,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.BadRequest, responseAsString)
+      UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "create an integer value with custom permissions" in {
@@ -1061,7 +995,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int                             = 1
       val customPermissions: String                 = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -1078,14 +1012,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       intValueWithCustomPermissionsIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1097,7 +1027,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueWithCustomPermissionsIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val intValueAsInt: Int = savedValue
@@ -1114,21 +1043,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val valueAsString: String                     = "text without standoff"
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity: String = createTextValueWithoutStandoffRequest(
         resourceIri = resourceIri,
         valueAsString = valueAsString,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1140,7 +1065,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -1152,26 +1076,21 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "not update a text value so it's empty" in {
       val resourceIri: IRI      = AThing.iri
       val valueAsString: String = ""
-
       val jsonLDEntity = updateTextValueWithoutStandoffRequest(
         resourceIri = resourceIri,
         valueIri = textValueWithoutStandoffIri.get,
         valueAsString = valueAsString,
       )
-
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLd(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "update a text value without standoff" in {
       val resourceIri: IRI                          = AThing.iri
       val valueAsString: String                     = "text without standoff updated"
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateTextValueWithoutStandoffRequest(
         resourceIri = resourceIri,
@@ -1179,14 +1098,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueAsString = valueAsString,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1198,7 +1113,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -1211,7 +1125,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val valueAsString: String                     = "text without standoff updated"
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateTextValueWithCommentRequest(
         resourceIri = resourceIri,
@@ -1220,14 +1134,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueHasComment = "Adding a comment",
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1239,7 +1149,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -1252,7 +1161,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val valueAsString: String                     = "text without standoff updated"
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateTextValueWithCommentRequest(
         resourceIri = resourceIri,
@@ -1261,14 +1170,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueHasComment = "Updated comment",
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1280,7 +1185,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -1294,7 +1198,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueAsString: String                     = "this is a text value that has a comment"
       val valueHasComment: String                   = "this is a comment"
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -1311,14 +1215,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1330,7 +1230,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -1346,7 +1245,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create a text value with standoff test1" in {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
@@ -1354,15 +1253,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         mappingIri = standardMappingIri,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseStr            = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseStr)
-      val responseJsonDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1374,7 +1268,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithStandoffIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -1403,7 +1296,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |""".stripMargin
 
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
@@ -1411,14 +1304,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         mappingIri = standardMappingIri,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1430,7 +1319,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithStandoffIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -1454,7 +1342,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 """.stripMargin
 
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
@@ -1462,14 +1350,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         mappingIri = standardMappingIri,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
       valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
@@ -1480,7 +1364,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = valueIri,
-        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -1491,17 +1374,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     "create a text value with standoff containing escaped text" in {
       val resourceIri                               = AThing.iri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
       val jsonLDEntity =
         FileUtil.readTextFile(Paths.get("test_data/generated_test_data/valuesE2EV2/CreateValueWithEscape.jsonld"))
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithEscapeIri.set(valueIri)
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
 
@@ -1511,7 +1390,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = valueIri,
-        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -1539,7 +1417,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |""".stripMargin
 
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
@@ -1547,14 +1425,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         mappingIri = standardMappingIri,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, responseToString(response))
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
       valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
@@ -1565,7 +1439,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = valueIri,
-        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml = savedValue
@@ -1589,19 +1462,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         mappingIri = standardMappingIri,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest)
+      UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "create a TextValue from XML representing HTML with an attribute containing escaped quotes" in {
       // Create the mapping.
-
       val xmlFileToSend = Paths.get("test_data/test_route/texts/mappingForHTML.xml")
-
       val mappingParams =
         s"""{
            |    "knora-api:mappingHasName": "HTMLMapping",
@@ -1614,30 +1482,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |        "knora-api": "${KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
            |    }
            |}""".stripMargin
-
-      val formDataMapping = Multipart.FormData(
-        Multipart.FormData.BodyPart(
-          "json",
-          HttpEntity(ContentTypes.`application/json`, mappingParams),
-        ),
-        Multipart.FormData.BodyPart(
-          "xml",
-          HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend),
-          Map("filename" -> "HTMLMapping.xml"),
-        ),
+      val multipartBody = Seq(
+        multipart("json", mappingParams).contentType("application/json"),
+        multipartFile("xml", xmlFileToSend).contentType("text/xml(UTF-8)"),
       )
-
-      // create standoff from XML
-      val mappingRequest = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~>
-        addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val mappingResponse: HttpResponse = singleAwaitingRequest(mappingRequest)
-      assert(mappingResponse.status == StatusCodes.OK, mappingResponse.toString)
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.postMultiPart[Json](uri"/v2/mapping", multipartBody, anythingUser1).flatMap(_.assert200),
+      )
 
       // Create the text value.
 
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val textValueAsXml =
         """<?xml version="1.0" encoding="UTF-8"?>
@@ -1651,14 +1508,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         mappingIri = s"${SharedTestDataADM.anythingProjectIri}/mappings/HTMLMapping",
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithStandoffIri.set(valueIri)
 
       val savedValue: JsonLDObject = getValue(
@@ -1667,7 +1520,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = valueIri,
-        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -1677,27 +1529,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     }
 
     "not create an empty text value" in {
-      val resourceIri: IRI      = AThing.iri
-      val valueAsString: String = ""
-
-      val jsonLDEntity = createTextValueWithoutStandoffRequest(
-        resourceIri = resourceIri,
-        valueAsString = valueAsString,
+      UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/values", createTextValueWithoutStandoffRequest(AThing.iri, ""), anythingUser1)
+          .flatMap(_.assert400),
       )
-
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
     }
 
     "create a decimal value" in {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri                               = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
       val decimalValueAsDecimal                     = BigDecimal(4.3)
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -1717,14 +1560,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       decimalValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1736,7 +1575,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = decimalValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedDecimalValueAsDecimal: BigDecimal = savedValue.requireDatatypeValueInObject(
@@ -1760,7 +1598,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasEndMonth                      = 10
       val dateValueHasEndDay                        = 6
       val dateValueHasEndEra                        = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = createDateValueWithDayPrecisionRequest(
         resourceIri = resourceIri,
@@ -1775,14 +1613,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasEndEra,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1794,7 +1628,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -1845,7 +1678,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasEndYear                       = 2018
       val dateValueHasEndMonth                      = 11
       val dateValueHasEndEra                        = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = createDateValueWithMonthPrecisionRequest(
         resourceIri = resourceIri,
@@ -1858,14 +1691,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasEndEra,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1877,7 +1706,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -1928,7 +1756,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasStartEra                      = "CE"
       val dateValueHasEndYear                       = 2019
       val dateValueHasEndEra                        = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = createDateValueWithYearPrecisionRequest(
         resourceIri = resourceIri,
@@ -1939,14 +1767,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasEndEra,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -1958,7 +1782,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -2005,7 +1828,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasStartMonth                    = 10
       val dateValueHasStartDay                      = 5
       val dateValueHasStartEra                      = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity: String = createDateValueWithDayPrecisionRequest(
         resourceIri = resourceIri,
@@ -2020,14 +1843,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -2039,7 +1858,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -2083,7 +1901,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasStartYear                     = 2018
       val dateValueHasStartMonth                    = 10
       val dateValueHasStartEra                      = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = createDateValueWithMonthPrecisionRequest(
         resourceIri = resourceIri,
@@ -2096,14 +1914,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -2115,7 +1929,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -2160,7 +1973,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasCalendar                      = "GREGORIAN"
       val dateValueHasStartYear                     = 2018
       val dateValueHasStartEra                      = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = createDateValueWithYearPrecisionRequest(
         resourceIri = resourceIri,
@@ -2171,14 +1984,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
@@ -2190,7 +1999,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -2234,7 +2042,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasStartYear                     = 1407
       val dateValueHasStartMonth                    = 1
       val dateValueHasStartDay                      = 26
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = createIslamicDateValueWithDayPrecisionRequest(
         resourceIri = resourceIri,
@@ -2247,13 +2055,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndDay = dateValueHasStartDay,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -2267,7 +2071,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -2308,7 +2111,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasEndYear                       = 1407
       val dateValueHasEndMonth                      = 1
       val dateValueHasEndDay                        = 26
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = createIslamicDateValueWithDayPrecisionRequest(
         resourceIri = resourceIri,
@@ -2321,13 +2124,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndDay = dateValueHasEndDay,
       )
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -2341,7 +2140,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -2378,7 +2176,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
       val booleanValue: Boolean                     = true
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -2394,13 +2192,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       booleanValueIri.set(valueIri)
@@ -2414,7 +2208,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = booleanValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val booleanValueAsBoolean = savedValue
@@ -2426,7 +2219,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create a geometry value" in {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -2442,13 +2235,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       geometryValueIri.set(valueIri)
@@ -2462,7 +2251,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geometryValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val geometryValueAsGeometry: String =
@@ -2477,7 +2265,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
       val intervalStart                             = BigDecimal("1.2")
       val intervalEnd                               = BigDecimal("3.4")
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -2501,13 +2289,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       intervalValueIri.set(valueIri)
@@ -2521,7 +2305,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intervalValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedIntervalValueHasStart: BigDecimal = savedValue.requireDatatypeValueInObject(
@@ -2545,7 +2328,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
       val timeStamp                                 = Instant.parse("2019-08-28T15:59:12.725007Z")
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -2565,13 +2348,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       timeValueIri.set(valueIri)
@@ -2585,7 +2364,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = timeValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
@@ -2601,7 +2379,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
       val listNode                                  = "http://rdfh.ch/lists/0001/treeList03"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -2620,13 +2398,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       listValueIri.set(valueIri)
@@ -2640,7 +2414,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = listValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedListValueHasListNode: IRI =
@@ -2655,7 +2428,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
       val color                                     = "#ff3333"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -2672,13 +2445,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       colorValueIri.set(valueIri)
@@ -2692,7 +2461,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = colorValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedColor: String = savedValue
@@ -2705,7 +2473,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
       val uri                                       = "https://www.knora.org"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -2725,13 +2493,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       uriValueIri.set(valueIri)
@@ -2745,7 +2509,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = uriValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedUri: IRI = savedValue.requireDatatypeValueInObject(
@@ -2761,7 +2524,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
       val geonameCode                               = "2661604"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -2778,13 +2541,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       geonameValueIri.set(valueIri)
@@ -2798,7 +2557,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geonameValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedGeonameCode: String =
@@ -2812,7 +2570,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val linkPropertyIri: SmartIri                 = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
       val linkValuePropertyIri: SmartIri            = linkPropertyIri.fromLinkPropToLinkValueProp
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity: String =
         s"""{
@@ -2831,14 +2589,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       linkValueIri.set(valueIri)
@@ -2856,7 +2609,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedTarget: JsonLDObject = savedValue
@@ -2897,14 +2649,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val bodyStr                = Await.result(Unmarshal(response.entity).to[String], 3.seconds)
-      assert(response.status == StatusCodes.OK, bodyStr)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIri)
@@ -2926,7 +2673,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int                             = 5
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -2943,14 +2690,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseStr: String    = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseStr)
-      val responseJsonDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       intValueIri.set(valueIri)
@@ -2970,7 +2712,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val intValueAsInt: Int =
@@ -2982,7 +2723,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int                             = 6
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
       val valueCreationDate                         = Instant.now
 
       val jsonLDEntity =
@@ -3005,13 +2746,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       intValueForRsyncIri.set(valueIri)
@@ -3025,7 +2762,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueForRsyncIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val intValueAsInt: Int =
@@ -3045,7 +2781,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int                             = 7
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
       val newValueVersionIri: IRI                   = s"http://rdfh.ch/0001/a-thing/values/W8COP_RXRpqVsjW9NL2JYg"
 
       val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
@@ -3055,14 +2791,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         newValueVersionIri = newValueVersionIri,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == newValueVersionIri)
@@ -3074,7 +2805,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueForRsyncIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val intValueAsInt: Int =
@@ -3094,13 +2824,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         newValueVersionIri = newValueVersionIri,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.BadRequest, responseAsString)
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "not update an integer value with an invalid custom new value version IRI" in {
@@ -3115,13 +2841,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         newValueVersionIri = newValueVersionIri,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.BadRequest, responseAsString)
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "not update an integer value with a custom new value version IRI that refers to the wrong project code" in {
@@ -3136,13 +2858,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         newValueVersionIri = newValueVersionIri,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.BadRequest, responseAsString)
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "not update an integer value with a custom new value version IRI that refers to the wrong resource" in {
@@ -3157,13 +2875,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         newValueVersionIri = newValueVersionIri,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.BadRequest, responseAsString)
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "not update an integer value if the simple schema is submitted" in {
@@ -3185,13 +2899,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.BadRequest, responseAsString)
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "update an integer value with custom permissions" in {
@@ -3199,7 +2909,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int                             = 3879
       val customPermissions: String                 = "CR http://rdfh.ch/groups/0001/thing-searcher"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -3217,13 +2927,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       intValueWithCustomPermissionsIri.set(valueIri)
@@ -3237,7 +2943,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueWithCustomPermissionsIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val intValueAsInt: Int =
@@ -3253,7 +2958,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val customPermissions: String                 = "CR http://rdfh.ch/groups/0001/thing-searcher|V knora-admin:KnownUser"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -3270,13 +2975,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       intValueIri.set(valueIri)
@@ -3290,7 +2991,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val hasPermissions = savedValue
@@ -3303,7 +3003,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
       val decimalValue                              = BigDecimal(5.6)
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -3324,13 +3024,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       decimalValueIri.set(valueIri)
@@ -3344,7 +3040,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = decimalValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedDecimalValue: BigDecimal = savedValue.requireDatatypeValueInObject(
@@ -3360,7 +3055,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI = AThing.iri
 
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -3380,13 +3075,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithStandoffIri.set(valueIri)
@@ -3400,7 +3091,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithStandoffIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -3412,17 +3102,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     "update a text value with standoff containing escaped text" in {
       val resourceIri                               = AThing.iri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
       val jsonLDEntity =
         FileUtil.readTextFile(Paths.get("test_data/generated_test_data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
       val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
-      val request = Put(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .putJsonLdDocument(uri"/v2/values", jsonLDEntityWithResourceValueIri, anythingUser1)
+          .flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithEscapeIri.set(valueIri)
@@ -3434,7 +3122,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = valueIri,
-        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -3453,7 +3140,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueAsString: String                     = "this is a text value that has an updated comment"
       val valueHasComment: String                   = "this is an updated comment"
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateTextValueWithCommentRequest(
         resourceIri = resourceIri,
@@ -3462,13 +3149,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueHasComment = valueHasComment,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithoutStandoffIri.set(valueIri)
@@ -3482,7 +3165,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -3507,7 +3189,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasEndMonth                      = 12
       val dateValueHasEndDay                        = 6
       val dateValueHasEndEra                        = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateDateValueWithDayPrecisionRequest(
         resourceIri = resourceIri,
@@ -3523,13 +3205,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasEndEra,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -3543,7 +3221,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -3594,7 +3271,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasEndYear                       = 2018
       val dateValueHasEndMonth                      = 12
       val dateValueHasEndEra                        = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateDateValueWithMonthPrecisionRequest(
         resourceIri = resourceIri,
@@ -3608,13 +3285,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasEndEra,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -3628,7 +3301,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -3679,7 +3351,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasStartEra                      = "CE"
       val dateValueHasEndYear                       = 2020
       val dateValueHasEndEra                        = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateDateValueWithYearPrecisionRequest(
         resourceIri = resourceIri,
@@ -3691,13 +3363,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasEndEra,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -3711,7 +3379,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -3760,7 +3427,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasStartMonth                    = 10
       val dateValueHasStartDay                      = 6
       val dateValueHasStartEra                      = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateDateValueWithDayPrecisionRequest(
         resourceIri = resourceIri,
@@ -3776,13 +3443,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -3796,7 +3459,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -3840,7 +3502,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasStartYear                     = 2018
       val dateValueHasStartMonth                    = 7
       val dateValueHasStartEra                      = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateDateValueWithMonthPrecisionRequest(
         resourceIri = resourceIri,
@@ -3854,13 +3516,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -3874,7 +3532,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -3921,7 +3578,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val dateValueHasCalendar                      = "GREGORIAN"
       val dateValueHasStartYear                     = 2019
       val dateValueHasStartEra                      = "CE"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateDateValueWithYearPrecisionRequest(
         resourceIri = resourceIri,
@@ -3933,13 +3590,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -3953,7 +3606,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -3996,7 +3648,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
       val booleanValue: Boolean                     = false
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -4013,13 +3665,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       booleanValueIri.set(valueIri)
@@ -4033,7 +3681,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = booleanValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val booleanValueAsBoolean = savedValue
@@ -4045,7 +3692,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "update a geometry value" in {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -4062,13 +3709,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       geometryValueIri.set(valueIri)
@@ -4082,7 +3725,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geometryValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val geometryValueAsGeometry: String =
@@ -4097,7 +3739,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
       val intervalStart                             = BigDecimal("5.6")
       val intervalEnd                               = BigDecimal("7.8")
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -4122,13 +3764,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       intervalValueIri.set(valueIri)
@@ -4142,7 +3780,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intervalValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedIntervalValueHasStart: BigDecimal = savedValue.requireDatatypeValueInObject(
@@ -4166,7 +3803,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
       val timeStamp                                 = Instant.parse("2019-12-16T09:14:56.409249Z")
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -4187,13 +3824,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       timeValueIri.set(valueIri)
@@ -4207,7 +3840,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = timeValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
@@ -4223,7 +3855,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
       val listNode                                  = "http://rdfh.ch/lists/0001/treeList02"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -4243,13 +3875,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       listValueIri.set(valueIri)
@@ -4263,7 +3891,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = listValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedListValueHasListNode: IRI =
@@ -4278,7 +3905,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
       val color                                     = "#ff3344"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -4296,13 +3923,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       colorValueIri.set(valueIri)
@@ -4316,7 +3939,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = colorValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedColor: String = savedValue
@@ -4329,7 +3951,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
       val uri                                       = "https://docs.knora.org"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -4350,13 +3972,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       uriValueIri.set(valueIri)
@@ -4370,7 +3988,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = uriValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedUri: IRI = savedValue.requireDatatypeValueInObject(
@@ -4386,7 +4003,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
       val geonameCode                               = "2988507"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity =
         s"""{
@@ -4404,13 +4021,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       geonameValueIri.set(valueIri)
@@ -4424,7 +4037,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geonameValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedGeonameCode: String =
@@ -4439,7 +4051,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val linkPropertyIri: SmartIri                 = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
       val linkValuePropertyIri: SmartIri            = linkPropertyIri.fromLinkPropToLinkValueProp
       val linkTargetIri: IRI                        = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateLinkValueRequest(
         resourceIri = resourceIri,
@@ -4447,14 +4059,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         targetResourceIri = linkTargetIri,
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       linkValueIri.set(valueIri)
@@ -4477,7 +4084,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedTarget: JsonLDObject = savedValue
@@ -4494,7 +4100,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val linkValuePropertyIri: SmartIri            = linkPropertyIri.fromLinkPropToLinkValueProp
       val linkTargetIri: IRI                        = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
       val comment                                   = "adding a comment"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateLinkValueRequest(
         resourceIri = resourceIri,
@@ -4503,14 +4109,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         comment = Some(comment),
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       linkValueIri.set(valueIri)
@@ -4532,7 +4133,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedComment: String = savedValue
@@ -4547,7 +4147,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val linkValuePropertyIri: SmartIri            = linkPropertyIri.fromLinkPropToLinkValueProp
       val linkTargetIri: IRI                        = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
       val comment                                   = "changing only the comment"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
 
       val jsonLDEntity = updateLinkValueRequest(
         resourceIri = resourceIri,
@@ -4556,14 +4156,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         comment = Some(comment),
       )
 
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       linkValueIri.set(valueIri)
@@ -4585,7 +4180,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedComment: String = savedValue
@@ -4598,7 +4192,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                          = AThing.iri
       val linkPropertyIri: SmartIri                 = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
       val linkValuePropertyIri: SmartIri            = linkPropertyIri.fromLinkPropToLinkValueProp
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
       val comment                                   = "Initial comment"
 
       val jsonLDEntity =
@@ -4619,14 +4213,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       linkValueIri.set(valueIri)
@@ -4640,7 +4229,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        userEmail = anythingUserEmail,
       )
 
       val savedTarget: JsonLDObject = savedValue
@@ -4657,18 +4245,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     }
 
     "delete an integer value" in {
-      val jsonLDEntity = deleteIntValueRequest(
-        resourceIri = AThing.iri,
-        valueIri = intValueIri.get,
-        maybeDeleteComment = Some("this value was incorrect"),
+      val jsonLDEntity = deleteIntValueRequest(AThing.iri, intValueIri.get, Some("this value was incorrect"))
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLDEntity, anythingUser1).flatMap(_.assert200),
       )
-
-      val request = Post(
-        baseApiUrl + "/v2/values/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
     }
 
     "delete an integer value, supplying a custom delete date" in {
@@ -4692,13 +4272,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      val request = Post(
-        baseApiUrl + "/v2/values/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
     }
 
     "not delete an integer value if the simple schema is submitted" in {
@@ -4716,13 +4292,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        baseApiUrl + "/v2/values/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.BadRequest, responseAsString)
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "delete an integer value without supplying a delete comment" in {
@@ -4735,20 +4307,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         maybeDeleteComment = None,
       )
 
-      val deleteRequest = Post(
-        baseApiUrl + "/v2/values/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingUser2.email, password))
-      val deleteResponse: HttpResponse = singleAwaitingRequest(deleteRequest)
-      assert(deleteResponse.status == StatusCodes.OK, deleteResponse.toString)
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLDEntity, anythingUser2).flatMap(_.assert200),
+      )
 
       // Request the resource as it was before the value was deleted.
-
-      val getRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}?version=${URLEncoder
-          .encode("2018-05-28T15:52:03.897Z", "UTF-8")}")
-      val getResponse: HttpResponse = singleAwaitingRequest(getRequest)
-      val getResponseAsString       = responseToString(getResponse)
-      assert(getResponse.status == StatusCodes.OK, getResponseAsString)
+      val timestamp = "2018-05-28T15:52:03.897Z"
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri?version=$timestamp", anythingUser2).flatMap(_.assert200),
+      )
     }
 
     "delete a link between two resources" in {
@@ -4766,13 +4333,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      val request = Post(
-        baseApiUrl + "/v2/values/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      val _ = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
     }
 
     "update a TextValue comment containing linebreaks should store linebreaks as Unicode" in {

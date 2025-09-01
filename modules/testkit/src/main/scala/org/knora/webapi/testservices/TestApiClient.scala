@@ -49,6 +49,17 @@ final case class TestApiClient(
     f(request).send(backend)
   }
 
+  def deleteJsonLd(
+    relativeUri: Uri,
+    user: Option[User],
+    update: RequestUpdate[String],
+  ): Task[Response[Either[String, String]]] = {
+    val request = update(basicRequest.delete(relativeUri))
+      .contentType(MediaType.unsafeApply("application", "ld+json"))
+      .response(asString)
+    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+  }
+
   def getAsString(
     relativeUri: Uri,
     f: Request[Either[String, String]] => Request[Either[String, String]],
@@ -208,6 +219,22 @@ final case class TestApiClient(
         .send(backend)
     }
 
+  def putJsonLdDocument(
+    relativeUri: Uri,
+    jsonLdBody: String,
+    user: Option[User],
+    update: RequestUpdate[JsonLDDocument],
+  ): ZIO[Any, Throwable, Response[Either[String, JsonLDDocument]]] = {
+    val request = update(
+      basicRequest
+        .put(relativeUri)
+        .body(jsonLdBody)
+        .contentType(MediaType.unsafeApply("application", "ld+json"))
+        .response(asJsonLdDocument),
+    )
+    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+  }
+
   def postSparql(
     relativeUri: Uri,
     sparqlQuery: String,
@@ -255,6 +282,13 @@ object TestApiClient {
     f: Request[Either[String, A]] => Request[Either[String, A]],
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.deleteJson(relativeUri, f))
+
+  def deleteJsonLd(
+    relativeUri: Uri,
+    user: User,
+    update: RequestUpdate[String] = identity,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.deleteJsonLd(relativeUri, Some(user), update))
 
   def getJson[A: JsonDecoder](
     relativeUri: Uri,
@@ -357,12 +391,26 @@ object TestApiClient {
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.putJsonLd(relativeUri, jsonLdBody, user))
 
+  def putJsonLdDocument(
+    relativeUri: Uri,
+    jsonLdBody: String,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.putJsonLdDocument(relativeUri, jsonLdBody, Some(user), r => r))
+
   def postMultiPart[A: JsonDecoder](
     relativeUri: Uri,
     body: Seq[Part[BasicBodyPart]],
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.postMultiPart[A](relativeUri, body, user))
+
+  def postSparql(
+    relativeUri: Uri,
+    sparqlQuery: String,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    postSparql(relativeUri, sparqlQuery, Some(user), identity)
 
   def postSparql(
     relativeUri: Uri,
