@@ -28,7 +28,7 @@ object Dependencies {
   val ZioConfigVersion            = "4.0.4"
   val ZioLoggingVersion           = "2.5.1"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.4.1"
+  val ZioMetricsConnectorsVersion = "2.4.3"
   val ZioPreludeVersion           = "1.0.0-RC41"
   val ZioSchemaVersion            = "1.7.4"
   val ZioMockVersion              = "1.0.0-RC12"
@@ -121,14 +121,14 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.5.2" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.5.3" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.81"
 
   // caching
-  val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
+  val ehcache = "org.ehcache" % "ehcache" % "3.11.1"
 
   // other
   val gwtServlet     = "com.google.gwt"        % "gwt-servlet"      % "2.10.0"
@@ -169,8 +169,8 @@ object Dependencies {
   )
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"  %% "zio-opentelemetry"              % "3.1.7",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.19.1",
+    "dev.zio"  %% "zio-opentelemetry"              % "3.1.8",
+    "io.sentry" % "sentry-opentelemetry-agentless" % "8.20.0",
   )
 
   val integrationTestDependencies = Seq(
