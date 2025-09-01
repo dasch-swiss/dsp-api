@@ -19,6 +19,7 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.util.UUID
 import scala.xml.XML
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
@@ -666,21 +667,25 @@ class ValuesEndpointsE2ESpec extends E2ESpec {
       val valueUuid   = "pLlW4ODASumZfZFbJdpw1g"
       val timestamp   = "20190212T090510Z"
 
-      val responseJsonDoc = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLdDocument(uri"/v2/values/$resourceIri/$valueUuid", anythingUser1, addVersionQueryParam(timestamp))
-          .flatMap(_.assert200),
+      UnsafeZioRun.runOrThrow(
+        for {
+          responseJsonDoc <- TestApiClient
+                               .getJsonLdDocument(
+                                 uri"/v2/values/$resourceIri/$valueUuid",
+                                 anythingUser1,
+                                 addVersionQueryParam(timestamp),
+                               )
+                               .flatMap(_.assert200)
+          value <- ZIO.attempt(
+                     getValueFromResource(
+                       resource = responseJsonDoc,
+                       propertyIriInResult = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
+                       expectedValueIri = "http://rdfh.ch/0001/thing-with-history/values/1b",
+                     ),
+                   )
+          actual <- ZIO.fromEither(value.getRequiredInt(KA.IntValueAsInt))
+        } yield actual should ===(2),
       )
-      val value: JsonLDObject = getValueFromResource(
-        resource = responseJsonDoc,
-        propertyIriInResult = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
-        expectedValueIri = "http://rdfh.ch/0001/thing-with-history/values/1b",
-      )
-
-      val intValueAsInt: Int = value
-        .getRequiredInt(KA.IntValueAsInt)
-        .fold(e => throw BadRequestException(e), identity)
-      intValueAsInt should ===(2)
     }
 
     "create an integer value" in {
