@@ -19,7 +19,6 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.util.UUID
 import scala.xml.XML
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
@@ -37,6 +36,8 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.testservices.RequestsUpdates
+import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
@@ -626,51 +627,37 @@ class ValuesEndpointsE2ESpec extends E2ESpec {
        |  }
        |}""".stripMargin
 
-  /**
-   * Gets a value from a resource by UUID, compares the response to the expected response, and
-   * adds the response to the client test data.
-   *
-   * @param resourceIri  the resource IRI.
-   * @param valueUuid    the value UUID.
-   * @param fileBasename the basename of the test data file.
-   */
-  private def verifyValueContent(resourceIri: IRI, valueUuid: String, fileBasename: String) =
-    UnsafeZioRun.runOrThrow(for {
-      actual   <- TestApiClient.getJsonLd(uri"/v2/values/$resourceIri/$valueUuid", anythingUser1).flatMap(_.assert200)
-      expected <- TestDataFileUtil.readTestData("valuesE2EV2", s"$fileBasename.jsonld")
-    } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected)))
-
   private val customValueUUID     = "CpO1TIDf1IS55dQbyIuDsA"
   private val customValueIri: IRI = s"http://rdfh.ch/0001/a-thing/values/$customValueUUID"
 
   "The values v2 endpoint" should {
 
     "get the latest versions of values, given their UUIDs" in {
-      // The UUIDs of values in TestDing.
-      val testDingValues: Map[String, String] = Map(
-        "int-value"                   -> TestDing.intValueUuid,
-        "decimal-value"               -> TestDing.decimalValueUuid,
-        "date-value"                  -> TestDing.dateValueUuid,
-        "boolean-value"               -> TestDing.booleanValueUuid,
-        "uri-value"                   -> TestDing.uriValueUuid,
-        "interval-value"              -> TestDing.intervalValueUuid,
-        "time-value"                  -> TestDing.timeValueUuid,
-        "color-value"                 -> TestDing.colorValueUuid,
-        "geom-value"                  -> TestDing.geomValueUuid,
-        "geoname-value"               -> TestDing.geonameValueUuid,
-        "text-value-with-standoff"    -> TestDing.textValueWithStandoffUuid,
-        "text-value-without-standoff" -> TestDing.textValueWithoutStandoffUuid,
-        "list-value"                  -> TestDing.listValueUuid,
-        "link-value"                  -> TestDing.linkValueUuid,
-      )
-
-      testDingValues.foreach { case (valueTypeName, valueUuid) =>
-        verifyValueContent(TestDing.iri, valueUuid, s"get-$valueTypeName-response")
-      }
-      verifyValueContent(
-        AThingPicture.iri,
-        AThingPicture.stillImageFileValueUuid,
-        "get-still-image-file-value-response",
+      UnsafeZioRun.runOrThrow(
+        ZIO.foreach(
+          Seq(
+            (TestDing.iri, "int-value", TestDing.intValueUuid),
+            (TestDing.iri, "decimal-value", TestDing.decimalValueUuid),
+            (TestDing.iri, "date-value", TestDing.dateValueUuid),
+            (TestDing.iri, "boolean-value", TestDing.booleanValueUuid),
+            (TestDing.iri, "uri-value", TestDing.uriValueUuid),
+            (TestDing.iri, "interval-value", TestDing.intervalValueUuid),
+            (TestDing.iri, "time-value", TestDing.timeValueUuid),
+            (TestDing.iri, "color-value", TestDing.colorValueUuid),
+            (TestDing.iri, "geom-value", TestDing.geomValueUuid),
+            (TestDing.iri, "geoname-value", TestDing.geonameValueUuid),
+            (TestDing.iri, "text-value-with-standoff", TestDing.textValueWithStandoffUuid),
+            (TestDing.iri, "text-value-without-standoff", TestDing.textValueWithoutStandoffUuid),
+            (TestDing.iri, "list-value", TestDing.listValueUuid),
+            (TestDing.iri, "link-value", TestDing.linkValueUuid),
+            (AThingPicture.iri, "still-image-file-value", AThingPicture.stillImageFileValueUuid),
+          ),
+        ) { case (iri, valueTypeName, valueUuid) =>
+          for {
+            actual   <- TestApiClient.getJsonLd(uri"/v2/values/$iri/$valueUuid", anythingUser1).flatMap(_.assert200)
+            expected <- TestDataFileUtil.readTestData("valuesE2EV2", s"get-$valueTypeName-response.jsonld")
+          } yield assert(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+        },
       )
     }
 
@@ -681,7 +668,7 @@ class ValuesEndpointsE2ESpec extends E2ESpec {
 
       val responseJsonDoc = UnsafeZioRun.runOrThrow(
         TestApiClient
-          .getJsonLdDocument(uri"/v2/values/$resourceIri/$valueUuid?version=$timestamp", anythingUser1)
+          .getJsonLdDocument(uri"/v2/values/$resourceIri/$valueUuid", anythingUser1, addVersionQueryParam(timestamp))
           .flatMap(_.assert200),
       )
       val value: JsonLDObject = getValueFromResource(

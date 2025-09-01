@@ -316,6 +316,13 @@ object TestApiClient {
 
   def getJsonLdDocument(
     relativeUri: Uri,
+    user: User,
+    update: RequestUpdate[JsonLDDocument],
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
+    getJsonLdDocument(relativeUri, Some(user), update)
+
+  def getJsonLdDocument(
+    relativeUri: Uri,
     user: Option[User],
     update: RequestUpdate[JsonLDDocument],
   ) = ZIO.serviceWithZIO[TestApiClient](_.getJsonLdDocument(relativeUri, user, update))
