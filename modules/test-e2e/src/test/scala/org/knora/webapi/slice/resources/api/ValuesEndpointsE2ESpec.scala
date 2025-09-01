@@ -133,17 +133,14 @@ class ValuesEndpointsE2ESpec extends E2ESpec {
       .mapAttempt(JsonLDUtil.parseJsonLD)
   }
 
-  private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
-    resource.body.getRequiredArray(propertyIriInResult.toString).fold(e => throw BadRequestException(e), identity)
-
   private def getValueFromResource(
     resource: JsonLDDocument,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
   ): JsonLDObject = {
-    val resourceIri: IRI = resource.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-    val propertyValues: JsonLDArray =
-      getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
+    val resourceIri = resource.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+    val propertyValues =
+      resource.body.getRequiredArray(propertyIriInResult.toString).fold(e => throw BadRequestException(e), identity)
 
     val matchingValues: Seq[JsonLDObject] = propertyValues.value.collect {
       case jsonLDObject: JsonLDObject
