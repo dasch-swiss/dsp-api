@@ -9,7 +9,6 @@ import org.scalatest.compatible.Assertion
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
-import spray.json.JsString
 import sttp.client4.*
 import zio.*
 import zio.json.*
@@ -272,7 +271,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
        |  "@type" : "anything:Thing",
        |  "anything:hasText" : {
        |    "@type" : "knora-api:TextValue",
-       |    "knora-api:textValueAsXml" : ${JsString(textValueAsXml).compactPrint},
+       |    "knora-api:textValueAsXml" : ${textValueAsXml.toJson},
        |    "knora-api:textValueHasMapping" : {
        |      "@id": "$mappingIri"
        |    }
@@ -2227,7 +2226,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  "@type" : "anything:Thing",
            |  "anything:hasGeometry" : {
            |    "@type" : "knora-api:GeomValue",
-           |    "knora-api:geometryValueAsGeometry" : ${JsString(geometryValue1).compactPrint}
+           |    "knora-api:geometryValueAsGeometry" : ${Json.Str(geometryValue1).toJson}
            |  },
            |  "@context" : {
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -3064,7 +3063,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  "anything:hasText" : {
            |    "@id" : "${textValueWithStandoffIri.get}",
            |    "@type" : "knora-api:TextValue",
-           |    "knora-api:textValueAsXml" : ${JsString(textValue2AsXmlWithStandardMapping).compactPrint},
+           |    "knora-api:textValueAsXml" : ${textValue2AsXmlWithStandardMapping.toJson},
            |    "knora-api:textValueHasMapping" : {
            |      "@id": "$standardMappingIri"
            |    }
@@ -3701,7 +3700,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  "anything:hasGeometry" : {
            |    "@id" : "${geometryValueIri.get}",
            |    "@type" : "knora-api:GeomValue",
-           |    "knora-api:geometryValueAsGeometry" : ${JsString(geometryValue2).compactPrint}
+           |    "knora-api:geometryValueAsGeometry" : ${geometryValue2.toJson}
            |  },
            |  "@context" : {
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
