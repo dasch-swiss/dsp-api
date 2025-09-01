@@ -127,14 +127,10 @@ class ValuesEndpointsE2ESpec extends E2ESpec {
         propertyIris = propertyIrisForGravsearch,
       )
       .toString()
-
-    // Run the query.
-    UnsafeZioRun.runOrThrow(
-      TestApiClient
-        .postSparql(uri"/v2/searchextended", gravsearchQuery, anythingUser1)
-        .flatMap(_.assert200)
-        .mapAttempt(JsonLDUtil.parseJsonLD),
-    )
+    TestApiClient
+      .postSparql(uri"/v2/searchextended", gravsearchQuery, anythingUser1)
+      .flatMap(_.assert200)
+      .mapAttempt(JsonLDUtil.parseJsonLD)
   }
 
   private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
@@ -196,16 +192,20 @@ class ValuesEndpointsE2ESpec extends E2ESpec {
     resourceIri: IRI,
     maybePreviousLastModDate: Option[Instant],
     maybeUpdatedLastModDate: Option[Instant],
-  ): Assertion =
-    maybeUpdatedLastModDate match {
-      case Some(updatedLastModDate) =>
+  ): ZIO[Any, AssertionException, Unit] =
+    ZIO
+      .fromOption(maybeUpdatedLastModDate)
+      .mapError(_ => AssertionException(s"Resource $resourceIri has no knora-api:lastModificationDate"))
+      .flatMap { updatedLastModDate =>
         maybePreviousLastModDate match {
-          case Some(previousLastModDate) => assert(updatedLastModDate.isAfter(previousLastModDate))
-          case None                      => assert(true)
+          case Some(previousLastModDate) =>
+            ZIO
+              .fail(AssertionException(s"Last ModificationDate $updatedLastModDate is before $previousLastModDate"))
+              .when(updatedLastModDate.isBefore(previousLastModDate))
+              .unit
+          case None => ZIO.unit
         }
-
-      case None => throw AssertionException(s"Resource $resourceIri has no knora-api:lastModificationDate")
-    }
+      }
 
   private def getValue(
     resourceIri: IRI,
@@ -213,29 +213,17 @@ class ValuesEndpointsE2ESpec extends E2ESpec {
     propertyIriForGravsearch: SmartIri,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
-  ) = {
-    val resource: JsonLDDocument =
-      getResourceWithValues(resourceIri = resourceIri, propertyIrisForGravsearch = Seq(propertyIriForGravsearch))
-
-    val receivedResourceIri: IRI = UnsafeZioRun.runOrThrow(resource.body.getRequiredIdValueAsKnoraDataIri).toString
-
-    if (receivedResourceIri != resourceIri) {
-      throw AssertionException(s"Expected resource $resourceIri, received $receivedResourceIri")
-    }
-
-    val resourceLastModDate: Option[Instant] = parseResourceLastModificationDate(resource)
-
-    checkLastModDate(
-      resourceIri = resourceIri,
-      maybePreviousLastModDate = maybePreviousLastModDate,
-      maybeUpdatedLastModDate = resourceLastModDate,
-    )
-
-    getValueFromResource(
-      resource = resource,
-      propertyIriInResult = propertyIriInResult,
-      expectedValueIri = expectedValueIri,
-    )
+  ) = UnsafeZioRun.runOrThrow {
+    for {
+      resource            <- getResourceWithValues(resourceIri, Seq(propertyIriForGravsearch))
+      receivedResourceIri <- resource.body.getRequiredIdValueAsKnoraDataIri
+      _ <- ZIO
+             .fail(AssertionException(s"Expected resource $resourceIri, received $receivedResourceIri"))
+             .when(receivedResourceIri.toString != resourceIri)
+      resourceLastModDate = parseResourceLastModificationDate(resource)
+      _                  <- checkLastModDate(resourceIri, maybePreviousLastModDate, resourceLastModDate)
+      value               = getValueFromResource(resource, propertyIriInResult, expectedValueIri)
+    } yield value
   }
 
   private def createTextValueWithoutStandoffRequest(resourceIri: IRI, valueAsString: String): String =
