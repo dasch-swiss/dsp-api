@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.e2e.v2
+package org.knora.webapi.slice.resources.api
 
 import org.scalatest.compatible.Assertion
 import org.xmlunit.builder.DiffBuilder
@@ -44,7 +44,7 @@ import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.util.*
 
-class ValuesRouteV2E2ESpec extends E2ESpec {
+class ValuesEndpointsE2ESpec extends E2ESpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
