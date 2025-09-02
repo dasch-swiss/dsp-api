@@ -72,7 +72,7 @@ final case class TestClientService()(implicit system: ActorSystem)
   /**
    * Performs a http request and returns the body of the response.
    */
-  def getResponseString(request: pekko.http.scaladsl.model.HttpRequest): Task[String] =
+  private def getResponseString(request: pekko.http.scaladsl.model.HttpRequest): Task[String] =
     for {
       response <- singleAwaitingRequest(request)
       body <-
