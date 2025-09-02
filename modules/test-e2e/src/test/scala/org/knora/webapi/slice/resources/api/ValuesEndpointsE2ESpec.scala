@@ -930,7 +930,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = intValueWithCustomPermissionsIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -940,11 +940,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                       )
         intValueAsInt  <- ZIO.fromEither(savedValue.getRequiredInt(KA.IntValueAsInt))
         hasPermissions <- ZIO.fromEither(savedValue.getRequiredString(KA.HasPermissions))
-      } yield assertTrue(
-        valueType == KA.IntValue.toSmartIri,
-        intValueAsInt == intValue,
-        hasPermissions == customPermissions,
-      )
+      } yield assertTrue(valueType == KA.IntValue, intValueAsInt == intValue, hasPermissions == customPermissions)
     },
     test("create a text value without standoff and without a comment") {
       val resourceIri: IRI      = AThing.iri
@@ -994,7 +990,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = textValueWithoutStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1003,10 +999,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = textValueWithoutStandoffIri.get,
                       )
         savedValueAsString <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueAsString))
-      } yield assertTrue(
-        valueType == KA.TextValue.toSmartIri,
-        savedValueAsString == valueAsString,
-      )
+      } yield assertTrue(valueType == KA.TextValue, savedValueAsString == valueAsString)
     },
     test("update a text value without standoff, adding a comment") {
       val resourceIri: IRI      = AThing.iri
@@ -1090,7 +1083,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = textValueWithoutStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1102,7 +1095,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         savedValueHasComment <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueHasComment))
       } yield assertTrue(
         savedValueAsString == valueAsString,
-        valueType == KA.TextValue.toSmartIri,
+        valueType == KA.TextValue,
         savedValueHasComment == valueHasComment,
       )
     },
@@ -1120,7 +1113,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = textValueWithStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1136,7 +1129,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                     .build()
       } yield assertTrue(
         !xmlDiff.hasDifferences,
-        valueType == KA.TextValue.toSmartIri,
+        valueType == KA.TextValue,
       )
     },
     test("create a very long text value with standoff and linked tags") {
@@ -1164,7 +1157,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = textValueWithStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1175,7 +1168,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         savedTextValueAsXml <- ZIO.fromEither(savedValue.getRequiredString(KA.TextValueAsXml))
         xmlDiff =
           DiffBuilder.compare(Input.fromString(textValueAsXml)).withTest(Input.fromString(savedTextValueAsXml)).build()
-      } yield assertTrue(valueType == KA.TextValue.toSmartIri, !xmlDiff.hasDifferences)
+      } yield assertTrue(valueType == KA.TextValue, !xmlDiff.hasDifferences)
     },
     test("create a text value with standoff containing a URL") {
       val resourceIri: IRI = AThing.iri
@@ -1198,8 +1191,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         responseJsonDoc <-
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
-        _         <- ZIO.attempt(assertTrue(valueType == KA.TextValue.toSmartIri))
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        _         <- ZIO.attempt(assertTrue(valueType == KA.TextValue))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1256,8 +1249,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         responseJsonDoc <-
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
-        _         <- ZIO.attempt(assertTrue(valueType == KA.TextValue.toSmartIri))
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        _         <- ZIO.attempt(assertTrue(valueType == KA.TextValue))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1371,8 +1364,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = decimalValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
-        _         <- ZIO.attempt(assertTrue(valueType == KA.DecimalValue.toSmartIri))
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1386,7 +1378,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                                        validationFun =
                                          (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
                                      )
-      } yield assertTrue(savedDecimalValueAsDecimal == decimalValueAsDecimal)
+      } yield assertTrue(valueType == KA.DecimalValue, savedDecimalValueAsDecimal == decimalValueAsDecimal)
     },
     test("create a date value representing a range with day precision") {
       val resourceIri: IRI       = AThing.iri
@@ -1420,8 +1412,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
-        _         <- ZIO.attempt(assertTrue(valueType == KA.DateValue.toSmartIri))
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1440,6 +1431,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         endDay        <- ZIO.fromEither(savedValue.getRequiredInt(KA.DateValueHasEndDay))
         endEra        <- ZIO.fromEither(savedValue.getRequiredString(KA.DateValueHasEndEra))
       } yield assertTrue(
+        valueType == KA.DateValue,
         valueAsString == "GREGORIAN:2018-10-05 CE:2018-10-06 CE",
         calendar == dateValueHasCalendar,
         startYear == dateValueHasStartYear,
@@ -1478,8 +1470,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
-        _         <- ZIO.attempt(assertTrue(valueType == KA.DateValue.toSmartIri))
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1498,6 +1489,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         endDay        <- ZIO.fromEither(savedValue.getInt(KA.DateValueHasEndDay))
         endEra        <- ZIO.fromEither(savedValue.getRequiredString(KA.DateValueHasEndEra))
       } yield assertTrue(
+        valueType == KA.DateValue,
         valueAsString == "GREGORIAN:2018-10 CE:2018-11 CE",
         calendar == dateValueHasCalendar,
         startYear == dateValueHasStartYear,
@@ -1532,8 +1524,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
-        _         <- ZIO.attempt(assertTrue(valueType == KA.DateValue.toSmartIri))
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1552,6 +1543,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         endDay        <- ZIO.fromEither(savedValue.getInt(KA.DateValueHasEndDay))
         endEra        <- ZIO.fromEither(savedValue.getRequiredString(KA.DateValueHasEndEra))
       } yield assertTrue(
+        valueType == KA.DateValue,
         valueAsString == "GREGORIAN:2018 CE:2019 CE",
         calendar == dateValueHasCalendar,
         startYear == dateValueHasStartYear,
@@ -1590,8 +1582,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
-        _         <- ZIO.attempt(assertTrue(valueType == KA.DateValue.toSmartIri))
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1610,6 +1601,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         endDay        <- ZIO.fromEither(savedValue.getRequiredInt(KA.DateValueHasEndDay))
         endEra        <- ZIO.fromEither(savedValue.getRequiredString(KA.DateValueHasEndEra))
       } yield assertTrue(
+        valueType == KA.DateValue,
         valueAsString == "GREGORIAN:2018-10-05 CE",
         calendar == dateValueHasCalendar,
         startYear == dateValueHasStartYear,
@@ -1646,7 +1638,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1666,7 +1658,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         endEra                     <- ZIO.fromEither(savedValue.getRequiredString(KA.DateValueHasEndEra))
       } yield assertTrue(
         actualValueAsString == "GREGORIAN:2018-10 CE",
-        valueType == KA.DateValue.toSmartIri,
+        valueType == KA.DateValue,
         actualDateValueHasCalendar == dateValueHasCalendar,
         startYear == dateValueHasStartYear,
         startMonth == dateValueHasStartMonth,
@@ -1676,7 +1668,6 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         endMonth == dateValueHasStartMonth,
         endDay.isEmpty,
         endEra == dateValueHasStartEra,
-        valueType == KA.DateValue.toSmartIri,
       )
     },
     test("create a date value representing a single date with year precision") {
@@ -1700,7 +1691,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1729,7 +1720,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         endMonth.isEmpty,
         endDay.isEmpty,
         endEra == dateValueHasStartEra,
-        valueType == KA.DateValue.toSmartIri,
+        valueType == KA.DateValue,
       )
     },
     test("create a date value representing a single Islamic date with day precision") {
@@ -1756,7 +1747,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1781,7 +1772,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         endYear == dateValueHasStartYear,
         endMonth == dateValueHasStartMonth,
         endDay == dateValueHasStartDay,
-        valueType == KA.DateValue.toSmartIri,
+        valueType == KA.DateValue,
       )
     },
     test("create an Islamic date value representing a range with day precision") {
@@ -1811,7 +1802,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1836,7 +1827,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         endYear == dateValueHasEndYear,
         endMonth == dateValueHasEndMonth,
         endDay == dateValueHasEndDay,
-        valueType == KA.DateValue.toSmartIri,
+        valueType == KA.DateValue,
       )
     },
     test("create a boolean value") {
@@ -1863,7 +1854,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = booleanValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1872,10 +1863,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = booleanValueIri.get,
                       )
         booleanValueAsBoolean <- ZIO.fromEither(savedValue.getRequiredBoolean(KA.BooleanValueAsBoolean))
-      } yield assertTrue(
-        valueType == KA.BooleanValue.toSmartIri,
-        booleanValueAsBoolean == booleanValue,
-      )
+      } yield assertTrue(valueType == KA.BooleanValue, booleanValueAsBoolean == booleanValue)
     },
     test("create a geometry value") {
       val resourceIri: IRI      = AThing.iri
@@ -1899,7 +1887,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = geometryValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1908,10 +1896,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = geometryValueIri.get,
                       )
         geometryValueAsGeometry <- ZIO.fromEither(savedValue.getRequiredString(KA.GeometryValueAsGeometry))
-      } yield assertTrue(
-        geometryValueAsGeometry == geometryValue1,
-        valueType == KA.GeomValue.toSmartIri,
-      )
+      } yield assertTrue(geometryValueAsGeometry == geometryValue1, valueType == KA.GeomValue)
     },
     test("create an interval value") {
       val resourceIri: IRI      = AThing.iri
@@ -1947,7 +1932,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = intervalValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1968,7 +1953,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                                                    ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
                                                )
       } yield assertTrue(
-        valueType == KA.IntervalValue.toSmartIri,
+        valueType == KA.IntervalValue,
         savedIntervalValueHasEnd == intervalEnd,
         savedIntervalValueHasStart == intervalStart,
       )
@@ -2000,7 +1985,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = timeValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2014,10 +1999,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                            validationFun =
                              (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
                          )
-      } yield assertTrue(
-        valueType == KA.TimeValue.toSmartIri,
-        savedTimeStamp == timeStamp,
-      )
+      } yield assertTrue(valueType == KA.TimeValue, savedTimeStamp == timeStamp)
     },
     test("create a list value") {
       val resourceIri: IRI      = AThing.iri
@@ -2046,7 +2028,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = listValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2055,10 +2037,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = listValueIri.get,
                       )
         savedListValueHasListNode = savedValue.requireIriInObject(KA.ListValueAsListNode, validationFun)
-      } yield assertTrue(
-        valueType == KA.ListValue.toSmartIri,
-        savedListValueHasListNode == listNode,
-      )
+      } yield assertTrue(valueType == KA.ListValue, savedListValueHasListNode == listNode)
     },
     test("create a color value") {
       val resourceIri: IRI      = AThing.iri
@@ -2084,7 +2063,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = colorValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2093,10 +2072,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = colorValueIri.get,
                       )
         savedColor <- ZIO.fromEither(savedValue.getRequiredString(KA.ColorValueAsColor))
-      } yield assertTrue(
-        valueType == KA.ColorValue.toSmartIri,
-        savedColor == color,
-      )
+      } yield assertTrue(valueType == KA.ColorValue, savedColor == color)
     },
     test("create a URI value") {
       val resourceIri: IRI      = AThing.iri
@@ -2125,7 +2101,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = uriValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2138,10 +2114,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                      expectedDatatype = Xsd.Uri.toSmartIri,
                      validationFun = validationFun,
                    )
-      } yield assertTrue(
-        valueType == KA.UriValue.toSmartIri,
-        savedUri == uri,
-      )
+      } yield assertTrue(valueType == KA.UriValue, savedUri == uri)
     },
     test("create a geoname value") {
       val resourceIri: IRI      = AThing.iri
@@ -2167,7 +2140,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = geonameValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2176,10 +2149,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = geonameValueIri.get,
                       )
         savedGeonameCode <- ZIO.fromEither(savedValue.getRequiredString(KA.GeonameValueAsGeonameCode))
-      } yield assertTrue(
-        valueType == KA.GeonameValue.toSmartIri,
-        savedGeonameCode == geonameCode,
-      )
+      } yield assertTrue(valueType == KA.GeonameValue, savedGeonameCode == geonameCode)
     },
     test("create a link between two resources, without a comment") {
       val resourceIri: IRI               = AThing.iri
@@ -2207,7 +2177,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = linkValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         _ <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID)).tap { uuid =>
                ZIO.succeed(self.linkValueUUID = UuidUtil.decode(uuid))
              }
@@ -2220,10 +2190,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                       )
         savedTarget    <- ZIO.fromEither(savedValue.getRequiredObject(KA.LinkValueHasTarget))
         savedTargetIri <- ZIO.fromEither(savedTarget.getRequiredString(JsonLDKeywords.ID))
-      } yield assertTrue(
-        valueType == KA.LinkValue.toSmartIri,
-        savedTargetIri == TestDing.iri,
-      )
+      } yield assertTrue(valueType == KA.LinkValue, savedTargetIri == TestDing.iri)
     },
     test("create a link between two resources with a custom link value IRI, UUID, creationDate") {
       val resourceIri: IRI            = AThing.iri
@@ -2297,7 +2264,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = intValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         newIntegerValueUUID = responseJsonDoc.body.requireStringWithValidation(
                                 KA.ValueHasUUID,
                                 (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun),
@@ -2313,7 +2280,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       } yield assertTrue(
         newIntegerValueUUID == integerValueUUID, // The new version should have the same UUID.
         intValueAsInt == intValue,
-        valueType == KA.IntValue.toSmartIri,
+        valueType == KA.IntValue,
       )
     },
     test("update an integer value with a custom creation date") {
@@ -2347,7 +2314,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = intValueForRsyncIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2362,11 +2329,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                                        validationFun = (s, errorFun) =>
                                          ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
                                      )
-      } yield assertTrue(
-        valueType == KA.IntValue.toSmartIri,
-        savedCreationDate == valueCreationDate,
-        intValueAsInt == intValue,
-      )
+      } yield assertTrue(valueType == KA.IntValue, savedCreationDate == valueCreationDate, intValueAsInt == intValue)
     },
     test("update an integer value with a custom new value version IRI") {
       val resourceIri: IRI        = AThing.iri
@@ -2513,7 +2476,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = intValueWithCustomPermissionsIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2523,11 +2486,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                       )
         intValueAsInt  <- ZIO.fromEither(savedValue.getRequiredInt(KA.IntValueAsInt))
         hasPermissions <- ZIO.fromEither(savedValue.getRequiredString(KA.HasPermissions))
-      } yield assertTrue(
-        valueType == KA.IntValue.toSmartIri,
-        hasPermissions == customPermissions,
-        intValueAsInt == intValue,
-      )
+      } yield assertTrue(valueType == KA.IntValue, hasPermissions == customPermissions, intValueAsInt == intValue)
     },
     test("update an integer value, changing only the permissions") {
       val resourceIri: IRI          = AThing.iri
@@ -2555,7 +2514,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = intValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2564,7 +2523,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = intValueIri.get,
                       )
         hasPermissions <- ZIO.fromEither(savedValue.getRequiredString(KA.HasPermissions))
-      } yield assertTrue(hasPermissions == customPermissions, valueType == KA.IntValue.toSmartIri)
+      } yield assertTrue(hasPermissions == customPermissions, valueType == KA.IntValue)
     },
     test("update a decimal value") {
       val resourceIri: IRI      = AThing.iri
@@ -2596,7 +2555,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = decimalValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2609,7 +2568,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                               expectedDatatype = Xsd.Decimal.toSmartIri,
                               validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
                             )
-      } yield assertTrue(valueType == KA.DecimalValue.toSmartIri, savedDecimalValue == decimalValue)
+      } yield assertTrue(valueType == KA.DecimalValue, savedDecimalValue == decimalValue)
     },
     test("update a text value with standoff") {
       val resourceIri: IRI = AThing.iri
@@ -2640,7 +2599,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = textValueWithStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2652,7 +2611,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       } yield assertTrue(
         savedTextValueAsXml.contains("updated text"),
         savedTextValueAsXml.contains("salsah-link"),
-        valueType == KA.TextValue.toSmartIri,
+        valueType == KA.TextValue,
       )
     },
     test("update a text value with standoff containing escaped text") {
@@ -2699,7 +2658,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = textValueWithoutStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2710,7 +2669,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         savedValueAsString   <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueAsString))
         savedValueHasComment <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueHasComment))
       } yield assertTrue(
-        valueType == KA.TextValue.toSmartIri,
+        valueType == KA.TextValue,
         savedValueHasComment == valueHasComment,
         savedValueAsString == valueAsString,
       )
@@ -2748,7 +2707,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2777,7 +2736,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         dateValueHasEndMonthInt == dateValueHasEndMonth,
         dateValueHasEndDayInt == dateValueHasEndDay,
         dateValueHasEndEraStr == dateValueHasEndEra,
-        valueType == KA.DateValue.toSmartIri,
+        valueType == KA.DateValue,
       )
     },
     test("update a date value representing a range with month precision") {
@@ -2809,7 +2768,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2828,8 +2787,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         dateValueHasEndDayOpt     <- ZIO.fromEither(savedValue.getInt(KA.DateValueHasEndDay))
         dateValueHasEndEraStr     <- ZIO.fromEither(savedValue.getRequiredString(KA.DateValueHasEndEra))
       } yield assertTrue(
-        valueType == KA.DateValue.toSmartIri,
-        valueType == KA.DateValue.toSmartIri,
+        valueType == KA.DateValue,
         valueAsString == "GREGORIAN:2018-09 CE:2018-12 CE",
         dateValueHasCalendarStr == dateValueHasCalendar,
         dateValueHasStartYearInt == dateValueHasStartYear,
@@ -2867,7 +2825,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2886,7 +2844,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         dateValueHasEndDayOpt     <- ZIO.fromEither(savedValue.getInt(KA.DateValueHasEndDay))
         dateValueHasEndEraStr     <- ZIO.fromEither(savedValue.getRequiredString(KA.DateValueHasEndEra))
       } yield assertTrue(
-        valueType == KA.DateValue.toSmartIri,
+        valueType == KA.DateValue,
         valueAsString == "GREGORIAN:2018 CE:2020 CE",
         dateValueHasCalendarStr == dateValueHasCalendar,
         dateValueHasStartYearInt == dateValueHasStartYear,
@@ -2928,7 +2886,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2947,7 +2905,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         dateValueHasEndDayInt     <- ZIO.fromEither(savedValue.getRequiredInt(KA.DateValueHasEndDay))
         dateValueHasEndEraStr     <- ZIO.fromEither(savedValue.getRequiredString(KA.DateValueHasEndEra))
       } yield assertTrue(
-        valueType == KA.DateValue.toSmartIri,
+        valueType == KA.DateValue,
         valueAsString == "GREGORIAN:2018-10-06 CE",
         dateValueHasCalendarStr == dateValueHasCalendar,
         dateValueHasStartYearInt == dateValueHasStartYear,
@@ -2986,7 +2944,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3005,7 +2963,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         dateValueHasEndDayOpt     <- ZIO.fromEither(savedValue.getInt(KA.DateValueHasEndDay))
         dateValueHasEndEraStr     <- ZIO.fromEither(savedValue.getRequiredString(KA.DateValueHasEndEra))
       } yield assertTrue(
-        valueType == KA.DateValue.toSmartIri,
+        valueType == KA.DateValue,
         valueAsString == "GREGORIAN:2018-07 CE",
         dateValueHasCalendarStr == dateValueHasCalendar,
         dateValueHasStartYearInt == dateValueHasStartYear,
@@ -3041,7 +2999,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3060,7 +3018,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         dateValueHasEndDayOpt     <- ZIO.fromEither(savedValue.getInt(KA.DateValueHasEndDay))
         dateValueHasEndEraStr     <- ZIO.fromEither(savedValue.getRequiredString(KA.DateValueHasEndEra))
       } yield assertTrue(
-        valueType == KA.DateValue.toSmartIri,
+        valueType == KA.DateValue,
         valueAsString == "GREGORIAN:2019 CE",
         dateValueHasCalendarStr == dateValueHasCalendar,
         dateValueHasStartYearInt == dateValueHasStartYear,
@@ -3099,7 +3057,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = booleanValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3108,7 +3066,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = booleanValueIri.get,
                       )
         booleanValueAsBoolean <- ZIO.fromEither(savedValue.getRequiredBoolean(KA.BooleanValueAsBoolean))
-      } yield assertTrue(valueType == KA.BooleanValue.toSmartIri, booleanValueAsBoolean == booleanValue)
+      } yield assertTrue(valueType == KA.BooleanValue, booleanValueAsBoolean == booleanValue)
     },
     test("update a geometry value") {
       val resourceIri: IRI      = AThing.iri
@@ -3135,7 +3093,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = geometryValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3144,7 +3102,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = geometryValueIri.get,
                       )
         geometryValueAsGeometry <- ZIO.fromEither(savedValue.getRequiredString(KA.GeometryValueAsGeometry))
-      } yield assertTrue(valueType == KA.GeomValue.toSmartIri, geometryValueAsGeometry == geometryValue2)
+      } yield assertTrue(valueType == KA.GeomValue, geometryValueAsGeometry == geometryValue2)
     },
     test("update an interval value") {
       val resourceIri: IRI      = AThing.iri
@@ -3181,7 +3139,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = intervalValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3202,7 +3160,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                                                    ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
                                                )
       } yield assertTrue(
-        valueType == KA.IntervalValue.toSmartIri,
+        valueType == KA.IntervalValue,
         savedIntervalValueHasStart == intervalStart,
         savedIntervalValueHasEnd == intervalEnd,
       )
@@ -3237,7 +3195,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = timeValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3251,7 +3209,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                                     validationFun =
                                       (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
                                   )
-      } yield assertTrue(valueType == KA.TimeValue.toSmartIri, savedTimeStamp == timeStamp)
+      } yield assertTrue(valueType == KA.TimeValue, savedTimeStamp == timeStamp)
     },
     test("update a list value") {
       val resourceIri: IRI      = AThing.iri
@@ -3282,7 +3240,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = listValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3291,7 +3249,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = listValueIri.get,
                       )
         savedListValueHasListNode = savedValue.requireIriInObject(KA.ListValueAsListNode, validationFun)
-      } yield assertTrue(valueType == KA.ListValue.toSmartIri, savedListValueHasListNode == listNode)
+      } yield assertTrue(valueType == KA.ListValue, savedListValueHasListNode == listNode)
     },
     test("update a color value") {
       val resourceIri: IRI      = AThing.iri
@@ -3320,7 +3278,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = colorValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3329,7 +3287,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = colorValueIri.get,
                       )
         savedColor <- ZIO.fromEither(savedValue.getRequiredString(KA.ColorValueAsColor))
-      } yield assertTrue(valueType == KA.ColorValue.toSmartIri, savedColor == color)
+      } yield assertTrue(valueType == KA.ColorValue, savedColor == color)
     },
     test("update a URI value") {
       val resourceIri: IRI      = AThing.iri
@@ -3361,7 +3319,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = uriValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3374,7 +3332,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                      expectedDatatype = Xsd.Uri.toSmartIri,
                      validationFun = validationFun,
                    )
-      } yield assertTrue(valueType == KA.UriValue.toSmartIri, savedUri == uri)
+      } yield assertTrue(valueType == KA.UriValue, savedUri == uri)
     },
     test("update a geoname value") {
       val resourceIri: IRI      = AThing.iri
@@ -3403,7 +3361,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = geonameValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3412,7 +3370,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = geonameValueIri.get,
                       )
         savedGeonameCode <- ZIO.fromEither(savedValue.getRequiredString(KA.GeonameValueAsGeonameCode))
-      } yield assertTrue(valueType == KA.GeonameValue.toSmartIri, savedGeonameCode == geonameCode)
+      } yield assertTrue(valueType == KA.GeonameValue, savedGeonameCode == geonameCode)
     },
     test("update a link between two resources") {
       val resourceIri: IRI               = AThing.iri
@@ -3432,7 +3390,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = linkValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         _ <- ZIO // When you change a link value's target, it gets a new UUID.
                .fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
                .map(UuidUtil.decode)
@@ -3447,10 +3405,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                       )
         savedTarget    <- ZIO.fromEither(savedValue.getRequiredObject(KA.LinkValueHasTarget))
         savedTargetIri <- ZIO.fromEither(savedTarget.getRequiredString(JsonLDKeywords.ID))
-      } yield assertTrue(
-        valueType == KA.LinkValue.toSmartIri,
-        savedTargetIri == linkTargetIri,
-      )
+      } yield assertTrue(valueType == KA.LinkValue, savedTargetIri == linkTargetIri)
     },
     test("update a link between two resources, adding a comment") {
       val resourceIri: IRI               = AThing.iri
@@ -3472,7 +3427,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = linkValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         // Since we only changed metadata, the UUID should be the same.
         _ <- ZIO
                .fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
@@ -3487,7 +3442,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = linkValueIri.get,
                       )
         savedComment <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueHasComment))
-      } yield assertTrue(valueType == KA.LinkValue.toSmartIri, savedComment == comment)
+      } yield assertTrue(valueType == KA.LinkValue, savedComment == comment)
     },
     test("update a link between two resources, changing only the comment") {
       val resourceIri: IRI               = AThing.iri
@@ -3509,7 +3464,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = linkValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         // Since we only changed metadata, the UUID should be the same.
         newLinkValueUUID = responseJsonDoc.body.requireStringWithValidation(
                              KA.ValueHasUUID,
@@ -3523,11 +3478,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = linkValueIri.get,
                       )
         savedComment <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueHasComment))
-      } yield assertTrue(
-        newLinkValueUUID == linkValueUUID,
-        valueType == KA.LinkValue.toSmartIri,
-        savedComment == comment,
-      )
+      } yield assertTrue(newLinkValueUUID == linkValueUUID, valueType == KA.LinkValue, savedComment == comment)
     },
     test("create a link between two resources, with a comment") {
       val resourceIri: IRI               = AThing.iri
@@ -3559,7 +3510,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _          = linkValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE)).map(_.toSmartIri)
+        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3570,7 +3521,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         savedTarget    <- ZIO.fromEither(savedValue.getRequiredObject(KA.LinkValueHasTarget))
         savedTargetIri <- ZIO.fromEither(savedTarget.getRequiredString(JsonLDKeywords.ID))
         savedComment   <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueHasComment))
-      } yield assertTrue(savedTargetIri == TestDing.iri, valueType == KA.LinkValue.toSmartIri, savedComment == comment)
+      } yield assertTrue(savedTargetIri == TestDing.iri, valueType == KA.LinkValue, savedComment == comment)
     },
     test("delete an integer value") {
       val jsonLDEntity = deleteIntValueRequest(AThing.iri, intValueIri.get, Some("this value was incorrect"))
