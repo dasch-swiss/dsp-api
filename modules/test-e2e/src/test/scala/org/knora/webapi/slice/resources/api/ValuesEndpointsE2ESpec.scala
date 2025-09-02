@@ -18,6 +18,7 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.util.UUID
 import scala.xml.XML
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
@@ -3712,13 +3713,15 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                               "@id"              -> Json.Str(newValueIri.toString),
                               KA.ValueHasComment -> Json.Str(commentWithLinebreaks),
                             )
-        _ <-
-          TestApiClient.putJsonLd(uri"/v2/values", updateValueJsonLd.toString, anythingUser1).flatMap(_.assert200)
-        resource <- TestResourcesApiClient.getResource(resourceIri, anythingUser1).flatMap(_.assert200)
+        updatedValueResponse <- TestApiClient
+                                  .putJsonLdDocument(uri"/v2/values", updateValueJsonLd.toString, anythingUser1)
+                                  .flatMap(_.assert200)
+        updatedValueIri <- updatedValueResponse.body.getRequiredIdValueAsKnoraDataIri
+        resource        <- TestResourcesApiClient.getResource(resourceIri, anythingUser1).flatMap(_.assert200)
         savedComment <- ZIO.fromEither(resource.body.getRequiredArray(anythingHasText).map {
                           _.value.collect { case obj: JsonLDObject => obj }
-                            .map(_.getRequiredString(KA.ValueHasComment))
-                            .collect { case Right(c) => c }
+                            .filter(_.getRequiredString(JsonLDKeywords.ID).toOption.contains(updatedValueIri.toString))
+                            .flatMap(_.getRequiredString(KA.ValueHasComment).toOption)
                             .head
                         })
       } yield assertTrue(savedComment == commentWithLinebreaks)
