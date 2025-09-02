@@ -1,5 +1,19 @@
 # Changelog
 
+## [32.1.0](https://github.com/dasch-swiss/dsp-api/compare/v32.0.0...v32.1.0) (2025-09-02)
+
+
+### Maintenances
+
+* Merge with dsp ingest ([#3743](https://github.com/dasch-swiss/dsp-api/issues/3743)) ([d1dd094](https://github.com/dasch-swiss/dsp-api/commit/d1dd094ff7b0f66a841967828343e79618e0bd07))
+* Migrate ValuesRouteV2E2ESpec to zio (DEV-5377) ([#3757](https://github.com/dasch-swiss/dsp-api/issues/3757)) ([4e1d3b7](https://github.com/dasch-swiss/dsp-api/commit/4e1d3b7f79b24ef2baf9df196e2a7a3cd9234dbf))
+* Migrate ValuesRouteV2E2ESpec to zio pt. 2 (DEV-5312) ([#3759](https://github.com/dasch-swiss/dsp-api/issues/3759)) ([72892cf](https://github.com/dasch-swiss/dsp-api/commit/72892cf8cefcfe6b7289c2b5fdf0b14f09acec09))
+
+
+### Enhancements
+
+* **dsp-ingest:** Remove keyframe extraction from moving images during ingest (DEV-5296) ([#3761](https://github.com/dasch-swiss/dsp-api/issues/3761)) ([73f76e9](https://github.com/dasch-swiss/dsp-api/commit/73f76e9684a98cf1341fc7185a1ad578466d9018))
+
 ## [32.0.0](https://github.com/dasch-swiss/dsp-api/compare/v31.21.2...v32.0.0) (2025-09-01)
 
 
