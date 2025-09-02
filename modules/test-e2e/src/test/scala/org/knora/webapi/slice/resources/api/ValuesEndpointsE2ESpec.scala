@@ -183,7 +183,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
     maybeUpdatedLastModDate: Option[Instant],
   ): IO[AssertionException, Unit] = ZIO
     .fromOption(maybeUpdatedLastModDate)
-    .mapError(_ => AssertionException(s"Resource $resourceIri has no knora-api:lastModificationDate"))
+    .orElseFail(AssertionException(s"Resource $resourceIri has no knora-api:lastModificationDate"))
     .flatMap { updatedLastModDate =>
       maybePreviousLastModDate match {
         case Some(previousLastModDate) =>
@@ -3714,7 +3714,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                               KA.ValueHasComment -> Json.Str(commentWithLinebreaks),
                             )
         updatedValueResponse <- TestApiClient
-                                  .putJsonLdDocument(uri"/v2/values", updateValueJsonLd.toString, anythingUser1)
+                                  .putJsonLdDocument(uri"/v2/values", updateValueJsonLd.toJson, anythingUser1)
                                   .flatMap(_.assert200)
         updatedValueIri <- updatedValueResponse.body.getRequiredIdValueAsKnoraDataIri
         resource        <- TestResourcesApiClient.getResource(resourceIri, anythingUser1).flatMap(_.assert200)
