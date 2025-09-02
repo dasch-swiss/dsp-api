@@ -1101,10 +1101,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = textValueWithoutStandoffIri.get,
                       )
-        savedValueAsString =
-          savedValue.getRequiredString(KA.ValueAsString).fold(msg => throw BadRequestException(msg), identity)
-        savedValueHasComment =
-          savedValue.getRequiredString(KA.ValueHasComment).fold(msg => throw BadRequestException(msg), identity)
+        savedValueAsString   <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueAsString))
+        savedValueHasComment <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueHasComment))
       } yield assertTrue(
         savedValueAsString == valueAsString,
         valueType == KA.TextValue.toSmartIri,
@@ -1133,8 +1131,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = textValueWithStandoffIri.get,
                       )
-        savedTextValueAsXml =
-          savedValue.getRequiredString(KA.TextValueAsXml).fold(msg => throw BadRequestException(msg), identity)
+        savedTextValueAsXml <- ZIO.fromEither(savedValue.getRequiredString(KA.TextValueAsXml))
         // Compare the original XML with the regenerated XML.
         xmlDiff = DiffBuilder
                     .compare(Input.fromString(textValue1AsXmlWithStandardMapping))
@@ -2224,11 +2221,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = linkValuePropertyIri,
                         expectedValueIri = linkValueIri.get,
                       )
-        savedTarget = savedValue
-                        .getRequiredObject(KA.LinkValueHasTarget)
-                        .fold(e => throw BadRequestException(e), identity)
-        savedTargetIri =
-          savedTarget.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
+        savedTarget    <- ZIO.fromEither(savedValue.getRequiredObject(KA.LinkValueHasTarget))
+        savedTargetIri <- ZIO.fromEither(savedTarget.getRequiredString(JsonLDKeywords.ID))
       } yield assertTrue(
         valueType == KA.LinkValue.toSmartIri,
         savedTargetIri == TestDing.iri,
@@ -2267,9 +2261,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       for {
         responseJsonDoc <-
           TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-        valueUUID =
-          responseJsonDoc.body.getRequiredString(KA.ValueHasUUID).fold(msg => throw BadRequestException(msg), identity)
+        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        valueUUID <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
         savedCreationDate = responseJsonDoc.body.requireDatatypeValueInObject(
                               key = KA.ValueCreationDate,
                               expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
@@ -2319,7 +2312,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = intValueIri.get,
                       )
-        intValueAsInt = savedValue.getRequiredInt(KA.IntValueAsInt).fold(e => throw BadRequestException(e), identity)
+        intValueAsInt <- ZIO.fromEither(savedValue.getRequiredInt(KA.IntValueAsInt))
       } yield assertTrue(
         newIntegerValueUUID == integerValueUUID, // The new version should have the same UUID.
         intValueAsInt == intValue,
@@ -2365,7 +2358,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = intValueForRsyncIri.get,
                       )
-        intValueAsInt = savedValue.getRequiredInt(KA.IntValueAsInt).fold(e => throw BadRequestException(e), identity)
+        intValueAsInt <- ZIO.fromEither(savedValue.getRequiredInt(KA.IntValueAsInt))
         savedCreationDate: Instant = savedValue.requireDatatypeValueInObject(
                                        key = KA.ValueCreationDate,
                                        expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
@@ -2404,7 +2397,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = intValueForRsyncIri.get,
                       )
-        intValueAsInt = savedValue.getRequiredInt(KA.IntValueAsInt).fold(e => throw BadRequestException(e), identity)
+        intValueAsInt <- ZIO.fromEither(savedValue.getRequiredInt(KA.IntValueAsInt))
       } yield assertTrue(valueIri == newValueVersionIri, intValueAsInt == intValue)
     },
     test("not update an integer value with a custom new value version IRI that is the same as the current IRI") {
@@ -2531,9 +2524,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = intValueWithCustomPermissionsIri.get,
                       )
-        intValueAsInt = savedValue.getRequiredInt(KA.IntValueAsInt).fold(e => throw BadRequestException(e), identity)
-        hasPermissions =
-          savedValue.getRequiredString(KA.HasPermissions).fold(msg => throw BadRequestException(msg), identity)
+        intValueAsInt  <- ZIO.fromEither(savedValue.getRequiredInt(KA.IntValueAsInt))
+        hasPermissions <- ZIO.fromEither(savedValue.getRequiredString(KA.HasPermissions))
       } yield assertTrue(
         valueType == KA.IntValue.toSmartIri,
         hasPermissions == customPermissions,
@@ -2574,8 +2566,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = intValueIri.get,
                       )
-        hasPermissions =
-          savedValue.getRequiredString(KA.HasPermissions).fold(msg => throw BadRequestException(msg), identity)
+        hasPermissions <- ZIO.fromEither(savedValue.getRequiredString(KA.HasPermissions))
       } yield assertTrue(hasPermissions == customPermissions, valueType == KA.IntValue.toSmartIri)
     },
     test("update a decimal value") {
@@ -2660,8 +2651,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = textValueWithStandoffIri.get,
                       )
-        savedTextValueAsXml =
-          savedValue.getRequiredString(KA.TextValueAsXml).fold(msg => throw BadRequestException(msg), identity)
+        savedTextValueAsXml <- ZIO.fromEither(savedValue.getRequiredString(KA.TextValueAsXml))
       } yield assertTrue(
         savedTextValueAsXml.contains("updated text"),
         savedTextValueAsXml.contains("salsah-link"),
@@ -2688,8 +2678,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = valueIri,
                       )
-        savedTextValueAsXml =
-          savedValue.getRequiredString(KA.TextValueAsXml).fold(msg => throw BadRequestException(msg), identity)
+        savedTextValueAsXml <- ZIO.fromEither(savedValue.getRequiredString(KA.TextValueAsXml))
         expectedText = """<p>
                          | test update</p>""".stripMargin
       } yield assertTrue(savedTextValueAsXml.contains(expectedText))
@@ -2721,10 +2710,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = textValueWithoutStandoffIri.get,
                       )
-        savedValueAsString =
-          savedValue.getRequiredString(KA.ValueAsString).fold(msg => throw BadRequestException(msg), identity)
-        savedValueHasComment =
-          savedValue.getRequiredString(KA.ValueHasComment).fold(msg => throw BadRequestException(msg), identity)
+        savedValueAsString   <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueAsString))
+        savedValueHasComment <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueHasComment))
       } yield assertTrue(
         valueType == KA.TextValue.toSmartIri,
         savedValueHasComment == valueHasComment,
@@ -3123,8 +3110,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = booleanValueIri.get,
                       )
-        booleanValueAsBoolean =
-          savedValue.getRequiredBoolean(KA.BooleanValueAsBoolean).fold(e => throw BadRequestException(e), identity)
+        booleanValueAsBoolean <- ZIO.fromEither(savedValue.getRequiredBoolean(KA.BooleanValueAsBoolean))
       } yield assertTrue(valueType == KA.BooleanValue.toSmartIri, booleanValueAsBoolean == booleanValue)
     },
     test("update a geometry value") {
@@ -3160,8 +3146,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = geometryValueIri.get,
                       )
-        geometryValueAsGeometry =
-          savedValue.getRequiredString(KA.GeometryValueAsGeometry).fold(msg => throw BadRequestException(msg), identity)
+        geometryValueAsGeometry <- ZIO.fromEither(savedValue.getRequiredString(KA.GeometryValueAsGeometry))
       } yield assertTrue(valueType == KA.GeomValue.toSmartIri, geometryValueAsGeometry == geometryValue2)
     },
     test("update an interval value") {
@@ -3346,8 +3331,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = colorValueIri.get,
                       )
-        savedColor =
-          savedValue.getRequiredString(KA.ColorValueAsColor).fold(msg => throw BadRequestException(msg), identity)
+        savedColor <- ZIO.fromEither(savedValue.getRequiredString(KA.ColorValueAsColor))
       } yield assertTrue(valueType == KA.ColorValue.toSmartIri, savedColor == color)
     },
     test("update a URI value") {
@@ -3430,9 +3414,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = geonameValueIri.get,
                       )
-        savedGeonameCode = savedValue
-                             .getRequiredString(KA.GeonameValueAsGeonameCode)
-                             .fold(msg => throw BadRequestException(msg), identity)
+        savedGeonameCode <- ZIO.fromEither(savedValue.getRequiredString(KA.GeonameValueAsGeonameCode))
       } yield assertTrue(valueType == KA.GeonameValue.toSmartIri, savedGeonameCode == geonameCode)
     },
     test("update a link between two resources") {
@@ -3466,10 +3448,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = linkValuePropertyIri,
                         expectedValueIri = linkValueIri.get,
                       )
-        savedTarget =
-          savedValue.getRequiredObject(KA.LinkValueHasTarget).fold(e => throw BadRequestException(e), identity)
-        savedTargetIri =
-          savedTarget.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
+        savedTarget    <- ZIO.fromEither(savedValue.getRequiredObject(KA.LinkValueHasTarget))
+        savedTargetIri <- ZIO.fromEither(savedTarget.getRequiredString(JsonLDKeywords.ID))
       } yield assertTrue(
         valueType == KA.LinkValue.toSmartIri,
         savedTargetIri == linkTargetIri,
@@ -3509,8 +3489,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = linkValuePropertyIri,
                         expectedValueIri = linkValueIri.get,
                       )
-        savedComment =
-          savedValue.getRequiredString(KA.ValueHasComment).fold(msg => throw BadRequestException(msg), identity)
+        savedComment <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueHasComment))
       } yield assertTrue(valueType == KA.LinkValue.toSmartIri, savedComment == comment)
     },
     test("update a link between two resources, changing only the comment") {
@@ -3546,8 +3525,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = linkValuePropertyIri,
                         expectedValueIri = linkValueIri.get,
                       )
-        savedComment =
-          savedValue.getRequiredString(KA.ValueHasComment).fold(msg => throw BadRequestException(msg), identity)
+        savedComment <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueHasComment))
       } yield assertTrue(
         newLinkValueUUID == linkValueUUID,
         valueType == KA.LinkValue.toSmartIri,
@@ -3592,12 +3570,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = linkValuePropertyIri,
                         expectedValueIri = linkValueIri.get,
                       )
-        savedTarget =
-          savedValue.getRequiredObject(KA.LinkValueHasTarget).fold(e => throw BadRequestException(e), identity)
-        savedTargetIri =
-          savedTarget.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
-        savedComment: String =
-          savedValue.getRequiredString(KA.ValueHasComment).fold(msg => throw BadRequestException(msg), identity)
+        savedTarget    <- ZIO.fromEither(savedValue.getRequiredObject(KA.LinkValueHasTarget))
+        savedTargetIri <- ZIO.fromEither(savedTarget.getRequiredString(JsonLDKeywords.ID))
+        savedComment   <- ZIO.fromEither(savedValue.getRequiredString(KA.ValueHasComment))
       } yield assertTrue(savedTargetIri == TestDing.iri, valueType == KA.LinkValue.toSmartIri, savedComment == comment)
     },
     test("delete an integer value") {
