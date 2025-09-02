@@ -21,7 +21,6 @@ import scala.xml.XML
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
@@ -69,8 +68,6 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
   )
-
-  private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
   object AThing {
     val iri: IRI = "http://rdfh.ch/0001/a-thing"
@@ -134,31 +131,27 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
     resource: JsonLDDocument,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
-  ): JsonLDObject = {
-    val resourceIri = resource.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-    val propertyValues =
-      resource.body.getRequiredArray(propertyIriInResult.toString).fold(e => throw BadRequestException(e), identity)
-
-    val matchingValues: Seq[JsonLDObject] = propertyValues.value.collect {
-      case jsonLDObject: JsonLDObject
-          if jsonLDObject.requireStringWithValidation(JsonLDKeywords.ID, validationFun) == expectedValueIri =>
-        jsonLDObject
-    }
-
-    if (matchingValues.isEmpty) {
-      throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>",
-      )
-    }
-
-    if (matchingValues.size > 1) {
-      throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>",
-      )
-    }
-
-    matchingValues.head
-  }
+  ) = for {
+    resourceIri    <- ZIO.fromEither(resource.body.getRequiredString(JsonLDKeywords.ID))
+    propertyValues <- ZIO.fromEither(resource.body.getRequiredArray(propertyIriInResult.toString))
+    matchingValues = propertyValues.value.collect {
+                       case jsonLDObject: JsonLDObject
+                           if jsonLDObject.getRequiredString(JsonLDKeywords.ID).toOption.contains(expectedValueIri) =>
+                         jsonLDObject
+                     }
+    _ <- ZIO
+           .when(matchingValues.isEmpty) {
+             val msg =
+               s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>"
+             ZIO.fail(msg)
+           }
+    _ <- ZIO
+           .when(matchingValues.size > 1) {
+             val msg =
+               s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>"
+             ZIO.fail(msg)
+           }
+  } yield matchingValues.head
 
   private def parseResourceLastModificationDate(resource: JsonLDDocument): Option[Instant] =
     resource.body
@@ -209,7 +202,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            .when(receivedResourceIri.toString != resourceIri)
     resourceLastModDate = parseResourceLastModificationDate(resource)
     _                  <- checkLastModDate(resourceIri, maybePreviousLastModDate, resourceLastModDate)
-    value               = getValueFromResource(resource, propertyIriInResult, expectedValueIri)
+    value              <- getValueFromResource(resource, propertyIriInResult, expectedValueIri)
   } yield value
 
   private def createTextValueWithoutStandoffRequest(resourceIri: IRI, valueAsString: String): String =
@@ -657,12 +650,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient
             .getJsonLdDocument(uri"/v2/values/$resourceIri/$valueUuid", anythingUser1, addVersionQueryParam(timestamp))
             .flatMap(_.assert200)
-        value <- ZIO.attempt(
-                   getValueFromResource(
-                     resource = responseJsonDoc,
-                     propertyIriInResult = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
-                     expectedValueIri = "http://rdfh.ch/0001/thing-with-history/values/1b",
-                   ),
+        value <- getValueFromResource(
+                   resource = responseJsonDoc,
+                   propertyIriInResult = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
+                   expectedValueIri = "http://rdfh.ch/0001/thing-with-history/values/1b",
                  )
         actual <- ZIO.fromEither(value.getRequiredInt(KA.IntValueAsInt))
       } yield assertTrue(actual == 2)
@@ -1958,9 +1949,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       } yield assertTrue(valueType == KA.TimeValue, savedTimeStamp == timeStamp)
     },
     test("create a list value") {
-      val resourceIri: IRI      = AThing.iri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
-      val listNode              = URI.create("http://rdfh.ch/lists/0001/treeList03")
+      val resourceIri = AThing.iri
+      val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+      val listNode    = "http://rdfh.ch/lists/0001/treeList03"
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
         jsonLd =
@@ -1991,7 +1982,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = listValueIri.get,
                       )
-        savedListValueHasListNode <- ZIO.fromEither(savedValue.getRequiredUri(KA.ListValueAsListNode))
+        savedListValueHasListNode <-
+          ZIO.fromEither(savedValue.getRequiredObject(KA.ListValueAsListNode).flatMap(_.getIri))
       } yield assertTrue(valueType == KA.ListValue, savedListValueHasListNode == listNode)
     },
     test("create a color value") {
@@ -3126,7 +3118,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
     test("update a list value") {
       val resourceIri = AThing.iri
       val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
-      val listNode    = URI.create("http://rdfh.ch/lists/0001/treeList02")
+      val listNode    = "http://rdfh.ch/lists/0001/treeList02"
 
       val jsonLd =
         s"""{
@@ -3159,7 +3151,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = listValueIri.get,
                       )
-        savedListValueHasListNode <- ZIO.fromEither(savedValue.getRequiredUri(KA.ListValueAsListNode))
+        savedListValueHasListNode <-
+          ZIO.fromEither(savedValue.getRequiredObject(KA.ListValueAsListNode).flatMap(_.getIri))
       } yield assertTrue(valueType == KA.ListValue, savedListValueHasListNode == listNode)
     },
     test("update a color value") {
@@ -3200,9 +3193,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       } yield assertTrue(valueType == KA.ColorValue, savedColor == color)
     },
     test("update a URI value") {
-      val resourceIri: IRI      = AThing.iri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
-      val uri                   = "https://docs.knora.org"
+      val resourceIri = AThing.iri
+      val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
+      val uri         = URI.create("https://docs.knora.org")
 
       val jsonLd =
         s"""{
@@ -3236,11 +3229,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = uriValueIri.get,
                       )
-        savedUri = savedValue.requireDatatypeValueInObject(
-                     key = KA.UriValueAsUri,
-                     expectedDatatype = Xsd.Uri.toSmartIri,
-                     validationFun = validationFun,
-                   )
+        savedUri <- ZIO.fromEither(savedValue.getRequiredUri(KA.UriValueAsUri))
       } yield assertTrue(valueType == KA.UriValue, savedUri == uri)
     },
     test("update a geoname value") {
