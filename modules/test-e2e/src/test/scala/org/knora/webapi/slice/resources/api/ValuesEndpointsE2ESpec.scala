@@ -4,7 +4,6 @@
  */
 
 package org.knora.webapi.slice.resources.api
-
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -14,6 +13,7 @@ import zio.json.*
 import zio.json.ast.*
 import zio.test.*
 
+import java.net.URI
 import java.nio.file.Paths
 import java.time.Instant
 import java.util.UUID
@@ -672,7 +672,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int         = 4
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -688,11 +688,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = intValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = intValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         _ <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID)).tap { uuid =>
                ZIO.succeed(self.integerValueUUID = UuidUtil.decode(uuid))
              }
@@ -710,7 +709,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val resourceIri: IRI = AThing.iri
       val intValue: Int    = 30
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -726,10 +725,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |  }
            |}""".stripMargin
       for {
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        valueUUID <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        valueUUID       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
       } yield assertTrue(valueIri == customValueIri, valueUUID == customValueUUID)
     },
     test("return a DuplicateValueException during value creation when the supplied value IRI is not unique") {
@@ -759,7 +757,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val resourceIri: IRI   = AThing.iri
       val intValue: Int      = 45
       val intValueCustomUUID = "IN4R19yYR0ygi3K2VEHpUQ"
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -775,10 +773,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |  }
            |}""".stripMargin
       for {
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueUUID <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueUUID       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
       } yield assertTrue(valueUUID == intValueCustomUUID, valueIri.endsWith(valueUUID))
     },
     test("do not create an integer value if the custom UUID is not part of the custom IRI") {
@@ -786,7 +783,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val intValue: Int    = 45
       val aUUID            = "IN4R19yYR0ygi3K2VEHpUQ"
       val valueIri         = s"http://rdfh.ch/0001/a-thing/values/IN4R19yYR0ygi3K2VEHpNN"
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -802,17 +799,14 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
            |  }
            |}""".stripMargin
-      TestApiClient
-        .postJsonLd(uri"/v2/values", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert400)
-        .as(assertCompletes)
+      TestApiClient.postJsonLd(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
     },
     test("create an integer value with a custom creation date") {
       val customCreationDate: Instant = Instant.parse("2020-06-04T11:36:54.502951Z")
       val resourceIri: IRI            = AThing.iri
       val intValue: Int               = 25
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -832,10 +826,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |}""".stripMargin
 
       for {
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _         = intValueForRsyncIri.set(valueIri)
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = intValueForRsyncIri.set(valueIri)
         savedCreationDate = responseJsonDoc.body.requireDatatypeValueInObject(
                               key = KA.ValueCreationDate,
                               expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
@@ -851,7 +844,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val customValueUUID             = "7VDvMOnuitf_r1Ju7BglsQ"
       val customCreationDate: Instant = Instant.parse("2020-06-04T12:58:54.502951Z")
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -872,10 +865,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |  }
            |}""".stripMargin
       for {
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        valueUUID <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        valueUUID       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
         savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
                                        key = KA.ValueCreationDate,
                                        expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
@@ -889,7 +881,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       )
     },
     test("not create an integer value if the simple schema is submitted") {
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "${AThing.iri}",
            |  "@type" : "anything:Thing",
@@ -899,10 +891,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
            |  }
            |}""".stripMargin
-      TestApiClient
-        .postJsonLd(uri"/v2/values", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert400)
-        .as(assertCompletes)
+      TestApiClient.postJsonLd(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
     },
     test("create an integer value with custom permissions") {
       val resourceIri: IRI          = AThing.iri
@@ -912,7 +901,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity =
+        jsonLd =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -926,11 +915,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}""".stripMargin
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = intValueWithCustomPermissionsIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = intValueWithCustomPermissionsIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -948,12 +936,11 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity              = createTextValueWithoutStandoffRequest(resourceIri, valueAsString)
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = textValueWithoutStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd                    = createTextValueWithoutStandoffRequest(resourceIri, valueAsString)
+        responseJsonDoc          <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = textValueWithoutStandoffIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -965,15 +952,12 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       } yield assertTrue(valueType == KA.TextValue, savedValueAsString == valueAsString)
     },
     test("not update a text value so it's empty") {
-      val jsonLDEntity = updateTextValueWithoutStandoffRequest(
+      val jsonLd = updateTextValueWithoutStandoffRequest(
         resourceIri = AThing.iri,
         valueIri = textValueWithoutStandoffIri.get,
         valueAsString = "",
       )
-      TestApiClient
-        .putJsonLd(uri"/v2/values", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert400)
-        .as(assertCompletes)
+      TestApiClient.putJsonLd(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
     },
     test("update a text value without standoff") {
       val resourceIri: IRI      = AThing.iri
@@ -981,16 +965,15 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = updateTextValueWithoutStandoffRequest(
-                         resourceIri = resourceIri,
-                         valueIri = textValueWithoutStandoffIri.get,
-                         valueAsString = valueAsString,
-                       )
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = textValueWithoutStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = updateTextValueWithoutStandoffRequest(
+                   resourceIri = resourceIri,
+                   valueIri = textValueWithoutStandoffIri.get,
+                   valueAsString = valueAsString,
+                 )
+        responseJsonDoc <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = textValueWithoutStandoffIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1007,17 +990,16 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = updateTextValueWithCommentRequest(
-                         resourceIri = resourceIri,
-                         valueIri = textValueWithoutStandoffIri.get,
-                         valueAsString = valueAsString,
-                         valueHasComment = "Adding a comment",
-                       )
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = textValueWithoutStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = updateTextValueWithCommentRequest(
+                   resourceIri = resourceIri,
+                   valueIri = textValueWithoutStandoffIri.get,
+                   valueAsString = valueAsString,
+                   valueHasComment = "Adding a comment",
+                 )
+        responseJsonDoc <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = textValueWithoutStandoffIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1034,17 +1016,16 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = updateTextValueWithCommentRequest(
-                         resourceIri = resourceIri,
-                         valueIri = textValueWithoutStandoffIri.get,
-                         valueAsString = valueAsString,
-                         valueHasComment = "Updated comment",
-                       )
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = textValueWithoutStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = updateTextValueWithCommentRequest(
+                   resourceIri = resourceIri,
+                   valueIri = textValueWithoutStandoffIri.get,
+                   valueAsString = valueAsString,
+                   valueHasComment = "Updated comment",
+                 )
+        responseJsonDoc <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = textValueWithoutStandoffIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1065,7 +1046,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri   = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity =
+        jsonLd =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -1079,11 +1060,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}""".stripMargin
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = textValueWithoutStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = textValueWithoutStandoffIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1104,16 +1084,15 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = createTextValueWithStandoffRequest(
-                         resourceIri = resourceIri,
-                         textValueAsXml = textValue1AsXmlWithStandardMapping,
-                         mappingIri = standardMappingIri,
-                       )
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = textValueWithStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = createTextValueWithStandoffRequest(
+                   resourceIri = resourceIri,
+                   textValueAsXml = textValue1AsXmlWithStandardMapping,
+                   mappingIri = standardMappingIri,
+                 )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = textValueWithStandoffIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1148,16 +1127,15 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = createTextValueWithStandoffRequest(
-                         resourceIri = resourceIri,
-                         textValueAsXml = textValueAsXml,
-                         mappingIri = standardMappingIri,
-                       )
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = textValueWithStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = createTextValueWithStandoffRequest(
+                   resourceIri = resourceIri,
+                   textValueAsXml = textValueAsXml,
+                   mappingIri = standardMappingIri,
+                 )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = textValueWithStandoffIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1183,16 +1161,15 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = createTextValueWithStandoffRequest(
-                         resourceIri = resourceIri,
-                         textValueAsXml = textValueAsXml,
-                         mappingIri = standardMappingIri,
-                       )
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
-        _         <- ZIO.attempt(assertTrue(valueType == KA.TextValue))
+        jsonLd = createTextValueWithStandoffRequest(
+                   resourceIri = resourceIri,
+                   textValueAsXml = textValueAsXml,
+                   mappingIri = standardMappingIri,
+                 )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        _               <- ZIO.attempt(assertTrue(valueType == KA.TextValue))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1207,12 +1184,11 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val resourceIri = AThing.iri
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity             <- TestDataFileUtil.readTestData("valuesE2EV2", "CreateValueWithEscape.jsonld")
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri    = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-        _           = textValueWithEscapeIri.set(valueIri)
-        propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+        jsonLd                   <- TestDataFileUtil.readTestData("valuesE2EV2", "CreateValueWithEscape.jsonld")
+        responseJsonDoc          <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = textValueWithEscapeIri.set(valueIri)
+        propertyIri               = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
         savedValue <- getValue(
                         resourceIri = AThing.iri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1241,16 +1217,15 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = createTextValueWithStandoffRequest(
-                         resourceIri = resourceIri,
-                         textValueAsXml = textValueAsXml,
-                         mappingIri = standardMappingIri,
-                       )
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
-        _         <- ZIO.attempt(assertTrue(valueType == KA.TextValue))
+        jsonLd = createTextValueWithStandoffRequest(
+                   resourceIri = resourceIri,
+                   textValueAsXml = textValueAsXml,
+                   mappingIri = standardMappingIri,
+                 )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        _               <- ZIO.attempt(assertTrue(valueType == KA.TextValue))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1270,15 +1245,12 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |   This text has a footnote<footnote /> without content.
            |</text>
            |""".stripMargin
-      val jsonLDEntity = createTextValueWithStandoffRequest(
+      val jsonLd = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
         textValueAsXml = textValueAsXml,
         mappingIri = standardMappingIri,
       )
-      TestApiClient
-        .postJsonLd(uri"/v2/values", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert400)
-        .as(assertCompletes)
+      TestApiClient.postJsonLd(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
     },
     test("create a TextValue from XML representing HTML with an attribute containing escaped quotes") {
       // Create the mapping.
@@ -1311,16 +1283,15 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
             |    <p>This an <span data-description="an &quot;event&quot;" data-date="GREGORIAN:2017-01-27 CE" class="event">event</span>.</p>
             |</text>""".stripMargin
 
-        jsonLDEntity = createTextValueWithStandoffRequest(
-                         resourceIri = resourceIri,
-                         textValueAsXml = textValueAsXml,
-                         mappingIri = s"$anythingProjectIri/mappings/HTMLMapping",
-                       )
-        _ <- TestApiClient.postMultiPart[Json](uri"/v2/mapping", multipartBody, anythingUser1).flatMap(_.assert200)
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-        _        = textValueWithStandoffIri.set(valueIri)
+        jsonLd = createTextValueWithStandoffRequest(
+                   resourceIri = resourceIri,
+                   textValueAsXml = textValueAsXml,
+                   mappingIri = s"$anythingProjectIri/mappings/HTMLMapping",
+                 )
+        _               <- TestApiClient.postMultiPart[Json](uri"/v2/mapping", multipartBody, anythingUser1).flatMap(_.assert200)
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = textValueWithStandoffIri.set(valueIri)
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1343,7 +1314,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val decimalValueAsDecimal = BigDecimal(4.3)
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity =
+        jsonLd =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -1360,11 +1331,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}""".stripMargin
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = decimalValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = decimalValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1394,25 +1364,22 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val dateValueHasEndEra     = "CE"
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-
-        jsonLDEntity = createDateValueWithDayPrecisionRequest(
-                         resourceIri = resourceIri,
-                         dateValueHasCalendar = dateValueHasCalendar,
-                         dateValueHasStartYear = dateValueHasStartYear,
-                         dateValueHasStartMonth = dateValueHasStartMonth,
-                         dateValueHasStartDay = dateValueHasStartDay,
-                         dateValueHasStartEra = dateValueHasStartEra,
-                         dateValueHasEndYear = dateValueHasEndYear,
-                         dateValueHasEndMonth = dateValueHasEndMonth,
-                         dateValueHasEndDay = dateValueHasEndDay,
-                         dateValueHasEndEra = dateValueHasEndEra,
-                       )
-
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = createDateValueWithDayPrecisionRequest(
+                   resourceIri = resourceIri,
+                   dateValueHasCalendar = dateValueHasCalendar,
+                   dateValueHasStartYear = dateValueHasStartYear,
+                   dateValueHasStartMonth = dateValueHasStartMonth,
+                   dateValueHasStartDay = dateValueHasStartDay,
+                   dateValueHasStartEra = dateValueHasStartEra,
+                   dateValueHasEndYear = dateValueHasEndYear,
+                   dateValueHasEndMonth = dateValueHasEndMonth,
+                   dateValueHasEndDay = dateValueHasEndDay,
+                   dateValueHasEndEra = dateValueHasEndEra,
+                 )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = dateValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1456,21 +1423,20 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val dateValueHasEndEra     = "CE"
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = createDateValueWithMonthPrecisionRequest(
-                         resourceIri = resourceIri,
-                         dateValueHasCalendar = dateValueHasCalendar,
-                         dateValueHasStartYear = dateValueHasStartYear,
-                         dateValueHasStartMonth = dateValueHasStartMonth,
-                         dateValueHasStartEra = dateValueHasStartEra,
-                         dateValueHasEndYear = dateValueHasEndYear,
-                         dateValueHasEndMonth = dateValueHasEndMonth,
-                         dateValueHasEndEra = dateValueHasEndEra,
-                       )
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = createDateValueWithMonthPrecisionRequest(
+                   resourceIri = resourceIri,
+                   dateValueHasCalendar = dateValueHasCalendar,
+                   dateValueHasStartYear = dateValueHasStartYear,
+                   dateValueHasStartMonth = dateValueHasStartMonth,
+                   dateValueHasStartEra = dateValueHasStartEra,
+                   dateValueHasEndYear = dateValueHasEndYear,
+                   dateValueHasEndMonth = dateValueHasEndMonth,
+                   dateValueHasEndEra = dateValueHasEndEra,
+                 )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = dateValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1512,19 +1478,18 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val dateValueHasEndEra    = "CE"
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = createDateValueWithYearPrecisionRequest(
-                         resourceIri = resourceIri,
-                         dateValueHasCalendar = dateValueHasCalendar,
-                         dateValueHasStartYear = dateValueHasStartYear,
-                         dateValueHasStartEra = dateValueHasStartEra,
-                         dateValueHasEndYear = dateValueHasEndYear,
-                         dateValueHasEndEra = dateValueHasEndEra,
-                       )
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = createDateValueWithYearPrecisionRequest(
+                   resourceIri = resourceIri,
+                   dateValueHasCalendar = dateValueHasCalendar,
+                   dateValueHasStartYear = dateValueHasStartYear,
+                   dateValueHasStartEra = dateValueHasStartEra,
+                   dateValueHasEndYear = dateValueHasEndYear,
+                   dateValueHasEndEra = dateValueHasEndEra,
+                 )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = dateValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1566,23 +1531,22 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val dateValueHasStartEra   = "CE"
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity: String = createDateValueWithDayPrecisionRequest(
-                                 resourceIri = resourceIri,
-                                 dateValueHasCalendar = dateValueHasCalendar,
-                                 dateValueHasStartYear = dateValueHasStartYear,
-                                 dateValueHasStartMonth = dateValueHasStartMonth,
-                                 dateValueHasStartDay = dateValueHasStartDay,
-                                 dateValueHasStartEra = dateValueHasStartEra,
-                                 dateValueHasEndYear = dateValueHasStartYear,
-                                 dateValueHasEndMonth = dateValueHasStartMonth,
-                                 dateValueHasEndDay = dateValueHasStartDay,
-                                 dateValueHasEndEra = dateValueHasStartEra,
-                               )
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd: String = createDateValueWithDayPrecisionRequest(
+                           resourceIri = resourceIri,
+                           dateValueHasCalendar = dateValueHasCalendar,
+                           dateValueHasStartYear = dateValueHasStartYear,
+                           dateValueHasStartMonth = dateValueHasStartMonth,
+                           dateValueHasStartDay = dateValueHasStartDay,
+                           dateValueHasStartEra = dateValueHasStartEra,
+                           dateValueHasEndYear = dateValueHasStartYear,
+                           dateValueHasEndMonth = dateValueHasStartMonth,
+                           dateValueHasEndDay = dateValueHasStartDay,
+                           dateValueHasEndEra = dateValueHasStartEra,
+                         )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = dateValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1624,21 +1588,20 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = createDateValueWithMonthPrecisionRequest(
-                         resourceIri = resourceIri,
-                         dateValueHasCalendar = dateValueHasCalendar,
-                         dateValueHasStartYear = dateValueHasStartYear,
-                         dateValueHasStartMonth = dateValueHasStartMonth,
-                         dateValueHasStartEra = dateValueHasStartEra,
-                         dateValueHasEndYear = dateValueHasStartYear,
-                         dateValueHasEndMonth = dateValueHasStartMonth,
-                         dateValueHasEndEra = dateValueHasStartEra,
-                       )
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = createDateValueWithMonthPrecisionRequest(
+                   resourceIri = resourceIri,
+                   dateValueHasCalendar = dateValueHasCalendar,
+                   dateValueHasStartYear = dateValueHasStartYear,
+                   dateValueHasStartMonth = dateValueHasStartMonth,
+                   dateValueHasStartEra = dateValueHasStartEra,
+                   dateValueHasEndYear = dateValueHasStartYear,
+                   dateValueHasEndMonth = dateValueHasStartMonth,
+                   dateValueHasEndEra = dateValueHasStartEra,
+                 )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = dateValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1679,19 +1642,18 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = createDateValueWithYearPrecisionRequest(
-                         resourceIri = resourceIri,
-                         dateValueHasCalendar = dateValueHasCalendar,
-                         dateValueHasStartYear = dateValueHasStartYear,
-                         dateValueHasStartEra = dateValueHasStartEra,
-                         dateValueHasEndYear = dateValueHasStartYear,
-                         dateValueHasEndEra = dateValueHasStartEra,
-                       )
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = createDateValueWithYearPrecisionRequest(
+                   resourceIri = resourceIri,
+                   dateValueHasCalendar = dateValueHasCalendar,
+                   dateValueHasStartYear = dateValueHasStartYear,
+                   dateValueHasStartEra = dateValueHasStartEra,
+                   dateValueHasEndYear = dateValueHasStartYear,
+                   dateValueHasEndEra = dateValueHasStartEra,
+                 )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = dateValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1733,21 +1695,20 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = createIslamicDateValueWithDayPrecisionRequest(
-                         resourceIri = resourceIri,
-                         dateValueHasCalendar = dateValueHasCalendar,
-                         dateValueHasStartYear = dateValueHasStartYear,
-                         dateValueHasStartMonth = dateValueHasStartMonth,
-                         dateValueHasStartDay = dateValueHasStartDay,
-                         dateValueHasEndYear = dateValueHasStartYear,
-                         dateValueHasEndMonth = dateValueHasStartMonth,
-                         dateValueHasEndDay = dateValueHasStartDay,
-                       )
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = createIslamicDateValueWithDayPrecisionRequest(
+                   resourceIri = resourceIri,
+                   dateValueHasCalendar = dateValueHasCalendar,
+                   dateValueHasStartYear = dateValueHasStartYear,
+                   dateValueHasStartMonth = dateValueHasStartMonth,
+                   dateValueHasStartDay = dateValueHasStartDay,
+                   dateValueHasEndYear = dateValueHasStartYear,
+                   dateValueHasEndMonth = dateValueHasStartMonth,
+                   dateValueHasEndDay = dateValueHasStartDay,
+                 )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = dateValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1788,21 +1749,20 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity = createIslamicDateValueWithDayPrecisionRequest(
-                         resourceIri = resourceIri,
-                         dateValueHasCalendar = dateValueHasCalendar,
-                         dateValueHasStartYear = dateValueHasStartYear,
-                         dateValueHasStartMonth = dateValueHasStartMonth,
-                         dateValueHasStartDay = dateValueHasStartDay,
-                         dateValueHasEndYear = dateValueHasEndYear,
-                         dateValueHasEndMonth = dateValueHasEndMonth,
-                         dateValueHasEndDay = dateValueHasEndDay,
-                       )
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        jsonLd = createIslamicDateValueWithDayPrecisionRequest(
+                   resourceIri = resourceIri,
+                   dateValueHasCalendar = dateValueHasCalendar,
+                   dateValueHasStartYear = dateValueHasStartYear,
+                   dateValueHasStartMonth = dateValueHasStartMonth,
+                   dateValueHasStartDay = dateValueHasStartDay,
+                   dateValueHasEndYear = dateValueHasEndYear,
+                   dateValueHasEndMonth = dateValueHasEndMonth,
+                   dateValueHasEndDay = dateValueHasEndDay,
+                 )
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = dateValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1837,7 +1797,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity =
+        jsonLd =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -1850,11 +1810,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}""".stripMargin
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = booleanValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = booleanValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1870,7 +1829,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity =
+        jsonLd =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -1883,11 +1842,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}""".stripMargin
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = geometryValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = geometryValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1906,7 +1864,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity =
+        jsonLd =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -1928,11 +1886,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |  }
              |}""".stripMargin
 
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = intervalValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = intervalValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1964,7 +1921,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val timeStamp             = Instant.parse("2019-08-28T15:59:12.725007Z")
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity =
+        jsonLd =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -1981,11 +1938,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}""".stripMargin
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = timeValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = timeValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2004,10 +1960,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
     test("create a list value") {
       val resourceIri: IRI      = AThing.iri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
-      val listNode              = "http://rdfh.ch/lists/0001/treeList03"
+      val listNode              = URI.create("http://rdfh.ch/lists/0001/treeList03")
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity =
+        jsonLd =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -2024,11 +1980,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |  }
              |}""".stripMargin
 
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = listValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = listValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2036,7 +1991,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = listValueIri.get,
                       )
-        savedListValueHasListNode = savedValue.requireIriInObject(KA.ListValueAsListNode, validationFun)
+        savedListValueHasListNode <- ZIO.fromEither(savedValue.getRequiredUri(KA.ListValueAsListNode))
       } yield assertTrue(valueType == KA.ListValue, savedListValueHasListNode == listNode)
     },
     test("create a color value") {
@@ -2045,7 +2000,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val color                 = "#ff3333"
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity =
+        jsonLd =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -2059,11 +2014,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}""".stripMargin
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = colorValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = colorValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2077,10 +2031,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
     test("create a URI value") {
       val resourceIri: IRI      = AThing.iri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
-      val uri                   = "https://www.knora.org"
+      val uri                   = URI.create("https://www.knora.org")
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity =
+        jsonLd =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -2097,11 +2051,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}""".stripMargin
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = uriValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = uriValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2109,11 +2062,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = uriValueIri.get,
                       )
-        savedUri = savedValue.requireDatatypeValueInObject(
-                     key = KA.UriValueAsUri,
-                     expectedDatatype = Xsd.Uri.toSmartIri,
-                     validationFun = validationFun,
-                   )
+        savedUri <- ZIO.fromEither(savedValue.getRequiredUri(KA.UriValueAsUri))
       } yield assertTrue(valueType == KA.UriValue, savedUri == uri)
     },
     test("create a geoname value") {
@@ -2122,7 +2071,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val geonameCode           = "2661604"
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity =
+        jsonLd =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -2136,11 +2085,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}""".stripMargin
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = geonameValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = geonameValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2157,7 +2105,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        jsonLDEntity: String =
+        jsonLd: String =
           s"""{
              |  "@id" : "$resourceIri",
              |  "@type" : "anything:Thing",
@@ -2173,11 +2121,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}""".stripMargin
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = linkValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                = linkValueIri.set(valueIri)
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         _ <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID)).tap { uuid =>
                ZIO.succeed(self.linkValueUUID = UuidUtil.decode(uuid))
              }
@@ -2199,7 +2146,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val customValueUUID             = "mr9i2aUUJolv64V_9hYdTw"
       val customCreationDate: Instant = Instant.parse("2020-06-04T11:36:54.502951Z")
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -2223,10 +2170,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |}""".stripMargin
 
       for {
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        valueUUID <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        valueUUID       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
         savedCreationDate = responseJsonDoc.body.requireDatatypeValueInObject(
                               key = KA.ValueCreationDate,
                               expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
@@ -2244,7 +2190,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int         = 5
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -2260,11 +2206,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |}""".stripMargin
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = intValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = intValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         newIntegerValueUUID = responseJsonDoc.body.requireStringWithValidation(
                                 KA.ValueHasUUID,
                                 (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun),
@@ -2289,7 +2234,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val intValue: Int         = 6
       val valueCreationDate     = Instant.now
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -2310,11 +2255,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |}""".stripMargin
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = intValueForRsyncIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = intValueForRsyncIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2337,7 +2281,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val intValue: Int           = 7
       val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/W8COP_RXRpqVsjW9NL2JYg"
 
-      val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
+      val jsonLd = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
         valueIri = intValueForRsyncIri.get,
         intValue = intValue,
@@ -2346,10 +2290,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-        _        = intValueForRsyncIri.set(valueIri)
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = intValueForRsyncIri.set(valueIri)
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2365,70 +2308,58 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val intValue: Int           = 8
       val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/W8COP_RXRpqVsjW9NL2JYg"
 
-      val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
+      val jsonLd = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
         valueIri = intValueForRsyncIri.get,
         intValue = intValue,
         newValueVersionIri = newValueVersionIri,
       )
-      TestApiClient
-        .putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert400)
-        .as(assertCompletes)
+      TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
     },
     test("not update an integer value with an invalid custom new value version IRI") {
       val resourceIri: IRI        = AThing.iri
       val intValue: Int           = 8
       val newValueVersionIri: IRI = "http://example.com/foo"
 
-      val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
+      val jsonLd = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
         valueIri = intValueForRsyncIri.get,
         intValue = intValue,
         newValueVersionIri = newValueVersionIri,
       )
-      TestApiClient
-        .putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert400)
-        .as(assertCompletes)
+      TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
     },
     test("not update an integer value with a custom new value version IRI that refers to the wrong project code") {
       val resourceIri: IRI        = AThing.iri
       val intValue: Int           = 8
       val newValueVersionIri: IRI = "http://rdfh.ch/0002/a-thing/values/foo"
 
-      val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
+      val jsonLd = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
         valueIri = intValueForRsyncIri.get,
         intValue = intValue,
         newValueVersionIri = newValueVersionIri,
       )
-      TestApiClient
-        .putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert400)
-        .as(assertCompletes)
+      TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
     },
     test("not update an integer value with a custom new value version IRI that refers to the wrong resource") {
       val resourceIri: IRI        = AThing.iri
       val intValue: Int           = 8
       val newValueVersionIri: IRI = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw/values/iEYi6E7Ntjvj2syzJZiXlg"
 
-      val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
+      val jsonLd = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
         valueIri = intValueForRsyncIri.get,
         intValue = intValue,
         newValueVersionIri = newValueVersionIri,
       )
-      TestApiClient
-        .putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert400)
-        .as(assertCompletes)
+      TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
     },
     test("not update an integer value if the simple schema is submitted") {
       val resourceIri: IRI = AThing.iri
       val intValue: Int    = 10
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -2442,11 +2373,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
            |  }
            |}""".stripMargin
-
-      TestApiClient
-        .putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert400)
-        .as(assertCompletes)
+      TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
     },
     test("update an integer value with custom permissions") {
       val resourceIri: IRI          = AThing.iri
@@ -2454,7 +2381,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val intValue: Int             = 3879
       val customPermissions: String = "CR http://rdfh.ch/groups/0001/thing-searcher"
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -2472,11 +2399,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = intValueWithCustomPermissionsIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = intValueWithCustomPermissionsIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2493,7 +2419,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val customPermissions: String = "CR http://rdfh.ch/groups/0001/thing-searcher|V knora-admin:KnownUser"
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -2510,11 +2436,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = intValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = intValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2530,7 +2455,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
       val decimalValue          = BigDecimal(5.6)
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -2551,11 +2476,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = decimalValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = decimalValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2575,7 +2499,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -2595,11 +2519,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = textValueWithStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = textValueWithStandoffIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2616,15 +2539,15 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
     },
     test("update a text value with standoff containing escaped text") {
       val resourceIri = AThing.iri
-      val jsonLDEntity =
+      val jsonLd =
         FileUtil.readTextFile(Paths.get("test_data/generated_test_data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
-      val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
+      val jsonLdWithResourceValueIri = jsonLd.replace("VALUE_IRI", textValueWithEscapeIri.get)
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
         responseJsonDoc <- TestApiClient
-                             .putJsonLdDocument(uri"/v2/values", jsonLDEntityWithResourceValueIri, anythingUser1)
+                             .putJsonLdDocument(uri"/v2/values", jsonLdWithResourceValueIri, anythingUser1)
                              .flatMap(_.assert200)
-        valueIri    = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        valueIri   <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _           = textValueWithEscapeIri.set(valueIri)
         propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
         savedValue <- getValue(
@@ -2645,7 +2568,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val valueHasComment: String = "this is an updated comment"
       val propertyIri: SmartIri   = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
 
-      val jsonLDEntity = updateTextValueWithCommentRequest(
+      val jsonLd = updateTextValueWithCommentRequest(
         resourceIri = resourceIri,
         valueIri = textValueWithoutStandoffIri.get,
         valueAsString = valueAsString,
@@ -2654,11 +2577,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = textValueWithoutStandoffIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = textValueWithoutStandoffIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2687,7 +2609,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val dateValueHasEndDay     = 6
       val dateValueHasEndEra     = "CE"
 
-      val jsonLDEntity = updateDateValueWithDayPrecisionRequest(
+      val jsonLd = updateDateValueWithDayPrecisionRequest(
         resourceIri = resourceIri,
         valueIri = dateValueIri.get,
         dateValueHasCalendar = dateValueHasCalendar,
@@ -2703,11 +2625,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = dateValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2750,7 +2671,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val dateValueHasEndMonth   = 12
       val dateValueHasEndEra     = "CE"
 
-      val jsonLDEntity = updateDateValueWithMonthPrecisionRequest(
+      val jsonLd = updateDateValueWithMonthPrecisionRequest(
         resourceIri = resourceIri,
         valueIri = dateValueIri.get,
         dateValueHasCalendar = dateValueHasCalendar,
@@ -2764,11 +2685,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = dateValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2809,7 +2729,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val dateValueHasEndYear   = 2020
       val dateValueHasEndEra    = "CE"
 
-      val jsonLDEntity = updateDateValueWithYearPrecisionRequest(
+      val jsonLd = updateDateValueWithYearPrecisionRequest(
         resourceIri = resourceIri,
         valueIri = dateValueIri.get,
         dateValueHasCalendar = dateValueHasCalendar,
@@ -2821,11 +2741,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = dateValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2866,7 +2785,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val dateValueHasStartDay   = 6
       val dateValueHasStartEra   = "CE"
 
-      val jsonLDEntity = updateDateValueWithDayPrecisionRequest(
+      val jsonLd = updateDateValueWithDayPrecisionRequest(
         resourceIri = resourceIri,
         valueIri = dateValueIri.get,
         dateValueHasCalendar = dateValueHasCalendar,
@@ -2882,11 +2801,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = dateValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2926,7 +2844,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val dateValueHasStartMonth = 7
       val dateValueHasStartEra   = "CE"
 
-      val jsonLDEntity = updateDateValueWithMonthPrecisionRequest(
+      val jsonLd = updateDateValueWithMonthPrecisionRequest(
         resourceIri = resourceIri,
         valueIri = dateValueIri.get,
         dateValueHasCalendar = dateValueHasCalendar,
@@ -2940,11 +2858,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = dateValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2983,7 +2900,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val dateValueHasStartYear = 2019
       val dateValueHasStartEra  = "CE"
 
-      val jsonLDEntity = updateDateValueWithYearPrecisionRequest(
+      val jsonLd = updateDateValueWithYearPrecisionRequest(
         resourceIri = resourceIri,
         valueIri = dateValueIri.get,
         dateValueHasCalendar = dateValueHasCalendar,
@@ -2995,11 +2912,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = dateValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = dateValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3036,7 +2952,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
       val booleanValue: Boolean = false
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -3053,11 +2969,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = booleanValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = booleanValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3072,7 +2987,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val resourceIri: IRI      = AThing.iri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -3089,11 +3004,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = geometryValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = geometryValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3110,7 +3024,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val intervalStart         = BigDecimal("5.6")
       val intervalEnd           = BigDecimal("7.8")
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -3135,11 +3049,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = intervalValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = intervalValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3170,7 +3083,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
       val timeStamp             = Instant.parse("2019-12-16T09:14:56.409249Z")
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -3191,11 +3104,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = timeValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = timeValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3212,11 +3124,11 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       } yield assertTrue(valueType == KA.TimeValue, savedTimeStamp == timeStamp)
     },
     test("update a list value") {
-      val resourceIri: IRI      = AThing.iri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
-      val listNode              = "http://rdfh.ch/lists/0001/treeList02"
+      val resourceIri = AThing.iri
+      val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+      val listNode    = URI.create("http://rdfh.ch/lists/0001/treeList02")
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -3236,11 +3148,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = listValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = listValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3248,7 +3159,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         propertyIriInResult = propertyIri,
                         expectedValueIri = listValueIri.get,
                       )
-        savedListValueHasListNode = savedValue.requireIriInObject(KA.ListValueAsListNode, validationFun)
+        savedListValueHasListNode <- ZIO.fromEither(savedValue.getRequiredUri(KA.ListValueAsListNode))
       } yield assertTrue(valueType == KA.ListValue, savedListValueHasListNode == listNode)
     },
     test("update a color value") {
@@ -3256,7 +3167,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
       val color                 = "#ff3344"
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -3274,11 +3185,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = colorValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = colorValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3294,7 +3204,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
       val uri                   = "https://docs.knora.org"
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -3315,11 +3225,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = uriValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = uriValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3339,7 +3248,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
       val geonameCode           = "2988507"
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -3357,11 +3266,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = geonameValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = geonameValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3378,7 +3286,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
       val linkTargetIri: IRI             = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
 
-      val jsonLDEntity = updateLinkValueRequest(
+      val jsonLd = updateLinkValueRequest(
         resourceIri = resourceIri,
         valueIri = linkValueIri.get,
         targetResourceIri = linkTargetIri,
@@ -3386,11 +3294,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = linkValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = linkValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         _ <- ZIO // When you change a link value's target, it gets a new UUID.
                .fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
                .map(UuidUtil.decode)
@@ -3414,7 +3321,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val linkTargetIri: IRI             = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
       val comment                        = "adding a comment"
 
-      val jsonLDEntity = updateLinkValueRequest(
+      val jsonLd = updateLinkValueRequest(
         resourceIri = resourceIri,
         valueIri = linkValueIri.get,
         targetResourceIri = linkTargetIri,
@@ -3423,11 +3330,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = linkValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = linkValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         // Since we only changed metadata, the UUID should be the same.
         _ <- ZIO
                .fromEither(responseJsonDoc.body.getRequiredString(KA.ValueHasUUID))
@@ -3451,7 +3357,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val linkTargetIri: IRI             = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
       val comment                        = "changing only the comment"
 
-      val jsonLDEntity = updateLinkValueRequest(
+      val jsonLd = updateLinkValueRequest(
         resourceIri = resourceIri,
         valueIri = linkValueIri.get,
         targetResourceIri = linkTargetIri,
@@ -3460,11 +3366,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = linkValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.putJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = linkValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         // Since we only changed metadata, the UUID should be the same.
         newLinkValueUUID = responseJsonDoc.body.requireStringWithValidation(
                              KA.ValueHasUUID,
@@ -3486,7 +3391,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
       val comment                        = "Initial comment"
 
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
@@ -3506,11 +3411,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
-        responseJsonDoc <-
-          TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        _          = linkValueIri.set(valueIri)
-        valueType <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+        responseJsonDoc          <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri                 <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _                         = linkValueIri.set(valueIri)
+        valueType                <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
         savedValue <- getValue(
                         resourceIri = resourceIri,
                         maybePreviousLastModDate = maybeResourceLastModDate,
@@ -3524,15 +3428,12 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       } yield assertTrue(savedTargetIri == TestDing.iri, valueType == KA.LinkValue, savedComment == comment)
     },
     test("delete an integer value") {
-      val jsonLDEntity = deleteIntValueRequest(AThing.iri, intValueIri.get, Some("this value was incorrect"))
-      TestApiClient
-        .postJsonLd(uri"/v2/values/delete", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert200)
-        .as(assertCompletes)
+      val jsonLd = deleteIntValueRequest(AThing.iri, intValueIri.get, Some("this value was incorrect"))
+      TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLd, anythingUser1).flatMap(_.assert200).as(assertCompletes)
     },
     test("delete an integer value, supplying a custom delete date") {
       val deleteDate = Instant.now
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "${AThing.iri}",
            |  "@type" : "anything:Thing",
@@ -3550,13 +3451,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-      TestApiClient
-        .postJsonLd(uri"/v2/values/delete", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert200)
-        .as(assertCompletes)
+      TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLd, anythingUser1).flatMap(_.assert200).as(assertCompletes)
     },
     test("not delete an integer value if the simple schema is submitted") {
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "${AThing.iri}",
            |  "@type" : "anything:Thing",
@@ -3569,24 +3467,19 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
            |  }
            |}""".stripMargin
-
-      TestApiClient
-        .postJsonLd(uri"/v2/values/delete", jsonLDEntity, anythingUser1)
-        .flatMap(_.assert400)
-        .as(assertCompletes)
+      TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
     },
     test("delete an integer value without supplying a delete comment") {
       val resourceIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
       val valueIri: IRI    = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg"
       val timestamp        = "2018-05-28T15:52:03.897Z"
 
-      val jsonLDEntity = deleteIntValueRequest(
+      val jsonLd = deleteIntValueRequest(
         resourceIri = resourceIri,
         valueIri = valueIri,
         maybeDeleteComment = None,
       )
-
-      TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLDEntity, anythingUser2).flatMap(_.assert200) *>
+      TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLd, anythingUser2).flatMap(_.assert200) *>
         // Request the resource as it was before the value was deleted.
         TestApiClient
           .getJsonLd(uri"/v2/resources/$resourceIri", anythingUser2, addVersionQueryParam(timestamp))
@@ -3594,7 +3487,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         assertCompletes
     },
     test("delete a link between two resources") {
-      val jsonLDEntity =
+      val jsonLd =
         s"""{
            |  "@id" : "${AThing.iri}",
            |  "@type" : "anything:Thing",
@@ -3608,7 +3501,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-      TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLDEntity, anythingUser1).flatMap(_.assert200) *>
+      TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLd, anythingUser1).flatMap(_.assert200) *>
         assertCompletes
     },
     test("update a TextValue comment containing linebreaks should store linebreaks as Unicode") {
