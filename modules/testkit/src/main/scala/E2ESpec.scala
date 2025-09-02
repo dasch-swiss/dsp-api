@@ -18,10 +18,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio.*
 
-import java.util.concurrent.TimeUnit
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
 
@@ -30,10 +27,8 @@ import org.knora.webapi.core.Db
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.util.TestDataFileUtil
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
@@ -79,20 +74,4 @@ abstract class E2ESpec
     UnsafeZioRun.runOrThrow(
       ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, timeout, printFailure)),
     )
-
-  protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
-    val responseBodyFuture: Future[String] =
-      httpResponse.entity.toStrict(FiniteDuration(10L, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8"))
-    val responseBodyStr = Await.result(responseBodyFuture, FiniteDuration(10L, TimeUnit.SECONDS))
-    JsonLDUtil.parseJsonLD(responseBodyStr)
-  }
-
-  protected def responseToString(httpResponse: HttpResponse): String = {
-    val responseBodyFuture: Future[String] =
-      httpResponse.entity.toStrict(FiniteDuration(10L, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8"))
-    Await.result(responseBodyFuture, FiniteDuration(10L, TimeUnit.SECONDS))
-  }
-
-  def readTestData(folder: String, filename: String): String =
-    UnsafeZioRun.runOrThrow(TestDataFileUtil.readTestData(folder, filename))
 }
