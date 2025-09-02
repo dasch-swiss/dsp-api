@@ -37,6 +37,7 @@ import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTrans
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
@@ -327,48 +328,16 @@ final case class ResourcesResponderV2(
    *
    * @param deleteResourceV2 the request message.
    */
-  def markResourceAsDeletedV2(deleteResourceV2: DeleteOrEraseResourceRequestV2): Task[SuccessResponseV2] = {
-    val deleteTask: Task[SuccessResponseV2] =
+  def markResourceAsDeletedV2(deleteResourceV2: DeleteOrEraseResourceRequestV2): Task[SuccessResponseV2] =
+    IriLocker.runWithIriLock_(deleteResourceV2.apiRequestID, deleteResourceV2.resourceIri) {
       for {
-        // Get the metadata of the resource to be updated.
-        resourcesSeq <- getResourcePreviewWithDeletedResource(
-                          resourceIris = Seq(deleteResourceV2.resourceIri),
-                          targetSchema = ApiV2Complex,
-                          requestingUser = deleteResourceV2.requestingUser,
-                        )
+        resource <- getResourcePreviewWithDeletedResource(
+                      resourceIris = Seq(deleteResourceV2.resourceIri),
+                      targetSchema = ApiV2Complex,
+                      requestingUser = deleteResourceV2.requestingUser,
+                    ).map(_.toResource(deleteResourceV2.resourceIri))
 
-        resource: ReadResourceV2 = resourcesSeq.toResource(deleteResourceV2.resourceIri)
-        internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
-
-        // Make sure that the resource's class is what the client thinks it is.
-        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
-               val msg =
-                 s"Resource <${resource.resourceIri}> is not a member of class <${deleteResourceV2.resourceClassIri}>"
-               ZIO.fail(BadRequestException(msg))
-             }
-
-        _ <- ensureNoConflictingChange(resource, deleteResourceV2.maybeLastModificationDate)
-
-        resourceIri <- iriConverter.asResourceIri(deleteResourceV2.resourceIri).mapError(BadRequestException.apply)
-        _           <- ensureResourceIsNotInUse(resourceIri)
-
-        // If a custom delete date was provided, make sure it's later than the resource's most recent timestamp.
-        _ <- ZIO.when(
-               deleteResourceV2.maybeDeleteDate.exists(
-                 !_.isAfter(resource.lastModificationDate.getOrElse(resource.creationDate)),
-               ),
-             ) {
-               val msg =
-                 s"A custom delete date must be later than the date when the resource was created or last modified"
-               ZIO.fail(BadRequestException(msg))
-             }
-
-        // Check that the user has permission to mark the resource as deleted.
-        _ <- resourceUtilV2.checkResourcePermission(
-               resource,
-               Permission.ObjectAccess.Delete,
-               deleteResourceV2.requestingUser,
-             )
+        _ <- canDeleteResource(deleteResourceV2, Some(resource))
 
         // Get the IRI of the named graph in which the resource is stored.
         dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
@@ -402,9 +371,7 @@ final case class ResourcesResponderV2(
             ZIO.fail(UpdateNotPerformedException(msg))
           }
       } yield SuccessResponseV2("Resource marked as deleted")
-
-    IriLocker.runWithIriLock(deleteResourceV2.apiRequestID, deleteResourceV2.resourceIri, deleteTask)
-  }
+    }
 
   /**
    * Checks whether a knora-base:Resource is "in use", i.e. if the resource is not directly referred to by any other
@@ -446,6 +413,57 @@ final case class ResourcesResponderV2(
           .foreach(result.results.bindings.map(_.rowMap.get("other")).flatten.toSet)(iriConverter.asResourceIri)
           .mapError(DataConversionException.apply)
     } yield otherResources
+
+  /**
+   * Checks whether a knora-base:Resource may be deleted.
+   * The function takes in the same request as `markResourceAsDeletedV2`.
+   *
+   * @param deleteResourceV2 potential request for deletion
+   * @param resource Prefetched ReadResourceV2, in case this is called from `markResourceAsDeletedV2`.
+   *
+   * @return CanDoResponseV2 indicates whether the request can be deleted, similar to other "can do" routes.
+   */
+  def canDeleteResource(
+    deleteResourceV2: DeleteOrEraseResourceRequestV2,
+    resource: Option[ReadResourceV2] = None,
+  ): Task[CanDoResponseV2] =
+    (for {
+      requestingUser <- ZIO.succeed(deleteResourceV2.requestingUser)
+      resource <- ZIO.succeed(resource).someOrElseZIO {
+                    getResourcePreviewWithDeletedResource(
+                      resourceIris = Seq(deleteResourceV2.resourceIri),
+                      targetSchema = ApiV2Complex,
+                      requestingUser = requestingUser,
+                    ).map(_.toResource(deleteResourceV2.resourceIri))
+                  }
+
+      internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
+
+      _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
+             val msg =
+               s"Resource <${resource.resourceIri}> is not a member of class <${deleteResourceV2.resourceClassIri}>"
+             ZIO.fail(BadRequestException(msg))
+           }
+
+      _ <- ensureNoConflictingChange(resource, deleteResourceV2.maybeLastModificationDate)
+
+      resourceIri <- iriConverter.asResourceIri(deleteResourceV2.resourceIri).mapError(BadRequestException.apply)
+      _           <- ensureResourceIsNotInUse(resourceIri)
+
+      lastModificationDate = resource.lastModificationDate.getOrElse(resource.creationDate)
+      _ <- ZIO.when(deleteResourceV2.maybeDeleteDate.exists(!_.isAfter(lastModificationDate))) {
+             val msg =
+               s"A custom delete date must be later than the date when the resource was created or last modified"
+             ZIO.fail(BadRequestException(msg))
+           }
+
+      _ <- resourceUtilV2.checkResourcePermission(resource, Permission.ObjectAccess.Delete, requestingUser)
+    } yield ()).exit.map { exit =>
+      CanDoResponseV2(
+        canDo = JsonLDBoolean(exit.isSuccess),
+        cannotDoReason = exit.toEither.left.toOption.map(t => JsonLDString(t.getMessage)),
+      )
+    }
 
   private def ensureResourceIsNotInUse(resourceIri: ResourceIri): Task[Unit] =
     isResourceInUse(resourceIri)
