@@ -337,7 +337,7 @@ final case class ResourcesResponderV2(
                       requestingUser = deleteResourceV2.requestingUser,
                     ).map(_.toResource(deleteResourceV2.resourceIri))
 
-        _ <- canDeleteResource(deleteResourceV2, Some(resource))
+        _ <- canDeleteResource(deleteResourceV2, Some(resource)).map(_.assertGoodRequestEither).absolve
 
         // Get the IRI of the named graph in which the resource is stored.
         dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
