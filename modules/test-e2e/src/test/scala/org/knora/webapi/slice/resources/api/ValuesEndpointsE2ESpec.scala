@@ -554,37 +554,34 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |}""".stripMargin
     }
 
-  private def deleteIntValueRequest(resourceIri: IRI, valueIri: IRI, maybeDeleteComment: Option[String]): String =
-    maybeDeleteComment match {
-      case Some(deleteComment) =>
-        s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasInteger" : {
-           |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:IntValue",
-           |    "knora-api:deleteComment" : "$deleteComment"
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
+  private def deleteIntValueRequest(resourceIri: IRI, valueIri: IRI, deleteComment: String): String =
+    s"""{
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasInteger" : {
+       |    "@id" : "$valueIri",
+       |    "@type" : "knora-api:IntValue",
+       |    "knora-api:deleteComment" : "$deleteComment"
+       |  },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
-      case None =>
-        s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasInteger" : {
-           |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:IntValue"
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-    }
+  private def deleteIntValueRequest(resourceIri: IRI, valueIri: IRI): String =
+    s"""{
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasInteger" : {
+       |    "@id" : "$valueIri",
+       |    "@type" : "knora-api:IntValue"
+       |  },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
   private def updateIntValueWithCustomNewValueVersionIriRequest(
     resourceIri: IRI,
@@ -3417,7 +3414,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       } yield assertTrue(savedTargetIri == TestDing.iri, valueType == KA.LinkValue, savedComment == comment)
     },
     test("delete an integer value") {
-      val jsonLd = deleteIntValueRequest(AThing.iri, intValueIri.get, Some("this value was incorrect"))
+      val jsonLd = deleteIntValueRequest(AThing.iri, intValueIri.get, "this value was incorrect")
       TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLd, anythingUser1).flatMap(_.assert200).as(assertCompletes)
     },
     test("delete an integer value, supplying a custom delete date") {
@@ -3463,11 +3460,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val valueIri: IRI    = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg"
       val timestamp        = "2018-05-28T15:52:03.897Z"
 
-      val jsonLd = deleteIntValueRequest(
-        resourceIri = resourceIri,
-        valueIri = valueIri,
-        maybeDeleteComment = None,
-      )
+      val jsonLd = deleteIntValueRequest(resourceIri, valueIri)
       TestApiClient.postJsonLd(uri"/v2/values/delete", jsonLd, anythingUser2).flatMap(_.assert200) *>
         // Request the resource as it was before the value was deleted.
         TestApiClient
