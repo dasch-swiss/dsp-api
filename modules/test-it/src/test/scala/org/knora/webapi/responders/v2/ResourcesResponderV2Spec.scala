@@ -51,29 +51,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.*
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-object ResourcesResponderV2Spec {
-  private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
-
-  private val anythingUserProfile = SharedTestDataADM.anythingUser2
-
-  private val defaultAnythingResourcePermissions =
-    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
-  private val defaultAnythingValuePermissions       = defaultAnythingResourcePermissions
-  private val defaultStillImageFileValuePermissions = defaultAnythingResourcePermissions
-
-  private val zeitgloeckleinIri = "http://rdfh.ch/0803/c5058f3a"
-
-  private val aThingIri                  = "http://rdfh.ch/0001/a-thing"
-  private var aThingLastModificationDate = Instant.now
-
-  private val resourceIriToErase                  = new MutableTestIri
-  private val firstValueIriToErase                = new MutableTestIri
-  private val secondValueIriToErase               = new MutableTestIri
-  private val standoffTagIrisToErase              = collection.mutable.Set.empty[IRI]
-  private var resourceToEraseLastModificationDate = Instant.now
-}
-
-class GraphTestData {
+object GraphTestData {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   val graphForAnythingUser1: GraphDataGetResponseV2 = GraphDataGetResponseV2(
@@ -399,16 +377,25 @@ class GraphTestData {
 }
 
 class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
-
-  import ResourcesResponderV2Spec.*
-
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val resourcesResponderV2SpecFullData          = new ResourcesResponderV2SpecFullData
   private val resourcesResponderV2                      = ZIO.serviceWithZIO[ResourcesResponderV2]
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+  private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
+  private val anythingUserProfile   = SharedTestDataADM.anythingUser2
+  private val defaultAnythingResourcePermissions =
+    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
+  private val defaultAnythingValuePermissions       = defaultAnythingResourcePermissions
+  private val defaultStillImageFileValuePermissions = defaultAnythingResourcePermissions
+  private val zeitgloeckleinIri                     = "http://rdfh.ch/0803/c5058f3a"
+  private val aThingIri                             = "http://rdfh.ch/0001/a-thing"
+  private var aThingLastModificationDate            = Instant.now
+
+  private val resourceIriToErase                            = new MutableTestIri
+  private val firstValueIriToErase                          = new MutableTestIri
+  private val secondValueIriToErase                         = new MutableTestIri
+  private val standoffTagIrisToErase                        = collection.mutable.Set.empty[IRI]
+  private var resourceToEraseLastModificationDate           = Instant.now
   private var standardMapping: Option[MappingXMLtoStandoff] = None
-
-  private val graphTestData = new GraphTestData
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -558,7 +545,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       )
 
       compareReadResourcesSequenceV2Response(
-        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
+        expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
         received = response,
       )
 
@@ -577,7 +564,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       )
 
       compareReadResourcesSequenceV2Response(
-        expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
+        expected = ResourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
         received = response,
       )
 
@@ -598,7 +585,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       )
 
       compareReadResourcesSequenceV2Response(
-        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
+        expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
         received = response,
       )
 
@@ -619,7 +606,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       )
 
       compareReadResourcesSequenceV2Response(
-        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
+        expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
         received = response,
       )
 
@@ -638,7 +625,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       )
 
       compareReadResourcesSequenceV2Response(
-        expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise,
+        expected = ResourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise,
         received = response,
       )
 
@@ -659,7 +646,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       )
 
       compareReadResourcesSequenceV2Response(
-        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder,
+        expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder,
         received = response,
       )
 
@@ -682,7 +669,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       // the redundant Iri should be ignored (distinct)
       compareReadResourcesSequenceV2Response(
-        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
+        expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
         received = response,
       )
 
@@ -745,7 +732,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       )
 
       compareReadResourcesSequenceV2Response(
-        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory,
+        expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory,
         received = response,
       )
 
@@ -767,7 +754,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         ),
       )
 
-      assert(response == resourcesResponderV2SpecFullData.expectedCompleteVersionHistoryResponse)
+      assert(response == ResourcesResponderV2SpecFullData.expectedCompleteVersionHistoryResponse)
     }
 
     "return the version history of a resource within a date range" in {
@@ -788,7 +775,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         ),
       )
 
-      assert(response == resourcesResponderV2SpecFullData.expectedPartialVersionHistoryResponse)
+      assert(response == ResourcesResponderV2SpecFullData.expectedPartialVersionHistoryResponse)
     }
 
     "get the latest version of a value, given its UUID" in {
@@ -805,7 +792,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       )
 
       compareReadResourcesSequenceV2Response(
-        expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuid,
+        expected = ResourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuid,
         received = response,
       )
     }
@@ -825,7 +812,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       )
 
       compareReadResourcesSequenceV2Response(
-        expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuidAndVersionDate,
+        expected = ResourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuidAndVersionDate,
         received = response,
       )
     }
@@ -845,8 +832,8 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       val edges = response.edges
       val nodes = response.nodes
 
-      edges should contain theSameElementsAs graphTestData.graphForAnythingUser1.edges
-      nodes should contain theSameElementsAs graphTestData.graphForAnythingUser1.nodes
+      edges should contain theSameElementsAs GraphTestData.graphForAnythingUser1.edges
+      nodes should contain theSameElementsAs GraphTestData.graphForAnythingUser1.nodes
     }
 
     "return a graph of resources reachable via links from/to a given resource, filtering the results according to the user's permissions" in {
@@ -864,8 +851,8 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       val edges = response.edges
       val nodes = response.nodes
 
-      edges should contain theSameElementsAs graphTestData.graphForIncunabulaUser.edges
-      nodes should contain theSameElementsAs graphTestData.graphForIncunabulaUser.nodes
+      edges should contain theSameElementsAs GraphTestData.graphForIncunabulaUser.edges
+      nodes should contain theSameElementsAs GraphTestData.graphForIncunabulaUser.nodes
     }
 
     "return a graph containing a standoff link" in {
@@ -880,7 +867,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
           ),
         ),
       )
-      response should ===(graphTestData.graphWithStandoffLink)
+      response should ===(GraphTestData.graphWithStandoffLink)
     }
 
     "return a graph containing just one node" in {
@@ -895,7 +882,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
           ),
         ),
       )
-      response should ===(graphTestData.graphWithOneNode)
+      response should ===(GraphTestData.graphWithOneNode)
     }
 
     "create a resource with no values" in {

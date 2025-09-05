@@ -21,7 +21,6 @@ import org.knora.webapi.util.FileUtil
 object ConstructResponseUtilV2Spec extends E2EZSpec {
   private implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val resourcesResponderV2SpecFullData    = new ResourcesResponderV2SpecFullData
   private val constructResponseUtilV2SpecFullData = new ConstructResponseUtilV2SpecFullData
 
   private val constructResponseUtilV2    = ZIO.serviceWith[ConstructResponseUtilV2]
@@ -55,7 +54,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
                             )
 
         check <- ResourcesResponseCheckerV2.compareReadResourcesSequenceV2ResponseZIO(
-                   resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
+                   ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
                    resourceSequence,
                  )
       } yield check
