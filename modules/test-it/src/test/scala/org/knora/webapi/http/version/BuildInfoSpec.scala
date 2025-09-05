@@ -5,17 +5,10 @@
 
 package org.knora.webapi.http.version
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import zio.test.*
 
-/**
- * This spec is used to test 'BuildInfo'.
- */
-class BuildInfoSpec extends AnyWordSpecLike with Matchers {
-  "The version info" should {
-    "contain all the necessary information" in {
-      BuildInfo.name should be("webapi")
-      BuildInfo.version should not be empty
-    }
+object BuildInfoSpec extends ZIOSpecDefault {
+  val spec: Spec[Any, Nothing] = suite("The version info") {
+    test("contain all the necessary information")(assertTrue(BuildInfo.name == "webapi", BuildInfo.version.nonEmpty))
   }
 }

@@ -20,7 +20,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
 
-class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormatter) {
+object ConstructResponseUtilV2SpecFullData {
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   val expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesAnythingAdmin = ReadResourcesSequenceV2(
     resources = Vector(
