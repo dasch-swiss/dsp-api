@@ -14,15 +14,14 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 class ResourcesResponseCheckerV2Spec extends AnyWordSpec with Matchers {
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private val resourcesResponderV2SpecFullData        = new ResourcesResponderV2SpecFullData
   private val resourcesResponderCheckerV2SpecFullData = new ResourcesResponseCheckerV2SpecFullData
 
   "The ResourcesResponseCheckerV2" should {
     "not throw an exception if received and expected resource responses are the same" in {
 
       compareReadResourcesSequenceV2Response(
-        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-        received = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
+        expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
+        received = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
       )
 
     }
@@ -30,8 +29,8 @@ class ResourcesResponseCheckerV2Spec extends AnyWordSpec with Matchers {
     "throw an exception if received and expected resource responses are different" in {
       assertThrows[AssertionError] {
         compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-          received = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
+          expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
+          received = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
         )
       }
     }
@@ -39,8 +38,8 @@ class ResourcesResponseCheckerV2Spec extends AnyWordSpec with Matchers {
     "throw an exception when comparing a full response to a preview response of the same resource" in {
       assertThrows[AssertionError] {
         compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-          received = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
+          expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
+          received = ResourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
         )
       }
     }
@@ -48,7 +47,7 @@ class ResourcesResponseCheckerV2Spec extends AnyWordSpec with Matchers {
     "throw an exception when comparing a full response to a full response with a different number of values for a property" in {
       assertThrows[AssertionError] {
         compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
+          expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
           received = resourcesResponderCheckerV2SpecFullData.expectedFullResourceResponseForReiseWrong,
         )
       }

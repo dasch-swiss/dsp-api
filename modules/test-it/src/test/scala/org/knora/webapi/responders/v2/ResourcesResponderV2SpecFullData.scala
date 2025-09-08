@@ -18,7 +18,9 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
 
-class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
+object ResourcesResponderV2SpecFullData {
+
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   val expectedReadResourceV2ForZeitgloecklein: ReadResourceV2 = ReadResourceV2(
     label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
