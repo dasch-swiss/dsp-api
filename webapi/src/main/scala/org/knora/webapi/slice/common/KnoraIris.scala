@@ -152,6 +152,7 @@ object KnoraIris {
     def isExternal: Boolean        = !isInternal
     def isBuiltIn: Boolean         = ontologyName.isBuiltIn
     def isShared: Boolean          = toInternalSchema.toIri.split("/")(4) == "shared"
+    def asComplex: OntologyIri     = OntologyIri.unsafeFrom(smartIri.toComplexSchema)
 
     override def equals(other: Any): Boolean = super.equals(other)
     override def hashCode(): Int             = super.hashCode()
