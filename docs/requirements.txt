@@ -3,3 +3,7 @@ mkdocs-material
 mkdocs-git-revision-date-localized-plugin
 neoteroi-mkdocs
 
+# from ingest docs
+mkdocs-monorepo-plugin
+mkdocs-include-markdown-plugin
+mike

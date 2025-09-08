@@ -28,9 +28,10 @@ object Dependencies {
   val ZioConfigVersion            = "4.0.4"
   val ZioLoggingVersion           = "2.5.1"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.4.1"
+  val ZioMetricsConnectorsVersion = "2.4.3"
   val ZioPreludeVersion           = "1.0.0-RC41"
-  val ZioSchemaVersion            = "0.2.0"
+  val ZioSchemaVersion            = "1.7.4"
+  val ZioMockVersion              = "1.0.0-RC12"
   val ZioVersion                  = "2.1.20"
 
   // ZIO
@@ -45,6 +46,27 @@ object Dependencies {
   val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio" %% "zio-nio"                   % ZioNioVersion
   val zioPrelude            = "dev.zio" %% "zio-prelude"               % ZioPreludeVersion
+
+  val zioMock = "dev.zio" %% "zio-mock" % ZioMockVersion % Test
+
+  val zioSeq = Seq(
+    "dev.zio" %% "zio"                   % ZioVersion,
+    "dev.zio" %% "zio-streams"           % ZioVersion,
+    "dev.zio" %% "zio-schema"            % ZioSchemaVersion,
+    "dev.zio" %% "zio-schema-derivation" % ZioSchemaVersion,
+    "dev.zio" %% "zio-nio"               % ZioNioVersion,
+    "dev.zio" %% "zio-prelude"           % ZioPreludeVersion,
+  )
+
+  val ingestTest = Seq(
+    "dev.zio"      %% "zio-mock"               % ZioMockVersion % Test,
+    "dev.zio"      %% "zio-http"               % "3.3.3"        % Test,
+    "dev.zio"      %% "zio-test"               % ZioVersion     % Test,
+    "dev.zio"      %% "zio-test-junit"         % ZioVersion     % Test,
+    "dev.zio"      %% "zio-test-magnolia"      % ZioVersion     % Test,
+    "dev.zio"      %% "zio-test-sbt"           % ZioVersion     % Test,
+    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.3.1"        % Test,
+  )
 
   val SttpClientVersion = "4.0.9"
   val zioSttpClient = Seq(
@@ -99,14 +121,14 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.5.2" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.5.3" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.81"
 
   // caching
-  val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
+  val ehcache = "org.ehcache" % "ehcache" % "3.11.1"
 
   // other
   val gwtServlet     = "com.google.gwt"        % "gwt-servlet"      % "2.10.0"
@@ -147,8 +169,8 @@ object Dependencies {
   )
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"  %% "zio-opentelemetry"              % "3.1.7",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.19.1",
+    "dev.zio"  %% "zio-opentelemetry"              % "3.1.8",
+    "io.sentry" % "sentry-opentelemetry-agentless" % "8.20.0",
   )
 
   val integrationTestDependencies = Seq(
@@ -201,4 +223,19 @@ object Dependencies {
     zioNio,
     zioPrelude,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
+
+  val flywayVersion         = "11.10.5"
+  val otelAgentVersion      = "v2.18.1"
+  val otelPyroscopeVersion  = "v1.0.4"
+  val hikariVersion         = "6.3.2"
+  val quillVersion          = "4.8.6"
+  val sqliteVersion         = "3.50.3.0"
+  val testContainersVersion = "1.20.4"
+
+  val db = Seq(
+    "org.xerial"   % "sqlite-jdbc"    % sqliteVersion,
+    "org.flywaydb" % "flyway-core"    % flywayVersion,
+    "com.zaxxer"   % "HikariCP"       % hikariVersion,
+    "io.getquill" %% "quill-jdbc-zio" % quillVersion,
+  )
 }

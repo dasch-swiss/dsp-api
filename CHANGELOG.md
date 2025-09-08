@@ -1,5 +1,42 @@
 # Changelog
 
+## [32.1.0](https://github.com/dasch-swiss/dsp-api/compare/v32.0.0...v32.1.0) (2025-09-02)
+
+
+### Maintenances
+
+* Merge with dsp ingest ([#3743](https://github.com/dasch-swiss/dsp-api/issues/3743)) ([d1dd094](https://github.com/dasch-swiss/dsp-api/commit/d1dd094ff7b0f66a841967828343e79618e0bd07))
+* Migrate ValuesRouteV2E2ESpec to zio (DEV-5377) ([#3757](https://github.com/dasch-swiss/dsp-api/issues/3757)) ([4e1d3b7](https://github.com/dasch-swiss/dsp-api/commit/4e1d3b7f79b24ef2baf9df196e2a7a3cd9234dbf))
+* Migrate ValuesRouteV2E2ESpec to zio pt. 2 (DEV-5312) ([#3759](https://github.com/dasch-swiss/dsp-api/issues/3759)) ([72892cf](https://github.com/dasch-swiss/dsp-api/commit/72892cf8cefcfe6b7289c2b5fdf0b14f09acec09))
+
+
+### Enhancements
+
+* **dsp-ingest:** Remove keyframe extraction from moving images during ingest (DEV-5296) ([#3761](https://github.com/dasch-swiss/dsp-api/issues/3761)) ([73f76e9](https://github.com/dasch-swiss/dsp-api/commit/73f76e9684a98cf1341fc7185a1ad578466d9018))
+
+## [32.0.0](https://github.com/dasch-swiss/dsp-api/compare/v31.21.2...v32.0.0) (2025-09-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* Update Fuseki to 5.5.0-1 // Removes automatically creating Fuseki dataset during dsp-api startup (DEV-5298) ([#3744](https://github.com/dasch-swiss/dsp-api/issues/3744))
+
+### Maintenances
+
+* Migrate GravsearchInspectorSpec to zio (DEV-5310) ([#3754](https://github.com/dasch-swiss/dsp-api/issues/3754)) ([27c74e6](https://github.com/dasch-swiss/dsp-api/commit/27c74e6c85bb90825f351fc0c49a11a32f7b606d))
+* Migrate SearchResponderV2Spec from pekko/scalaTest to zio (DEV 5311) ([#3751](https://github.com/dasch-swiss/dsp-api/issues/3751)) ([55626cd](https://github.com/dasch-swiss/dsp-api/commit/55626cd23cdccc8e8b53e70dde694b44d12350c2))
+* Minor dependency updates ([#3756](https://github.com/dasch-swiss/dsp-api/issues/3756)) ([87860ea](https://github.com/dasch-swiss/dsp-api/commit/87860eaabaf00487a36b27d76c4543d6559a5570))
+* Patch dependency updates ([#3755](https://github.com/dasch-swiss/dsp-api/issues/3755)) ([e283e78](https://github.com/dasch-swiss/dsp-api/commit/e283e78d732cfcb729f8817140e320ee2f29af48))
+* Split SearchEndpointE2ESpec further (DEV-5299) ([#3746](https://github.com/dasch-swiss/dsp-api/issues/3746)) ([0cc0a88](https://github.com/dasch-swiss/dsp-api/commit/0cc0a88fe87993e33f3c2e1f2f409ea6a15d008a))
+* Split SearchEndpointsE2ESpec further (DEV-5299) ([#3749](https://github.com/dasch-swiss/dsp-api/issues/3749)) ([bc63887](https://github.com/dasch-swiss/dsp-api/commit/bc63887e0a760a112a76ab6e40b3a37b254af274))
+* Update Fuseki to 5.5.0-1 // Removes automatically creating Fuseki dataset during dsp-api startup (DEV-5298) ([#3744](https://github.com/dasch-swiss/dsp-api/issues/3744)) ([c75ed24](https://github.com/dasch-swiss/dsp-api/commit/c75ed249d1a85ab429bc0b404bce10eda175dfd2))
+* Update Sipi base image (DEV-5258) ([#3747](https://github.com/dasch-swiss/dsp-api/issues/3747)) ([145c1b0](https://github.com/dasch-swiss/dsp-api/commit/145c1b013d2b88084d75f2b2a92ab9639642246b))
+
+
+### Bug Fixes
+
+* Fix double encoding of comments when creating a resource (DEV-5356) ([#3753](https://github.com/dasch-swiss/dsp-api/issues/3753)) ([138c067](https://github.com/dasch-swiss/dsp-api/commit/138c0674a719fc1fa003bd3d5f82b77479f80473))
+
 ## [31.21.2](https://github.com/dasch-swiss/dsp-api/compare/v31.21.1...v31.21.2) (2025-08-25)
 
 
