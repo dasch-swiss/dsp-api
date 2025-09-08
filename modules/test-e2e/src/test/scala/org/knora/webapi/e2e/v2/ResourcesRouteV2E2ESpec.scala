@@ -996,9 +996,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         responseJsonDoc <- TestApiClient
                              .postJsonLdDocument(uri"/v2/resources", createResourceReqPayload(), anythingUser1)
                              .flatMap(_.assert200)
-        resourceIri <- ZIO.succeed(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID).getOrElse {
-                         throw BadRequestException("Resource IRI not found in response")
-                       })
+        resourceIri <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         lastModificationDate <- responseJsonDoc.body
                                   .getDataTypeValueInObject(
                                     KnoraApiV2Complex.CreationDate,
@@ -1035,9 +1033,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         responseJsonDoc <- TestApiClient
                              .postJsonLdDocument(uri"/v2/resources", createResourceReqPayload(), anythingUser1)
                              .flatMap(_.assert200)
-        resourceIri <- ZIO.succeed(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID).getOrElse {
-                         throw BadRequestException("Resource IRI not found in response")
-                       })
+        resourceIri <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         lastModificationDate <- responseJsonDoc.body
                                   .getDataTypeValueInObject(
                                     KnoraApiV2Complex.CreationDate,
