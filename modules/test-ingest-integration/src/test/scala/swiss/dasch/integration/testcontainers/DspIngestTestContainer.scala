@@ -13,8 +13,7 @@ import zio.{URLayer, ZIO, ZLayer}
 
 import java.util.function.Consumer
 
-final class DspIngestTestContainer
-    extends GenericContainer[DspIngestTestContainer](s"daschswiss/dsp-ingest:${BuildInfo.version}")
+final class DspIngestTestContainer extends GenericContainer[DspIngestTestContainer](s"daschswiss/dsp-ingest:latest")
 
 object DspIngestTestContainer {
 

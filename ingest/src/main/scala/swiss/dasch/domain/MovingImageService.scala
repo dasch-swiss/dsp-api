@@ -40,14 +40,6 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
       .as(fileExtension)
   }
 
-  def extractKeyFrames(file: MovingImageDerivativeFile, assetRef: AssetRef): Task[Unit] =
-    for {
-      _       <- ZIO.logInfo(s"Extracting key frames for $file, $assetRef")
-      absPath <- file.toAbsolutePath
-      cmd     <- executor.buildCommand("/sipi/scripts/export-moving-image-frames.sh", "-i", absPath.toString)
-      _       <- executor.executeOrFail(cmd)
-    } yield ()
-
   def extractMetadata(original: Original, derivative: MovingImageDerivativeFile): Task[MovingImageMetadata] = for {
     _                          <- ZIO.when(original.assetId != derivative.assetId)(ZIO.die(new Exception("Asset IDs do not match")))
     _                          <- ZIO.logInfo(s"Extracting metadata for ${derivative.assetId}")
@@ -118,9 +110,6 @@ object MovingImageService {
     assetRef: AssetRef,
   ): ZIO[MovingImageService, Throwable, MovingImageDerivativeFile] =
     ZIO.serviceWithZIO(_.createDerivative(original, assetRef))
-
-  def extractKeyFrames(file: MovingImageDerivativeFile, assetRef: AssetRef): ZIO[MovingImageService, Throwable, Unit] =
-    ZIO.serviceWithZIO(_.extractKeyFrames(file, assetRef))
 
   def extractMetadata(
     original: Original,

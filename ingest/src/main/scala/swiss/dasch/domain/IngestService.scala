@@ -118,7 +118,6 @@ class IngestServiceLive(
     ZIO.logInfo(s"Creating derivative for moving image $original, ${assetDir.assetRef}") *> {
       for {
         derivative <- movingImageService.createDerivative(original, assetDir.assetRef)
-        _          <- movingImageService.extractKeyFrames(derivative, assetDir.assetRef)
         meta       <- movingImageService.extractMetadata(original, derivative)
       } yield Asset.makeMovingImageAsset(assetDir.assetRef, original, derivative, meta)
     }
