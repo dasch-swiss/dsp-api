@@ -9,7 +9,7 @@ import org.apache.pekko.testkit.ImplicitSender
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
-import zio.ZIO
+import zio.*
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.models.filemodels.*
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
@@ -377,11 +377,11 @@ object GraphTestData {
 }
 
 class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
-  private val resourcesResponderV2                      = ZIO.serviceWithZIO[ResourcesResponderV2]
+
+  private val resourcesResponderV2 = ZIO.serviceWithZIO[ResourcesResponderV2]
+
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
-  private val anythingUserProfile   = SharedTestDataADM.anythingUser2
   private val defaultAnythingResourcePermissions =
     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
   private val defaultAnythingValuePermissions       = defaultAnythingResourcePermissions
@@ -471,7 +471,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
           resourceIris = Seq(resourceIri),
           targetSchema = ApiV2Complex,
           schemaOptions = Set.empty,
-          requestingUser = anythingUserProfile,
+          requestingUser = anythingUser2,
         ),
       ),
     )
@@ -539,7 +539,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             versionDate = None,
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
-            requestingUser = incunabulaUserProfile,
+            requestingUser = incunabulaProjectAdminUser,
           ),
         ),
       )
@@ -558,7 +558,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
           _.getResourcePreviewWithDeletedResource(
             resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
             targetSchema = ApiV2Complex,
-            requestingUser = incunabulaUserProfile,
+            requestingUser = incunabulaProjectAdminUser,
           ),
         ),
       )
@@ -579,7 +579,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             versionDate = None,
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
-            requestingUser = incunabulaUserProfile,
+            requestingUser = incunabulaProjectAdminUser,
           ),
         ),
       )
@@ -600,7 +600,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             versionDate = None,
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
-            requestingUser = incunabulaUserProfile,
+            requestingUser = incunabulaProjectAdminUser,
           ),
         ),
       )
@@ -619,7 +619,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
           _.getResourcePreviewWithDeletedResource(
             resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
             targetSchema = ApiV2Complex,
-            requestingUser = incunabulaUserProfile,
+            requestingUser = incunabulaProjectAdminUser,
           ),
         ),
       )
@@ -640,7 +640,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             versionDate = None,
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
-            requestingUser = incunabulaUserProfile,
+            requestingUser = incunabulaProjectAdminUser,
           ),
         ),
       )
@@ -662,7 +662,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             versionDate = None,
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
-            requestingUser = incunabulaUserProfile,
+            requestingUser = incunabulaProjectAdminUser,
           ),
         ),
       )
@@ -684,7 +684,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             mappingIri = None,
             gravsearchTemplateIri = None,
             headerXSLTIri = None,
-            requestingUser = anythingUserProfile,
+            requestingUser = anythingUser2,
           ),
         ),
       )
@@ -704,7 +704,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             mappingIri = None,
             gravsearchTemplateIri = None,
             headerXSLTIri = None,
-            requestingUser = anythingUserProfile,
+            requestingUser = anythingUser2,
           ),
         ),
       )
@@ -726,7 +726,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             versionDate = Some(VersionDate.fromInstant(versionDate)),
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
-            requestingUser = anythingUserProfile,
+            requestingUser = anythingUser2,
           ),
         ),
       )
@@ -748,7 +748,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
               resourceIri = resourceIri,
               startDate = None,
               endDate = None,
-              requestingUser = anythingUserProfile,
+              requestingUser = anythingUser2,
             ),
           ),
         ),
@@ -769,7 +769,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
               resourceIri = resourceIri,
               startDate = Some(startDate),
               endDate = Some(endDate),
-              requestingUser = anythingUserProfile,
+              requestingUser = anythingUser2,
             ),
           ),
         ),
@@ -786,7 +786,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
-            requestingUser = anythingUserProfile,
+            requestingUser = anythingUser2,
           ),
         ),
       )
@@ -806,7 +806,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             versionDate = Some(VersionDate.fromInstant(Instant.parse("2019-02-12T09:05:10Z"))),
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
-            requestingUser = anythingUserProfile,
+            requestingUser = anythingUser2,
           ),
         ),
       )
@@ -825,7 +825,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             depth = 6,
             GraphDirection.Both,
             excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-            requestingUser = SharedTestDataADM.anythingUser1,
+            requestingUser = anythingUser1,
           ),
         ),
       )
@@ -844,7 +844,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             depth = 6,
             GraphDirection.Both,
             excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-            requestingUser = SharedTestDataADM.incunabulaProjectAdminUser,
+            requestingUser = incunabulaProjectAdminUser,
           ),
         ),
       )
@@ -863,7 +863,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             depth = 4,
             GraphDirection.Both,
             excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-            requestingUser = SharedTestDataADM.anythingUser1,
+            requestingUser = anythingUser1,
           ),
         ),
       )
@@ -878,7 +878,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             depth = 4,
             GraphDirection.Both,
             excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-            requestingUser = SharedTestDataADM.anythingUser1,
+            requestingUser = anythingUser1,
           ),
         ),
       )
@@ -888,19 +888,19 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
     "create a resource with no values" in {
       // Create the resource.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "test thing",
         values = Map.empty,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val response = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
 
@@ -912,7 +912,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         outputResource = actualFromResponse,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
       )
 
       // Get the resource from the triplestore and check it again.
@@ -923,20 +923,20 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         outputResource = actualFromDb,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
       )
     }
 
     "not create a resource when empty list for required property is provided" in {
       val createThis = CreateResourceV2(
-        Some(stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode).toSmartIri),
+        Some(stringFormatter.makeRandomResourceIri(anythingProject.shortcode).toSmartIri),
         "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         "test book",
         Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Seq.empty),
-        SharedTestDataADM.incunabulaProject,
+        incunabulaProject,
       )
 
-      val req = CreateResourceRequestV2(createThis, incunabulaUserProfile, UUID.randomUUID)
+      val req = CreateResourceRequestV2(createThis, incunabulaProjectAdminUser, UUID.randomUUID)
 
       val exit = UnsafeZioRun.run(resourcesResponderV2(_.createResource(req)))
       assertFailsWithA[OntologyConstraintException](exit)
@@ -945,20 +945,20 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
     "create a resource with no values and custom permissions" in {
       // Create the resource.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "test thing",
         values = Map.empty,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
         permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"),
       )
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
 
@@ -970,13 +970,13 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
       )
     }
 
     "create a resource with values" in {
       // Create the resource.
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
@@ -1107,12 +1107,12 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "test thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
 
@@ -1124,12 +1124,12 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
       )
     }
 
     "create a resource with a still image file value" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputResource = UploadFileRequest
         .make(
@@ -1143,7 +1143,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)).logError,
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)).logError,
         ),
       )
 
@@ -1155,12 +1155,12 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultStillImageFileValuePermissions,
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
       )
     }
 
     "create a resource with an external still image file value" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val imageRequestUrl = IiifImageRequestUrl.unsafeFrom(
         "https://iiif.ub.unibe.ch/image/v2.1/632664f2-20cb-43e4-8584-2fa3988c63a2/full/max/0/default.jpg",
@@ -1174,7 +1174,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)).logError,
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)).logError,
         ),
       )
 
@@ -1186,14 +1186,14 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultStillImageFileValuePermissions,
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
       )
     }
 
     "create a resource with document representation" in {
       // Create the resource.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputResource = UploadFileRequest
         .make(
@@ -1204,7 +1204,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)).logError,
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)).logError,
         ),
       )
 
@@ -1216,14 +1216,14 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultStillImageFileValuePermissions,
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
       )
     }
 
     "create a resource with archive representation" in {
       // Create the resource.
 
-      val resourceIri: String = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: String = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputResource = UploadFileRequest
         .make(
@@ -1237,7 +1237,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)).logError,
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)).logError,
         ),
       )
 
@@ -1249,31 +1249,31 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
       )
     }
 
     "not create a resource with missing required values" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(incunabulaProject.shortcode)
 
       val inputResource = CreateResourceV2(
         Some(resourceIri.toSmartIri),
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         "invalid book",
         Map.empty,
-        SharedTestDataADM.incunabulaProject,
+        incunabulaProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, incunabulaUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, incunabulaProjectAdminUser, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[OntologyConstraintException](exit)
     }
 
     "not create a resource with too many values for the cardinality of a property" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(incunabulaProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1308,19 +1308,19 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         label = "invalid book",
         values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject,
+        projectADM = incunabulaProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, incunabulaUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, incunabulaProjectAdminUser, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[OntologyConstraintException](exit)
     }
 
     "not create a resource with a property for which there is no cardinality in the resource class" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(incunabulaProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1348,19 +1348,19 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         label = "invalid book",
         values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject,
+        projectADM = incunabulaProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, incunabulaUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, incunabulaProjectAdminUser, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[OntologyConstraintException](exit)
     }
 
     "not create a resource if the user doesn't have permission to create resources in the project" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(incunabulaProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1379,19 +1379,19 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         label = "invalid book",
         values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject,
+        projectADM = incunabulaProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[ForbiddenException](exit)
     }
 
     "not create a resource with a link to a nonexistent other resource" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
@@ -1409,19 +1409,19 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[NotFoundException](exit)
     }
 
     "not create a resource with a standoff link to a nonexistent other resource" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val standoffWithInvalidLink: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
@@ -1479,19 +1479,19 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[NotFoundException](exit)
     }
 
     "not create a resource with a list value referring to a nonexistent list node" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
@@ -1511,19 +1511,19 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[NotFoundException](exit)
     }
 
     "not create a resource with a value that's the wrong type for the property" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
@@ -1542,19 +1542,19 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[OntologyConstraintException](exit)
     }
 
     "not create a resource with a link to a resource of the wrong class for the link property" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
@@ -1572,39 +1572,39 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[OntologyConstraintException](exit)
     }
 
     "not create a resource with invalid custom permissions" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = Map.empty,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
         permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser"),
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a resource with a value that has invalid custom permissions" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
@@ -1624,31 +1624,31 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = values,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a resource that uses a class from another non-shared project" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(incunabulaProject.shortcode)
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "test thing",
         values = Map.empty,
-        projectADM = SharedTestDataADM.incunabulaProject,
+        projectADM = incunabulaProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, incunabulaUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, incunabulaProjectAdminUser, UUID.randomUUID)),
         ),
       )
       assertFailsWithA[BadRequestException](exit)
@@ -1659,7 +1659,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceIri = aThingIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("new test label"),
-        requestingUser = incunabulaUserProfile,
+        requestingUser = incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID,
       )
       val exit = UnsafeZioRun.run(resourcesResponderV2(_.updateResourceMetadataV2(updateRequest)))
@@ -1671,7 +1671,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceIri = aThingIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing".toSmartIri,
         maybeLabel = Some("new test label"),
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID,
       )
       val exit = UnsafeZioRun.run(resourcesResponderV2(_.updateResourceMetadataV2(updateRequest)))
@@ -1688,7 +1688,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some(newLabel),
         maybePermissions = Some(newPermissions),
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID,
       )
       val _ = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.updateResourceMetadataV2(updateRequest)))
@@ -1710,7 +1710,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceIri = aThingIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("another new test label"),
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID,
       )
       val exit = UnsafeZioRun.run(resourcesResponderV2(_.updateResourceMetadataV2(updateRequest)))
@@ -1723,7 +1723,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(Instant.MIN),
         maybeLabel = Some("another new test label"),
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID,
       )
       val exit = UnsafeZioRun.run(resourcesResponderV2(_.updateResourceMetadataV2(updateRequest)))
@@ -1738,7 +1738,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeLabel = Some(newLabel),
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID,
       )
       val _ = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.updateResourceMetadataV2(updateRequest)))
@@ -1757,7 +1757,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeNewModificationDate = Some(Instant.MIN),
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID,
       )
       val exit = UnsafeZioRun.run(resourcesResponderV2(_.updateResourceMetadataV2(updateRequest)))
@@ -1772,7 +1772,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeNewModificationDate = Some(newModificationDate),
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID,
       )
       val _ = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.updateResourceMetadataV2(updateRequest)))
@@ -1793,7 +1793,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         maybeDeleteComment = Some("This resource is too boring."),
         maybeDeleteDate = Some(deleteDate),
         maybeLastModificationDate = Some(aThingLastModificationDate),
-        requestingUser = SharedTestDataADM.anythingUser1,
+        requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID,
       )
       val exit = UnsafeZioRun.run(resourcesResponderV2(_.markResourceAsDeletedV2(deleteRequest)))
@@ -1802,16 +1802,16 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
     "mark a resource as deleted" in {
       // Create the resource.
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
       val createReq = CreateResourceRequestV2(
         CreateResourceV2(
           Some(resourceIri.toSmartIri),
           "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           "test label",
           Map.empty,
-          SharedTestDataADM.anythingProject,
+          anythingProject,
         ),
-        SharedTestDataADM.anythingUser1,
+        anythingUser1,
         UUID.randomUUID,
       )
       val response                    = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.createResource(createReq)))
@@ -1824,7 +1824,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeDeleteComment = Some("This resource is too boring."),
         maybeLastModificationDate = Some(createdResourceCreationDate),
-        requestingUser = SharedTestDataADM.anythingUser1,
+        requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID,
       )
       val _ = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.markResourceAsDeletedV2(deleteRequest)))
@@ -1835,7 +1835,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             resourceIris = Seq(createdResourceIri),
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
-            requestingUser = SharedTestDataADM.anythingUser1,
+            requestingUser = anythingUser1,
           ),
         ),
       )
@@ -1858,7 +1858,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         maybeDeleteComment = Some("This resource is too boring."),
         maybeDeleteDate = Some(deleteDate),
         maybeLastModificationDate = None,
-        requestingUser = SharedTestDataADM.superUser,
+        requestingUser = superUser,
         apiRequestID = UUID.randomUUID,
       )
 
@@ -1870,7 +1870,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             resourceIris = Seq(resourceIri),
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
-            requestingUser = SharedTestDataADM.anythingUser1,
+            requestingUser = anythingUser1,
           ),
         ),
       )
@@ -1885,21 +1885,21 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
     }
 
     "not accept custom resource permissions that would give the requesting user a higher permission on a resource than the default" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(imagesProject.shortcode)
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = Map.empty,
-        projectADM = SharedTestDataADM.imagesProject,
+        projectADM = imagesProject,
         permissions = Some("CR knora-admin:Creator"),
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
           _.createResource(
-            CreateResourceRequestV2(inputResource, SharedTestDataADM.imagesReviewerUser, UUID.randomUUID),
+            CreateResourceRequestV2(inputResource, imagesReviewerUser, UUID.randomUUID),
           ),
         ),
       )
@@ -1907,45 +1907,45 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
     }
 
     "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a system admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(imagesProject.shortcode)
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = Map.empty,
-        projectADM = SharedTestDataADM.imagesProject,
+        projectADM = imagesProject,
         permissions = Some("CR knora-admin:Creator"),
       )
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, SharedTestDataADM.rootUser, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, rootUser, UUID.randomUUID)),
         ),
       )
     }
 
     "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a project admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(imagesProject.shortcode)
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = Map.empty,
-        projectADM = SharedTestDataADM.imagesProject,
+        projectADM = imagesProject,
         permissions = Some("CR knora-admin:Creator"),
       )
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, SharedTestDataADM.imagesUser01, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, imagesUser01, UUID.randomUUID)),
         ),
       )
     }
 
     "not accept custom value permissions that would give the requesting user a higher permission on a value than the default" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(imagesProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
@@ -1965,13 +1965,13 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = inputValues,
-        projectADM = SharedTestDataADM.imagesProject,
+        projectADM = imagesProject,
       )
 
       val exit = UnsafeZioRun.run(
         resourcesResponderV2(
           _.createResource(
-            CreateResourceRequestV2(inputResource, SharedTestDataADM.imagesReviewerUser, UUID.randomUUID),
+            CreateResourceRequestV2(inputResource, imagesReviewerUser, UUID.randomUUID),
           ),
         ),
       )
@@ -1979,7 +1979,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
     }
 
     "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(imagesProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
@@ -1999,18 +1999,18 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = inputValues,
-        projectADM = SharedTestDataADM.imagesProject,
+        projectADM = imagesProject,
       )
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, SharedTestDataADM.rootUser, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, rootUser, UUID.randomUUID)),
         ),
       )
     }
 
     "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(imagesProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
@@ -2030,12 +2030,12 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = inputValues,
-        projectADM = SharedTestDataADM.imagesProject,
+        projectADM = imagesProject,
       )
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, SharedTestDataADM.imagesUser01, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, imagesUser01, UUID.randomUUID)),
         ),
       )
     }
@@ -2043,7 +2043,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
     "create a resource with version history so we can test erasing it" in {
       // Create the resource.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
       resourceIriToErase.set(resourceIri)
       val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
       val propertyIri: SmartIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
@@ -2069,12 +2069,12 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = resourceClassIri,
         label = "test thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
 
@@ -2105,7 +2105,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
                 textValueType = TextValueType.FormattedText,
               ),
             ),
-            anythingUserProfile,
+            anythingUser2,
             UUID.randomUUID,
           ),
         ),
@@ -2138,7 +2138,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceIri = resourceIriToErase.get,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID,
       )
 
@@ -2149,7 +2149,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
     "not erase a resource if another resource has a link to it" in {
       // Create a resource with a link to the resource that is to be deleted.
       val resourceWithLinkIri = ResourceIri.unsafeFrom(
-        stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode).toSmartIri,
+        stringFormatter.makeRandomResourceIri(anythingProject.shortcode).toSmartIri,
       )
       val resourceClassIri =
         ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
@@ -2172,12 +2172,12 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = resourceClassIri.smartIri,
         label = "thing with link",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
 
@@ -2190,7 +2190,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceIri = resourceIriToErase.get,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
-        requestingUser = SharedTestDataADM.anythingAdminUser,
+        requestingUser = anythingAdminUser,
         apiRequestID = UUID.randomUUID,
       )
 
@@ -2209,7 +2209,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
               valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
               apiRequestId = UUID.randomUUID,
             ),
-            anythingUserProfile,
+            anythingUser2,
           ),
         ),
       )
@@ -2221,7 +2221,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceIri = resourceIriToErase.get,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
-        requestingUser = SharedTestDataADM.anythingAdminUser,
+        requestingUser = anythingAdminUser,
         apiRequestID = UUID.randomUUID,
       )
       val _ = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.eraseResourceV2(eraseRequest)))
@@ -2242,16 +2242,16 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
     "erase a deleted resource" in {
       // Create a resource.
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
       val createReq = CreateResourceRequestV2(
         CreateResourceV2(
           Some(resourceIri.toSmartIri),
           "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           "test label for resource to be deleted then erased",
           Map.empty,
-          SharedTestDataADM.anythingProject,
+          anythingProject,
         ),
-        SharedTestDataADM.anythingUser1,
+        anythingUser1,
         UUID.randomUUID,
       )
       val createResponse              = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.createResource(createReq)))
@@ -2264,7 +2264,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri, // External schema IRI
         maybeDeleteComment = Some("This resource will be deleted first, then erased."),
         maybeLastModificationDate = Some(createdResourceCreationDate),
-        requestingUser = SharedTestDataADM.anythingAdminUser, // Need admin user for erasure
+        requestingUser = anythingAdminUser, // Need admin user for erasure
         apiRequestID = UUID.randomUUID,
       )
       val _ = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.markResourceAsDeletedV2(deleteRequest)))
@@ -2277,7 +2277,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
             withDeleted = true,
             targetSchema = ApiV2Complex,
             schemaOptions = Set.empty,
-            requestingUser = SharedTestDataADM.anythingAdminUser,
+            requestingUser = anythingAdminUser,
           ),
         ),
       )
@@ -2289,7 +2289,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceIri = createdResourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri, // Same external schema IRI
         maybeLastModificationDate = deletedResource.lastModificationDate,
-        requestingUser = SharedTestDataADM.anythingAdminUser,
+        requestingUser = anythingAdminUser,
         apiRequestID = UUID.randomUUID,
       )
       val eraseResponse = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.eraseResourceV2(eraseRequest)))
@@ -2312,12 +2312,12 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "thing with a custom IRI",
         values = Map.empty,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val response = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
 
@@ -2329,7 +2329,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         outputResource = actualFromResponse,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
       )
 
       // Get the resource from the triplestore and check it again.
@@ -2340,14 +2340,14 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         outputResource = actualFromDb,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
       )
     }
 
     "create a resource with a value that has custom UUID" in {
       // Create the resource.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
@@ -2368,12 +2368,12 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "thing with custom value UUID",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val _ = UnsafeZioRun.runOrThrow(
         resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, UUID.randomUUID)),
         ),
       )
 
@@ -2385,7 +2385,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
       )
     }
   }
@@ -2396,7 +2396,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val events = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourceHistoryEvents(resourceIri, anythingUserProfile).map(_.historyEvents),
+          _.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents),
         ),
       )
       events.size shouldEqual 3
@@ -2416,7 +2416,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val events = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourceHistoryEvents(resourceIri, anythingUserProfile).map(_.historyEvents),
+          _.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents),
         ),
       )
       events.size should be(9)
@@ -2443,7 +2443,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
               valueIri = Some(newValueIri.toSmartIri),
               permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser"),
             ),
-            requestingUser = anythingUserProfile,
+            requestingUser = anythingUser2,
             apiRequestID = UUID.randomUUID,
           ),
         ),
@@ -2451,7 +2451,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val events = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourceHistoryEvents(resourceIri, anythingUserProfile).map(_.historyEvents),
+          _.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents),
         ),
       )
       events.size should be(10)
@@ -2493,14 +2493,14 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
               deleteComment = Some(deleteComment),
               apiRequestId = UUID.randomUUID,
             ),
-            anythingUserProfile,
+            anythingUser2,
           ),
         ),
       )
 
       val events = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourceHistoryEvents(resourceIri.toString, anythingUserProfile).map(_.historyEvents),
+          _.getResourceHistoryEvents(resourceIri.toString, anythingUser2).map(_.historyEvents),
         ),
       )
       events.size should be(11)
@@ -2517,7 +2517,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val events = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourceHistoryEvents(resourceIri, anythingUserProfile).map(_.historyEvents),
+          _.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents),
         ),
       )
       events.size should be(2)
@@ -2534,12 +2534,12 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourceIri = resourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("a new label"),
-        requestingUser = anythingUserProfile,
+        requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID,
       )
       val _ = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.updateResourceMetadataV2(updateRequest)))
       val events = UnsafeZioRun.runOrThrow(
-        resourcesResponderV2(_.getResourceHistoryEvents(resourceIri, anythingUserProfile).map(_.historyEvents)),
+        resourcesResponderV2(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents)),
       )
       events.size should be(2)
       val updateMetadataEvent: Option[ResourceAndValueHistoryEvent] =
@@ -2552,7 +2552,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourcesResponderV2(
           _.getProjectResourceHistoryEvents(
             ProjectIri.unsafeFrom("http://rdfh.ch/projects/1111"),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
           ),
         ),
       )
@@ -2564,7 +2564,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         resourcesResponderV2(
           _.getProjectResourceHistoryEvents(
             ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
           ),
         ),
       )
