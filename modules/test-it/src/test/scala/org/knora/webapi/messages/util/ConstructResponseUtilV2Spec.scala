@@ -11,7 +11,6 @@ import zio.test.*
 import java.nio.file.Paths
 
 import org.knora.webapi.*
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.responders.v2.ResourcesResponderV2SpecFullData
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2
@@ -19,9 +18,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.util.FileUtil
 
 object ConstructResponseUtilV2Spec extends E2EZSpec {
-  private implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
-
-  private val constructResponseUtilV2SpecFullData = new ConstructResponseUtilV2SpecFullData
 
   private val constructResponseUtilV2    = ZIO.serviceWith[ConstructResponseUtilV2]
   private val constructResponseUtilV2ZIO = ZIO.serviceWithZIO[ConstructResponseUtilV2]
@@ -84,7 +80,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
                             )
         check <-
           ResourcesResponseCheckerV2.compareReadResourcesSequenceV2ResponseZIO(
-            constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesAnythingAdmin,
+            ConstructResponseUtilV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesAnythingAdmin,
             resourceSequence,
           )
       } yield check
@@ -116,7 +112,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
                             )
         check <-
           ResourcesResponseCheckerV2.compareReadResourcesSequenceV2ResponseZIO(
-            constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesIncunabulaUser,
+            ConstructResponseUtilV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesIncunabulaUser,
             resourceSequence,
           )
       } yield check
@@ -146,7 +142,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
                             )
         check <-
           ResourcesResponseCheckerV2.compareReadResourcesSequenceV2ResponseZIO(
-            constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingThingWithOneHiddenThingAnythingAdmin,
+            ConstructResponseUtilV2SpecFullData.expectedReadResourceForAnythingThingWithOneHiddenThingAnythingAdmin,
             resourceSequence,
           )
       } yield check
@@ -175,7 +171,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
                             )
         check <-
           ResourcesResponseCheckerV2.compareReadResourcesSequenceV2ResponseZIO(
-            constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingThingWithOneHiddenThingAnonymousUser,
+            ConstructResponseUtilV2SpecFullData.expectedReadResourceForAnythingThingWithOneHiddenThingAnonymousUser,
             resourceSequence,
           )
       } yield check
@@ -204,7 +200,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
                               ),
                             )
         check <- ResourcesResponseCheckerV2.compareReadResourcesSequenceV2ResponseZIO(
-                   constructResponseUtilV2SpecFullData.expectedReadResourceSequenceV2WithStandoffAnythingAdminUser,
+                   ConstructResponseUtilV2SpecFullData.expectedReadResourceSequenceV2WithStandoffAnythingAdminUser,
                    resourceSequence,
                  )
       } yield check
@@ -265,7 +261,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
                               ),
                             )
         check <- ResourcesResponseCheckerV2.compareReadResourcesSequenceV2ResponseZIO(
-                   constructResponseUtilV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery1,
+                   ConstructResponseUtilV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery1,
                    resourceSequence,
                  )
       } yield check
@@ -326,7 +322,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
                               ),
                             )
         check <- ResourcesResponseCheckerV2.compareReadResourcesSequenceV2ResponseZIO(
-                   constructResponseUtilV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery2,
+                   ConstructResponseUtilV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery2,
                    resourceSequence,
                  )
       } yield check

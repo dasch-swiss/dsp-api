@@ -18,7 +18,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
 
-class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFormatter) {
+object ResourcesResponseCheckerV2SpecFullData {
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   // one title is missing
   val expectedReadResourceV2ForReiseInsHeiligelandWrong: ReadResourceV2 = ReadResourceV2(
