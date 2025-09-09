@@ -1026,7 +1026,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
             .flatMap(_.assert200)
 
       } yield assertTrue {
-        canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false) == true
+        canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
       }
     },
     test("check if a resource is not allowed to be deleted") {
