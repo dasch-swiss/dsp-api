@@ -110,6 +110,12 @@ object IriLocker {
     ZIO.scoped(ZIO.acquireRelease(acquire)(release) *> task)
   }
 
+  def runWithIriLock_[A](apiRequestID: UUID, iri: IRI)(task: Task[A]): Task[A] = {
+    val acquire: Task[Unit]        = ZIO.attemptBlocking(this.acquireLock(iri, apiRequestID)).logError
+    val release: Unit => UIO[Unit] = _ => ZIO.attempt(decrementOrReleaseLock(iri, apiRequestID)).logError.ignore
+    ZIO.scoped(ZIO.acquireRelease(acquire)(release) *> task)
+  }
+
   /**
    * Tries to acquire an update lock for an API request on an IRI. If the API request already
    * has the lock, the lock's entry count is incremented. If another API request has the lock,

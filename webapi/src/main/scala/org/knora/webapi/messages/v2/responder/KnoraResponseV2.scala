@@ -204,6 +204,10 @@ final case class CanDoResponseV2(
     )
     JsonLDDocument(body, context)
   }
+
+  def assertGoodRequestEither: Either[BadRequestException, Unit] =
+    if (canDo._1) Right(())
+    else Left(BadRequestException(cannotDoReason.map(_._1).getOrElse("")))
 }
 
 object CanDoResponseV2 {

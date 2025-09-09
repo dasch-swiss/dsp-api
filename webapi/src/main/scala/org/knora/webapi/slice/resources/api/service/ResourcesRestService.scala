@@ -147,6 +147,16 @@ final case class ResourcesRestService(
       response <- renderer.render(result, formatOptions)
     } yield response
 
+  def canDeleteResource(user: User)(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =
+    for {
+      uuid <- Random.nextUUID
+      eraseRequest <- requestParser
+                        .deleteOrEraseResourceRequestV2(jsonLd, user, uuid)
+                        .mapError(BadRequestException.apply)
+      result   <- resourcesService.canDeleteResource(eraseRequest)
+      response <- renderer.render(result, formatOptions)
+    } yield response
+
   def deleteResource(user: User)(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
       uuid <- Random.nextUUID

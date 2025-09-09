@@ -133,6 +133,13 @@ final case class ResourcesEndpoints(
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
 
+  val getResourcesCanDelete = baseEndpoints.withUserEndpoint.post
+    .in(base / "candelete")
+    .in(ApiV2.Inputs.formatOptions)
+    .in(stringJsonBody)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
   val postResourcesDelete = baseEndpoints.withUserEndpoint.post
     .in(base / "delete")
     .in(ApiV2.Inputs.formatOptions)
@@ -164,6 +171,7 @@ final case class ResourcesEndpoints(
     getResourcesParams,
     getResourcesGraph,
     getResourcesTei,
+    getResourcesCanDelete,
     postResourcesErase,
     postResourcesDelete,
     postResources,
