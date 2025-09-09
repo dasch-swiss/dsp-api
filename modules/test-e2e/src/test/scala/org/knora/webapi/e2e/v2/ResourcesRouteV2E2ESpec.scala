@@ -991,14 +991,12 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         lastModificationDate == newModificationDate,
       )
     },
-    test("check if a resource can be deleted") {
+    test("check if a resource is allowed to be deleted") {
       for {
         responseJsonDoc <- TestApiClient
                              .postJsonLdDocument(uri"/v2/resources", createResourceReqPayload(), anythingUser1)
                              .flatMap(_.assert200)
-        resourceIri <- ZIO.succeed(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID).getOrElse {
-                         throw BadRequestException("Resource IRI not found in response")
-                       })
+        resourceIri <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         lastModificationDate <- responseJsonDoc.body
                                   .getDataTypeValueInObject(
                                     KnoraApiV2Complex.CreationDate,
@@ -1021,21 +1019,22 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                            |  }
                            |}""".stripMargin
-        canDeleteResponseAsString <-
-          TestApiClient.postJsonLd(uri"/v2/resources/candelete", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        canDeleteJsonLD = JsonLDUtil.parseJsonLD(canDeleteResponseAsString)
-        _               = println(s"ResourcesRouteV2E2ESpec -> canDeleteJsonLD -> $canDeleteJsonLD")
-        canDo           = canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
-      } yield assertTrue(canDo == true)
+
+        canDeleteJsonLD <-
+          TestApiClient
+            .getJsonLdDocument(uri"/v2/resources/candelete?jsonLd=${jsonLDEntity}", anythingUser1)
+            .flatMap(_.assert200)
+
+      } yield assertTrue {
+        canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
+      }
     },
-    test("check if a resource can not be deleted") {
+    test("check if a resource is not allowed to be deleted") {
       for {
         responseJsonDoc <- TestApiClient
                              .postJsonLdDocument(uri"/v2/resources", createResourceReqPayload(), anythingUser1)
                              .flatMap(_.assert200)
-        resourceIri <- ZIO.succeed(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID).getOrElse {
-                         throw BadRequestException("Resource IRI not found in response")
-                       })
+        resourceIri <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         lastModificationDate <- responseJsonDoc.body
                                   .getDataTypeValueInObject(
                                     KnoraApiV2Complex.CreationDate,
@@ -1061,12 +1060,13 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                            |  }
                            |}""".stripMargin
-        canDeleteResponseAsString <-
-          TestApiClient.postJsonLd(uri"/v2/resources/candelete", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        canDeleteJsonLD = JsonLDUtil.parseJsonLD(canDeleteResponseAsString)
-        _               = println(s"ResourcesRouteV2E2ESpec -> canDeleteJsonLD -> $canDeleteJsonLD")
-        canDo           = canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
-      } yield assertTrue(canDo == false)
+        canDeleteJsonLD <-
+          TestApiClient
+            .getJsonLdDocument(uri"/v2/resources/candelete?jsonLd=${jsonLDEntity}", anythingUser1)
+            .flatMap(_.assert200)
+      } yield assertTrue {
+        canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false) == false
+      }
     },
     test("mark a resource as deleted") {
       for {
@@ -1155,6 +1155,42 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         responseType == KnoraApiV2Complex.DeletedResource,
         responseDeleteDate == deleteDate.toString,
       )
+    },
+    test("failure to mark a resource as deleted because of delete date") {
+      for {
+        responseJsonDoc <- TestApiClient
+                             .postJsonLdDocument(uri"/v2/resources", createResourceReqPayload(), anythingUser1)
+                             .flatMap(_.assert200)
+        lastModificationDate <- responseJsonDoc.body
+                                  .getDataTypeValueInObject(
+                                    KnoraApiV2Complex.CreationDate,
+                                    OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                  )
+                                  .someOrFail("Last modification date not found")
+        jsonLDEntity = s"""|{
+                           |  "@id" : "${responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID).toOption.get}",
+                           |  "@type" : "anything:Thing",
+                           |  "knora-api:lastModificationDate" : {
+                           |    "@type" : "xsd:dateTimeStamp",
+                           |    "@value" : "$lastModificationDate"
+                           |  },
+                           |  "knora-api:deleteDate" : {
+                           |    "@type" : "xsd:dateTimeStamp",
+                           |    "@value" : "${Instant.EPOCH}"
+                           |  },
+                           |  "@context" : {
+                           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                           |  }
+                           |}""".stripMargin
+        responseJsonDoc <-
+          TestApiClient
+            .postJsonLdDocument(uri"/v2/resources/delete", jsonLDEntity, anythingUser1)
+            .flatMap(_.assert400)
+      } yield assertCompletes
     },
     test("create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)") {
       for {

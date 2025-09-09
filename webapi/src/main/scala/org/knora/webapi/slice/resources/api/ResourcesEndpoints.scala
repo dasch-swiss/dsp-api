@@ -133,10 +133,10 @@ final case class ResourcesEndpoints(
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
 
-  val getResourcesCanDelete = baseEndpoints.withUserEndpoint.post
+  val getResourcesCanDelete = baseEndpoints.withUserEndpoint.get
     .in(base / "candelete")
     .in(ApiV2.Inputs.formatOptions)
-    .in(stringJsonBody)
+    .in(query[String]("jsonLd"))
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
 
