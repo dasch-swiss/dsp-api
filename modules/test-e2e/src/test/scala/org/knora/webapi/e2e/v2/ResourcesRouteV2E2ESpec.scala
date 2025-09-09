@@ -991,7 +991,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         lastModificationDate == newModificationDate,
       )
     },
-    test("check if a resource can be deleted") {
+    test("check if a resource is allowed to be deleted") {
       for {
         responseJsonDoc <- TestApiClient
                              .postJsonLdDocument(uri"/v2/resources", createResourceReqPayload(), anythingUser1)
@@ -1021,10 +1021,13 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                            |  }
                            |}""".stripMargin
-        canDeleteResponseAsString <-
-          TestApiClient.postJsonLd(uri"/v2/resources/candelete", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        canDeleteJsonLD = JsonLDUtil.parseJsonLD(canDeleteResponseAsString)
-        canDo           = canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
+
+        canDeleteJsonLD <-
+          TestApiClient
+            .getJsonLdDocument(uri"/v2/resources/candelete?jsonLd=${jsonLDEntity}", anythingUser1)
+            .flatMap(_.assert200)
+
+        canDo = canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
       } yield assertTrue(canDo == true)
     },
     test("check if a resource can not be deleted") {
@@ -1060,10 +1063,11 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                            |  }
                            |}""".stripMargin
-        canDeleteResponseAsString <-
-          TestApiClient.postJsonLd(uri"/v2/resources/candelete", jsonLDEntity, anythingUser1).flatMap(_.assert200)
-        canDeleteJsonLD = JsonLDUtil.parseJsonLD(canDeleteResponseAsString)
-        canDo           = canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
+        canDeleteJsonLD <-
+          TestApiClient
+            .getJsonLdDocument(uri"/v2/resources/candelete?jsonLd=${jsonLDEntity}", anythingUser1)
+            .flatMap(_.assert200)
+        canDo = canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
       } yield assertTrue(canDo == false)
     },
     test("mark a resource as deleted") {
