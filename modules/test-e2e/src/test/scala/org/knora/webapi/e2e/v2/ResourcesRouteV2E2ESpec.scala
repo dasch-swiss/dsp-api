@@ -1025,8 +1025,9 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
             .getJsonLdDocument(uri"/v2/resources/candelete?jsonLd=${jsonLDEntity}", anythingUser1)
             .flatMap(_.assert200)
 
-        canDo = canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
-      } yield assertTrue(canDo == true)
+      } yield assertTrue {
+        canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false) == true
+      }
     },
     test("check if a resource can not be deleted") {
       for {
@@ -1063,8 +1064,9 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
           TestApiClient
             .getJsonLdDocument(uri"/v2/resources/candelete?jsonLd=${jsonLDEntity}", anythingUser1)
             .flatMap(_.assert200)
-        canDo = canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
-      } yield assertTrue(canDo == false)
+      } yield assertTrue {
+        canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false) == false
+      }
     },
     test("mark a resource as deleted") {
       for {
