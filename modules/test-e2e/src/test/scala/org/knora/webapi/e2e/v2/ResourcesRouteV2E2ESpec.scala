@@ -1024,7 +1024,6 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         canDeleteResponseAsString <-
           TestApiClient.postJsonLd(uri"/v2/resources/candelete", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         canDeleteJsonLD = JsonLDUtil.parseJsonLD(canDeleteResponseAsString)
-        _               = println(s"ResourcesRouteV2E2ESpec -> canDeleteJsonLD -> $canDeleteJsonLD")
         canDo           = canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
       } yield assertTrue(canDo == true)
     },
@@ -1064,7 +1063,6 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         canDeleteResponseAsString <-
           TestApiClient.postJsonLd(uri"/v2/resources/candelete", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         canDeleteJsonLD = JsonLDUtil.parseJsonLD(canDeleteResponseAsString)
-        _               = println(s"ResourcesRouteV2E2ESpec -> canDeleteJsonLD -> $canDeleteJsonLD")
         canDo           = canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false)
       } yield assertTrue(canDo == false)
     },
