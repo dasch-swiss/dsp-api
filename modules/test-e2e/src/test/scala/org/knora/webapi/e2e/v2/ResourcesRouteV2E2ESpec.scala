@@ -1029,7 +1029,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         canDeleteJsonLD.body.getRequiredBoolean(KnoraApiV2Complex.CanDo).getOrElse(false) == true
       }
     },
-    test("check if a resource can not be deleted") {
+    test("check if a resource is not allowed to be deleted") {
       for {
         responseJsonDoc <- TestApiClient
                              .postJsonLdDocument(uri"/v2/resources", createResourceReqPayload(), anythingUser1)
