@@ -6,7 +6,9 @@
 package org.knora.webapi.responders.v2
 
 import eu.timepit.refined.types.string.NonEmptyString
-import zio.ZIO
+import zio.*
+//import zio.test.*
+//import zio.test.Assertion.*
 
 import java.time.Instant
 import java.util.UUID
@@ -31,7 +33,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
@@ -46,20 +48,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-/**
- * Tests [[OntologyResponderV2]].
- */
 class OntologyResponderV2Spec extends E2ESpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val imagesUser           = SharedTestDataADM.imagesUser01
-  private val imagesProjectIri     = SharedTestDataADM.imagesProjectIri
-  private val anythingAdminUser    = SharedTestDataADM.anythingAdminUser
-  private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
-  private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri
-  private val ontologyResponder    = ZIO.serviceWithZIO[OntologyResponderV2]
-  private val triplestoreService   = ZIO.serviceWithZIO[TriplestoreService]
+  private val ontologyResponder  = ZIO.serviceWithZIO[OntologyResponderV2]
+  private val triplestoreService = ZIO.serviceWithZIO[TriplestoreService]
 
   override lazy val rdfDataObjects: List[RdfDataObject] =
     List(
@@ -85,7 +79,6 @@ class OntologyResponderV2Spec extends E2ESpec {
       ),
     )
 
-  // The default timeout for receiving reply messages from actors.
   private val fooIri                       = new MutableTestIri
   private val barIri                       = new MutableTestIri
   private val chairIri                     = new MutableTestIri
@@ -195,7 +188,7 @@ class OntologyResponderV2Spec extends E2ESpec {
           "The foo ontology",
           None,
           UUID.randomUUID,
-          imagesUser,
+          imagesUser01,
         )
       val response = UnsafeZioRun.runOrThrow(ontologyResponder(_.createOntology(createReq)))
 
@@ -219,7 +212,7 @@ class OntologyResponderV2Spec extends E2ESpec {
             None,
             fooLastModDate,
             UUID.randomUUID,
-            imagesUser,
+            imagesUser01,
           ),
         ),
       )
@@ -246,7 +239,7 @@ class OntologyResponderV2Spec extends E2ESpec {
             Some(aComment),
             fooLastModDate,
             UUID.randomUUID,
-            imagesUser,
+            imagesUser01,
           ),
         ),
       )
@@ -274,7 +267,7 @@ class OntologyResponderV2Spec extends E2ESpec {
             Some(aComment),
             fooLastModDate,
             UUID.randomUUID,
-            imagesUser,
+            imagesUser01,
           ),
         ),
       )
@@ -302,7 +295,7 @@ class OntologyResponderV2Spec extends E2ESpec {
             None,
             fooLastModDate,
             UUID.randomUUID,
-            imagesUser,
+            imagesUser01,
           ),
         ),
       )
@@ -321,7 +314,7 @@ class OntologyResponderV2Spec extends E2ESpec {
 
     "delete the comment from 'foo'" in {
       val response = UnsafeZioRun.runOrThrow(
-        ontologyResponder(_.deleteOntologyComment(fooIri.asOntologyIri, fooLastModDate, UUID.randomUUID, imagesUser)),
+        ontologyResponder(_.deleteOntologyComment(fooIri.asOntologyIri, fooLastModDate, UUID.randomUUID, imagesUser01)),
       )
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
@@ -344,7 +337,7 @@ class OntologyResponderV2Spec extends E2ESpec {
           "The bär ontology",
           Some(NonEmptyString.unsafeFrom("some comment")),
           UUID.randomUUID,
-          imagesUser,
+          imagesUser01,
         )
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
@@ -359,7 +352,7 @@ class OntologyResponderV2Spec extends E2ESpec {
         "The bar ontology",
         Some(comment),
         UUID.randomUUID,
-        imagesUser,
+        imagesUser01,
       )
       val response = UnsafeZioRun.runOrThrow(ontologyResponder(_.createOntology(createReq)))
       assert(response.ontologies.size == 1)
@@ -383,7 +376,7 @@ class OntologyResponderV2Spec extends E2ESpec {
             Some(newComment),
             barLastModDate,
             UUID.randomUUID,
-            imagesUser,
+            imagesUser01,
           ),
         ),
       )
@@ -401,7 +394,7 @@ class OntologyResponderV2Spec extends E2ESpec {
 
     "not create 'foo' again" in {
       val createReq =
-        CreateOntologyRequestV2("foo", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser)
+        CreateOntologyRequestV2("foo", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser01)
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
@@ -466,63 +459,87 @@ class OntologyResponderV2Spec extends E2ESpec {
 
     "not create an ontology called 'rdfs'" in {
       val createReq =
-        CreateOntologyRequestV2("rdfs", imagesProjectIri, false, "The rdfs ontology", None, UUID.randomUUID, imagesUser)
+        CreateOntologyRequestV2(
+          "rdfs",
+          imagesProjectIri,
+          false,
+          "The rdfs ontology",
+          None,
+          UUID.randomUUID,
+          imagesUser01,
+        )
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called '0000'" in {
       val createReq =
-        CreateOntologyRequestV2("0000", imagesProjectIri, false, "The 0000 ontology", None, UUID.randomUUID, imagesUser)
+        CreateOntologyRequestV2(
+          "0000",
+          imagesProjectIri,
+          false,
+          "The 0000 ontology",
+          None,
+          UUID.randomUUID,
+          imagesUser01,
+        )
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called '-foo'" in {
       val createReq =
-        CreateOntologyRequestV2("-foo", imagesProjectIri, false, "The -foo ontology", None, UUID.randomUUID, imagesUser)
+        CreateOntologyRequestV2(
+          "-foo",
+          imagesProjectIri,
+          false,
+          "The -foo ontology",
+          None,
+          UUID.randomUUID,
+          imagesUser01,
+        )
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'v3'" in {
       val createReq =
-        CreateOntologyRequestV2("v3", imagesProjectIri, false, "The v3 ontology", None, UUID.randomUUID, imagesUser)
+        CreateOntologyRequestV2("v3", imagesProjectIri, false, "The v3 ontology", None, UUID.randomUUID, imagesUser01)
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'ontology'" in {
       val createReq =
-        CreateOntologyRequestV2("ontology", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser)
+        CreateOntologyRequestV2("ontology", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser01)
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'knora'" in {
       val createReq =
-        CreateOntologyRequestV2("knora", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser)
+        CreateOntologyRequestV2("knora", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser01)
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'simple'" in {
       val createReq =
-        CreateOntologyRequestV2("simple", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser)
+        CreateOntologyRequestV2("simple", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser01)
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'shared'" in {
       val createReq =
-        CreateOntologyRequestV2("shared", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser)
+        CreateOntologyRequestV2("shared", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser01)
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a shared ontology in the wrong project" in {
       val createReq =
-        CreateOntologyRequestV2("misplaced", imagesProjectIri, true, "ignored", None, UUID.randomUUID, imagesUser)
+        CreateOntologyRequestV2("misplaced", imagesProjectIri, true, "ignored", None, UUID.randomUUID, imagesUser01)
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
@@ -536,7 +553,7 @@ class OntologyResponderV2Spec extends E2ESpec {
           "ignored",
           None,
           UUID.randomUUID,
-          imagesUser,
+          imagesUser01,
         )
       val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
@@ -551,7 +568,7 @@ class OntologyResponderV2Spec extends E2ESpec {
           "a chaired ontology",
           None,
           UUID.randomUUID,
-          SharedTestDataADM.superUser,
+          superUser,
         )
       val response = UnsafeZioRun.runOrThrow(ontologyResponder(_.createOntology(createReq)))
       assert(response.ontologies.size == 1)
@@ -614,7 +631,7 @@ class OntologyResponderV2Spec extends E2ESpec {
 
       val actual = UnsafeZioRun.run(
         ontologyResponder(
-          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingNonAdminUser),
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingUser1),
         ),
       )
       assertFailsWithA[ForbiddenException](actual)
@@ -1894,7 +1911,7 @@ class OntologyResponderV2Spec extends E2ESpec {
               newObjects,
               anythingLastModDate,
               UUID.randomUUID,
-              anythingNonAdminUser,
+              anythingUser1,
             ),
           ),
         ),
@@ -1996,7 +2013,7 @@ class OntologyResponderV2Spec extends E2ESpec {
               newObjects,
               anythingLastModDate,
               UUID.randomUUID,
-              anythingNonAdminUser,
+              anythingUser1,
             ),
           ),
         ),
@@ -2260,7 +2277,7 @@ class OntologyResponderV2Spec extends E2ESpec {
       val exit = UnsafeZioRun.run(
         ontologyResponder(
           _.createClass(
-            CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingNonAdminUser),
+            CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingUser1),
           ),
         ),
       )
@@ -3071,7 +3088,7 @@ class OntologyResponderV2Spec extends E2ESpec {
               newObjects = newObjects,
               lastModificationDate = anythingLastModDate,
               apiRequestID = UUID.randomUUID,
-              requestingUser = anythingNonAdminUser,
+              requestingUser = anythingUser1,
             ),
           ),
         ),
@@ -3174,7 +3191,7 @@ class OntologyResponderV2Spec extends E2ESpec {
               newObjects = newObjects,
               lastModificationDate = anythingLastModDate,
               apiRequestID = UUID.randomUUID,
-              requestingUser = anythingNonAdminUser,
+              requestingUser = anythingUser1,
             ),
           ),
         ),
@@ -4048,7 +4065,7 @@ class OntologyResponderV2Spec extends E2ESpec {
             classIri = classIri,
             lastModificationDate = anythingLastModDate,
             apiRequestID = UUID.randomUUID,
-            requestingUser = anythingNonAdminUser,
+            requestingUser = anythingUser1,
           ),
         ),
       )
@@ -4106,7 +4123,7 @@ class OntologyResponderV2Spec extends E2ESpec {
               classInfoContent,
               anythingLastModDate,
               UUID.randomUUID,
-              anythingNonAdminUser,
+              anythingUser1,
             ),
           ),
         ),
@@ -4560,7 +4577,7 @@ class OntologyResponderV2Spec extends E2ESpec {
               classInfoContent = classInfoContent,
               lastModificationDate = anythingLastModDate,
               apiRequestID = UUID.randomUUID,
-              requestingUser = anythingNonAdminUser,
+              requestingUser = anythingUser1,
             ),
           ),
         ),
@@ -4770,7 +4787,7 @@ class OntologyResponderV2Spec extends E2ESpec {
               classInfoContent = classInfoContent,
               lastModificationDate = anythingLastModDate,
               apiRequestID = UUID.randomUUID,
-              requestingUser = anythingNonAdminUser,
+              requestingUser = anythingUser1,
             ),
           ),
         ),
@@ -4847,7 +4864,7 @@ class OntologyResponderV2Spec extends E2ESpec {
             propertyIri = hasEmptiness,
             lastModificationDate = anythingLastModDate,
             apiRequestID = UUID.randomUUID,
-            requestingUser = anythingNonAdminUser,
+            requestingUser = anythingUser1,
           ),
         ),
       )
@@ -5976,7 +5993,7 @@ class OntologyResponderV2Spec extends E2ESpec {
 
       // Create a resource of #BlueTestClass using only #hasBlueTestIntProp.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(anythingProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestIntProp".toSmartIri -> Seq(
@@ -5996,7 +6013,7 @@ class OntologyResponderV2Spec extends E2ESpec {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
         label = "my blue test class thing instance",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject,
+        projectADM = anythingProject,
       )
 
       val _ = UnsafeZioRun.runOrThrow(
