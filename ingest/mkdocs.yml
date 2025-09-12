@@ -1,13 +1,13 @@
 site_name: Dsp-Ingest
 
 nav:
-  - Overview:
-      - Introduction: index.md
-      - Ingesting Assets: ingest.md
-      - Authentication: authentication.md
-      - Service documentation:
-          - Configuration: service-configuration.md
-          - Filesystem Setup: service-filesystem-setup.md
+  - OpenAPI Documentation: openapi.md
+  - Introduction: index.md
+  - Ingesting Assets: ingest.md
+  - Authentication: authentication.md
+  - Service documentation:
+      - Configuration: service-configuration.md
+      - Filesystem Setup: service-filesystem-setup.md
 
 plugins:
   - include-markdown
