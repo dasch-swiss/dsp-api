@@ -57,7 +57,7 @@ object Schema {
    * A set that contains all gui elements that do not have a gui attribute
    */
   private val guiElementsWithoutGuiAttribute: Set[SalsahGui.IRI] =
-    guiElements.toSet diff guiElementToGuiAttributes.keySet
+    guiElements diff guiElementToGuiAttributes.keySet
 
   /**
    * A set that contains all gui elements that point to a list
@@ -109,7 +109,7 @@ object Schema {
       // create a list of GuiAttribute value objects from raw inputs
       val validatedGuiAttributes: Validation[ValidationException, List[GuiAttribute]] =
         // with forEach, multiple errors are returned if multiple errors occur
-        guiAttributes.toList.forEach { case guiAttribute => GuiAttribute.make(guiAttribute) }
+        guiAttributes.toList.forEach(GuiAttribute.make)
 
       val validatedGuiAttributesAndGuiElement
         : ZValidation[Nothing, ValidationException, (List[GuiAttribute], Option[GuiElement])] =
@@ -125,6 +125,12 @@ object Schema {
       }
 
     }
+
+    def unsafeFrom(
+      guiAttributes: Set[GuiAttribute],
+      guiElement: Option[GuiElement],
+    ): GuiObject = make(guiAttributes, guiElement)
+      .fold(errs => throw new Exception(errs.map(_.getMessage).mkString(", ")), identity)
 
     def make(
       guiAttributes: Set[GuiAttribute],
@@ -174,6 +180,9 @@ object Schema {
     val value = k + "=" + v
   }
   object GuiAttribute {
+    def unsafeFrom(keyValue: String): GuiAttribute = make(keyValue)
+      .fold(errs => throw new Exception(errs.map(_.getMessage).mkString(", ")), identity)
+
     def make(keyValue: String): Validation[ValidationException, GuiAttribute] = {
       val k: String = keyValue.split("=").head.trim()
       val v: String = keyValue.split("=").last.trim()
