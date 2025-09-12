@@ -92,7 +92,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
   private val freeTestOntologyIri      = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri)
 
   private val fooLastModDate               = LastModRef.make
-  private var barLastModDate: Instant      = Instant.now
+  private val barLastModDate               = LastModRef.make
   private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
   private var freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
 
@@ -349,9 +349,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         response <- ontologyResponder(_.createOntology(createReq))
         metadata  = response.ontologies.head
         _         = self.barIri.set(metadata.ontologyIri.toString)
-        _ = self.barLastModDate = metadata.lastModificationDate.getOrElse(
-              throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-            )
+        (_, _)    = self.barLastModDate.updateFrom(response)
       } yield assertTrue(
         response.ontologies.size == 1,
         metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/bar",
@@ -368,17 +366,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                         OntologyIri.unsafeFrom(barIri.get.toSmartIri.toComplexSchema),
                         None,
                         Some(newComment),
-                        barLastModDate,
+                        self.barLastModDate,
                         randomUUID,
                         imagesUser01,
                       ),
                     )
-        metadata = response.ontologies.head
-        newBarLastModDate = metadata.lastModificationDate.getOrElse(
-                              throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-                            )
-        oldBarLastModDate = self.barLastModDate
-        _                 = self.barLastModDate = newBarLastModDate
+        metadata                               = response.ontologies.head
+        (oldBarLastModDate, newBarLastModDate) = self.barLastModDate.updateFrom(response)
       } yield assertTrue(
         response.ontologies.size == 1,
         metadata.ontologyIri == barIri.get.toSmartIri,
