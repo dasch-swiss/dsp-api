@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
+import scala.language.implicitConversions
 import eu.timepit.refined.types.string.NonEmptyString
 import zio.*
 import zio.test.*
@@ -82,14 +83,15 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ),
     )
 
-  private val fooIri                       = new MutableTestIri
-  private val barIri                       = new MutableTestIri
-  private val chairIri                     = new MutableTestIri
-  private val ExampleSharedOntologyIri     = "http://api.knora.org/ontology/shared/example-box/v2".toSmartIri
-  private val IncunabulaOntologyIri        = "http://0.0.0.0:3333/ontology/0803/incunabula/v2".toSmartIri
-  private val anythingOntologyIri          = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-  private val freeTestOntologyIri          = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri)
-  private var fooLastModDate: Instant      = Instant.now
+  private val fooIri                   = new MutableTestIri
+  private val barIri                   = new MutableTestIri
+  private val chairIri                 = new MutableTestIri
+  private val ExampleSharedOntologyIri = "http://api.knora.org/ontology/shared/example-box/v2".toSmartIri
+  private val IncunabulaOntologyIri    = "http://0.0.0.0:3333/ontology/0803/incunabula/v2".toSmartIri
+  private val anythingOntologyIri      = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
+  private val freeTestOntologyIri      = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri)
+
+  private val fooLastModDate               = LastModRef.make
   private var barLastModDate: Instant      = Instant.now
   private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
   private var freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
@@ -203,9 +205,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         response <- ontologyResponder(_.createOntology(createReq))
         metadata  = response.ontologies.head
         _         = self.fooIri.set(metadata.ontologyIri.toString)
-        _ = self.fooLastModDate = metadata.lastModificationDate.getOrElse(
-              throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-            )
+        (_, _)    = self.fooLastModDate.updateFrom(response)
       } yield assertTrue(
         response.ontologies.size == 1,
         metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo",
@@ -220,17 +220,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                         fooIri.asOntologyIri,
                         Some(newLabel),
                         None,
-                        fooLastModDate,
+                        self.fooLastModDate,
                         randomUUID,
                         imagesUser01,
                       ),
                     )
-        metadata       = response.ontologies.head
-        oldLastModDate = self.fooLastModDate
-        newFooLastModDate = metadata.lastModificationDate.getOrElse(
-                              throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-                            )
-        _ = self.fooLastModDate = newFooLastModDate
+        metadata                            = response.ontologies.head
+        (oldLastModDate, newFooLastModDate) = self.fooLastModDate.updateFrom(response)
       } yield assertTrue(
         response.ontologies.size == 1,
         metadata.ontologyIri == fooIri.get.toSmartIri,
@@ -247,17 +243,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                         fooIri.asOntologyIri,
                         None,
                         Some(aComment),
-                        fooLastModDate,
+                        self.fooLastModDate,
                         randomUUID,
                         imagesUser01,
                       ),
                     )
-        metadata       = response.ontologies.head
-        oldLastModDate = self.fooLastModDate
-        newFooLastModDate = metadata.lastModificationDate.getOrElse(
-                              throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-                            )
-        _ = self.fooLastModDate = newFooLastModDate
+        metadata                            = response.ontologies.head
+        (oldLastModDate, newFooLastModDate) = self.fooLastModDate.updateFrom(response)
       } yield assertTrue(
         response.ontologies.size == 1,
         metadata.ontologyIri == fooIri.get.toSmartIri,
@@ -275,17 +267,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                         fooIri.asOntologyIri,
                         Some(aLabel),
                         Some(aComment),
-                        fooLastModDate,
+                        self.fooLastModDate,
                         randomUUID,
                         imagesUser01,
                       ),
                     )
-        metadata       = response.ontologies.head
-        oldLastModDate = self.fooLastModDate
-        newFooLastModDate = metadata.lastModificationDate.getOrElse(
-                              throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-                            )
-        _ = self.fooLastModDate = newFooLastModDate
+        metadata                            = response.ontologies.head
+        (oldLastModDate, newFooLastModDate) = self.fooLastModDate.updateFrom(response)
       } yield assertTrue(
         response.ontologies.size == 1,
         metadata.ontologyIri == fooIri.get.toSmartIri,
@@ -296,24 +284,19 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("change the label of 'foo' again") {
       val newLabel = "a label changed again"
-
       for {
         response <- ontologyResponder(
                       _.changeOntologyMetadata(
                         fooIri.asOntologyIri,
                         Some(newLabel),
                         None,
-                        fooLastModDate,
+                        self.fooLastModDate,
                         randomUUID,
                         imagesUser01,
                       ),
                     )
-        metadata = response.ontologies.head
-        newFooLastModDate = metadata.lastModificationDate.getOrElse(
-                              throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-                            )
-        oldLastModDate = self.fooLastModDate
-        _              = self.fooLastModDate = newFooLastModDate
+        metadata                            = response.ontologies.head
+        (oldLastModDate, newFooLastModDate) = self.fooLastModDate.updateFrom(response)
       } yield assertTrue(
         response.ontologies.size == 1,
         metadata.ontologyIri == fooIri.get.toSmartIri,
@@ -325,13 +308,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("delete the comment from 'foo'") {
       for {
         response <-
-          ontologyResponder(_.deleteOntologyComment(fooIri.asOntologyIri, fooLastModDate, randomUUID, imagesUser01))
-        metadata = response.ontologies.head
-        newFooLastModDate = metadata.lastModificationDate.getOrElse(
-                              throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-                            )
-        oldLastModDate = self.fooLastModDate
-        _              = self.fooLastModDate = newFooLastModDate
+          ontologyResponder(
+            _.deleteOntologyComment(fooIri.asOntologyIri, self.fooLastModDate, randomUUID, imagesUser01),
+          )
+        metadata                            = response.ontologies.head
+        (oldLastModDate, newFooLastModDate) = self.fooLastModDate.updateFrom(response)
       } yield assertTrue(
         response.ontologies.size == 1,
         metadata.ontologyIri == fooIri.get.toSmartIri,
@@ -413,15 +394,15 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("not delete an ontology that doesn't exist") {
       ontologyResponder(
         _.deleteOntology(
-          ontologyIri = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri),
-          lastModificationDate = fooLastModDate,
-          apiRequestID = randomUUID,
+          OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri),
+          self.fooLastModDate,
+          randomUUID,
         ),
       ).exit.map(actual => assert(actual)(failsWithA[NotFoundException]))
     },
     test("delete the 'foo' ontology") {
       for {
-        _ <- ontologyResponder(_.deleteOntology(fooIri.asOntologyIri, fooLastModDate, randomUUID))
+        _ <- ontologyResponder(_.deleteOntology(fooIri.asOntologyIri, self.fooLastModDate, randomUUID))
         // Request the metadata of all ontologies to check that 'foo' isn't listed.
         cachedMetadataResponse <- ontologyResponder(_.getOntologyMetadataForAllProjects)
         // Reload the ontologies from the triplestore and check again.
@@ -637,7 +618,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         actualProperty.entityInfoContent == propertyInfoContent,
         newAnythingLastModDate.isAfter(oldAnythingLastModDate),
         ontologyResponseAfterRefresh.properties.size == 1,
-        readPropertyInfo.entityInfoContent == (propertyInfoContent),
+        readPropertyInfo.entityInfoContent == propertyInfoContent,
       )
     },
     test(
@@ -1676,7 +1657,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         oldAnythingLastModDate = self.anythingLastModDate
         _                      = self.anythingLastModDate = newAnythingLastModDate
       } yield assertTrue(
-        readPropertyInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects == (newObjects),
+        readPropertyInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects == newObjects,
         externalOntology.properties.size == 1,
         newAnythingLastModDate.isAfter(oldAnythingLastModDate),
       )
@@ -2370,10 +2351,10 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         _                      = self.anythingLastModDate = newAnythingLastModDate
       } yield assertTrue(
         externalOntology.classes.size == 1,
-        readClassInfo.allBaseClasses == (expectedAllBaseClasses),
-        readClassInfo.entityInfoContent == (classInfoContent),
+        readClassInfo.allBaseClasses == expectedAllBaseClasses,
+        readClassInfo.entityInfoContent == classInfoContent,
         !readClassInfo.inheritedCardinalities.keySet.contains(anythingHasInteger.toSmartIri),
-        readClassInfo.allResourcePropertyCardinalities.keySet == (expectedProperties),
+        readClassInfo.allResourcePropertyCardinalities.keySet == expectedProperties,
         newAnythingLastModDate.isAfter(anythingLastModDate),
       )
     },
@@ -2481,10 +2462,10 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                ),
                              )
       } yield assertTrue(
-        readClassInfo.allBaseClasses == (expectedAllBaseClasses),
-        readClassInfo.entityInfoContent == (classInfoContent),
+        readClassInfo.allBaseClasses == expectedAllBaseClasses,
+        readClassInfo.entityInfoContent == classInfoContent,
         readClassInfo.inheritedCardinalities.keySet.contains(anythingHasInteger.toSmartIri),
-        readClassInfo.allResourcePropertyCardinalities.keySet == (expectedProperties),
+        readClassInfo.allResourcePropertyCardinalities.keySet == expectedProperties,
         newAnythingLastModDate.isAfter(anythingLastModDate),
         !canDeleteResponse.canDo.value,
       )
@@ -2647,9 +2628,9 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         oldAnythingLastModDate = self.anythingLastModDate
         _                      = self.anythingLastModDate = newAnythingLastModDate
       } yield assertTrue(
-        (externalOntology.classes.size == 1),
-        readClassInfo.entityInfoContent == (classInfoContent),
-        readClassInfo.allResourcePropertyCardinalities.keySet == (expectedProperties),
+        externalOntology.classes.size == 1,
+        readClassInfo.entityInfoContent == classInfoContent,
+        readClassInfo.allResourcePropertyCardinalities.keySet == expectedProperties,
         newAnythingLastModDate.isAfter(oldAnythingLastModDate),
       )
     },
@@ -2821,7 +2802,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         _              = self.anythingLastModDate = newAnythingLastModDate
       } yield assertTrue(
         externalOntology.classes.size == 1,
-        readClassInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects == (newObjectsUnescaped),
+        readClassInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects == newObjectsUnescaped,
         newAnythingLastModDate.isAfter(oldLastModDate),
       )
     },
@@ -3048,7 +3029,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         _                      = self.anythingLastModDate = newAnythingLastModDate
       } yield assertTrue(
         externalOntology.classes.size == 1,
-        readClassInfo.entityInfoContent == (classInfoContent),
+        readClassInfo.entityInfoContent == classInfoContent,
         readClassInfo.allCardinalities(anythingOntologyIri.makeEntityIri("hasBoolean")).cardinality == ExactlyOne,
         newAnythingLastModDate.isAfter(oldAnythingLastModDate),
       )
@@ -3270,7 +3251,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           case Some(predicateInfo) =>
             val guiElementTypeFromMessage = predicateInfo.objects.head.asInstanceOf[SmartIriLiteralV2]
             val guiElementTypeInternal    = guiElementTypeFromMessage.toOntologySchema(InternalSchema)
-            guiElementTypeFromMessage == (guiElementTypeInternal)
+            guiElementTypeFromMessage == guiElementTypeInternal
           case None => true
         },
         externalOntology.properties.size == 1,
@@ -4116,8 +4097,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         _                      = self.anythingLastModDate = newAnythingLastModDate
       } yield assertTrue(
         externalOntology.classes.size == 1,
-        readClassInfo.entityInfoContent.directCardinalities == (classInfoContent.directCardinalities),
-        readClassInfo.allResourcePropertyCardinalities.keySet == (expectedProperties),
+        readClassInfo.entityInfoContent.directCardinalities == classInfoContent.directCardinalities,
+        readClassInfo.allResourcePropertyCardinalities.keySet == expectedProperties,
         newAnythingLastModDate.isAfter(oldAnythingLastModDate),
       )
     },
@@ -5561,4 +5542,36 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
   )
+}
+case class LastModRef(private var value: Instant) {
+  private def set(newValue: Instant): Instant =
+    this.value = newValue
+    this.value
+
+  def updateFrom(r: ReadOntologyV2): (Instant, Instant) = {
+    val oldValue = value
+    val newValue = r
+      .toOntologySchema(ApiV2Complex)
+      .ontologyMetadata
+      .lastModificationDate
+      .getOrElse(throw AssertionException(s"${r.ontologyIri} has no last modification date"))
+    (oldValue, set(newValue))
+  }
+
+  def updateFrom(r: ReadOntologyMetadataV2): (Instant, Instant) = {
+    val oldValue = value
+    val newValue = r
+      .toOntologySchema(ApiV2Complex)
+      .ontologies
+      .headOption
+      .flatMap(_.lastModificationDate)
+      .getOrElse(throw AssertionException(s"$r has no last modification date"))
+    (oldValue, set(newValue))
+  }
+
+  def isAfter(other: Instant): Boolean = value.isAfter(other)
+}
+object LastModRef {
+  given Conversion[LastModRef, Instant] = _.value
+  def make: LastModRef                  = LastModRef(Instant.now)
 }
