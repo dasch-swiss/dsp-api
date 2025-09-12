@@ -1,5 +1,30 @@
 # Changelog
 
+## [32.2.0](https://github.com/dasch-swiss/dsp-api/compare/v32.1.0...v32.2.0) (2025-09-12)
+
+
+### Maintenances
+
+* **dsp-api:** Migrate ValuesResponderV2Spec (DEV-5377) ([#3762](https://github.com/dasch-swiss/dsp-api/issues/3762)) ([7ee4134](https://github.com/dasch-swiss/dsp-api/commit/7ee41348a5c4713d6d958fe50f40e4056e1459c3))
+* Migrate ResourcesResponderV2Spec (DEV-5308) ([#3765](https://github.com/dasch-swiss/dsp-api/issues/3765)) ([3f5c5f0](https://github.com/dasch-swiss/dsp-api/commit/3f5c5f0fec6bf314cc2587b4c6d3acdb519c0a5f))
+* Remove debugging printlns from tests ([bfa2f67](https://github.com/dasch-swiss/dsp-api/commit/bfa2f670e23ea61c77371fa88471a151a8ae4942))
+
+
+### Documentation
+
+* **ingest:** Fix openapi paths ([#3769](https://github.com/dasch-swiss/dsp-api/issues/3769)) ([57d3d48](https://github.com/dasch-swiss/dsp-api/commit/57d3d48f5f9e68410412526747d4941f241a2adc))
+
+
+### Enhancements
+
+* Convert /v2/resources/candelete to GET ([#3766](https://github.com/dasch-swiss/dsp-api/issues/3766)) ([8a0d798](https://github.com/dasch-swiss/dsp-api/commit/8a0d7983b8144812d05a27752891936d9f9a58ea))
+* Expose /v2/resources/candelete (DEV-5267) ([#3758](https://github.com/dasch-swiss/dsp-api/issues/3758)) ([187d1be](https://github.com/dasch-swiss/dsp-api/commit/187d1be5fed264cd2f8bba15344d3f69eae47c62))
+
+
+### Bug Fixes
+
+* Send queries to Fuseki as form data not as URL parameters ([#3768](https://github.com/dasch-swiss/dsp-api/issues/3768)) ([829d543](https://github.com/dasch-swiss/dsp-api/commit/829d5438943b4bf96c7a9e54f7cbb2ac3dfde351))
+
 ## [32.1.0](https://github.com/dasch-swiss/dsp-api/compare/v32.0.0...v32.1.0) (2025-09-02)
 
 
