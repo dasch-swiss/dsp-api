@@ -33,7 +33,7 @@ object MetricsServer {
       docs       <- DocsServer.docsEndpoints.map(endpoints => ZioHttpInterpreter().toHttp(endpoints))
       prometheus <- ZIO.service[PrometheusRoutes]
       _          <- Server.install(prometheus.routes ++ docs): @annotation.nowarn
-      _          <- ZIO.never.as(())
+      _          <- ZIO.never.unit
     } yield ()
 
   type MetricsServerEnv = KnoraApi & State & InstrumentationServerConfig & ApiV2Endpoints & ShaclEndpoints &

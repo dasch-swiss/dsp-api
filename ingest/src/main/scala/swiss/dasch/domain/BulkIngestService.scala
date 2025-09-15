@@ -132,7 +132,7 @@ final case class BulkIngestService(
       .ingestFile(file, project)
       .flatMap(asset => updateMappingCsv(asset, file, importDir, mappingFile))
       .as(IngestResult.success)
-      .catchNonFatalOrDie(e =>
+      .catchAll(e =>
         ZIO.logErrorCause(s"Error ingesting file $file: ${e.getMessage}", Cause.fail(e)).as(IngestResult.failed),
       )
 
