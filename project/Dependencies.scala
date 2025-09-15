@@ -60,7 +60,7 @@ object Dependencies {
 
   val ingestTest = Seq(
     "dev.zio"      %% "zio-mock"               % ZioMockVersion % Test,
-    "dev.zio"      %% "zio-http"               % "3.3.3"        % Test,
+    "dev.zio"      %% "zio-http"               % "3.5.1"        % Test,
     "dev.zio"      %% "zio-test"               % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-junit"         % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-magnolia"      % ZioVersion     % Test,
