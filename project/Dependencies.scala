@@ -32,7 +32,7 @@ object Dependencies {
   val ZioPreludeVersion           = "1.0.0-RC41"
   val ZioSchemaVersion            = "1.7.4"
   val ZioMockVersion              = "1.0.0-RC12"
-  val ZioVersion                  = "2.1.20"
+  val ZioVersion                  = "2.1.21"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
