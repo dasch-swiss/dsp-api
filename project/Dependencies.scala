@@ -30,7 +30,7 @@ object Dependencies {
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.4.3"
   val ZioPreludeVersion           = "1.0.0-RC41"
-  val ZioSchemaVersion            = "1.7.4"
+  val ZioSchemaVersion            = "1.7.5"
   val ZioMockVersion              = "1.0.0-RC12"
   val ZioVersion                  = "2.1.21"
 
