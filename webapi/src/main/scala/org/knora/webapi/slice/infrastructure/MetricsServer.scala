@@ -24,11 +24,11 @@ import org.knora.webapi.slice.admin.api.AdminApiEndpoints
 import org.knora.webapi.slice.common.api.ApiV2Endpoints
 import org.knora.webapi.slice.infrastructure.api.PrometheusRoutes
 import org.knora.webapi.slice.shacl.api.ShaclEndpoints
+import org.knora.webapi.slice.v3.api.ApiV3Endpoints
 
 object MetricsServer {
 
-  private val metricsServer
-    : ZIO[AdminApiEndpoints & ApiV2Endpoints & KnoraApi & ShaclEndpoints & PrometheusRoutes & Server, Nothing, Unit] =
+  private val metricsServer =
     for {
       docs       <- DocsServer.docsEndpoints.map(endpoints => ZioHttpInterpreter().toHttp(endpoints))
       prometheus <- ZIO.service[PrometheusRoutes]
@@ -37,7 +37,7 @@ object MetricsServer {
     } yield ()
 
   type MetricsServerEnv = KnoraApi & State & InstrumentationServerConfig & ApiV2Endpoints & ShaclEndpoints &
-    AdminApiEndpoints
+    AdminApiEndpoints & ApiV3Endpoints
 
   val make: ZIO[MetricsServerEnv, Throwable, Unit] =
     for {
@@ -45,6 +45,7 @@ object MetricsServer {
       apiV2Endpoints    <- ZIO.service[ApiV2Endpoints]
       adminApiEndpoints <- ZIO.service[AdminApiEndpoints]
       shaclApiEndpoints <- ZIO.service[ShaclEndpoints]
+      apiV3Endpoints    <- ZIO.service[ApiV3Endpoints]
       config            <- ZIO.service[InstrumentationServerConfig]
       port               = config.port
       interval           = config.interval
@@ -58,6 +59,7 @@ object MetricsServer {
              ZLayer.succeed(adminApiEndpoints),
              ZLayer.succeed(apiV2Endpoints),
              ZLayer.succeed(shaclApiEndpoints),
+             ZLayer.succeed(apiV3Endpoints),
              Server.defaultWithPort(port),
              prometheus.publisherLayer,
              ZLayer.succeed(metricsConfig) >>> prometheus.prometheusLayer,
@@ -77,7 +79,8 @@ object DocsServer {
       apiV2       <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
       admin       <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
       shacl       <- ZIO.serviceWith[ShaclEndpoints](_.endpoints)
-      allEndpoints = List(apiV2, admin, shacl).flatten
+      apiV3       <- ZIO.serviceWith[ApiV3Endpoints](_.endpoints)
+      allEndpoints = List(apiV2, admin, shacl, apiV3).flatten
       info = Info(
                title = "DSP-API",
                version = BuildInfo.version,
