@@ -2124,7 +2124,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
       } yield assertTrue(
         response.ontologies.size == 1,
-        metadata.ontologyIri == anythingOntologyIri.smartIri,
+        metadata.ontologyIri.toComplexSchema == anythingOntologyIri.toComplexSchema,
         metadata.label.contains(newLabel),
         newAnythingLastModDate.isAfter(oldAnythingLastModDate),
       )
@@ -2218,7 +2218,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         readClassInfo.entityInfoContent == classInfoContent,
         !readClassInfo.inheritedCardinalities.keySet.contains(anythingHasInteger.toSmartIri),
         readClassInfo.allResourcePropertyCardinalities.keySet == expectedProperties,
-        newAnythingLastModDate.isAfter(anythingLastModDate),
+        newAnythingLastModDate.isAfter(oldAnythingLastModDate),
       )
     },
     test("not allow inherited property to be deleted on subclass") {
@@ -2321,7 +2321,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         readClassInfo.entityInfoContent == classInfoContent,
         readClassInfo.inheritedCardinalities.keySet.contains(anythingHasInteger.toSmartIri),
         readClassInfo.allResourcePropertyCardinalities.keySet == expectedProperties,
-        newAnythingLastModDate.isAfter(anythingLastModDate),
+        newAnythingLastModDate.isAfter(oldAnythingLastModDate),
         !canDeleteResponse.canDo.value,
       )
     },
@@ -2382,18 +2382,12 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
       for {
-        msg <-
-          ontologyResponder(
-            _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)),
-          )
-        externalOntology       = msg.toOntologySchema(ApiV2Complex)
-        readClassInfo          = externalOntology.classes(classIri)
-        metadata               = externalOntology.ontologyMetadata
-        oldAnythingLastModDate = self.anythingLastModDate
-        newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-                                   throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-                                 )
+        msg                                             <- ontologyResponder(_.createClass(createReq))
+        (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
+        readClassInfo                                    = msg.toOntologySchema(ApiV2Complex).classes(classIri)
+
         classInfoContentWithCardinalityToDeleteAllow =
           ClassInfoContentV2(
             classIri = classIri,
@@ -2525,7 +2519,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(
         externalOntology.classes.size == 1,
         readClassInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects == newObjects,
-        newAnythingLastModDate.isAfter(anythingLastModDate),
+        newAnythingLastModDate.isAfter(oldAnythingLastModDate),
       )
     },
     test("change the labels of a class, submitting the same labels again") {
@@ -2601,7 +2595,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(
         externalOntology.classes.size == 1,
         readClassInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects == newObjectsUnescaped,
-        newAnythingLastModDate.isAfter(anythingLastModDate),
+        newAnythingLastModDate.isAfter(oldLastModDate),
       )
     },
     test("change the comments of a class, submitting the same comments again") {
@@ -2950,7 +2944,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         actual =>
           assert(actual)(
             failsWithMessageEqualTo[BadRequestException](
-              s"All values of ${Rdfs.Label} must be string literals with a language code",
+              s"All values of ${Rdfs.Comment} must be string literals with a language code",
             ),
           ),
       )
@@ -4502,7 +4496,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                   )
       } yield assertTrue(
         lastModDateAfterCreateClass.isAfter(lastModDateBeforeCreateClass),
-        lastModDateBeforeCreateProperty.isAfter(lastModDateBeforeCreateProperty),
+        lastModDateAfterCreateProperty.isAfter(lastModDateBeforeCreateProperty),
         lastModDateAfterCreateIntegerProp.isAfter(lastModDateBeforeCreateIntegerProp),
         lastModDateAfterCreateLinkProperty.isAfter(lastModDateBeforeCreateLinkProperty),
         lastModDateAfterAddCardinalities.isAfter(lastModDateBeforeAddCardinalities),
