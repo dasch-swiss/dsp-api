@@ -598,7 +598,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                    throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
                                  )
         _  = self.anythingLastModDate = newAnythingLastModDate
-        _ <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+        _ <- ontologyCache(_.refreshCache())
         ontologyResponseAfterRefresh <- ontologyResponder(
                                           _.getPropertiesFromOntologyV2(
                                             Set(PropertyIri.unsafeFrom(propertyIri)),
@@ -678,7 +678,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         readPropertyInfoFromGetProperties = ontologyFromGetProperties.properties.values.head
 
         // Reload the ontology cache and see if we get the same result.
-        _ <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+        _ <- ontologyCache(_.refreshCache())
         getPropertiesResponseAfterCacheRefresh <- ontologyResponder(
                                                     _.getPropertiesFromOntologyV2(
                                                       propertyIris = Set(PropertyIri.unsafeFrom(propertyIri)),
@@ -4883,7 +4883,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         _                                     = self.anythingLastModDate = lastModDateAfterReplaceCardinalities
 
         // Check that the correct blank nodes were stored for the cardinalities.
-        actual <- ZIO.serviceWithZIO[TriplestoreService](
+        actual <- triplestoreService(
                     _.query(
                       Select(
                         """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -5223,7 +5223,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Check that the correct blank nodes were stored for the cardinalities.
         actual <-
-          ZIO.serviceWithZIO[TriplestoreService](
+          triplestoreService(
             _.query(
               Select(
                 """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
