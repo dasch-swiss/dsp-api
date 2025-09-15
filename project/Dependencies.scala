@@ -16,7 +16,7 @@ object Dependencies {
 
   val ScalaVersion = "3.3.6"
 
-  val PekkoActorVersion = "1.1.5"
+  val PekkoActorVersion = "1.2.0"
   val PekkoHttpVersion  = "1.2.0"
 
   val MonocleVersion = "3.3.0"
@@ -28,7 +28,7 @@ object Dependencies {
   val ZioConfigVersion            = "4.0.4"
   val ZioLoggingVersion           = "2.5.1"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.4.3"
+  val ZioMetricsConnectorsVersion = "2.5.0"
   val ZioPreludeVersion           = "1.0.0-RC41"
   val ZioSchemaVersion            = "1.7.4"
   val ZioMockVersion              = "1.0.0-RC12"
@@ -60,7 +60,7 @@ object Dependencies {
 
   val ingestTest = Seq(
     "dev.zio"      %% "zio-mock"               % ZioMockVersion % Test,
-    "dev.zio"      %% "zio-http"               % "3.3.3"        % Test,
+    "dev.zio"      %% "zio-http"               % "3.5.1"        % Test,
     "dev.zio"      %% "zio-test"               % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-junit"         % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-magnolia"      % ZioVersion     % Test,
@@ -170,7 +170,7 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"  %% "zio-opentelemetry"              % "3.1.8",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.20.0",
+    "io.sentry" % "sentry-opentelemetry-agentless" % "8.21.1",
   )
 
   val integrationTestDependencies = Seq(
@@ -224,7 +224,7 @@ object Dependencies {
     zioPrelude,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion         = "11.10.5"
+  val flywayVersion         = "11.12.0"
   val otelAgentVersion      = "v2.18.1"
   val otelPyroscopeVersion  = "v1.0.4"
   val hikariVersion         = "6.3.2"
