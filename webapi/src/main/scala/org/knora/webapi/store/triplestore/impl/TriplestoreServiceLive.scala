@@ -344,8 +344,8 @@ case class TriplestoreServiceLive(
     }
 
     val params  = Map(("query", query.sparql), ("timeout", timeout.toSeconds.toString))
-    val uri     = targetHostUri.addPath(paths.query).addParams(params)
-    val request = authenticatedRequest.post(uri).header("Accept", acceptMimeType)
+    val uri     = targetHostUri.addPath(paths.query)
+    val request = authenticatedRequest.post(uri).header("Accept", acceptMimeType).body(params)
     trackQueryDuration(query, doHttpRequest(request).map(_.body.merge))
   }
 
