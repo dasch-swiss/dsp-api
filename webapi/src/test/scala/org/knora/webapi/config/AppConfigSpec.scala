@@ -34,8 +34,8 @@ object AppConfigSpec extends ZIOSpecDefault {
           dspIngestConfig.audience == "http://localhost:3340",
           dspIngestConfig.baseUrl == "http://localhost:3340",
           jwtConfig.expiration == java.time.Duration.ofDays(30),
-          jwtConfig.issuer.contains("0.0.0.0:3333"),
-          jwtConfig.issuerAsString() == "0.0.0.0:3333",
+          jwtConfig.issuer.contains("127.0.0.1:3333"),
+          jwtConfig.issuerAsString() == "127.0.0.1:3333",
         )
       }
     }.provideLayer(AppConfig.layer),
