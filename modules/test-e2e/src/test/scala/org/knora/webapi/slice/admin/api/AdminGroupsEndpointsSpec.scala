@@ -12,7 +12,7 @@ import zio.json.*
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.LanguageCode.EN
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2

@@ -14,7 +14,6 @@ import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
-import org.knora.webapi.LanguageCode.EN
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
@@ -28,6 +27,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.util.MutableTestIri
 
 object ProjectRestServiceSpec extends E2EZSpec {

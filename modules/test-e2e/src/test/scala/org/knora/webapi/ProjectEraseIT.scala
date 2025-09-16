@@ -12,6 +12,7 @@ import zio.ZIO
 import zio.test.Spec
 import zio.test.TestAspect
 import zio.test.assertTrue
+import org.knora.webapi.slice.common.domain.LanguageCode
 
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger

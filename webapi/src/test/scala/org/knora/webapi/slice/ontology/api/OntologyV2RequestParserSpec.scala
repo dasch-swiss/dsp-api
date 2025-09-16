@@ -12,7 +12,6 @@ import zio.test.Assertion.*
 import java.time.Instant
 
 import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.LanguageCode
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
@@ -30,6 +29,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 

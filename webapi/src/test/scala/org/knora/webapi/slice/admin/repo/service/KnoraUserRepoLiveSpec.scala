@@ -20,7 +20,6 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
-import org.knora.webapi.LanguageCode
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.TestDataFactory.User.*
 import org.knora.webapi.messages.StringFormatter
@@ -37,6 +36,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TestTripleStore

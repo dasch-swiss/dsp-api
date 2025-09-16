@@ -9,7 +9,7 @@ import zio.prelude.Validation
 import zio.test.*
 
 import dsp.errors.ValidationException
-import org.knora.webapi.LanguageCode
+import org.knora.webapi.slice.common.domain.LanguageCode
 
 /**
  * This spec is used to test the [[dsp.valueobjects.LangString]] value objects creation.
@@ -44,7 +44,9 @@ object LangStringSpec extends ZIOSpecDefault {
       test("pass an invalid language value and return an error") {
         val invalidLanguageCode = "english"
         val expected =
-          Validation.fail(ValidationException("Unsupported language code: en, supported codes are: de, en, fr, it, rm"))
+          Validation.fail(
+            ValidationException("Unsupported language code: english, supported codes are: de, en, fr, it, rm"),
+          )
         val result = LangString.makeFromStrings(invalidLanguageCode, "ok string value")
         assertTrue(result == expected)
       },

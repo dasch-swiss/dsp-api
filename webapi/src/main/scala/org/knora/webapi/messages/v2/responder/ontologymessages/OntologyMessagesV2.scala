@@ -26,7 +26,6 @@ import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
 import org.knora.webapi.*
-import org.knora.webapi.LanguageCode.EN
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions.*
@@ -48,6 +47,8 @@ import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.LanguageCode
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 /**

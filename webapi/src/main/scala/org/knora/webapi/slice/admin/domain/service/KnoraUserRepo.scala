@@ -8,7 +8,6 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.Chunk
 import zio.Task
 
-import org.knora.webapi.LanguageCode
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
@@ -20,6 +19,7 @@ import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.repo.service.Repository
 
 trait KnoraUserRepo extends Repository[KnoraUser, UserIri] {

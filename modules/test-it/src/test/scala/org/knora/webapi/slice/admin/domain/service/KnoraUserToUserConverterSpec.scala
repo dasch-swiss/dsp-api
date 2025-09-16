@@ -12,7 +12,6 @@ import zio.test.assertTrue
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.IRI
-import org.knora.webapi.LanguageCode
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProjectIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
@@ -27,6 +26,7 @@ import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.common.domain.LanguageCode
 
 object KnoraUserToUserConverterSpec extends E2EZSpec {
 

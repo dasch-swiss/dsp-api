@@ -10,7 +10,7 @@ import sttp.model.*
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.LanguageCode.*
+import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2

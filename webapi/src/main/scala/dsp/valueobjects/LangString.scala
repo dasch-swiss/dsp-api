@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.Logger
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
-import org.knora.webapi.LanguageCode
+import org.knora.webapi.slice.common.domain.LanguageCode
 
 /**
  * LangString value object

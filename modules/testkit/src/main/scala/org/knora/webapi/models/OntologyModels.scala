@@ -9,7 +9,7 @@ import java.time.Instant
 import scala.annotation.tailrec
 
 import dsp.valueobjects.LangString
-import org.knora.webapi.LanguageCode
+import org.knora.webapi.slice.common.domain.LanguageCode
 
 object Comments {
   def handleOptionalComment(comment: Option[LangString]): String =
