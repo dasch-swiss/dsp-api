@@ -8,6 +8,7 @@ package dsp.valueobjects
 import zio.prelude.Validation
 import zio.test.*
 
+import org.knora.webapi.LanguageCode
 import dsp.errors.ValidationException
 
 /**
@@ -24,27 +25,26 @@ object LangStringSpec extends ZIOSpecDefault {
     suite("`make()` smart constructor")(
       test("pass an empty string value and return an error") {
         val expected = Validation.fail(ValidationException(LangStringErrorMessages.LangStringValueEmpty))
-        val result   = LangString.make(LanguageCode.en, "")
+        val result   = LangString.make(LanguageCode.EN, "")
         assertTrue(result == expected)
       },
       test("pass an invalid string value and return an error") {
         val expected = Validation.fail(ValidationException(LangStringErrorMessages.LangStringValueEmpty))
-        val result   = LangString.make(LanguageCode.en, "\t\n  ") // blank only is not allowed
+        val result   = LangString.make(LanguageCode.EN, "\t\n  ") // blank only is not allowed
         assertTrue(result == expected)
       },
       test("pass a valid value and successfully create value object") {
         val stringValue = "Some valid string"
         (for {
-          result <- LangString.make(LanguageCode.en, stringValue)
-        } yield assertTrue(result.language.value == "en") &&
-          assertTrue(result.value == stringValue)).toZIO
+          result <- LangString.make(LanguageCode.EN, stringValue)
+        } yield assertTrue(result.language == LanguageCode.EN, result.value == stringValue)).toZIO
       },
     ),
     suite("`makeFromStrings()` smart constructor")(
       test("pass an invalid language value and return an error") {
         val invalidLanguageCode = "english"
         val expected =
-          Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid(invalidLanguageCode)))
+          Validation.fail(ValidationException("Unsupported language code: en, supported codes are: de, en, fr, it, rm"))
         val result = LangString.makeFromStrings(invalidLanguageCode, "ok string value")
         assertTrue(result == expected)
       },
@@ -62,22 +62,19 @@ object LangStringSpec extends ZIOSpecDefault {
         val stringValue = "Some valid string"
         (for {
           result <- LangString.makeFromStrings("en", stringValue)
-        } yield assertTrue(result.language.value == "en") &&
-          assertTrue(result.value == stringValue)).toZIO
+        } yield assertTrue(result.language == LanguageCode.EN, result.value == stringValue)).toZIO
       },
     ),
     suite("`unsafeMake()` unsafe constructor")(
       test("create a valid LangString through the unsafe method") {
         val str         = "some langstring"
-        val unsafeValid = LangString.unsafeMake(LanguageCode.en, str)
-        assertTrue(unsafeValid.language.value == "en") &&
-        assertTrue(unsafeValid.value == str)
+        val unsafeValid = LangString.unsafeMake(LanguageCode.EN, str)
+        assertTrue(unsafeValid.language == LanguageCode.EN, unsafeValid.value == str)
       },
       test("create an invalid LangString through the unsafe method") {
         val str         = ""
-        val unsafeValid = LangString.unsafeMake(LanguageCode.en, str)
-        assertTrue(unsafeValid.language.value == "en") &&
-        assertTrue(unsafeValid.value == str)
+        val unsafeValid = LangString.unsafeMake(LanguageCode.EN, str)
+        assertTrue(unsafeValid.language == LanguageCode.EN, unsafeValid.value == str)
       },
     ),
   )
@@ -91,13 +88,13 @@ object LangStringSpec extends ZIOSpecDefault {
       },
       test("pass a set of LangString with non unique languages and return an error") {
         val langStrings = Set(
-          LangString.unsafeMake(LanguageCode.en, "english 1"),
-          LangString.unsafeMake(LanguageCode.en, "english 2"),
-          LangString.unsafeMake(LanguageCode.de, "german 1"),
-          LangString.unsafeMake(LanguageCode.de, "german 2"),
-          LangString.unsafeMake(LanguageCode.fr, "french 1"),
+          LangString.unsafeMake(LanguageCode.EN, "english 1"),
+          LangString.unsafeMake(LanguageCode.EN, "english 2"),
+          LangString.unsafeMake(LanguageCode.DE, "german 1"),
+          LangString.unsafeMake(LanguageCode.DE, "german 2"),
+          LangString.unsafeMake(LanguageCode.FR, "french 1"),
         )
-        val nonUniqueLanguages = Set(LanguageCode.en, LanguageCode.de)
+        val nonUniqueLanguages = Set(LanguageCode.EN, LanguageCode.DE)
         val res                = MultiLangString.make(langStrings)
         val expected =
           Validation.fail(ValidationException(MultiLangStringErrorMessages.LanguageNotUnique(nonUniqueLanguages)))
@@ -105,9 +102,9 @@ object LangStringSpec extends ZIOSpecDefault {
       },
       test("pass a valid set of LangString and return a MultiLangString") {
         val langStrings = Set(
-          LangString.unsafeMake(LanguageCode.en, "string in english"),
-          LangString.unsafeMake(LanguageCode.de, "string in german"),
-          LangString.unsafeMake(LanguageCode.fr, "string in french"),
+          LangString.unsafeMake(LanguageCode.EN, "string in english"),
+          LangString.unsafeMake(LanguageCode.DE, "string in german"),
+          LangString.unsafeMake(LanguageCode.FR, "string in french"),
         )
         (for {
           res <- MultiLangString.make(langStrings)

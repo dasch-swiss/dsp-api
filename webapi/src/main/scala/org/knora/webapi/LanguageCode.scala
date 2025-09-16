@@ -5,10 +5,12 @@
 
 package org.knora.webapi
 
-/**
- * Constants for language codes.
- */
-enum LanguageCode(val code: String) {
+import zio.json.JsonCodec
+
+import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value.StringValue
+
+enum LanguageCode(val value: String) extends StringValue {
   case DE extends LanguageCode("de")
   case EN extends LanguageCode("en")
   case FR extends LanguageCode("fr")
@@ -16,8 +18,15 @@ enum LanguageCode(val code: String) {
   case RM extends LanguageCode("rm")
 }
 
-object LanguageCode {
-  def from(value: String): Option[LanguageCode] = values.find(_.code == value)
-  def isSupported(value: String): Boolean       = from(value).isDefined
-  def isNotSupported(value: String): Boolean    = !isSupported(value)
+object LanguageCode extends StringValueCompanion[LanguageCode] {
+
+  given JsonCodec[LanguageCode] = JsonCodec[String].transformOrFail(LanguageCode.from, _.value)
+
+  def from(str: String): Either[String, LanguageCode] = values
+    .find(_.value == str)
+    .toRight(s"Unsupported language code: $str, supported codes are: ${values.mkString(", ")}")
+
+  def isSupported(value: String): Boolean = from(value).isRight
+
+  def isNotSupported(value: String): Boolean = !isSupported(value)
 }

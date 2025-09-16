@@ -258,7 +258,7 @@ object StringLiteralV2 {
   implicit val schema: Schema[StringLiteralV2]   = Schema.derived[StringLiteralV2]
 
   def from(value: String, lang: LanguageCode): StringLiteralV2 =
-    from(value, Some(lang.code))
+    from(value, Some(lang.value))
 
   def from(value: String, language: Option[String]): StringLiteralV2 = language match {
     case Some(_) if value.isEmpty => throw BadRequestException("String value is missing.")

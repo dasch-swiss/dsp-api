@@ -779,7 +779,7 @@ final case class PredicateInfoV2Builder private (
   def withObjects(objs: Seq[OntologyLiteralV2]): PredicateInfoV2Builder =
     copy(objects = self.objects ++ objs)
   def withStringLiteral(lang: LanguageCode, value: String): PredicateInfoV2Builder =
-    withObject(StringLiteralV2.from(value, Some(lang.code)))
+    withObject(StringLiteralV2.from(value, Some(lang.value)))
   def withStringLiteral(value: String): PredicateInfoV2Builder =
     withObject(StringLiteralV2.from(value, None))
   def withStringLiterals(literals: Map[LanguageCode, String]): PredicateInfoV2Builder =
