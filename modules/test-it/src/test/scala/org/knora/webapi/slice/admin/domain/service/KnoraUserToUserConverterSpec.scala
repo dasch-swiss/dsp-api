@@ -10,7 +10,7 @@ import zio.ZIO
 import zio.prelude.ForEachOps
 import zio.test.assertTrue
 
-import dsp.valueobjects.LanguageCode
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.IRI
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -42,7 +42,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
     FamilyName.unsafeFrom("dummy"),
     GivenName.unsafeFrom("dummy"),
     PasswordHash.unsafeFrom("dummy"),
-    LanguageCode.en,
+    LanguageCode.EN,
     UserStatus.Active,
     isInProject.map(ProjectIri.unsafeFrom).toChunk,
     isInGroup.map(GroupIri.unsafeFrom).toChunk,

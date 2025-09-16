@@ -16,7 +16,6 @@ import zio.test.assertTrue
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
-import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
@@ -99,7 +98,7 @@ object ProjectEraseIT extends E2EZSpec {
         FamilyName.unsafeFrom("Duck"),
         Password.unsafeFrom("test"),
         UserStatus.from(true),
-        LanguageCode.en,
+        LanguageCode.EN,
         SystemAdmin.IsNotSystemAdmin,
       ),
     ),

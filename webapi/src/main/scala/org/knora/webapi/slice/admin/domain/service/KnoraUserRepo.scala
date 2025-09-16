@@ -8,7 +8,7 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.Chunk
 import zio.Task
 
-import dsp.valueobjects.LanguageCode
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
@@ -70,7 +70,7 @@ object KnoraUserRepo {
       FamilyName.unsafeFrom(username),
       GivenName.unsafeFrom("Knora"),
       PasswordHash.unsafeFrom("youcannotloginwiththispassword"),
-      LanguageCode.en,
+      LanguageCode.EN,
       UserStatus.Active,
       Chunk.empty[ProjectIri],
       Chunk.empty[GroupIri],

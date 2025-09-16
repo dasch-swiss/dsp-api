@@ -8,7 +8,6 @@ package org.knora.webapi
 import zio.Chunk
 import zio.NonEmptyChunk
 
-import dsp.valueobjects.LanguageCode
 import org.knora.webapi.TestDataFactory.Project.systemProjectIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -56,7 +55,7 @@ object TestDataFactory {
       FamilyName.unsafeFrom("Doe"),
       GivenName.unsafeFrom("""Jane "TheFirst" J"""),
       PasswordHash.unsafeFrom("hashedPassword"),
-      LanguageCode.en,
+      LanguageCode.EN,
       UserStatus.Active,
       isInProject = Chunk(
         ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
@@ -73,7 +72,7 @@ object TestDataFactory {
       FamilyName.unsafeFrom("""D’Oe"""),
       GivenName.unsafeFrom("""D'Juan"""),
       PasswordHash.unsafeFrom("hashedPassword2"),
-      LanguageCode.de,
+      LanguageCode.DE,
       UserStatus.Inactive,
       isInProject = Chunk.empty,
       isInGroup = Chunk.empty,
@@ -87,7 +86,7 @@ object TestDataFactory {
       FamilyName.unsafeFrom("Doe"),
       GivenName.unsafeFrom("John"),
       PasswordHash.unsafeFrom("hashedPassword"),
-      LanguageCode.en,
+      LanguageCode.EN,
       UserStatus.Active,
       isInProject = Chunk(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")),
       isInGroup = Chunk(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/12345")),

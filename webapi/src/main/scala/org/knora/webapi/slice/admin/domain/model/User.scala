@@ -12,8 +12,8 @@ import zio.json.JsonCodec
 import scala.util.matching.Regex
 
 import dsp.valueobjects.Iri
-import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationType

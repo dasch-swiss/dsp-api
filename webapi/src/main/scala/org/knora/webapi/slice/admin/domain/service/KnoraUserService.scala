@@ -13,7 +13,7 @@ import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.DuplicateValueException
-import dsp.valueobjects.LanguageCode
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.model.Project

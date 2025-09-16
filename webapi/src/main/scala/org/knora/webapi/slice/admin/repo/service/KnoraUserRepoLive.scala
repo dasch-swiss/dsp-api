@@ -16,7 +16,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
-import dsp.valueobjects.LanguageCode
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email

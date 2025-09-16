@@ -10,7 +10,7 @@ import sttp.model.StatusCode
 import zio.ZIO
 import zio.test.*
 
-import dsp.valueobjects.LanguageCode
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -131,7 +131,7 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           familyName = FamilyName.unsafeFrom("with a custom Iri"),
           password = Password.unsafeFrom("test"),
           status = UserStatus.Active,
-          lang = LanguageCode.en,
+          lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
         TestApiClient
@@ -147,7 +147,7 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           familyName = FamilyName.unsafeFrom("with a custom Iri"),
           password = Password.unsafeFrom("test"),
           status = UserStatus.Active,
-          lang = LanguageCode.en,
+          lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
         TestAdminApiClient
@@ -164,7 +164,7 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           familyName = FamilyName.unsafeFrom("with a duplicate custom Iri"),
           password = Password.unsafeFrom("test"),
           status = UserStatus.Active,
-          lang = LanguageCode.en,
+          lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
         TestAdminApiClient
@@ -182,7 +182,7 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           familyName = FamilyName.unsafeFrom("M\tFamily Name"),
           password = Password.unsafeFrom("test"),
           status = UserStatus.Active,
-          lang = LanguageCode.en,
+          lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
         TestAdminApiClient
@@ -234,7 +234,7 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           familyName = FamilyName.unsafeFrom("Duck"),
           password = Password.unsafeFrom("test"),
           status = UserStatus.Active,
-          lang = LanguageCode.en,
+          lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsSystemAdmin,
         )
         TestAdminApiClient
@@ -249,7 +249,7 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           familyName = FamilyName.unsafeFrom("Duck"),
           password = Password.unsafeFrom("test"),
           status = UserStatus.Active,
-          lang = LanguageCode.en,
+          lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
         TestAdminApiClient
@@ -275,7 +275,7 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           familyName = FamilyName.unsafeFrom("NewDuck"),
           password = Password.unsafeFrom("test"),
           status = UserStatus.Active,
-          lang = LanguageCode.en,
+          lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
         TestAdminApiClient
@@ -290,7 +290,7 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           familyName = FamilyName.unsafeFrom("NewDuck"),
           password = Password.unsafeFrom("test"),
           status = UserStatus.Active,
-          lang = LanguageCode.en,
+          lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
         TestAdminApiClient
@@ -321,7 +321,7 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           email = Some(Email.unsafeFrom("donald.big.duck@example.org")),
           givenName = Some(GivenName.unsafeFrom("Big Donald")),
           familyName = Some(FamilyName.unsafeFrom("Duckmann")),
-          lang = Some(LanguageCode.de),
+          lang = Some(LanguageCode.DE),
         )
         TestAdminApiClient
           .updateUserBasicInfo(donaldIri.asUserIri, updateUserRequest, rootUser)

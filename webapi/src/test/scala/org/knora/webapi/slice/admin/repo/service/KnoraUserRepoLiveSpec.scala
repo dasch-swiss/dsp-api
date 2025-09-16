@@ -20,7 +20,7 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
-import dsp.valueobjects.LanguageCode
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.TestDataFactory.User.*
 import org.knora.webapi.messages.StringFormatter
@@ -84,7 +84,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
       FamilyName.unsafeFrom("System"),
       GivenName.unsafeFrom("Knora"),
       PasswordHash.unsafeFrom("youcannotloginwiththispassword"),
-      LanguageCode.en,
+      LanguageCode.EN,
       UserStatus.Active,
       Chunk.empty[ProjectIri],
       Chunk.empty[GroupIri],
@@ -98,7 +98,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
       FamilyName.unsafeFrom("Anonymous"),
       GivenName.unsafeFrom("Knora"),
       PasswordHash.unsafeFrom("youcannotloginwiththispassword"),
-      LanguageCode.en,
+      LanguageCode.EN,
       UserStatus.Active,
       Chunk.empty[ProjectIri],
       Chunk.empty[GroupIri],

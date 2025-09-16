@@ -19,7 +19,7 @@ import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.LangString
-import dsp.valueobjects.LanguageCode
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.e2e.v2.ontology.InputOntologyParsingModeV2.TestResponseParsingModeV2
 import org.knora.webapi.e2e.v2.ontology.InputOntologyV2
@@ -2405,10 +2405,10 @@ class OntologiesEndpointE2ESpec extends E2ESpec {
   "create a class with two cardinalities, use one in data, and allow only removal of the cardinality for the property not used in data" in {
     // Create a class with no cardinalities.
 
-    val label = LangString.make(LanguageCode.en, "A Blue Free Test class").fold(e => throw e.head, v => v)
+    val label = LangString.make(LanguageCode.EN, "A Blue Free Test class").fold(e => throw e.head, v => v)
     val comment = Some(
       LangString
-        .make(LanguageCode.en, "A Blue Free Test class used for testing cardinalities")
+        .make(LanguageCode.EN, "A Blue Free Test class used for testing cardinalities")
         .fold(e => throw e.head, v => v),
     )
     val createClassRequestJson = CreateClassRequest
@@ -2429,10 +2429,10 @@ class OntologiesEndpointE2ESpec extends E2ESpec {
     }
 
     // Create a text property.
-    val label1 = LangString.make(LanguageCode.en, "blue test text property").fold(e => throw e.head, v => v)
+    val label1 = LangString.make(LanguageCode.EN, "blue test text property").fold(e => throw e.head, v => v)
     val comment1 = Some(
       LangString
-        .make(LanguageCode.en, "A blue test text property")
+        .make(LanguageCode.EN, "A blue test text property")
         .fold(e => throw e.head, v => v),
     )
     val createTestTextPropRequestJson =
@@ -2457,10 +2457,10 @@ class OntologiesEndpointE2ESpec extends E2ESpec {
     }
 
     // Create an integer property.
-    val label2 = LangString.make(LanguageCode.en, "blue test integer property").fold(e => throw e.head, v => v)
+    val label2 = LangString.make(LanguageCode.EN, "blue test integer property").fold(e => throw e.head, v => v)
     val comment2 = Some(
       LangString
-        .make(LanguageCode.en, "A blue test integer property")
+        .make(LanguageCode.EN, "A blue test integer property")
         .fold(e => throw e.head, v => v),
     )
     val createTestIntegerPropRequestJson = CreatePropertyRequest
@@ -2622,10 +2622,10 @@ class OntologiesEndpointE2ESpec extends E2ESpec {
 
   "create two classes with the same property, use one in data, and allow removal of the cardinality for the property not used in data" in {
     // Create TestClassOne with no cardinalities.
-    val label = LangString.make(LanguageCode.en, "Test class number one").fold(e => throw e.head, v => v)
+    val label = LangString.make(LanguageCode.EN, "Test class number one").fold(e => throw e.head, v => v)
     val comment = Some(
       LangString
-        .make(LanguageCode.en, "A test class used for testing cardinalities")
+        .make(LanguageCode.EN, "A test class used for testing cardinalities")
         .fold(e => throw e.head, v => v),
     )
     val createClassRequestJsonOne = CreateClassRequest
@@ -2647,10 +2647,10 @@ class OntologiesEndpointE2ESpec extends E2ESpec {
     }
 
     // Create TestClassTwo with no cardinalities
-    val label1 = LangString.make(LanguageCode.en, "Test class number two").fold(e => throw e.head, v => v)
+    val label1 = LangString.make(LanguageCode.EN, "Test class number two").fold(e => throw e.head, v => v)
     val comment1 = Some(
       LangString
-        .make(LanguageCode.en, "A test class used for testing cardinalities")
+        .make(LanguageCode.EN, "A test class used for testing cardinalities")
         .fold(e => throw e.head, v => v),
     )
     val createClassRequestJsonTwo = CreateClassRequest
@@ -2672,10 +2672,10 @@ class OntologiesEndpointE2ESpec extends E2ESpec {
     }
 
     // Create a text property hasTestTextProp.
-    val label2 = LangString.make(LanguageCode.en, "Test int property").fold(e => throw e.head, v => v)
+    val label2 = LangString.make(LanguageCode.EN, "Test int property").fold(e => throw e.head, v => v)
     val comment2 = Some(
       LangString
-        .make(LanguageCode.en, "A test int property")
+        .make(LanguageCode.EN, "A test int property")
         .fold(e => throw e.head, v => v),
     )
     val createPropRequestJson = CreatePropertyRequest
@@ -2845,7 +2845,7 @@ class OntologiesEndpointE2ESpec extends E2ESpec {
   }
 
   "create a class w/o comment" in {
-    val label = LangString.make(LanguageCode.en, "Test label").fold(e => throw e.head, v => v)
+    val label = LangString.make(LanguageCode.EN, "Test label").fold(e => throw e.head, v => v)
     val request = CreateClassRequest
       .make(
         ontologyName = "freetest",
@@ -2863,7 +2863,7 @@ class OntologiesEndpointE2ESpec extends E2ESpec {
   }
 
   "create a property w/o comment" in {
-    val label = LangString.unsafeMake(LanguageCode.en, "Test label")
+    val label = LangString.unsafeMake(LanguageCode.EN, "Test label")
     val request = CreatePropertyRequest
       .make(
         ontologyName = "freetest",

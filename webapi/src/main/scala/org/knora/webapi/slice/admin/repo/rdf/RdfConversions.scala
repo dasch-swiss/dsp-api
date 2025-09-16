@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin.repo.rdf
 
-import dsp.valueobjects.LanguageCode
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefix
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2

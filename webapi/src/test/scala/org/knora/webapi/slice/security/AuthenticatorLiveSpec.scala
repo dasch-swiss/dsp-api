@@ -8,7 +8,7 @@ package org.knora.webapi.slice.security
 import zio.*
 import zio.test.*
 
-import dsp.valueobjects.LanguageCode
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.IriService

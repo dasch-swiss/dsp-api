@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.Logger
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
+import org.knora.webapi.LanguageCode
 
 /**
  * LangString value object
@@ -42,7 +43,7 @@ object LangString {
    */
   def makeFromStrings(language: String, value: String): Validation[ValidationException, LangString] =
     for {
-      languageCode <- LanguageCode.make(language)
+      languageCode <- Validation.fromEither(LanguageCode.from(language).left.map(err => ValidationException(err)))
       langString   <- LangString.make(languageCode, value)
     } yield langString
 
