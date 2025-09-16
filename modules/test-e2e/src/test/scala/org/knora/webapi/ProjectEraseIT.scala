@@ -12,7 +12,6 @@ import zio.ZIO
 import zio.test.Spec
 import zio.test.TestAspect
 import zio.test.assertTrue
-import org.knora.webapi.slice.common.domain.LanguageCode
 
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
@@ -54,6 +53,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
