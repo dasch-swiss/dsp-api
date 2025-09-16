@@ -12,8 +12,6 @@ import zio.json.*
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.slice.common.domain.LanguageCode.DE
-import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.RdfModel
@@ -22,6 +20,8 @@ import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.*
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.common.domain.LanguageCode.DE
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.MutableTestIri
