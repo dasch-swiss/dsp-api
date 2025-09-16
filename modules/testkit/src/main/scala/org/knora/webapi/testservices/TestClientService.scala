@@ -8,21 +8,13 @@ package org.knora.webapi.testservices
 import org.apache.pekko
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
-import org.apache.pekko.http.scaladsl.model.HttpEntity
-import org.apache.pekko.http.scaladsl.model.headers.HttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import zio.*
 
-import java.util.concurrent.TimeUnit
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
 
 import dsp.errors.AssertionException
-import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.settings.KnoraDispatchers
 
 final case class TestClientService()(implicit system: ActorSystem)
@@ -68,61 +60,6 @@ final case class TestClientService()(implicit system: ActorSystem)
         case None            => throw AssertionException("Request timed out.")
         case Some(throwable) => throw throwable
       }
-
-  /**
-   * Performs a http request and returns the body of the response.
-   */
-  private def getResponseString(request: pekko.http.scaladsl.model.HttpRequest): Task[String] =
-    for {
-      response <- singleAwaitingRequest(request)
-      body <-
-        ZIO
-          .attemptBlocking(
-            Await.result(
-              response.entity.toStrict(FiniteDuration(1, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8")),
-              FiniteDuration(1, TimeUnit.SECONDS),
-            ),
-          )
-          .mapError(error =>
-            throw AssertionException(s"Got HTTP ${response.status.intValue}\n REQUEST: $request, \n RESPONSE: $error"),
-          )
-      _ <- ZIO
-             .fail(AssertionException(s"Got HTTP ${response.status.intValue}\n REQUEST: $request, \n RESPONSE: $body"))
-             .when(response.status.isFailure())
-    } yield body
-
-  /**
-   * Performs a http request and does not return the string (only error channel).
-   */
-  def checkResponseOK(request: pekko.http.scaladsl.model.HttpRequest): Task[Unit] = getResponseString(request).unit
-
-  /**
-   * Performs a http request and tries to parse the response body as JsonLD.
-   */
-  def getResponseJsonLD(request: pekko.http.scaladsl.model.HttpRequest): Task[JsonLDDocument] =
-    for {
-      body <- getResponseString(request)
-      json <- ZIO.succeed(JsonLDUtil.parseJsonLD(body))
-    } yield json
-
-  def getJsonLd(url: String, credentials: HttpCredentials): Task[JsonLDDocument] =
-    getResponseJsonLD(Get(url) ~> addCredentials(credentials))
-
-  def getJsonLd(url: String): Task[JsonLDDocument] = getResponseJsonLD(Get(url))
-
-  def patchJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): Task[JsonLDDocument] =
-    getResponseJsonLD(
-      Patch(url, HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLd)) ~> addCredentials(credentials),
-    )
-
-  def deleteJsonLd(url: String, credentials: HttpCredentials): Task[JsonLDDocument] =
-    getResponseJsonLD(Delete(url) ~> addCredentials(credentials))
-
-  def putJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): Task[JsonLDDocument] =
-    getResponseJsonLD(Put(url, HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLd)) ~> addCredentials(credentials))
-
-  def postJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): Task[JsonLDDocument] =
-    getResponseJsonLD(Post(url, HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLd)) ~> addCredentials(credentials))
 }
 
 object TestClientService {

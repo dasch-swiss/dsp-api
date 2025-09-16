@@ -45,6 +45,11 @@ class MutableTestIri { self =>
   def asGroupIri: GroupIri                                     = GroupIri.unsafeFrom(self.get)
   def asResourceIri(implicit sf: StringFormatter): ResourceIri = ResourceIri.unsafeFrom(self.get.toSmartIri)
   def asValueIri(implicit sf: StringFormatter): ValueIri       = ValueIri.unsafeFrom(self.get.toSmartIri)
+
+  override def toString: String = maybeIri match {
+    case Some(iri) => iri
+    case None      => ""
+  }
 }
 
 /**
