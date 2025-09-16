@@ -8,8 +8,8 @@ package dsp.valueobjects
 import zio.prelude.Validation
 import zio.test.*
 
-import org.knora.webapi.LanguageCode
 import dsp.errors.ValidationException
+import org.knora.webapi.LanguageCode
 
 /**
  * This spec is used to test the [[dsp.valueobjects.LangString]] value objects creation.

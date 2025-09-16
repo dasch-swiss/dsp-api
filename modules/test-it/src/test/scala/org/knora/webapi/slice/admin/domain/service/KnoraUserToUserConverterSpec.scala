@@ -10,9 +10,9 @@ import zio.ZIO
 import zio.prelude.ForEachOps
 import zio.test.assertTrue
 
-import org.knora.webapi.LanguageCode
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.IRI
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProjectIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2

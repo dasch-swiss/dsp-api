@@ -19,8 +19,8 @@ import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.LangString
-import org.knora.webapi.LanguageCode
 import org.knora.webapi.*
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.e2e.v2.ontology.InputOntologyParsingModeV2.TestResponseParsingModeV2
 import org.knora.webapi.e2e.v2.ontology.InputOntologyV2
 import org.knora.webapi.messages.IriConversions.*
