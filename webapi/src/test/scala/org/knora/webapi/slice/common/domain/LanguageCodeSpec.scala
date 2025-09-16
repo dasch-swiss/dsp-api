@@ -29,10 +29,7 @@ object LanguageCodeSpec extends ZIOSpecDefault {
     },
     test("from should return Left for invalid string") {
       val result = LanguageCode.from("invalid")
-      assertTrue(
-        result.isLeft,
-        result.left.getOrElse("") == "Unsupported language code: invalid, supported codes are: DE, EN, FR, IT, RM",
-      )
+      assertTrue(result == Left("Unsupported language code: invalid, supported codes are: de, en, fr, it, rm"))
     },
     test("isSupported should return true for valid codes") {
       assertTrue(
@@ -70,10 +67,15 @@ object LanguageCodeSpec extends ZIOSpecDefault {
     test("value should return correct string representation") {
       assertTrue(
         LanguageCode.DE.value == "de",
+        LanguageCode.DE.toString == "de",
         LanguageCode.EN.value == "en",
+        LanguageCode.EN.toString == "en",
         LanguageCode.FR.value == "fr",
+        LanguageCode.FR.toString == "fr",
         LanguageCode.IT.value == "it",
+        LanguageCode.IT.toString == "it",
         LanguageCode.RM.value == "rm",
+        LanguageCode.RM.toString == "rm",
       )
     },
     test("JSON encoding should work correctly") {
