@@ -13,18 +13,23 @@ alias ssd := stack-start-dev
 fmt:
     ./sbtx fmt
 
-# Run unit tests
+# Run unit tests for dsp-api
 test:
     ./sbtx "webapi/test"
 
-# Run integration tests
+# Run integration tests for dsp-api
 test-it:
-    ./sbtx "it/test"
+    ./sbtx "test-it/test"
 
-# Run End-2-End tests
+# Run End-2-End tests for dsp-api
 test-e2e:
-    ./sbtx "e2e/test"
+    ./sbtx "test-e2e/test"
 
+# Run unit tests for ingest
+test-ingest:
+    ./sbtx ingest/test
+
+# Run integration tests for ingest
 test-ingest-integration:
     ./sbtx ingestIntegration/test
 
