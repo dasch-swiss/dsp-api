@@ -619,7 +619,6 @@ final case class ValuesResponderV2(
     for {
       _                     <- valueValidator.validate(updateValue).mapError(BadRequestException.apply)
       resourcePropertyValue <- checkValueAndRetrieveResourceProperties(updateValue, requestingUser)
-      shortcode              = resourcePropertyValue.resource.projectADM.shortcode
 
       resourceInfo: ReadResourceV2                     = resourcePropertyValue.resource
       adjustedInternalPropertyInfo: ReadPropertyInfoV2 = resourcePropertyValue.adjustedInternalPropertyInfo
