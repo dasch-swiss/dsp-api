@@ -1984,8 +1984,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(savedValue.valueHasString.contains(valueHasString))
     },
     test("not update a text value (submitting standoff) if the linked resource is in a different project") {
-      val valueHasString = "Comment 1ab"
-      val propertyIri    = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+      val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
       // the aThingIri resource is in the Anything project, while the zeitgloeckleinIri resource is in the Incunabula project.
       val standoffTags = sampleStandoffWithLink(aThingIri)
@@ -1996,19 +1995,18 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         valueIri = zeitgloeckleinCommentWithStandoffIri.get,
         valueContent = TextValueContentV2(
           ontologySchema = ApiV2Complex,
-          maybeValueHasString = Some(valueHasString),
+          maybeValueHasString = Some("ignored"),
           standoff = standoffTags,
           mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
         ),
       )
-      for {
-        maybeResourceLastModDate <- getResourceLastModificationDate(zeitgloeckleinIri, incunabulaMemberUser)
-        actual                   <- valuesResponder(_.updateValueV2(updateParams, incunabulaMemberUser, randomUUID)).exit
-      } yield assert(actual)(
-        E2EZSpec.failsWithMessageEqualTo[BadRequestException](
-          "Cannot create a standoff IRI link between resources cross projects 0803 and 0001",
+      valuesResponder(_.updateValueV2(updateParams, incunabulaMemberUser, randomUUID)).exit.map(actual =>
+        assert(actual)(
+          E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+            "Cannot create a standoff IRI link between resources cross projects 0803 and 0001",
+          ),
         ),
       )
     },
