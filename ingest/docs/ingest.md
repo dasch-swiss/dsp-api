@@ -18,7 +18,7 @@ import/
 ```
 
 ### Triggering a _Bulk Ingest_
-You can trigger a _Bulk Ingest_ with a request to the [_Bulk Ingest_ Endpoint](api-endpoints-projects.md#post-projectsshortcodebulk-ingest). 
+You can trigger a _Bulk Ingest_ with a request to the [_Bulk Ingest_ Endpoint](https://ingest.dasch.swiss/docs/#/bulk-ingest/postProjectsShortcodeBulk-ingest). 
 The _Bulk Ingest_ will run in the background, and you can check its status in the logs of the service.
 
 The _Bulk Ingest_ will create a new asset for each valid file in the `import/{shortcode}/` folder, and move the file to the [`STORAGE_ASSET_DIR/{shortcode}`](service-configuration.md#storage) folder.
@@ -40,5 +40,5 @@ You can use this mapping to create the respective resource in the DSP-API.
 
 ### Finalizing a _Bulk Ingest_
 Once you have verified the success of the ingest and/or created the resources in the DSP-API, 
-you should finalize the _Bulk Ingest_ with a request to the [_Bulk Ingest Finalize_ Endpoint](api-endpoints-projects.md#post-projectsshortcodebulk-ingestfinalize).
+you should finalize the _Bulk Ingest_ with a request to the [_Bulk Ingest Finalize_ Endpoint](https://ingest.dasch.swiss/docs/#/bulk-ingest/postProjectsShortcodeBulk-ingestFinalize).
 The _Bulk Ingest_ will then delete the `mapping-{shortcode}.csv` file and the `import/{shortcode}/` folder and all its content.
