@@ -25,18 +25,6 @@ object StandoffStringUtil {
   private val standoffLinkReferenceToClientIdForResourceRegex: Regex = ("^ref:(" + XmlPatterns.nCNamePattern + ")$").r
 
   /**
-   * Checks whether a string is a reference to a client's ID for a resource described in an XML bulk import.
-   *
-   * @param s the string to be checked.
-   * @return `true` if the string is an XML NCName prefixed by `ref:`.
-   */
-  def isStandoffLinkReferenceToClientIDForResource(s: String): Boolean =
-    s match {
-      case standoffLinkReferenceToClientIdForResourceRegex(_) => true
-      case _                                                  => false
-    }
-
-  /**
    * Checks that a string represents a valid resource identifier in a standoff link.
    *
    * @param s               the string to be checked.
@@ -49,25 +37,23 @@ object StandoffStringUtil {
   def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: => Nothing): IRI =
     validateStandoffLinkResourceReference(s, acceptClientIDs).getOrElse(errorFun)
 
-  def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean): Validation[ValidationException, IRI] =
-    if (acceptClientIDs && StandoffStringUtil.isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
+  private def validateStandoffLinkResourceReference(
+    s: String,
+    acceptClientIDs: Boolean,
+  ): Validation[ValidationException, IRI] =
+    if (acceptClientIDs && isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
     else Iri.validateAndEscapeIri(s)
 
   /**
-   * Accepts a reference from a standoff link to a resource. The reference may be either a real resource IRI
-   * (referring to a resource that already exists) or a client's ID for a resource that doesn't yet exist and is
-   * described in an XML bulk import. Returns the real IRI of the target resource.
+   * Checks whether a string is a reference to a client's ID for a resource described in an XML bulk import.
    *
-   * @param iri                             an IRI from a standoff link, either in the form of a real resource IRI or in the form of
-   *                                        a reference to a client's ID for a resource.
-   * @param clientResourceIDsToResourceIris a map of client resource IDs to real resource IRIs.
+   * @param s the string to be checked.
+   * @return `true` if the string is an XML NCName prefixed by `ref:`.
    */
-  def toRealStandoffLinkTargetResourceIri(iri: IRI, clientResourceIDsToResourceIris: Map[String, IRI]): IRI =
-    iri match {
-      case standoffLinkReferenceToClientIdForResourceRegex(clientResourceID) =>
-        clientResourceIDsToResourceIris(clientResourceID)
-      case _ => iri
-    }
+  private def isStandoffLinkReferenceToClientIDForResource(s: String): Boolean = s match {
+    case standoffLinkReferenceToClientIdForResourceRegex(_) => true
+    case _                                                  => false
+  }
 
   /**
    * Map over all standoff tags to collect IRIs that are referred to by linking standoff tags.
