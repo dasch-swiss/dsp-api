@@ -18,7 +18,6 @@ import dsp.errors.NotFoundException
 import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
-import org.knora.webapi.LanguageCode.*
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -28,6 +27,7 @@ import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
+import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.util.MutableTestIri
 
 object ListsResponderSpec extends E2EZSpec {

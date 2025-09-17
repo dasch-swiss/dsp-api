@@ -8,7 +8,6 @@ package org.knora.webapi.slice.security
 import zio.*
 import zio.test.*
 
-import dsp.valueobjects.LanguageCode
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.IriService
@@ -40,6 +39,7 @@ import org.knora.webapi.slice.admin.repo.service.AdministrativePermissionRepoLiv
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
+import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.InvalidTokenCache

@@ -12,7 +12,6 @@ import zio.json.JsonCodec
 import scala.util.matching.Regex
 
 import dsp.valueobjects.Iri
-import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -28,6 +27,7 @@ import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.domain.LanguageCode
 
 /**
  * The user entity as found in the knora-admin ontology.

@@ -12,7 +12,6 @@ import zio.*
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
@@ -35,6 +34,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.domain.LanguageCode
 
 object PathVars {
   import Codecs.TapirCodec.*
