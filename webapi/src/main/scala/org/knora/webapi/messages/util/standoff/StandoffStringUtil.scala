@@ -9,7 +9,6 @@ import zio.prelude.Validation
 
 import scala.util.matching.Regex
 
-import dsp.errors.NotFoundException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
@@ -76,20 +75,16 @@ object StandoffStringUtil {
    * @param standoffTags The list of [[StandoffTagV2]].
    * @return a set of Iris referred to in the [[StandoffTagV2]].
    */
-  @throws[NotFoundException]
   def getResourceIrisFromStandoffTags(standoffTags: Seq[StandoffTagV2]): Set[IRI] =
     standoffTags.foldLeft(Set.empty[IRI]) { case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
       if (standoffNode.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
-        val maybeTargetIri: Option[IRI] = standoffNode.attributes.collectFirst {
+        val maybeTargetIri: Seq[IRI] = standoffNode.attributes.collect {
           case iriTagAttr: StandoffTagIriAttributeV2
               if iriTagAttr.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasLink =>
             iriTagAttr.value
         }
-
-        acc + maybeTargetIri.getOrElse(throw NotFoundException(s"No link found in $standoffNode"))
-      } else {
-        acc
-      }
+        acc ++ maybeTargetIri
+      } else { acc }
     }
 
   /**
