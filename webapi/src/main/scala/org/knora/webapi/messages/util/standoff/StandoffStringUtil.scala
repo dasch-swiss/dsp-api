@@ -12,7 +12,7 @@ import scala.util.matching.Regex
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import org.knora.webapi.messages.XmlPatterns
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAttributeV2
@@ -75,17 +75,13 @@ object StandoffStringUtil {
    * @param standoffTags The list of [[StandoffTagV2]].
    * @return a set of Iris referred to in the [[StandoffTagV2]].
    */
-  def getResourceIrisFromStandoffLinkTags(standoffTags: Seq[StandoffTagV2]): Set[IRI] =
-    standoffTags.foldLeft(Set.empty[IRI]) { case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
-      if (standoffNode.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
-        val maybeTargetIri: Seq[IRI] = standoffNode.attributes.collect {
-          case iriTagAttr: StandoffTagIriAttributeV2
-              if iriTagAttr.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasLink =>
-            iriTagAttr.value
-        }
-        acc ++ maybeTargetIri
-      } else { acc }
-    }
+  def getResourceIrisFromStandoffLinkTags(standoffTags: Seq[StandoffTagV2]): Seq[IRI] =
+    standoffTags
+      .filter(_.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag))
+      .flatMap(_.attributes)
+      .collect { case attr: StandoffTagIriAttributeV2 => attr }
+      .filter(_.standoffPropertyIri.toInternalIri.value == KB.StandoffTagHasLink)
+      .map(_.value)
 
   /**
    * Creates a new standoff tag IRI based on a UUID.
