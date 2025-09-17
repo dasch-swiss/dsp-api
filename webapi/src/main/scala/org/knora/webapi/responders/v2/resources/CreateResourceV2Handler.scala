@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2.resources
 
-import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import java.time.Instant
@@ -14,7 +13,6 @@ import scala.language.postfixOps
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
@@ -23,7 +21,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCre
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
-import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
@@ -37,13 +34,11 @@ import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
-import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -59,24 +54,20 @@ import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
+import org.knora.webapi.slice.resources.service.ValueValidator
 import org.knora.webapi.util.ZioHelper
 
 final case class CreateResourceV2Handler(
-  appConfig: AppConfig,
-  iriService: IriService,
-  messageRelay: MessageRelay,
-  resourcesRepo: ResourcesRepo,
-  constructResponseUtilV2: ConstructResponseUtilV2,
-  standoffTagUtilV2: StandoffTagUtilV2,
-  resourceUtilV2: ResourceUtilV2,
-  permissionUtilADM: PermissionUtilADM,
-  searchResponderV2: SearchResponderV2,
-  getResources: GetResources,
-  ontologyRepo: OntologyRepo,
-  permissionsResponder: PermissionsResponder,
-  legalInfoService: LegalInfoService,
-)(implicit val stringFormatter: StringFormatter)
-    extends LazyLogging {
+  private val iriService: IriService,
+  private val messageRelay: MessageRelay,
+  private val resourcesRepo: ResourcesRepo,
+  private val resourceUtilV2: ResourceUtilV2,
+  private val permissionUtilADM: PermissionUtilADM,
+  private val getResources: GetResources,
+  private val ontologyRepo: OntologyRepo,
+  private val permissionsResponder: PermissionsResponder,
+  private val valueValidator: ValueValidator,
+)(implicit val stringFormatter: StringFormatter) {
 
   /**
    * Creates a new resource.
@@ -92,11 +83,11 @@ final case class CreateResourceV2Handler(
   ): Task[ReadResourcesSequenceV2] =
     for {
       _         <- ensureNotAnonymousUser(createResourceRequestV2.requestingUser)
+      _         <- valueValidator.validate(createResourceRequestV2).mapError(BadRequestException.apply)
       _         <- ensureClassBelongsToProjectOntology(createResourceRequestV2)
       projectIri = createResourceRequestV2.createResource.projectADM.id
       shortcode  = createResourceRequestV2.createResource.projectADM.shortcode
       _         <- ensureUserHasPermission(createResourceRequestV2, projectIri)
-      _         <- validateLegalInfo(createResourceRequestV2.createResource.values, shortcode)
 
       resourceIri <- iriService.checkOrCreateEntityIri(
                        createResourceRequestV2.createResource.resourceIri,
@@ -142,18 +133,6 @@ final case class CreateResourceV2Handler(
             resourceClassOntologyIri.isShared,
         )
   } yield ()
-
-  private def validateLegalInfo(
-    values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-    shortcode: Shortcode,
-  ): IO[BadRequestException, Unit] = {
-    val checkThese: Iterable[FileValueV2] = values.values.flatten
-      .map(_.valueContent)
-      .collect { case fvc: FileValueContentV2 => fvc.fileValue }
-    ZIO.foreachDiscard(checkThese)(
-      legalInfoService.validateLegalInfo(_, shortcode).mapError(BadRequestException.apply),
-    )
-  }
 
   private def ensureUserHasPermission(createResourceRequestV2: CreateResourceRequestV2, projectIri: ProjectIri) = for {
     internalResourceClassIri <-
@@ -591,15 +570,16 @@ final case class CreateResourceV2Handler(
       .flatMap { textType =>
         ZIO
           .fromOption(maxStandoffStartIndex)
-          .orElseFail(StandoffInternalException("Max standoff start index not computed"))
-          .map(standoffStartIndex =>
-            FormattedTextValueInfo(
-              valueHasLanguage,
-              InternalIri(mappingIri),
-              standoffStartIndex,
-              standoffInfo,
-              textType,
-            ),
+          .mapBoth(
+            _ => StandoffInternalException("Max standoff start index not computed"),
+            standoffStartIndex =>
+              FormattedTextValueInfo(
+                valueHasLanguage,
+                InternalIri(mappingIri),
+                standoffStartIndex,
+                standoffInfo,
+                textType,
+              ),
           )
       }
 

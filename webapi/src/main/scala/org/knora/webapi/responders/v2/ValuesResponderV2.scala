@@ -37,16 +37,13 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
-import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -56,27 +53,28 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
+import org.knora.webapi.slice.resources.service.ValueValidator
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class ValuesResponderV2(
-  appConfig: AppConfig,
-  iriService: IriService,
-  iriConverter: IriConverter,
-  projectService: KnoraProjectService,
-  messageRelay: MessageRelay,
-  permissionUtilADM: PermissionUtilADM,
-  resourceUtilV2: ResourceUtilV2,
-  searchResponderV2: SearchResponderV2,
-  triplestoreService: TriplestoreService,
-  permissionsResponder: PermissionsResponder,
-  legalInfoService: LegalInfoService,
-  valueRepo: ValueRepo,
-  ontologyRepo: OntologyRepo,
-  auth: AuthorizationRestService,
-  resourcesResponder: ResourcesResponderV2,
-)(implicit val stringFormatter: StringFormatter) {
+  private val appConfig: AppConfig,
+  private val auth: AuthorizationRestService,
+  private val iriConverter: IriConverter,
+  private val iriService: IriService,
+  private val messageRelay: MessageRelay,
+  private val ontologyRepo: OntologyRepo,
+  private val permissionUtilADM: PermissionUtilADM,
+  private val permissionsResponder: PermissionsResponder,
+  private val projectService: KnoraProjectService,
+  private val resourceUtilV2: ResourceUtilV2,
+  private val resourcesResponder: ResourcesResponderV2,
+  private val searchResponderV2: SearchResponderV2,
+  private val triplestoreService: TriplestoreService,
+  private val valueRepo: ValueRepo,
+  private val valueValidator: ValueValidator,
+)(implicit private val stringFormatter: StringFormatter) {
 
   /**
    * Creates a new value in an existing resource.
@@ -91,255 +89,234 @@ final case class ValuesResponderV2(
     requestingUser: User,
     apiRequestID: UUID,
   ): Task[CreateValueResponseV2] = {
-    def taskZio: Task[CreateValueResponseV2] = {
-      for {
-        resourceIri <-
-          iriConverter
-            .asSmartIri(valueToCreate.resourceIri)
-            .flatMap(iri => ZIO.fromEither(ResourceIri.from(iri)).mapError(BadRequestException.apply))
-        project <- projectService
-                     .findByShortcode(resourceIri.shortcode)
-                     .someOrFail(NotFoundException(s"Project not found for resource IRI: $resourceIri"))
-        _ <- validateLegalInfo(valueToCreate.valueContent, project.shortcode)
+    val task = for {
+      _ <- auth.ensureUserIsNotAnonymous(requestingUser)
+      _ <- valueValidator.validate(valueToCreate).mapError(BadRequestException.apply)
 
-        // Convert the submitted value to the internal schema.
-        submittedInternalPropertyIri <-
-          ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
+      resourceIri <- iriConverter.asResourceIri(valueToCreate.resourceIri).mapError(e => BadRequestException(e))
 
-        submittedInternalValueContent = valueToCreate.valueContent.toOntologySchema(InternalSchema)
+      // Convert the submitted value to the internal schema.
+      submittedInternalPropertyIri <- ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
+      submittedInternalValueContent = valueToCreate.valueContent.toOntologySchema(InternalSchema)
 
-        // Get ontology information about the submitted property.
-        propertyInfoRequestForSubmittedProperty =
-          PropertiesGetRequestV2(
-            propertyIris = Set(submittedInternalPropertyIri),
-            allLanguages = false,
-            requestingUser = requestingUser,
-          )
+      // Get ontology information about the submitted property.
+      propertyInfoRequestForSubmittedProperty =
+        PropertiesGetRequestV2(
+          propertyIris = Set(submittedInternalPropertyIri),
+          allLanguages = false,
+          requestingUser = requestingUser,
+        )
 
-        propertyInfoResponseForSubmittedProperty <-
-          messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
+      propertyInfoResponseForSubmittedProperty <-
+        messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
 
-        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
-          propertyInfoResponseForSubmittedProperty.properties(
-            submittedInternalPropertyIri,
-          )
+      propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
+        propertyInfoResponseForSubmittedProperty.properties(
+          submittedInternalPropertyIri,
+        )
 
-        // Don't accept link properties.
-        _ <- ZIO.when(propertyInfoForSubmittedProperty.isLinkProp)(
-               ZIO.fail(
-                 BadRequestException(
-                   s"Invalid property <${valueToCreate.propertyIri}>. Use a link value property to submit a link.",
-                 ),
+      // Don't accept link properties.
+      _ <- ZIO.when(propertyInfoForSubmittedProperty.isLinkProp)(
+             ZIO.fail(
+               BadRequestException(
+                 s"Invalid property <${valueToCreate.propertyIri}>. Use a link value property to submit a link.",
                ),
-             )
-
-        // Don't accept knora-api:hasStandoffLinkToValue.
-        _ <- ZIO.when(valueToCreate.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)(
-               ZIO.fail(
-                 BadRequestException(
-                   s"Values of <${valueToCreate.propertyIri}> cannot be created directly",
-                 ),
-               ),
-             )
-
-        // Make an adjusted version of the submitted property: if it's a link value property, substitute the
-        // corresponding link property, whose objects we will need to query. Get ontology information about the
-        // adjusted property.
-        adjustedInternalPropertyInfo <-
-          getAdjustedInternalPropertyInfo(
-            submittedPropertyIri = valueToCreate.propertyIri,
-            maybeSubmittedValueType = Some(valueToCreate.valueContent.valueType),
-            propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
-          )
-
-        adjustedInternalPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri
-
-        // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
-        // so we can see objects that the user doesn't have permission to see.
-        resourceInfo <-
-          getResourceWithPropertyValues(
-            resourceIri = valueToCreate.resourceIri,
-            propertyInfo = adjustedInternalPropertyInfo,
-            requestingUser = KnoraSystemInstances.Users.SystemUser,
-          )
-
-        // Check that the user has permission to modify the resource.
-        _ <- resourceUtilV2.checkResourcePermission(
-               resourceInfo = resourceInfo,
-               permissionNeeded = Permission.ObjectAccess.Modify,
-               requestingUser = requestingUser,
-             )
-
-        // Check that the resource has the rdf:type that the client thinks it has.
-        _ <- ZIO.when(resourceInfo.resourceClassIri != valueToCreate.resourceClassIri.toOntologySchema(InternalSchema))(
-               ZIO.fail(
-                 BadRequestException(
-                   s"The rdf:type of resource <${valueToCreate.resourceIri}> is not <${valueToCreate.resourceClassIri}>",
-                 ),
-               ),
-             )
-
-        // Get the definition of the resource class.
-        classInfoRequest =
-          ClassesGetRequestV2(
-            classIris = Set(resourceInfo.resourceClassIri),
-            allLanguages = false,
-            requestingUser = requestingUser,
-          )
-
-        classInfoResponse <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
-
-        // Check that the resource class has a cardinality for the submitted property.
-        cardinalityInfo <-
-          ZIO
-            .fromOption(
-              for {
-                classInfo       <- classInfoResponse.classes.get(resourceInfo.resourceClassIri)
-                cardinalityInfo <- classInfo.allCardinalities.get(submittedInternalPropertyIri)
-              } yield cardinalityInfo,
-            )
-            .orElseFail(
-              BadRequestException(
-                s"Resource <${valueToCreate.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
-                    .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${valueToCreate.propertyIri}>",
-              ),
-            )
-
-        // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
-        // the correct type for the adjusted property's knora-base:objectClassConstraint.
-        _ <- checkPropertyObjectClassConstraint(
-               propertyInfo = adjustedInternalPropertyInfo,
-               valueContent = submittedInternalValueContent,
-               requestingUser = requestingUser,
-             )
-
-        _ <- ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(submittedInternalValueContent)
-
-        // Check that the resource class's cardinality for the submitted property allows another value to be added
-        // for that property.
-        currentValuesForProp: Seq[ReadValueV2] =
-          resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
-
-        _ <-
-          ZIO.when(
-            (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.isEmpty,
-          )(
-            ZIO.fail(
-              InconsistentRepositoryDataException(
-                s"Resource class <${resourceInfo.resourceClassIri
-                    .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, but resource <${valueToCreate.resourceIri}> has no value for that property",
-              ),
-            ),
-          )
-
-        _ <-
-          ZIO.when(
-            cardinalityInfo.cardinality == ExactlyOne || (cardinalityInfo.cardinality == ZeroOrOne && currentValuesForProp.nonEmpty),
-          )(
-            ZIO.fail(
-              OntologyConstraintException(
-                s"Resource class <${resourceInfo.resourceClassIri
-                    .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, and this does not allow a value to be added for that property to resource <${valueToCreate.resourceIri}>",
-              ),
-            ),
-          )
-
-        // If this is a text value, check that the resources pointed to by any standoff link tags exist
-        // and that the user has permission to see them.
-        _ <- submittedInternalValueContent match {
-               case textValueContent: TextValueContentV2 =>
-                 checkResourceIris(
-                   targetResourceIris = textValueContent.standoffLinkTagTargetResourceIris,
-                   requestingUser = requestingUser,
-                 )
-
-               case _ => ZIO.unit
-             }
-
-        // Get the default permissions for the new value.
-        defaultValuePermissions <- permissionsResponder.newValueDefaultObjectAccessPermissions(
-                                     resourceInfo.projectADM.id,
-                                     resourceInfo.resourceClassIri,
-                                     submittedInternalPropertyIri,
-                                     requestingUser,
-                                   )
-
-        // Did the user submit permissions for the new value?
-        newValuePermissionLiteral <-
-          valueToCreate.permissions match {
-            case Some(permissions: String) =>
-              // Yes. Validate them.
-              for {
-                validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissions)
-
-                // Is the requesting user a system admin, or an admin of this project?
-                userPermissions = requestingUser.permissions
-                _ <- ZIO.when(!(userPermissions.isProjectAdmin(requestingUser.id) || userPermissions.isSystemAdmin)) {
-
-                       // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
-                       val permissionComparisonResult: PermissionComparisonResult =
-                         PermissionUtilADM.comparePermissionsADM(
-                           entityProject = resourceInfo.projectADM.id.value,
-                           permissionLiteralA = validatedCustomPermissions,
-                           permissionLiteralB = defaultValuePermissions.permissionLiteral,
-                           requestingUser = requestingUser,
-                         )
-
-                       ZIO.when(permissionComparisonResult == AGreaterThanB)(
-                         ZIO.fail(
-                           ForbiddenException(
-                             s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
-                           ),
-                         ),
-                       )
-                     }
-              } yield validatedCustomPermissions
-
-            case None =>
-              // No. Use the default permissions.
-              ZIO.succeed(defaultValuePermissions.permissionLiteral)
-          }
-
-        dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
-
-        // Create the new value.
-        created <-
-          createValueV2AfterChecks(
-            dataNamedGraph = dataNamedGraph,
-            resourceInfo = resourceInfo,
-            propertyIri = adjustedInternalPropertyIri,
-            value = submittedInternalValueContent,
-            valueIri = valueToCreate.valueIri,
-            valueUUID = valueToCreate.valueUUID,
-            valueCreationDate = valueToCreate.valueCreationDate,
-            valueCreator = requestingUser.id,
-            valuePermissions = newValuePermissionLiteral,
-          )
-
-      } yield CreateValueResponseV2(
-        valueIri = created.newValueIri,
-        valueType = created.valueContent.valueType,
-        valueUUID = created.newValueUUID,
-        valueCreationDate = created.creationDate,
-        projectADM = resourceInfo.projectADM,
-      )
-    }
-    for {
-      // Don't allow anonymous users to create values.
-      _ <- ZIO.when(requestingUser.isAnonymousUser)(
-             ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create values")),
+             ),
            )
-      // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-      taskResult <- IriLocker.runWithIriLock(apiRequestID, valueToCreate.resourceIri, taskZio)
-    } yield taskResult
-  }
 
-  private def validateLegalInfo(fvc: ValueContentV2, shortcode: Shortcode): IO[BadRequestException, Unit] =
-    fvc match {
-      case fvc: FileValueContentV2 =>
-        legalInfoService.validateLegalInfo(fvc.fileValue, shortcode).mapError(BadRequestException.apply).unit
-      case _ => ZIO.unit
-    }
+      // Don't accept knora-api:hasStandoffLinkToValue.
+      _ <- ZIO.when(valueToCreate.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)(
+             ZIO.fail(
+               BadRequestException(
+                 s"Values of <${valueToCreate.propertyIri}> cannot be created directly",
+               ),
+             ),
+           )
+
+      // Make an adjusted version of the submitted property: if it's a link value property, substitute the
+      // corresponding link property, whose objects we will need to query. Get ontology information about the
+      // adjusted property.
+      adjustedInternalPropertyInfo <-
+        getAdjustedInternalPropertyInfo(
+          submittedPropertyIri = valueToCreate.propertyIri,
+          maybeSubmittedValueType = Some(valueToCreate.valueContent.valueType),
+          propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
+        )
+
+      adjustedInternalPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri
+
+      // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
+      // so we can see objects that the user doesn't have permission to see.
+      resourceInfo <-
+        getResourceWithPropertyValues(
+          resourceIri = valueToCreate.resourceIri,
+          propertyInfo = adjustedInternalPropertyInfo,
+          requestingUser = KnoraSystemInstances.Users.SystemUser,
+        )
+
+      // Check that the user has permission to modify the resource.
+      _ <- resourceUtilV2.checkResourcePermission(
+             resourceInfo = resourceInfo,
+             permissionNeeded = Permission.ObjectAccess.Modify,
+             requestingUser = requestingUser,
+           )
+
+      // Check that the resource has the rdf:type that the client thinks it has.
+      _ <- ZIO.when(resourceInfo.resourceClassIri != valueToCreate.resourceClassIri.toOntologySchema(InternalSchema))(
+             ZIO.fail(
+               BadRequestException(
+                 s"The rdf:type of resource <${valueToCreate.resourceIri}> is not <${valueToCreate.resourceClassIri}>",
+               ),
+             ),
+           )
+
+      // Get the definition of the resource class.
+      classInfoRequest =
+        ClassesGetRequestV2(
+          classIris = Set(resourceInfo.resourceClassIri),
+          allLanguages = false,
+          requestingUser = requestingUser,
+        )
+
+      classInfoResponse <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
+
+      // Check that the resource class has a cardinality for the submitted property.
+      cardinalityInfo <-
+        ZIO
+          .fromOption(
+            for {
+              classInfo       <- classInfoResponse.classes.get(resourceInfo.resourceClassIri)
+              cardinalityInfo <- classInfo.allCardinalities.get(submittedInternalPropertyIri)
+            } yield cardinalityInfo,
+          )
+          .orElseFail(
+            BadRequestException(
+              s"Resource <${valueToCreate.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
+                  .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${valueToCreate.propertyIri}>",
+            ),
+          )
+
+      // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
+      // the correct type for the adjusted property's knora-base:objectClassConstraint.
+      _ <- checkPropertyObjectClassConstraint(
+             propertyInfo = adjustedInternalPropertyInfo,
+             valueContent = submittedInternalValueContent,
+             requestingUser = requestingUser,
+           )
+
+      _ <- ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(submittedInternalValueContent)
+
+      // Check that the resource class's cardinality for the submitted property allows another value to be added
+      // for that property.
+      currentValuesForProp: Seq[ReadValueV2] =
+        resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
+
+      _ <-
+        ZIO.when(
+          (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.isEmpty,
+        )(
+          ZIO.fail(
+            InconsistentRepositoryDataException(
+              s"Resource class <${resourceInfo.resourceClassIri
+                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, but resource <${valueToCreate.resourceIri}> has no value for that property",
+            ),
+          ),
+        )
+
+      _ <-
+        ZIO.when(
+          cardinalityInfo.cardinality == ExactlyOne || (cardinalityInfo.cardinality == ZeroOrOne && currentValuesForProp.nonEmpty),
+        )(
+          ZIO.fail(
+            OntologyConstraintException(
+              s"Resource class <${resourceInfo.resourceClassIri
+                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, and this does not allow a value to be added for that property to resource <${valueToCreate.resourceIri}>",
+            ),
+          ),
+        )
+
+      // If this is a text value, check that the resources pointed to by any standoff link tags exist
+      // and that the user has permission to see them.
+      _ <- submittedInternalValueContent match {
+             case textValueContent: TextValueContentV2 =>
+               checkResourceIris(
+                 targetResourceIris = textValueContent.standoffLinkTagTargetResourceIris,
+                 requestingUser = requestingUser,
+               )
+
+             case _ => ZIO.unit
+           }
+
+      // Get the default permissions for the new value.
+      defaultValuePermissions <- permissionsResponder.newValueDefaultObjectAccessPermissions(
+                                   resourceInfo.projectADM.id,
+                                   resourceInfo.resourceClassIri,
+                                   submittedInternalPropertyIri,
+                                   requestingUser,
+                                 )
+
+      // Did the user submit permissions for the new value?
+      newValuePermissionLiteral <-
+        valueToCreate.permissions match {
+          case Some(permissions: String) =>
+            // Yes. Validate them.
+            for {
+              validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissions)
+
+              // Is the requesting user a system admin, or an admin of this project?
+              userPermissions = requestingUser.permissions
+              _ <- ZIO.when(!(userPermissions.isProjectAdmin(requestingUser.id) || userPermissions.isSystemAdmin)) {
+
+                     // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                     val permissionComparisonResult: PermissionComparisonResult =
+                       PermissionUtilADM.comparePermissionsADM(
+                         entityProject = resourceInfo.projectADM.id.value,
+                         permissionLiteralA = validatedCustomPermissions,
+                         permissionLiteralB = defaultValuePermissions.permissionLiteral,
+                         requestingUser = requestingUser,
+                       )
+
+                     ZIO.when(permissionComparisonResult == AGreaterThanB)(
+                       ZIO.fail(
+                         ForbiddenException(
+                           s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
+                         ),
+                       ),
+                     )
+                   }
+            } yield validatedCustomPermissions
+
+          case None =>
+            // No. Use the default permissions.
+            ZIO.succeed(defaultValuePermissions.permissionLiteral)
+        }
+
+      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
+
+      // Create the new value.
+      created <-
+        createValueV2AfterChecks(
+          dataNamedGraph = dataNamedGraph,
+          resourceInfo = resourceInfo,
+          propertyIri = adjustedInternalPropertyIri,
+          value = submittedInternalValueContent,
+          valueIri = valueToCreate.valueIri,
+          valueUUID = valueToCreate.valueUUID,
+          valueCreationDate = valueToCreate.valueCreationDate,
+          valueCreator = requestingUser.id,
+          valuePermissions = newValuePermissionLiteral,
+        )
+
+    } yield CreateValueResponseV2(
+      valueIri = created.newValueIri,
+      valueType = created.valueContent.valueType,
+      valueUUID = created.newValueUUID,
+      valueCreationDate = created.creationDate,
+      projectADM = resourceInfo.projectADM,
+    )
+
+    IriLocker.runWithIriLock(apiRequestID, valueToCreate.resourceIri, task)
+  }
 
   private def ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(valueContent: ValueContentV2) =
     valueContent match {
@@ -639,8 +616,9 @@ final case class ValuesResponderV2(
     requestingUser: User,
   ): Task[UpdateValueResponseV2] = {
     for {
+      _                     <- valueValidator.validate(updateValue).mapError(BadRequestException.apply)
       resourcePropertyValue <- checkValueAndRetrieveResourceProperties(updateValue, requestingUser)
-      _                     <- validateLegalInfo(updateValue.valueContent, resourcePropertyValue.resource.projectADM.shortcode)
+      shortcode              = resourcePropertyValue.resource.projectADM.shortcode
 
       resourceInfo: ReadResourceV2                     = resourcePropertyValue.resource
       adjustedInternalPropertyInfo: ReadPropertyInfoV2 = resourcePropertyValue.adjustedInternalPropertyInfo

@@ -65,6 +65,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
+import org.knora.webapi.slice.resources.service.ValueValidator
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -94,40 +95,37 @@ trait GetResources {
 }
 
 final case class ResourcesResponderV2(
-  appConfig: AppConfig,
-  iriService: IriService,
-  iriConverter: IriConverter,
-  messageRelay: MessageRelay,
-  triplestore: TriplestoreService,
-  constructResponseUtilV2: ConstructResponseUtilV2,
-  standoffTagUtilV2: StandoffTagUtilV2,
-  resourceUtilV2: ResourceUtilV2,
-  permissionUtilADM: PermissionUtilADM,
-  projectService: KnoraProjectService,
-  searchResponderV2: SearchResponderV2,
-  ontologyRepo: OntologyRepo,
-  permissionsResponder: PermissionsResponder,
-  resourcesRepo: ResourcesRepo,
-  legalInfoService: LegalInfoService,
+  private val appConfig: AppConfig,
+  private val constructResponseUtilV2: ConstructResponseUtilV2,
+  private val iriConverter: IriConverter,
+  private val iriService: IriService,
+  private val legalInfoService: LegalInfoService,
+  private val messageRelay: MessageRelay,
+  private val ontologyRepo: OntologyRepo,
+  private val permissionUtilADM: PermissionUtilADM,
+  private val permissionsResponder: PermissionsResponder,
+  private val projectService: KnoraProjectService,
+  private val resourceUtilV2: ResourceUtilV2,
+  private val resourcesRepo: ResourcesRepo,
+  private val searchResponderV2: SearchResponderV2,
+  private val standoffTagUtilV2: StandoffTagUtilV2,
+  private val triplestore: TriplestoreService,
+  private val valueValidator: ValueValidator,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with LazyLogging
     with GetResources {
 
   private val createHandler = CreateResourceV2Handler(
-    appConfig,
     iriService,
     messageRelay,
     resourcesRepo,
-    constructResponseUtilV2,
-    standoffTagUtilV2,
     resourceUtilV2,
     permissionUtilADM,
-    searchResponderV2,
     this,
     ontologyRepo,
     permissionsResponder: PermissionsResponder,
-    legalInfoService,
+    valueValidator,
   )
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
@@ -2064,24 +2062,42 @@ final case class ResourcesResponderV2(
 object ResourcesResponderV2 {
   val layer = ZLayer.fromZIO {
     for {
-      config <- ZIO.service[AppConfig]
-      iriS   <- ZIO.service[IriService]
-      iriC   <- ZIO.service[IriConverter]
-      mr     <- ZIO.service[MessageRelay]
-      ts     <- ZIO.service[TriplestoreService]
-      cu     <- ZIO.service[ConstructResponseUtilV2]
-      su     <- ZIO.service[StandoffTagUtilV2]
-      ru     <- ZIO.service[ResourceUtilV2]
-      pu     <- ZIO.service[PermissionUtilADM]
-      kps    <- ZIO.service[KnoraProjectService]
-      sr     <- ZIO.service[SearchResponderV2]
-      or     <- ZIO.service[OntologyRepo]
-      sf     <- ZIO.service[StringFormatter]
-      pr     <- ZIO.service[PermissionsResponder]
-      rr     <- ZIO.service[ResourcesRepo]
-      li     <- ZIO.service[LegalInfoService]
-      handler <-
-        mr.subscribe(ResourcesResponderV2(config, iriS, iriC, mr, ts, cu, su, ru, pu, kps, sr, or, pr, rr, li)(sf))
-    } yield handler
+      appConfig               <- ZIO.service[AppConfig]
+      constructResponseUtilV2 <- ZIO.service[ConstructResponseUtilV2]
+      iriConverter            <- ZIO.service[IriConverter]
+      iriService              <- ZIO.service[IriService]
+      legalInfoService        <- ZIO.service[LegalInfoService]
+      messageRelay            <- ZIO.service[MessageRelay]
+      ontologyRepo            <- ZIO.service[OntologyRepo]
+      permissionUtilADM       <- ZIO.service[PermissionUtilADM]
+      permissionsResponder    <- ZIO.service[PermissionsResponder]
+      projectService          <- ZIO.service[KnoraProjectService]
+      resourceUtilV2          <- ZIO.service[ResourceUtilV2]
+      resourcesRepo           <- ZIO.service[ResourcesRepo]
+      searchResponderV2       <- ZIO.service[SearchResponderV2]
+      standoffTagUtilV2       <- ZIO.service[StandoffTagUtilV2]
+      stringFormatter         <- ZIO.service[StringFormatter]
+      triplestoreService      <- ZIO.service[TriplestoreService]
+      valueValidator          <- ZIO.service[ValueValidator]
+      responder = new ResourcesResponderV2(
+                    appConfig,
+                    constructResponseUtilV2,
+                    iriConverter,
+                    iriService,
+                    legalInfoService,
+                    messageRelay,
+                    ontologyRepo,
+                    permissionUtilADM,
+                    permissionsResponder,
+                    projectService,
+                    resourceUtilV2,
+                    resourcesRepo,
+                    searchResponderV2,
+                    standoffTagUtilV2,
+                    triplestoreService,
+                    valueValidator,
+                  )(stringFormatter)
+      _ <- messageRelay.subscribe(responder)
+    } yield responder
   }
 }
