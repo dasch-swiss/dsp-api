@@ -75,7 +75,7 @@ object StandoffStringUtil {
    * @param standoffTags The list of [[StandoffTagV2]].
    * @return a set of Iris referred to in the [[StandoffTagV2]].
    */
-  def getResourceIrisFromStandoffTags(standoffTags: Seq[StandoffTagV2]): Set[IRI] =
+  def getResourceIrisFromStandoffLinkTags(standoffTags: Seq[StandoffTagV2]): Set[IRI] =
     standoffTags.foldLeft(Set.empty[IRI]) { case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
       if (standoffNode.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
         val maybeTargetIri: Seq[IRI] = standoffNode.attributes.collect {

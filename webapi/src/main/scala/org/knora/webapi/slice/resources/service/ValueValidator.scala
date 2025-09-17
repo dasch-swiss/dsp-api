@@ -59,7 +59,7 @@ final case class ValueValidator(
     }
 
   private def ensureNoCrossProjectLink(tvc: TextValueContentV2, inProject: Shortcode): IO[String, Unit] =
-    ZIO.foreachDiscard(StandoffStringUtil.getResourceIrisFromStandoffTags(tvc.standoff))(iri =>
+    ZIO.foreachDiscard(StandoffStringUtil.getResourceIrisFromStandoffLinkTags(tvc.standoff))(iri =>
       iriConverter.asResourceIri(iri).option.flatMap {
         case Some(ResourceIri(_, refShortcode, _)) =>
           ZIO
