@@ -8,10 +8,12 @@ package org.knora.webapi.slice.resources.service
 import zio.*
 
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.service.IriConverter
 
 /**
@@ -44,14 +46,29 @@ final case class ValueValidator(
     ensureNoCrossProjectLink(vc, inProject) *> ensureValidLegalInfo(vc, inProject)
 
   private def ensureNoCrossProjectLink(vc: ValueContentV2, inProject: Shortcode): IO[String, Unit] = vc match
-    case LinkValueContentV2(_, referredResourceIri, _, _, _, _) =>
-      iriConverter.asResourceIri(referredResourceIri).map(_.shortcode).flatMap { refShortcode =>
-        ZIO
-          .fail(s"Cannot create a link between resources cross projects $inProject and $refShortcode")
-          .unless(inProject == refShortcode)
-          .unit
-      }
-    case _ => ZIO.unit
+    case lvc: LinkValueContentV2 => ensureNoCrossProjectLink(lvc, inProject)
+    case tvc: TextValueContentV2 => ensureNoCrossProjectLink(tvc, inProject)
+    case _                       => ZIO.unit
+
+  private def ensureNoCrossProjectLink(lvc: LinkValueContentV2, inProject: Shortcode) =
+    iriConverter.asResourceIri(lvc.referredResourceIri).map(_.shortcode).flatMap { refShortcode =>
+      ZIO
+        .fail(s"Cannot create a link between resources cross projects $inProject and $refShortcode")
+        .unless(inProject == refShortcode)
+        .unit
+    }
+
+  private def ensureNoCrossProjectLink(tvc: TextValueContentV2, inProject: Shortcode): IO[String, Unit] =
+    ZIO.foreachDiscard(StandoffStringUtil.getResourceIrisFromStandoffTags(tvc.standoff))(iri =>
+      iriConverter.asResourceIri(iri).option.flatMap {
+        case Some(ResourceIri(_, refShortcode, _)) =>
+          ZIO
+            .fail(s"Cannot create a standoff IRI link between resources cross projects $inProject and $refShortcode")
+            .unless(inProject == refShortcode)
+            .unit
+        case None => ZIO.unit
+      },
+    )
 
   private def ensureValidLegalInfo(vc: ValueContentV2, inProject: Shortcode): IO[String, Unit] = vc match
     case fvc: FileValueContentV2 => legalInfoService.validateLegalInfo(fvc.fileValue, inProject).unit
