@@ -9,7 +9,7 @@ import java.time.Instant
 import scala.annotation.tailrec
 
 import dsp.valueobjects.LangString
-import dsp.valueobjects.LanguageCode
+import org.knora.webapi.slice.common.domain.LanguageCode
 
 object Comments {
   def handleOptionalComment(comment: Option[LangString]): String =
@@ -17,7 +17,7 @@ object Comments {
       case Some(value) =>
         s"""
            |    "rdfs:comment" : {
-           |      "@language" : "${value.language.value}",
+           |      "@language" : "${value.language}",
            |      "@value" : "${value.value}"
            |    },
            |""".stripMargin
@@ -44,7 +44,7 @@ object CreateClassRequest {
     ontologyName: String,
     lastModificationDate: Instant,
     className: String,
-    label: LangString = LangString.unsafeMake(LanguageCode.en, "Label"),
+    label: LangString = LangString.unsafeMake(LanguageCode.EN, "Label"),
     comment: Option[LangString] = None,
     subClassOf: Option[String] = None,
   ): CreateClassRequest = {
@@ -63,7 +63,7 @@ object CreateClassRequest {
                    |    "@id" : "$ontologyName:$className",
                    |    "@type" : "owl:Class",
                    |    "rdfs:label" : {
-                   |      "@language" : "${label.language.value}",
+                   |      "@language" : "${label.language}",
                    |      "@value" : "${label.value}"
                    |    },
                    |    $maybeComment
@@ -113,7 +113,7 @@ object CreatePropertyRequest {
     propertyName: String,
     subjectClassName: Option[String],
     propertyType: PropertyValueType,
-    label: LangString = LangString.unsafeMake(LanguageCode.en, "Label"),
+    label: LangString = LangString.unsafeMake(LanguageCode.EN, "Label"),
     comment: Option[LangString] = None,
     subPropertyOf: Option[String] = None,
   ): CreatePropertyRequest = {
@@ -147,7 +147,7 @@ object CreatePropertyRequest {
                    |      },
                    |      $maybeComment
                    |      "rdfs:label" : {
-                   |        "@language" : "${label.language.value}",
+                   |        "@language" : "${label.language}",
                    |        "@value" : "${label.value}"
                    |      },
                    |      "rdfs:subPropertyOf" : {

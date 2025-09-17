@@ -23,6 +23,7 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.slice.common.domain.LanguageCode
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
@@ -258,7 +259,7 @@ object StringLiteralV2 {
   implicit val schema: Schema[StringLiteralV2]   = Schema.derived[StringLiteralV2]
 
   def from(value: String, lang: LanguageCode): StringLiteralV2 =
-    from(value, Some(lang.code))
+    from(value, Some(lang.value))
 
   def from(value: String, language: Option[String]): StringLiteralV2 = language match {
     case Some(_) if value.isEmpty => throw BadRequestException("String value is missing.")

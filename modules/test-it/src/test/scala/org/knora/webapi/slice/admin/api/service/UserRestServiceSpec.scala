@@ -14,7 +14,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -26,6 +25,7 @@ import org.knora.webapi.slice.admin.api.model.UserDto
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.security.Authenticator
 
 object UserRestServiceSpec extends E2EZSpec {
@@ -95,7 +95,7 @@ object UserRestServiceSpec extends E2EZSpec {
           FamilyName.unsafeFrom("Duck"),
           Password.unsafeFrom("test"),
           UserStatus.from(true),
-          LanguageCode.en,
+          LanguageCode.EN,
           SystemAdmin.IsNotSystemAdmin,
         )
         userRestService(_.createUser(rootUser)(createRequest))
@@ -119,7 +119,7 @@ object UserRestServiceSpec extends E2EZSpec {
           FamilyName.unsafeFrom("Duck"),
           Password.unsafeFrom("test"),
           UserStatus.from(true),
-          LanguageCode.en,
+          LanguageCode.EN,
           SystemAdmin.IsNotSystemAdmin,
         )
         userRestService(_.createUser(rootUser)(createRequest)).exit.map(
@@ -137,7 +137,7 @@ object UserRestServiceSpec extends E2EZSpec {
           FamilyName.unsafeFrom("Duck"),
           Password.unsafeFrom("test"),
           UserStatus.from(true),
-          LanguageCode.en,
+          LanguageCode.EN,
           SystemAdmin.IsNotSystemAdmin,
         )
         userRestService(_.createUser(rootUser)(createRequest)).exit.map(

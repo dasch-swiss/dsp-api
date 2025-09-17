@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
 
 import org.knora.webapi.*
-import org.knora.webapi.LanguageCode.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
@@ -19,6 +18,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2Builder.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 
 /**

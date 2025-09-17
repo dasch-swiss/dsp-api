@@ -13,7 +13,6 @@ import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.DuplicateValueException
-import dsp.valueobjects.LanguageCode
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.model.Project
@@ -41,6 +40,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.NotPr
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.NotProjectMember
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.UserChangeRequest
 import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.domain.LanguageCode
 
 case class KnoraUserService(
   private val userRepo: KnoraUserRepo,
