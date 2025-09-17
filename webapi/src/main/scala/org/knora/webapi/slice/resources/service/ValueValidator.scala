@@ -19,8 +19,7 @@ final case class ValueValidator(
   private val legalInfoService: LegalInfoService,
 ) {
 
-  def validate(createValue: CreateValueV2): IO[String, Unit] =
-    validateValueContent(createValue.valueContent, createValue.resourceIri)
+  def validate(cv: CreateValueV2): IO[String, Unit] = validateValueContent(cv.valueContent, cv.resourceIri)
 
   def validate(uv: UpdateValueV2): IO[String, Unit] = uv match
     case uvc: UpdateValueContentV2   => validateValueContent(uvc.valueContent, uvc.resourceIri)
@@ -34,8 +33,8 @@ final case class ValueValidator(
   private def validateValueContent(vc: ValueContentV2, resourceIri: IRI): IO[String, Unit] =
     iriConverter.asResourceIri(resourceIri).map(_.shortcode).flatMap(validateValueContent(vc, _))
 
-  private def validateValueContent(valueContent: ValueContentV2, inProject: Shortcode): IO[String, Unit] =
-    ensureNoCrossProjectLink(valueContent, inProject) *> ensureValidLegalInfo(valueContent, inProject)
+  private def validateValueContent(vc: ValueContentV2, inProject: Shortcode): IO[String, Unit] =
+    ensureNoCrossProjectLink(vc, inProject) *> ensureValidLegalInfo(vc, inProject)
 
   private def ensureNoCrossProjectLink(vc: ValueContentV2, inProject: Shortcode): IO[String, Unit] = vc match
     case LinkValueContentV2(_, referredResourceIri, _, _, _, _) =>
