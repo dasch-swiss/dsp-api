@@ -1984,14 +1984,12 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(savedValue.valueHasString.contains(valueHasString))
     },
     test("not update a text value (submitting standoff) if the linked resource is in a different project") {
-      val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-
       // the aThingIri resource is in the Anything project, while the zeitgloeckleinIri resource is in the Incunabula project.
       val standoffTags = sampleStandoffWithLink(aThingIri)
       val updateParams = UpdateValueContentV2(
         resourceIri = zeitgloeckleinIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        propertyIri = propertyIri,
+        propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri,
         valueIri = zeitgloeckleinCommentWithStandoffIri.get,
         valueContent = TextValueContentV2(
           ontologySchema = ApiV2Complex,
