@@ -13,7 +13,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.service.IriConverter
 
 /**
@@ -40,7 +39,10 @@ final case class ValueValidator(
     ZIO.foreachDiscard(vcsToCreate)(validateValueContent(_, shortcode))
 
   private def validateValueContent(vc: ValueContentV2, resourceIri: IRI): IO[String, Unit] =
-    iriConverter.asResourceIri(resourceIri).map(_.shortcode).flatMap(validateValueContent(vc, _))
+    extractShortcode(resourceIri).flatMap(validateValueContent(vc, _))
+
+  private def extractShortcode(resourceIri: IRI): IO[String, Shortcode] =
+    iriConverter.asResourceIri(resourceIri).map(_.shortcode)
 
   private def validateValueContent(vc: ValueContentV2, inProject: Shortcode): IO[String, Unit] =
     ensureNoCrossProjectLink(vc, inProject) *> ensureValidLegalInfo(vc, inProject)
@@ -51,7 +53,7 @@ final case class ValueValidator(
     case _                       => ZIO.unit
 
   private def ensureNoCrossProjectLink(lvc: LinkValueContentV2, inProject: Shortcode) =
-    iriConverter.asResourceIri(lvc.referredResourceIri).map(_.shortcode).flatMap { refShortcode =>
+    extractShortcode(lvc.referredResourceIri).flatMap { refShortcode =>
       ZIO
         .fail(s"Cannot create a link between resources cross projects $inProject and $refShortcode")
         .unless(inProject == refShortcode)
@@ -59,9 +61,9 @@ final case class ValueValidator(
     }
 
   private def ensureNoCrossProjectLink(tvc: TextValueContentV2, inProject: Shortcode): IO[String, Unit] =
-    ZIO.foreachDiscard(StandoffStringUtil.getResourceIrisFromStandoffLinkTags(tvc.standoff))(iri =>
-      iriConverter.asResourceIri(iri).option.flatMap {
-        case Some(ResourceIri(_, refShortcode, _)) =>
+    ZIO.foreachDiscard(StandoffStringUtil.getResourceIrisFromStandoffLinkTags(tvc.standoff))(resourceIri =>
+      extractShortcode(resourceIri).option.flatMap {
+        case Some(refShortcode) =>
           ZIO
             .fail(s"Cannot create a standoff IRI link between resources cross projects $inProject and $refShortcode")
             .unless(inProject == refShortcode)
