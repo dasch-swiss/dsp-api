@@ -17,10 +17,10 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.service.IriConverter
 
 /**
- * A service that validates values in requests that create resources or create/update values.
+ * A service that validates values in requests that create resources with values or create/update values.
  *
  * The validations performed here include:
- * - Ensuring that link values do not create cross-project links.
+ * - Ensuring that link or standoff link values do not create cross-project links.
  * - Ensuring that file values have valid legal information
  */
 final case class ValueValidator(
