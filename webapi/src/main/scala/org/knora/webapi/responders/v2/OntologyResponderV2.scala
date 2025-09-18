@@ -459,9 +459,7 @@ final case class OntologyResponderV2(
         OntologyIri.makeNew(validOntologyName, createOntologyRequest.isShared, Some(project.shortcode), stringFormatter)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      createOntologyRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
+      taskResult <- IriLocker.runWithIriLock(createOntologyRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
                       makeTaskFuture(ontologyIri),
                     )
     } yield taskResult
@@ -518,7 +516,7 @@ final case class OntologyResponderV2(
       ),
     )
 
-    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, changeTask)
+    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(changeTask)
   }
 
   private def getOntologyOrFailNotFound(iri: OntologyIri) =
@@ -563,7 +561,7 @@ final case class OntologyResponderV2(
       ),
     )
 
-    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteComment)
+    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteComment)
   }
 
   /**
@@ -697,7 +695,7 @@ final case class OntologyResponderV2(
                       requestingUser = createClassRequest.requestingUser,
                     )
       } yield response
-    IriLocker.runWithIriLock(createClassRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, task)
+    IriLocker.runWithIriLock(createClassRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(task)
   }
 
   /**
@@ -812,9 +810,7 @@ final case class OntologyResponderV2(
       internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      changeGuiOrderRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
+      taskResult <- IriLocker.runWithIriLock(changeGuiOrderRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
                       makeTaskFuture(internalClassIri, internalOntologyIri),
                     )
     } yield taskResult
@@ -962,7 +958,7 @@ final case class OntologyResponderV2(
                     requestingUser = addCardinalitiesRequest.requestingUser,
                   )
     } yield response
-    IriLocker.runWithIriLock(addCardinalitiesRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, task)
+    IriLocker.runWithIriLock(addCardinalitiesRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(task)
   }
 
   /**
@@ -987,7 +983,7 @@ final case class OntologyResponderV2(
              classIriExternal,
              request.requestingUser,
            )
-      response <- IriLocker.runWithIriLock(request.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, task)
+      response <- IriLocker.runWithIriLock(request.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(task)
     } yield response
   }
 
@@ -1163,15 +1159,14 @@ final case class OntologyResponderV2(
       internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      canDeleteCardinalitiesFromClassRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
-                      cardinalityHandler.canDeleteCardinalitiesFromClass(
-                        deleteCardinalitiesFromClassRequest = canDeleteCardinalitiesFromClassRequest,
-                        internalClassIri = internalClassIri,
-                        internalOntologyIri = internalOntologyIri,
-                      ),
-                    )
+      taskResult <-
+        IriLocker.runWithIriLock(canDeleteCardinalitiesFromClassRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
+          cardinalityHandler.canDeleteCardinalitiesFromClass(
+            deleteCardinalitiesFromClassRequest = canDeleteCardinalitiesFromClassRequest,
+            internalClassIri = internalClassIri,
+            internalOntologyIri = internalOntologyIri,
+          ),
+        )
     } yield taskResult
 
   /**
@@ -1197,9 +1192,7 @@ final case class OntologyResponderV2(
       internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      deleteCardinalitiesFromClassRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
+      taskResult <- IriLocker.runWithIriLock(deleteCardinalitiesFromClassRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
                       cardinalityHandler.deleteCardinalitiesFromClass(
                         deleteCardinalitiesFromClassRequest = deleteCardinalitiesFromClassRequest,
                         internalClassIri = internalClassIri,
@@ -1294,7 +1287,7 @@ final case class OntologyResponderV2(
                         )
     } yield ReadOntologyMetadataV2(Set(updatedOntology.ontologyMetadata))
 
-    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteClassTask)
+    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteClassTask)
   }
 
   /**
@@ -1411,7 +1404,7 @@ final case class OntologyResponderV2(
           properties = ontology.properties -- propertiesToRemoveFromCache,
         )
     } yield ReadOntologyMetadataV2(Set(updatedOntology.ontologyMetadata))
-    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteTask)
+    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteTask)
   }
 
   /**
@@ -1448,7 +1441,7 @@ final case class OntologyResponderV2(
              }
         _ <- save(Update(sparql.v2.txt.deleteOntology(ontologyIri.toInternalSchema)))
       } yield SuccessResponseV2(s"Ontology ${ontologyIri.toComplexSchema} has been deleted")
-    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteTask)
+    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteTask)
   }
 
   /**
@@ -1690,9 +1683,7 @@ final case class OntologyResponderV2(
       internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
+      taskResult <- IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
                       makeTaskFuture(internalPropertyIri, internalOntologyIri),
                     )
     } yield taskResult
@@ -1780,9 +1771,7 @@ final case class OntologyResponderV2(
       internalOntologyIri = externalOntologyIri.toInternalSchema
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      changePropertyGuiElementRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
+      taskResult <- IriLocker.runWithIriLock(changePropertyGuiElementRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
                       makeTaskFuture(internalPropertyIri, internalOntologyIri),
                     )
     } yield taskResult
@@ -1791,7 +1780,7 @@ final case class OntologyResponderV2(
   /**
    * Changes the values of `rdfs:label` or `rdfs:comment` in a property definition.
    *
-   * @param changePropertyLabelsOrCommentsRequest the request to change the property's labels or comments.
+   * @param changeReq the request to change the property's labels or comments.
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
   def changePropertyLabelsOrComments(changeReq: ChangePropertyLabelsOrCommentsRequestV2): Task[ReadOntologyV2] = {
@@ -1852,7 +1841,7 @@ final case class OntologyResponderV2(
                   )
     } yield response
 
-    IriLocker.runWithIriLock(changeReq.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, task)
+    IriLocker.runWithIriLock(changeReq.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(task)
   }
 
   /**
@@ -1912,7 +1901,7 @@ final case class OntologyResponderV2(
         ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(req.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, changeTask)
+      taskResult <- IriLocker.runWithIriLock(req.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(changeTask)
     } yield taskResult
   }
 
@@ -1944,7 +1933,7 @@ final case class OntologyResponderV2(
                             .someOrFail(NotFoundException(s"Ontology ${ontologyIri.toComplexSchema.toIri} not found"))
       hasComment = propertyToUpdate.entityInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)
       _ <- IriLocker
-             .runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteCommentTask(propertyToUpdate))
+             .runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteCommentTask(propertyToUpdate))
              .when(hasComment)
       response <- getPropertiesFromOntologyV2(Set(propertyIri), allLanguages = true, requestingUser = requestingUser)
     } yield response
@@ -1953,7 +1942,11 @@ final case class OntologyResponderV2(
   /**
    * Delete the `rdfs:comment` in a class definition.
    *
-   * @param deleteClassCommentRequest the request to delete the class' comment
+   * @param classIri             the IRI of the class to be modified.
+   * @param lastModificationDate the last modification date of the ontology.
+   * @param apiRequestID         the api request ID.
+   * @param requestingUser       the user making the request.
+   *
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
   def deleteClassComment(
@@ -1987,9 +1980,7 @@ final case class OntologyResponderV2(
                          .findClassBy(classIri)
                          .someOrFail(NotFoundException(s"Class ${classIri.toComplexSchema} not found"))
       hasComment = classToUpdate.entityInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)
-      _ <- IriLocker
-             .runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteCommentTask)
-             .when(hasComment)
+      _         <- IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteCommentTask).when(hasComment)
       response <-
         ontologyCacheHelpers.getClasses(classIris = Seq(classIri), allLanguages = true, requestingUser = requestingUser)
     } yield response

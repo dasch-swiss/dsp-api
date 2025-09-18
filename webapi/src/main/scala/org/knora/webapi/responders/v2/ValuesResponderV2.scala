@@ -330,7 +330,7 @@ final case class ValuesResponderV2(
              ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create values")),
            )
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-      taskResult <- IriLocker.runWithIriLock(apiRequestID, valueToCreate.resourceIri, taskZio)
+      taskResult <- IriLocker.runWithIriLock(apiRequestID, valueToCreate.resourceIri)(taskZio)
     } yield taskResult
   }
 
@@ -579,12 +579,8 @@ final case class ValuesResponderV2(
     requestingUser: User,
     apiRequestId: UUID,
   ): Task[UpdateValueResponseV2] =
-    ZIO
-      .fail(ForbiddenException("Anonymous users aren't allowed to update values"))
-      .when(requestingUser.isAnonymousUser) *>
-      IriLocker.runWithIriLock(
-        apiRequestId,
-        updateValue.resourceIri,
+    auth.ensureUserIsNotAnonymous(requestingUser) *>
+      IriLocker.runWithIriLock(apiRequestId, updateValue.resourceIri)(
         updateValue match {
           case updateContent: UpdateValueContentV2         => updateValueContent(updateContent, requestingUser)
           case updatePermissions: UpdateValuePermissionsV2 => updateValuePermissions(updatePermissions, requestingUser)
@@ -1150,7 +1146,7 @@ final case class ValuesResponderV2(
           ?pvStandoff rdf:type knora-base:StandoffLinkTag .
         }
       """)
-      historyHasLinks <- triplestoreService.query(Select(query)).map(_.results.bindings.size > 0)
+      historyHasLinks <- triplestoreService.query(Select(query)).map(_.results.bindings.nonEmpty)
       result <- ZIO
                   .fail(BadRequestException("Erasing standoff text values with links is not supported"))
                   .when {
@@ -1297,7 +1293,7 @@ final case class ValuesResponderV2(
                            requestingUser,
                          )
     } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted")
-    IriLocker.runWithIriLock(deleteValue.apiRequestId, deleteValue.resourceIri, deleteTask)
+    IriLocker.runWithIriLock(deleteValue.apiRequestId, deleteValue.resourceIri)(deleteTask)
   }
 
   /**
