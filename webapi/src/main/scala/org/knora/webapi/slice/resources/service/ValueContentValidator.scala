@@ -22,7 +22,7 @@ import org.knora.webapi.slice.common.service.IriConverter
  * - Ensuring that link or standoff link values do not create cross-project links.
  * - Ensuring that file values have valid legal information
  */
-final case class ValueValidator(
+final case class ValueContentValidator(
   private val iriConverter: IriConverter,
   private val legalInfoService: LegalInfoService,
 ) {
@@ -77,6 +77,6 @@ final case class ValueValidator(
     case _                       => ZIO.unit
 }
 
-object ValueValidator {
-  val layer = ZLayer.derive[ValueValidator]
+object ValueContentValidator {
+  val layer = ZLayer.derive[ValueContentValidator]
 }

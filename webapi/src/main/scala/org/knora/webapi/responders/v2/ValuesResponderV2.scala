@@ -53,7 +53,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
-import org.knora.webapi.slice.resources.service.ValueValidator
+import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -73,7 +73,7 @@ final case class ValuesResponderV2(
   private val searchResponderV2: SearchResponderV2,
   private val triplestoreService: TriplestoreService,
   private val valueRepo: ValueRepo,
-  private val valueValidator: ValueValidator,
+  private val valueValidator: ValueContentValidator,
 )(implicit private val stringFormatter: StringFormatter) {
 
   /**

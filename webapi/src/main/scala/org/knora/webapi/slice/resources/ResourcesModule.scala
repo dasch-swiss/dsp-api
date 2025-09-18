@@ -17,7 +17,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object ResourcesModule { self =>
   type Dependencies = IriConverter & KnoraProjectService & LegalInfoService & StringFormatter & TriplestoreService
-  type Provided     = MetadataService & ResourceInfoRepoLive & ValueValidator
+  type Provided     = MetadataService & ResourceInfoRepoLive & ValueContentValidator
   val layer: URLayer[Dependencies, Provided] =
-    MetadataService.layer >+> ResourceInfoRepoLive.layer >+> ValueValidator.layer
+    MetadataService.layer >+> ResourceInfoRepoLive.layer >+> ValueContentValidator.layer
 }

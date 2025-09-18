@@ -65,7 +65,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
-import org.knora.webapi.slice.resources.service.ValueValidator
+import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -110,7 +110,7 @@ final case class ResourcesResponderV2(
   private val searchResponderV2: SearchResponderV2,
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val triplestore: TriplestoreService,
-  private val valueValidator: ValueValidator,
+  private val valueValidator: ValueContentValidator,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with LazyLogging
@@ -2078,7 +2078,7 @@ object ResourcesResponderV2 {
       standoffTagUtilV2       <- ZIO.service[StandoffTagUtilV2]
       stringFormatter         <- ZIO.service[StringFormatter]
       triplestoreService      <- ZIO.service[TriplestoreService]
-      valueValidator          <- ZIO.service[ValueValidator]
+      valueContentValidator   <- ZIO.service[ValueContentValidator]
       responder = new ResourcesResponderV2(
                     appConfig,
                     constructResponseUtilV2,
@@ -2095,7 +2095,7 @@ object ResourcesResponderV2 {
                     searchResponderV2,
                     standoffTagUtilV2,
                     triplestoreService,
-                    valueValidator,
+                    valueContentValidator,
                   )(stringFormatter)
       _ <- messageRelay.subscribe(responder)
     } yield responder
