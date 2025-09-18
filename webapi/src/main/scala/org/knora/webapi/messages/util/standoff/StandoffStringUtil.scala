@@ -61,13 +61,12 @@ object StandoffStringUtil {
    * @param standoffTags The list of [[StandoffTagV2]].
    * @return a set of Iris referred to in the [[StandoffTagV2]].
    */
-  def getResourceIrisFromStandoffLinkTags(standoffTags: Seq[StandoffTagV2]): Seq[IRI] =
-    standoffTags
-      .filter(_.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag))
-      .flatMap(_.attributes)
-      .collect { case attr: StandoffTagIriAttributeV2 => attr }
-      .filter(_.standoffPropertyIri.toInternalIri.value == KB.StandoffTagHasLink)
-      .map(_.value)
+  def getResourceIrisFromStandoffLinkTags(standoffTags: Seq[StandoffTagV2]): Seq[IRI] = standoffTags
+    .filter(_.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag))
+    .flatMap(_.attributes)
+    .collect { case attr: StandoffTagIriAttributeV2 => attr }
+    .filter(_.standoffPropertyIri.toInternalIri.value == KB.StandoffTagHasLink)
+    .map(_.value)
 
   /**
    * Creates a new standoff tag IRI based on a UUID.
