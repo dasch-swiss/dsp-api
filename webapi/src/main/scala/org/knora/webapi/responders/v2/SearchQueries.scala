@@ -8,11 +8,12 @@ package org.knora.webapi.responders.v2
 import org.knora.webapi.IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.util.FusekiLucenceQuery
 
 object SearchQueries {
 
   def selectCountByLabel(
-    searchTerm: String,
+    luceneQuery: FusekiLucenceQuery,
     limitToProject: Option[IRI],
     limitToResourceClass: Option[IRI],
   ): Select =
@@ -21,7 +22,7 @@ object SearchQueries {
           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
           |SELECT (count(distinct ?resource) as ?count)
           |WHERE {
-          |    ?resource <http://jena.apache.org/text#query> (rdfs:label "$searchTerm") ;
+          |    ?resource <http://jena.apache.org/text#query> (rdfs:label "${luceneQuery.getQueryString}") ;
           |        a ?resourceClass .
           |    ?resourceClass rdfs:subClassOf* knora-base:Resource .
           |    ${limitToResourceClass.fold("")(resourceClass => s"?resourceClass rdfs:subClassOf* <$resourceClass> .")}
@@ -32,7 +33,7 @@ object SearchQueries {
     )
 
   def constructSearchByLabel(
-    searchTerm: String,
+    luceneQuery: FusekiLucenceQuery,
     limitToResourceClass: Option[IRI] = None,
     limitToProject: Option[IRI] = None,
     limit: Int,
@@ -65,7 +66,7 @@ object SearchQueries {
           |    {
           |        SELECT DISTINCT ?resource ?label
           |        WHERE {
-          |            ?resource <http://jena.apache.org/text#query> (rdfs:label "$searchTerm") ;
+          |            ?resource <http://jena.apache.org/text#query> (rdfs:label "${luceneQuery.getQueryString}") ;
           |                a ?resourceClass ;
           |                rdfs:label ?label .
           |            $limitToClassOrProject
@@ -97,5 +98,4 @@ object SearchQueries {
           |""".stripMargin,
     )
   }
-
 }
