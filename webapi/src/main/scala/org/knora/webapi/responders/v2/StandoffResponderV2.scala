@@ -463,7 +463,7 @@ final case class StandoffResponderV2(
         BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
     }
 
-    IriLocker.runWithIriLock(uuid, s"${request.projectIri.value}/mappings", createMappingAndCheck)
+    IriLocker.runWithIriLock(uuid, s"${request.projectIri.value}/mappings")(createMappingAndCheck)
   }
 
   /**

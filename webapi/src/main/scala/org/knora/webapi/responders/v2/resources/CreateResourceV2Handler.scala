@@ -102,9 +102,7 @@ final case class CreateResourceV2Handler(
                        createResourceRequestV2.createResource.resourceIri,
                        stringFormatter.makeRandomResourceIri(shortcode),
                      )
-      taskResult <- IriLocker.runWithIriLock(
-                      createResourceRequestV2.apiRequestID,
-                      resourceIri,
+      taskResult <- IriLocker.runWithIriLock(createResourceRequestV2.apiRequestID, resourceIri)(
                       makeTask(createResourceRequestV2, resourceIri),
                     )
     } yield taskResult
