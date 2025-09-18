@@ -5,8 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import org.apache.pekko
-
 import java.time.Instant
 
 import dsp.valueobjects.UuidUtil
@@ -19,11 +17,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
 
-import pekko.actor.ActorSystem
-
-class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
-
-  implicit lazy val system: ActorSystem = ActorSystem("webapi")
+class SearchResponderV2SpecFullData(implicit sf: StringFormatter) {
 
   val booksBookIri: String     = "http://www.knora.org/ontology/0001/books#Book"
   val booksHasTextType: String = "http://www.knora.org/ontology/0001/books#hasTextType"
@@ -453,5 +447,4 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
   val constructQuerySortByLabelDesc: ConstructQuery = constructQuerySortByLabel.copy(
     orderBy = Vector(OrderCriterion(QueryVariable("l"), false)),
   )
-
 }

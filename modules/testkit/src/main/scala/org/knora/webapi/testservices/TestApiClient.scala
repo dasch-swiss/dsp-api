@@ -60,6 +60,20 @@ final case class TestApiClient(
     addAuthIfNeeded(user, request).flatMap(_.send(backend))
   }
 
+  def deleteJsonLdDocument(
+    relativeUri: Uri,
+    user: Option[User],
+    update: RequestUpdate[JsonLDDocument],
+  ): Task[Response[Either[String, JsonLDDocument]]] = {
+    val request: Request[Either[String, JsonLDDocument]] = update(
+      basicRequest
+        .delete(relativeUri)
+        .contentType(MediaType.unsafeApply("application", "ld+json"))
+        .response(asJsonLdDocument),
+    )
+    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+  }
+
   def getAsString(
     relativeUri: Uri,
     f: Request[Either[String, String]] => Request[Either[String, String]],
@@ -187,6 +201,22 @@ final case class TestApiClient(
         .send(backend)
     }
 
+  def patchJsonLdDocument(
+    relativeUri: Uri,
+    jsonLdBody: String,
+    user: Option[User],
+    update: RequestUpdate[JsonLDDocument],
+  ): Task[Response[Either[String, JsonLDDocument]]] = {
+    val request: Request[Either[String, JsonLDDocument]] = update(
+      basicRequest
+        .patch(relativeUri)
+        .body(jsonLdBody)
+        .contentType(MediaType.unsafeApply("application", "ld+json"))
+        .response(asJsonLdDocument),
+    )
+    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+  }
+
   def putJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,
     body: B,
@@ -290,6 +320,12 @@ object TestApiClient {
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.deleteJsonLd(relativeUri, Some(user), update))
 
+  def deleteJsonLdDocument(
+    relativeUri: Uri,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.deleteJsonLdDocument(relativeUri, Some(user), r => r))
+
   def getJson[A: JsonDecoder](
     relativeUri: Uri,
     f: Request[Either[String, A]] => Request[Either[String, A]] = identity,
@@ -383,6 +419,13 @@ object TestApiClient {
     user: Option[User] = None,
     update: RequestUpdate[JsonLDDocument] = identity,
   ) = ZIO.serviceWithZIO[TestApiClient](_.postJsonLdDocument(relativeUri, jsonLdBody, user, update))
+
+  def patchJsonLdDocument(
+    relativeUri: Uri,
+    jsonLdBody: String,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.patchJsonLdDocument(relativeUri, jsonLdBody, Some(user), identity))
 
   def putJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,
