@@ -316,8 +316,7 @@ final case class ResourcesResponderV2(
       taskResult <- IriLocker.runWithIriLock(
                       updateResourceMetadataRequestV2.apiRequestID,
                       updateResourceMetadataRequestV2.resourceIri,
-                      makeTaskFuture,
-                    )
+                    )(makeTaskFuture)
     } yield taskResult
   }
 
@@ -327,7 +326,7 @@ final case class ResourcesResponderV2(
    * @param deleteResourceV2 the request message.
    */
   def markResourceAsDeletedV2(deleteResourceV2: DeleteOrEraseResourceRequestV2): Task[SuccessResponseV2] =
-    IriLocker.runWithIriLock_(deleteResourceV2.apiRequestID, deleteResourceV2.resourceIri) {
+    IriLocker.runWithIriLock(deleteResourceV2.apiRequestID, deleteResourceV2.resourceIri) {
       for {
         resource <- getResourcePreviewWithDeletedResource(
                       resourceIris = Seq(deleteResourceV2.resourceIri),
@@ -529,7 +528,7 @@ final case class ResourcesResponderV2(
             )
             .whenZIO(iriService.checkIriExists(resourceIri.toString))
       } yield SuccessResponseV2("Resource erased")
-    IriLocker.runWithIriLock(eraseResourceV2.apiRequestID, eraseResourceV2.resourceIri, eraseTask)
+    IriLocker.runWithIriLock(eraseResourceV2.apiRequestID, eraseResourceV2.resourceIri)(eraseTask)
   }
 
   /**

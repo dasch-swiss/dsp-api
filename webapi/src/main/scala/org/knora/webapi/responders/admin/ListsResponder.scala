@@ -647,7 +647,7 @@ final case class ListsResponder(
         .someOrFail(UpdateNotPerformedException(errMsg))
         .map(ListGetResponseADM.apply)
     }
-    IriLocker.runWithIriLock(apiRequestID, LISTS_GLOBAL_LOCK_IRI, createTask)
+    IriLocker.runWithIriLock(apiRequestID, LISTS_GLOBAL_LOCK_IRI)(createTask)
   }
 
   /**
@@ -681,7 +681,7 @@ final case class ListsResponder(
               )
           }
       } yield updated
-    IriLocker.runWithIriLock(apiRequestID, nodeIri, nodeInfoChangeTask)
+    IriLocker.runWithIriLock(apiRequestID, nodeIri)(nodeInfoChangeTask)
   }
 
   /**
@@ -724,9 +724,7 @@ final case class ListsResponder(
 
       } yield ChildNodeInfoGetResponseADM(nodeinfo = newListNode)
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      LISTS_GLOBAL_LOCK_IRI,
+    IriLocker.runWithIriLock(apiRequestID, LISTS_GLOBAL_LOCK_IRI)(
       listChildNodeCreateTask(req),
     )
   }
@@ -769,7 +767,7 @@ final case class ListsResponder(
         updated <- loadUpdatedListFromTriplestore(listIri)
       } yield updated
 
-    IriLocker.runWithIriLock(apiRequestID, listIri.value, updateTask)
+    IriLocker.runWithIriLock(apiRequestID, listIri.value)(updateTask)
   }
 
   private def loadUpdatedListFromTriplestore(listIri: ListIri) =
@@ -817,7 +815,7 @@ final case class ListsResponder(
 
         updated <- loadUpdatedListFromTriplestore(listIri)
       } yield updated
-    IriLocker.runWithIriLock(apiRequestID, listIri.value, updateTask)
+    IriLocker.runWithIriLock(apiRequestID, listIri.value)(updateTask)
   }
 
   /**
@@ -853,7 +851,7 @@ final case class ListsResponder(
         updated <- loadUpdatedListFromTriplestore(listIri)
       } yield updated
 
-    IriLocker.runWithIriLock(apiRequestID, listIri.value, updateTask)
+    IriLocker.runWithIriLock(apiRequestID, listIri.value)(updateTask)
   }
 
   /**
@@ -1095,7 +1093,7 @@ final case class ListsResponder(
         parentNode <- verifyParentChildrenUpdate(newPosition)
       } yield NodePositionChangeResponseADM(node = parentNode)
 
-    IriLocker.runWithIriLock(apiRequestID, nodeIri.value, updateTask)
+    IriLocker.runWithIriLock(apiRequestID, nodeIri.value)(updateTask)
   }
 
   /**
@@ -1292,7 +1290,7 @@ final case class ListsResponder(
                   }
     } yield response
 
-    IriLocker.runWithIriLock(apiRequestID, nodeIri.value, nodeDeleteTask)
+    IriLocker.runWithIriLock(apiRequestID, nodeIri.value)(nodeDeleteTask)
   }
 
   ////////////////////

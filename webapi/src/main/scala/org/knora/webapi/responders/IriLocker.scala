@@ -17,6 +17,7 @@ import scala.concurrent.Future
 
 import dsp.errors.ApplicationLockException
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.util.JavaUtil
 
@@ -88,9 +89,6 @@ object IriLocker {
       }
     }
 
-  def runWithIriLock[A](apiRequestID: UUID, iri: KnoraIri, task: Task[A]): Task[A] =
-    runWithIriLock(apiRequestID, iri.toInternalSchema.toString, task)
-
   /**
    * Acquires an update lock on an IRI, then runs a task that updates the IRI.
    * The lock implementation is reentrant: if the API request requesting the lock already has it, this will not cause a deadlock.
@@ -104,17 +102,17 @@ object IriLocker {
    * @param task         The [[Task]] that performs the update.
    * @return the result of the task.
    */
-  def runWithIriLock[A](apiRequestID: UUID, iri: IRI, task: Task[A]): Task[A] = {
+  def runWithIriLock[A](apiRequestID: UUID, iri: IRI)(task: Task[A]): Task[A] = {
     val acquire: Task[Unit]        = ZIO.attemptBlocking(this.acquireLock(iri, apiRequestID)).logError
     val release: Unit => UIO[Unit] = _ => ZIO.attempt(decrementOrReleaseLock(iri, apiRequestID)).logError.ignore
     ZIO.scoped(ZIO.acquireRelease(acquire)(release) *> task)
   }
 
-  def runWithIriLock_[A](apiRequestID: UUID, iri: IRI)(task: Task[A]): Task[A] = {
-    val acquire: Task[Unit]        = ZIO.attemptBlocking(this.acquireLock(iri, apiRequestID)).logError
-    val release: Unit => UIO[Unit] = _ => ZIO.attempt(decrementOrReleaseLock(iri, apiRequestID)).logError.ignore
-    ZIO.scoped(ZIO.acquireRelease(acquire)(release) *> task)
-  }
+  def runWithIriLock[A](apiRequestID: UUID, iri: SmartIri)(task: Task[A]): Task[A] =
+    runWithIriLock(apiRequestID, iri.toInternalSchema.toString)(task)
+
+  def runWithIriLock[A](apiRequestID: UUID, iri: KnoraIri)(task: Task[A]): Task[A] =
+    runWithIriLock(apiRequestID, iri.smartIri)(task)
 
   /**
    * Tries to acquire an update lock for an API request on an IRI. If the API request already

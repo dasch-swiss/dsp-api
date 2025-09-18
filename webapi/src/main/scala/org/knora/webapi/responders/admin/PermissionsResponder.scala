@@ -228,7 +228,7 @@ final case class PermissionsResponder(
         created <- administrativePermissionForIriGetRequestADM(newPermissionIri, requestingUser)
       } yield AdministrativePermissionCreateResponseADM(created.administrativePermission)
 
-    IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI, createAdministrativePermissionTask)
+    IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI)(createAdministrativePermissionTask)
   }
 
   /**
@@ -598,7 +598,7 @@ final case class PermissionsResponder(
         _ <- doapService.save(doap)
       } yield DefaultObjectAccessPermissionCreateResponseADM(doapService.asDefaultObjectAccessPermissionADM(doap))
 
-    IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI, createPermissionTask)
+    IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI)(createPermissionTask)
   }
 
   def verifyHasPermissionsDOAP(hasPermissions: Set[PermissionADM]): Task[Set[PermissionADM]] = ZIO.attempt {
@@ -694,7 +694,7 @@ final case class PermissionsResponder(
     val task = updateDoapInternal(permissionIri, req)
       .flatMap(makeExternal)
       .map(DefaultObjectAccessPermissionGetResponseADM.apply)
-    IriLocker.runWithIriLock(uuid, permissionIri.value, task)
+    IriLocker.runWithIriLock(uuid, permissionIri.value)(task)
 
   private def updateDoapInternal(
     permissionIri: PermissionIri,
@@ -807,7 +807,7 @@ final case class PermissionsResponder(
           }
       } yield response
 
-    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionGroupChangeTask)
+    IriLocker.runWithIriLock(apiRequestID, permissionIri.value)(permissionGroupChangeTask)
   }
 
   /**
@@ -884,7 +884,7 @@ final case class PermissionsResponder(
                     }
       } yield response
 
-    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionHasPermissionsChangeTask)
+    IriLocker.runWithIriLock(apiRequestID, permissionIri.value)(permissionHasPermissionsChangeTask)
   }
 
   /**
@@ -899,9 +899,7 @@ final case class PermissionsResponder(
     permission: PermissionIri,
     changeRequest: ChangePermissionResourceClassApiRequestADM,
     apiRequestID: UUID,
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] = IriLocker.runWithIriLock(
-    apiRequestID,
-    permission.value,
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] = IriLocker.runWithIriLock(apiRequestID, permission.value)(
     updateDoapInternal(permission, ChangeDoapRequest(forResourceClass = Some(changeRequest.forResourceClass)))
       .map(DefaultObjectAccessPermissionGetResponseADM.apply),
   )
@@ -910,9 +908,7 @@ final case class PermissionsResponder(
     permission: PermissionIri,
     changeRequest: ChangePermissionPropertyApiRequestADM,
     apiRequestID: UUID,
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] = IriLocker.runWithIriLock(
-    apiRequestID,
-    permission.value,
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] = IriLocker.runWithIriLock(apiRequestID, permission.value)(
     updateDoapInternal(permission, ChangeDoapRequest(forProperty = Some(changeRequest.forProperty)))
       .map(DefaultObjectAccessPermissionGetResponseADM.apply),
   )
@@ -924,7 +920,7 @@ final case class PermissionsResponder(
   ): Task[PermissionDeleteResponseADM] = {
     val permissionIriInternal =
       stringFormatter.toSmartIri(permissionIri.value).toOntologySchema(InternalSchema).toString
-    def permissionDeleteTask(): Task[PermissionDeleteResponseADM] =
+    val permissionDeleteTask =
       for {
         // check that there is a permission with a given IRI
         _ <- permissionGetADM(permissionIriInternal, requestingUser)
@@ -939,7 +935,7 @@ final case class PermissionsResponder(
 
       } yield PermissionDeleteResponseADM(iriExternal, deleted = true)
 
-    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionDeleteTask())
+    IriLocker.runWithIriLock(apiRequestID, permissionIri.value)(permissionDeleteTask)
   }
 
   /**
