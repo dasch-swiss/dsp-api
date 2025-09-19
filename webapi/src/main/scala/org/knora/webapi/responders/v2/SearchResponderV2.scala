@@ -58,6 +58,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.util.ApacheLuceneSupport
 import org.knora.webapi.util.ApacheLuceneSupport.*
 
 /**
@@ -461,7 +462,7 @@ final case class SearchResponderV2Live(
          |  ?region knora-api:hasGeometry ?geom .
          |  ?region knora-api:hasComment ?comment .
          |  ?region knora-api:hasColor ?color .
-         |} 
+         |}
          |WHERE {
          |  ?region a knora-api:Region .
          |  ?region a knora-api:Resource .
@@ -485,7 +486,7 @@ final case class SearchResponderV2Live(
          |  ?color a knora-api:Color .
          |
          |  ?region rdfs:label ?label .
-         |} 
+         |}
          |ORDER BY ?label
          |OFFSET $offset
          |""".stripMargin
@@ -1132,7 +1133,9 @@ final case class SearchResponderV2Live(
       searchValue          <- validateSearchString(searchValue)
       _                    <- ensureIsFulltextSearch(searchValue)
       limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
-      searchTerm            = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
+      searchTerm <- ApacheLuceneSupport
+                      .asLuceneQueryForSearchByLabel(searchValue)
+                      .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
       countSparql =
         SearchQueries.selectCountByLabel(searchTerm, limitToProject.map(_.value), limitToResourceClass.map(_.toString))
       countResponse <- triplestore.query(countSparql)
@@ -1194,7 +1197,9 @@ final case class SearchResponderV2Live(
       searchValue          <- validateSearchString(searchValue)
       _                    <- ensureIsFulltextSearch(searchValue)
       limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
-      searchTerm            = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
+      searchTerm <- ApacheLuceneSupport
+                      .asLuceneQueryForSearchByLabel(searchValue)
+                      .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
       searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(
                                       searchTerm,
                                       limitToResourceClass.map(_.toIri),
