@@ -179,10 +179,8 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
           )
         },
         test("perform a searchbylabel search for a label with special characters") {
-          val label = // the characters that have a special meaning in the lucene query parser syntax need to be escaped like so:
-            """this .,\:; is \+ a \- test & with \\ special \( characters \) in \[\] \{\} | the \|\| label\?\!"""
           verifySearchByLabel(
-            label,
+            """this .,:; is + a - test & with special ( characters ) in [] {} | the || label?!""",
             "SearchbylabelSpecialCharacters.jsonld",
             addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book") andThen
               addQueryParam("offset", "0"),
@@ -190,7 +188,7 @@ object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
         },
         test("perform a searchbylabel search for a label that starts with a slash `/`") {
           verifySearchByLabel(
-            """\/slashes""",
+            """/slashes""",
             "SearchbylabelSlashes.jsonld",
             addQueryParam("limitToResourceClass", "http://0.0.0.0:3333/ontology/0001/books/v2#Book") andThen
               addQueryParam("offset", "0"),

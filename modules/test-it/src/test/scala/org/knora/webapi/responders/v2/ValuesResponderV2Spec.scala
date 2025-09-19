@@ -137,7 +137,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     ),
   )
 
-  private val sampleStandoffWithLink: Vector[StandoffTagV2] = Vector(
+  private def sampleStandoffWithLink(
+    linkedResourceIri: IRI,
+  ): Vector[StandoffTagV2] = Vector(
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
       dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
@@ -149,7 +151,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       attributes = Vector(
         StandoffTagIriAttributeV2(
           standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-          value = aThingIri,
+          value = linkedResourceIri,
         ),
       ),
     ),
@@ -1981,10 +1983,36 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         savedValue <- asInstanceOf[TextValueContentV2](valueFromTriplestore.valueContent)
       } yield assertTrue(savedValue.valueHasString.contains(valueHasString))
     },
+    test("not update a text value (submitting standoff) if the linked resource is in a different project") {
+      // the aThingIri resource is in the Anything project, while the zeitgloeckleinIri resource is in the Incunabula project.
+      val standoffTags = sampleStandoffWithLink(aThingIri)
+      val updateParams = UpdateValueContentV2(
+        resourceIri = zeitgloeckleinIri,
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+        propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri,
+        valueIri = zeitgloeckleinCommentWithStandoffIri.get,
+        valueContent = TextValueContentV2(
+          ontologySchema = ApiV2Complex,
+          maybeValueHasString = Some("ignored"),
+          standoff = standoffTags,
+          mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+          mapping = standardMapping,
+          textValueType = TextValueType.FormattedText,
+        ),
+      )
+      valuesResponder(_.updateValueV2(updateParams, incunabulaMemberUser, randomUUID)).exit.map(actual =>
+        assert(actual)(
+          E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+            "Cannot create a standoff IRI link between resources cross projects 0803 and 0001",
+          ),
+        ),
+      )
+    },
     test("update a text value (submitting standoff)") {
       val valueHasString = "Comment 1ab"
       val propertyIri    = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
+      val standoffTags = sampleStandoffWithLink(generationeIri)
       val updateParams = UpdateValueContentV2(
         resourceIri = zeitgloeckleinIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
@@ -1993,7 +2021,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         valueContent = TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(valueHasString),
-          standoff = sampleStandoffWithLink,
+          standoff = standoffTags,
           mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
@@ -2028,11 +2056,11 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         linkValueContentV2              <- asInstanceOf[LinkValueContentV2](standoffLinkValueFromTriplestore.valueContent)
       } yield assertTrue(
         savedValue.valueHasString.contains(valueHasString),
-        savedValue.standoff == sampleStandoffWithLink,
+        savedValue.standoff == standoffTags,
         savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"),
         savedValue.mapping == standardMapping,
         standoffLinkValues.size == 1,
-        linkValueContentV2.referredResourceIri == aThingIri,
+        linkValueContentV2.referredResourceIri == generationeIri,
       )
     },
     test("create a second text value with standoff") {
@@ -2863,7 +2891,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         valueContent = TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some("Comment 1 for UUID checking"),
-          standoff = sampleStandoffWithLink,
+          standoff = sampleStandoffWithLink(aThingIri),
           mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
@@ -2895,7 +2923,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                 valueContent = TextValueContentV2(
                   ontologySchema = ApiV2Complex,
                   maybeValueHasString = Some("Comment 2 for UUID checking"),
-                  standoff = sampleStandoffWithLink,
+                  standoff = sampleStandoffWithLink(aThingIri),
                   mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
                   mapping = standardMapping,
                   textValueType = TextValueType.FormattedText,
@@ -2936,7 +2964,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                 valueContent = TextValueContentV2(
                   ontologySchema = ApiV2Complex,
                   maybeValueHasString = Some("Comment 3 for UUID checking"),
-                  standoff = sampleStandoffWithLink,
+                  standoff = sampleStandoffWithLink(aThingIri),
                   mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
                   mapping = standardMapping,
                   textValueType = TextValueType.FormattedText,

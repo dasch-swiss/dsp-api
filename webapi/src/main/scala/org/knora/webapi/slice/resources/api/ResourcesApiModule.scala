@@ -22,12 +22,12 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
-import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.service.MetadataRestService
 import org.knora.webapi.slice.resources.api.service.ResourceInfoRestService
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
+import org.knora.webapi.slice.resources.repo.ResourceInfoRepoLive
 import org.knora.webapi.slice.resources.service.MetadataService
 
 object ResourcesApiModule { self =>
@@ -36,13 +36,14 @@ object ResourcesApiModule { self =>
     ApiComplexV2JsonLdRequestParser &
     AuthorizationRestService &
     BaseEndpoints &
+    CsvService &
     GraphRoute &
     HandlerMapper &
-    CsvService &
     IriConverter &
     KnoraProjectService &
     KnoraResponseRenderer &
-    ResourcesModule.Provided &
+    MetadataService &
+    ResourceInfoRepoLive &
     ResourcesResponderV2 &
     SearchResponderV2 &
     StandoffResponderV2 &
