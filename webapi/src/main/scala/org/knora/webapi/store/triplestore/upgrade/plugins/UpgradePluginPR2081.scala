@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import com.typesafe.scalalogging.Logger
-
 import java.time.Instant
 
 import org.knora.webapi.messages.OntologyConstants
@@ -17,7 +15,7 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for Knora PR 2081.
  * Fixes wrong date serialisations (all `xsd:dateTime` in the database should end on `Z` rather than specifying a time zone).
  */
-class UpgradePluginPR2081(log: Logger) extends UpgradePlugin {
+class UpgradePluginPR2081 extends UpgradePlugin {
   override def transform(model: RdfModel): Unit = {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
@@ -32,7 +30,6 @@ class UpgradePluginPR2081(log: Logger) extends UpgradePlugin {
       statement.obj match {
         case literal: DatatypeLiteral if shouldTransform(literal) =>
           val newValue = newObjectValue(literal.value)
-          log.debug(s"Transformed ${literal.value} => ${newValue.value}")
           statementsToRemove += statement
           statementsToAdd += JenaNodeFactory.makeStatement(
             subj = statement.subj,

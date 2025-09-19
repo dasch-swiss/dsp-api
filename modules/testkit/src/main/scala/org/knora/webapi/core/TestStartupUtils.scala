@@ -5,7 +5,6 @@
 
 package org.knora.webapi.core
 
-import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -16,7 +15,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
  * This trait is only used for testing. It is necessary so that E2E tests will only start
  * after the KnoraService is ready.
  */
-trait TestStartupUtils extends LazyLogging {
+trait TestStartupUtils {
 
   /**
    * Load the test data and caches

@@ -5,13 +5,11 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import com.typesafe.scalalogging.LazyLogging
-
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
 
-class UpgradePluginPR2081Spec extends UpgradePluginSpec with LazyLogging {
+class UpgradePluginPR2081Spec extends UpgradePluginSpec {
   private def getDateValue(model: RdfModel, subj: IriNode, pred: IriNode): String = {
     val statement = model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet.head
     statement.obj match {
@@ -40,7 +38,7 @@ class UpgradePluginPR2081Spec extends UpgradePluginSpec with LazyLogging {
       val resource3CreationDate = getDateValue(model, resource3, creationDate) // only this one should stay the same
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR2081(log)
+      val plugin = new UpgradePluginPR2081()
       plugin.transform(model)
 
       // get the new values after transformation

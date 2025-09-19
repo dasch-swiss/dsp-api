@@ -207,7 +207,6 @@ object Dependencies {
     saxonHE,
     scalaCsv,
     scalaGraph,
-    scalaLogging,
     slf4jApi,
     springSecurityCore,
     titaniumJSONLD,

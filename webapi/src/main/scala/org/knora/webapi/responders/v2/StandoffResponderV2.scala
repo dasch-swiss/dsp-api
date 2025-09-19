@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import com.typesafe.scalalogging.LazyLogging
 import org.xml.sax.SAXException
 import zio.*
 
@@ -72,8 +71,7 @@ final case class StandoffResponderV2(
   mappingCache: EhCache[String, MappingXMLtoStandoff],
   sipiService: SipiService,
 )(implicit val stringFormatter: StringFormatter)
-    extends MessageHandler
-    with LazyLogging {
+    extends MessageHandler {
 
   private val xmlMimeTypes = Set("text/xml", "application/xml", "application/xslt+xml")
 
@@ -443,9 +441,6 @@ final case class StandoffResponderV2(
       newMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))
 
       _ = if (newMappingResponse.statements.isEmpty) {
-            logger.error(
-              s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$newMappingResponse",
-            )
             throw UpdateNotPerformedException(
               s"Resource $mappingIri was not created. Please report this as a possible bug.",
             )

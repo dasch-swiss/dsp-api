@@ -5,7 +5,6 @@
 
 package dsp.valueobjects
 
-import com.typesafe.scalalogging.Logger
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
@@ -17,8 +16,6 @@ import org.knora.webapi.slice.common.domain.LanguageCode
 sealed abstract case class LangString private (language: LanguageCode, value: String)
 
 object LangString {
-
-  val log: Logger = Logger(this.getClass())
 
   /**
    * Creates a [[zio.prelude.Validation]] that either fails with a ValidationException or succeeds with a LangString value object.
@@ -58,14 +55,7 @@ object LangString {
   def unsafeMake(language: LanguageCode, value: String): LangString =
     LangString
       .make(language = language, value = value)
-      .fold(
-        e => {
-          val unsafe = new LangString(language, value) {}
-          log.warn(s"Called unsafeMake() for an invalid LangString '$unsafe': $e")
-          unsafe
-        },
-        langString => langString,
-      )
+      .getOrElse(throw new IllegalArgumentException("Invalid LangString."))
 }
 
 /**

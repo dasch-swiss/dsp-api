@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 
-import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import java.time.Instant
@@ -430,8 +429,7 @@ trait OntologyCache {
 
 final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef: Ref[OntologyCacheData])(implicit
   val stringFormatter: StringFormatter,
-) extends OntologyCache
-    with LazyLogging {
+) extends OntologyCache {
 
   /**
    * Loads and caches all ontology information.

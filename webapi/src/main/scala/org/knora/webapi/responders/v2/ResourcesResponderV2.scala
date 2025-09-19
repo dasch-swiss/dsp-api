@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
@@ -113,7 +112,6 @@ final case class ResourcesResponderV2(
   private val valueValidator: ValueContentValidator,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
-    with LazyLogging
     with GetResources {
 
   private val createHandler = CreateResourceV2Handler(
