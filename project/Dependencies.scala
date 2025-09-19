@@ -107,8 +107,7 @@ object Dependencies {
   val topbraidShacl = "org.topbraid"      % "shacl"               % TopbraidShaclVersion
 
   // logging
-  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
-  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.17" // the logging interface
+  val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.17" // the logging interface
 
   // Metrics
   val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.24"
