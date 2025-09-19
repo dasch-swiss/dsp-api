@@ -22,7 +22,7 @@ object OntologyHelpersSpec extends E2EZSpec {
 
   private implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+  override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest",

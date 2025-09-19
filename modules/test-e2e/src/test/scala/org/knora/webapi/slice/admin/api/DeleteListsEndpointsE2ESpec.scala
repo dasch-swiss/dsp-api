@@ -20,7 +20,7 @@ import org.knora.webapi.testservices.TestApiClient
 
 object DeleteListsEndpointsE2ESpec extends E2EZSpec {
 
-  override lazy val rdfDataObjects = List(
+  override val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
       name = "http://www.knora.org/data/0001/anything",

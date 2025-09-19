@@ -32,7 +32,7 @@ import org.knora.webapi.util.*
 
 object OntologyFormatsE2ESpec extends E2EZSpec {
 
-  override lazy val rdfDataObjects: List[RdfDataObject] =
+  override val rdfDataObjects: List[RdfDataObject] =
     List(
       RdfDataObject("test_data/project_ontologies/freetest-onto.ttl", "http://www.knora.org/ontology/0001/freetest"),
       RdfDataObject("test_data/project_ontologies/minimal-onto.ttl", "http://www.knora.org/ontology/0001/minimal"),

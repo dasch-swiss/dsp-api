@@ -55,7 +55,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
   val aThingWithHistoryIri: ResourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri)
   val reiseInsHeiligeLandIri: ResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701".toSmartIri)
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+  override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/incunabula-data.ttl",
       name = "http://www.knora.org/data/0803/incunabula",

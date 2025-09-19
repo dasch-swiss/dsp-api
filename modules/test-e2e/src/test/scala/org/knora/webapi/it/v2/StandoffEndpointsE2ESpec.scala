@@ -55,7 +55,7 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
   private val freetestTextValueIRI                          = new MutableTestIri
   private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+  override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
     RdfDataObject(
       path = "test_data/project_ontologies/freetest-onto.ttl",

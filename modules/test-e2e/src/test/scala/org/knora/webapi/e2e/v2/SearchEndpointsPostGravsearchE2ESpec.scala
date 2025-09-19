@@ -21,7 +21,7 @@ import org.knora.webapi.util.TestDataFileUtil
 
 object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
+  override val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
 
   override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended (without type inference)")(
     test("perform a Gravsearch query using simple schema which allows to sort the results by external link") {

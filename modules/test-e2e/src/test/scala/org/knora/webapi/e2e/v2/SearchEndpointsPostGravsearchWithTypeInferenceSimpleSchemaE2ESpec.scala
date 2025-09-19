@@ -19,7 +19,7 @@ import org.knora.webapi.testservices.ResponseOps.assert400
 
 object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends E2EZSpec {
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
+  override val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
 
   override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended (with type inference, simple schema)")(
     test(

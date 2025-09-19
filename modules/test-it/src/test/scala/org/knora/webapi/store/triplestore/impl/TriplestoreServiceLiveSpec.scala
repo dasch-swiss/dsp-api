@@ -22,7 +22,7 @@ object TriplestoreServiceLiveSpec extends E2EZSpec { self =>
 
   private val triplestore = ZIO.serviceWithZIO[TriplestoreService]
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+  override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject("test_data/project_data/anything-data.ttl", "http://www.knora.org/data/0001/anything"),
   )
 
