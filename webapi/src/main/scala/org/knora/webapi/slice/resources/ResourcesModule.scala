@@ -9,12 +9,15 @@ import zio.URLayer
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.LegalInfoService
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.repo.ResourceInfoRepoLive
-import org.knora.webapi.slice.resources.service.MetadataService
+import org.knora.webapi.slice.resources.service.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object ResourcesModule { self =>
-  type Dependencies = KnoraProjectService & TriplestoreService & StringFormatter
-  type Provided     = MetadataService & ResourceInfoRepoLive
-  val layer: URLayer[Dependencies, Provided] = MetadataService.layer >+> ResourceInfoRepoLive.layer
+  type Dependencies = IriConverter & KnoraProjectService & LegalInfoService & StringFormatter & TriplestoreService
+  type Provided     = MetadataService & ResourceInfoRepoLive & ValueContentValidator
+  val layer: URLayer[Dependencies, Provided] =
+    MetadataService.layer >+> ResourceInfoRepoLive.layer >+> ValueContentValidator.layer
 }
