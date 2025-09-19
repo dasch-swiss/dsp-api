@@ -5,11 +5,11 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import spray.json.JsValue
-import spray.json.JsonParser
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+import zio.json.*
+import zio.json.ast.*
 
 import java.nio.file.Paths
 
@@ -99,10 +99,9 @@ object JsonLDUtilSpec extends ZIOSpecDefault {
           |}
                 """.stripMargin
 
-      val compactedJsonLDDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(ontologyJsonLDInputStr)
-      val formattedCompactedDoc              = compactedJsonLDDoc.toPrettyString()
-      val receivedOutputAsJsValue: JsValue   = JsonParser(formattedCompactedDoc)
-      val expectedOutputAsJsValue: JsValue   = JsonParser(ontologyCompactedJsonLDOutputStr)
+      val actual                  = JsonLDUtil.parseJsonLD(ontologyJsonLDInputStr)
+      val receivedOutputAsJsValue = actual.toPrettyString().fromJson[Json]
+      val expectedOutputAsJsValue = ontologyCompactedJsonLDOutputStr.fromJson[Json]
       assertTrue(receivedOutputAsJsValue == expectedOutputAsJsValue)
     },
     test("convert JSON-LD representing an ontology to an RDF4J Model") {
