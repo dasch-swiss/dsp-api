@@ -5,7 +5,8 @@
 
 package org.knora.webapi.messages
 
-import spray.json.JsonParser
+import zio.json.*
+import zio.json.ast.Json
 
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -21,7 +22,7 @@ object ValuesValidator {
 
   def validateBigDecimal(s: String): Option[BigDecimal] = Try(BigDecimal(s)).toOption
 
-  def validateGeometryString(s: String): Option[String] = Try(JsonParser(s)).map(_ => s).toOption
+  def validateGeometryString(s: String): Option[String] = s.fromJson[Json].map(_ => s).toOption
 
   /**
    * Checks that a hexadecimal color code string is valid.

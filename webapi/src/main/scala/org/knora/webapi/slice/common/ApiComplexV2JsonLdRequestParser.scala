@@ -9,6 +9,8 @@ import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.RDF
 import org.apache.jena.vocabulary.RDFS
 import zio.*
+import zio.json.*
+import zio.json.ast.*
 
 import java.time.Instant
 import java.util.UUID
@@ -417,6 +419,9 @@ final case class ApiComplexV2JsonLdRequestParser(
       )
       .unsome
 
+  def updateValueV2fromJsonLd(json: Json.Obj): IO[String, UpdateValueV2] =
+    updateValueV2fromJsonLd(json.toJson)
+
   def updateValueV2fromJsonLd(str: String): IO[String, UpdateValueV2] =
     ZIO.scoped {
       for {
@@ -458,6 +463,9 @@ final case class ApiComplexV2JsonLdRequestParser(
                          case _ => ZIO.fail("No value content or permissions provided")
       } yield updateValue
     }
+
+  def createValueV2FromJsonLd(json: Json.Obj): IO[String, CreateValueV2] =
+    createValueV2FromJsonLd(json.toJson)
 
   def createValueV2FromJsonLd(str: String): IO[String, CreateValueV2] =
     ZIO.scoped {
