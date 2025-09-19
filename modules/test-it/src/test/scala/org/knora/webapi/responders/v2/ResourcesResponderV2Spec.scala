@@ -20,6 +20,7 @@ import java.util.UUID.*
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
+import org.knora.webapi.E2EZSpec.failsWithMessageEqualTo
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -1396,23 +1397,45 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           actual => assert(actual)(failsWithA[OntologyConstraintException]),
         )
       },
-      test("not create a resource with a link to a resource of the wrong class for the link property") {
+      test("not create a resource with a link to a resource in a different project") {
+        // The new resource should be created in the Anything project 0001
         val resourceIri = sf.makeRandomResourceIri(anythingProject.shortcode)
-        val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
-            CreateValueInNewResourceV2(
-              valueContent = LinkValueContentV2(
-                ontologySchema = ApiV2Complex,
-                referredResourceIri = zeitgloeckleinIri,
+        // This resource is present in the Incunabula project 0803
+        val linkedResourceIri = zeitgloeckleinIri
+
+        val createResource = CreateResourceV2(
+          resourceIri = Some(resourceIri.toSmartIri),
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          label = "invalid thing",
+          values = Map(
+            "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri ->
+              Seq(CreateValueInNewResourceV2(LinkValueContentV2(ApiV2Complex, linkedResourceIri))),
+          ),
+          projectADM = anythingProject,
+        )
+
+        resourceResponder(_.createResource(CreateResourceRequestV2(createResource, anythingUser2, randomUUID))).exit
+          .map(actual =>
+            assert(actual)(
+              failsWithMessageEqualTo[BadRequestException](
+                "Cannot create a link between resources cross projects 0001 and 0803",
               ),
             ),
-          ),
-        )
+          )
+      },
+      test("not create a resource with a link to a resource of the wrong class for the link property") {
+        // the linked Resource exists in the test data and is a anything:ThingText
+        val linkedResourceIri = "http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw"
+        // subjectClassConstraint for hasOtherThingValue is anything:Thing
+        val linkProperty = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri
+
+        val resourceIri = sf.makeRandomResourceIri(anythingProject.shortcode)
         val inputResource = CreateResourceV2(
           resourceIri = Some(resourceIri.toSmartIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "invalid thing",
-          values = inputValues,
+          values =
+            Map(linkProperty -> Seq(CreateValueInNewResourceV2(LinkValueContentV2(ApiV2Complex, linkedResourceIri)))),
           projectADM = anythingProject,
         )
 
