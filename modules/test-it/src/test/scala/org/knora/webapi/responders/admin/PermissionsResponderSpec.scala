@@ -41,7 +41,7 @@ object PermissionsResponderSpec extends E2EZSpec {
   private val permissionResponder   = ZIO.serviceWithZIO[PermissionsResponder]
   private val permissionRestService = ZIO.serviceWithZIO[PermissionRestService]
 
-  override lazy val rdfDataObjects: List[RdfDataObject] =
+  override val rdfDataObjects: List[RdfDataObject] =
     anythingRdfOntologyAndData ++ incunabulaRdfOntologyAndData :+
       RdfDataObject(
         path =

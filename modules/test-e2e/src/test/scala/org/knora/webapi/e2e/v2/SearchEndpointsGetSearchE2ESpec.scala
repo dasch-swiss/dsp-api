@@ -27,7 +27,7 @@ import org.knora.webapi.util.TestDataFileUtil
 
 object SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
+  override val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
 
   private def loadFile(name: String) = TestDataFileUtil.readTestData("searchR2RV2", name)
 

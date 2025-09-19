@@ -4,7 +4,6 @@
  */
 
 package org.knora.webapi.testservices
-import org.apache.pekko.actor.ActorSystem
 import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.URLayer
 
@@ -23,7 +22,6 @@ object TestClientsModule { self =>
     // format: off
     TestAdminApiClient &
     TestApiClient &
-    TestClientService &
     TestDataFileUtil &
     TestDspIngestClient &
     TestMetadataApiClient &
@@ -34,7 +32,6 @@ object TestClientsModule { self =>
 
   type Dependencies =
     // format: off
-    ActorSystem &
     AppConfig &
     Authenticator &
     DspIngestConfig &
@@ -48,7 +45,6 @@ object TestClientsModule { self =>
     HttpClientZioBackend.layer().orDie >>> (
       TestApiClient.layer >+>
         TestAdminApiClient.layer ++
-        TestClientService.layer ++
         TestDataFileUtil.layer ++
         TestDspIngestClient.layer ++
         TestMetadataApiClient.layer ++

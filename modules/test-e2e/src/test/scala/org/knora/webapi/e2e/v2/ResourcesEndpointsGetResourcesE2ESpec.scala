@@ -31,7 +31,7 @@ import org.knora.webapi.util.TestDataFileUtil
 
 object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+  override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/incunabula-data.ttl",
       name = "http://www.knora.org/data/0803/incunabula",

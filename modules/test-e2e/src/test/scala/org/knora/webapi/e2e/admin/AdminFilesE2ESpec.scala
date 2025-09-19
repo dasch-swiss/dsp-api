@@ -24,7 +24,7 @@ import org.knora.webapi.testservices.TestAdminApiClient
  */
 object AdminFilesE2ESpec extends E2EZSpec {
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
+  override val rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 
   override val e2eSpec = suite("The Files Route ('admin/files') using token credentials")(
     test("return CR (8) permission code") {

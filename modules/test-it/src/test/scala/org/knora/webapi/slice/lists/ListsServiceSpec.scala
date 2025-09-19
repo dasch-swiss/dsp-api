@@ -25,7 +25,7 @@ object ListsServiceSpec extends E2EZSpec {
 
   private val listsService = ZIO.serviceWithZIO[ListsService]
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
+  override val rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 
   override val e2eSpec = suite("The ListsService")(
     test("return a list") {

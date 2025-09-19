@@ -40,7 +40,7 @@ object AddCardinalitiesToClassSpec extends E2EZSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val ontologyResponder                         = ZIO.serviceWithZIO[OntologyResponderV2]
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(freetestRdfOntology)
+  override val rdfDataObjects: List[RdfDataObject] = List(freetestRdfOntology)
 
   private def getCardinalityCountFromTriplestore(
     classIri: ResourceClassIri,
@@ -52,7 +52,7 @@ object AddCardinalitiesToClassSpec extends E2EZSpec {
           |
           |SELECT (count(?blanknode) as ?count)
           |WHERE {
-          |  <${classIri.toInternalSchema}> rdfs:subClassOf ?blanknode 
+          |  <${classIri.toInternalSchema}> rdfs:subClassOf ?blanknode
           |  FILTER isBlank(?blanknode)
           |  ?blanknode owl:onProperty <${propertyIri.toInternalSchema}>
           |}
