@@ -29,7 +29,6 @@ case class UsersEndpointsHandler(
   mapper: HandlerMapper,
 ) {
 
-  // Deletes
   private val public = List(
     PublicEndpointHandler(usersEndpoints.get.usersByIriProjectMemberShips, restService.getProjectMemberShipsByUserIri),
     PublicEndpointHandler(

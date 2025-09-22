@@ -126,7 +126,7 @@ final case class ProjectsEndpointsHandler(
     SecuredEndpointHandler(projectsEndpoints.Secured.postAdminProjectsByShortcodeImport, restService.importProject),
     SecuredEndpointHandler(projectsEndpoints.Secured.postAdminProjects, restService.createProject),
     SecuredEndpointHandler(projectsEndpoints.Secured.putAdminProjectsByIri, restService.updateProject),
-  ).map(mapper.mapSecuredEndpointHandler(_))
+  ).map(mapper.mapSecuredEndpointHandler)
 
   val allHanders = handlers ++ secureHandlers
 }

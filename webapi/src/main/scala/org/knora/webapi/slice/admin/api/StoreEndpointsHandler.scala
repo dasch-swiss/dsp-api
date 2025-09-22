@@ -31,7 +31,7 @@ final case class StoreEndpointsHandler(
   val allHandlers = {
     val handlerIfConfigured =
       if (appConfig.allowReloadOverHttp) Seq(postStoreResetTriplestoreContentHandler) else Seq.empty
-    handlerIfConfigured.map(mapper.mapPublicEndpointHandler(_))
+    handlerIfConfigured.map(mapper.mapPublicEndpointHandler)
   }
 }
 
