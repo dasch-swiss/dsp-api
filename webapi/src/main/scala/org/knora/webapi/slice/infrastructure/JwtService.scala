@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.infrastructure
 
-import com.typesafe.scalalogging.Logger
-import org.slf4j.LoggerFactory
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
@@ -21,7 +19,6 @@ import zio.ZLayer
 import zio.durationInt
 import zio.json.ast.Json
 
-import scala.util.Failure
 import scala.util.Success
 
 import dsp.valueobjects.Iri
@@ -75,7 +72,6 @@ final case class JwtServiceLive(
 ) extends JwtService {
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
   private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
-  private val logger                  = Logger(LoggerFactory.getLogger(this.getClass))
   private val audience                = Set("Knora", "Sipi", dspIngestConfig.audience)
 
   override def createJwt(userIri: UserIri, scope: Scope, content: Map[String, Json] = Map.empty): UIO[Jwt] =
@@ -154,13 +150,10 @@ final case class JwtServiceLive(
         if (!missingRequiredContent) {
           claim.subject.flatMap(iri => Iri.validateAndEscapeIri(iri).toOption.map(_ => (header, claim)))
         } else {
-          logger.debug("Missing required content in JWT")
           None
         }
 
-      case Failure(f) =>
-        logger.debug(s"Invalid JWT: $f")
-        None
+      case _ => None
     }
 }
 

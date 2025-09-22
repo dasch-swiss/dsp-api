@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import com.typesafe.scalalogging.LazyLogging
 import eu.timepit.refined.types.string.NonEmptyString
 import zio.*
 import zio.prelude.Validation
@@ -89,8 +88,7 @@ final case class OntologyResponderV2(
   knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
 )(implicit val stringFormatter: StringFormatter)
-    extends MessageHandler
-    with LazyLogging {
+    extends MessageHandler {
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[OntologiesResponderRequestV2]
 

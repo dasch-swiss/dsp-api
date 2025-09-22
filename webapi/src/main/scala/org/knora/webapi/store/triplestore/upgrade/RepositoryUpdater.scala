@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade
 
-import com.typesafe.scalalogging.Logger
-import org.slf4j.LoggerFactory
 import zio.Task
 import zio.UIO
 import zio.ZIO
@@ -29,11 +27,6 @@ import org.knora.webapi.store.triplestore.upgrade.plugins.MigrateOnlyBuiltInGrap
 import org.knora.webapi.util.FileUtil
 
 final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
-
-  /**
-   * Provides logging.
-   */
-  private val log: Logger = Logger(LoggerFactory.getLogger(getClass.getName))
 
   private val tmpDirNamePrefix: String = "knora"
 
@@ -112,9 +105,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
    */
   private def selectPluginsForNeededUpdates(maybeRepositoryVersion: Option[Int]): Seq[PluginForKnoraBaseVersion] = {
     val repositoryVersion = maybeRepositoryVersion.getOrElse(-1)
-    val plugins = RepositoryUpdatePlan
-      .makePluginsForVersions(log)
-      .filter(_.versionNumber > repositoryVersion)
+    val plugins           = RepositoryUpdatePlan.makePluginsForVersions.filter(_.versionNumber > repositoryVersion)
     if (plugins.isEmpty) { Seq(PluginForKnoraBaseVersion(KnoraBaseVersion, new MigrateOnlyBuiltInGraphs)) }
     else { plugins }
   }
@@ -179,30 +170,26 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
     downloadedRepositoryFile: Path,
     transformedRepositoryFile: Path,
     pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion],
-  ): UIO[Unit] = ZIO.attempt {
+  ): UIO[Unit] = (for {
     // Parse the input file.
-    log.info("Reading repository file...")
-    val model = RdfFormatUtil.fileToRdfModel(file = downloadedRepositoryFile, rdfFormat = NQuads)
-    log.info(s"Read ${model.size} statements.")
+    _     <- ZIO.logInfo("Reading repository file...")
+    model <- ZIO.attempt(RdfFormatUtil.fileToRdfModel(file = downloadedRepositoryFile, rdfFormat = NQuads))
+    _     <- ZIO.logInfo(s"Read ${model.size} statements.")
 
     // Run the update plugins.
-    for (pluginForNeededUpdate <- pluginsForNeededUpdates) {
-      log.info(s"Running transformation for ${pluginForNeededUpdate.versionNumber}...")
-      pluginForNeededUpdate.plugin.transform(model)
-    }
+    _ <- ZIO.foreachDiscard(pluginsForNeededUpdates) { pluginForNeededUpdate =>
+           ZIO.logInfo(s"Running transformation for ${pluginForNeededUpdate.versionNumber}...") *>
+             ZIO.attempt(pluginForNeededUpdate.plugin.transform(model))
+         }
 
     // Update the built-in named graphs.
-    log.info("Updating built-in named graphs...")
-    addBuiltInNamedGraphsToModel(model)
+    _ <- ZIO.logInfo("Updating built-in named graphs...")
+    _ <- ZIO.attempt(addBuiltInNamedGraphsToModel(model))
 
     // Write the output file.
-    log.info(s"Writing output file (${model.size} statements)...")
-    RdfFormatUtil.rdfModelToFile(
-      rdfModel = model,
-      file = transformedRepositoryFile,
-      rdfFormat = NQuads,
-    )
-  }.orDie
+    _ <- ZIO.logInfo(s"Writing output file (${model.size} statements)...")
+    _ <- ZIO.attempt(RdfFormatUtil.rdfModelToFile(model, transformedRepositoryFile, NQuads))
+  } yield ()).orDie
 
   /**
    * Adds Knora's built-in named graphs to an [[RdfModel]].

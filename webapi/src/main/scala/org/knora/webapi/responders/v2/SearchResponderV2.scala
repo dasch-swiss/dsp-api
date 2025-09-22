@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import dsp.errors.AssertionException
@@ -302,8 +301,7 @@ final case class SearchResponderV2Live(
   private val iriConverter: IriConverter,
   private val constructTransformer: ConstructTransformer,
   private val ontologyRepo: OntologyRepo,
-) extends SearchResponderV2
-    with LazyLogging {
+) extends SearchResponderV2 {
 
   private implicit val sf: StringFormatter = stringFormatter
 

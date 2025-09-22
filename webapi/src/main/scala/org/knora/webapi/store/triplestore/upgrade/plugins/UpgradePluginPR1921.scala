@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import com.typesafe.scalalogging.Logger
-
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
@@ -14,7 +12,7 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 /**
  * Transforms a repository for Knora PR 1921.
  */
-class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
+class UpgradePluginPR1921 extends UpgradePlugin {
   // Group descriptions without language attribute get language attribute defined in DEFAULT_LANG
   private val DEFAULT_LANG = "en"
 
@@ -41,10 +39,6 @@ class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
             context = statement.context,
           )
 
-          log.info(
-            s"Updated <${statement.subj}> <${statement.pred}> to <${newPredicateLabel.stringValue}> with <${groupDescriptionWithLanguage}>",
-          )
-
         // the group description did already have a language attribute
         case None =>
           statementsToRemove += statement
@@ -55,7 +49,6 @@ class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
             obj = statement.obj,
             context = statement.context,
           )
-          log.info(s"Updated <${statement.pred}> to <${newPredicateLabel.stringValue}>")
       }
 
     for (statement: Statement <- model) {

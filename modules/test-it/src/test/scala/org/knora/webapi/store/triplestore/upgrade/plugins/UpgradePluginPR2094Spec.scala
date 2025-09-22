@@ -5,20 +5,18 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import com.typesafe.scalalogging.LazyLogging
-
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
 
-class UpgradePluginPR2094Spec extends UpgradePluginSpec with LazyLogging {
+class UpgradePluginPR2094Spec extends UpgradePluginSpec {
   "Upgrade plugin PR2094" should {
     "fix the missing valueHasUri datatype" in {
       // Parse the input file.
       val model: RdfModel = trigFileToModel("test_data/upgrade/pr2094.trig")
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR2094(log)
+      val plugin = new UpgradePluginPR2094()
       plugin.transform(model)
 
       // Check that the datatype was fixed.

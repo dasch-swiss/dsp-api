@@ -5,8 +5,10 @@
 
 package dsp.valueobjects
 
+import zio.ZIO
 import zio.prelude.Validation
 import zio.test.*
+import zio.test.Assertion.failsWithA
 
 import dsp.errors.ValidationException
 import org.knora.webapi.slice.common.domain.LanguageCode
@@ -73,10 +75,12 @@ object LangStringSpec extends ZIOSpecDefault {
         val unsafeValid = LangString.unsafeMake(LanguageCode.EN, str)
         assertTrue(unsafeValid.language == LanguageCode.EN, unsafeValid.value == str)
       },
-      test("create an invalid LangString through the unsafe method") {
-        val str         = ""
-        val unsafeValid = LangString.unsafeMake(LanguageCode.EN, str)
-        assertTrue(unsafeValid.language == LanguageCode.EN, unsafeValid.value == str)
+      test("not create an invalid LangString through the unsafe method") {
+        val str = ""
+        ZIO
+          .attempt(LangString.unsafeMake(LanguageCode.EN, str))
+          .exit
+          .map(actual => assert(actual)(failsWithA[IllegalArgumentException]))
       },
     ),
   )
@@ -108,14 +112,8 @@ object LangStringSpec extends ZIOSpecDefault {
           LangString.unsafeMake(LanguageCode.DE, "string in german"),
           LangString.unsafeMake(LanguageCode.FR, "string in french"),
         )
-        (for {
-          res <- MultiLangString.make(langStrings)
-        } yield (
-          assertTrue(res.langStrings.size == 3) &&
-            assertTrue(res.langStrings == langStrings)
-        )).toZIO
+        MultiLangString.make(langStrings).toZIO.map(res => assertTrue(res.langStrings == langStrings))
       },
     ),
   )
-
 }

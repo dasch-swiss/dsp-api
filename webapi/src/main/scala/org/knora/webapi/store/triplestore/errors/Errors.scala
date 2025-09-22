@@ -5,9 +5,6 @@
 
 package org.knora.webapi.store.triplestore.errors
 
-import com.typesafe.scalalogging.Logger
-
-import dsp.errors.ExceptionUtil
 import dsp.errors.InternalServerException
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 
@@ -29,11 +26,6 @@ abstract class TriplestoreException(message: String, cause: Option[Throwable] = 
 final case class TriplestoreConnectionException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
-object TriplestoreConnectionException {
-  def apply(message: String, e: Throwable, log: Logger): TriplestoreConnectionException =
-    TriplestoreConnectionException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
-}
-
 /**
  * Indicates that a read timeout occurred while waiting for data from the triplestore.
  *
@@ -44,9 +36,6 @@ final case class TriplestoreTimeoutException(message: String, cause: Option[Thro
     extends TriplestoreException(message, cause)
 
 object TriplestoreTimeoutException {
-  def apply(message: String, e: Throwable, log: Logger): TriplestoreTimeoutException =
-    TriplestoreTimeoutException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
-
   def apply(message: String, cause: Throwable): TriplestoreTimeoutException =
     TriplestoreTimeoutException(message, Some(cause))
 
@@ -64,8 +53,8 @@ final case class TriplestoreUnsupportedFeatureException(message: String, cause: 
     extends TriplestoreException(message, cause)
 
 object TriplestoreUnsupportedFeatureException {
-  def apply(message: String, e: Throwable, log: Logger): TriplestoreUnsupportedFeatureException =
-    TriplestoreUnsupportedFeatureException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+  def apply(message: String, e: Throwable): TriplestoreUnsupportedFeatureException =
+    TriplestoreUnsupportedFeatureException(message, Some(e))
 }
 
 /**
@@ -76,11 +65,6 @@ object TriplestoreUnsupportedFeatureException {
  */
 case class TriplestoreInternalException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
-
-object TriplestoreInternalException {
-  def apply(message: String, e: Throwable, log: Logger): TriplestoreInternalException =
-    TriplestoreInternalException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
-}
 
 /**
  * Indicates that the triplestore returned an error message, or a response that could not be parsed.
@@ -95,9 +79,6 @@ object TriplestoreResponseException {
 
   def apply(e: RdfError): TriplestoreResponseException =
     TriplestoreResponseException(e.toString, None)
-
-  def apply(message: String, e: Throwable, log: Logger): TriplestoreResponseException =
-    TriplestoreResponseException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 
   def apply(message: String): TriplestoreResponseException =
     TriplestoreResponseException(message, None)

@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import com.typesafe.scalalogging.Logger
-
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
@@ -14,7 +12,7 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 /**
  * Transforms a repository for Knora PR 1746.
  */
-class UpgradePluginPR1746(log: Logger) extends UpgradePlugin {
+class UpgradePluginPR1746 extends UpgradePlugin {
   private val dummyString = "FIXME"
 
   override def transform(model: RdfModel): Unit = {
@@ -37,8 +35,6 @@ class UpgradePluginPR1746(log: Logger) extends UpgradePlugin {
         obj = fixMeString,
         context = statement.context,
       )
-
-      log.info(s"Changed empty object of <${statement.subj}> <${statement.pred}> to FIXME")
     }
 
     for (statement: Statement <- model) {

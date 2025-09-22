@@ -5,7 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import com.typesafe.scalalogging.Logger
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -23,7 +22,6 @@ import org.knora.webapi.messages.util.rdf.*
  * Provides helper methods for specs that test upgrade plugins.
  */
 abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
-  val log: Logger = Logger(this.getClass)
 
   /**
    * Parses a TriG file and returns it as an [[RdfModel]].
@@ -65,7 +63,6 @@ abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
         ),
       )
     }
-
-    SparqlSelectResultBody(bindings = rowMaps)
+    SparqlSelectResultBody(rowMaps)
   }
 }
