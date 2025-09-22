@@ -91,11 +91,10 @@ object Dependencies {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
 
   // pekko
-  val pekkoHttp          = "org.apache.pekko" %% "pekko-http"            % PekkoHttpVersion
-  val pekkoHttpCors      = "org.apache.pekko" %% "pekko-http-cors"       % PekkoHttpVersion
-  val pekkoHttpSprayJson = "org.apache.pekko" %% "pekko-http-spray-json" % PekkoHttpVersion
-  val pekkoSlf4j         = "org.apache.pekko" %% "pekko-slf4j"           % PekkoActorVersion
-  val pekkoStream        = "org.apache.pekko" %% "pekko-stream"          % PekkoActorVersion
+  val pekkoHttp     = "org.apache.pekko" %% "pekko-http"      % PekkoHttpVersion
+  val pekkoHttpCors = "org.apache.pekko" %% "pekko-http-cors" % PekkoHttpVersion
+  val pekkoSlf4j    = "org.apache.pekko" %% "pekko-slf4j"     % PekkoActorVersion
+  val pekkoStream   = "org.apache.pekko" %% "pekko-stream"    % PekkoActorVersion
 
   // rdf and graph libraries
   val jenaCore      = "org.apache.jena"   % "jena-core"           % JenaVersion
@@ -116,8 +115,7 @@ object Dependencies {
     "commons-validator" % "commons-validator" % "1.10.0" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.3"
-  // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
+  val jwtZioJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.3"
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "6.5.3" exclude (
       "commons-logging",
@@ -189,7 +187,6 @@ object Dependencies {
   val webapiDependencies = monocle ++ refined ++ Seq(
     pekkoHttp,
     pekkoHttpCors,
-    pekkoHttpSprayJson,
     pekkoSlf4j,
     pekkoStream,
     bouncyCastle,
@@ -200,7 +197,7 @@ object Dependencies {
     icu4j,
     jakartaJSON,
     jenaText,
-    jwtSprayJson,
+    jwtZioJson,
     rdf4jShacl,
     rdf4jSparql,
     saxonHE,

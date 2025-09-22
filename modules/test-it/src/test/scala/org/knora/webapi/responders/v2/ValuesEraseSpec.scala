@@ -5,8 +5,9 @@
 
 package org.knora.webapi.responders.v2
 
-import spray.json.*
 import zio.*
+import zio.json.*
+import zio.json.ast.*
 import zio.test.*
 
 import java.util.UUID
@@ -402,28 +403,26 @@ final case class TestHelper(
     } yield ()
 
   def createTextValueWithStandoff(resource: ActiveResource, textValueAsXml: String): Task[ActiveValue] =
+    val jsonLd = Json.Obj(
+      "@id"   -> Json.Str(resource.iri.toString),
+      "@type" -> Json.Str(ontologyIri.makeClass("Thing").toComplexSchema.toIri),
+      "anything:hasText" -> Json.Obj(
+        "@type"                    -> Json.Str("knora-api:TextValue"),
+        "knora-api:textValueAsXml" -> Json.Str(textValueAsXml),
+        "knora-api:textValueHasMapping" -> Json.Obj(
+          "@id" -> Json.Str("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        ),
+      ),
+      "@context" -> Json.Obj(
+        "knora-api" -> Json.Str("http://api.knora.org/ontology/knora-api/v2#"),
+        "anything"  -> Json.Str(s"${ontologyIri.toComplexSchema.toIri}#"),
+      ),
+    )
+
     for {
-      textValueAsXmlEncoded <- ZIO.succeed(JsString(textValueAsXml).compactPrint)
-      jsonLd = s"""{
-                  |  "@id" : "${resource.iri.toString}",
-                  |  "@type" : "${ontologyIri.makeClass("Thing").toComplexSchema.toIri}",
-                  |  "anything:hasText" : {
-                  |    "@type" : "knora-api:TextValue",
-                  |    "knora-api:textValueAsXml" : $textValueAsXmlEncoded,
-                  |    "knora-api:textValueHasMapping" : {
-                  |      "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
-                  |    }
-                  |  },
-                  |  "@context" : {
-                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                  |    "anything" : "${ontologyIri.toComplexSchema.toIri}#"
-                  |  }
-                  |}""".stripMargin
-
       createVal <- requestParser.createValueV2FromJsonLd(jsonLd).mapError(Throwable(_))
-
-      uuid  <- Random.nextUUID
-      value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
+      uuid      <- Random.nextUUID
+      value     <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value <- valueRepo
                  .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
                  .someOrFail(IllegalStateException("Value not found"))
@@ -434,29 +433,26 @@ final case class TestHelper(
     resource: ActiveResource,
     textValueAsXml: String,
   ): Task[ActiveValue] =
+    val jsonLd = Json.Obj(
+      "@id"   -> Json.Str(resource.iri.toString),
+      "@type" -> Json.Str(ontologyIri.makeClass("Thing").toComplexSchema.toIri),
+      "anything:hasText" -> Json.Obj(
+        "@id"                      -> Json.Str(value.iri.toComplexSchema.toIri),
+        "@type"                    -> Json.Str("knora-api:TextValue"),
+        "knora-api:textValueAsXml" -> Json.Str(textValueAsXml),
+        "knora-api:textValueHasMapping" -> Json.Obj(
+          "@id" -> Json.Str("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        ),
+      ),
+      "@context" -> Json.Obj(
+        "knora-api" -> Json.Str("http://api.knora.org/ontology/knora-api/v2#"),
+        "anything"  -> Json.Str(s"${ontologyIri.toComplexSchema.toIri}#"),
+      ),
+    )
     for {
-      textValueAsXmlEncoded <- ZIO.succeed(JsString(textValueAsXml).compactPrint)
-      jsonLd = s"""{
-                  |  "@id" : "${resource.iri.toString}",
-                  |  "@type" : "${ontologyIri.makeClass("Thing").toComplexSchema.toIri}",
-                  |  "anything:hasText" : {
-                  |    "@id" : "${value.iri}",
-                  |    "@type" : "knora-api:TextValue",
-                  |    "knora-api:textValueAsXml" : $textValueAsXmlEncoded,
-                  |    "knora-api:textValueHasMapping" : {
-                  |      "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
-                  |    }
-                  |  },
-                  |  "@context" : {
-                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                  |    "anything" : "${ontologyIri.toComplexSchema.toIri}#"
-                  |  }
-                  |}""".stripMargin
-
       updateVal <- requestParser.updateValueV2fromJsonLd(jsonLd).mapError(Throwable(_))
-
-      uuid  <- Random.nextUUID
-      value <- valuesResponder.updateValueV2(updateVal, rootUser, uuid)
+      uuid      <- Random.nextUUID
+      value     <- valuesResponder.updateValueV2(updateVal, rootUser, uuid)
       value <- valueRepo
                  .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
                  .someOrFail(IllegalStateException("Value not found"))
