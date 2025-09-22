@@ -26,7 +26,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
-case class ListsEndpoints(baseEndpoints: BaseEndpoints) {
+case class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
   import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.listIri
 
   private val base = "admin" / "lists"
@@ -199,6 +199,6 @@ object Requests {
   }
 }
 
-object ListsEndpoints {
-  val layer = ZLayer.derive[ListsEndpoints]
+object AdminListsEndpoints {
+  val layer = ZLayer.derive[AdminListsEndpoints]
 }

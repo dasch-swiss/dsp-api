@@ -21,7 +21,7 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.FileUtil.*
 
-object ListsEndpointsE2ESpec extends E2EZSpec {
+object ListsV2EndpointsE2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = List(incunabulaRdfData, imagesRdfData, anythingRdfData)
 
