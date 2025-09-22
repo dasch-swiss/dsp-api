@@ -36,18 +36,18 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class ProjectRestService(
-  format: KnoraResponseRenderer,
-  projectService: ProjectService,
-  knoraProjectService: KnoraProjectService,
-  permissionResponder: PermissionsResponder,
-  projectEraseService: ProjectEraseService,
-  projectExportService: ProjectExportService,
-  projectImportService: ProjectImportService,
-  ontologyCache: OntologyCache,
-  userService: UserService,
-  auth: AuthorizationRestService,
-  features: Features,
-  triplestore: TriplestoreService,
+  private val format: KnoraResponseRenderer,
+  private val projectService: ProjectService,
+  private val knoraProjectService: KnoraProjectService,
+  private val permissionResponder: PermissionsResponder,
+  private val projectEraseService: ProjectEraseService,
+  private val projectExportService: ProjectExportService,
+  private val projectImportService: ProjectImportService,
+  private val ontologyCache: OntologyCache,
+  private val userService: UserService,
+  private val auth: AuthorizationRestService,
+  private val features: Features,
+  private val triplestore: TriplestoreService,
 ) {
 
   /**
@@ -58,7 +58,7 @@ final case class ProjectRestService(
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
-  def listAllProjects(): Task[ProjectsGetResponse] = for {
+  def listAllProjects(ignored: Unit): Task[ProjectsGetResponse] = for {
     internal <- projectService.findAllRegularProjects
     projects  = internal.filter(_.id.isRegularProjectIri)
     external <- format.toExternal(ProjectsGetResponse(projects))
@@ -120,7 +120,7 @@ final case class ProjectRestService(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def deleteProject(projectIri: ProjectIri, user: User): Task[ProjectOperationResponseADM] =
+  def deleteProject(user: User)(projectIri: ProjectIri): Task[ProjectOperationResponseADM] =
     for {
       project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
       internal <- projectService
@@ -129,7 +129,7 @@ final case class ProjectRestService(
       external <- format.toExternal(internal)
     } yield external
 
-  def eraseProject(shortcode: Shortcode, user: User, keepAssets: Boolean): Task[ProjectOperationResponseADM] =
+  def eraseProject(user: User)(shortcode: Shortcode, keepAssets: Boolean): Task[ProjectOperationResponseADM] =
     for {
       _ <- auth.ensureSystemAdmin(user)
       _ <- ZIO.unless(features.allowEraseProjects)(
@@ -150,19 +150,18 @@ final case class ProjectRestService(
   /**
    * Updates a project, identified by its [[ProjectIri]].
    *
-   * @param id        the [[ProjectIri]] of the project
-   * @param updateReq the [[ProjectUpdateRequest]]
-   * @param user      the [[User]] making the request
+   * @param user       the [[User]] making the request
+   * @param projectIri the [[ProjectIri]] of the project
+   * @param updateReq  the [[ProjectUpdateRequest]]
    * @return
    *     '''success''': information about the project as a [[ProjectOperationResponseADM]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def updateProject(
+  def updateProject(user: User)(
     projectIri: ProjectIri,
     updateReq: ProjectUpdateRequest,
-    user: User,
   ): Task[ProjectOperationResponseADM] = for {
     project <- knoraProjectService
                  .findById(projectIri)
@@ -183,26 +182,26 @@ final case class ProjectRestService(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[IriIdentifier]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def getAllProjectData(id: ProjectIri, user: User): Task[ProjectDataGetResponseADM] =
+  def getAllProjectData(user: User)(id: ProjectIri): Task[ProjectDataGetResponseADM] =
     for {
       project <- auth.ensureSystemAdminOrProjectAdminById(user, id)
       result  <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
     } yield ProjectDataGetResponseADM(result)
 
-  def getProjectMembersById(user: User, id: ProjectIri): Task[ProjectMembersGetResponseADM] =
+  def getProjectMembersById(user: User)(id: ProjectIri): Task[ProjectMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(findProjectMembers)
-  def getProjectMembersByShortcode(user: User, id: Shortcode): Task[ProjectMembersGetResponseADM] =
+  def getProjectMembersByShortcode(user: User)(id: Shortcode): Task[ProjectMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(findProjectMembers)
-  def getProjectMembersByShortname(user: User, id: Shortname): Task[ProjectMembersGetResponseADM] =
+  def getProjectMembersByShortname(user: User)(id: Shortname): Task[ProjectMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminByShortname(user, id).flatMap(findProjectMembers)
   private def findProjectMembers(project: KnoraProject) =
     userService.findByProjectMembership(project).map(ProjectMembersGetResponseADM.from).flatMap(format.toExternal)
 
-  def getProjectAdminMembersById(user: User, id: ProjectIri): Task[ProjectAdminMembersGetResponseADM] =
+  def getProjectAdminMembersById(user: User)(id: ProjectIri): Task[ProjectAdminMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(findProjectAdminMembers)
-  def getProjectAdminMembersByShortcode(user: User, id: Shortcode): Task[ProjectAdminMembersGetResponseADM] =
+  def getProjectAdminMembersByShortcode(user: User)(id: Shortcode): Task[ProjectAdminMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(findProjectAdminMembers)
-  def getProjectAdminMembersByShortname(user: User, id: Shortname): Task[ProjectAdminMembersGetResponseADM] =
+  def getProjectAdminMembersByShortname(user: User)(id: Shortname): Task[ProjectAdminMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminByShortname(user, id).flatMap(findProjectAdminMembers)
   private def findProjectAdminMembers(project: KnoraProject) =
     userService
@@ -218,7 +217,7 @@ final case class ProjectRestService(
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
-  def listAllKeywords(): Task[ProjectsKeywordsGetResponse] = for {
+  def listAllKeywords(ignored: Unit): Task[ProjectsKeywordsGetResponse] = for {
     projects <- knoraProjectService.findAll()
     internal  = ProjectsKeywordsGetResponse(projects.flatMap(_.keywords.map(_.value)).distinct.sorted)
     external <- format.toExternal(internal)
@@ -265,16 +264,14 @@ final case class ProjectRestService(
       external <- format.toExternal(ProjectRestrictedViewSettingsGetResponseADM.from(project.restrictedView))
     } yield external
 
-  def updateProjectRestrictedViewSettingsByShortcode(
+  def updateProjectRestrictedViewSettingsByShortcode(user: User)(
     id: Shortcode,
-    user: User,
     req: SetRestrictedViewRequest,
   ): Task[RestrictedViewResponse] =
     auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(updateRestrictedViewSettings(_, req))
 
-  def updateProjectRestrictedViewSettingsById(
+  def updateProjectRestrictedViewSettingsById(user: User)(
     id: ProjectIri,
-    user: User,
     req: SetRestrictedViewRequest,
   ): Task[RestrictedViewResponse] =
     auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(updateRestrictedViewSettings(_, req))
@@ -285,13 +282,13 @@ final case class ProjectRestService(
       newSettings    <- knoraProjectService.setProjectRestrictedView(project, restrictedView)
     } yield RestrictedViewResponse.from(newSettings)
 
-  def exportProject(id: Shortcode, user: User): Task[Unit] = for {
+  def exportProject(user: User)(id: Shortcode): Task[Unit] = for {
     _       <- auth.ensureSystemAdmin(user)
     project <- knoraProjectService.findByShortcode(id).someOrFail(NotFoundException(s"Project $id not found."))
     _       <- projectExportService.exportProject(project).logError.forkDaemon
   } yield ()
 
-  def exportProjectAwaiting(shortcode: Shortcode, user: User): Task[ProjectExportInfoResponse] = for {
+  def exportProjectAwaiting(user: User)(shortcode: Shortcode): Task[ProjectExportInfoResponse] = for {
     _ <- auth.ensureSystemAdmin(user)
     project <- knoraProjectService
                  .findByShortcode(shortcode)
@@ -316,7 +313,7 @@ final case class ProjectRestService(
     _ <- ontologyCache.refreshCache()
   } yield ProjectImportResponse(path.toString)
 
-  def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]] = for {
+  def listExports(user: User)(ignored: Unit): Task[Chunk[ProjectExportInfoResponse]] = for {
     _       <- auth.ensureSystemAdmin(user)
     exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
   } yield exports
