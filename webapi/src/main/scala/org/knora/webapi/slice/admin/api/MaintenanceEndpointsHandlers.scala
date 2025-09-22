@@ -28,7 +28,7 @@ final case class MaintenanceEndpointsHandlers(
       (user: User) => { case (action: String, jsonMaybe: Option[String]) =>
         ZIO
           .foreach(jsonMaybe)(str => ZIO.fromEither(str.fromJson[Json]).orElseFail(BadRequestException("Invalid JSON")))
-          .flatMap(restService.executeMaintenanceAction(user, action, _))
+          .flatMap(restService.executeMaintenanceAction(user)(action, _))
       },
     )
 

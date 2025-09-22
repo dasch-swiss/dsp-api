@@ -36,140 +36,32 @@ final case class PermissionsEndpointsHandlers(
   mapper: HandlerMapper,
 ) {
 
-  private val postPermissionsApHandler =
-    SecuredEndpointHandler[
-      CreateAdministrativePermissionAPIRequestADM,
-      AdministrativePermissionCreateResponseADM,
-    ](
-      permissionsEndpoints.postPermissionsAp,
-      user => { case (request: CreateAdministrativePermissionAPIRequestADM) =>
-        restService.createAdministrativePermission(request, user)
-      },
-    )
-
-  private val getPermissionsApByProjectIriHandler =
-    SecuredEndpointHandler[ProjectIri, AdministrativePermissionsForProjectGetResponseADM](
-      permissionsEndpoints.getPermissionsApByProjectIri,
-      user => { case (projectIri: ProjectIri) =>
-        restService.getPermissionsApByProjectIri(projectIri, user)
-      },
-    )
-
-  private val getPermissionsApByProjectAndGroupIriHandler =
-    SecuredEndpointHandler[(ProjectIri, GroupIri), AdministrativePermissionGetResponseADM](
+  val allHanders = List(
+    SecuredEndpointHandler(permissionsEndpoints.postPermissionsAp, restService.createAdministrativePermission),
+    SecuredEndpointHandler(permissionsEndpoints.getPermissionsApByProjectIri, restService.getPermissionsApByProjectIri),
+    SecuredEndpointHandler(
       permissionsEndpoints.getPermissionsApByProjectAndGroupIri,
-      user => { case (projectIri: ProjectIri, groupIri: GroupIri) =>
-        restService.getPermissionsApByProjectAndGroupIri(projectIri, groupIri, user)
-      },
-    )
-
-  private val getPermissionsDaopByProjectIriHandler =
-    SecuredEndpointHandler[ProjectIri, DefaultObjectAccessPermissionsForProjectGetResponseADM](
+      restService.getPermissionsApByProjectAndGroupIri,
+    ),
+    SecuredEndpointHandler(
       permissionsEndpoints.getPermissionsDoapByProjectIri,
-      user => { case (projectIri: ProjectIri) =>
-        restService.getPermissionsDaopByProjectIri(projectIri, user)
-      },
-    )
-
-  private val getPermissionsByProjectIriHandler =
-    SecuredEndpointHandler[ProjectIri, PermissionsForProjectGetResponseADM](
-      permissionsEndpoints.getPermissionsByProjectIri,
-      user => { case (projectIri: ProjectIri) =>
-        restService.getPermissionsByProjectIri(projectIri, user)
-      },
-    )
-
-  private val deletePermissionHandler =
-    SecuredEndpointHandler[PermissionIri, PermissionDeleteResponseADM](
-      permissionsEndpoints.deletePermission,
-      user => { case (permissionIri: PermissionIri) =>
-        restService.deletePermission(permissionIri, user)
-      },
-    )
-
-  private val postPermissionsDoapHandler =
-    SecuredEndpointHandler[
-      CreateDefaultObjectAccessPermissionAPIRequestADM,
-      DefaultObjectAccessPermissionCreateResponseADM,
-    ](
-      permissionsEndpoints.postPermissionsDoap,
-      user => { case (request: CreateDefaultObjectAccessPermissionAPIRequestADM) =>
-        restService.createDefaultObjectAccessPermission(request, user)
-      },
-    )
-
-  private val putPermissionsDoapForWhatHandler =
-    SecuredEndpointHandler[
-      (PermissionIri, ChangeDoapRequest),
-      DefaultObjectAccessPermissionGetResponseADM,
-    ](
-      permissionsEndpoints.putPermissionsDoapForWhat,
-      user => { case (permissionIri: PermissionIri, request: ChangeDoapRequest) =>
-        restService.updateDoapForWhat(permissionIri, request, user)
-      },
-    )
-
-  private val putPermissionsProjectIriGroupHandler =
-    SecuredEndpointHandler[
-      (PermissionIri, ChangePermissionGroupApiRequestADM),
-      PermissionGetResponseADM,
-    ](
-      permissionsEndpoints.putPermissionsProjectIriGroup,
-      user => { case (permissionIri: PermissionIri, request: ChangePermissionGroupApiRequestADM) =>
-        restService.updatePermissionGroup(permissionIri, request, user)
-      },
-    )
-
-  private val putPermissionsHasPermissionsHandler =
-    SecuredEndpointHandler[
-      (PermissionIri, ChangePermissionHasPermissionsApiRequestADM),
-      PermissionGetResponseADM,
-    ](
+      restService.getPermissionsDaopByProjectIri,
+    ),
+    SecuredEndpointHandler(permissionsEndpoints.getPermissionsByProjectIri, restService.getPermissionsByProjectIri),
+    SecuredEndpointHandler(permissionsEndpoints.putPermissionsDoapForWhat, restService.updateDoapForWhat),
+    SecuredEndpointHandler(permissionsEndpoints.putPermissionsProjectIriGroup, restService.updatePermissionGroup),
+    SecuredEndpointHandler(
       permissionsEndpoints.putPerrmissionsHasPermissions,
-      user => { case (permissionIri: PermissionIri, request: ChangePermissionHasPermissionsApiRequestADM) =>
-        restService.updatePermissionHasPermissions(permissionIri, request, user)
-      },
-    )
-
-  private val putPermissionsResourceClass =
-    SecuredEndpointHandler[
-      (PermissionIri, ChangePermissionResourceClassApiRequestADM),
-      DefaultObjectAccessPermissionGetResponseADM,
-    ](
+      restService.updatePermissionHasPermissions,
+    ),
+    SecuredEndpointHandler(permissionsEndpoints.putPermissionsProperty, restService.updatePermissionProperty),
+    SecuredEndpointHandler(
       permissionsEndpoints.putPermisssionsResourceClass,
-      user => { case (permissionIri: PermissionIri, request: ChangePermissionResourceClassApiRequestADM) =>
-        restService.updatePermissionResourceClass(permissionIri, request, user)
-      },
-    )
-
-  private val putPermissionsProperty =
-    SecuredEndpointHandler[
-      (PermissionIri, ChangePermissionPropertyApiRequestADM),
-      DefaultObjectAccessPermissionGetResponseADM,
-    ](
-      permissionsEndpoints.putPermissionsProperty,
-      user => { case (permissionIri: PermissionIri, request: ChangePermissionPropertyApiRequestADM) =>
-        restService.updatePermissionProperty(permissionIri, request, user)
-      },
-    )
-
-  private val securedHandlers =
-    List(
-      postPermissionsApHandler,
-      getPermissionsApByProjectIriHandler,
-      getPermissionsApByProjectAndGroupIriHandler,
-      getPermissionsDaopByProjectIriHandler,
-      getPermissionsByProjectIriHandler,
-      putPermissionsDoapForWhatHandler,
-      putPermissionsProjectIriGroupHandler,
-      putPermissionsHasPermissionsHandler,
-      putPermissionsProperty,
-      putPermissionsResourceClass,
-      deletePermissionHandler,
-      postPermissionsDoapHandler,
-    ).map(mapper.mapSecuredEndpointHandler(_))
-
-  val allHanders = securedHandlers
+      restService.updatePermissionResourceClass,
+    ),
+    SecuredEndpointHandler(permissionsEndpoints.deletePermission, restService.deletePermission),
+    SecuredEndpointHandler(permissionsEndpoints.postPermissionsDoap, restService.createDefaultObjectAccessPermission),
+  ).map(mapper.mapSecuredEndpointHandler)
 }
 
 object PermissionsEndpointsHandlers {
