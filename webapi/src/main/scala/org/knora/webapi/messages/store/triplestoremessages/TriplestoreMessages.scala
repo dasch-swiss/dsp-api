@@ -7,7 +7,6 @@ package org.knora.webapi.messages.store.triplestoremessages
 
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
-import spray.json.*
 import sttp.tapir.Schema
 import zio.*
 import zio.json.DeriveJsonCodec
@@ -387,7 +386,7 @@ case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
  * A ZIO json protocol that parses JSON returned by a SPARQL endpoint. Empty values and empty rows are
  * ignored.
  */
-object SparqlResultProtocol extends DefaultJsonProtocol {
+object SparqlResultProtocol {
   import zio.json._
   import zio.json.ast.Json
   import cats.implicits._
@@ -408,63 +407,4 @@ object SparqlResultProtocol extends DefaultJsonProtocol {
 
   implicit val headerDecoder: JsonDecoder[SparqlSelectResultHeader] = DeriveJsonDecoder.gen[SparqlSelectResultHeader]
   implicit val responseDecoder: JsonDecoder[SparqlSelectResult]     = DeriveJsonDecoder.gen[SparqlSelectResult]
-}
-
-/**
- * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
- */
-trait TriplestoreJsonProtocol extends DefaultJsonProtocol with NullOptions {
-
-  implicit object LiteralV2Format extends JsonFormat[StringLiteralV2] {
-
-    /**
-     * Converts a [[StringLiteralV2]] to a [[JsValue]].
-     *
-     * @param string a [[StringLiteralV2]].
-     * @return a [[JsValue]].
-     */
-    def write(string: StringLiteralV2): JsValue =
-      if (string.language.isDefined) {
-        // have language tag
-        JsObject(
-          Map(
-            "value"    -> string.value.toJson,
-            "language" -> string.language.toJson,
-          ),
-        )
-      } else {
-        // no language tag
-        JsObject(
-          Map(
-            "value" -> string.value.toJson,
-          ),
-        )
-      }
-
-    /**
-     * Converts a [[JsValue]] to a [[StringLiteralV2]].
-     *
-     * @param json a [[JsValue]].
-     * @return a [[StringLiteralV2]].
-     */
-    def read(json: JsValue): StringLiteralV2 = json match {
-      case stringWithLang: JsObject =>
-        stringWithLang.getFields("value", "language") match {
-          case Seq(JsString(value), JsString(language)) =>
-            StringLiteralV2.from(
-              value = value,
-              language = Some(language),
-            )
-          case Seq(JsString(value)) =>
-            StringLiteralV2.from(
-              value = value,
-              language = None,
-            )
-          case _ =>
-            throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
-        }
-      case JsString(value) => StringLiteralV2.from(value, None)
-      case _               => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
-    }
-  }
 }
