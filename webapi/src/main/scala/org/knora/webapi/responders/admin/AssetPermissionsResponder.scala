@@ -21,6 +21,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.common.domain.SparqlEncodedString
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
@@ -33,14 +34,13 @@ final case class AssetPermissionsResponder(
   private val triplestoreService: TriplestoreService,
 )(private implicit val sf: StringFormatter) {
 
-  def getPermissionCodeAndProjectRestrictedViewSettings(
+  def getPermissionCodeAndProjectRestrictedViewSettings(user: User)(
     shortcode: Shortcode,
-    filename: String,
-    requestingUser: User,
+    filename: SparqlEncodedString,
   ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     for {
-      queryResponse  <- queryForFileValue(filename)
-      permissionCode <- getPermissionCode(queryResponse, filename, requestingUser)
+      queryResponse  <- queryForFileValue(filename.value)
+      permissionCode <- getPermissionCode(queryResponse, filename.value, user)
       response       <- buildResponse(shortcode, permissionCode)
     } yield response
 

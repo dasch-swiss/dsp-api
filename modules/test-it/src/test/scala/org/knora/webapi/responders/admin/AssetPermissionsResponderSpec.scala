@@ -13,18 +13,19 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.admin.api.model.ProjectRestrictedViewSettingsADM
+import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 object AssetPermissionsResponderSpec extends E2EZSpec {
 
   private val assetPermissionResponder = ZIO.serviceWithZIO[AssetPermissionsResponder]
-  private val asset: String            = "incunabula_0000003328.jp2"
+  private val asset                    = SparqlEncodedString.unsafeFrom("incunabula_0000003328.jp2")
 
   override val rdfDataObjects: List[RdfDataObject] = List(incunabulaRdfData)
 
   override val e2eSpec = suite("The AssetPermissionsResponder")(
     test("return details of a full quality file value") {
       assetPermissionResponder(
-        _.getPermissionCodeAndProjectRestrictedViewSettings(incunabulaProject.shortcode, asset, incunabulaMemberUser),
+        _.getPermissionCodeAndProjectRestrictedViewSettings(incunabulaMemberUser)(incunabulaProject.shortcode, asset),
       ).map { actual =>
         assertTrue(actual == PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 6, None))
       }
@@ -32,7 +33,7 @@ object AssetPermissionsResponderSpec extends E2EZSpec {
     test("return details of a restricted view file value") {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
       assetPermissionResponder(
-        _.getPermissionCodeAndProjectRestrictedViewSettings(incunabulaProject.shortcode, asset, anonymousUser),
+        _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(incunabulaProject.shortcode, asset),
       ).map(actual =>
         assertTrue(
           actual == PermissionCodeAndProjectRestrictedViewSettings(
