@@ -282,17 +282,13 @@ lazy val testkit: Project = Project(id = "testkit", base = file("modules/testkit
     logLevel := Level.Info,
     // bring in test frameworks as compile-time for base specs
     libraryDependencies ++= Seq(
-      Dependencies.scalaTest,
       Dependencies.zioTest,
-      Dependencies.pekkoTestkit,
       Dependencies.testcontainers,
       Dependencies.wiremock,
     ),
     publish / skip := true,
     name           := "testkit",
-    resolvers ++= Seq(
-      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    ),
+    resolvers ++= Seq("Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"),
   )
   .enablePlugins(HeaderPlugin)
 

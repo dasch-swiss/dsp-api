@@ -137,10 +137,7 @@ object Dependencies {
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
-  val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion
-  val pekkoStreamTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % PekkoActorVersion
-  val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
-  val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.21.3"
 
@@ -170,9 +167,6 @@ object Dependencies {
   )
 
   val integrationTestDependencies = Seq(
-    pekkoHttpTestkit,
-    pekkoStreamTestkit,
-    pekkoTestkit,
     rdf4jClient,
     scalaTest,
     testcontainers,
