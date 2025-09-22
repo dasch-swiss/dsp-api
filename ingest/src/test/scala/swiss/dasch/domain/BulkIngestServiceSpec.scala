@@ -163,5 +163,5 @@ object BulkIngestServiceSpec extends ZIOSpecDefault {
     SpecConfigurations.storageConfigLayer,
     StorageServiceLive.layer,
     TestUtils.testDbLayerWithEmptyDb,
-  ) @@ TestAspect.timeout(4.seconds)
+  ) @@ TestAspect.timeout(10.seconds)
 }

@@ -5,7 +5,6 @@
 
 package org.knora.webapi.messages.util
 
-import com.typesafe.scalalogging.LazyLogging
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -31,7 +30,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 /**
  * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.
  */
-object PermissionUtilADM extends LazyLogging {
+object PermissionUtilADM {
 
   /**
    * Calculates the highest permission level a user can be granted on a entity.
@@ -328,7 +327,6 @@ object PermissionUtilADM extends LazyLogging {
           val cleanedPermissionListStr = permissionListStr.replaceAll("[<>]", "")
           val permissions: Seq[String] =
             cleanedPermissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter).toIndexedSeq
-          logger.debug(s"PermissionUtil.parsePermissionsWithType - split permissions: $permissions")
           permissions.flatMap { permission =>
             val splitPermission = permission.split(' ')
             val abbreviation    = splitPermission(0)
@@ -391,7 +389,6 @@ object PermissionUtilADM extends LazyLogging {
 
       case Permission.Administrative.ProjectResourceCreateRestricted.token =>
         if (iris.nonEmpty) {
-          logger.debug(s"buildPermissionObject - ProjectResourceCreateRestrictedPermission - iris: $iris")
           iris.map(iri => PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
@@ -566,11 +563,9 @@ final case class PermissionUtilADMLive(groupService: GroupService) extends Permi
       irisToCheck = projectSpecificGroupIris.map(iri => GroupIri.unsafeFrom(iri)).toSeq
 
       // Check that those groups exist.
-      _ <- ZIO.foreach(irisToCheck)(iri =>
-             groupService
-               .findById(iri)
-               .someOrFail(NotFoundException(s"Group <$iri> not found.")),
-           )
+      _ <- ZIO.foreachDiscard(irisToCheck) { iri =>
+             groupService.findById(iri).someOrFail(NotFoundException(s"Group <$iri> not found."))
+           }
 
       // Reformat the permission literal.
       permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap { case (entityPermission, groupIris) =>

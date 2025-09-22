@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import java.util.UUID
@@ -67,8 +66,7 @@ final case class PermissionsResponder(
   private val iriConverter: IriConverter,
   private val ontologyRepo: OntologyRepo,
   private val doapService: DefaultObjectAccessPermissionService,
-)(implicit val stringFormatter: StringFormatter)
-    extends LazyLogging {
+)(implicit val stringFormatter: StringFormatter) {
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
 
@@ -723,7 +721,7 @@ final case class PermissionsResponder(
 
   private def checkGroupExists(groupIri: IRI): Task[GroupIri] = for {
     gIri <- ZIO.fromEither(GroupIri.from(groupIri)).mapError(BadRequestException.apply)
-    _    <- groupService.findById(gIri).someOrFail(BadRequestException(s"Group ${groupIri} not found."))
+    _    <- groupService.findById(gIri).someOrFail(BadRequestException(s"Group $groupIri not found."))
   } yield gIri
 
   private def checkPropertyIri(propertyIri: IRI): Task[PropertyIri] =

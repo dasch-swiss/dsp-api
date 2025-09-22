@@ -5,13 +5,12 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.compatible.Assertion
 
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.util.rdf.*
 
-class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
+class UpgradePluginPR1921Spec extends UpgradePluginSpec {
   private def checkLiteral(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: RdfLiteral): Assertion =
     model
       .find(
@@ -34,7 +33,7 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
     // Parse the input file.
     val model: RdfModel = trigFileToModel("test_data/upgrade/pr1921.trig")
     // Use the plugin to transform the input.
-    val plugin = new UpgradePluginPR1921(log)
+    val plugin = new UpgradePluginPR1921()
     plugin.transform(model)
 
     "replace simple strings in group descriptions with language strings" in {

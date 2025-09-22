@@ -5,8 +5,6 @@
 
 package org.knora.webapi.util
 
-import com.typesafe.scalalogging.Logger
-
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -151,22 +149,5 @@ object FileUtil {
     }
 
     file
-  }
-
-  /**
-   * Deletes a temporary file.
-   *
-   * @param file the file to be deleted.
-   * @param log      a logging adapter.
-   * @return `true` if the file was deleted by this method.
-   */
-  def deleteFileFromTmpLocation(file: Path, log: Logger): Boolean = {
-
-    if (!Files.isWritable(file)) {
-      val ex = FileWriteException(s"File $file cannot be deleted.")
-      log.error(ex.getMessage, ex)
-    }
-
-    Files.deleteIfExists(file)
   }
 }

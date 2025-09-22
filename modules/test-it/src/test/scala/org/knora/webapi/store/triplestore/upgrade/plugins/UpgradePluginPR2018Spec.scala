@@ -5,15 +5,13 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import com.typesafe.scalalogging.LazyLogging
-
 import org.knora.webapi.messages.util.rdf.*
 
-class UpgradePluginPR2018Spec extends UpgradePluginSpec with LazyLogging {
+class UpgradePluginPR2018Spec extends UpgradePluginSpec {
   "Upgrade plugin PR2018" should {
     "add lastModificationDate to ontology not attached to SystemProject" in {
       val model: RdfModel = trigFileToModel("test_data/upgrade/pr2018.trig")
-      val plugin          = new UpgradePluginPR2018(log)
+      val plugin          = new UpgradePluginPR2018()
       plugin.transform(model)
       val repository: JenaRepository = model.asRepository
 

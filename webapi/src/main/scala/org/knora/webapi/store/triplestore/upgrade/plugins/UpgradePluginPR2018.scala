@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import com.typesafe.scalalogging.Logger
-
 import java.time.Instant
 
 import dsp.errors.InconsistentRepositoryDataException
@@ -21,7 +19,7 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 /**
  * Transforms a repository for DSP-API PR 2018.
  */
-class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
+class UpgradePluginPR2018 extends UpgradePlugin {
   private val newModificationDate   = Instant.now.toString
   private val ontologyType: IriNode = JenaNodeFactory.makeIriNode(Ontology)
 
@@ -36,8 +34,6 @@ class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
         ),
         context = Some(ontology.iri),
       )
-
-      log.info(s"Updated ontology: ${ontology.iri} with LastModificationDate")
     }
 
   private def getOntologiesToTransform(model: RdfModel): Iterator[IriNode] = {

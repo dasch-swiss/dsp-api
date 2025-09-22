@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders
 
-import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import dsp.errors.*
@@ -36,7 +35,7 @@ final case class IriService(
   private val iriConverter: IriConverter,
   private val triplestore: TriplestoreService,
   private val stringFormatter: StringFormatter,
-) extends LazyLogging {
+) {
 
   /**
    * Checks whether an entity is used in the triplestore (in data or ontologies).

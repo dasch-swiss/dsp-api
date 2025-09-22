@@ -5,9 +5,6 @@
 
 package dsp.errors
 
-import com.typesafe.scalalogging.Logger
-import org.apache.commons.lang3.SerializationException
-import org.apache.commons.lang3.SerializationUtils
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
@@ -247,8 +244,7 @@ case class AuthenticationException(
 ) extends InternalServerException(message)
 
 object AuthenticationException {
-  def apply(message: String, e: Throwable, log: Logger): AuthenticationException =
-    AuthenticationException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+  def apply(message: String, e: Throwable): AuthenticationException = AuthenticationException(message, Some(e))
 }
 
 /**
@@ -298,8 +294,8 @@ case class StandoffInternalException(message: String, cause: Option[Throwable] =
     extends InternalServerException(message, cause)
 
 object StandoffInternalException {
-  def apply(message: String, e: Throwable, log: Logger): StandoffInternalException =
-    StandoffInternalException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+  def apply(message: String, e: Throwable): StandoffInternalException =
+    StandoffInternalException(message, Some(e))
 }
 
 /**
@@ -312,8 +308,7 @@ case class AssertionException(message: String, cause: Option[Throwable] = None)
     extends InternalServerException(message, cause)
 
 object AssertionException {
-  def apply(message: String, e: Throwable, log: Logger): AssertionException =
-    AssertionException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+  def apply(message: String, e: Throwable): AssertionException = AssertionException(message, Some(e))
 }
 
 /**
@@ -325,8 +320,8 @@ case class InconsistentRepositoryDataException(message: String, cause: Option[Th
     extends InternalServerException(message, cause)
 
 object InconsistentRepositoryDataException {
-  def apply(message: String, e: Throwable, log: Logger): InconsistentRepositoryDataException =
-    InconsistentRepositoryDataException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+  def apply(message: String, e: Throwable): InconsistentRepositoryDataException =
+    InconsistentRepositoryDataException(message, Some(e))
 }
 
 case class MissingLastModificationDateOntologyException(message: String, cause: Option[Throwable] = None)
@@ -342,8 +337,8 @@ case class InvalidApiJsonException(message: String, cause: Option[Throwable] = N
     extends InternalServerException(message, cause)
 
 object InvalidApiJsonException {
-  def apply(message: String, e: Throwable, log: Logger): InvalidApiJsonException =
-    InvalidApiJsonException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+  def apply(message: String, e: Throwable): InvalidApiJsonException =
+    InvalidApiJsonException(message, Some(e))
 }
 
 /**
@@ -462,39 +457,3 @@ case class RdfProcessingException(message: String, cause: Option[Throwable] = No
  * @param message a description of the error.
  */
 case class GravsearchOptimizationException(message: String) extends InternalServerException(message)
-
-/**
- * Helper functions for error handling.
- */
-object ExceptionUtil {
-
-  /**
-   * Checks whether an exception is serializable.
-   *
-   * @param e the exception to be checked.
-   * @return `true` if the exception is serializable, otherwise `false`.
-   */
-  def isSerializable(e: Throwable): Boolean =
-    try {
-      SerializationUtils.serialize(e)
-      true
-    } catch {
-      case _: SerializationException => false
-    }
-
-  /**
-   * Checks whether an exception is serializable. If it is serializable, it is returned as-is. If not,
-   * the exception is logged with its stack trace, and a string representation of it is returned in a
-   * [[WrapperException]].
-   *
-   * @param e the exception to be checked.
-   * @return the same exception, or a [[WrapperException]].
-   */
-  def logAndWrapIfNotSerializable(e: Throwable, log: Logger): Throwable =
-    if (isSerializable(e)) {
-      e
-    } else {
-      log.error(e.toString)
-      WrapperException(e)
-    }
-}

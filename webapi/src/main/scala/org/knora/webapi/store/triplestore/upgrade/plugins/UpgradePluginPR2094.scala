@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import com.typesafe.scalalogging.Logger
-
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
@@ -16,7 +14,7 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms incorrect value of valueHasUri from node to string type adding also
  * missing datatype ^^<http://www.w3.org/2001/XMLSchema#anyURI>
  */
-class UpgradePluginPR2094(log: Logger) extends UpgradePlugin {
+class UpgradePluginPR2094 extends UpgradePlugin {
   override def transform(model: RdfModel): Unit = {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
@@ -35,11 +33,6 @@ class UpgradePluginPR2094(log: Logger) extends UpgradePlugin {
               obj = newObjectValue(node.iri),
               context = statement.context,
             )
-
-            log.info(
-              s"Transformed valueHasUri $node to ${newObjectValue(node.iri)}.",
-            )
-
           case _ => ()
         }
       }
