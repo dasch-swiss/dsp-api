@@ -1,5 +1,37 @@
 # Changelog
 
+## [32.3.0](https://github.com/dasch-swiss/dsp-api/compare/v32.2.0...v32.3.0) (2025-09-22)
+
+
+### Maintenances
+
+* Align IriLocker.runWithIriLock method signatures ([#3784](https://github.com/dasch-swiss/dsp-api/issues/3784)) ([eb10c45](https://github.com/dasch-swiss/dsp-api/commit/eb10c45f0390a349528e434a091d6e9de5d83b13))
+* **dsp-api:** Migrate CORSSupportE2ESpec to zio and cleanup (DEV-5309) ([#3786](https://github.com/dasch-swiss/dsp-api/issues/3786)) ([0b7b658](https://github.com/dasch-swiss/dsp-api/commit/0b7b65838a86acadffcb970d85aaaa4c2e4c1134))
+* **dsp-api:** Migrate OntologiesEndpointsE2ESpec to zio (DEV-5314) ([#3782](https://github.com/dasch-swiss/dsp-api/issues/3782)) ([01ba167](https://github.com/dasch-swiss/dsp-api/commit/01ba16754145bfc218283017ffcfc812937f8c94))
+* **dsp-api:** Remove duplication for LanguageCode ([#3780](https://github.com/dasch-swiss/dsp-api/issues/3780)) ([eda56ad](https://github.com/dasch-swiss/dsp-api/commit/eda56ad6888883d3f243944e3d9a24b14b56da5f))
+* **dsp-api:** Remove scalaTest and unused pekko test kit Dependencies ([#3790](https://github.com/dasch-swiss/dsp-api/issues/3790)) ([4dadcc2](https://github.com/dasch-swiss/dsp-api/commit/4dadcc2d148cc944bff79a32d4a2dd1c2feea309))
+* **dsp-api:** Replace spray json with zio-json (DEV-5426) ([#3787](https://github.com/dasch-swiss/dsp-api/issues/3787)) ([0c8512e](https://github.com/dasch-swiss/dsp-api/commit/0c8512eab376ed33b993bd241cd47a1780793314))
+* Migrate OntologyResponderV2Spec to zio (DEV-5313) ([#3767](https://github.com/dasch-swiss/dsp-api/issues/3767)) ([da7d7fc](https://github.com/dasch-swiss/dsp-api/commit/da7d7fc974c504a0ab1579e3ddbbf5085793a1b6))
+* Remove dedicated zio-http dependency from Test and use tapir's version ([#3788](https://github.com/dasch-swiss/dsp-api/issues/3788)) ([c84bfe6](https://github.com/dasch-swiss/dsp-api/commit/c84bfe6630d0baad5ff7dad30e57eeba36f0df78))
+* Remove unused files (testkit main resources) ([#3779](https://github.com/dasch-swiss/dsp-api/issues/3779)) ([81b6492](https://github.com/dasch-swiss/dsp-api/commit/81b6492ffbdf2b272be854a0436dbab1d761a76c))
+* Replace scala logging with zio logging ([#3789](https://github.com/dasch-swiss/dsp-api/issues/3789)) ([743edb0](https://github.com/dasch-swiss/dsp-api/commit/743edb05e5d04217b39a2c1d2fdcd09e5cba2218))
+
+
+### Documentation
+
+* **ingest:** Remove leftovers of the mkdocs-rendered openapi docs of ingest (DEV-5417) ([#3783](https://github.com/dasch-swiss/dsp-api/issues/3783)) ([845b3d6](https://github.com/dasch-swiss/dsp-api/commit/845b3d62a045e15702c3c1569715c8fe0387cafb))
+
+
+### Enhancements
+
+* **dsp-api:** Prevent cross project resource linking (DEV-5419) ([#3781](https://github.com/dasch-swiss/dsp-api/issues/3781)) ([03f78ed](https://github.com/dasch-swiss/dsp-api/commit/03f78ed3906dab85b0ad012c8e7d5fee54f6477a))
+
+
+### Bug Fixes
+
+* **dsp-api:** Properly escape special characters for search by label Lucene query (DEV-5421) ([#3785](https://github.com/dasch-swiss/dsp-api/issues/3785)) ([70364a7](https://github.com/dasch-swiss/dsp-api/commit/70364a730202c080f5d03fda2214c8465a835a3d))
+* Repair and extend just recipes for testing ingest and api ([#3776](https://github.com/dasch-swiss/dsp-api/issues/3776)) ([952303e](https://github.com/dasch-swiss/dsp-api/commit/952303e75447a64572a083a2d5e90248e93db7e0))
+
 ## [32.2.0](https://github.com/dasch-swiss/dsp-api/compare/v32.1.0...v32.2.0) (2025-09-15)
 
 
