@@ -7,10 +7,8 @@ package org.knora.webapi.slice.admin.api
 
 import zio.ZIO
 import zio.ZLayer
-import zio.json.*
 import zio.json.ast.Json
 
-import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper
@@ -22,17 +20,9 @@ final case class MaintenanceEndpointsHandlers(
   mapper: HandlerMapper,
 ) {
 
-  private val postMaintenanceHandler =
-    SecuredEndpointHandler[(String, Option[String]), Unit](
-      endpoints.postMaintenance,
-      (user: User) => { case (action: String, jsonMaybe: Option[String]) =>
-        ZIO
-          .foreach(jsonMaybe)(str => ZIO.fromEither(str.fromJson[Json]).orElseFail(BadRequestException("Invalid JSON")))
-          .flatMap(restService.executeMaintenanceAction(user)(action, _))
-      },
-    )
-
-  val allHandlers = List(postMaintenanceHandler).map(mapper.mapSecuredEndpointHandler(_))
+  val allHandlers = List(
+    SecuredEndpointHandler(endpoints.postMaintenance, restService.executeMaintenanceAction),
+  ).map(mapper.mapSecuredEndpointHandler)
 }
 
 object MaintenanceEndpointsHandlers {

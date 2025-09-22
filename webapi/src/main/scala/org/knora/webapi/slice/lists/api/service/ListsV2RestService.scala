@@ -60,7 +60,7 @@ final case class ListsV2RestService(
       )
       .map(_.nodeinfo)
       .map(NodeGetResponseV2(_, user.lang, appConfig.fallbackLanguage))
-      .flatMap(renderer.render(_, FormatOptions.default))
+      .flatMap(renderer.render(_, opts))
 }
 
 object ListsV2RestService {
