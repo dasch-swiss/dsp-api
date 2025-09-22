@@ -5,8 +5,13 @@
 
 package org.knora.webapi.models.filemodels
 
+import zio.json.*
+import zio.json.ast.*
+import zio.test.*
+
 import java.time.Instant
 import java.util.UUID
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
@@ -16,9 +21,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.models.filemodels.FileType.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import zio.test.*
-import zio.json.*
-import zio.json.ast.*
 
 object FileModelsSpec extends ZIOSpecDefault {
 
