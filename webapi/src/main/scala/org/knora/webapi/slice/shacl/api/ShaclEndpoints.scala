@@ -5,9 +5,7 @@
 
 package org.knora.webapi.slice.shacl.api
 
-import org.apache.pekko.stream.scaladsl.Source
-import org.apache.pekko.util.ByteString
-import sttp.capabilities.pekko.PekkoStreams
+import sttp.capabilities.zio.ZioStreams
 import sttp.model.MediaType
 import sttp.tapir.*
 import sttp.tapir.Schema.annotations.description
@@ -39,7 +37,7 @@ case class ShaclEndpoints(baseEndpoints: BaseEndpoints) {
       .in("shacl" / "validate")
       .description("foo")
       .in(multipartBody[ValidationFormData])
-      .out(streamTextBody(PekkoStreams)(new CodecFormat {
+      .out(streamTextBody(ZioStreams)(new CodecFormat {
         override val mediaType: MediaType = MediaType("text", "turtle")
       }).description("""
                        |The validation report in Turtle format.

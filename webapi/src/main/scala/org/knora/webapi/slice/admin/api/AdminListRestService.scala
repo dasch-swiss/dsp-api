@@ -38,7 +38,7 @@ final case class AdminListRestService(
   def getLists(projectIriOpt: Option[Either[ProjectIri, Shortcode]]): Task[ListsGetResponseADM] =
     listsResponder.getLists(projectIriOpt)
 
-  def listGetRequestADM(iri: ListIri): Task[ListItemGetResponseADM] = listsResponder.listGetRequestADM(iri.value)
+  def listGetRequestADM(iri: ListIri): Task[ListItemGetResponseADM] = listsResponder.listGetRequestADM(iri)
 
   def listNodeInfoGetRequestADM(iri: ListIri): Task[NodeInfoGetResponseADM] =
     listsResponder.listNodeInfoGetRequestADM(iri.value)

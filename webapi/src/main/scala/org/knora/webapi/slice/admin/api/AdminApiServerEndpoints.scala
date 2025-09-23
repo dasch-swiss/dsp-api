@@ -5,10 +5,9 @@
 
 package org.knora.webapi.slice.admin.api
 
-import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
-import sttp.tapir.ztapir.ZServerEndpoint
+import sttp.tapir.ztapir.*
 
 final case class AdminApiServerEndpoints(
   private val adminListsServerEndpoints: AdminListsServerEndpoints,

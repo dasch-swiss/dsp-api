@@ -91,13 +91,10 @@ final case class OntologiesRestService(
     getOntologyMetadataBy(projectIri.toSet, formatOptions)
 
   def getOntologyMetadataByProjects(
-    projectIris: List[String],
+    projectIris: List[ProjectIri],
     formatOptions: FormatOptions,
-  ): Task[(RenderedResponse, MediaType)] = ZIO
-    .foreach(projectIris.toSet)(iri =>
-      ZIO.fromEither(ProjectIri.from(iri)).orElseFail(BadRequestException(s"Invalid project IRI $iri")),
-    )
-    .flatMap(getOntologyMetadataBy(_, formatOptions))
+  ): Task[(RenderedResponse, MediaType)] =
+    getOntologyMetadataBy(projectIris.toSet, formatOptions)
 
   private def getOntologyMetadataBy(projectIris: Set[ProjectIri], formatOptions: FormatOptions) = for {
     result   <- ontologyResponder.getOntologyMetadataForProjects(projectIris)
