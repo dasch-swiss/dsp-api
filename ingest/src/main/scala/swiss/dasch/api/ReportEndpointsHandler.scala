@@ -18,7 +18,7 @@ final class ReportEndpointsHandler(
 ) {
 
   private val postAssetOverviewReportHandler: ZServerEndpoint[Any, Any] =
-    reportEndpoints.postAssetOverviewReport.zServerLogic(_ =>
+    reportEndpoints.postAssetOverviewReport.serverLogic(_ =>
       _ => createAssetOverReports.forkDaemon.logError.as("work in progress"),
     )
 
