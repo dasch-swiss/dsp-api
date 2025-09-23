@@ -1600,9 +1600,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                                  savedValue.getRequiredString(KA.TextValueAsXml),
                                )
       } yield {
-        // The apostrophe should be preserved as-is, not escaped as &apos;
+        // The apostrophe should be preserved as-is, not escaped as "\&apos;"
         assertTrue(savedTextValueAsXml.contains("Apostrophe start &apos; end"))
-        // s"Expected apostrophe to be preserved, but got: $savedTextValueAsXml",
       }
     },
     test("create a date value representing a single date with month precision") {
