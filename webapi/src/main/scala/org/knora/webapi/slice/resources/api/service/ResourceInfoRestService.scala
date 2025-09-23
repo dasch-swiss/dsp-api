@@ -11,10 +11,11 @@ import java.time.Instant
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
+import org.knora.webapi.slice.admin.api.model.Order
+import org.knora.webapi.slice.admin.api.model.OrderBy
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.api.model.ListResponseDto
-import org.knora.webapi.slice.resources.api.model.QueryParams.*
 import org.knora.webapi.slice.resources.api.model.ResourceInfoDto
 import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 
@@ -28,13 +29,13 @@ final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: I
 
   private def instant(order: Order)(one: Instant, two: Instant) =
     order match {
-      case Asc  => two.compareTo(one) > 0
-      case Desc => one.compareTo(two) > 0
+      case Order.Asc  => two.compareTo(one) > 0
+      case Order.Desc => one.compareTo(two) > 0
     }
 
   private def sort(resources: List[ResourceInfoDto], order: Order, orderBy: OrderBy) = (orderBy, order) match {
-    case (LastModificationDate, order) => resources.sortWith(lastModificationDateSort(order))
-    case (CreationDate, order)         => resources.sortWith(creationDateSort(order))
+    case (OrderBy.LastModificationDate, order) => resources.sortWith(lastModificationDateSort(order))
+    case (OrderBy.CreationDate, order)         => resources.sortWith(creationDateSort(order))
   }
 
   /**

@@ -9,8 +9,11 @@ import zio.ZLayer
 
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 
-final class AuthenticationApiRoutes(handler: AuthenticationEndpointsV2Handler, tapirToPekko: TapirToPekkoInterpreter) {
-  val routes = handler.allHandlers.map(tapirToPekko.toRoute(_))
+final class AuthenticationApiRoutes(
+  private val handler: AuthenticationEndpointsV2Handler,
+  private val tapirToPekko: TapirToPekkoInterpreter,
+) {
+  val routes = handler.allHandlers.map(tapirToPekko.toRoute)
 }
 
 object AuthenticationApiRoutes {

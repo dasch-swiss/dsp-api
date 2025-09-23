@@ -10,9 +10,11 @@ import zio.*
 
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 
-final case class ShaclApiRoutes(shaclEndpointsHandler: ShaclEndpointsHandler, tapirToPekko: TapirToPekkoInterpreter) {
-  private val handlers   = shaclEndpointsHandler.allHandlers
-  val routes: Seq[Route] = handlers.map(tapirToPekko.toRoute(_))
+final case class ShaclApiRoutes(
+  private val shaclEndpointsHandler: ShaclEndpointsHandler,
+  private val tapirToPekko: TapirToPekkoInterpreter,
+) {
+  val routes: Seq[Route] = shaclEndpointsHandler.allHandlers.map(tapirToPekko.toRoute(_))
 }
 
 object ShaclApiRoutes {

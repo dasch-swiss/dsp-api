@@ -16,11 +16,9 @@ final case class MetadataServerEndpoints(
   private val mapper: HandlerMapper,
 ) {
   val allHandlers =
-    Seq(
-      SecuredEndpointHandler(endpoints.getResourcesMetadata, resourcesRestService.getResourcesMetadata),
-    ).map(mapper.mapSecuredEndpointHandler)
+    Seq(SecuredEndpointHandler(endpoints.getResourcesMetadata, resourcesRestService.getResourcesMetadata))
+      .map(mapper.mapSecuredEndpointHandler)
 }
-
 object MetadataServerEndpoints {
   val layer = ZLayer.derive[MetadataServerEndpoints]
 }
