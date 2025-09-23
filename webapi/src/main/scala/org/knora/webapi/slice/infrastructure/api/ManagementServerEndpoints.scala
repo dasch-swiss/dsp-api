@@ -12,10 +12,10 @@ final case class ManagementServerEndpoints(
   private val endpoint: ManagementEndpoints,
   private val restService: ManagementRestService,
 ) {
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = Seq(
     endpoint.getVersion.zServerLogic(_ => ZIO.succeed(VersionResponse.current)),
     endpoint.getHealth.zServerLogic(_ => restService.healthCheck),
-    endpoint.postStartCompaction.serverLogic(restService.startCompaction),
+    endpoint.postStartCompaction.zServerLogic(restService.startCompaction),
   )
 }
 object ManagementServerEndpoints {

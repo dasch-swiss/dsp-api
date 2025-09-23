@@ -134,7 +134,6 @@ object LayersLive { self =>
     AdminApiModule.Provided &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
-    CompleteApiServerEndpoints &
     ApiV2Endpoints &
     AssetPermissionsResponder &
     AuthenticationApiModule.Provided &
@@ -142,8 +141,8 @@ object LayersLive { self =>
     CardinalityHandler &
     CommonModule.Provided &
     ConstructResponseUtilV2 &
-    OntologyModule.Provided &
     DefaultObjectAccessPermissionService &
+    Endpoints &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     ListsApiModule.Provided &
@@ -151,6 +150,7 @@ object LayersLive { self =>
     MessageRelay &
     OntologyApiModule.Provided &
     OntologyInferencer &
+    OntologyModule.Provided &
     OntologyResponderV2 &
     PermissionUtilADM &
     PermissionsResponder &
@@ -160,15 +160,15 @@ object LayersLive { self =>
     RepositoryUpdater &
     ResourceUtilV2 &
     ResourcesApiServerEndpoints &
-    ResourcesResponderV2 &
     ResourcesRepo &
-    SecurityModule.Provided &
-    SearchServerEndpoints &
+    ResourcesResponderV2 &
     SearchResponderV2Module.Provided &
+    SearchServerEndpoints &
+    SecurityModule.Provided &
     SecurityModule.Provided &
     ShaclApiModule.Provided &
-    ShaclModule.Provided &
     ShaclEndpoints &
+    ShaclModule.Provided &
     SipiService &
     StandoffResponderV2 &
     StandoffTagUtilV2 &
@@ -185,7 +185,6 @@ object LayersLive { self =>
     ](
       AdminApiModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
-      CompleteApiServerEndpoints.layer,
       ApiV2Endpoints.layer,
       AssetPermissionsResponder.layer,
       AuthenticationApiModule.layer,
@@ -193,6 +192,7 @@ object LayersLive { self =>
       BaseEndpoints.layer,
       CardinalityHandler.layer,
       ConstructResponseUtilV2.layer,
+      Endpoints.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       KnoraResponseRenderer.layer,
@@ -216,9 +216,9 @@ object LayersLive { self =>
       ResourcesModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
-      SearchServerEndpoints.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,
+      SearchServerEndpoints.layer,
       SecurityModule.layer,
       ShaclApiModule.layer,
       ShaclModule.layer,

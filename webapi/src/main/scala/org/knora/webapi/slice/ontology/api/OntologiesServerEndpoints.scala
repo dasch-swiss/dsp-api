@@ -16,7 +16,7 @@ final class OntologiesServerEndpoints(
   private val restService: OntologiesRestService,
 ) {
 
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getOntologiesMetadataProject.zServerLogic(restService.getOntologyMetadataByProjectOption),
     endpoints.getOntologyPathSegments.serverLogic(restService.dereferenceOntologyIri),
     endpoints.putOntologiesMetadata.serverLogic(restService.changeOntologyMetadata),

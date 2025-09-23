@@ -40,7 +40,7 @@ final case class ProjectsServerEndpoints(
           },
     )
 
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     projectsEndpoints.Public.getAdminProjects.zServerLogic(restService.listAllProjects),
     projectsEndpoints.Public.getAdminProjectsKeywords.zServerLogic(restService.listAllKeywords),
     projectsEndpoints.Public.getAdminProjectsByProjectIri.zServerLogic(restService.findById),

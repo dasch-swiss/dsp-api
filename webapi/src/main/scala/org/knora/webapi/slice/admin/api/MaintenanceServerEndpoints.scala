@@ -17,7 +17,7 @@ final case class MaintenanceServerEndpoints(
   private val endpoints: MaintenanceEndpoints,
   private val restService: MaintenanceRestService,
 ) {
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.postMaintenance.serverLogic(restService.executeMaintenanceAction),
   )
 }

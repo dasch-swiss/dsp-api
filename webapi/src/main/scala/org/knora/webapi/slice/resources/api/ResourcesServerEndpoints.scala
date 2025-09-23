@@ -4,6 +4,8 @@
  */
 
 package org.knora.webapi.slice.resources.api
+
+import sttp.tapir.ztapir.*
 import zio.*
 
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
@@ -13,7 +15,7 @@ final class ResourcesServerEndpoints(
   private val resourcesRestService: ResourcesRestService,
 ) {
 
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     resourcesEndpoints.getResourcesCanDelete.serverLogic(resourcesRestService.canDeleteResource),
     resourcesEndpoints.getResourcesGraph.serverLogic(resourcesRestService.getResourcesGraph),
     resourcesEndpoints.getResourcesIiifManifest.serverLogic(resourcesRestService.getResourcesIiifManifest),

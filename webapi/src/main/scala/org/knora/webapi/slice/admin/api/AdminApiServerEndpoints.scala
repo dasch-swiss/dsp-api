@@ -21,7 +21,7 @@ final case class AdminApiServerEndpoints(
   private val usersServerEndpoints: UsersServerEndpoints,
 ) {
 
-  val serverEndpoints =
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
     filesServerEndpoints.serverEndpoints ++
       groupsServerEndpoints.serverEndpoints ++
       adminListsServerEndpoints.serverEndpoints ++

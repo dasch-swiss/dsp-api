@@ -19,7 +19,7 @@ final case class FilesServerEndpoints(
   private val filesEndpoints: FilesEndpoints,
   private val assetPermissionsResponder: AssetPermissionsResponder,
 ) {
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     filesEndpoints.getAdminFilesShortcodeFileIri.serverLogic(
       assetPermissionsResponder.getPermissionCodeAndProjectRestrictedViewSettings,
     ),

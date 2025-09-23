@@ -9,7 +9,7 @@ import zio.*
 import zio.http.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.KnoraApi
-import org.knora.webapi.routing.CompleteApiServerEndpoints
+import org.knora.webapi.routing.Endpoints
 import sttp.tapir.server.interceptor.cors.CORSConfig.AllowedOrigin
 import sttp.tapir.server.interceptor.cors.{CORSConfig, CORSInterceptor}
 import sttp.tapir.server.metrics.zio.ZioMetrics
@@ -24,7 +24,7 @@ object HttpServer {
 
   private def createServer = for {
     apiConfig <- ZIO.service[KnoraApi]
-    endpoints <- ZIO.serviceWith[CompleteApiServerEndpoints](_.serverEndpoints)
+    endpoints <- ZIO.serviceWith[Endpoints](_.serverEndpoints)
     httpApp    = ZioHttpInterpreter(options).toHttp(endpoints)
     _         <- Server.install(httpApp).provide(Server.defaultWithPort(apiConfig.internalPort))
     _         <- Console.printLine(s"Go to http://localhost:${apiConfig.externalPort}/docs to open SwaggerUI")

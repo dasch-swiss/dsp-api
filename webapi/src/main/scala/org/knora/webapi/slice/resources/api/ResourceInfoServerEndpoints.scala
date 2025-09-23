@@ -16,7 +16,9 @@ final case class ResourceInfoServerEndpoints(
   private val endpoints: ResourceInfoEndpoints,
   private val resourceInfoService: ResourceInfoRestService,
 ) {
-  val serverEndpoints = Seq(endpoints.getResourcesInfo.zServerLogic(resourceInfoService.findByProjectAndResourceClass))
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = Seq(
+    endpoints.getResourcesInfo.zServerLogic(resourceInfoService.findByProjectAndResourceClass),
+  )
 }
 object ResourceInfoServerEndpoints {
   val layer = ZLayer.derive[ResourceInfoServerEndpoints]

@@ -20,7 +20,7 @@ final class ValuesServerEndpoints(
   private val valuesRestService: ValuesRestService,
 ) {
 
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getValue.serverLogic(valuesRestService.getValue),
     endpoints.postValues.serverLogic(valuesRestService.createValue),
     endpoints.putValues.serverLogic(valuesRestService.updateValue),

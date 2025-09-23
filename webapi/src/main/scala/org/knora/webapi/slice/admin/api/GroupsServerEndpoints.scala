@@ -18,7 +18,7 @@ case class GroupsServerEndpoints(
   private val endpoints: GroupsEndpoints,
   private val restService: GroupRestService,
 ) {
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getGroups.zServerLogic(_ => restService.getGroups),
     endpoints.getGroupByIri.zServerLogic(restService.getGroupByIri),
     endpoints.getGroupMembers.serverLogic(restService.getGroupMembers),

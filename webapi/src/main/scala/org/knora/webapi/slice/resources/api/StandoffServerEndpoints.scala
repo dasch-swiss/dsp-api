@@ -14,7 +14,9 @@ final case class StandoffServerEndpoints(
   private val endpoints: StandoffEndpoints,
   private val restService: StandoffRestService,
 ) {
-  val serverEndpoints = Seq(endpoints.postMapping.serverLogic(restService.createMapping))
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
+    endpoints.postMapping.serverLogic(restService.createMapping),
+  )
 }
 object StandoffServerEndpoints {
   val layer = ZLayer.derive[StandoffServerEndpoints]

@@ -28,7 +28,7 @@ final case class AdminListsServerEndpoints(
   private val adminListsEndpoints: AdminListsEndpoints,
   private val restService: AdminListRestService,
 ) {
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     adminListsEndpoints.getListsQueryByProjectIriOption.zServerLogic(restService.getLists),
     adminListsEndpoints.getListsByIri.zServerLogic(restService.listGetRequestADM),
     adminListsEndpoints.getListsByIriInfo.zServerLogic(restService.listNodeInfoGetRequestADM),

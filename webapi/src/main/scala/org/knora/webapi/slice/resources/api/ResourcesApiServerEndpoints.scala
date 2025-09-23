@@ -12,7 +12,7 @@ final case class ResourcesApiServerEndpoints(
   private val standoffServerEndpoints: StandoffServerEndpoints,
   private val valuesServerEndpoints: ValuesServerEndpoints,
 ) {
-  val serverEndpoints = valuesServerEndpoints.serverEndpoints ++
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = valuesServerEndpoints.serverEndpoints ++
     resourcesServerEndpoints.serverEndpoints ++
     standoffServerEndpoints.serverEndpoints ++
     metadataServerEndpoints.serverEndpoints

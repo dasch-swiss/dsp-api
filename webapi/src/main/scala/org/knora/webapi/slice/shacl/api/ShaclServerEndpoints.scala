@@ -12,7 +12,9 @@ case class ShaclServerEndpoints(
   private val shaclEndpoints: ShaclEndpoints,
   private val shaclApiService: ShaclApiService,
 ) {
-  val serverEndpoints = Seq(shaclEndpoints.validate.zServerLogic(shaclApiService.validate))
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = Seq(
+    shaclEndpoints.validate.zServerLogic(shaclApiService.validate),
+  )
 }
 
 object ShaclServerEndpoints {

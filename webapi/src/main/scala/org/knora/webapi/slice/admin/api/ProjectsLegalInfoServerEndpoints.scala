@@ -13,7 +13,7 @@ final class ProjectsLegalInfoServerEndpoints(
   private val endpoints: ProjectsLegalInfoEndpoints,
   private val restService: ProjectsLegalInfoRestService,
 ) {
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getProjectLicenses.zServerLogic(restService.findLicenses),
     endpoints.getProjectLicensesIri.zServerLogic(restService.findAvailableLicenseByIdAndShortcode),
     endpoints.getProjectAuthorships.serverLogic(restService.findAuthorships),

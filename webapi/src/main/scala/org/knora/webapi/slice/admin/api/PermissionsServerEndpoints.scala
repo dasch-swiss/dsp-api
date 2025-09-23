@@ -34,7 +34,7 @@ final case class PermissionsServerEndpoints(
   private val restService: PermissionRestService,
 ) {
 
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     permissionsEndpoints.postPermissionsAp.serverLogic(restService.createAdministrativePermission),
     permissionsEndpoints.getPermissionsApByProjectIri.serverLogic(restService.getPermissionsApByProjectIri),
     permissionsEndpoints.getPermissionsApByProjectAndGroupIri.serverLogic(

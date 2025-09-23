@@ -25,7 +25,7 @@ final case class MaintenanceEndpointsHandler(
 
   private val postMaintenanceEndpoint: ZServerEndpoint[Any, Any] =
     maintenanceEndpoints.postMaintenanceActionEndpoint
-      .serverLogic(userSession => { case (action, shortcodes) =>
+      .zServerLogic(userSession => { case (action, shortcodes) =>
         for {
           _ <- authorizationHandler.ensureAdminScope(userSession)
           paths <-
@@ -46,7 +46,7 @@ final case class MaintenanceEndpointsHandler(
 
   val needsTopLeftCorrectionEndpoint: ZServerEndpoint[Any, Any] =
     maintenanceEndpoints.needsTopLeftCorrectionEndpoint
-      .serverLogic(userSession =>
+      .zServerLogic(userSession =>
         _ =>
           authorizationHandler.ensureAdminScope(userSession) *>
             maintenanceActions
@@ -58,7 +58,7 @@ final case class MaintenanceEndpointsHandler(
 
   val wasTopLeftCorrectionAppliedEndpoint: ZServerEndpoint[Any, Any] =
     maintenanceEndpoints.wasTopLeftCorrectionAppliedEndpoint
-      .serverLogic(userSession =>
+      .zServerLogic(userSession =>
         _ =>
           authorizationHandler.ensureAdminScope(userSession) *>
             maintenanceActions

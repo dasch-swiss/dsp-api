@@ -14,7 +14,7 @@ final case class ListsV2ServerEndpoints(
   private val endpoints: ListsEndpointsV2,
   private val restService: ListsV2RestService,
 ) {
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getV2Lists.serverLogic(restService.getList),
     endpoints.getV2Node.serverLogic(restService.getNode),
   )

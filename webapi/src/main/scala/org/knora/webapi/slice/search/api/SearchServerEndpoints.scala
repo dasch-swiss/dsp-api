@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.search.api
 import sttp.model.MediaType
+import sttp.tapir.ztapir.*
 import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -19,7 +20,7 @@ final case class SearchServerEndpoints(
   private val searchRestService: SearchRestService,
 ) {
 
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     searchEndpoints.getFullTextSearch.serverLogic(searchRestService.fullTextSearch),
     searchEndpoints.getFullTextSearchCount.serverLogic(searchRestService.fullTextSearchCount),
     searchEndpoints.getSearchByLabel.serverLogic(searchRestService.searchResourcesByLabelV2),

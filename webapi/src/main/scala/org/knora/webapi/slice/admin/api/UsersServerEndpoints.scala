@@ -26,7 +26,7 @@ case class UsersServerEndpoints(
   private val restService: UserRestService,
 ) {
 
-  val serverEndpoints = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     usersEndpoints.get.usersByIriProjectMemberShips.zServerLogic(restService.getProjectMemberShipsByUserIri),
     usersEndpoints.get.usersByIriProjectAdminMemberShips.zServerLogic(restService.getProjectAdminMemberShipsByUserIri),
     usersEndpoints.get.usersByIriGroupMemberships.zServerLogic(restService.getGroupMemberShipsByIri),

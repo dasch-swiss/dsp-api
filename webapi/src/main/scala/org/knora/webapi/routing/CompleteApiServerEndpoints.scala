@@ -23,7 +23,7 @@ import sttp.tapir.ztapir.*
  * ALL requests go through each of the routes in ORDER.
  * The FIRST matching route is used for handling a request.
  */
-final case class CompleteApiServerEndpoints(
+final case class Endpoints(
   adminApiServerEndpoints: AdminApiServerEndpoints,
   authenticationServerEndpoints: AuthenticationServerEndpoints,
   listsV2ServerEndpoints: ListsV2ServerEndpoints,
@@ -34,16 +34,17 @@ final case class CompleteApiServerEndpoints(
   managementServerEndpoints: ManagementServerEndpoints,
   ontologiesServerEndpoints: OntologiesServerEndpoints,
 ) {
-  val serverEndpoints = adminApiServerEndpoints.serverEndpoints ++
-    authenticationServerEndpoints.serverEndpoints ++
-    listsV2ServerEndpoints.serverEndpoints ++
-    managementServerEndpoints.serverEndpoints ++
-    ontologiesServerEndpoints.serverEndpoints ++
-    resourceInfoServerEndpoints.serverEndpoints ++
-    resourcesApiServerEndpoints.serverEndpoints ++
-    searchServerEndpoints.serverEndpoints ++
-    shaclServerEndpoints.serverEndpoints
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
+    adminApiServerEndpoints.serverEndpoints ++
+      authenticationServerEndpoints.serverEndpoints ++
+      listsV2ServerEndpoints.serverEndpoints ++
+      managementServerEndpoints.serverEndpoints ++
+      ontologiesServerEndpoints.serverEndpoints ++
+      resourceInfoServerEndpoints.serverEndpoints ++
+      resourcesApiServerEndpoints.serverEndpoints ++
+      searchServerEndpoints.serverEndpoints ++
+      shaclServerEndpoints.serverEndpoints
 }
-object CompleteApiServerEndpoints {
-  val layer = ZLayer.derive[CompleteApiServerEndpoints]
+object Endpoints {
+  val layer = ZLayer.derive[Endpoints]
 }
