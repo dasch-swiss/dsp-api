@@ -11,9 +11,9 @@ import zio.ZLayer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 
 final case class AdminApiRoutes(
+  private val adminLists: AdminListsEndpointsHandlers,
   private val filesEndpoints: FilesEndpointsHandler,
   private val groups: GroupsEndpointsHandler,
-  private val adminLists: AdminListsEndpointsHandlers,
   private val maintenance: MaintenanceEndpointsHandlers,
   private val permissions: PermissionsEndpointsHandlers,
   private val project: ProjectsEndpointsHandler,

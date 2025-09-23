@@ -19,11 +19,11 @@ import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
 
 final case class SearchApiRoutes(
-  searchEndpoints: SearchEndpoints,
-  searchRestService: SearchRestService,
-  mapper: HandlerMapper,
-  tapirToPekko: TapirToPekkoInterpreter,
-  iriConverter: IriConverter,
+  private val iriConverter: IriConverter,
+  private val mapper: HandlerMapper,
+  private val searchEndpoints: SearchEndpoints,
+  private val searchRestService: SearchRestService,
+  private val tapirToPekko: TapirToPekkoInterpreter,
 ) {
 
   val routes: Seq[Route] =

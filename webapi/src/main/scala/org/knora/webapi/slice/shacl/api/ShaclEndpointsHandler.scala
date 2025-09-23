@@ -11,17 +11,13 @@ import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 
 case class ShaclEndpointsHandler(
-  shaclEndpoints: ShaclEndpoints,
-  shaclApiService: ShaclApiService,
-  mapper: HandlerMapper,
+  private val shaclEndpoints: ShaclEndpoints,
+  private val shaclApiService: ShaclApiService,
+  private val mapper: HandlerMapper,
 ) {
 
-  val validate = PublicEndpointHandler(
-    shaclEndpoints.validate,
-    shaclApiService.validate,
-  )
-
-  val allHandlers = List(validate).map(mapper.mapPublicEndpointHandler)
+  val allHandlers =
+    List(PublicEndpointHandler(shaclEndpoints.validate, shaclApiService.validate)).map(mapper.mapPublicEndpointHandler)
 }
 
 object ShaclEndpointsHandler {

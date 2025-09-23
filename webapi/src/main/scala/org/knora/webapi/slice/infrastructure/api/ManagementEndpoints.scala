@@ -9,21 +9,13 @@ import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
-import zio.UIO
 import zio.ZIO
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.PublicEndpointHandler
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
-import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class VersionResponse(
   webapi: String,
@@ -94,50 +86,4 @@ final case class ManagementEndpoints(baseEndpoints: BaseEndpoints) {
 
 object ManagementEndpoints {
   val layer = zio.ZLayer.derive[ManagementEndpoints]
-}
-
-final case class ManagementRoutes(
-  endpoint: ManagementEndpoints,
-  state: State,
-  mapper: HandlerMapper,
-  tapirToPekko: TapirToPekkoInterpreter,
-  triplestore: TriplestoreService,
-  auth: AuthorizationRestService,
-) {
-
-  private val versionEndpointHandler =
-    PublicEndpointHandler[Unit, VersionResponse](endpoint.getVersion, _ => ZIO.succeed(VersionResponse.current))
-
-  private val healthEndpointHandler =
-    PublicEndpointHandler[Unit, (HealthResponse, StatusCode)](endpoint.getHealth, _ => createHealthResponse)
-
-  private val createHealthResponse: UIO[(HealthResponse, StatusCode)] =
-    state.getAppState.map { s =>
-      val response = HealthResponse.from(s)
-      (response, if (response.status) StatusCode.Ok else StatusCode.ServiceUnavailable)
-    }
-
-  private val startCompactionHandler =
-    SecuredEndpointHandler[Unit, (String, StatusCode)](
-      endpoint.postStartCompaction,
-      user =>
-        _ =>
-          for {
-            _       <- auth.ensureSystemAdmin(user)
-            success <- triplestore.compact()
-          } yield if (success) ("ok", StatusCode.Ok) else ("forbidden", StatusCode.Forbidden),
-    )
-
-  val routes = (
-    List(versionEndpointHandler, healthEndpointHandler)
-      .map(mapper.mapPublicEndpointHandler(_))
-      ++
-        List(startCompactionHandler)
-          .map(mapper.mapSecuredEndpointHandler(_))
-  )
-    .map(tapirToPekko.toRoute)
-}
-
-object ManagementRoutes {
-  val layer = zio.ZLayer.derive[ManagementRoutes]
 }

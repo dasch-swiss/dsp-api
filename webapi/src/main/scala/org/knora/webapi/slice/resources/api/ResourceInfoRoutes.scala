@@ -16,10 +16,10 @@ import org.knora.webapi.slice.resources.api.model.ListResponseDto
 import org.knora.webapi.slice.resources.api.service.ResourceInfoRestService
 
 final case class ResourceInfoRoutes(
-  endpoints: ResourceInfoEndpoints,
-  resourceInfoService: ResourceInfoRestService,
-  mapper: HandlerMapper,
-  interpreter: TapirToPekkoInterpreter,
+  private val endpoints: ResourceInfoEndpoints,
+  private val interpreter: TapirToPekkoInterpreter,
+  private val mapper: HandlerMapper,
+  private val resourceInfoService: ResourceInfoRestService,
 ) {
 
   val routes: Seq[Route] =
