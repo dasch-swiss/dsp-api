@@ -8,15 +8,10 @@ package org.knora.webapi.slice.resources.api
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
-import sttp.tapir.server.PartialServerEndpoint
 import zio.ZLayer
 
-import scala.concurrent.Future
-
-import dsp.errors.RequestRejectedException
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.resources.api.model.GraphDirection

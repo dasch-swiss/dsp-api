@@ -4,15 +4,12 @@
  */
 
 package org.knora.webapi.slice.search.api
-import sttp.model.MediaType
 import sttp.tapir.ztapir.*
 import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
 
 final case class SearchServerEndpoints(
