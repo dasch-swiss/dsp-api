@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.api.service
 
+import zio.stream.ZStream
 import zio.*
 
 import dsp.errors.BadRequestException
@@ -34,6 +35,7 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import zio.nio.file.Files
 
 final case class ProjectRestService(
   private val format: KnoraResponseRenderer,
@@ -177,16 +179,17 @@ final case class ProjectRestService(
    * @param id   the [[IriIdentifier]] of the project
    * @param user the [[User]] making the request
    * @return
-   *     '''success''': data of the project as [[ProjectDataGetResponseADM]]
+   *     '''success''': data of the project for download as a stream of bytes, along with a suggested filename and a MIME type
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[IriIdentifier]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def getAllProjectData(user: User)(id: ProjectIri): Task[ProjectDataGetResponseADM] =
+  def getAllProjectData(user: User)(id: ProjectIri): Task[(String, String, ZStream[Any, Throwable, Byte])] =
     for {
       project <- auth.ensureSystemAdminOrProjectAdminById(user, id)
-      result  <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
-    } yield ProjectDataGetResponseADM(result)
+      path    <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
+      stream   = ZStream.fromPath(path).ensuringWith(_ => ZIO.attempt(Files.deleteIfExists(path)).ignore)
+    } yield (s"attachment; filename=project-data.trig", "application/octet-stream", stream)
 
   def getProjectMembersById(user: User)(id: ProjectIri): Task[ProjectMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(findProjectMembers)

@@ -11,7 +11,6 @@ import zio.stream.*
 
 import java.nio.file.Files
 import scala.concurrent.ExecutionContext
-
 import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
@@ -22,25 +21,14 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
+import sttp.capabilities.zio.ZioStreams
 
 final case class ProjectsServerEndpoints(
   private val projectsEndpoints: ProjectsEndpoints,
   private val restService: ProjectRestService,
 ) {
 
-  private val getAdminProjectsByIriAllDataHandler =
-    projectsEndpoints.Secured.getAdminProjectsByIriAllData.serverLogic((user: User) =>
-      (iri: ProjectIri) =>
-        restService
-          .getAllProjectData(user)(iri)
-          .map { result =>
-            val path   = result.projectDataFile
-            val stream = ZStream.fromPath(path).ensuringWith(_ => ZIO.attempt(Files.deleteIfExists(path)).ignore)
-            (s"attachment; filename=project-data.trig", "application/octet-stream", stream)
-          },
-    )
-
-  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
+  val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(
     projectsEndpoints.Public.getAdminProjects.zServerLogic(restService.listAllProjects),
     projectsEndpoints.Public.getAdminProjectsKeywords.zServerLogic(restService.listAllKeywords),
     projectsEndpoints.Public.getAdminProjectsByProjectIri.zServerLogic(restService.findById),
@@ -53,7 +41,7 @@ final case class ProjectsServerEndpoints(
       .zServerLogic(restService.getProjectRestrictedViewSettingsByShortcode),
     projectsEndpoints.Public.getAdminProjectsByProjectShortnameRestrictedViewSettings
       .zServerLogic(restService.getProjectRestrictedViewSettingsByShortname),
-    getAdminProjectsByIriAllDataHandler,
+    projectsEndpoints.Secured.getAdminProjectsByIriAllData.serverLogic(restService.getAllProjectData),
     projectsEndpoints.Secured.postAdminProjectsByProjectIriRestrictedViewSettings
       .serverLogic(restService.updateProjectRestrictedViewSettingsById),
     projectsEndpoints.Secured.postAdminProjectsByProjectShortcodeRestrictedViewSettings
