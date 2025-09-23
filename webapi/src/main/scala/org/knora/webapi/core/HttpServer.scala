@@ -23,10 +23,10 @@ object HttpServer {
   val layer = ZLayer.scoped(createServer)
 
   private def createServer = for {
-    port      <- ZIO.serviceWith[KnoraApi](_.internalPort)
+    apiConfig <- ZIO.service[KnoraApi]
     endpoints <- ZIO.serviceWith[CompleteApiServerEndpoints](_.serverEndpoints)
     httpApp    = ZioHttpInterpreter(options).toHttp(endpoints)
-    _         <- Server.install(httpApp).provide(Server.defaultWithPort(port))
-    _         <- Console.printLine(s"Go to http://localhost:$config.knoraApi.externalPort/docs to open SwaggerUI")
+    _         <- Server.install(httpApp).provide(Server.defaultWithPort(apiConfig.internalPort))
+    _         <- Console.printLine(s"Go to http://localhost:${apiConfig.externalPort}/docs to open SwaggerUI")
   } yield ()
 }
