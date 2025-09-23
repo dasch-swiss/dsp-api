@@ -89,11 +89,16 @@ DELETE {
 } INSERT {
     GRAPH ?dataNamedGraph {
         @* Construct the new value version. *@
-        ?newValue rdf:type <@value.valueType> ;
-            knora-base:isDeleted false  ;
-            knora-base:valueHasString """@value.valueHasString""" ;
-            knora-base:valueHasUUID ?currentValueUUID .
-
+        ?newValue rdf:type <@value.valueType> .
+        ?newValue knora-base:isDeleted false  .
+        ?newValue knora-base:valueHasString """@value.valueHasString""" .
+        ?newValue knora-base:valueHasUUID ?currentValueUUID .
+        ?newValue knora-base:attachedToUser <@valueCreator> .
+        ?newValue knora-base:hasPermissions "@valuePermissions"^^xsd:string  .
+        @* TODO: in case of a file value, order is not given *@
+        ?newValue knora-base:valueHasOrder ?order .
+        ?newValue knora-base:valueCreationDate "@currentTime"^^xsd:dateTime .
+        ?newValue knora-base:previousValue ?currentValue .
 
         @value match {
 
@@ -335,14 +340,6 @@ DELETE {
 
             case None => {}
         }
-
-        ?newValue knora-base:attachedToUser <@valueCreator> ;
-            knora-base:hasPermissions "@valuePermissions"^^xsd:string  .
-
-        @* TODO: in case of a file value, order is not given *@
-        ?newValue knora-base:valueHasOrder ?order .
-        ?newValue knora-base:valueCreationDate "@currentTime"^^xsd:dateTime .
-        ?newValue knora-base:previousValue ?currentValue .
 
         @* Insert direct links and LinkValues for resource references. *@
 

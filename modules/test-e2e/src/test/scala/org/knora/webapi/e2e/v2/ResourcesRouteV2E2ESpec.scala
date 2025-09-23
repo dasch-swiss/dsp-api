@@ -521,7 +521,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                                         .getRequiredString(KnoraApiV2Complex.TextValueAsXml)
                                         .fold(msg => throw BadRequestException(msg), identity)
 
-        // The apostrophe should be preserved as-is, not escaped as &apos;
+        // The apostrophe should be preserved as-is, not escaped as "\&apos;"
         assertEncoded = assertTrue(savedTextValueAsXml.contains("Apostrophe start &apos; end"))
       } yield assertIri && assertEncoded
     },

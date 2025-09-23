@@ -9,6 +9,7 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
+import scala.jdk.CollectionConverters._
 import scala.PartialFunction.cond
 
 import dsp.errors.*
@@ -314,6 +315,7 @@ final case class ValuesResponderV2(
             valueCreationDate = valueToCreate.valueCreationDate,
             valueCreator = requestingUser.id,
             valuePermissions = newValuePermissionLiteral,
+            requestingUser = requestingUser,
           )
 
       } yield CreateValueResponseV2(
@@ -386,6 +388,7 @@ final case class ValuesResponderV2(
     valueCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
+    requestingUser: User,
   ): ZIO[Any, Throwable, UnverifiedValueV2] =
     value match {
       case linkValueContent: LinkValueContentV2 =>
@@ -412,6 +415,7 @@ final case class ValuesResponderV2(
           maybeValueCreationDate = valueCreationDate,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
+          requestingUser = requestingUser,
         )
     }
 
@@ -439,6 +443,7 @@ final case class ValuesResponderV2(
     maybeValueCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
+    requestingUser: User,
   ) =
     for {
 
@@ -482,6 +487,7 @@ final case class ValuesResponderV2(
       resourceIriInternal  <- ZIO.fromEither(InternalIri.from(resourceInfo.resourceIri))
       newValueIriInternal  <- ZIO.fromEither(InternalIri.from(newValueIri))
       valueCreatorInternal <- ZIO.fromEither(InternalIri.from(valueCreator))
+      requestingUserInternal  <- ZIO.fromEither(InternalIri.from(requestingUser.id))
 
       // Use repository method which handles dual validation
       _ <- valueRepo.createValue(
@@ -495,6 +501,7 @@ final case class ValuesResponderV2(
              valueCreator = valueCreatorInternal,
              valuePermissions = valuePermissions,
              creationDate = creationDate,
+             requestingUser = requestingUserInternal,
            )
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
@@ -970,28 +977,28 @@ final case class ValuesResponderV2(
 
       // If no custom value creation date was provided, make a timestamp to indicate when the value
       // was updated.
-      currentTime: Instant = valueCreationDate.getOrElse(Instant.now)
-
+      currentTime: Instant     = valueCreationDate.getOrElse(Instant.now)
+      dataNamedGraphInternal  <- ZIO.fromEither(InternalIri.from(dataNamedGraph))
+      resourceIriInternal     <- ZIO.fromEither(InternalIri.from(resourceInfo.resourceIri))
+      currentValueIriInternal <- ZIO.fromEither(InternalIri.from(currentValue.valueIri))
+      newValueIriInternal     <- ZIO.fromEither(InternalIri.from(newValueIri))
+      valueCreatorInternal    <- ZIO.fromEither(InternalIri.from(valueCreator))
+      requestingUserInternal  <- ZIO.fromEither(InternalIri.from(requestingUser.id))
       // Generate a SPARQL update.
-      sparqlUpdate = sparql.v2.txt.addValueVersion(
-                       dataNamedGraph = dataNamedGraph,
-                       resourceIri = resourceInfo.resourceIri,
-                       propertyIri = propertyIri,
-                       currentValueIri = currentValue.valueIri,
-                       newValueIri = newValueIri,
-                       valueTypeIri = currentValue.valueContent.valueType,
-                       value = newValueVersion,
-                       valueCreator = valueCreator,
-                       valuePermissions = valuePermissions,
-                       maybeComment = newValueVersion.comment,
-                       linkUpdates = standoffLinkUpdates,
-                       currentTime = currentTime,
-                       requestingUser = requestingUser.id,
-                     )
-
-      // Do the update.
-      _ <- triplestoreService.query(Update(sparqlUpdate))
-
+      _ <- valueRepo.updateValue(
+             dataNamedGraph = dataNamedGraphInternal,
+             resourceIri = resourceIriInternal,
+             propertyIri = propertyIri,
+             currentValueIri = currentValueIriInternal,
+             newValueIri = newValueIriInternal,
+             valueTypeIri = currentValue.valueContent.valueType,
+             value = newValueVersion,
+             valueCreator = valueCreatorInternal,
+             valuePermissions = valuePermissions,
+             linkUpdates = standoffLinkUpdates,
+             creationDate = currentTime,
+             requestingUser = requestingUserInternal,
+           )
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
       newValueUUID = currentValue.valueHasUUID,
