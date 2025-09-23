@@ -22,17 +22,12 @@ final case class FilesEndpointsHandler(
 ) {
 
   private val getAdminFilesShortcodeFileIri =
-    SecuredEndpointHandler[
-      (Shortcode, SparqlEncodedString),
-      PermissionCodeAndProjectRestrictedViewSettings,
-    ](
+    SecuredEndpointHandler(
       filesEndpoints.getAdminFilesShortcodeFileIri,
-      (user: User) => { case (shortcode: Shortcode, filename: SparqlEncodedString) =>
-        assetPermissionsResponder.getPermissionCodeAndProjectRestrictedViewSettings(shortcode, filename.value, user)
-      },
+      assetPermissionsResponder.getPermissionCodeAndProjectRestrictedViewSettings,
     )
 
-  val allHandlers = List(getAdminFilesShortcodeFileIri).map(mapper.mapSecuredEndpointHandler(_))
+  val allHandlers = List(getAdminFilesShortcodeFileIri).map(mapper.mapSecuredEndpointHandler)
 }
 
 object FilesEndpointsHandler {

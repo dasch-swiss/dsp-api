@@ -21,58 +21,19 @@ case class GroupsEndpointsHandler(
   restService: GroupRestService,
   mapper: HandlerMapper,
 ) {
-  private val getGroupsHandler =
-    PublicEndpointHandler(
-      endpoints.getGroups,
-      (_: Unit) => restService.getGroups,
-    )
 
-  private val getGroupByIriHandler =
-    PublicEndpointHandler(
-      endpoints.getGroupByIri,
-      (iri: GroupIri) => restService.getGroupByIri(iri),
-    )
-
-  private val getGroupMembersHandler =
-    SecuredEndpointHandler(
-      endpoints.getGroupMembers,
-      user => iri => restService.getGroupMembers(iri, user),
-    )
-
-  private val postGroupHandler =
-    SecuredEndpointHandler(
-      endpoints.postGroup,
-      user => request => restService.postGroup(request, user),
-    )
-
-  private val putGroupHandler =
-    SecuredEndpointHandler[(GroupIri, GroupUpdateRequest), GroupGetResponseADM](
-      endpoints.putGroup,
-      user => { case (iri, request) =>
-        restService.putGroup(iri, request, user)
-      },
-    )
-
-  private val putGroupStatusHandler =
-    SecuredEndpointHandler[(GroupIri, GroupStatusUpdateRequest), GroupGetResponseADM](
-      endpoints.putGroupStatus,
-      user => { case (iri, request) =>
-        restService.putGroupStatus(iri, request, user)
-      },
-    )
-
-  private val deleteGroupHandler =
-    SecuredEndpointHandler(
-      endpoints.deleteGroup,
-      user => iri => restService.deleteGroup(iri, user),
-    )
-
-  private val securedHandlers =
-    List(getGroupMembersHandler, postGroupHandler, putGroupHandler, putGroupStatusHandler, deleteGroupHandler)
-      .map(mapper.mapSecuredEndpointHandler(_))
-
-  val allHandlers = List(getGroupsHandler, getGroupByIriHandler).map(mapper.mapPublicEndpointHandler(_))
-    ++ securedHandlers
+  val allHandlers =
+    List(
+      PublicEndpointHandler(endpoints.getGroups, (_: Unit) => restService.getGroups),
+      PublicEndpointHandler(endpoints.getGroupByIri, restService.getGroupByIri),
+    ).map(mapper.mapPublicEndpointHandler) ++
+      List(
+        SecuredEndpointHandler(endpoints.getGroupMembers, restService.getGroupMembers),
+        SecuredEndpointHandler(endpoints.postGroup, restService.postGroup),
+        SecuredEndpointHandler(endpoints.putGroup, restService.putGroup),
+        SecuredEndpointHandler(endpoints.putGroupStatus, restService.putGroupStatus),
+        SecuredEndpointHandler(endpoints.deleteGroup, restService.deleteGroup),
+      ).map(mapper.mapSecuredEndpointHandler)
 }
 
 object GroupsEndpointsHandler {

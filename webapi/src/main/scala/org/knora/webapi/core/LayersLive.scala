@@ -46,7 +46,6 @@ import org.knora.webapi.slice.infrastructure.OpenTelemetry
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
-import org.knora.webapi.slice.lists.domain.ListsService
 import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.ontology.OntologyModule.Provided
 import org.knora.webapi.slice.ontology.api.OntologyApiModule
@@ -153,7 +152,6 @@ object LayersLive { self =>
     InfrastructureModule.Provided &
     ListsApiModule.Provided &
     ListsResponder &
-    ListsService &
     MessageRelay &
     OntologyApiModule.Provided &
     OntologyInferencer &
@@ -205,7 +203,6 @@ object LayersLive { self =>
       KnoraResponseRenderer.layer,
       ListsApiModule.layer,
       ListsResponder.layer,
-      ListsService.layer,
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,

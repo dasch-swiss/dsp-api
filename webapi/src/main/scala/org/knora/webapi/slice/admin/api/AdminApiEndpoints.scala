@@ -9,20 +9,20 @@ import sttp.tapir.AnyEndpoint
 import zio.ZLayer
 
 final case class AdminApiEndpoints(
-  groupsEndpoints: GroupsEndpoints,
-  listsEndpoints: ListsEndpoints,
-  maintenanceEndpoints: MaintenanceEndpoints,
-  permissionsEndpoints: PermissionsEndpoints,
-  projectsEndpoints: ProjectsEndpoints,
-  projectsLegalInfoEndpoint: ProjectsLegalInfoEndpoints,
-  storeEndpoints: StoreEndpoints,
-  usersEndpoints: UsersEndpoints,
-  filesEndpoints: FilesEndpoints,
+  private val adminListsEndpoints: AdminListsEndpoints,
+  private val filesEndpoints: FilesEndpoints,
+  private val groupsEndpoints: GroupsEndpoints,
+  private val maintenanceEndpoints: MaintenanceEndpoints,
+  private val permissionsEndpoints: PermissionsEndpoints,
+  private val projectsEndpoints: ProjectsEndpoints,
+  private val projectsLegalInfoEndpoint: ProjectsLegalInfoEndpoints,
+  private val storeEndpoints: StoreEndpoints,
+  private val usersEndpoints: UsersEndpoints,
 ) {
 
   val endpoints: Seq[AnyEndpoint] =
     groupsEndpoints.endpoints ++
-      listsEndpoints.endpoints ++
+      adminListsEndpoints.endpoints ++
       maintenanceEndpoints.endpoints ++
       permissionsEndpoints.endpoints ++
       projectsLegalInfoEndpoint.endpoints ++

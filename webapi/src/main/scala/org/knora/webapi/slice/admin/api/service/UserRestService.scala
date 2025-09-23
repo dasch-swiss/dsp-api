@@ -42,14 +42,14 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class UserRestService(
-  auth: AuthorizationRestService,
-  groupService: GroupService,
-  userService: UserService,
-  knoraUserService: KnoraUserService,
-  knoraUserToUserConverter: KnoraUserToUserConverter,
-  passwordService: PasswordService,
-  projectService: ProjectService,
-  format: KnoraResponseRenderer,
+  private val auth: AuthorizationRestService,
+  private val groupService: GroupService,
+  private val userService: UserService,
+  private val knoraUserService: KnoraUserService,
+  private val knoraUserToUserConverter: KnoraUserToUserConverter,
+  private val passwordService: PasswordService,
+  private val projectService: ProjectService,
+  private val format: KnoraResponseRenderer,
 ) {
 
   def getAllUsers(requestingUser: User): Task[UsersResponse] = for {

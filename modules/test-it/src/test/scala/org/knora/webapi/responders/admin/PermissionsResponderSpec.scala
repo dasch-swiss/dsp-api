@@ -63,10 +63,9 @@ object PermissionsResponderSpec extends E2EZSpec {
       test("return Permission.Administrative for project and group") {
         for {
           result <- permissionRestService(
-                      _.getPermissionsApByProjectAndGroupIri(
+                      _.getPermissionsApByProjectAndGroupIri(rootUser)(
                         imagesProjectIri,
                         KnoraGroupRepo.builtIn.ProjectMember.id,
-                        rootUser,
                       ),
                     )
         } yield assertTrue(result == AdministrativePermissionGetResponseADM(perm002_a1.p))

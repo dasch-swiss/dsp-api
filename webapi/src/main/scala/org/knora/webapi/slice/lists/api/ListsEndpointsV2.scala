@@ -38,15 +38,15 @@ final case class ListsEndpointsV2(private val base: BaseEndpoints) {
   val getV2Lists = base.withUserEndpoint.get
     .in("v2" / "lists" / listIri)
     .in(ApiV2.Inputs.formatOptions)
-    .out(header[MediaType](HeaderNames.ContentType))
     .out(stringBody.example(Examples.listGetResponseV2.format(FormatOptions.default, Examples.appConfig)))
+    .out(header[MediaType](HeaderNames.ContentType))
     .description("Returns a list (a graph with all list nodes).")
 
   val getV2Node = base.withUserEndpoint.get
     .in("v2" / "node" / listIri)
     .in(ApiV2.Inputs.formatOptions)
-    .out(header[MediaType](HeaderNames.ContentType))
     .out(stringBody.example(Examples.nodeGetResponseV2.format(FormatOptions.default, Examples.appConfig)))
+    .out(header[MediaType](HeaderNames.ContentType))
     .description("Returns a list node.")
 
   val endpoints: Seq[AnyEndpoint] = Seq(

@@ -23,6 +23,7 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatStatements
@@ -49,26 +50,25 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
-import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.domain.InternalIri
-import org.knora.webapi.slice.lists.domain.ListsService
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
 
 final case class ConstructResponseUtilV2(
-  appConfig: AppConfig,
-  messageRelay: MessageRelay,
-  listsService: ListsService,
-  standoffTagUtilV2: StandoffTagUtilV2,
-  projectService: ProjectService,
+  private val appConfig: AppConfig,
+  private val messageRelay: MessageRelay,
+  private val listsResponder: ListsResponder,
+  private val standoffTagUtilV2: StandoffTagUtilV2,
+  private val projectService: ProjectService,
 )(implicit val stringFormatter: StringFormatter) {
 
   private val inferredPredicates = Set(
@@ -1007,14 +1007,15 @@ final case class ConstructResponseUtilV2(
         targetSchema match {
           case ApiV2Simple =>
             for {
-              nodeIri <- ZIO
-                           .fromEither(ListIri.from(listNodeIri))
-                           .orElseFail(BadRequestException(s"Invalid list iri: $listNodeIri"))
-              nodeResponse <- listsService.getNode(nodeIri, requestingUser).mapError { e =>
-                                e.fold(NotFoundException(s"List node $nodeIri not found"))(identity)
-                              }
-              listNodeLabel =
-                nodeResponse.node.getLabelInPreferredLanguage(requestingUser.lang, appConfig.fallbackLanguage)
+              listNodeLabel <-
+                listsResponder
+                  .listNodeInfoGetRequestADM(listNodeIri)
+                  .flatMap(r =>
+                    ZIO
+                      .fromOption(r.asOpt[ChildNodeInfoGetResponseADM])
+                      .orElseFail(NotFoundException(s"List node not found: $listNodeIri")),
+                  )
+                  .map(_.nodeinfo.getLabelInPreferredLanguage(requestingUser.lang, appConfig.fallbackLanguage))
             } yield listNode.copy(listNodeLabel = listNodeLabel)
           case ApiV2Complex => ZIO.succeed(listNode)
         }

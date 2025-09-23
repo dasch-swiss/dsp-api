@@ -30,19 +30,20 @@ final case class StoreRestService(
    * @return a [[MessageResponse]].
    */
   def resetTriplestoreContent(
-    rdfDataObjects: List[RdfDataObject],
+    rdfDataObjects: Option[List[RdfDataObject]],
     prependDefaults: Boolean = true,
   ): Task[MessageResponse] =
+    val objs = rdfDataObjects.getOrElse(List.empty)
     for {
       _ <- ZIO.when(!appConfig.allowReloadOverHttp) {
              val msg =
                "The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?"
              ZIO.fail(ForbiddenException(msg))
            }
-      _ <- ZIO.logWarning(s"Resetting triplestore content with ${rdfDataObjects.map(_.name).mkString(", ")}")
-      _ <- triplestoreService.resetTripleStoreContent(rdfDataObjects, prependDefaults).logError
+      _ <- ZIO.logWarning(s"Resetting triplestore content with ${objs.map(_.name).mkString(", ")}")
+      _ <- triplestoreService.resetTripleStoreContent(objs, prependDefaults).logError
       _ <- ontologyCache.refreshCache().logError
-      _  = cacheManager.clearAll()
+      _ <- cacheManager.clearAll()
     } yield MessageResponse("success")
 }
 

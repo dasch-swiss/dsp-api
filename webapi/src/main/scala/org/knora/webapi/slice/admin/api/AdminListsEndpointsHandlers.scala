@@ -27,109 +27,109 @@ import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
-final case class ListsEndpointsHandlers(
-  listsEndpoints: ListsEndpoints,
-  listsResponder: ListsResponder,
-  listRestService: ListRestService,
-  mapper: HandlerMapper,
+final case class AdminListsEndpointsHandlers(
+  private val adminListsEndpoints: AdminListsEndpoints,
+  private val adminListsRestService: AdminListRestService,
+  private val listsResponder: ListsResponder,
+  private val mapper: HandlerMapper,
 ) {
 
   private val getListsQueryByProjectIriHandler = PublicEndpointHandler(
-    listsEndpoints.getListsQueryByProjectIriOption,
+    adminListsEndpoints.getListsQueryByProjectIriOption,
     (iriShortcode: Option[Either[ProjectIri, Shortcode]]) => listsResponder.getLists(iriShortcode),
   )
 
   private val getListsByIriHandler = PublicEndpointHandler(
-    listsEndpoints.getListsByIri,
+    adminListsEndpoints.getListsByIri,
     (iri: ListIri) => listsResponder.listGetRequestADM(iri.value),
   )
 
   private val getListsByIriInfoHandler = PublicEndpointHandler(
-    listsEndpoints.getListsByIriInfo,
+    adminListsEndpoints.getListsByIriInfo,
     (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value),
   )
 
   private val getListsInfosByIriHandler = PublicEndpointHandler(
-    listsEndpoints.getListsInfosByIri,
+    adminListsEndpoints.getListsInfosByIri,
     (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value),
   )
 
   private val getListsNodesByIriHandler = PublicEndpointHandler(
-    listsEndpoints.getListsNodesByIri,
+    adminListsEndpoints.getListsNodesByIri,
     (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value),
   )
 
   // Creates
   private val postListsCreateRootNodeHandler =
     SecuredEndpointHandler[ListCreateRootNodeRequest, ListGetResponseADM](
-      listsEndpoints.postLists,
-      user => req => listRestService.listCreateRootNode(req, user),
+      adminListsEndpoints.postLists,
+      user => req => adminListsRestService.listCreateRootNode(req, user),
     )
 
   private val postListsCreateChildNodeHandler =
     SecuredEndpointHandler[(ListIri, ListCreateChildNodeRequest), ChildNodeInfoGetResponseADM](
-      listsEndpoints.postListsChild,
+      adminListsEndpoints.postListsChild,
       user => { case (iri: ListIri, req: ListCreateChildNodeRequest) =>
         ZIO
           .fail(BadRequestException("Route and payload parentNodeIri mismatch."))
           .when(iri != req.parentNodeIri) *>
-          listRestService.listCreateChildNode(req, user)
+          adminListsRestService.listCreateChildNode(req, user)
       },
     )
 
   // Updates
   private val putListsByIriNameHandler =
     SecuredEndpointHandler[(ListIri, ListChangeNameRequest), NodeInfoGetResponseADM](
-      listsEndpoints.putListsByIriName,
+      adminListsEndpoints.putListsByIriName,
       (user: User) => { case (iri: ListIri, newName: ListChangeNameRequest) =>
-        listRestService.listChangeName(iri, newName, user)
+        adminListsRestService.listChangeName(iri, newName, user)
       },
     )
 
   private val putListsByIriLabelsHandler =
     SecuredEndpointHandler[(ListIri, ListChangeLabelsRequest), NodeInfoGetResponseADM](
-      listsEndpoints.putListsByIriLabels,
+      adminListsEndpoints.putListsByIriLabels,
       (user: User) => { case (iri: ListIri, request: ListChangeLabelsRequest) =>
-        listRestService.listChangeLabels(iri, request, user)
+        adminListsRestService.listChangeLabels(iri, request, user)
       },
     )
 
   private val putListsByIriCommentsHandler =
     SecuredEndpointHandler[(ListIri, ListChangeCommentsRequest), NodeInfoGetResponseADM](
-      listsEndpoints.putListsByIriComments,
+      adminListsEndpoints.putListsByIriComments,
       (user: User) => { case (iri: ListIri, request: ListChangeCommentsRequest) =>
-        listRestService.listChangeComments(iri, request, user)
+        adminListsRestService.listChangeComments(iri, request, user)
       },
     )
 
   private val putListsByIriPositionHandler =
     SecuredEndpointHandler[(ListIri, ListChangePositionRequest), NodePositionChangeResponseADM](
-      listsEndpoints.putListsByIriPosition,
+      adminListsEndpoints.putListsByIriPosition,
       (user: User) => { case (iri: ListIri, request: ListChangePositionRequest) =>
-        listRestService.nodePositionChangeRequest(iri, request, user)
+        adminListsRestService.nodePositionChangeRequest(iri, request, user)
       },
     )
 
   private val putListsByIriHandler = SecuredEndpointHandler[(ListIri, ListChangeRequest), NodeInfoGetResponseADM](
-    listsEndpoints.putListsByIri,
+    adminListsEndpoints.putListsByIri,
     (user: User) => { case (iri: ListIri, request: ListChangeRequest) =>
-      listRestService.listChange(iri, request, user)
+      adminListsRestService.listChange(iri, request, user)
     },
   )
 
   // Deletes
   private val deleteListsByIriHandler = SecuredEndpointHandler[ListIri, ListItemDeleteResponseADM](
-    listsEndpoints.deleteListsByIri,
-    user => listIri => listRestService.deleteListItemRequestADM(listIri, user),
+    adminListsEndpoints.deleteListsByIri,
+    user => listIri => adminListsRestService.deleteListItemRequestADM(listIri, user),
   )
 
   private val getListsCanDeleteByIriHandler = PublicEndpointHandler[ListIri, CanDeleteListResponseADM](
-    listsEndpoints.getListsCanDeleteByIri,
+    adminListsEndpoints.getListsCanDeleteByIri,
     listsResponder.canDeleteListRequestADM,
   )
 
   private val deleteListsCommentHandler = SecuredEndpointHandler[ListIri, ListNodeCommentsDeleteResponseADM](
-    listsEndpoints.deleteListsComment,
+    adminListsEndpoints.deleteListsComment,
     _ => listIri => listsResponder.deleteListNodeCommentsADM(listIri),
   )
 
@@ -157,6 +157,6 @@ final case class ListsEndpointsHandlers(
   val allHandlers = public ++ secured
 }
 
-object ListsEndpointsHandlers {
-  val layer = ZLayer.derive[ListsEndpointsHandlers]
+object AdminListsEndpointsHandlers {
+  val layer = ZLayer.derive[AdminListsEndpointsHandlers]
 }
