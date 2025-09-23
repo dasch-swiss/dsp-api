@@ -5,7 +5,8 @@
 
 package org.knora.webapi.slice.admin.api
 
-import zio.ZLayer
+import zio.*
+import sttp.tapir.ztapir.*
 
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
@@ -27,44 +28,29 @@ import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final case class PermissionsEndpointsHandlers(
   permissionsEndpoints: PermissionsEndpoints,
   restService: PermissionRestService,
-  mapper: HandlerMapper,
 ) {
 
-  val allHanders = List(
-    SecuredEndpointHandler(permissionsEndpoints.postPermissionsAp, restService.createAdministrativePermission),
-    SecuredEndpointHandler(permissionsEndpoints.getPermissionsApByProjectIri, restService.getPermissionsApByProjectIri),
-    SecuredEndpointHandler(
-      permissionsEndpoints.getPermissionsApByProjectAndGroupIri,
+  val allHanders = Seq(
+    permissionsEndpoints.postPermissionsAp.serverLogic(restService.createAdministrativePermission),
+    permissionsEndpoints.getPermissionsApByProjectIri.serverLogic(restService.getPermissionsApByProjectIri),
+    permissionsEndpoints.getPermissionsApByProjectAndGroupIri.serverLogic(
       restService.getPermissionsApByProjectAndGroupIri,
     ),
-    SecuredEndpointHandler(
-      permissionsEndpoints.getPermissionsDoapByProjectIri,
-      restService.getPermissionsDaopByProjectIri,
-    ),
-    SecuredEndpointHandler(permissionsEndpoints.getPermissionsByProjectIri, restService.getPermissionsByProjectIri),
-    SecuredEndpointHandler(permissionsEndpoints.putPermissionsDoapForWhat, restService.updateDoapForWhat),
-    SecuredEndpointHandler(permissionsEndpoints.putPermissionsProjectIriGroup, restService.updatePermissionGroup),
-    SecuredEndpointHandler(
-      permissionsEndpoints.putPerrmissionsHasPermissions,
-      restService.updatePermissionHasPermissions,
-    ),
-    SecuredEndpointHandler(permissionsEndpoints.putPermissionsProperty, restService.updatePermissionProperty),
-    SecuredEndpointHandler(
-      permissionsEndpoints.putPermisssionsResourceClass,
-      restService.updatePermissionResourceClass,
-    ),
-    SecuredEndpointHandler(permissionsEndpoints.deletePermission, restService.deletePermission),
-    SecuredEndpointHandler(permissionsEndpoints.postPermissionsDoap, restService.createDefaultObjectAccessPermission),
-  ).map(mapper.mapSecuredEndpointHandler)
+    permissionsEndpoints.getPermissionsDoapByProjectIri.serverLogic(restService.getPermissionsDaopByProjectIri),
+    permissionsEndpoints.getPermissionsByProjectIri.serverLogic(restService.getPermissionsByProjectIri),
+    permissionsEndpoints.putPermissionsDoapForWhat.serverLogic(restService.updateDoapForWhat),
+    permissionsEndpoints.putPermissionsProjectIriGroup.serverLogic(restService.updatePermissionGroup),
+    permissionsEndpoints.putPerrmissionsHasPermissions.serverLogic(restService.updatePermissionHasPermissions),
+    permissionsEndpoints.putPermissionsProperty.serverLogic(restService.updatePermissionProperty),
+    permissionsEndpoints.putPermisssionsResourceClass.serverLogic(restService.updatePermissionResourceClass),
+    permissionsEndpoints.deletePermission.serverLogic(restService.deletePermission),
+    permissionsEndpoints.postPermissionsDoap.serverLogic(restService.createDefaultObjectAccessPermission),
+  )
 }
-
 object PermissionsEndpointsHandlers {
-
   val layer = ZLayer.derive[PermissionsEndpointsHandlers]
 }

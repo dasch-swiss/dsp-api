@@ -12,41 +12,33 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
 
 final case class SearchApiRoutes(
-  private val iriConverter: IriConverter,
-  private val mapper: HandlerMapper,
   private val searchEndpoints: SearchEndpoints,
   private val searchRestService: SearchRestService,
-  private val tapirToPekko: TapirToPekkoInterpreter,
 ) {
 
-  val routes: Seq[Route] =
-    Seq(
-      SecuredEndpointHandler(searchEndpoints.getFullTextSearch, searchRestService.fullTextSearch),
-      SecuredEndpointHandler(searchEndpoints.getFullTextSearchCount, searchRestService.fullTextSearchCount),
-      SecuredEndpointHandler(searchEndpoints.getSearchByLabel, searchRestService.searchResourcesByLabelV2),
-      SecuredEndpointHandler(searchEndpoints.getSearchByLabelCount, searchRestService.searchResourcesByLabelCountV2),
-      SecuredEndpointHandler(searchEndpoints.postGravsearch, searchRestService.gravsearch),
-      SecuredEndpointHandler(searchEndpoints.getGravsearch, searchRestService.gravsearch),
-      SecuredEndpointHandler(searchEndpoints.postGravsearchCount, searchRestService.gravsearchCount),
-      SecuredEndpointHandler(searchEndpoints.getGravsearchCount, searchRestService.gravsearchCount),
-      SecuredEndpointHandler(searchEndpoints.getSearchIncomingLinks, searchRestService.searchIncomingLinks),
-      SecuredEndpointHandler(
-        searchEndpoints.getSearchStillImageRepresentations,
-        searchRestService.getSearchStillImageRepresentations,
-      ),
-      SecuredEndpointHandler(
-        searchEndpoints.getSearchStillImageRepresentationsCount,
-        searchRestService.getSearchStillImageRepresentationsCount,
-      ),
-      SecuredEndpointHandler(searchEndpoints.getSearchIncomingRegions, searchRestService.searchIncomingRegions),
-    ).map(mapper.mapSecuredEndpointHandler).map(tapirToPekko.toRoute)
+  val allHandler = Seq(
+    searchEndpoints.getFullTextSearch.serverLogic(searchRestService.fullTextSearch),
+    searchEndpoints.getFullTextSearchCount.serverLogic(searchRestService.fullTextSearchCount),
+    searchEndpoints.getSearchByLabel.serverLogic(searchRestService.searchResourcesByLabelV2),
+    searchEndpoints.getSearchByLabelCount.serverLogic(searchRestService.searchResourcesByLabelCountV2),
+    searchEndpoints.postGravsearch.serverLogic(searchRestService.gravsearch),
+    searchEndpoints.getGravsearch.serverLogic(searchRestService.gravsearch),
+    searchEndpoints.postGravsearchCount.serverLogic(searchRestService.gravsearchCount),
+    searchEndpoints.getGravsearchCount.serverLogic(searchRestService.gravsearchCount),
+    searchEndpoints.getSearchIncomingLinks.serverLogic(searchRestService.searchIncomingLinks),
+    searchEndpoints.getSearchStillImageRepresentations.serverLogic(
+      searchRestService.getSearchStillImageRepresentations,
+    ),
+    searchEndpoints.getSearchStillImageRepresentationsCount.serverLogic(
+      searchRestService.getSearchStillImageRepresentationsCount,
+    ),
+    searchEndpoints.getSearchIncomingRegions.serverLogic(searchRestService.searchIncomingRegions),
+  )
 }
 object SearchApiRoutes {
   val layer = SearchRestService.layer >+> SearchEndpoints.layer >>> ZLayer.derive[SearchApiRoutes]

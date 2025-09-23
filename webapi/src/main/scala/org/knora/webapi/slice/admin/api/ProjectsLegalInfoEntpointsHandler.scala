@@ -4,31 +4,25 @@
  */
 
 package org.knora.webapi.slice.admin.api
-import zio.ZLayer
+import zio.*
+import sttp.tapir.ztapir.*
 
 import org.knora.webapi.slice.admin.api.service.ProjectsLegalInfoRestService
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.PublicEndpointHandler
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final class ProjectsLegalInfoEndpointsHandler(
   endpoints: ProjectsLegalInfoEndpoints,
   restService: ProjectsLegalInfoRestService,
 ) {
-  val allHandlers =
-    List(
-      PublicEndpointHandler(endpoints.getProjectLicenses, restService.findLicenses),
-      PublicEndpointHandler(endpoints.getProjectLicensesIri, restService.findAvailableLicenseByIdAndShortcode),
-    )
-      .map(mapper.mapPublicEndpointHandler) ++
-      List(
-        SecuredEndpointHandler(endpoints.getProjectAuthorships, restService.findAuthorships),
-        SecuredEndpointHandler(endpoints.putProjectLicensesEnable, restService.enableLicense),
-        SecuredEndpointHandler(endpoints.putProjectLicensesDisable, restService.disableLicense),
-        SecuredEndpointHandler(endpoints.getProjectCopyrightHolders, restService.findCopyrightHolders),
-        SecuredEndpointHandler(endpoints.postProjectCopyrightHolders, restService.addCopyrightHolders),
-        SecuredEndpointHandler(endpoints.putProjectCopyrightHolders, restService.replaceCopyrightHolder),
-      ).map(mapper.mapSecuredEndpointHandler)
+  val allHandlers = Seq(
+    endpoints.getProjectLicenses.zServerLogic(restService.findLicenses),
+    endpoints.getProjectLicensesIri.zServerLogic(restService.findAvailableLicenseByIdAndShortcode),
+    endpoints.getProjectAuthorships.serverLogic(restService.findAuthorships),
+    endpoints.putProjectLicensesEnable.serverLogic(restService.enableLicense),
+    endpoints.putProjectLicensesDisable.serverLogic(restService.disableLicense),
+    endpoints.getProjectCopyrightHolders.serverLogic(restService.findCopyrightHolders),
+    endpoints.postProjectCopyrightHolders.serverLogic(restService.addCopyrightHolders),
+    endpoints.putProjectCopyrightHolders.serverLogic(restService.replaceCopyrightHolder),
+  )
 }
 
 object ProjectsLegalInfoEndpointsHandler {

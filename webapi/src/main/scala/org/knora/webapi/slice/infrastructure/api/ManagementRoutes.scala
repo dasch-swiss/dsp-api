@@ -5,31 +5,21 @@
 
 package org.knora.webapi.slice.infrastructure.api
 
-import sttp.model.StatusCode
+import sttp.tapir.ztapir.*
 import zio.*
-
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.PublicEndpointHandler
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 
 final case class ManagementRoutes(
   private val endpoint: ManagementEndpoints,
   private val restService: ManagementRestService,
-  private val mapper: HandlerMapper,
-  private val tapirToPekko: TapirToPekkoInterpreter,
 ) {
 
-  val routes = (
-    List(
-      PublicEndpointHandler(endpoint.getVersion, _ => ZIO.succeed(VersionResponse.current)),
-      PublicEndpointHandler(endpoint.getHealth, _ => restService.healthCheck),
-    ).map(mapper.mapPublicEndpointHandler)
-      ++
-        List(SecuredEndpointHandler(endpoint.postStartCompaction, restService.startCompaction))
-          .map(mapper.mapSecuredEndpointHandler)
-  ).map(tapirToPekko.toRoute)
+  val allHandlers = Seq(
+    endpoint.getVersion.zServerLogic(_ => ZIO.succeed(VersionResponse.current)),
+    endpoint.getHealth.zServerLogic(_ => restService.healthCheck),
+    endpoint.postStartCompaction.serverLogic(restService.startCompaction),
+  )
+
 }
 object ManagementRoutes {
-  val layer = zio.ZLayer.derive[ManagementRoutes]
+  val layer = ZLayer.derive[ManagementRoutes]
 }

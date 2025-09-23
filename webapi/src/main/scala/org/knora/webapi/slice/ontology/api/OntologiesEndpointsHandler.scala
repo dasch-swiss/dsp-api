@@ -4,57 +4,49 @@
  */
 
 package org.knora.webapi.slice.ontology.api
-import zio.ZLayer
+
+import zio.*
+import sttp.tapir.ztapir.*
 
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.PublicEndpointHandler
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 import org.knora.webapi.slice.ontology.api.service.OntologiesRestService
 
 final class OntologiesEndpointsHandler(
   private val endpoints: OntologiesEndpoints,
   private val restService: OntologiesRestService,
-  private val mapper: HandlerMapper,
 ) {
 
-  private val publicHandlers = Seq(
-    PublicEndpointHandler(endpoints.getOntologiesMetadataProject, restService.getOntologyMetadataByProjectOption),
-    PublicEndpointHandler(endpoints.getOntologiesMetadataProjects, restService.getOntologyMetadataByProjects),
-  ).map(mapper.mapPublicEndpointHandler)
-
-  private val secureHandlers = Seq(
-    SecuredEndpointHandler(endpoints.getOntologyPathSegments, restService.dereferenceOntologyIri),
-    SecuredEndpointHandler(endpoints.putOntologiesMetadata, restService.changeOntologyMetadata),
-    SecuredEndpointHandler(endpoints.getOntologiesAllentities, restService.getOntologyEntities),
-    SecuredEndpointHandler(endpoints.postOntologiesClasses, restService.createClass),
-    SecuredEndpointHandler(endpoints.putOntologiesClasses, restService.changeClassLabelsOrComments),
-    SecuredEndpointHandler(endpoints.deleteOntologiesClassesComment, restService.deleteClassComment),
-    SecuredEndpointHandler(endpoints.postOntologiesCardinalities, restService.addCardinalities),
-    SecuredEndpointHandler(endpoints.getOntologiesCanreplacecardinalities, restService.canChangeCardinality),
-    SecuredEndpointHandler(endpoints.putOntologiesCardinalities, restService.replaceCardinalities),
-    SecuredEndpointHandler(endpoints.postOntologiesCandeletecardinalities, restService.canDeleteCardinalitiesFromClass),
-    SecuredEndpointHandler(endpoints.patchOntologiesCardinalities, restService.deleteCardinalitiesFromClass),
-    SecuredEndpointHandler(endpoints.putOntologiesGuiorder, restService.changeGuiOrder),
-    SecuredEndpointHandler(endpoints.getOntologiesClassesIris, restService.getClasses),
-    SecuredEndpointHandler(endpoints.getOntologiesCandeleteclass, restService.canDeleteClass),
-    SecuredEndpointHandler(endpoints.deleteOntologiesClasses, restService.deleteClass),
-    SecuredEndpointHandler(endpoints.deleteOntologiesComment, restService.deleteOntologyComment),
-    SecuredEndpointHandler(endpoints.postOntologiesProperties, restService.createProperty),
-    SecuredEndpointHandler(endpoints.putOntologiesProperties, restService.changePropertyLabelsOrComments),
-    SecuredEndpointHandler(endpoints.deletePropertiesComment, restService.deletePropertyComment),
-    SecuredEndpointHandler(endpoints.putOntologiesPropertiesGuielement, restService.changePropertyGuiElement),
-    SecuredEndpointHandler(endpoints.getOntologiesProperties, restService.getProperties),
-    SecuredEndpointHandler(endpoints.getOntologiesCandeleteproperty, restService.canDeleteProperty),
-    SecuredEndpointHandler(endpoints.deleteOntologiesProperty, restService.deleteProperty),
-    SecuredEndpointHandler(endpoints.postOntologies, restService.createOntology),
-    SecuredEndpointHandler(endpoints.getOntologiesCandeleteontology, restService.canDeleteOntology),
-    SecuredEndpointHandler(endpoints.deleteOntologies, restService.deleteOntology),
-  ).map(mapper.mapSecuredEndpointHandler)
-
-  val allHandlers = publicHandlers ++ secureHandlers
+  val allHandlers = Seq(
+    endpoints.getOntologiesMetadataProject.zServerLogic(restService.getOntologyMetadataByProjectOption),
+    endpoints.getOntologiesMetadataProject.zServerLogic(restService.getOntologyMetadataByProjects),
+    endpoints.getOntologyPathSegments.serverLogic(restService.dereferenceOntologyIri),
+    endpoints.putOntologiesMetadata.serverLogic(restService.changeOntologyMetadata),
+    endpoints.getOntologiesAllentities.serverLogic(restService.getOntologyEntities),
+    endpoints.postOntologiesClasses.serverLogic(restService.createClass),
+    endpoints.putOntologiesClasses.serverLogic(restService.changeClassLabelsOrComments),
+    endpoints.deleteOntologiesClassesComment.serverLogic(restService.deleteClassComment),
+    endpoints.postOntologiesCardinalities.serverLogic(restService.addCardinalities),
+    endpoints.getOntologiesCanreplacecardinalities.serverLogic(restService.canChangeCardinality),
+    endpoints.putOntologiesCardinalities.serverLogic(restService.replaceCardinalities),
+    endpoints.postOntologiesCandeletecardinalities.serverLogic(restService.canDeleteCardinalitiesFromClass),
+    endpoints.patchOntologiesCardinalities.serverLogic(restService.deleteCardinalitiesFromClass),
+    endpoints.putOntologiesGuiorder.serverLogic(restService.changeGuiOrder),
+    endpoints.getOntologiesClassesIris.serverLogic(restService.getClasses),
+    endpoints.getOntologiesCandeleteclass.serverLogic(restService.canDeleteClass),
+    endpoints.deleteOntologiesClasses.serverLogic(restService.deleteClass),
+    endpoints.deleteOntologiesComment.serverLogic(restService.deleteOntologyComment),
+    endpoints.postOntologiesProperties.serverLogic(restService.createProperty),
+    endpoints.putOntologiesProperties.serverLogic(restService.changePropertyLabelsOrComments),
+    endpoints.deletePropertiesComment.serverLogic(restService.deletePropertyComment),
+    endpoints.putOntologiesPropertiesGuielement.serverLogic(restService.changePropertyGuiElement),
+    endpoints.getOntologiesProperties.serverLogic(restService.getProperties),
+    endpoints.getOntologiesCandeleteproperty.serverLogic(restService.canDeleteProperty),
+    endpoints.deleteOntologiesProperty.serverLogic(restService.deleteProperty),
+    endpoints.postOntologies.serverLogic(restService.createOntology),
+    endpoints.getOntologiesCandeleteontology.serverLogic(restService.canDeleteOntology),
+    endpoints.deleteOntologies.serverLogic(restService.deleteOntology),
+  )
 }
-
 object OntologiesEndpointsHandler {
   val layer = ZLayer.derive[OntologiesEndpointsHandler]
 }

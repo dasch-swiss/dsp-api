@@ -5,21 +5,17 @@
 
 package org.knora.webapi.slice.resources.api
 
-import zio.ZLayer
+import zio.*
+import sttp.tapir.ztapir.*
 
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 import org.knora.webapi.slice.resources.api.service.StandoffRestService
 
 final case class StandoffEndpointsHandler(
   endpoints: StandoffEndpoints,
-  standoffRestService: StandoffRestService,
-  mapper: HandlerMapper,
+  restService: StandoffRestService,
 ) {
-  val allHandlers = Seq(SecuredEndpointHandler(endpoints.postMapping, standoffRestService.createMapping))
-    .map(mapper.mapSecuredEndpointHandler)
+  val allHandlers = Seq(endpoints.postMapping.serverLogic(restService.createMapping))
 }
-
 object StandoffEndpointsHandler {
   val layer = ZLayer.derive[StandoffEndpointsHandler]
 }

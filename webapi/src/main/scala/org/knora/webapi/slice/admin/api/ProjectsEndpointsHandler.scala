@@ -5,8 +5,9 @@
 
 package org.knora.webapi.slice.admin.api
 
-import org.apache.pekko.stream.scaladsl.FileIO
-import zio.ZLayer
+import sttp.tapir.ztapir.*
+import zio.*
+import zio.stream.*
 
 import java.nio.file.Files
 import scala.concurrent.ExecutionContext
@@ -21,114 +22,62 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.PublicEndpointHandler
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final case class ProjectsEndpointsHandler(
   projectsEndpoints: ProjectsEndpoints,
   restService: ProjectRestService,
-  mapper: HandlerMapper,
 ) {
 
-  val getAdminProjectsByIriAllDataHandler = {
-    implicit val ec: ExecutionContext = ExecutionContext.global
+  private val getAdminProjectsByIriAllDataHandler =
     projectsEndpoints.Secured.getAdminProjectsByIriAllData.serverLogic((user: User) =>
       (iri: ProjectIri) =>
-        // Future[Either[RequestRejectedException, (String, String, PekkoStreams.BinaryStream]]
-        mapper.runToFuture(
-          restService
-            .getAllProjectData(user)(iri)
-            .map { result =>
-              val path = result.projectDataFile
-//            On Pekko use pekko-streams to stream the file, but when running on zio-http we use ZStream:
-//            val stream = ZStream
-//              .fromPath(path)
-//              .ensuringWith(_ => ZIO.attempt(Files.deleteIfExists(path)).ignore)
-              val stream = FileIO
-                .fromPath(path)
-                .watchTermination() { case (_, result) => result.onComplete(_ => Files.deleteIfExists(path)) }
-              (s"attachment; filename=project-data.trig", "application/octet-stream", stream)
-            },
-        ),
+        restService
+          .getAllProjectData(user)(iri)
+          .map { result =>
+            val path   = result.projectDataFile
+            val stream = ZStream.fromPath(path).ensuringWith(_ => ZIO.attempt(Files.deleteIfExists(path)).ignore)
+            (s"attachment; filename=project-data.trig", "application/octet-stream", stream)
+          },
     )
-  }
 
-  private val handlers =
-    List(
-      PublicEndpointHandler(projectsEndpoints.Public.getAdminProjects, restService.listAllProjects),
-      PublicEndpointHandler(projectsEndpoints.Public.getAdminProjectsKeywords, restService.listAllKeywords),
-      PublicEndpointHandler(projectsEndpoints.Public.getAdminProjectsByProjectIri, restService.findById),
-      PublicEndpointHandler(projectsEndpoints.Public.getAdminProjectsByProjectShortcode, restService.findByShortcode),
-      PublicEndpointHandler(projectsEndpoints.Public.getAdminProjectsByProjectShortname, restService.findByShortname),
-      PublicEndpointHandler(
-        projectsEndpoints.Public.getAdminProjectsKeywordsByProjectIri,
-        restService.getKeywordsByProjectIri,
-      ),
-      PublicEndpointHandler(
-        projectsEndpoints.Public.getAdminProjectsByProjectIriRestrictedViewSettings,
-        restService.getProjectRestrictedViewSettingsById,
-      ),
-      PublicEndpointHandler(
-        projectsEndpoints.Public.getAdminProjectsByProjectShortcodeRestrictedViewSettings,
-        restService.getProjectRestrictedViewSettingsByShortcode,
-      ),
-      PublicEndpointHandler(
-        projectsEndpoints.Public.getAdminProjectsByProjectShortnameRestrictedViewSettings,
-        restService.getProjectRestrictedViewSettingsByShortname,
-      ),
-    ).map(mapper.mapPublicEndpointHandler(_))
-
-  private val secureHandlers = getAdminProjectsByIriAllDataHandler :: List(
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.postAdminProjectsByProjectIriRestrictedViewSettings,
-      restService.updateProjectRestrictedViewSettingsById,
-    ),
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.postAdminProjectsByProjectShortcodeRestrictedViewSettings,
-      restService.updateProjectRestrictedViewSettingsByShortcode,
-    ),
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.getAdminProjectsByProjectIriMembers,
-      restService.getProjectMembersById,
-    ),
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.getAdminProjectsByProjectShortcodeMembers,
-      restService.getProjectMembersByShortcode,
-    ),
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.getAdminProjectsByProjectShortnameMembers,
-      restService.getProjectMembersByShortname,
-    ),
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.getAdminProjectsByProjectIriAdminMembers,
-      restService.getProjectAdminMembersById,
-    ),
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.getAdminProjectsByProjectShortcodeAdminMembers,
-      restService.getProjectAdminMembersByShortcode,
-    ),
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.getAdminProjectsByProjectShortnameAdminMembers,
-      restService.getProjectAdminMembersByShortname,
-    ),
-    SecuredEndpointHandler(projectsEndpoints.Secured.deleteAdminProjectsByIri, restService.deleteProject),
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.deleteAdminProjectsByProjectShortcodeErase,
-      restService.eraseProject,
-    ),
-    SecuredEndpointHandler(projectsEndpoints.Secured.getAdminProjectsExports, restService.listExports),
-    SecuredEndpointHandler(projectsEndpoints.Secured.postAdminProjectsByShortcodeExport, restService.exportProject),
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.postAdminProjectsByShortcodeExportAwaiting,
-      restService.exportProjectAwaiting,
-    ),
-    SecuredEndpointHandler(projectsEndpoints.Secured.postAdminProjectsByShortcodeImport, restService.importProject),
-    SecuredEndpointHandler(projectsEndpoints.Secured.postAdminProjects, restService.createProject),
-    SecuredEndpointHandler(projectsEndpoints.Secured.putAdminProjectsByIri, restService.updateProject),
-  ).map(mapper.mapSecuredEndpointHandler)
-
-  val allHanders = handlers ++ secureHandlers
+  val allHanders = Seq(
+    projectsEndpoints.Public.getAdminProjects.zServerLogic(restService.listAllProjects),
+    projectsEndpoints.Public.getAdminProjectsKeywords.zServerLogic(restService.listAllKeywords),
+    projectsEndpoints.Public.getAdminProjectsByProjectIri.zServerLogic(restService.findById),
+    projectsEndpoints.Public.getAdminProjectsByProjectShortcode.zServerLogic(restService.findByShortcode),
+    projectsEndpoints.Public.getAdminProjectsByProjectShortname.zServerLogic(restService.findByShortname),
+    projectsEndpoints.Public.getAdminProjectsKeywordsByProjectIri.zServerLogic(restService.getKeywordsByProjectIri),
+    projectsEndpoints.Public.getAdminProjectsByProjectIriRestrictedViewSettings
+      .zServerLogic(restService.getProjectRestrictedViewSettingsById),
+    projectsEndpoints.Public.getAdminProjectsByProjectShortcodeRestrictedViewSettings
+      .zServerLogic(restService.getProjectRestrictedViewSettingsByShortcode),
+    projectsEndpoints.Public.getAdminProjectsByProjectShortnameRestrictedViewSettings
+      .zServerLogic(restService.getProjectRestrictedViewSettingsByShortname),
+    getAdminProjectsByIriAllDataHandler,
+    projectsEndpoints.Secured.postAdminProjectsByProjectIriRestrictedViewSettings
+      .serverLogic(restService.updateProjectRestrictedViewSettingsById),
+    projectsEndpoints.Secured.postAdminProjectsByProjectShortcodeRestrictedViewSettings
+      .serverLogic(restService.updateProjectRestrictedViewSettingsByShortcode),
+    projectsEndpoints.Secured.getAdminProjectsByProjectIriMembers.serverLogic(restService.getProjectMembersById),
+    projectsEndpoints.Secured.getAdminProjectsByProjectShortcodeMembers
+      .serverLogic(restService.getProjectMembersByShortcode),
+    projectsEndpoints.Secured.getAdminProjectsByProjectShortnameMembers
+      .serverLogic(restService.getProjectMembersByShortname),
+    projectsEndpoints.Secured.getAdminProjectsByProjectIriAdminMembers
+      .serverLogic(restService.getProjectAdminMembersById),
+    projectsEndpoints.Secured.getAdminProjectsByProjectShortcodeAdminMembers
+      .serverLogic(restService.getProjectAdminMembersByShortcode),
+    projectsEndpoints.Secured.getAdminProjectsByProjectShortnameAdminMembers
+      .serverLogic(restService.getProjectAdminMembersByShortname),
+    projectsEndpoints.Secured.deleteAdminProjectsByIri.serverLogic(restService.deleteProject),
+    projectsEndpoints.Secured.deleteAdminProjectsByProjectShortcodeErase.serverLogic(restService.eraseProject),
+    projectsEndpoints.Secured.getAdminProjectsExports.serverLogic(restService.listExports),
+    projectsEndpoints.Secured.postAdminProjectsByShortcodeExport.serverLogic(restService.exportProject),
+    projectsEndpoints.Secured.postAdminProjectsByShortcodeExportAwaiting.serverLogic(restService.exportProjectAwaiting),
+    projectsEndpoints.Secured.postAdminProjectsByShortcodeImport.serverLogic(restService.importProject),
+    projectsEndpoints.Secured.postAdminProjects.serverLogic(restService.createProject),
+    projectsEndpoints.Secured.putAdminProjectsByIri.serverLogic(restService.updateProject),
+  )
 }
 
 object ProjectsEndpointsHandler {

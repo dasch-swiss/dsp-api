@@ -28,22 +28,22 @@ final case class AdminListsEndpointsHandlers(
   private val adminListsEndpoints: AdminListsEndpoints,
   private val restService: AdminListRestService,
 ) {
-  val allHandlers: Seq[ZServerEndpoint[Any, Any]]
+  val allHandlers: Seq[ZServerEndpoint[Any, Any]] = Seq(
     adminListsEndpoints.getListsQueryByProjectIriOption.zServerLogic(restService.getLists),
     adminListsEndpoints.getListsByIri.zServerLogic(restService.listGetRequestADM),
     adminListsEndpoints.getListsByIriInfo.zServerLogic(restService.listNodeInfoGetRequestADM),
     adminListsEndpoints.getListsInfosByIri.zServerLogic(restService.listNodeInfoGetRequestADM),
     adminListsEndpoints.getListsNodesByIri.zServerLogic(restService.listNodeInfoGetRequestADM),
     adminListsEndpoints.getListsCanDeleteByIri.zServerLogic(restService.canDeleteListRequestADM),
-    adminListsEndpoints.postLists.serverLogic( restService.listCreateRootNode),
-    adminListsEndpoints.postListsChild.serverLogic( restService.listCreateChildNode),
-    adminListsEndpoints.putListsByIriName.serverLogic( restService.listChangeName),
-    adminListsEndpoints.putListsByIriLabels.serverLogic( restService.listChangeLabels),
-    adminListsEndpoints.putListsByIriComments.serverLogic( restService.listChangeComments),
-    adminListsEndpoints.putListsByIriPosition.serverLogic( restService.nodePositionChangeRequest),
-    adminListsEndpoints.putListsByIri.serverLogic( restService.listChange),
-    adminListsEndpoints.deleteListsByIri.serverLogic( restService.deleteListItemRequestADM),
-    adminListsEndpoints.deleteListsComment.serverLogic( restService.deleteListNodeCommentsADM),
+    adminListsEndpoints.postLists.serverLogic(restService.listCreateRootNode),
+    adminListsEndpoints.postListsChild.serverLogic(restService.listCreateChildNode),
+    adminListsEndpoints.putListsByIriName.serverLogic(restService.listChangeName),
+    adminListsEndpoints.putListsByIriLabels.serverLogic(restService.listChangeLabels),
+    adminListsEndpoints.putListsByIriComments.serverLogic(restService.listChangeComments),
+    adminListsEndpoints.putListsByIriPosition.serverLogic(restService.nodePositionChangeRequest),
+    adminListsEndpoints.putListsByIri.serverLogic(restService.listChange),
+    adminListsEndpoints.deleteListsByIri.serverLogic(restService.deleteListItemRequestADM),
+    adminListsEndpoints.deleteListsComment.serverLogic(restService.deleteListNodeCommentsADM),
   )
 }
 

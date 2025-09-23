@@ -4,27 +4,20 @@
  */
 
 package org.knora.webapi.slice.lists.api
-import sttp.model.MediaType
-import zio.*
 
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
+import zio.*
+import sttp.tapir.ztapir.*
+
 import org.knora.webapi.slice.lists.api.service.ListsV2RestService
 
 final case class ListsEndpointsV2Handler(
-  private val appConfig: AppConfig,
   private val endpoints: ListsEndpointsV2,
-  private val listsRestService: ListsV2RestService,
-  private val mapper: HandlerMapper,
+  private val restService: ListsV2RestService,
 ) {
-  val allHandlers = List(
-    SecuredEndpointHandler(endpoints.getV2Lists, listsRestService.getList),
-    SecuredEndpointHandler(endpoints.getV2Node, listsRestService.getNode),
-  ).map(mapper.mapSecuredEndpointHandler)
+  val allHandlers = Seq(
+    endpoints.getV2Lists.serverLogic(restService.getList),
+    endpoints.getV2Node.serverLogic(restService.getNode),
+  )
 }
 
 object ListsEndpointsV2Handler {

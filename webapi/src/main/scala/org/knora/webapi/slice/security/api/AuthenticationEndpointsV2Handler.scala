@@ -5,13 +5,10 @@
 
 package org.knora.webapi.slice.security.api
 import sttp.model.headers.CookieValueWithMeta
-import zio.ZIO
-import zio.ZLayer
+import zio.*
+import sttp.tapir.ztapir.*
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.PublicEndpointHandler
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginForm
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
@@ -19,19 +16,16 @@ import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutRespo
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
 
 case class AuthenticationEndpointsV2Handler(
-  appConfig: AppConfig,
-  restService: AuthenticationRestService,
-  endpoints: AuthenticationEndpointsV2,
-  mapper: HandlerMapper,
+  private val restService: AuthenticationRestService,
+  private val endpoints: AuthenticationEndpointsV2,
 ) {
-  val allHandlers = List(
-    SecuredEndpointHandler(endpoints.getV2Authentication, _ => _ => ZIO.succeed(CheckResponse("credentials are OK"))),
-  ).map(mapper.mapSecuredEndpointHandler) ++ List(
-    PublicEndpointHandler(endpoints.postV2Authentication, restService.authenticate),
-    PublicEndpointHandler(endpoints.deleteV2Authentication, restService.logout),
-    PublicEndpointHandler(endpoints.getV2Login, restService.loginForm),
-    PublicEndpointHandler(endpoints.postV2Login, restService.authenticate),
-  ).map(mapper.mapPublicEndpointHandler)
+  val allHandlers = Seq(
+    endpoints.getV2Authentication.serverLogic(_ => _ => ZIO.succeed(CheckResponse("credentials are OK"))),
+    endpoints.postV2Authentication.zServerLogic(restService.authenticate),
+    endpoints.deleteV2Authentication.zServerLogic(restService.logout),
+    endpoints.getV2Login.zServerLogic(restService.loginForm),
+    endpoints.postV2Login.zServerLogic(restService.authenticate),
+  )
 }
 
 object AuthenticationEndpointsV2Handler {

@@ -6,48 +6,31 @@
 package org.knora.webapi.slice.resources.api
 import zio.*
 
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 
 final class ResourcesEndpointsHandler(
   private val resourcesEndpoints: ResourcesEndpoints,
   private val resourcesRestService: ResourcesRestService,
-  private val mapper: HandlerMapper,
 ) {
 
-  val allHandlers =
-    Seq(
-      SecuredEndpointHandler(resourcesEndpoints.getResourcesCanDelete, resourcesRestService.canDeleteResource),
-      SecuredEndpointHandler(resourcesEndpoints.getResourcesGraph, resourcesRestService.getResourcesGraph),
-      SecuredEndpointHandler(
-        resourcesEndpoints.getResourcesIiifManifest,
-        resourcesRestService.getResourcesIiifManifest,
-      ),
-      SecuredEndpointHandler(
-        resourcesEndpoints.getResourcesPreview,
-        resourcesRestService.getResourcesPreview,
-      ),
-      SecuredEndpointHandler(
-        resourcesEndpoints.getResourcesProjectHistoryEvents,
-        resourcesRestService.getResourcesProjectHistoryEvents,
-      ),
-      SecuredEndpointHandler(
-        resourcesEndpoints.getResourcesHistoryEvents,
-        resourcesRestService.getResourcesHistoryEvents,
-      ),
-      SecuredEndpointHandler(resourcesEndpoints.getResourcesHistory, resourcesRestService.getResourceHistory),
-      SecuredEndpointHandler(
-        resourcesEndpoints.getResourcesParams,
-        resourcesRestService.searchResourcesByProjectAndClass,
-      ),
-      SecuredEndpointHandler(resourcesEndpoints.getResources, resourcesRestService.getResources),
-      SecuredEndpointHandler(resourcesEndpoints.getResourcesTei, resourcesRestService.getResourceAsTeiV2),
-      SecuredEndpointHandler(resourcesEndpoints.postResourcesErase, resourcesRestService.eraseResource),
-      SecuredEndpointHandler(resourcesEndpoints.postResourcesDelete, resourcesRestService.deleteResource),
-      SecuredEndpointHandler(resourcesEndpoints.postResources, resourcesRestService.createResource),
-      SecuredEndpointHandler(resourcesEndpoints.putResources, resourcesRestService.updateResourceMetadata),
-    ).map(mapper.mapSecuredEndpointHandler)
+  val allHandlers = Seq(
+    resourcesEndpoints.getResourcesCanDelete.serverLogic(resourcesRestService.canDeleteResource),
+    resourcesEndpoints.getResourcesGraph.serverLogic(resourcesRestService.getResourcesGraph),
+    resourcesEndpoints.getResourcesIiifManifest.serverLogic(resourcesRestService.getResourcesIiifManifest),
+    resourcesEndpoints.getResourcesPreview.serverLogic(resourcesRestService.getResourcesPreview),
+    resourcesEndpoints.getResourcesProjectHistoryEvents.serverLogic(
+      resourcesRestService.getResourcesProjectHistoryEvents,
+    ),
+    resourcesEndpoints.getResourcesHistoryEvents.serverLogic(resourcesRestService.getResourcesHistoryEvents),
+    resourcesEndpoints.getResourcesHistory.serverLogic(resourcesRestService.getResourceHistory),
+    resourcesEndpoints.getResourcesParams.serverLogic(resourcesRestService.searchResourcesByProjectAndClass),
+    resourcesEndpoints.getResources.serverLogic(resourcesRestService.getResources),
+    resourcesEndpoints.getResourcesTei.serverLogic(resourcesRestService.getResourceAsTeiV2),
+    resourcesEndpoints.postResourcesErase.serverLogic(resourcesRestService.eraseResource),
+    resourcesEndpoints.postResourcesDelete.serverLogic(resourcesRestService.deleteResource),
+    resourcesEndpoints.postResources.serverLogic(resourcesRestService.createResource),
+    resourcesEndpoints.putResources.serverLogic(resourcesRestService.updateResourceMetadata),
+  )
 }
 
 object ResourcesEndpointsHandler {

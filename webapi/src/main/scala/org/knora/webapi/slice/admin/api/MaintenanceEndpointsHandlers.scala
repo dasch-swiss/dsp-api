@@ -17,10 +17,10 @@ final case class MaintenanceEndpointsHandlers(
   endpoints: MaintenanceEndpoints,
   restService: MaintenanceRestService,
 ) {
-
-  val allHandlers: ZServerEndpoint[Any, Any] =  Seq(endpoints.postMaintenance.serverLogic(restService.executeMaintenanceAction))
+  val allHandlers: ZServerEndpoint[Any, Any] = Seq(
+    endpoints.postMaintenance.serverLogic(restService.executeMaintenanceAction),
+  )
 }
-
 object MaintenanceEndpointsHandlers {
   val layer = ZLayer.derive[MaintenanceEndpointsHandlers]
 }

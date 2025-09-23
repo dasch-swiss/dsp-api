@@ -5,19 +5,14 @@
 
 package org.knora.webapi.slice.shacl.api
 
-import zio.ZLayer
-
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.PublicEndpointHandler
+import zio.*
+import sttp.tapir.ztapir.*
 
 case class ShaclEndpointsHandler(
   private val shaclEndpoints: ShaclEndpoints,
   private val shaclApiService: ShaclApiService,
-  private val mapper: HandlerMapper,
 ) {
-
-  val allHandlers =
-    List(PublicEndpointHandler(shaclEndpoints.validate, shaclApiService.validate)).map(mapper.mapPublicEndpointHandler)
+  val allHandlers = Seq(shaclEndpoints.validate.zServerLogic(shaclApiService.validate))
 }
 
 object ShaclEndpointsHandler {
