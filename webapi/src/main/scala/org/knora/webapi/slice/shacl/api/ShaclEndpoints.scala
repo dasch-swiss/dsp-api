@@ -10,14 +10,13 @@ import sttp.model.MediaType
 import sttp.tapir.*
 import sttp.tapir.Schema.annotations.description
 import sttp.tapir.generic.auto.*
-import zio.ZLayer
+import zio.*
+import zio.stream.ZStream
 
 import java.io.File
 
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.slice.common.api.BaseEndpoints
-
-import org.knora.webapi.slice.shacl.api.ShaclApiService.ValidationStream
 
 case class ValidationFormData(
   @description("The data to be validated.")
@@ -34,7 +33,7 @@ case class ValidationFormData(
 
 case class ShaclEndpoints(baseEndpoints: BaseEndpoints) {
 
-  val validate: Endpoint[Unit, ValidationFormData, RequestRejectedException, ValidationStream, ZioStreams] =
+  val validate =
     baseEndpoints.publicEndpoint.post
       .in("shacl" / "validate")
       .description("foo")
@@ -54,8 +53,7 @@ case class ShaclEndpoints(baseEndpoints: BaseEndpoints) {
                        |```
                        |""".stripMargin))
 
-  val endpoints: Seq[AnyEndpoint] =
-    Seq(validate).map(_.tag("Shacl"))
+  val endpoints = Seq(validate).map(_.tag("Shacl"))
 }
 
 object ShaclEndpoints {

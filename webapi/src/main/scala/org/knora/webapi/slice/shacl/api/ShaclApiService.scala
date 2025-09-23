@@ -11,46 +11,30 @@ import zio.*
 import zio.stream.*
 
 import java.io.FileInputStream
-import java.io.OutputStream
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 import org.knora.webapi.slice.shacl.domain.ValidationOptions
-import org.knora.webapi.slice.shacl.api.ShaclApiService.ValidationStream
 
 import java.io.IOException
 
 final case class ShaclApiService(private val validator: ShaclValidator) {
 
-  def validate(formData: ValidationFormData): Task[ValidationStream] = {
+  def validate(formData: ValidationFormData): Task[ZStream[Any, Throwable, Byte]] = {
     val options = ValidationOptions(
       formData.validateShapes.getOrElse(ValidationOptions.default.validateShapes),
       formData.reportDetails.getOrElse(ValidationOptions.default.reportDetails),
       formData.addBlankNodes.getOrElse(ValidationOptions.default.addBlankNodes),
     )
-    val (out, src) = makeOutputStreamAndSource()
     ZIO.scoped {
       for {
         dataStream  <- ZIO.fromAutoCloseable(ZIO.succeed(new FileInputStream(formData.`data.ttl`)))
         shaclStream <- ZIO.fromAutoCloseable(ZIO.succeed(new FileInputStream(formData.`shacl.ttl`)))
         report      <- validator.validate(dataStream, shaclStream, options)
-        _ <- ZIO.attemptBlockingIO {
-               try { RDFDataMgr.write(out, report.getModel, RDFFormat.TURTLE) }
-               finally { out.close() }
-             }.forkDaemon
-      } yield ()
-    }.as(src)
-  }
-
-  private def makeOutputStreamAndSource(): (OutputStream, ValidationStream) = {
-    val outputStream             = new PipedOutputStream()
-    val inputStream              = new PipedInputStream(outputStream)
-    val source: ValidationStream = ZStream.fromInputStream(() => inputStream)
-    (outputStream, source)
+        out          = ZStream.fromOutputStreamWriter(RDFDataMgr.write(_, report.getModel, RDFFormat.TURTLE))
+      } yield out
+    }
   }
 }
 
 object ShaclApiService {
-  type ValidationStream = ZStream[Any, IOException, Byte]
   val layer = ZLayer.derive[ShaclApiService]
 }
