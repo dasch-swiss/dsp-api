@@ -44,6 +44,7 @@ import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.MetricsServer.MetricsServerEnv
 import org.knora.webapi.slice.infrastructure.OpenTelemetry
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
+import org.knora.webapi.slice.infrastructure.api.ManagementRestService
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.ontology.OntologyModule
@@ -204,6 +205,7 @@ object LayersLive { self =>
       ListsApiModule.layer,
       ListsResponder.layer,
       ManagementEndpoints.layer,
+      ManagementRestService.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,

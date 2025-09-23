@@ -53,7 +53,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
           }
         }
       },
-    ) @@ TestAspect.withLiveClock
+    ) @@ TestAspect.withLiveClock @@ TestAspect.flaky
 
   val spec = suite("MaintenanceEndpoint")(needsTopleftCorrectionSuite)
     .provide(

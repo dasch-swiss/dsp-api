@@ -10,20 +10,20 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.*
 import zio.ZLayer
 
+import org.knora.webapi.slice.admin.api.model.Order
+import org.knora.webapi.slice.admin.api.model.OrderBy
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.resources.api.model.ListResponseDto
-import org.knora.webapi.slice.resources.api.model.QueryParams.Order
-import org.knora.webapi.slice.resources.api.model.QueryParams.OrderBy
 
 final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {
   val getResourcesInfo = baseEndpoints.publicEndpoint.get
     .in("v2" / "resources" / "info")
     .in(header[ProjectIri](ApiV2.Headers.xKnoraAcceptProject))
     .in(query[String]("resourceClass"))
-    .in(query[Option[Order]](Order.queryParamKey))
-    .in(query[Option[OrderBy]](OrderBy.queryParamKey))
+    .in(Order.queryParam)
+    .in(OrderBy.queryParam.default(OrderBy.LastModificationDate))
     .out(jsonBody[ListResponseDto])
 
   val endpoints: Seq[AnyEndpoint] =

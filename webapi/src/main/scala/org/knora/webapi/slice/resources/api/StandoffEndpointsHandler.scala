@@ -16,11 +16,8 @@ final case class StandoffEndpointsHandler(
   standoffRestService: StandoffRestService,
   mapper: HandlerMapper,
 ) {
-
-  val allHandlers =
-    Seq(
-      SecuredEndpointHandler(endpoints.postMapping, standoffRestService.createMapping),
-    ).map(mapper.mapSecuredEndpointHandler(_))
+  val allHandlers = Seq(SecuredEndpointHandler(endpoints.postMapping, standoffRestService.createMapping))
+    .map(mapper.mapSecuredEndpointHandler)
 }
 
 object StandoffEndpointsHandler {

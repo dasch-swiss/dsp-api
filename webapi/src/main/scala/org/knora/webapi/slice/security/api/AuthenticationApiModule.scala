@@ -22,5 +22,6 @@ object AuthenticationApiModule { self =>
       AuthenticationEndpointsV2.layer,
       AuthenticationEndpointsV2Handler.layer,
       AuthenticationApiRoutes.layer,
+      AuthenticationRestService.layer,
     )
 }
