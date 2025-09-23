@@ -13,10 +13,6 @@ import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.resources.api.model.ListResponseDto
-import org.knora.webapi.slice.resources.api.model.QueryParams.Asc
-import org.knora.webapi.slice.resources.api.model.QueryParams.LastModificationDate
-import org.knora.webapi.slice.resources.api.model.QueryParams.Order
-import org.knora.webapi.slice.resources.api.model.QueryParams.OrderBy
 import org.knora.webapi.slice.resources.api.service.ResourceInfoRestService
 
 final case class ResourceInfoRoutes(
@@ -26,22 +22,10 @@ final case class ResourceInfoRoutes(
   interpreter: TapirToPekkoInterpreter,
 ) {
 
-  val getResourcesInfoHandler =
-    PublicEndpointHandler[(ProjectIri, String, Option[Order], Option[OrderBy]), ListResponseDto](
-      endpoints.getResourcesInfo,
-      { case (projectIri: ProjectIri, resourceClass: String, order: Option[Order], orderBy: Option[OrderBy]) =>
-        resourceInfoService.findByProjectAndResourceClass(
-          projectIri,
-          resourceClass,
-          order.getOrElse(Asc),
-          orderBy.getOrElse(LastModificationDate),
-        )
-      },
-    )
-
-  val routes: Seq[Route] = List(getResourcesInfoHandler)
-    .map(it => mapper.mapPublicEndpointHandler(it))
-    .map(interpreter.toRoute(_))
+  val routes: Seq[Route] =
+    List(PublicEndpointHandler(endpoints.getResourcesInfo, resourceInfoService.findByProjectAndResourceClass))
+      .map(mapper.mapPublicEndpointHandler)
+      .map(interpreter.toRoute(_))
 }
 object ResourceInfoRoutes {
   val layer = ZLayer.derive[ResourceInfoRoutes]

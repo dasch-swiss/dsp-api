@@ -21,13 +21,10 @@ final case class ListsEndpointsV2Handler(
   private val listsRestService: ListsV2RestService,
   private val mapper: HandlerMapper,
 ) {
-
   val allHandlers = List(
     SecuredEndpointHandler(endpoints.getV2Lists, listsRestService.getList),
     SecuredEndpointHandler(endpoints.getV2Node, listsRestService.getNode),
-  )
-    .map(mapper.mapSecuredEndpointHandler)
-
+  ).map(mapper.mapSecuredEndpointHandler)
 }
 
 object ListsEndpointsV2Handler {
