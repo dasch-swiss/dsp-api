@@ -1330,7 +1330,9 @@ final case class SearchResponderV2Live(
   private def getProjectOntologies(projectIri: ProjectIri): Task[Option[Set[SmartIri]]] =
     ontologyRepo.findByProject(projectIri).map { ontologies =>
       val ontologyIris = ontologies.map(_.ontologyMetadata.ontologyIri)
-      Option.when(ontologyIris.nonEmpty)(ontologyIris.toSet)
+      Option.when(ontologyIris.nonEmpty)(
+        ontologyIris.toSet + stringFormatter.toSmartIri(OntologyConstants.KnoraBase.KnoraBaseOntologyIri),
+      )
     }
 }
 
