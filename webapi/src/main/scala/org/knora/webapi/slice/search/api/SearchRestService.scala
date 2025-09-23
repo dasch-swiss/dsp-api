@@ -29,13 +29,12 @@ final case class SearchRestService(
   tracing: Tracing,
 ) {
 
-  def searchResourcesByLabelV2(
+  def searchResourcesByLabelV2(user: User)(
     query: String,
     opts: FormatOptions,
     offset: Offset,
     project: Option[ProjectIri],
     limitByResourceClass: Option[InputIri],
-    user: User,
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iriConverter.asSmartIri)
     searchResult <-
@@ -43,7 +42,7 @@ final case class SearchRestService(
     response <- renderer.render(searchResult, opts)
   } yield response
 
-  def searchResourcesByLabelCountV2(
+  def searchResourcesByLabelCountV2(ignored: User)(
     query: String,
     opts: FormatOptions,
     project: Option[ProjectIri],
@@ -55,54 +54,55 @@ final case class SearchRestService(
     response <- renderer.render(searchResult, opts)
   } yield response
 
-  def gravsearch(
+  def gravsearch(user: User)(
     query: String,
     opts: FormatOptions,
-    user: User,
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] = for {
     searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, limitToProject)
     response     <- renderer.render(searchResult, opts)
   } yield response
 
-  def gravsearchCount(
+  def gravsearchCount(user: User)(
     query: String,
     opts: FormatOptions,
-    user: User,
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] = for {
     searchResult <- searchResponderV2.gravsearchCountV2(query, user, limitToProject)
     response     <- renderer.render(searchResult, opts)
   } yield response
 
-  def searchIncomingLinks(
-    resourceIri: String,
+  def searchIncomingLinks(user: User)(
+    resourceIri: InputIri,
     offset: Offset,
     opts: FormatOptions,
-    user: User,
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     (for {
       searchResult <-
-        searchResponderV2.searchIncomingLinksV2(resourceIri, offset.value, opts.schemaRendering, user, limitToProject)
-          @@ tracing.aspects.span("query")
+        searchResponderV2.searchIncomingLinksV2(
+          resourceIri.value,
+          offset.value,
+          opts.schemaRendering,
+          user,
+          limitToProject,
+        ) @@ tracing.aspects.span("query")
       response <- renderer.render(searchResult, opts) @@ tracing.aspects.span("render")
       _        <- ZIO.succeed(Sentry.captureMessage("searchIncomingLinks", SentryLevel.INFO))
     } yield response) @@ tracing.aspects.root(
       spanName = "searchIncomingLinks",
       attributes = Attributes
         .builder()
-        .put("resourceIri", resourceIri)
+        .put("resourceIri", resourceIri.value)
         .put("offset", offset.value)
         .put("limitToProject", limitToProject.map(_.value).getOrElse("None"))
         .build(),
     )
 
-  def getSearchStillImageRepresentations(
-    resourceIri: String,
+  def getSearchStillImageRepresentations(user: User)(
+    resourceIri: InputIri,
     offset: Offset,
     opts: FormatOptions,
-    user: User,
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     for {
@@ -111,7 +111,7 @@ final case class SearchRestService(
           for {
             result <-
               searchResponderV2.searchStillImageRepresentationsV2(
-                resourceIri,
+                resourceIri.value,
                 offset.value,
                 opts.schemaRendering,
                 user,
@@ -122,10 +122,9 @@ final case class SearchRestService(
         }
     } yield response
 
-  def getSearchStillImageRepresentationsCount(
-    resourceIri: String,
+  def getSearchStillImageRepresentationsCount(user: User)(
+    resourceIri: InputIri,
     opts: FormatOptions,
-    user: User,
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     for {
@@ -134,7 +133,7 @@ final case class SearchRestService(
           for {
             result <-
               searchResponderV2.searchStillImageRepresentationsCountV2(
-                resourceIri,
+                resourceIri.value,
                 user,
                 limitToProject,
               )
@@ -143,11 +142,10 @@ final case class SearchRestService(
         }
     } yield response
 
-  def searchIncomingRegions(
-    resourceIri: String,
+  def searchIncomingRegions(user: User)(
+    resourceIri: InputIri,
     offset: Offset,
     opts: FormatOptions,
-    user: User,
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     for {
@@ -156,7 +154,7 @@ final case class SearchRestService(
           for {
             searchResult <-
               searchResponderV2.searchIncomingRegionsV2(
-                resourceIri,
+                resourceIri.value,
                 offset.value,
                 opts.schemaRendering,
                 user,
@@ -167,7 +165,7 @@ final case class SearchRestService(
         }
     } yield response
 
-  def fullTextSearch(
+  def fullTextSearch(user: User)(
     query: RenderedResponse,
     opts: FormatOptions,
     offset: Offset,
@@ -175,7 +173,6 @@ final case class SearchRestService(
     resourceClass: Option[InputIri],
     standoffClass: Option[InputIri],
     returnFiles: Boolean,
-    user: User,
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(resourceClass.map(_.value))(iriConverter.asSmartIri)
     standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)
@@ -192,7 +189,7 @@ final case class SearchRestService(
     response <- renderer.render(searchResult, opts)
   } yield response
 
-  def fullTextSearchCount(
+  def fullTextSearchCount(ignored: User)(
     query: RenderedResponse,
     opts: FormatOptions,
     project: Option[ProjectIri],

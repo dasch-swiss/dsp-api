@@ -25,129 +25,28 @@ final case class SearchApiRoutes(
   tapirToPekko: TapirToPekkoInterpreter,
   iriConverter: IriConverter,
 ) {
-  private type GravsearchQuery = String
-
-  private val postGravsearch =
-    SecuredEndpointHandler[(GravsearchQuery, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
-      searchEndpoints.postGravsearch,
-      user => { case (query, opts, limitToProject) => searchRestService.gravsearch(query, opts, user, limitToProject) },
-    )
-
-  private val getGravsearch =
-    SecuredEndpointHandler[(GravsearchQuery, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
-      searchEndpoints.getGravsearch,
-      user => { case (query, opts, limitToProject) => searchRestService.gravsearch(query, opts, user, limitToProject) },
-    )
-
-  private val postGravsearchCount =
-    SecuredEndpointHandler[(GravsearchQuery, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
-      searchEndpoints.postGravsearchCount,
-      user => { case (query, opts, limitToProject) =>
-        searchRestService.gravsearchCount(query, opts, user, limitToProject)
-      },
-    )
-
-  private val getGravsearchCount =
-    SecuredEndpointHandler[(GravsearchQuery, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
-      searchEndpoints.getGravsearchCount,
-      user => { case (query, opts, limitToProject) =>
-        searchRestService.gravsearchCount(query, opts, user, limitToProject)
-      },
-    )
-
-  private val getSearchIncomingLinks =
-    SecuredEndpointHandler[(InputIri, Offset, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
-      searchEndpoints.getSearchIncomingLinks,
-      user => { case (resourceIri, offset, opts, limitToProject) =>
-        searchRestService.searchIncomingLinks(resourceIri.value, offset, opts, user, limitToProject)
-      },
-    )
-
-  private val getSearchStillImageRepresentations =
-    SecuredEndpointHandler[(InputIri, Offset, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
-      searchEndpoints.getSearchStillImageRepresentations,
-      user => { case (resourceIri, offset, opts, limitToProject) =>
-        searchRestService.getSearchStillImageRepresentations(resourceIri.value, offset, opts, user, limitToProject)
-      },
-    )
-
-  private val getSearchStillImageRepresentationsCount =
-    SecuredEndpointHandler[(InputIri, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
-      searchEndpoints.getSearchStillImageRepresentationsCount,
-      user => { case (resourceIri, opts, limitToProject) =>
-        searchRestService.getSearchStillImageRepresentationsCount(resourceIri.value, opts, user, limitToProject)
-      },
-    )
-
-  private val getSearchIncomingRegions =
-    SecuredEndpointHandler[(InputIri, Offset, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
-      searchEndpoints.getSearchIncomingRegions,
-      user => { case (resourceIri, offset, opts, limitToProject) =>
-        searchRestService.searchIncomingRegions(resourceIri.value, offset, opts, user, limitToProject)
-      },
-    )
-
-  private val getSearchByLabel =
-    SecuredEndpointHandler[
-      (String, FormatOptions, Offset, Option[ProjectIri], Option[InputIri]),
-      (RenderedResponse, MediaType),
-    ](
-      searchEndpoints.getSearchByLabel,
-      user => { case (query, opts, offset, project, resourceClass) =>
-        searchRestService.searchResourcesByLabelV2(query, opts, offset, project, resourceClass, user)
-      },
-    )
-
-  private val getSearchByLabelCount =
-    SecuredEndpointHandler[
-      (String, FormatOptions, Option[ProjectIri], Option[InputIri]),
-      (RenderedResponse, MediaType),
-    ](
-      searchEndpoints.getSearchByLabelCount,
-      _ => { case (query, opts, project, resourceClass) =>
-        searchRestService.searchResourcesByLabelCountV2(query, opts, project, resourceClass)
-      },
-    )
-
-  private val getFullTextSearch =
-    SecuredEndpointHandler[
-      (String, FormatOptions, Offset, Option[ProjectIri], Option[InputIri], Option[InputIri], Boolean),
-      (RenderedResponse, MediaType),
-    ](
-      searchEndpoints.getFullTextSearch,
-      user => { case (query, opts, offset, project, resourceClass, standoffClass, returnFiles) =>
-        searchRestService.fullTextSearch(query, opts, offset, project, resourceClass, standoffClass, returnFiles, user)
-      },
-    )
-
-  private val getFullTextSearchCount =
-    SecuredEndpointHandler[
-      (String, FormatOptions, Option[ProjectIri], Option[InputIri], Option[InputIri]),
-      (RenderedResponse, MediaType),
-    ](
-      searchEndpoints.getFullTextSearchCount,
-      _ => { case (query, opts, project, resourceClass, standoffClass) =>
-        searchRestService.fullTextSearchCount(query, opts, project, resourceClass, standoffClass)
-      },
-    )
 
   val routes: Seq[Route] =
     Seq(
-      getFullTextSearch,
-      getFullTextSearchCount,
-      getSearchByLabel,
-      getSearchByLabelCount,
-      postGravsearch,
-      getGravsearch,
-      postGravsearchCount,
-      getGravsearchCount,
-      getSearchIncomingLinks,
-      getSearchStillImageRepresentations,
-      getSearchStillImageRepresentationsCount,
-      getSearchIncomingRegions,
-    )
-      .map(it => mapper.mapSecuredEndpointHandler(it))
-      .map(it => tapirToPekko.toRoute(it))
+      SecuredEndpointHandler(searchEndpoints.getFullTextSearch, searchRestService.fullTextSearch),
+      SecuredEndpointHandler(searchEndpoints.getFullTextSearchCount, searchRestService.fullTextSearchCount),
+      SecuredEndpointHandler(searchEndpoints.getSearchByLabel, searchRestService.searchResourcesByLabelV2),
+      SecuredEndpointHandler(searchEndpoints.getSearchByLabelCount, searchRestService.searchResourcesByLabelCountV2),
+      SecuredEndpointHandler(searchEndpoints.postGravsearch, searchRestService.gravsearch),
+      SecuredEndpointHandler(searchEndpoints.getGravsearch, searchRestService.gravsearch),
+      SecuredEndpointHandler(searchEndpoints.postGravsearchCount, searchRestService.gravsearchCount),
+      SecuredEndpointHandler(searchEndpoints.getGravsearchCount, searchRestService.gravsearchCount),
+      SecuredEndpointHandler(searchEndpoints.getSearchIncomingLinks, searchRestService.searchIncomingLinks),
+      SecuredEndpointHandler(
+        searchEndpoints.getSearchStillImageRepresentations,
+        searchRestService.getSearchStillImageRepresentations,
+      ),
+      SecuredEndpointHandler(
+        searchEndpoints.getSearchStillImageRepresentationsCount,
+        searchRestService.getSearchStillImageRepresentationsCount,
+      ),
+      SecuredEndpointHandler(searchEndpoints.getSearchIncomingRegions, searchRestService.searchIncomingRegions),
+    ).map(mapper.mapSecuredEndpointHandler).map(tapirToPekko.toRoute)
 }
 object SearchApiRoutes {
   val layer = SearchRestService.layer >+> SearchEndpoints.layer >>> ZLayer.derive[SearchApiRoutes]
