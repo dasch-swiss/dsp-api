@@ -18,11 +18,8 @@ import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.api.AuthenticationServerEndpoints
 import org.knora.webapi.slice.shacl.api.ShaclServerEndpoints
 import sttp.tapir.ztapir.*
+import sttp.capabilities.zio.ZioStreams
 
-/**
- * ALL requests go through each of the routes in ORDER.
- * The FIRST matching route is used for handling a request.
- */
 final case class Endpoints(
   adminApiServerEndpoints: AdminApiServerEndpoints,
   authenticationServerEndpoints: AuthenticationServerEndpoints,
@@ -34,7 +31,7 @@ final case class Endpoints(
   managementServerEndpoints: ManagementServerEndpoints,
   ontologiesServerEndpoints: OntologiesServerEndpoints,
 ) {
-  val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
+  val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
     adminApiServerEndpoints.serverEndpoints ++
       authenticationServerEndpoints.serverEndpoints ++
       listsV2ServerEndpoints.serverEndpoints ++

@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.api
 import zio.*
 
 import sttp.tapir.ztapir.*
+import sttp.capabilities.zio.ZioStreams
 
 final case class AdminApiServerEndpoints(
   private val adminListsServerEndpoints: AdminListsServerEndpoints,
@@ -21,7 +22,7 @@ final case class AdminApiServerEndpoints(
   private val usersServerEndpoints: UsersServerEndpoints,
 ) {
 
-  val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
+  val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
     filesServerEndpoints.serverEndpoints ++
       groupsServerEndpoints.serverEndpoints ++
       adminListsServerEndpoints.serverEndpoints ++
