@@ -17,6 +17,8 @@ import java.io.File
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
+import org.knora.webapi.slice.shacl.api.ShaclApiService.ValidationStream
+
 case class ValidationFormData(
   @description("The data to be validated.")
   `data.ttl`: File,
@@ -32,7 +34,7 @@ case class ValidationFormData(
 
 case class ShaclEndpoints(baseEndpoints: BaseEndpoints) {
 
-  val validate: Endpoint[Unit, ValidationFormData, RequestRejectedException, Source[ByteString, Any], PekkoStreams] =
+  val validate: Endpoint[Unit, ValidationFormData, RequestRejectedException, ValidationStream, ZioStreams] =
     baseEndpoints.publicEndpoint.post
       .in("shacl" / "validate")
       .description("foo")

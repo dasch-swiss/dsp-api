@@ -16,12 +16,11 @@ import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 import org.knora.webapi.slice.shacl.domain.ValidationOptions
+import org.knora.webapi.slice.shacl.api.ShaclApiService.ValidationStream
 
 import java.io.IOException
 
 final case class ShaclApiService(private val validator: ShaclValidator) {
-
-  private type ValidationStream = ZStream[Any, IOException, Byte]
 
   def validate(formData: ValidationFormData): Task[ValidationStream] = {
     val options = ValidationOptions(
@@ -52,5 +51,6 @@ final case class ShaclApiService(private val validator: ShaclValidator) {
 }
 
 object ShaclApiService {
+  type ValidationStream = ZStream[Any, IOException, Byte]
   val layer = ZLayer.derive[ShaclApiService]
 }
