@@ -143,7 +143,6 @@ object LayersLive { self =>
       ConstructResponseUtilV2.layer,
       DspIngestClientLive.layer,
       Endpoints.layer,
-      HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
       IriService.layer,
