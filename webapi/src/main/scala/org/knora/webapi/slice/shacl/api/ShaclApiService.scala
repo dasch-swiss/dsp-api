@@ -11,10 +11,9 @@ import zio.*
 import zio.stream.*
 
 import java.io.FileInputStream
+
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 import org.knora.webapi.slice.shacl.domain.ValidationOptions
-
-import java.io.IOException
 
 final case class ShaclApiService(private val validator: ShaclValidator) {
 

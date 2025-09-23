@@ -4,8 +4,8 @@
  */
 
 package org.knora.webapi.slice.resources.api
-import zio.*
 import sttp.tapir.ztapir.*
+import zio.*
 
 final case class ResourcesApiServerEndpoints(
   private val metadataServerEndpoints: MetadataServerEndpoints,

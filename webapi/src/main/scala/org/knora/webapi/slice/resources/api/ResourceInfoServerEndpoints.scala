@@ -5,11 +5,10 @@
 
 package org.knora.webapi.slice.resources.api
 
-import zio.*
 import sttp.tapir.ztapir.*
+import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.resources.api.model.ListResponseDto
 import org.knora.webapi.slice.resources.api.service.ResourceInfoRestService
 
 final case class ResourceInfoServerEndpoints(

@@ -4,16 +4,12 @@
  */
 
 package org.knora.webapi.slice.security.api
-import sttp.model.headers.CookieValueWithMeta
-import zio.*
 import sttp.tapir.ztapir.*
+import zio.*
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginForm
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
 
 case class AuthenticationServerEndpoints(
   private val restService: AuthenticationRestService,

@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.ontology.api
 
-import zio.*
 import sttp.tapir.ztapir.*
+import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.api.service.OntologiesRestService

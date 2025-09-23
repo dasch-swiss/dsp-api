@@ -5,8 +5,9 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.stream.ZStream
 import zio.*
+import zio.nio.file.Files
+import zio.stream.ZStream
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
@@ -35,7 +36,6 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import zio.nio.file.Files
 
 final case class ProjectRestService(
   private val format: KnoraResponseRenderer,

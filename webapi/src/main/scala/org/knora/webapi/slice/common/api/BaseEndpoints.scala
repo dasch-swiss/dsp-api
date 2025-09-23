@@ -7,20 +7,20 @@ package org.knora.webapi.slice.common.api
 
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
-import sttp.tapir.ztapir.*
-import sttp.tapir.{PublicEndpoint, EndpointOutput, Validator}
+import sttp.tapir.EndpointOutput
+import sttp.tapir.PublicEndpoint
+import sttp.tapir.Validator
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.model.UsernamePassword
+import sttp.tapir.ztapir.*
 import zio.*
 
-import scala.concurrent.Future
 import dsp.errors.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.security.Authenticator
-import sttp.tapir.Endpoint
 
 final case class BaseEndpoints(authenticator: Authenticator) {
 

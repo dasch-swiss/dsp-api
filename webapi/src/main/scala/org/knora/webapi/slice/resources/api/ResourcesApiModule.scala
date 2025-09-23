@@ -69,6 +69,7 @@ object ResourcesApiModule { self =>
       ResourcesEndpoints.layer,
       ResourcesRestService.layer,
       ResourcesServerEndpoints.layer,
+      ResourcesApiServerEndpoints.layer,
       StandoffEndpoints.layer,
       StandoffRestService.layer,
       StandoffServerEndpoints.layer,

@@ -5,10 +5,9 @@
 
 package org.knora.webapi.slice.admin.api
 
-import zio.*
 import sttp.tapir.ztapir.*
+import zio.*
 
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.api.service.GroupRestService

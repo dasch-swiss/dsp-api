@@ -5,19 +5,9 @@
 
 package org.knora.webapi.slice.admin.api
 
-import zio.*
-import zio.ZLayer
-
 import sttp.tapir.ztapir.*
+import zio.*
 
-import dsp.errors.BadRequestException
-import org.knora.webapi.messages.admin.responder.listsmessages.CanDeleteListResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListItemDeleteResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCommentsDeleteResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.NodePositionChangeResponseADM
 import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode

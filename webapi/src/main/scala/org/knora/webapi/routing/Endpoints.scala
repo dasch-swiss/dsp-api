@@ -5,8 +5,10 @@
 
 package org.knora.webapi.routing
 
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
 import zio.*
-import org.knora.webapi.http.version.ServerVersion
+
 import org.knora.webapi.routing
 import org.knora.webapi.slice.admin.api.AdminApiServerEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementServerEndpoints
@@ -17,8 +19,6 @@ import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.api.AuthenticationServerEndpoints
 import org.knora.webapi.slice.shacl.api.ShaclServerEndpoints
-import sttp.tapir.ztapir.*
-import sttp.capabilities.zio.ZioStreams
 
 final case class Endpoints(
   adminApiServerEndpoints: AdminApiServerEndpoints,

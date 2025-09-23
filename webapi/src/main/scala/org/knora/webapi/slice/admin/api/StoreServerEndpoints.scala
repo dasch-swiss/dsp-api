@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.admin.api
 
-import zio.*
 import sttp.tapir.ztapir.*
+import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject

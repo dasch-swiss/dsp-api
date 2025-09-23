@@ -6,7 +6,9 @@
 package org.knora.webapi.core
 
 import zio.*
+
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.Features
 import org.knora.webapi.config.GraphRoute
@@ -15,7 +17,6 @@ import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.config.OpenTelemetryConfig
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.config.Triplestore
-import org.knora.webapi.core.Db.DbInitEnv
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
@@ -39,7 +40,6 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.InfrastructureModule.Provided
 import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.MetricsServer.MetricsServerEnv
 import org.knora.webapi.slice.infrastructure.OpenTelemetry
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRestService
@@ -56,8 +56,8 @@ import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
-import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
+import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
 import org.knora.webapi.slice.shacl.ShaclModule
@@ -71,59 +71,6 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.util.Logger
 
 object LayersLive { self =>
-
-  /*
-   * This layer composition is done really happhazardly.
-   * This can certainly be improved a lot.
-   * However, this brings the layers ependency graph from ~12.7k to ~2.9k nodes.
-   * (By that I'm refering to the text output one gets when enabling `ZLayer.Debug.mermaid`.)
-   * It is unclear how closely this relates to the actual graph construction code,
-   * but I expect it will prevent the `class too big` error that we have seen in the past.
-   * It seems to have little or no impact on compile time.
-   */
-
-  private type ConfigDependencies = Any
-  private type ConfigProvided     = AppConfig.AppConfigurations
-
-  private type IntermediateDependencies1 = AppConfig & Triplestore & Features & DspIngestConfig & JwtConfig
-  private type IntermediateProvided1 = CommonModule.Provided & IriService & OntologyModule.Provided &
-    InfrastructureModule.Provided
-
-  private type IntermediateDependencies3 = IntermediateProvided1 & Features & DspIngestConfig & JwtConfig &
-    DspIngestClient & PredicateObjectMapper & AppConfig
-  private type IntermediateProvided3 = AdminModule.Provided & IntermediateProvided1
-
-  type ApplicationEnvironment = DbInitEnv & MetricsServerEnv
-
-  private val configLayer: ZLayer[self.ConfigDependencies, Nothing, self.ConfigProvided] =
-    Logger.fromEnv() >>> AppConfig.layer
-
-  val intermediateLayers1: ZLayer[self.IntermediateDependencies1, Nothing, self.IntermediateProvided1] =
-    ZLayer.makeSome[self.IntermediateDependencies1, self.IntermediateProvided1](
-      CommonModule.layer,
-      IriService.layer,
-      OntologyModule.layer,
-      InfrastructureModule.layer,
-    )
-
-  val intermediateLayers2
-    : ZLayer[JwtService & DspIngestConfig & IriConverter, Nothing, DspIngestClient & PredicateObjectMapper] =
-    ZLayer.makeSome[JwtService & DspIngestConfig & IriConverter, DspIngestClient & PredicateObjectMapper](
-      DspIngestClientLive.layer,
-      PredicateObjectMapper.layer,
-    )
-
-  val intermediateLayers3
-    : ZLayer[self.IntermediateDependencies3, Nothing, self.IntermediateProvided3 & DspIngestConfig & JwtConfig] =
-    ZLayer.makeSome[self.IntermediateDependencies3, self.IntermediateProvided3 & DspIngestConfig & JwtConfig](
-      AdminModule.layer,
-    )
-
-  private val intermediateLayersAll =
-    configLayer >+> intermediateLayers1 >+> intermediateLayers2 >+> intermediateLayers3
-
-  val bootstrap: ZLayer[Any, Nothing, ApplicationEnvironment] =
-    intermediateLayersAll >+> LayersLive.remainingLayer
 
   /**
    * The `Environment` that we require to exist at startup.
@@ -176,14 +123,15 @@ object LayersLive { self =>
     ValuesResponderV2
     // format: on
 
-  type Config = AppConfig & Features & GraphRoute & KnoraApi & OpenTelemetryConfig & Sipi & Triplestore
-
-  val remainingLayer =
+  val remainingLayer: URLayer[AppConfigurations, Environment] =
     ZLayer.makeSome[
-      Config & IntermediateProvided1 & IntermediateProvided3 & DspIngestClient & PredicateObjectMapper,
+      AppConfig & DspIngestConfig & KnoraApi & Sipi & Triplestore & Features & GraphRoute & JwtConfig &
+        OpenTelemetryConfig,
       self.Environment,
     ](
+      // ZLayer.Debug.mermaid,
       AdminApiModule.layer,
+      AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
       ApiV2Endpoints.layer,
       AssetPermissionsResponder.layer,
@@ -191,10 +139,14 @@ object LayersLive { self =>
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CardinalityHandler.layer,
+      CommonModule.layer,
       ConstructResponseUtilV2.layer,
+      DspIngestClientLive.layer,
       Endpoints.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
+      InfrastructureModule.layer,
+      IriService.layer,
       KnoraResponseRenderer.layer,
       ListsApiModule.layer,
       ListsResponder.layer,
@@ -203,10 +155,12 @@ object LayersLive { self =>
       ManagementServerEndpoints.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,
+      OntologyModule.layer,
       OntologyResponderV2.layer,
       OpenTelemetry.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
+      PredicateObjectMapper.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,
@@ -227,6 +181,9 @@ object LayersLive { self =>
       StandoffTagUtilV2Live.layer,
       State.layer,
       ValuesResponderV2.layer,
-      // ZLayer.Debug.mermaid,
     )
+
+  private val loggerAndConfig: ULayer[AppConfigurations] = Logger.fromEnv() >>> AppConfig.layer
+
+  val bootstrap: ULayer[AppConfigurations & Environment] = loggerAndConfig >+> LayersLive.remainingLayer
 }

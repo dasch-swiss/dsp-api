@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.lists.api
 
-import zio.*
 import sttp.tapir.ztapir.*
+import zio.*
 
 import org.knora.webapi.slice.lists.api.service.ListsV2RestService
 

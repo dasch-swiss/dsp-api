@@ -5,10 +5,9 @@
 
 package org.knora.webapi.slice.admin.api
 
-import zio.*
-
-import sttp.tapir.ztapir.*
 import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
+import zio.*
 
 final case class AdminApiServerEndpoints(
   private val adminListsServerEndpoints: AdminListsServerEndpoints,

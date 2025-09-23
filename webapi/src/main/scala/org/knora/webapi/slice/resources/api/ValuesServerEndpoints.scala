@@ -5,10 +5,8 @@
 
 package org.knora.webapi.slice.resources.api
 
-import sttp.model.MediaType
-
-import zio.*
 import sttp.tapir.ztapir.*
+import zio.*
 
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.resources.api.model.ValueUuid

@@ -8,10 +8,8 @@ package org.knora.webapi.slice.shacl.api
 import zio.*
 import zio.nio.file.Files
 import zio.test.*
-import zio.stream.ZStream
-import org.knora.webapi.slice.shacl.domain.ShaclValidator
 
-import java.io.IOException
+import org.knora.webapi.slice.shacl.domain.ShaclValidator
 
 object ShaclApiServiceSpec extends ZIOSpecDefault {
 

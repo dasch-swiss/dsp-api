@@ -4,8 +4,8 @@
  */
 
 package org.knora.webapi.slice.admin.api
-import zio.*
 import sttp.tapir.ztapir.*
+import zio.*
 
 import org.knora.webapi.slice.admin.api.service.ProjectsLegalInfoRestService
 
