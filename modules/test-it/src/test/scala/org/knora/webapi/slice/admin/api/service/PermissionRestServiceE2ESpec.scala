@@ -29,26 +29,24 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
     suite("Administrative Permission Create Requests")(
       test("return 'BadRequest' if the supplied project IRI for AdministrativePermissionCreateRequestADM is not valid") {
         permissionRestService(
-          _.createAdministrativePermission(
+          _.createAdministrativePermission(SharedTestDataADM.imagesUser01)(
             CreateAdministrativePermissionAPIRequestADM(
               forProject = "invalid-project-IRI",
               forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
               hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll)),
             ),
-            SharedTestDataADM.imagesUser01,
           ),
         ).exit.map(assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("Project IRI is invalid.")))
       },
       test("return 'BadRequest' if the supplied group IRI for AdministrativePermissionCreateRequestADM is not valid") {
         val groupIri = "invalid-group-iri"
         permissionRestService(
-          _.createAdministrativePermission(
+          _.createAdministrativePermission(SharedTestDataADM.imagesUser01)(
             CreateAdministrativePermissionAPIRequestADM(
               forProject = SharedTestDataADM.imagesProjectIri.value,
               forGroup = groupIri,
               hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll)),
             ),
-            SharedTestDataADM.imagesUser01,
           ),
         ).exit.map(assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException](s"Invalid group IRI $groupIri")))
       },
@@ -57,14 +55,13 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
       ) {
         val permissionIri = "invalid-permission-IRI"
         permissionRestService(
-          _.createAdministrativePermission(
+          _.createAdministrativePermission(SharedTestDataADM.imagesUser01)(
             CreateAdministrativePermissionAPIRequestADM(
               id = Some(permissionIri),
               forProject = SharedTestDataADM.imagesProjectIri.value,
               forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
               hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll)),
             ),
-            SharedTestDataADM.imagesUser01,
           ),
         ).exit.map(
           assert(_)(
@@ -76,13 +73,12 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         val invalidName    = "Delete"
         val hasPermissions = Set(PermissionADM(name = invalidName, additionalInformation = None, permissionCode = None))
         permissionRestService(
-          _.createAdministrativePermission(
+          _.createAdministrativePermission(SharedTestDataADM.imagesUser01)(
             CreateAdministrativePermissionAPIRequestADM(
               forProject = SharedTestDataADM.imagesProjectIri.value,
               forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
               hasPermissions = hasPermissions,
             ),
-            SharedTestDataADM.imagesUser01,
           ),
         ).exit.map(
           assert(_)(
@@ -97,13 +93,12 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'BadRequest' if the a permissions supplied for AdministrativePermissionCreateRequestADM had invalid name",
       ) {
         permissionRestService(
-          _.createAdministrativePermission(
+          _.createAdministrativePermission(SharedTestDataADM.imagesUser01)(
             CreateAdministrativePermissionAPIRequestADM(
               forProject = SharedTestDataADM.imagesProjectIri.value,
               forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
               hasPermissions = Set.empty[PermissionADM],
             ),
-            SharedTestDataADM.imagesUser01,
           ),
         ).exit
           .map(assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("Permissions needs to be supplied.")))
@@ -112,13 +107,12 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'ForbiddenException' if the user requesting AdministrativePermissionCreateRequestADM is not system or project admin",
       ) {
         permissionRestService(
-          _.createAdministrativePermission(
+          _.createAdministrativePermission(SharedTestDataADM.imagesReviewerUser)(
             CreateAdministrativePermissionAPIRequestADM(
               forProject = SharedTestDataADM.imagesProjectIri.value,
               forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
               hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll)),
             ),
-            SharedTestDataADM.imagesReviewerUser,
           ),
         ).exit.map(
           assert(_)(
@@ -135,7 +129,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid",
       ) {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(
+          _.createDefaultObjectAccessPermission(SharedTestDataADM.imagesUser01)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = "invalid-project-IRI",
               forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -143,7 +137,6 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
             ),
-            SharedTestDataADM.imagesUser01,
           ),
         ).exit.map(assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("Project IRI is invalid.")))
       },
@@ -152,7 +145,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
       ) {
         val groupIri = "invalid-group-iri"
         permissionRestService(
-          _.createDefaultObjectAccessPermission(
+          _.createDefaultObjectAccessPermission(SharedTestDataADM.imagesUser01)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = SharedTestDataADM.imagesProjectIri.value,
               forGroup = Some(groupIri),
@@ -160,7 +153,6 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
             ),
-            SharedTestDataADM.imagesUser01,
           ),
         ).exit
           .map(assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException](s"Group IRI is invalid: $groupIri")))
@@ -170,7 +162,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
       ) {
         val permissionIri = "invalid-permission-IRI"
         permissionRestService(
-          _.createDefaultObjectAccessPermission(
+          _.createDefaultObjectAccessPermission(SharedTestDataADM.imagesUser01)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               id = Some(permissionIri),
               forProject = SharedTestDataADM.imagesProjectIri.value,
@@ -179,7 +171,6 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
             ),
-            SharedTestDataADM.imagesUser01,
           ),
         ).exit.map(
           assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException](s"Couldn't parse IRI: $permissionIri")),
@@ -187,13 +178,12 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
       },
       test("return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM") {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(
+          _.createDefaultObjectAccessPermission(SharedTestDataADM.imagesUser01)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = SharedTestDataADM.imagesProjectIri.value,
               forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
               hasPermissions = Set.empty[PermissionADM],
             ),
-            SharedTestDataADM.imagesUser01,
           ),
         ).exit
           .map(assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("Permissions needs to be supplied.")))
@@ -310,14 +300,13 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionCreateRequestADM is not system or project Admin",
       ) {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(
+          _.createDefaultObjectAccessPermission(SharedTestDataADM.anythingUser2)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = SharedTestDataADM.anythingProjectIri.value,
               forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
               hasPermissions =
                 Set(PermissionADM.from(Permission.ObjectAccess.RestrictedView, SharedTestDataADM.thingSearcherGroup.id)),
             ),
-            SharedTestDataADM.anythingUser2,
           ),
         ).exit.map(
           assert(_)(
@@ -331,7 +320,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'BadRequest' if the both group and resource class are supplied for DefaultObjectAccessPermissionCreateRequestADM",
       ) {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(
+          _.createDefaultObjectAccessPermission(SharedTestDataADM.rootUser)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = anythingProjectIri,
               forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -340,7 +329,6 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
             ),
-            SharedTestDataADM.rootUser,
           ),
         ).exit.map(
           assert(_)(
@@ -355,7 +343,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'BadRequest' if the both group and property are supplied for DefaultObjectAccessPermissionCreateRequestADM",
       ) {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(
+          _.createDefaultObjectAccessPermission(SharedTestDataADM.rootUser)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = anythingProjectIri,
               forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -364,7 +352,6 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
             ),
-            SharedTestDataADM.rootUser,
           ),
         ).exit.map(
           assert(_)(
@@ -379,7 +366,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'BadRequest' if propertyIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid",
       ) {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(
+          _.createDefaultObjectAccessPermission(SharedTestDataADM.rootUser)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = anythingProjectIri,
               forProperty = Some(SharedTestDataADM.customValueIRI),
@@ -387,7 +374,6 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
             ),
-            SharedTestDataADM.rootUser,
           ),
         ).exit.map(
           assert(_)(
@@ -401,14 +387,13 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'BadRequest' if neither a group, nor a resource class, nor a property is supplied for DefaultObjectAccessPermissionCreateRequestADM",
       ) {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(
+          _.createDefaultObjectAccessPermission(SharedTestDataADM.rootUser)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = anythingProjectIri,
               hasPermissions = Set(
                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
             ),
-            SharedTestDataADM.rootUser,
           ),
         ).exit.map(
           assert(_)(

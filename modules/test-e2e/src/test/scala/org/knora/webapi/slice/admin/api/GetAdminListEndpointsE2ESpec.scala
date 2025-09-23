@@ -17,7 +17,7 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
-object GetListEndpointsE2ESpec extends E2EZSpec {
+object GetAdminListEndpointsE2ESpec extends E2EZSpec {
 
   override val rdfDataObjects = List(
     RdfDataObject(

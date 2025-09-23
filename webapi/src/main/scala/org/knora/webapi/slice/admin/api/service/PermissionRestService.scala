@@ -42,16 +42,16 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class PermissionRestService(
-  responder: PermissionsResponder,
-  knoraProjectService: KnoraProjectService,
-  auth: AuthorizationRestService,
-  format: KnoraResponseRenderer,
-  administrativePermissionService: AdministrativePermissionService,
+  private val responder: PermissionsResponder,
+  private val knoraProjectService: KnoraProjectService,
+  private val auth: AuthorizationRestService,
+  private val format: KnoraResponseRenderer,
+  private val administrativePermissionService: AdministrativePermissionService,
 ) {
+
   def createAdministrativePermission(
-    request: CreateAdministrativePermissionAPIRequestADM,
     user: User,
-  ): Task[AdministrativePermissionCreateResponseADM] =
+  )(request: CreateAdministrativePermissionAPIRequestADM): Task[AdministrativePermissionCreateResponseADM] =
     for {
       _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
       uuid   <- Random.nextUUID
@@ -72,23 +72,22 @@ final case class PermissionRestService(
       .tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
 
   def getPermissionsApByProjectIri(
-    value: ProjectIri,
     user: User,
-  ): Task[AdministrativePermissionsForProjectGetResponseADM] =
+  )(value: ProjectIri): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(value, user)
       result <- responder.getPermissionsApByProjectIri(value.value)
       ext    <- format.toExternal(result)
     } yield ext
 
-  def getPermissionsByProjectIri(projectIri: ProjectIri, user: User): Task[PermissionsForProjectGetResponseADM] =
+  def getPermissionsByProjectIri(user: User)(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
       result <- responder.getPermissionsByProjectIri(projectIri)
       ext    <- format.toExternal(result)
     } yield ext
 
-  def deletePermission(permissionIri: PermissionIri, user: User): Task[PermissionDeleteResponseADM] =
+  def deletePermission(user: User)(permissionIri: PermissionIri): Task[PermissionDeleteResponseADM] =
     for {
       _      <- auth.ensureSystemAdmin(user)
       uuid   <- Random.nextUUID
@@ -96,9 +95,8 @@ final case class PermissionRestService(
       ext    <- format.toExternal(result)
     } yield ext
 
-  def createDefaultObjectAccessPermission(
+  def createDefaultObjectAccessPermission(user: User)(
     request: CreateDefaultObjectAccessPermissionAPIRequestADM,
-    user: User,
   ): Task[DefaultObjectAccessPermissionCreateResponseADM] =
     for {
       _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
@@ -107,10 +105,9 @@ final case class PermissionRestService(
       ext    <- format.toExternal(result)
     } yield ext
 
-  def updatePermissionHasPermissions(
+  def updatePermissionHasPermissions(user: User)(
     permissionIri: PermissionIri,
     request: ChangePermissionHasPermissionsApiRequestADM,
-    user: User,
   ): Task[PermissionGetResponseADM] =
     for {
       _    <- auth.ensureSystemAdmin(user)
@@ -122,10 +119,9 @@ final case class PermissionRestService(
       ext    <- format.toExternal(result)
     } yield ext
 
-  def updatePermissionProperty(
+  def updatePermissionProperty(user: User)(
     permissionIri: PermissionIri,
     request: ChangePermissionPropertyApiRequestADM,
-    user: User,
   ): Task[DefaultObjectAccessPermissionGetResponseADM] =
     for {
       _      <- auth.ensureSystemAdmin(user)
@@ -134,10 +130,9 @@ final case class PermissionRestService(
       ext    <- format.toExternal(result)
     } yield ext
 
-  def updatePermissionResourceClass(
+  def updatePermissionResourceClass(user: User)(
     permissionIri: PermissionIri,
     request: ChangePermissionResourceClassApiRequestADM,
-    user: User,
   ): Task[DefaultObjectAccessPermissionGetResponseADM] =
     for {
       _      <- auth.ensureSystemAdmin(user)
@@ -146,10 +141,9 @@ final case class PermissionRestService(
       ext    <- format.toExternal(result)
     } yield ext
 
-  def updateDoapForWhat(
+  def updateDoapForWhat(user: User)(
     iri: PermissionIri,
     req: ChangeDoapRequest,
-    user: User,
   ): Task[DefaultObjectAccessPermissionGetResponseADM] =
     for {
       _      <- auth.ensureSystemAdmin(user)
@@ -159,10 +153,9 @@ final case class PermissionRestService(
       ext    <- format.toExternal(result)
     } yield ext
 
-  def updatePermissionGroup(
+  def updatePermissionGroup(user: User)(
     permissionIri: PermissionIri,
     request: ChangePermissionGroupApiRequestADM,
-    user: User,
   ): Task[PermissionGetResponseADM] =
     for {
       _        <- auth.ensureSystemAdmin(user)
@@ -173,19 +166,17 @@ final case class PermissionRestService(
     } yield ext
 
   def getPermissionsDaopByProjectIri(
-    projectIri: ProjectIri,
     user: User,
-  ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
+  )(projectIri: ProjectIri): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
       result <- responder.getPermissionsDaopByProjectIri(projectIri)
       ext    <- format.toExternal(result)
     } yield ext
 
-  def getPermissionsApByProjectAndGroupIri(
+  def getPermissionsApByProjectAndGroupIri(user: User)(
     projectIri: ProjectIri,
     groupIri: GroupIri,
-    user: User,
   ): Task[AdministrativePermissionGetResponseADM] =
     for {
       _ <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)

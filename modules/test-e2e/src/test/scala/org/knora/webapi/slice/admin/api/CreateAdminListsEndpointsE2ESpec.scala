@@ -23,7 +23,7 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.MutableTestIri
 
-object CreateListsEndpointsE2ESpec extends E2EZSpec {
+object CreateAdminListsEndpointsE2ESpec extends E2EZSpec {
 
   private val customListIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/qq54wdGKR0S5zsbR5-9wtg")
   private val customChildNodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/vQgijJZKSqawFooJPyhYkw")

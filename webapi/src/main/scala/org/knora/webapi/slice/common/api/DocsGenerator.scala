@@ -22,9 +22,9 @@ import zio.nio.file.Path
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.slice.admin.api.AdminApiEndpoints
+import org.knora.webapi.slice.admin.api.AdminListsEndpoints
 import org.knora.webapi.slice.admin.api.FilesEndpoints
 import org.knora.webapi.slice.admin.api.GroupsEndpoints
-import org.knora.webapi.slice.admin.api.ListsEndpoints
 import org.knora.webapi.slice.admin.api.MaintenanceEndpoints
 import org.knora.webapi.slice.admin.api.PermissionsEndpoints
 import org.knora.webapi.slice.admin.api.ProjectsEndpoints
@@ -86,13 +86,13 @@ object DocsGenerator extends ZIOAppDefault {
   }.provideSome[ZIOAppArgs](
     AppConfig.layer,
     AdminApiEndpoints.layer,
+    AdminListsEndpoints.layer,
     ApiV2Endpoints.layer,
     AuthenticationEndpointsV2.layer,
     BaseEndpoints.layer,
     DocsNoopAuthenticator.layer,
     FilesEndpoints.layer,
     GroupsEndpoints.layer,
-    ListsEndpoints.layer,
     ListsEndpointsV2.layer,
     MaintenanceEndpoints.layer,
     MetadataEndpoints.layer,
