@@ -42,7 +42,7 @@ final case class ProjectsEndpointsHandler(
 ) extends HandlerFunctions {
 
   val getProjectsEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsEndpoint
-    .zServerLogic(userSession =>
+    .serverLogic(userSession =>
       _ =>
         authorizationHandler.ensureAdminScope(userSession) *>
           projectService
@@ -55,7 +55,7 @@ final case class ProjectsEndpointsHandler(
     )
 
   val getProjectByShortcodeEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectByShortcodeEndpoint
-    .zServerLogic(userSession =>
+    .serverLogic(userSession =>
       shortcode =>
         authorizationHandler.ensureProjectReadable(userSession, shortcode) *>
           projectService
@@ -68,7 +68,7 @@ final case class ProjectsEndpointsHandler(
     )
 
   private val getProjectChecksumReportEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsChecksumReport
-    .zServerLogic(userSession =>
+    .serverLogic(userSession =>
       shortcode =>
         authorizationHandler.ensureProjectReadable(userSession, shortcode) *>
           reportService
@@ -81,7 +81,7 @@ final case class ProjectsEndpointsHandler(
     )
 
   private val deleteProjectsEraseEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.deleteProjectsErase
-    .zServerLogic(userSession =>
+    .serverLogic(userSession =>
       shortcode =>
         authorizationHandler.ensureAdminScope(userSession) *>
           projectService.findProject(shortcode).some.mapError(projectNotFoundOrServerError(_, shortcode)) *> {
@@ -99,7 +99,7 @@ final case class ProjectsEndpointsHandler(
     )
 
   private val getProjectsAssetsInfoEndpoint: ZServerEndpoint[Any, Any] =
-    projectEndpoints.getProjectsAssetsInfo.zServerLogic { userSession => (shortcode, assetId) =>
+    projectEndpoints.getProjectsAssetsInfo.serverLogic { userSession => (shortcode, assetId) =>
       val ref = AssetRef(assetId, shortcode)
       authorizationHandler.ensureProjectReadable(userSession, shortcode) *>
         assetInfoService
@@ -113,7 +113,7 @@ final case class ProjectsEndpointsHandler(
 
   private val getProjectsAssetsOriginalEndpoint: ZServerEndpoint[Any, ZioStreams] =
     projectEndpoints.getProjectsAssetsOriginal
-      .zServerLogic(userSession =>
+      .serverLogic(userSession =>
         (shortcode, assetId) =>
           for {
             ref            <- ZIO.succeed(AssetRef(assetId, shortcode))
@@ -132,7 +132,7 @@ final case class ProjectsEndpointsHandler(
 
   private val ChunkSize = 64 * 1024 // larger chunk size; better for larger files
   private val postProjectAssetEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postProjectAsset
-    .zServerLogic(principal => { case (shortcode, filename, stream) =>
+    .serverLogic(principal => { case (shortcode, filename, stream) =>
       authorizationHandler.ensureProjectWritable(principal, shortcode) *>
         ZIO.scoped {
           for {
@@ -149,7 +149,7 @@ final case class ProjectsEndpointsHandler(
     })
 
   private val postBulkIngestEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngest
-    .zServerLogic(userSession =>
+    .serverLogic(userSession =>
       code =>
         authorizationHandler.ensureProjectWritable(userSession, code) *>
           bulkIngestService
@@ -164,7 +164,7 @@ final case class ProjectsEndpointsHandler(
     )
 
   private val postBulkIngestEndpointFinalize: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngestFinalize
-    .zServerLogic(userSession =>
+    .serverLogic(userSession =>
       code =>
         authorizationHandler.ensureProjectWritable(userSession, code) *>
           bulkIngestService
@@ -180,7 +180,7 @@ final case class ProjectsEndpointsHandler(
 
   private val getBulkIngestMappingCsvEndpoint: ZServerEndpoint[Any, Any] =
     projectEndpoints.getBulkIngestMappingCsv
-      .zServerLogic(userSession =>
+      .serverLogic(userSession =>
         code =>
           authorizationHandler.ensureProjectWritable(userSession, code) *>
             bulkIngestService
@@ -193,7 +193,7 @@ final case class ProjectsEndpointsHandler(
       )
 
   private val postBulkIngestUploadEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postBulkIngestUpload
-    .zServerLogic(principal => { case (shortcode, filename, stream) =>
+    .serverLogic(principal => { case (shortcode, filename, stream) =>
       for {
         _ <- authorizationHandler.ensureProjectWritable(principal, shortcode)
         s <- bulkIngestService.uploadSingleFile(shortcode, filename, stream).mapError {
@@ -206,7 +206,7 @@ final case class ProjectsEndpointsHandler(
     Conflict(s"A bulk ingest is currently in progress for project ${code.value}.")
 
   private val postExportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postExport
-    .zServerLogic(userSession =>
+    .serverLogic(userSession =>
       shortcode =>
         authorizationHandler.ensureAdminScope(userSession) *>
           projectService
@@ -224,7 +224,7 @@ final case class ProjectsEndpointsHandler(
     )
 
   private val getImportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.getImport
-    .zServerLogic(userSession =>
+    .serverLogic(userSession =>
       (shortcode, stream) =>
         authorizationHandler.ensureAdminScope(userSession) *>
           importService
