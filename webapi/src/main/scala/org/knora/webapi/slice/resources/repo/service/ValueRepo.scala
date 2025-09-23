@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.resources.repo.service
 
 import org.apache.jena.rdf.model.Resource
-import org.apache.jena.update.UpdateFactory
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
@@ -21,6 +20,7 @@ import scala.language.implicitConversions
 
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
@@ -206,7 +206,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
   def createValue(
     dataNamedGraph: InternalIri,
     resourceIri: InternalIri,
-    propertyIri: org.knora.webapi.messages.SmartIri,
+    propertyIri: SmartIri,
     newValueIri: InternalIri,
     newValueUUID: UUID,
     value: ValueContentV2,
@@ -214,93 +214,54 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     valueCreator: InternalIri,
     valuePermissions: String,
     creationDate: Instant,
-  ): Task[Unit] = {
-    // Generate query using RDF4J builder (primary)
-    val builderQuery = CreateValueQueryBuilder.createValueQuery(
-      dataNamedGraph,
-      resourceIri,
-      propertyIri,
-      newValueIri,
-      newValueUUID,
-      value,
-      linkUpdates,
-      valueCreator,
-      valuePermissions,
-      creationDate,
+  ): Task[Unit] =
+    triplestore.query(
+      CreateValueQueryBuilder.createValueQuery(
+        dataNamedGraph,
+        resourceIri,
+        propertyIri,
+        newValueIri,
+        Left(newValueUUID),
+        value,
+        linkUpdates,
+        valueCreator,
+        valuePermissions,
+        creationDate,
+        requestingUser = null,
+      ),
     )
 
-    // Generate query using Twirl template (verification)
-    val twirlQuery = CreateValueQueryBuilder.createValueQueryTwirl(
-      dataNamedGraph,
-      resourceIri,
-      propertyIri,
-      newValueIri,
-      newValueUUID,
-      value,
-      linkUpdates,
-      valueCreator,
-      valuePermissions,
-      creationDate,
-    )(sf)
-
-    // Compare and log differences
-    for {
-      _ <- compareQueries(builderQuery.sparql, twirlQuery.sparql, "CreateValue").ignore()
-      _ <- triplestore.query(builderQuery) // Execute Twirl query for now as requested
-    } yield ()
-  }
-
-  private def compareQueries(
-    builderQuery: String,
-    twirlQuery: String,
-    queryType: String,
+  def updateValue(
+    dataNamedGraph: InternalIri,
+    resourceIri: InternalIri,
+    propertyIri: SmartIri,
+    currentValueIri: InternalIri,
+    newValueIri: InternalIri,
+    valueTypeIri: SmartIri,
+    value: ValueContentV2,
+    valueCreator: InternalIri,
+    valuePermissions: String,
+    linkUpdates: Seq[SparqlTemplateLinkUpdate],
+    creationDate: Instant,
+    requestingUser: InternalIri,
   ): Task[Unit] =
-    for {
-      parsedTwirlUpdate   <- ZIO.attempt(UpdateFactory.create(twirlQuery))
-      parsedBuilderUpdate <- ZIO.attempt(UpdateFactory.create(builderQuery))
-      normalizedBuilder    = replaceUuidPatterns(parsedBuilderUpdate.toString)
-      normalizedTwirl      = replaceUuidPatterns(parsedTwirlUpdate.toString)
-      _ <- ZIO.when(normalizedBuilder != normalizedTwirl)(
-             ZIO.logWarning(
-               s"""|$queryType: Builder and Twirl template generated different queries!
-                   |
-                   |${diffLines(normalizedBuilder, normalizedTwirl)}
-                   |
-                   |${"*" * 80}
-                   |
-                   |Normalized builder:
-                   |$normalizedBuilder
-                   |
-                   |${"*" * 80}
-                   |
-                   |Normalized twirl:
-                   |$normalizedTwirl""".stripMargin,
-             ),
-           )
-    } yield ()
-
-  private def diffLines(query1: String, query2: String): String = {
-    val lines1 = query1.split('\n')
-    val lines2 = query2.split('\n')
-    val minLen = math.min(lines1.length, lines2.length)
-
-    val startSame = (0 until minLen).takeWhile(i => lines1(i) == lines2(i)).length
-    val endSame = (0 until (minLen - startSame))
-      .takeWhile(i => lines1(lines1.length - 1 - i) == lines2(lines2.length - 1 - i))
-      .length
-
-    val diff1 = lines1.slice(startSame, lines1.length - endSame)
-    val diff2 = lines2.slice(startSame, lines2.length - endSame)
-
-    s"Builder diff:\n${diff1.mkString("\n")}\n\nTwirl diff:\n${diff2.mkString("\n")}"
-  }
-
-  private def replaceUuidPatterns(sparqlQuery: String): String = {
-    val valueUuidPattern    = """knora-base:valueHasUUID\s+"[^"]+"\s*\.""".r
-    val standoffUuidPattern = """knora-base:standoffTagHasUUID\s+"[^"]+"\s*\.""".r
-    val withValueUuids      = valueUuidPattern.replaceAllIn(sparqlQuery, """knora-base:valueHasUUID "***" .""")
-    standoffUuidPattern.replaceAllIn(withValueUuids, """knora-base:standoffTagHasUUID "***" .""")
-  }
+    triplestore
+      .query(
+        CreateValueQueryBuilder.createValueQuery(
+          dataNamedGraph,
+          resourceIri,
+          propertyIri,
+          newValueIri,
+          Right(currentValueIri),
+          value,
+          linkUpdates,
+          valueCreator,
+          valuePermissions,
+          creationDate,
+          requestingUser = requestingUser,
+        ),
+      )
+      .as(())
 }
 
 object ValueRepo {

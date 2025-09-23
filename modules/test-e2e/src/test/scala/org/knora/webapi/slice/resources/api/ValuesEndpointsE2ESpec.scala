@@ -1566,6 +1566,45 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         endEra == dateValueHasStartEra,
       )
     },
+    test("create a text value with standoff containing a footnote with apostrophe (encode apostrophe correctly)") {
+      val resourceIri: IRI = AThing.iri
+      val textValueAsXml: String =
+        """|<?xml version="1.0" encoding="UTF-8"?>
+           |<text>Text <footnote content="Apostrophe start ' end"/> end text</text>
+           |""".stripMargin
+
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+      for {
+        maybeResourceLastModDate: Option[Instant] <- getResourceLastModificationDate(resourceIri)
+
+        jsonLd = createTextValueWithStandoffRequest(
+                   resourceIri = resourceIri,
+                   textValueAsXml = textValueAsXml,
+                   mappingIri = standardMappingIri,
+                 )
+
+        responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
+        valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
+
+        savedValue <- getValue(
+                        resourceIri = resourceIri,
+                        maybePreviousLastModDate = maybeResourceLastModDate,
+                        propertyIriForGravsearch = propertyIri,
+                        propertyIriInResult = propertyIri,
+                        expectedValueIri = valueIri,
+                      )
+
+        savedTextValueAsXml <- ZIO.fromEither(
+                                 savedValue.getRequiredString(KA.TextValueAsXml),
+                               )
+      } yield {
+        // The apostrophe should be preserved as-is, not escaped as &apos;
+        assertTrue(savedTextValueAsXml.contains("Apostrophe start &apos; end"))
+        // s"Expected apostrophe to be preserved, but got: $savedTextValueAsXml",
+      }
+    },
     test("create a date value representing a single date with month precision") {
       val resourceIri: IRI       = AThing.iri
       val propertyIri            = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
@@ -2549,6 +2588,30 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         savedTextValueAsXml <- ZIO.fromEither(savedValue.getRequiredString(KA.TextValueAsXml))
         expectedText = """<p>
                          | test update</p>""".stripMargin
+      } yield assertTrue(savedTextValueAsXml.contains(expectedText))
+    },
+    test("update a text value with standoff containing horrible input") {
+      val resourceIri = AThing.iri
+      val jsonLd =
+        FileUtil.readTextFile(Paths.get("test_data/generated_test_data/valuesE2EV2/UpdateValueWithTripleQuote.jsonld"))
+      val jsonLdWithResourceValueIri = jsonLd.replace("VALUE_IRI", textValueWithEscapeIri.get)
+      for {
+        maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri)
+        responseJsonDoc <- TestApiClient
+                             .putJsonLdDocument(uri"/v2/values", jsonLdWithResourceValueIri, anythingUser1)
+                             .flatMap(_.assert200)
+        valueIri   <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        _           = textValueWithEscapeIri.set(valueIri)
+        propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+        savedValue <- getValue(
+                        resourceIri = resourceIri,
+                        maybePreviousLastModDate = maybeResourceLastModDate,
+                        propertyIriForGravsearch = propertyIri,
+                        propertyIriInResult = propertyIri,
+                        expectedValueIri = valueIri,
+                      )
+        savedTextValueAsXml <- ZIO.fromEither(savedValue.getRequiredString(KA.TextValueAsXml))
+        expectedText = """<p>&quot;&quot;&quot;</p>""".stripMargin
       } yield assertTrue(savedTextValueAsXml.contains(expectedText))
     },
     test("update a text value with a comment") {

@@ -81,12 +81,13 @@ object CreateValueQueryBuilderTestSupport {
           resourceIri = testResourceIri,
           propertyIri = testPropertyIri,
           newValueIri = testValueIri,
-          newValueUUID = testValueUUID,
+          newValueUUIDOrCurrentValueIri = Left(testValueUUID),
           value = value,
           linkUpdates = linkUpdates,
           valueCreator = testUserIri,
           valuePermissions = testPermissions,
           creationDate = testCreationDate,
+          requestingUser = null, // TODO
         )
         .sparql
 
