@@ -187,8 +187,8 @@ final case class ProjectRestService(
   def getAllProjectData(user: User)(id: ProjectIri): Task[(String, String, ZStream[Any, Throwable, Byte])] =
     for {
       project <- auth.ensureSystemAdminOrProjectAdminById(user, id)
-      path    <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
-      stream   = ZStream.fromPath(path).ensuringWith(_ => ZIO.attempt(Files.deleteIfExists(path)).ignore)
+      path    <- projectExportService.exportProjectTriples(project)
+      stream   = ZStream.fromPath(path.toFile.toPath).ensuringWith(_ => ZIO.attempt(Files.deleteIfExists(path)).ignore)
     } yield (s"attachment; filename=project-data.trig", "application/octet-stream", stream)
 
   def getProjectMembersById(user: User)(id: ProjectIri): Task[ProjectMembersGetResponseADM] =
