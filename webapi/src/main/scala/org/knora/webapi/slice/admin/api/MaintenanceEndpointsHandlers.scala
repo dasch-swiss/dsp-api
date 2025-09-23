@@ -5,24 +5,20 @@
 
 package org.knora.webapi.slice.admin.api
 
-import zio.ZIO
-import zio.ZLayer
+import zio.*
 import zio.json.ast.Json
+
+import sttp.tapir.ztapir.*
 
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final case class MaintenanceEndpointsHandlers(
   endpoints: MaintenanceEndpoints,
   restService: MaintenanceRestService,
-  mapper: HandlerMapper,
 ) {
 
-  val allHandlers = List(
-    SecuredEndpointHandler(endpoints.postMaintenance, restService.executeMaintenanceAction),
-  ).map(mapper.mapSecuredEndpointHandler)
+  val allHandlers: ZServerEndpoint[Any, Any] =  Seq(endpoints.postMaintenance.serverLogic(restService.executeMaintenanceAction))
 }
 
 object MaintenanceEndpointsHandlers {

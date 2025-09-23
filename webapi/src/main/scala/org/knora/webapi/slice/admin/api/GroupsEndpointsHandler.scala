@@ -5,35 +5,30 @@
 
 package org.knora.webapi.slice.admin.api
 
-import zio.ZLayer
+import zio.*
+import sttp.tapir.ztapir.*
 
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.PublicEndpointHandler
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 case class GroupsEndpointsHandler(
   endpoints: GroupsEndpoints,
   restService: GroupRestService,
-  mapper: HandlerMapper,
 ) {
 
-  val allHandlers =
-    List(
-      PublicEndpointHandler(endpoints.getGroups, (_: Unit) => restService.getGroups),
-      PublicEndpointHandler(endpoints.getGroupByIri, restService.getGroupByIri),
-    ).map(mapper.mapPublicEndpointHandler) ++
-      List(
-        SecuredEndpointHandler(endpoints.getGroupMembers, restService.getGroupMembers),
-        SecuredEndpointHandler(endpoints.postGroup, restService.postGroup),
-        SecuredEndpointHandler(endpoints.putGroup, restService.putGroup),
-        SecuredEndpointHandler(endpoints.putGroupStatus, restService.putGroupStatus),
-        SecuredEndpointHandler(endpoints.deleteGroup, restService.deleteGroup),
-      ).map(mapper.mapSecuredEndpointHandler)
+  val allHandlers: ZServerEndpoint[Any, Any] =
+    Seq(
+      endpoints.getGroups.zServerLogic(_ => restService.getGroups),
+      endpoints.getGroupByIri.zServerLogic(restService.getGroupByIri),
+      endpoints.getGroupMembers.serverLogic(restService.getGroupMembers),
+      endpoints.postGroup.serverLogic(restService.postGroup),
+      endpoints.putGroup.serverLogic(restService.putGroup),
+      endpoints.putGroupStatus.serverLogic(restService.putGroupStatus),
+      endpoints.deleteGroup.serverLogic(restService.deleteGroup),
+    )
 }
 
 object GroupsEndpointsHandler {

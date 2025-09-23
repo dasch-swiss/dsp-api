@@ -5,7 +5,6 @@
 
 package org.knora.webapi.core
 
-import org.apache.pekko.actor.ActorSystem
 import zio.*
 
 import org.knora.webapi.config.AppConfig
@@ -211,7 +210,6 @@ object LayersLive { self =>
       OntologyApiModule.layer,
       OntologyResponderV2.layer,
       OpenTelemetry.layer,
-      PekkoActorSystem.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       ProjectExportServiceLive.layer,
@@ -233,7 +231,6 @@ object LayersLive { self =>
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      TapirToPekkoInterpreter.layer,
       ValuesResponderV2.layer,
       // ZLayer.Debug.mermaid,
     )

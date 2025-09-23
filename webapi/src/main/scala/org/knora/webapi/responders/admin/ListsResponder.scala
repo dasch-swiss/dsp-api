@@ -143,7 +143,7 @@ final case class ListsResponder(
    * @param nodeIri        the Iri if the required node.
    * @return a [[ListItemGetResponseADM]].
    */
-  def listGetRequestADM(nodeIri: IRI): Task[ListItemGetResponseADM] = {
+  def listGetRequestADM(nodeIri: ListIri): Task[ListItemGetResponseADM] = {
 
     def getNodeADM(childNode: ListChildNodeADM): Task[ListNodeGetResponseADM] =
       for {

@@ -5,7 +5,6 @@
 
 package org.knora.webapi.core
 
-import org.apache.pekko.actor.ActorSystem
 import zio.*
 
 import org.knora.webapi.config.*

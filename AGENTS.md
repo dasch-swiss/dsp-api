@@ -29,7 +29,7 @@ When context is insufficient, prefer asking 1–3 focused questions rather than 
 ## Project Overview
 
 DSP-API is the Digital Humanities Service Platform API — a Scala-based REST API for managing semantic data and digital
-assets in the humanities. The project uses ZIO for functional programming, Pekko HTTP (Apache Pekko) for the API, and
+assets in the humanities. The project uses ZIO for functional programming, zio-http and tapir for the API, and
 integrates with Apache Jena Fuseki triplestore and the Sipi media server.
 
 ## Build System & Commands
@@ -74,7 +74,7 @@ Essential commands:
 - Technology
   - Language: Scala 3.3.x
   - FP: ZIO 2.x
-  - HTTP: Pekko HTTP + Tapir
+  - HTTP: ZIO HTTP + Tapir
   - Store: Apache Jena Fuseki (RDF)
   - Media: Sipi
   - JSON: ZIO JSON

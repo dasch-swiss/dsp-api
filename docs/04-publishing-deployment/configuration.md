@@ -1,14 +1,12 @@
 # Configuration
 
-All configuration for Knora is done in `application.conf`. Besides the Knora application
-specific configuration, there we can also find configuration for the underlying Pekko library.
+All configuration for Knora is done in `application.conf`. 
 
 For optimal performance it is important to tune the configuration to the hardware used, mainly
 to the number of CPUs and cores per CPU.
 
 The relevant sections for tuning are:
 
-- `pekko.actor.deployment`
 - `knora-actor-dispatcher`
 - `knora-blocking-dispatcher`
 
@@ -18,9 +16,6 @@ A number of core settings is additionally configurable through system environmen
 
 | key in application.conf                | environment variable                            | default value           |
 |----------------------------------------|-------------------------------------------------|-------------------------|
-| pekko.log-config-on-start              | KNORA_AKKA_LOG_CONFIG_ON_START                  | off                     |
-| pekko.loglevel                         | KNORA_AKKA_LOGLEVEL                             | INFO                    |
-| pekko.stdout-loglevel                  | KNORA_AKKA_STDOUT_LOGLEVEL                      | INFO                    |
 | app.print-extended-config              | KNORA_WEBAPI_PRINT_EXTENDED_CONFIG              | false                   |
 | app.bcrypt-password-strength           | KNORA_WEBAPI_BCRYPT_PASSWORD_STRENGTH           | 12                      |
 | app.jwt.secret                         | KNORA_WEBAPI_JWT_SECRET_KEY                     | super-secret-key        |

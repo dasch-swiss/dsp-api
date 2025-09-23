@@ -5,52 +5,28 @@
 
 package org.knora.webapi.core
 
-import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.http.scaladsl.Http
 import zio.*
-
+import zio.http.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.ApiRoutes
-
-/**
- * The Akka based HTTP server
- */
-trait HttpServer {
-  val serverBinding: Http.ServerBinding
-}
+import sttp.tapir.server.interceptor.cors.CORSConfig.AllowedOrigin
+import sttp.tapir.server.interceptor.cors.{CORSConfig, CORSInterceptor}
+import sttp.tapir.server.metrics.zio.ZioMetrics
+import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
+import sttp.tapir.ztapir.RIOMonadError
 
 object HttpServer {
-  val layer: ZLayer[ActorSystem & AppConfig & ApiRoutes, Nothing, HttpServer] =
-    ZLayer.scoped {
-      for {
-        as        <- ZIO.service[ActorSystem]
-        config    <- ZIO.service[AppConfig]
-        apiRoutes <- ZIO.service[ApiRoutes]
-        binding <- {
-          implicit val system: ActorSystem = as
 
-          ZIO.acquireRelease {
-            ZIO
-              .fromFuture(_ =>
-                Http().newServerAt(config.knoraApi.internalHost, config.knoraApi.internalPort).bind(apiRoutes.routes),
-              )
-              .zipLeft(ZIO.logInfo(">>> Acquire HTTP Server <<<"))
-              .orDie
-          } { serverBinding =>
-            ZIO
-              .fromFuture(_ =>
-                serverBinding.terminate(
-                  new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.MILLISECONDS),
-                ),
-              )
-              .zipLeft(ZIO.logInfo(">>> Release HTTP Server <<<"))
-              .orDie
-          }
-        }
-      } yield HttpServerImpl(binding)
-    }
+  private def options: ZioHttpServerOptions[Any] = ZioHttpServerOptions.default
 
-  private final case class HttpServerImpl(binding: Http.ServerBinding) extends HttpServer { self =>
-    val serverBinding: Http.ServerBinding = self.binding
-  }
+  val layer: ZLayer[AppConfig & ApiRoutes, Nothing, Unit] = ZLayer.scoped(createServer.orDie)
+
+  private def createServer: ZIO[ApiRoutes & AppConfig, Throwable, Unit] =
+    for {
+      config    <- ZIO.service[AppConfig]
+      endpoints <- ZIO.service[ApiRoutes]
+      httpApp    = ZioHttpInterpreter(options).toHttp(endpoints.endpoints)
+      _         <- Server.install(httpApp).provide(Server.defaultWithPort(config.knoraApi.externalPort))
+      _         <- Console.printLine(s"Go to http://localhost:$config.knoraApi.externalPort/docs to open SwaggerUI")
+    } yield ()
 }

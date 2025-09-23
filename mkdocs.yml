@@ -73,7 +73,6 @@ nav:
               - Ontology Schemas: 05-internals/design/api-v2/ontology-schemas.md
               - Smart IRIs: 05-internals/design/api-v2/smart-iris.md
               - Content Wrappers: 05-internals/design/api-v2/content-wrappers.md
-              - How to Add an API v2 Route: 05-internals/design/api-v2/how-to-add-a-route.md
               - JSON-LD Parsing and Formatting: 05-internals/design/api-v2/json-ld.md
               - Ontology Management: 05-internals/design/api-v2/ontology-management.md
               - DSP-API and Sipi: 05-internals/design/api-v2/sipi.md

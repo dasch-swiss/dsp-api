@@ -51,7 +51,6 @@ object AdminApiModule { self =>
       CacheManager &
       Features &
       GroupService &
-      HandlerMapper &
       KnoraGroupService &
       KnoraProjectService &
       KnoraResponseRenderer &
@@ -67,7 +66,6 @@ object AdminApiModule { self =>
       ProjectExportService &
       ProjectImportService &
       ProjectService &
-      TapirToPekkoInterpreter &
       TriplestoreService &
       UserService
       // format: on
@@ -86,7 +84,7 @@ object AdminApiModule { self =>
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       AdminApiEndpoints.layer,
-      AdminApiRoutes.layer,
+      AdminApiServerEndpoints.layer,
       AdminListRestService.layer,
       AdminListsEndpoints.layer,
       AdminListsEndpointsHandlers.layer,

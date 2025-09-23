@@ -6,11 +6,11 @@
 package org.knora.webapi.slice.admin.api
 
 import org.apache.pekko.http.scaladsl.server.Route
-import zio.ZLayer
+import zio.*
 
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import sttp.tapir.ztapir.ZServerEndpoint
 
-final case class AdminApiRoutes(
+final case class AdminApiServerEndpoints(
   private val adminLists: AdminListsEndpointsHandlers,
   private val filesEndpoints: FilesEndpointsHandler,
   private val groups: GroupsEndpointsHandler,
@@ -19,11 +19,10 @@ final case class AdminApiRoutes(
   private val project: ProjectsEndpointsHandler,
   private val projectLegalInfo: ProjectsLegalInfoEndpointsHandler,
   private val storeEndpoints: StoreEndpointsHandler,
-  private val tapirToPekko: TapirToPekkoInterpreter,
   private val users: UsersEndpointsHandler,
 ) {
 
-  private val handlers =
+  private val endpoints: List[ZServerEndpoint[Any, Any]] =
     filesEndpoints.allHandlers ++
       groups.allHandlers ++
       adminLists.allHandlers ++
@@ -33,10 +32,8 @@ final case class AdminApiRoutes(
       project.allHanders ++
       storeEndpoints.allHandlers ++
       users.allHanders
-
-  val routes: Seq[Route] = handlers.map(tapirToPekko.toRoute(_))
 }
 
-object AdminApiRoutes {
-  val layer = ZLayer.derive[AdminApiRoutes]
+object AdminApiServerEndpoints {
+  val layer = ZLayer.derive[AdminApiServerEndpoints]
 }

@@ -14,7 +14,6 @@ import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 final class ProjectsLegalInfoEndpointsHandler(
   endpoints: ProjectsLegalInfoEndpoints,
   restService: ProjectsLegalInfoRestService,
-  mapper: HandlerMapper,
 ) {
   val allHandlers =
     List(

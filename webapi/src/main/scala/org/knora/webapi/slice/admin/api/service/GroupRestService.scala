@@ -6,9 +6,9 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
-
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
+import dsp.errors.RequestRejectedException
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
@@ -34,7 +34,7 @@ final case class GroupRestService(
 ) {
 
   def getGroups: Task[GroupsGetResponseADM] = for {
-    internal <- groupService.findAllRegularGroups
+    internal <- groupService.findAllRegularGroups.orDie
     external <- format.toExternal(GroupsGetResponseADM(internal))
   } yield external
 

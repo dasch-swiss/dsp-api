@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 DSP-API is the Digital Humanities Service Platform API - a Scala-based REST API for managing semantic data and digital assets in the humanities. 
-The project uses ZIO for functional programming, Pekko HTTP (Apache Pekko) for the API, and integrates with Apache Jena Fuseki triplestore and Sipi media server.
+The project uses ZIO for functional programming, zio-http as HTTP server and tapir for defining endpoints of the API, and integrates with Apache Jena Fuseki triplestore and Sipi media server.
 
 ## Build System & Commands
 

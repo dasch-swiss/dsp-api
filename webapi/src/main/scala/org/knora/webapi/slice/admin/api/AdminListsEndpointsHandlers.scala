@@ -5,8 +5,10 @@
 
 package org.knora.webapi.slice.admin.api
 
-import zio.ZIO
+import zio.*
 import zio.ZLayer
+
+import sttp.tapir.ztapir.*
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.CanDeleteListResponseADM
@@ -23,21 +25,12 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.PublicEndpointHandler
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final case class AdminListsEndpointsHandlers(
   private val adminListsEndpoints: AdminListsEndpoints,
   private val adminListsRestService: AdminListRestService,
   private val listsResponder: ListsResponder,
-  private val mapper: HandlerMapper,
 ) {
-
-  private val getListsQueryByProjectIriHandler = PublicEndpointHandler(
-    adminListsEndpoints.getListsQueryByProjectIriOption,
-    (iriShortcode: Option[Either[ProjectIri, Shortcode]]) => listsResponder.getLists(iriShortcode),
-  )
 
   private val getListsByIriHandler = PublicEndpointHandler(
     adminListsEndpoints.getListsByIri,
@@ -135,12 +128,12 @@ final case class AdminListsEndpointsHandlers(
 
   private val public = List(
     getListsByIriHandler,
-    getListsQueryByProjectIriHandler,
+    adminListsEndpoints.getListsQueryByProjectIriOption.zServerLogic(listsResponder.getLists),
     getListsByIriInfoHandler,
     getListsInfosByIriHandler,
     getListsNodesByIriHandler,
     getListsCanDeleteByIriHandler,
-  ).map(mapper.mapPublicEndpointHandler(_))
+  )
 
   private val secured = List(
     postListsCreateRootNodeHandler,
@@ -152,9 +145,9 @@ final case class AdminListsEndpointsHandlers(
     putListsByIriHandler,
     deleteListsByIriHandler,
     deleteListsCommentHandler,
-  ).map(mapper.mapSecuredEndpointHandler(_))
+  )
 
-  val allHandlers = public ++ secured
+  val allHandlers: List[ZServerEndpoint[Any, Any]] = public ++ secured
 }
 
 object AdminListsEndpointsHandlers {
