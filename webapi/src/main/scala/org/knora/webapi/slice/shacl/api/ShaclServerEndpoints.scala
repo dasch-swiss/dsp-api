@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.shacl.api
 
+import sttp.capabilities.zio.ZioStreams
 import zio.*
 import sttp.tapir.ztapir.*
 
@@ -12,7 +13,7 @@ case class ShaclServerEndpoints(
   private val shaclEndpoints: ShaclEndpoints,
   private val shaclApiService: ShaclApiService,
 ) {
-  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
+  val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(
     shaclEndpoints.validate.zServerLogic(shaclApiService.validate),
   )
 }
