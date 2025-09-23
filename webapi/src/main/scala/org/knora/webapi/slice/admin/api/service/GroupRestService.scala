@@ -25,12 +25,12 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class GroupRestService(
-  auth: AuthorizationRestService,
-  format: KnoraResponseRenderer,
-  groupService: GroupService,
-  knoraGroupService: KnoraGroupService,
-  knoraProjectService: KnoraProjectService,
-  userService: UserService,
+  private val auth: AuthorizationRestService,
+  private val format: KnoraResponseRenderer,
+  private val groupService: GroupService,
+  private val knoraGroupService: KnoraGroupService,
+  private val knoraProjectService: KnoraProjectService,
+  private val userService: UserService,
 ) {
 
   def getGroups: Task[GroupsGetResponseADM] = for {
@@ -47,7 +47,7 @@ final case class GroupRestService(
       external <- format.toExternal(internal)
     } yield external
 
-  def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
+  def getGroupMembers(user: User)(iri: GroupIri): Task[GroupMembersGetResponseADM] =
     for {
       _ <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       _ <- groupService
@@ -57,7 +57,7 @@ final case class GroupRestService(
       external <- format.toExternal(internal)
     } yield external
 
-  def postGroup(request: GroupCreateRequest, user: User): Task[GroupGetResponseADM] =
+  def postGroup(user: User)(request: GroupCreateRequest): Task[GroupGetResponseADM] =
     for {
       _ <- auth.ensureSystemAdminOrProjectAdminById(user, request.project)
       project <- knoraProjectService
@@ -67,7 +67,7 @@ final case class GroupRestService(
       external <- format.toExternal(internal)
     } yield external
 
-  def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM] =
+  def putGroup(user: User)(iri: GroupIri, request: GroupUpdateRequest): Task[GroupGetResponseADM] =
     for {
       _ <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       _ <- ZIO
@@ -80,10 +80,10 @@ final case class GroupRestService(
       external <- format.toExternal(internal)
     } yield external
 
-  def putGroupStatus(iri: GroupIri, request: GroupStatusUpdateRequest, user: User): Task[GroupGetResponseADM] =
+  def putGroupStatus(user: User)(iri: GroupIri, request: GroupStatusUpdateRequest): Task[GroupGetResponseADM] =
     updateStatus(iri, request.status, user)
 
-  def deleteGroup(iri: GroupIri, user: User): Task[GroupGetResponseADM] =
+  def deleteGroup(user: User)(iri: GroupIri): Task[GroupGetResponseADM] =
     updateStatus(iri, GroupStatus.inactive, user)
 
   private def updateStatus(iri: GroupIri, status: GroupStatus, user: User) =

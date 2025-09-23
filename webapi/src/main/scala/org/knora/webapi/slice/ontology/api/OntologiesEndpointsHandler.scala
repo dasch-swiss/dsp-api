@@ -21,7 +21,7 @@ final class OntologiesEndpointsHandler(
   private val publicHandlers = Seq(
     PublicEndpointHandler(endpoints.getOntologiesMetadataProject, restService.getOntologyMetadataByProjectOption),
     PublicEndpointHandler(endpoints.getOntologiesMetadataProjects, restService.getOntologyMetadataByProjects),
-  ).map(mapper.mapPublicEndpointHandler(_))
+  ).map(mapper.mapPublicEndpointHandler)
 
   private val secureHandlers = Seq(
     SecuredEndpointHandler(endpoints.getOntologyPathSegments, restService.dereferenceOntologyIri),
@@ -50,7 +50,7 @@ final class OntologiesEndpointsHandler(
     SecuredEndpointHandler(endpoints.postOntologies, restService.createOntology),
     SecuredEndpointHandler(endpoints.getOntologiesCandeleteontology, restService.canDeleteOntology),
     SecuredEndpointHandler(endpoints.deleteOntologies, restService.deleteOntology),
-  ).map(mapper.mapSecuredEndpointHandler(_))
+  ).map(mapper.mapSecuredEndpointHandler)
 
   val allHandlers = publicHandlers ++ secureHandlers
 }

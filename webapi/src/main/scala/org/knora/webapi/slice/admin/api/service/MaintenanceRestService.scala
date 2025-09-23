@@ -20,11 +20,11 @@ import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceServic
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 
 final case class MaintenanceRestService(
-  securityService: AuthorizationRestService,
-  maintenanceService: MaintenanceService,
+  private val securityService: AuthorizationRestService,
+  private val maintenanceService: MaintenanceService,
 ) {
 
-  def executeMaintenanceAction(user: User, action: String, jsonMaybe: Option[Json]): Task[Unit] =
+  def executeMaintenanceAction(user: User)(action: String, jsonMaybe: Option[Json]): Task[Unit] =
     securityService.ensureSystemAdmin(user) *> {
       action match {
         case `fixTopLeftAction` => executeTopLeftAction(jsonMaybe)

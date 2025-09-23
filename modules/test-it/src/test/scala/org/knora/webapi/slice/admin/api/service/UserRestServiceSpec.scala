@@ -232,7 +232,7 @@ object UserRestServiceSpec extends E2EZSpec {
       test("UPDATE the user's status, making them active ") {
         userRestService(
           _.changeStatus(rootUser)(normalUser.userIri, StatusChangeRequest(UserStatus.Active)),
-        ).map(r => assertTrue(r.user.status == true))
+        ).map(r => assertTrue(r.user.status))
       },
       test("UPDATE the user's system admin membership true") {
         userRestService(
@@ -254,7 +254,7 @@ object UserRestServiceSpec extends E2EZSpec {
           membershipsBeforeUpdate <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
           _                       <- userRestService(_.addUserToProject(rootUser)(normalUser.userIri, imagesProject.id))
           membershipsAfterUpdate  <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
-          received                <- projectRestService(_.getProjectMembersById(SystemUser, imagesProject.id))
+          received                <- projectRestService(_.getProjectMembersById(SystemUser)(imagesProject.id))
         } yield assertTrue(
           membershipsBeforeUpdate.projects.isEmpty,
           membershipsAfterUpdate.projects.map(_.id) == Seq(imagesProject.id),
@@ -266,7 +266,7 @@ object UserRestServiceSpec extends E2EZSpec {
           membershipsBeforeUpdate <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
           _                       <- userRestService(_.addUserToProject(rootUser)(normalUser.userIri, incunabulaProject.id))
           membershipsAfterUpdate  <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
-          received                <- projectRestService(_.getProjectMembersById(SystemUser, incunabulaProject.id))
+          received                <- projectRestService(_.getProjectMembersById(SystemUser)(incunabulaProject.id))
         } yield assertTrue(
           membershipsBeforeUpdate.projects.map(_.id) == Seq(imagesProject.id),
           membershipsAfterUpdate.projects.map(_.id).sortBy(_.value) == Seq(imagesProject.id, incunabulaProject.id)
@@ -284,7 +284,7 @@ object UserRestServiceSpec extends E2EZSpec {
           membershipsAfterUpdate <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
           projectAdminMembershipsAfterUpdate <-
             userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
-          received <- projectRestService(_.getProjectMembersById(rootUser, imagesProject.id))
+          received <- projectRestService(_.getProjectMembersById(rootUser)(imagesProject.id))
         } yield assertTrue(
           membershipsBeforeUpdate.projects.map(_.id).sortBy(_.value) == Seq(imagesProject.id, incunabulaProject.id)
             .sortBy(_.value),
@@ -316,7 +316,7 @@ object UserRestServiceSpec extends E2EZSpec {
           _                       <- userRestService(_.addUserToProjectAsAdmin(rootUser)(normalUser.userIri, imagesProject.id))
           membershipsAfterUpdate <-
             userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
-          received <- projectRestService(_.getProjectAdminMembersById(rootUser, imagesProject.id))
+          received <- projectRestService(_.getProjectAdminMembersById(rootUser)(imagesProject.id))
         } yield assertTrue(
           membershipsBeforeUpdate.projects == Seq(),
           membershipsAfterUpdate.projects.map(_.id) == Seq(imagesProject.id),
@@ -328,7 +328,7 @@ object UserRestServiceSpec extends E2EZSpec {
           membershipsBeforeUpdate <- userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
           _                       <- userRestService(_.removeUserFromProjectAsAdmin(rootUser)(normalUser.userIri, imagesProject.id))
           membershipsAfterUpdate  <- userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
-          received                <- projectRestService(_.getProjectAdminMembersById(rootUser, imagesProject.id))
+          received                <- projectRestService(_.getProjectAdminMembersById(rootUser)(imagesProject.id))
         } yield assertTrue(
           membershipsBeforeUpdate.projects.map(_.id) == Seq(imagesProject.id),
           membershipsAfterUpdate.projects == Seq(),
@@ -344,7 +344,7 @@ object UserRestServiceSpec extends E2EZSpec {
           _ <- userRestService(_.addUserToGroup(rootUser)(normalUser.userIri, imagesReviewerGroup.groupIri))
           membershipsAfterUpdate <-
             userService(_.findUserByIri(normalUser.userIri)).map(_.map(_.groups).getOrElse(Seq.empty))
-          received <- groupRestService(_.getGroupMembers(imagesReviewerGroup.groupIri, rootUser))
+          received <- groupRestService(_.getGroupMembers(rootUser)(imagesReviewerGroup.groupIri))
         } yield assertTrue(
           membershipsBeforeUpdate == Seq(),
           membershipsAfterUpdate.map(_.id) == Seq(imagesReviewerGroup.id),
@@ -358,7 +358,7 @@ object UserRestServiceSpec extends E2EZSpec {
           _ <- userRestService(_.removeUserFromGroup(rootUser)(normalUser.userIri, imagesReviewerGroup.groupIri))
           membershipsAfterUpdate <-
             userService(_.findUserByIri(normalUser.userIri)).map(_.map(_.groups).getOrElse(Seq.empty))
-          received <- groupRestService(_.getGroupMembers(imagesReviewerGroup.groupIri, rootUser))
+          received <- groupRestService(_.getGroupMembers(rootUser)(imagesReviewerGroup.groupIri))
         } yield assertTrue(
           membershipsBeforeUpdate.map(_.id) == Seq(imagesReviewerGroup.id),
           membershipsAfterUpdate == Seq(),

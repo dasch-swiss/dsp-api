@@ -23,10 +23,10 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 
-final case class ListRestService(
-  auth: AuthorizationRestService,
-  listsResponder: ListsResponder,
-  knoraProjectService: KnoraProjectService,
+final case class AdminListRestService(
+  private val auth: AuthorizationRestService,
+  private val knoraProjectService: KnoraProjectService,
+  private val listsResponder: ListsResponder,
 ) {
   def listChange(iri: ListIri, request: ListChangeRequest, user: User): Task[NodeInfoGetResponseADM] = for {
     _ <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
@@ -93,6 +93,6 @@ final case class ListRestService(
 
 }
 
-object ListRestService {
-  val layer = ZLayer.derive[ListRestService]
+object AdminListRestService {
+  val layer = ZLayer.derive[AdminListRestService]
 }
