@@ -16,7 +16,7 @@ final case class ResourceInfoServerEndpoints(
   private val endpoints: ResourceInfoEndpoints,
   private val resourceInfoService: ResourceInfoRestService,
 ) {
-  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = Seq(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getResourcesInfo.zServerLogic(resourceInfoService.findByProjectAndResourceClass),
   )
 }
