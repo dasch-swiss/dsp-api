@@ -15,16 +15,16 @@ import org.knora.webapi.routing.Endpoints
 
 object HttpServer {
 
-  private def options = ZioHttpServerOptions.default
+  private def options: ZioHttpServerOptions[Any] = ZioHttpServerOptions.default
 
-  val layer = ZLayer.scoped(createServer).orDie
+  val layer = ZLayer.scoped(apiServer).orDie
 
-  private def createServer = for {
+  private def apiServer: ZIO[Endpoints & KnoraApi, Throwable, Unit] = for {
     apiConfig <- ZIO.service[KnoraApi]
     endpoints <- ZIO.serviceWith[Endpoints](_.serverEndpoints)
-    httpApp    = ZioHttpInterpreter(options).toHttp(endpoints)
-//    _         <- Server.install(httpApp).provide(Server.defaultWithPort(apiConfig.internalPort))
-    _ <- Console.printLine(s"Go to http://localhost:${apiConfig.externalPort}/docs to open SwaggerUI")
-    _ <- ZIO.never
+    routes     = ZioHttpInterpreter(options).toHttp(endpoints)
+    _         <- Server.install(routes).provide(Server.defaultWithPort(apiConfig.internalPort)): @annotation.nowarn
+    _         <- Console.printLine(s"Go to http://localhost:${apiConfig.externalPort}/docs to open SwaggerUI")
+    _         <- ZIO.never.unit
   } yield ()
 }
