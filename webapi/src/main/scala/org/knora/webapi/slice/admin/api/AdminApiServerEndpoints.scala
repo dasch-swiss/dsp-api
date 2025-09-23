@@ -11,27 +11,27 @@ import zio.*
 import sttp.tapir.ztapir.ZServerEndpoint
 
 final case class AdminApiServerEndpoints(
-  private val adminLists: AdminListsEndpointsHandlers,
-  private val filesEndpoints: FilesEndpointsHandler,
-  private val groups: GroupsEndpointsHandler,
-  private val maintenance: MaintenanceEndpointsHandlers,
-  private val permissions: PermissionsEndpointsHandlers,
-  private val project: ProjectsEndpointsHandler,
-  private val projectLegalInfo: ProjectsLegalInfoEndpointsHandler,
-  private val storeEndpoints: StoreEndpointsHandler,
-  private val users: UsersEndpointsHandler,
+  private val adminListsServerEndpoints: AdminListsServerEndpoints,
+  private val filesServerEndpoints: FilesServerEndpoints,
+  private val groupsServerEndpoints: GroupsServerEndpoints,
+  private val maintenanceServerEndpoints: MaintenanceServerEndpoints,
+  private val permissionsServerEndpoints: PermissionsServerEndpoints,
+  private val projectsServerEndpoints: ProjectsServerEndpoints,
+  private val projectsLegalInfoServerEndpoints: ProjectsLegalInfoServerEndpoints,
+  private val storeServerEndpoints: StoreServerEndpoints,
+  private val usersServerEndpoints: UsersServerEndpoints,
 ) {
 
-  private val endpoints: List[ZServerEndpoint[Any, Any]] =
-    filesEndpoints.allHandlers ++
-      groups.allHandlers ++
-      adminLists.allHandlers ++
-      maintenance.allHandlers ++
-      permissions.allHanders ++
-      projectLegalInfo.allHandlers ++
-      project.allHanders ++
-      storeEndpoints.allHandlers ++
-      users.allHanders
+  val serverEndpoints =
+    filesServerEndpoints.serverEndpoints ++
+      groupsServerEndpoints.serverEndpoints ++
+      adminListsServerEndpoints.serverEndpoints ++
+      maintenanceServerEndpoints.serverEndpoints ++
+      permissionsServerEndpoints.serverEndpoints ++
+      projectsLegalInfoServerEndpoints.serverEndpoints ++
+      projectsServerEndpoints.serverEndpoints ++
+      storeServerEndpoints.serverEndpoints ++
+      usersServerEndpoints.serverEndpoints
 }
 
 object AdminApiServerEndpoints {

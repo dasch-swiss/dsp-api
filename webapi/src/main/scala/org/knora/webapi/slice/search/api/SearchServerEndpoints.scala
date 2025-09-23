@@ -4,24 +4,22 @@
  */
 
 package org.knora.webapi.slice.search.api
-import org.apache.pekko.http.scaladsl.server.Route
 import sttp.model.MediaType
 import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
 
-final case class SearchApiRoutes(
+final case class SearchServerEndpoints(
   private val searchEndpoints: SearchEndpoints,
   private val searchRestService: SearchRestService,
 ) {
 
-  val allHandler = Seq(
+  val serverEndpoints = Seq(
     searchEndpoints.getFullTextSearch.serverLogic(searchRestService.fullTextSearch),
     searchEndpoints.getFullTextSearchCount.serverLogic(searchRestService.fullTextSearchCount),
     searchEndpoints.getSearchByLabel.serverLogic(searchRestService.searchResourcesByLabelV2),
@@ -40,6 +38,6 @@ final case class SearchApiRoutes(
     searchEndpoints.getSearchIncomingRegions.serverLogic(searchRestService.searchIncomingRegions),
   )
 }
-object SearchApiRoutes {
-  val layer = SearchRestService.layer >+> SearchEndpoints.layer >>> ZLayer.derive[SearchApiRoutes]
+object SearchServerEndpoints {
+  val layer = SearchRestService.layer >+> SearchEndpoints.layer >>> ZLayer.derive[SearchServerEndpoints]
 }

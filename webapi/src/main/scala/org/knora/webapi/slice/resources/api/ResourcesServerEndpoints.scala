@@ -8,12 +8,12 @@ import zio.*
 
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 
-final class ResourcesEndpointsHandler(
+final class ResourcesServerEndpoints(
   private val resourcesEndpoints: ResourcesEndpoints,
   private val resourcesRestService: ResourcesRestService,
 ) {
 
-  val allHandlers = Seq(
+  val serverEndpoints = Seq(
     resourcesEndpoints.getResourcesCanDelete.serverLogic(resourcesRestService.canDeleteResource),
     resourcesEndpoints.getResourcesGraph.serverLogic(resourcesRestService.getResourcesGraph),
     resourcesEndpoints.getResourcesIiifManifest.serverLogic(resourcesRestService.getResourcesIiifManifest),
@@ -33,6 +33,6 @@ final class ResourcesEndpointsHandler(
   )
 }
 
-object ResourcesEndpointsHandler {
-  val layer = ZLayer.derive[ResourcesEndpointsHandler]
+object ResourcesServerEndpoints {
+  val layer = ZLayer.derive[ResourcesServerEndpoints]
 }

@@ -15,12 +15,12 @@ import org.knora.webapi.slice.resources.api.model.ValueUuid
 import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
 
-final class ValuesEndpointsHandler(
-  endpoints: ValuesEndpoints,
-  valuesRestService: ValuesRestService,
+final class ValuesServerEndpoints(
+  private val endpoints: ValuesEndpoints,
+  private val valuesRestService: ValuesRestService,
 ) {
 
-  val allHandlers = Seq(
+  val serverEndpoints = Seq(
     endpoints.getValue.serverLogic(valuesRestService.getValue),
     endpoints.postValues.serverLogic(valuesRestService.createValue),
     endpoints.putValues.serverLogic(valuesRestService.updateValue),
@@ -29,6 +29,6 @@ final class ValuesEndpointsHandler(
     endpoints.postValuesErasehistory.serverLogic(valuesRestService.eraseValueHistory),
   )
 }
-object ValuesEndpointsHandler {
-  val layer = ZLayer.derive[ValuesEndpointsHandler]
+object ValuesServerEndpoints {
+  val layer = ZLayer.derive[ValuesServerEndpoints]
 }

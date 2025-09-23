@@ -15,19 +15,17 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
-final case class FilesEndpointsHandler(
-  filesEndpoints: FilesEndpoints,
-  assetPermissionsResponder: AssetPermissionsResponder,
+final case class FilesServerEndpoints(
+  private val filesEndpoints: FilesEndpoints,
+  private val assetPermissionsResponder: AssetPermissionsResponder,
 ) {
-
-  val allHandlers: List[ZServerEndpoint[Any, Any]] =
-    List(
-      filesEndpoints.getAdminFilesShortcodeFileIri.serverLogic(
-        assetPermissionsResponder.getPermissionCodeAndProjectRestrictedViewSettings,
-      ),
-    )
+  val serverEndpoints = Seq(
+    filesEndpoints.getAdminFilesShortcodeFileIri.serverLogic(
+      assetPermissionsResponder.getPermissionCodeAndProjectRestrictedViewSettings,
+    ),
+  )
 }
 
-object FilesEndpointsHandler {
-  val layer = ZLayer.derive[FilesEndpointsHandler]
+object FilesServerEndpoints {
+  val layer = ZLayer.derive[FilesServerEndpoints]
 }

@@ -8,18 +8,16 @@ package org.knora.webapi.slice.infrastructure.api
 import sttp.tapir.ztapir.*
 import zio.*
 
-final case class ManagementRoutes(
+final case class ManagementServerEndpoints(
   private val endpoint: ManagementEndpoints,
   private val restService: ManagementRestService,
 ) {
-
-  val allHandlers = Seq(
+  val serverEndpoints = Seq(
     endpoint.getVersion.zServerLogic(_ => ZIO.succeed(VersionResponse.current)),
     endpoint.getHealth.zServerLogic(_ => restService.healthCheck),
     endpoint.postStartCompaction.serverLogic(restService.startCompaction),
   )
-
 }
-object ManagementRoutes {
-  val layer = ZLayer.derive[ManagementRoutes]
+object ManagementServerEndpoints {
+  val layer = ZLayer.derive[ManagementServerEndpoints]
 }

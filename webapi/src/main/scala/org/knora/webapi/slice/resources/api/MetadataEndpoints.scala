@@ -16,7 +16,6 @@ import zio.json.JsonCodec
 import java.time.Instant
 import scala.concurrent.Future
 
-import dsp.errors.RequestRejectedException
 import org.knora.webapi.slice.admin.api.AdminPathVariables
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -106,9 +105,7 @@ final case class MetadataEndpoints(private val baseEndpoints: BaseEndpoints) {
         "This endpoint is only available for system and project admins.",
     )
 
-  val endpoints: Seq[AnyEndpoint] = (Seq(
-    getResourcesMetadata,
-  ).map(_.endpoint)).map(_.tag("V2 Metadata"))
+  val endpoints: Seq[AnyEndpoint] = Seq(getResourcesMetadata).map(_.endpoint).map(_.tag("V2 Metadata"))
 }
 object MetadataEndpoints {
   val layer = ZLayer.derive[MetadataEndpoints]

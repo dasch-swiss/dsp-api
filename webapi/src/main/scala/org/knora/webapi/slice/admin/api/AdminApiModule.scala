@@ -73,7 +73,7 @@ object AdminApiModule { self =>
   type Provided =
       // format: off
       AdminApiEndpoints &
-      AdminApiRoutes &
+      AdminApiServerEndpoints &
       // the `*RestService`s are only exposed for the integration tests
       GroupRestService &
       PermissionRestService &
@@ -87,29 +87,29 @@ object AdminApiModule { self =>
       AdminApiServerEndpoints.layer,
       AdminListRestService.layer,
       AdminListsEndpoints.layer,
-      AdminListsEndpointsHandlers.layer,
+      AdminListsServerEndpoints.layer,
       FilesEndpoints.layer,
-      FilesEndpointsHandler.layer,
+      FilesServerEndpoints.layer,
       GroupRestService.layer,
       GroupsEndpoints.layer,
-      GroupsEndpointsHandler.layer,
+      GroupsServerEndpoints.layer,
       MaintenanceEndpoints.layer,
-      MaintenanceEndpointsHandlers.layer,
       MaintenanceRestService.layer,
+      MaintenanceServerEndpoints.layer,
       PermissionRestService.layer,
       PermissionsEndpoints.layer,
-      PermissionsEndpointsHandlers.layer,
+      PermissionsServerEndpoints.layer,
       ProjectRestService.layer,
       ProjectsEndpoints.layer,
-      ProjectsEndpointsHandler.layer,
       ProjectsLegalInfoEndpoints.layer,
-      ProjectsLegalInfoEndpointsHandler.layer,
       ProjectsLegalInfoRestService.layer,
+      ProjectsLegalInfoServerEndpoints.layer,
+      ProjectsServerEndpoints.layer,
       StoreEndpoints.layer,
-      StoreEndpointsHandler.layer,
       StoreRestService.layer,
+      StoreServerEndpoints.layer,
       UserRestService.layer,
       UsersEndpoints.layer,
-      UsersEndpointsHandler.layer,
+      UsersServerEndpoints.layer,
     )
 }

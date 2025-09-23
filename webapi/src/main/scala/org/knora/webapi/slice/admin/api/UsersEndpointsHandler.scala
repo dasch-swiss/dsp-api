@@ -21,12 +21,12 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 
-case class UsersEndpointsHandler(
-  usersEndpoints: UsersEndpoints,
-  restService: UserRestService,
+case class UsersServerEndpoints(
+  private val usersEndpoints: UsersEndpoints,
+  private val restService: UserRestService,
 ) {
 
-  val allHanders = Seq(
+  val serverEndpoints = Seq(
     usersEndpoints.get.usersByIriProjectMemberShips.zServerLogic(restService.getProjectMemberShipsByUserIri),
     usersEndpoints.get.usersByIriProjectAdminMemberShips.zServerLogic(restService.getProjectAdminMemberShipsByUserIri),
     usersEndpoints.get.usersByIriGroupMemberships.zServerLogic(restService.getGroupMemberShipsByIri),
@@ -49,6 +49,6 @@ case class UsersEndpointsHandler(
   )
 }
 
-object UsersEndpointsHandler {
-  val layer = ZLayer.derive[UsersEndpointsHandler]
+object UsersServerEndpoints {
+  val layer = ZLayer.derive[UsersServerEndpoints]
 }

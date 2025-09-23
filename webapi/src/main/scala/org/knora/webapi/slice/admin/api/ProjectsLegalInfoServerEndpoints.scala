@@ -9,11 +9,11 @@ import sttp.tapir.ztapir.*
 
 import org.knora.webapi.slice.admin.api.service.ProjectsLegalInfoRestService
 
-final class ProjectsLegalInfoEndpointsHandler(
-  endpoints: ProjectsLegalInfoEndpoints,
-  restService: ProjectsLegalInfoRestService,
+final class ProjectsLegalInfoServerEndpoints(
+  private val endpoints: ProjectsLegalInfoEndpoints,
+  private val restService: ProjectsLegalInfoRestService,
 ) {
-  val allHandlers = Seq(
+  val serverEndpoints = Seq(
     endpoints.getProjectLicenses.zServerLogic(restService.findLicenses),
     endpoints.getProjectLicensesIri.zServerLogic(restService.findAvailableLicenseByIdAndShortcode),
     endpoints.getProjectAuthorships.serverLogic(restService.findAuthorships),
@@ -25,6 +25,6 @@ final class ProjectsLegalInfoEndpointsHandler(
   )
 }
 
-object ProjectsLegalInfoEndpointsHandler {
-  val layer = ZLayer.derive[ProjectsLegalInfoEndpointsHandler]
+object ProjectsLegalInfoServerEndpoints {
+  val layer = ZLayer.derive[ProjectsLegalInfoServerEndpoints]
 }

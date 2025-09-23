@@ -60,8 +60,8 @@ final case class ListsResponder(
    * (as lists can be very large), we only return the head of the list, i.e. the root node without
    * any children.
    *
-   * @param projectIri [[Some(ProjectIri)]] if the project for which lists are to be queried.
-   *                   [[None]] if all lists are to be queried.
+   * @param iriShortcode [[Some(ProjectIri|Shortcode)]] if the project for which lists are to be queried.
+   *                     [[None]] if all lists are to be queried.
    * @return a [[ListsGetResponseADM]].
    */
   def getLists(iriShortcode: Option[Either[ProjectIri, Shortcode]]): Task[ListsGetResponseADM] =
@@ -147,17 +147,19 @@ final case class ListsResponder(
 
     def getNodeADM(childNode: ListChildNodeADM): Task[ListNodeGetResponseADM] =
       for {
-        maybeNodeInfo <- listNodeInfoGetADM(nodeIri = nodeIri)
+        maybeNodeInfo <- listNodeInfoGetADM(nodeIri.value)
         nodeInfo <- maybeNodeInfo match {
                       case Some(childNodeInfo: ListChildNodeInfoADM) => ZIO.succeed(childNodeInfo)
                       case _                                         => ZIO.fail(NotFoundException(s"Information not found for node '$nodeIri'"))
                     }
       } yield ListNodeGetResponseADM(NodeADM(nodeInfo, childNode.children))
 
-    ZIO.ifZIO(rootNodeByIriExists(nodeIri))(
-      listGetADM(nodeIri).someOrFail(NotFoundException(s"List '$nodeIri' not found")).map(ListGetResponseADM.apply),
+    ZIO.ifZIO(rootNodeByIriExists(nodeIri.value))(
+      listGetADM(nodeIri.value)
+        .someOrFail(NotFoundException(s"List '$nodeIri' not found"))
+        .map(ListGetResponseADM.apply),
       for {
-        maybeNode <- listNodeGetADM(nodeIri, shallow = true)
+        maybeNode <- listNodeGetADM(nodeIri.value, shallow = true)
 
         entireNode <- maybeNode match {
                         // make sure that it is a child node

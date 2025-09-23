@@ -23,9 +23,9 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 
-final case class ProjectsEndpointsHandler(
-  projectsEndpoints: ProjectsEndpoints,
-  restService: ProjectRestService,
+final case class ProjectsServerEndpoints(
+  private val projectsEndpoints: ProjectsEndpoints,
+  private val restService: ProjectRestService,
 ) {
 
   private val getAdminProjectsByIriAllDataHandler =
@@ -40,7 +40,7 @@ final case class ProjectsEndpointsHandler(
           },
     )
 
-  val allHanders = Seq(
+  val serverEndpoints = Seq(
     projectsEndpoints.Public.getAdminProjects.zServerLogic(restService.listAllProjects),
     projectsEndpoints.Public.getAdminProjectsKeywords.zServerLogic(restService.listAllKeywords),
     projectsEndpoints.Public.getAdminProjectsByProjectIri.zServerLogic(restService.findById),
@@ -80,6 +80,6 @@ final case class ProjectsEndpointsHandler(
   )
 }
 
-object ProjectsEndpointsHandler {
-  val layer = ZLayer.derive[ProjectsEndpointsHandler]
+object ProjectsServerEndpoints {
+  val layer = ZLayer.derive[ProjectsServerEndpoints]
 }

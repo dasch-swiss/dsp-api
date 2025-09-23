@@ -14,7 +14,7 @@ final case class MetadataServerEndpoints(
   private val endpoints: MetadataEndpoints,
   private val restService: MetadataRestService,
 ) {
-  val allHandlers = Seq(endpoints.getResourcesMetadata.serverLogic(restService.getResourcesMetadata))
+  val serverEndpoints = Seq(endpoints.getResourcesMetadata.serverLogic(restService.getResourcesMetadata))
 }
 object MetadataServerEndpoints {
   val layer = ZLayer.derive[MetadataServerEndpoints]

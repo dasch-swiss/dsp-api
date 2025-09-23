@@ -24,11 +24,11 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
 
-final case class AdminListsEndpointsHandlers(
+final case class AdminListsServerEndpoints(
   private val adminListsEndpoints: AdminListsEndpoints,
   private val restService: AdminListRestService,
 ) {
-  val allHandlers: Seq[ZServerEndpoint[Any, Any]] = Seq(
+  val serverEndpoints = Seq(
     adminListsEndpoints.getListsQueryByProjectIriOption.zServerLogic(restService.getLists),
     adminListsEndpoints.getListsByIri.zServerLogic(restService.listGetRequestADM),
     adminListsEndpoints.getListsByIriInfo.zServerLogic(restService.listNodeInfoGetRequestADM),
@@ -47,6 +47,6 @@ final case class AdminListsEndpointsHandlers(
   )
 }
 
-object AdminListsEndpointsHandlers {
-  val layer = ZLayer.derive[AdminListsEndpointsHandlers]
+object AdminListsServerEndpoints {
+  val layer = ZLayer.derive[AdminListsServerEndpoints]
 }

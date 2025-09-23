@@ -21,7 +21,6 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
-import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater

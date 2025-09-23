@@ -11,12 +11,12 @@ import sttp.tapir.ztapir.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.api.service.OntologiesRestService
 
-final class OntologiesEndpointsHandler(
+final class OntologiesServerEndpoints(
   private val endpoints: OntologiesEndpoints,
   private val restService: OntologiesRestService,
 ) {
 
-  val allHandlers = Seq(
+  val serverEndpoints = Seq(
     endpoints.getOntologiesMetadataProject.zServerLogic(restService.getOntologyMetadataByProjectOption),
     endpoints.getOntologiesMetadataProject.zServerLogic(restService.getOntologyMetadataByProjects),
     endpoints.getOntologyPathSegments.serverLogic(restService.dereferenceOntologyIri),
@@ -47,6 +47,6 @@ final class OntologiesEndpointsHandler(
     endpoints.deleteOntologies.serverLogic(restService.deleteOntology),
   )
 }
-object OntologiesEndpointsHandler {
-  val layer = ZLayer.derive[OntologiesEndpointsHandler]
+object OntologiesServerEndpoints {
+  val layer = ZLayer.derive[OntologiesServerEndpoints]
 }

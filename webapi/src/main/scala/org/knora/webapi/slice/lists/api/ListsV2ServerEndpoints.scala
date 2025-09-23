@@ -10,16 +10,16 @@ import sttp.tapir.ztapir.*
 
 import org.knora.webapi.slice.lists.api.service.ListsV2RestService
 
-final case class ListsEndpointsV2Handler(
+final case class ListsV2ServerEndpoints(
   private val endpoints: ListsEndpointsV2,
   private val restService: ListsV2RestService,
 ) {
-  val allHandlers = Seq(
+  val serverEndpoints = Seq(
     endpoints.getV2Lists.serverLogic(restService.getList),
     endpoints.getV2Node.serverLogic(restService.getNode),
   )
 }
 
-object ListsEndpointsV2Handler {
-  val layer = ZLayer.derive[ListsEndpointsV2Handler]
+object ListsV2ServerEndpoints {
+  val layer = ZLayer.derive[ListsV2ServerEndpoints]
 }

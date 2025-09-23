@@ -15,11 +15,11 @@ import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayloa
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
 
-case class AuthenticationEndpointsV2Handler(
+case class AuthenticationServerEndpoints(
   private val restService: AuthenticationRestService,
   private val endpoints: AuthenticationEndpointsV2,
 ) {
-  val allHandlers = Seq(
+  val serverEndpoints = Seq(
     endpoints.getV2Authentication.serverLogic(_ => _ => ZIO.succeed(CheckResponse("credentials are OK"))),
     endpoints.postV2Authentication.zServerLogic(restService.authenticate),
     endpoints.deleteV2Authentication.zServerLogic(restService.logout),
@@ -28,6 +28,6 @@ case class AuthenticationEndpointsV2Handler(
   )
 }
 
-object AuthenticationEndpointsV2Handler {
-  val layer = ZLayer.derive[AuthenticationEndpointsV2Handler]
+object AuthenticationServerEndpoints {
+  val layer = ZLayer.derive[AuthenticationServerEndpoints]
 }

@@ -10,12 +10,12 @@ import sttp.tapir.ztapir.*
 
 import org.knora.webapi.slice.resources.api.service.StandoffRestService
 
-final case class StandoffEndpointsHandler(
-  endpoints: StandoffEndpoints,
-  restService: StandoffRestService,
+final case class StandoffServerEndpoints(
+  private val endpoints: StandoffEndpoints,
+  private val restService: StandoffRestService,
 ) {
-  val allHandlers = Seq(endpoints.postMapping.serverLogic(restService.createMapping))
+  val serverEndpoints = Seq(endpoints.postMapping.serverLogic(restService.createMapping))
 }
-object StandoffEndpointsHandler {
-  val layer = ZLayer.derive[StandoffEndpointsHandler]
+object StandoffServerEndpoints {
+  val layer = ZLayer.derive[StandoffServerEndpoints]
 }

@@ -6,7 +6,6 @@
 package org.knora.webapi.core
 
 import zio.*
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.Features
@@ -44,7 +43,7 @@ import org.knora.webapi.slice.infrastructure.MetricsServer.MetricsServerEnv
 import org.knora.webapi.slice.infrastructure.OpenTelemetry
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRestService
-import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
+import org.knora.webapi.slice.infrastructure.api.ManagementServerEndpoints
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.ontology.OntologyModule.Provided
@@ -54,16 +53,15 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
-import org.knora.webapi.slice.resources.api.ResourcesApiRoutes
+import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
-import org.knora.webapi.slice.search.api.SearchApiRoutes
+import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
 import org.knora.webapi.slice.shacl.ShaclModule
 import org.knora.webapi.slice.shacl.api.ShaclApiModule
-import org.knora.webapi.slice.shacl.api.ShaclApiRoutes
 import org.knora.webapi.slice.shacl.api.ShaclEndpoints
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
@@ -132,12 +130,11 @@ object LayersLive { self =>
    */
   type Environment =
     // format: off
-    ActorSystem &
     AdminApiEndpoints &
     AdminApiModule.Provided &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
-    ApiRoutes &
+    CompleteApiServerEndpoints &
     ApiV2Endpoints &
     AssetPermissionsResponder &
     AuthenticationApiModule.Provided &
@@ -147,7 +144,6 @@ object LayersLive { self =>
     ConstructResponseUtilV2 &
     OntologyModule.Provided &
     DefaultObjectAccessPermissionService &
-    HttpServer &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     ListsApiModule.Provided &
@@ -163,11 +159,11 @@ object LayersLive { self =>
     ProjectImportService &
     RepositoryUpdater &
     ResourceUtilV2 &
-    ResourcesApiRoutes &
+    ResourcesApiServerEndpoints &
     ResourcesResponderV2 &
     ResourcesRepo &
     SecurityModule.Provided &
-    SearchApiRoutes &
+    SearchServerEndpoints &
     SearchResponderV2Module.Provided &
     SecurityModule.Provided &
     ShaclApiModule.Provided &
@@ -189,7 +185,7 @@ object LayersLive { self =>
     ](
       AdminApiModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
-      ApiRoutes.layer,
+      CompleteApiServerEndpoints.layer,
       ApiV2Endpoints.layer,
       AssetPermissionsResponder.layer,
       AuthenticationApiModule.layer,
@@ -197,7 +193,6 @@ object LayersLive { self =>
       BaseEndpoints.layer,
       CardinalityHandler.layer,
       ConstructResponseUtilV2.layer,
-      HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       KnoraResponseRenderer.layer,
@@ -205,7 +200,7 @@ object LayersLive { self =>
       ListsResponder.layer,
       ManagementEndpoints.layer,
       ManagementRestService.layer,
-      ManagementRoutes.layer,
+      ManagementServerEndpoints.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,
       OntologyResponderV2.layer,
@@ -221,7 +216,7 @@ object LayersLive { self =>
       ResourcesModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
-      SearchApiRoutes.layer,
+      SearchServerEndpoints.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,
       SecurityModule.layer,

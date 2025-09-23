@@ -29,12 +29,12 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 
-final case class PermissionsEndpointsHandlers(
-  permissionsEndpoints: PermissionsEndpoints,
-  restService: PermissionRestService,
+final case class PermissionsServerEndpoints(
+  private val permissionsEndpoints: PermissionsEndpoints,
+  private val restService: PermissionRestService,
 ) {
 
-  val allHanders = Seq(
+  val serverEndpoints = Seq(
     permissionsEndpoints.postPermissionsAp.serverLogic(restService.createAdministrativePermission),
     permissionsEndpoints.getPermissionsApByProjectIri.serverLogic(restService.getPermissionsApByProjectIri),
     permissionsEndpoints.getPermissionsApByProjectAndGroupIri.serverLogic(
@@ -51,6 +51,6 @@ final case class PermissionsEndpointsHandlers(
     permissionsEndpoints.postPermissionsDoap.serverLogic(restService.createDefaultObjectAccessPermission),
   )
 }
-object PermissionsEndpointsHandlers {
-  val layer = ZLayer.derive[PermissionsEndpointsHandlers]
+object PermissionsServerEndpoints {
+  val layer = ZLayer.derive[PermissionsServerEndpoints]
 }

@@ -17,9 +17,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.resources.api.service.MetadataRestService
@@ -38,7 +36,6 @@ object ResourcesApiModule { self =>
     BaseEndpoints &
     CsvService &
     GraphRoute &
-    HandlerMapper &
     IriConverter &
     KnoraProjectService &
     KnoraResponseRenderer &
@@ -47,30 +44,36 @@ object ResourcesApiModule { self =>
     ResourcesResponderV2 &
     SearchResponderV2 &
     StandoffResponderV2 &
-    TapirToPekkoInterpreter &
     ValuesResponderV2
     //format: on
 
-  type Provided = MetadataEndpoints & ResourceInfoEndpoints & ResourceInfoRoutes & ResourcesApiRoutes &
-    ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints
+  type Provided =
+    // format: off
+    MetadataEndpoints &
+    ResourceInfoEndpoints &
+    ResourceInfoServerEndpoints &
+    ResourcesApiServerEndpoints &
+    ResourcesEndpoints &
+    StandoffEndpoints &
+    ValuesEndpoints
+    //format: on
 
   def layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
-      ValuesEndpointsHandler.layer,
+      MetadataEndpoints.layer,
+      MetadataRestService.layer,
+      MetadataServerEndpoints.layer,
+      ResourceInfoEndpoints.layer,
+      ResourceInfoRestService.layer,
+      ResourceInfoServerEndpoints.layer,
+      ResourcesEndpoints.layer,
+      ResourcesRestService.layer,
+      ResourcesServerEndpoints.layer,
+      StandoffEndpoints.layer,
+      StandoffRestService.layer,
+      StandoffServerEndpoints.layer,
       ValuesEndpoints.layer,
       ValuesRestService.layer,
-      ResourcesEndpoints.layer,
-      ResourcesEndpointsHandler.layer,
-      ResourcesRestService.layer,
-      ResourcesApiRoutes.layer,
-      MetadataEndpoints.layer,
-      MetadataServerEndpoints.layer,
-      MetadataRestService.layer,
-      StandoffEndpoints.layer,
-      StandoffEndpointsHandler.layer,
-      StandoffRestService.layer,
-      ResourceInfoRestService.layer,
-      ResourceInfoEndpoints.layer,
-      ResourceInfoRoutes.layer,
+      ValuesServerEndpoints.layer,
     )
 }

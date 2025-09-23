@@ -8,13 +8,13 @@ package org.knora.webapi.slice.shacl.api
 import zio.*
 import sttp.tapir.ztapir.*
 
-case class ShaclEndpointsHandler(
+case class ShaclServerEndpoints(
   private val shaclEndpoints: ShaclEndpoints,
   private val shaclApiService: ShaclApiService,
 ) {
-  val allHandlers = Seq(shaclEndpoints.validate.zServerLogic(shaclApiService.validate))
+  val serverEndpoints = Seq(shaclEndpoints.validate.zServerLogic(shaclApiService.validate))
 }
 
-object ShaclEndpointsHandler {
-  val layer = ZLayer.derive[ShaclEndpointsHandler]
+object ShaclServerEndpoints {
+  val layer = ZLayer.derive[ShaclServerEndpoints]
 }

@@ -143,10 +143,10 @@ Each slice typically contains:
 ## Common Development Tasks
 
 ### Adding New Endpoints
-1. Define endpoint in appropriate `*Endpoints.scala`
-2. Implement handler in `*EndpointsHandler.scala`
-3. Add route in `*Routes.scala`
-4. Add to main router in `ApiRoutes.scala`
+1. Define endpoint in the appropriate `*Endpoints.scala`
+2. Connect endpoint definition with server logic in `*ServerEndpoints.scala`
+3. Register in `CompleteApiServerEndpoints.scala`
+4. Add unit/integration tests mirroring the main structure
 
 ### Code Style
 - Use Scalafmt for formatting

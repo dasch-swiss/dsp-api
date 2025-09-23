@@ -11,9 +11,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.api.service.OntologiesRestService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -29,25 +27,22 @@ object OntologyApiModule { self =>
     AppConfig &
     BaseEndpoints &
     CardinalityService &
-    HandlerMapper &
     IriConverter &
     KnoraResponseRenderer &
     OntologyCacheHelpers &
     OntologyRepo &
     OntologyResponderV2 &
-    StringFormatter &
-    TapirToPekkoInterpreter
+    StringFormatter
     // format: on
 
-  type Provided = OntologiesApiRoutes & OntologiesEndpoints & OntologyV2RequestParser
+  type Provided = OntologiesServerEndpoints & OntologiesEndpoints & OntologyV2RequestParser
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       RestCardinalityService.layer,
       OntologiesRestService.layer,
-      OntologiesEndpointsHandler.layer,
+      OntologiesServerEndpoints.layer,
       OntologiesEndpoints.layer,
       OntologyV2RequestParser.layer,
-      OntologiesApiRoutes.layer,
     )
 }

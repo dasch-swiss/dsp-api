@@ -12,12 +12,12 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.resources.api.model.ListResponseDto
 import org.knora.webapi.slice.resources.api.service.ResourceInfoRestService
 
-final case class ResourceInfoRoutes(
+final case class ResourceInfoServerEndpoints(
   private val endpoints: ResourceInfoEndpoints,
   private val resourceInfoService: ResourceInfoRestService,
 ) {
-  val allHandler = Seq(endpoints.getResourcesInfo.zServerLogic(resourceInfoService.findByProjectAndResourceClass))
+  val serverEndpoints = Seq(endpoints.getResourcesInfo.zServerLogic(resourceInfoService.findByProjectAndResourceClass))
 }
-object ResourceInfoRoutes {
-  val layer = ZLayer.derive[ResourceInfoRoutes]
+object ResourceInfoServerEndpoints {
+  val layer = ZLayer.derive[ResourceInfoServerEndpoints]
 }

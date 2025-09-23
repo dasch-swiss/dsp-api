@@ -12,18 +12,18 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.admin.api.service.StoreRestService
 
-final case class StoreEndpointsHandler(
+final case class StoreServerEndpoints(
   private val appConfig: AppConfig,
   private val endpoints: StoreEndpoints,
   private val restService: StoreRestService,
 ) {
 
-  val allHandlers =
+  val serverEndpoints =
     if (appConfig.allowReloadOverHttp)
       Seq(endpoints.postStoreResetTriplestoreContent.zServerLogic(restService.resetTriplestoreContent))
     else Seq.empty
 }
 
-object StoreEndpointsHandler {
-  val layer = ZLayer.derive[StoreEndpointsHandler]
+object StoreServerEndpoints {
+  val layer = ZLayer.derive[StoreServerEndpoints]
 }

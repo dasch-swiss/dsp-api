@@ -13,14 +13,14 @@ import sttp.tapir.ztapir.*
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.domain.model.User
 
-final case class MaintenanceEndpointsHandlers(
-  endpoints: MaintenanceEndpoints,
-  restService: MaintenanceRestService,
+final case class MaintenanceServerEndpoints(
+  private val endpoints: MaintenanceEndpoints,
+  private val restService: MaintenanceRestService,
 ) {
-  val allHandlers: ZServerEndpoint[Any, Any] = Seq(
+  val serverEndpoints = Seq(
     endpoints.postMaintenance.serverLogic(restService.executeMaintenanceAction),
   )
 }
-object MaintenanceEndpointsHandlers {
-  val layer = ZLayer.derive[MaintenanceEndpointsHandlers]
+object MaintenanceServerEndpoints {
+  val layer = ZLayer.derive[MaintenanceServerEndpoints]
 }

@@ -8,25 +8,24 @@ package org.knora.webapi.core
 import zio.*
 import zio.http.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.routing.CompleteApiServerEndpoints
 import sttp.tapir.server.interceptor.cors.CORSConfig.AllowedOrigin
 import sttp.tapir.server.interceptor.cors.{CORSConfig, CORSInterceptor}
 import sttp.tapir.server.metrics.zio.ZioMetrics
-import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
+import sttp.tapir.server.ziohttp.{ZioHttpServerOptions, ZioHttpInterpreter}
 import sttp.tapir.ztapir.RIOMonadError
 
 object HttpServer {
 
   private def options: ZioHttpServerOptions[Any] = ZioHttpServerOptions.default
 
-  val layer: ZLayer[AppConfig & ApiRoutes, Nothing, Unit] = ZLayer.scoped(createServer.orDie)
+  val layer = ZLayer.scoped(createServer)
 
-  private def createServer: ZIO[ApiRoutes & AppConfig, Throwable, Unit] =
-    for {
-      config    <- ZIO.service[AppConfig]
-      endpoints <- ZIO.service[ApiRoutes]
-      httpApp    = ZioHttpInterpreter(options).toHttp(endpoints.endpoints)
-      _         <- Server.install(httpApp).provide(Server.defaultWithPort(config.knoraApi.externalPort))
-      _         <- Console.printLine(s"Go to http://localhost:$config.knoraApi.externalPort/docs to open SwaggerUI")
-    } yield ()
+  private def createServer = for {
+    config    <- ZIO.service[AppConfig]
+    endpoints <- ZIO.service[CompleteApiServerEndpoints].map(_.serverEndpoints)
+    httpApp    = ZioHttpInterpreter(options).toHttp(endpoints)
+    _         <- Server.install(httpApp).provide(Server.defaultWithPort(config.knoraApi.externalPort))
+    _         <- Console.printLine(s"Go to http://localhost:$config.knoraApi.externalPort/docs to open SwaggerUI")
+  } yield ()
 }

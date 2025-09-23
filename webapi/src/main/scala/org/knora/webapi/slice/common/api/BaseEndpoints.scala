@@ -8,24 +8,23 @@ package org.knora.webapi.slice.common.api
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.tapir.ztapir.*
-import sttp.tapir.{EndpointOutput, PublicEndpoint, Validator}
+import sttp.tapir.{PublicEndpoint, EndpointOutput, Validator}
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.model.UsernamePassword
-import zio.ZIO
-import zio.ZLayer
+import zio.*
 
 import scala.concurrent.Future
-
 import dsp.errors.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.security.Authenticator
+import sttp.tapir.Endpoint
 
 final case class BaseEndpoints(authenticator: Authenticator) {
 
-  private val errorOutputs =
+  private val errorOutputs: EndpointOutput.OneOf[Throwable, Throwable] =
     oneOf[Throwable](
       // default
       oneOfVariant[NotFoundException](statusCode(StatusCode.NotFound).and(jsonBody[NotFoundException])),
@@ -44,23 +43,40 @@ final case class BaseEndpoints(authenticator: Authenticator) {
       oneOfVariant[ForbiddenException](statusCode(StatusCode.Forbidden).and(jsonBody[ForbiddenException])),
     )
 
-  val publicEndpoint = endpoint.errorOut(errorOutputs)
+  val publicEndpoint: Endpoint[Unit, Unit, Throwable, Unit, Any] = endpoint.errorOut(errorOutputs)
 
-  private val endpointWithBearerCookieBasicAuthOptional =
+  private val endpointWithBearerCookieBasicAuthOptional
+    : Endpoint[(Option[String], Option[String], Option[UsernamePassword]), Unit, Throwable, Unit, Any] =
     endpoint
       .errorOut(errorOutputs)
       .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
       .securityIn(cookie[Option[String]](authenticator.calculateCookieName()))
       .securityIn(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
 
-  val securedEndpoint = endpointWithBearerCookieBasicAuthOptional.zServerSecurityLogic {
+  val securedEndpoint: ZPartialServerEndpoint[
+    Nothing,
+    (Option[String], Option[String], Option[UsernamePassword]),
+    User,
+    Unit,
+    Throwable,
+    Unit,
+    Any,
+  ] = endpointWithBearerCookieBasicAuthOptional.zServerSecurityLogic {
     case (Some(jwtToken), _, _) => authenticateJwt(jwtToken)
     case (_, Some(cookie), _)   => authenticateJwt(cookie)
     case (_, _, Some(basic))    => authenticateBasic(basic)
     case _                      => ZIO.fail(BadCredentialsException("No credentials provided."))
   }
 
-  val withUserEndpoint = endpointWithBearerCookieBasicAuthOptional.zServerSecurityLogic {
+  val withUserEndpoint: ZPartialServerEndpoint[
+    Nothing,
+    (Option[String], Option[String], Option[UsernamePassword]),
+    User,
+    Unit,
+    Throwable,
+    Unit,
+    Any,
+  ] = endpointWithBearerCookieBasicAuthOptional.zServerSecurityLogic {
     case (Some(jwtToken), _, _) => authenticateJwt(jwtToken)
     case (_, Some(cookie), _)   => authenticateJwt(cookie)
     case (_, _, Some(basic))    => authenticateBasic(basic)

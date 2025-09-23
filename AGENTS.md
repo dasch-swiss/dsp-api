@@ -98,8 +98,7 @@ Essential commands:
 ## API Structure
 
 - Endpoints: defined via Tapir in `*Endpoints.scala`
-- Handlers: in `*EndpointsHandler.scala`
-- Routes: in `*Routes.scala` and wired through `ApiRoutes.scala`
+- ServerEndpoints: in `*ServerEndpoints.scala`
 - API areas: Admin API, API v2 (main), Management (health/metrics)
 - Auth: JWT; scoped authorization; session management
 
@@ -107,8 +106,8 @@ Essential commands:
 
 - Add a new endpoint
   1. Define endpoint in the appropriate `*Endpoints.scala`
-  2. Implement handler in `*EndpointsHandler.scala`
-  3. Add route in `*Routes.scala` and register in `ApiRoutes.scala`
+  2. Connect endpoint definition with server logic in `*ServerEndpoints.scala`
+  3. Register in `CompleteApiServerEndpoints.scala`
   4. Add unit/integration tests mirroring the main structure
 - Code style and patterns
   - Use Scalafmt; prefer ZIO effects over side effects
