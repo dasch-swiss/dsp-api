@@ -31,6 +31,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfSubject
 
 import java.time.Instant
 import java.util.UUID
+import scala.util.chaining.scalaUtilChainingOps
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
@@ -45,7 +46,6 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 object CreateValueQueryBuilder {
-
   private[service] def createValueQueryTwirl(
     dataNamedGraph: InternalIri,
     resourceIri: InternalIri,
@@ -83,25 +83,39 @@ object CreateValueQueryBuilder {
     resourceIri: InternalIri,
     propertyIri: SmartIri,
     newValueIri: InternalIri,
-    newValueUUID: UUID,
+    newValueUUIDOrCurrentValueIri: Either[UUID, InternalIri],
     value: ValueContentV2,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     valueCreator: InternalIri,
     valuePermissions: String,
     creationDate: Instant,
+    requestingUser: InternalIri,
   ): Update = {
     val dataGraphVar = variable("dataNamedGraph")
     val resourceVar  = variable("resource")
+    val currentVar   = variable("currentValue")
 
     val resource = iri(resourceIri.value)
     val property = iri(propertyIri.toString)
     val valueIri = iri(newValueIri.value)
 
+    val currentValue     = newValueUUIDOrCurrentValueIri.toOption
+    val currentVarOpt    = currentValue.map(_ => currentVar)
+    val currentValueUUID = variable("currentValueUuid")
+    val newValueUUID     = newValueUUIDOrCurrentValueIri.map(_ => currentValueUUID)
+
     val resourceLastModDate = variable("resourceLastModificationDate")
     val nextOrder           = variable("nextOrder")
 
     // Build delete patterns
-    val deletePatterns = buildDeletePatterns(resourceVar, resourceLastModDate, linkUpdates)
+    val deletePatterns = buildDeletePatterns(
+      resourceVar,
+      property,
+      resourceLastModDate,
+      linkUpdates,
+      currentVarOpt,
+      currentValueUUID,
+    )
 
     // Build insert patterns
     val insertPatterns = buildInsertPatterns(
@@ -116,6 +130,8 @@ object CreateValueQueryBuilder {
       valuePermissions,
       creationDate,
       nextOrder,
+      currentVarOpt,
+      requestingUser,
     )
 
     // Build where clause
@@ -124,13 +140,15 @@ object CreateValueQueryBuilder {
       dataGraphVar,
       resourceIri.value,
       resourceVar,
-      property,
       value,
       linkUpdates,
       resourceLastModDate,
       nextOrder,
       resourceIri,
       propertyIri.toIri,
+      currentVar,
+      currentValue,
+      currentValueUUID,
     )
 
     val query = Queries
@@ -147,13 +165,28 @@ object CreateValueQueryBuilder {
 
   private def buildDeletePatterns(
     resource: Variable,
+    property: rdf.Iri,
     resourceLastModDate: Variable,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
+    currentValue: Option[Variable],
+    currentValueUUID: Variable,
   ): List[TriplePattern] = {
     val resourceModPattern = resource.has(KB.lastModificationDate, resourceLastModDate)
 
+    val currentValuePatterns = currentValue.toList.flatMap { currentValue =>
+      List(
+        resource.has(property, currentValue),
+        currentValue.has(KB.valueHasUUID, currentValueUUID),
+        currentValue.has(KB.hasPermissions, variable("currentValuePermissions")),
+      )
+    }
+
     val linkValueDeletePatterns = linkUpdates.zipWithIndex.flatMap { case (linkUpdate, index) =>
-      if (linkUpdate.linkValueExists) {
+      val deleteDirectLink = Option.when(linkUpdate.deleteDirectLink) {
+        resource.has(iri(linkUpdate.linkPropertyIri.toString), iri(linkUpdate.linkTargetIri))
+      }
+
+      val linkValueExists = Option.when(linkUpdate.linkValueExists) {
         val linkValue            = variable(s"linkValue$index")
         val linkValueUUID        = variable(s"linkValueUUID$index")
         val linkValuePermissions = variable(s"linkValuePermissions$index")
@@ -163,10 +196,12 @@ object CreateValueQueryBuilder {
           linkValue.has(KB.valueHasUUID, linkValueUUID),
           linkValue.has(KB.hasPermissions, linkValuePermissions),
         )
-      } else List.empty
+      }
+
+      deleteDirectLink.toList ++ linkValueExists.toList.flatten
     }.toList
 
-    resourceModPattern :: linkValueDeletePatterns
+    resourceModPattern :: currentValuePatterns ::: linkValueDeletePatterns
   }
 
   private def buildInsertPatterns(
@@ -174,13 +209,15 @@ object CreateValueQueryBuilder {
     resourceVar: Variable,
     property: rdf.Iri,
     valueIri: rdf.Iri,
-    valueUUID: UUID,
+    valueUUID: Either[UUID, Variable],
     value: ValueContentV2,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     valueCreator: InternalIri,
     valuePermissions: String,
     creationDate: Instant,
     nextOrder: Variable,
+    currentValue: Option[Variable],
+    requestingUser: InternalIri,
   ): List[TriplePattern] = {
     // Resource modification date
     val resourceModPattern =
@@ -191,7 +228,12 @@ object CreateValueQueryBuilder {
       .isA(iri(value.valueType.toString))
       .andHas(KB.isDeleted, literalOf(false))
       .andHas(KB.valueHasString, literalOf(value.valueHasString))
-      .andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(valueUUID)))
+
+    val baseValuePatternWithUUID =
+      valueUUID.fold(
+        uuid => baseValuePattern.andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(uuid))),
+        variable => baseValuePattern.andHas(KB.valueHasUUID, variable),
+      )
 
     val base2 = valueIri
       .hasOptional(KB.valueHasComment, value.comment.map(literalOf))
@@ -206,14 +248,21 @@ object CreateValueQueryBuilder {
     val typeSpecificPatterns = buildTypeSpecificPatterns(valueIri, value)
 
     // Link patterns
-    val linkPatterns = buildLinkPatterns(resource, linkUpdates, creationDate)
+    val linkPatterns = buildLinkPatterns(resource, linkUpdates, creationDate, requestingUser)
 
     // Resource to value link
     val resourceValuePattern = resource.has(property, valueIri)
+    val previousValuePattern = currentValue.toList.map(valueIri.has(KB.previousValue, _))
 
-    resourceModPattern :: baseValuePattern :: typeSpecificPatterns ::: List(base2) ::: linkPatterns ::: List(
-      resourceValuePattern,
-    )
+    List(
+      List(resourceModPattern),
+      List(baseValuePatternWithUUID),
+      previousValuePattern,
+      typeSpecificPatterns,
+      List(base2),
+      linkPatterns,
+      List(resourceValuePattern),
+    ).fold(List[TriplePattern]())(_ ::: _)
   }
 
   private def buildTypeSpecificPatterns(
@@ -427,6 +476,7 @@ object CreateValueQueryBuilder {
     resource: org.eclipse.rdf4j.sparqlbuilder.rdf.Iri,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     creationDate: Instant,
+    requestingUser: InternalIri,
   ): List[TriplePattern] =
     linkUpdates.flatMap { linkUpdate =>
       val directLink = if (linkUpdate.insertDirectLink) {
@@ -440,26 +490,36 @@ object CreateValueQueryBuilder {
         .andHas(RDF.OBJECT, iri(linkUpdate.linkTargetIri))
         .andHas(KB.valueHasString, literalOf(linkUpdate.linkTargetIri))
         .andHas(KB.valueHasRefCount, literalOf(linkUpdate.newReferenceCount))
-        .andHas(KB.isDeleted, literalOf(false))
         .andHas(KB.valueCreationDate, literalOfType(creationDate.toString, XSD.DATETIME))
         .andHas(KB.attachedToUser, iri(linkUpdate.newLinkValueCreator))
         .andHas(KB.hasPermissions, literalOf(linkUpdate.newLinkValuePermissions))
-
-      val linkValueWithUUID = if (linkUpdate.linkValueExists) {
-        val linkValueIndex    = linkUpdates.indexOf(linkUpdate)
-        val linkValueUUID     = variable(s"linkValueUUID$linkValueIndex")
-        val previousLinkValue = variable(s"linkValue$linkValueIndex")
-        linkValue
-          .andHas(KB.previousValue, previousLinkValue)
-          .andHas(KB.valueHasUUID, linkValueUUID)
-      } else {
-        linkValue.andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(UUID.randomUUID())))
-      }
+        .pipe { linkValue =>
+          if (linkUpdate.linkValueExists) {
+            val linkValueIndex    = linkUpdates.indexOf(linkUpdate)
+            val linkValueUUID     = variable(s"linkValueUUID$linkValueIndex")
+            val previousLinkValue = variable(s"linkValue$linkValueIndex")
+            linkValue
+              .andHas(KB.previousValue, previousLinkValue)
+              .andHas(KB.valueHasUUID, linkValueUUID)
+          } else {
+            linkValue.andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(UUID.randomUUID())))
+          }
+        }
+        .pipe { linkValue =>
+          if (linkUpdate.newReferenceCount == 0) {
+            linkValue
+              .andHas(KB.isDeleted, literalOf(true))
+              .andHas(KB.deleteDate, literalOfType(creationDate.toString, XSD.DATETIME))
+              .andHas(KB.deletedBy, iri(requestingUser.value))
+          } else {
+            linkValue.andHas(KB.isDeleted, literalOf(false))
+          }
+        }
 
       val resourceToLinkValue =
         resource.has(iri(linkUpdate.linkPropertyIri.toString + "Value"), iri(linkUpdate.newLinkValueIri))
 
-      List(directLink, Some(linkValueWithUUID), Some(resourceToLinkValue)).flatten
+      List(directLink, Some(linkValue), Some(resourceToLinkValue)).flatten
     }.toList
 
   private def buildWhereClause(
@@ -467,13 +527,15 @@ object CreateValueQueryBuilder {
     dataNamedGraphVar: Variable,
     resourceString: String,
     resourceVar: Variable,
-    property: rdf.Iri,
     value: ValueContentV2,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     resourceLastModDate: Variable,
     nextOrder: Variable,
     resourceIri: InternalIri,
     propertyIri: String,
+    currentVar: Variable,
+    currentValue: Option[InternalIri],
+    currentValueUUID: Variable,
   ): List[GraphPattern] = {
     val resourceClass = variable("resourceClass")
     val valueType     = variable("valueType")
@@ -487,9 +549,9 @@ object CreateValueQueryBuilder {
     val bindPatterns = List(
       Expressions.bind(Expressions.function(SparqlFunction.IRI, literalOf(dataNamedGraph)), dataNamedGraphVar),
       Expressions.bind(Expressions.function(SparqlFunction.IRI, literalOf(resourceString)), resourceVar),
-    )
-
-    val _ = (property, valueType, propertyRange, restriction)
+    ) ++ currentValue.toList.map { currentValue =>
+      Expressions.bind(Expressions.function(SparqlFunction.IRI, literalOf(currentValue.value)), currentVar)
+    }
 
     val basicPatterns = List(
       // Resource validation
@@ -515,6 +577,16 @@ object CreateValueQueryBuilder {
         .isA(OWL.RESTRICTION)
         .andHas(OWL.ONPROPERTY, propertyVar),
     )
+
+    val currentValuePatterns = currentValue.toList.flatMap { _ =>
+      List(
+        resourceVar.has(propertyVar, currentVar),
+        currentVar.has(RDF.TYPE, valueType),
+        currentVar.has(KB.isDeleted, literalOf(false)),
+        currentVar.has(KB.valueHasUUID, currentValueUUID),
+        currentVar.has(KB.hasPermissions, variable("currentValuePermissions")),
+      )
+    }
 
     // List node validation for hierarchical list values
     val listNodeValidation = value match {
@@ -620,7 +692,14 @@ object CreateValueQueryBuilder {
         )
     }
 
-    bindPatterns ::: basicPatterns ::: listNodeValidation ::: linkValidations ::: List(orderSubquery)
+    List(
+      bindPatterns,
+      basicPatterns,
+      currentValuePatterns,
+      listNodeValidation,
+      linkValidations,
+      List(orderSubquery),
+    ).fold(List[GraphPattern]())(_ ::: _)
   }
 }
 
