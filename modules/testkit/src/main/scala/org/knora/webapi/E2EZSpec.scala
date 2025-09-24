@@ -41,7 +41,9 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
     _ <- TestApiClient
            .getJson[Json](uri"/version")
            .repeatWhile(_.code != StatusCode.Ok)
-           .retry(Schedule.duration(5.seconds))
+           .retry(Schedule.exponential(10.milli))
+           .timeout(5.seconds)
+           .orDie
     _ <- ZIO.logInfo("API is ready")
   } yield ()
 
