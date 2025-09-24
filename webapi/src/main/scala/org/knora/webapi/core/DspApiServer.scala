@@ -22,7 +22,10 @@ final case class DspApiServer(server: Server, endpoints: Endpoints, c: KnoraApi)
     ZioHttpServerOptions.customiseInterceptors
       .corsInterceptor(
         CORSInterceptor.customOrThrow(
-          CORSConfig.default.allowAllMethods.allowAllOrigins.exposeAllHeaders,
+          CORSConfig.default.allowCredentials
+            .allowMethods(GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH)
+            .allowMatchingOrigins(_ => true)
+            .exposeAllHeaders,
         ),
       )
       .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
