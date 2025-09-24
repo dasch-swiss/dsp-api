@@ -5,16 +5,17 @@
 
 package org.knora.webapi.core
 
+import sttp.model.Method.*
+import sttp.tapir.server.interceptor.cors.CORSConfig
+import sttp.tapir.server.interceptor.cors.CORSInterceptor
+import sttp.tapir.server.metrics.zio.ZioMetrics
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import zio.*
 import zio.http.*
+
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.routing.Endpoints
-import sttp.tapir.server.interceptor.cors.CORSConfig
-import sttp.tapir.server.interceptor.cors.CORSInterceptor
-import sttp.tapir.server.metrics.zio.ZioMetrics
-import sttp.model.Method.*
 
 final case class DspApiServer(server: Server, endpoints: Endpoints, c: KnoraApi) {
 
