@@ -26,7 +26,7 @@ final case class DspApiServer(server: Server, endpoints: Endpoints, c: KnoraApi)
       .options
 
   def startup(): UIO[Unit] = for {
-    _          <- ZIO.logInfo(s"Starting ${BuildInfo.name} (${BuildInfo.version}")
+    _          <- ZIO.logInfo("Starting DSP API server...")
     app         = ZioHttpInterpreter(serverOptions).toHttp(endpoints.serverEndpoints)
     actualPort <- Server.install(app).provide(ZLayer.succeed(server)): @annotation.nowarn
     _          <- ZIO.logInfo(s"API available at http://${c.externalHost}:$actualPort/version")

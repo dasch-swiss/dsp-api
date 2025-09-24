@@ -30,11 +30,6 @@ object Main extends ZIOApp {
    *  Entrypoint of our Application
    */
   override def run: ZIO[Environment & ZIOAppArgs & Scope, Any, Any] =
-    (Db.init *>
-      DspApiServer.startup *>
-      MetricsServer.make *>
-      logStarted *>
-      ZIO.never).provideSomeAuto(DspApiServer.layer)
+    (Db.init *> DspApiServer.startup *> MetricsServer.make).provideSomeAuto(DspApiServer.layer)
 
-  private def logStarted = ZIO.logInfo(s"${BuildInfo.name} ${BuildInfo.version} started.")
 }
