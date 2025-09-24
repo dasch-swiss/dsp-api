@@ -15,9 +15,9 @@ import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.metrics.zio.ZioMetrics
 
-object DspApiServer {
+final case class DspApiServer(server: Server, endpoints: Endpoints, c: KnoraApi) {
 
-  private def options: ZioHttpServerOptions[Any] =
+  private val serverOptions: ZioHttpServerOptions[Any] =
     ZioHttpServerOptions.customiseInterceptors
       .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
       .corsInterceptor(
@@ -25,11 +25,22 @@ object DspApiServer {
       )
       .options
 
-  def startup(): ZIO[Endpoints & KnoraApi & Server, Throwable, Unit] =
-    for {
-      c   <- ZIO.service[KnoraApi]
-      app <- ZIO.serviceWith[Endpoints](_.serverEndpoints).map(ZioHttpInterpreter(options).toHttp(_))
-      _   <- ZIO.serviceWithZIO[Server](_.install(app)): @annotation.nowarn
-      _   <- ZIO.logInfo(s"http://localhost:${c.internalPort}/version ")
-    } yield ()
+  def startup(): UIO[Unit] = for {
+    _          <- ZIO.logInfo(s"Starting ${BuildInfo.name} (${BuildInfo.version}")
+    app         = ZioHttpInterpreter(serverOptions).toHttp(endpoints.serverEndpoints)
+    actualPort <- Server.install(app).provide(ZLayer.succeed(server)): @annotation.nowarn
+    _          <- ZIO.logInfo(s"API available at http://${c.externalHost}:$actualPort/version")
+  } yield ()
+}
+
+object DspApiServer {
+
+  def startup: RIO[DspApiServer, Unit] = ZIO.serviceWithZIO[DspApiServer](_.startup())
+
+  private val serverLayer = ZLayer
+    .service[KnoraApi]
+    .flatMap(cfg => Server.defaultWith(_.binding(cfg.get.internalHost, cfg.get.internalPort).enableRequestStreaming))
+    .orDie
+
+  val layer = serverLayer >>> ZLayer.derive[DspApiServer]
 }

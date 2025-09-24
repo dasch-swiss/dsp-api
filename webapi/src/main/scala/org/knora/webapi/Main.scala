@@ -6,12 +6,11 @@
 package org.knora.webapi
 
 import zio.*
-import zio.http.Server
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.core.*
 import org.knora.webapi.core.LayersLive.Environment
-//import org.knora.webapi.slice.infrastructure.MetricsServer
+import org.knora.webapi.slice.infrastructure.MetricsServer
 
 object Main extends ZIOApp {
 
@@ -32,12 +31,10 @@ object Main extends ZIOApp {
    */
   override def run: ZIO[Environment & ZIOAppArgs & Scope, Any, Any] =
     (Db.init *>
-      DspApiServer.startup() *>
-      ZIO.never)
-      .provideSomeAuto(
-        ZLayer
-          .service[KnoraApi]
-          .flatMap(c => Server.defaultWith(_.binding(c.get.internalHost, c.get.internalPort).enableRequestStreaming)),
-      )
-//    MetricsServer.make
+      DspApiServer.startup *>
+      MetricsServer.make *>
+      logStarted *>
+      ZIO.never).provideSomeAuto(DspApiServer.layer)
+
+  private def logStarted = ZIO.logInfo(s"${BuildInfo.name} ${BuildInfo.version} started.")
 }
