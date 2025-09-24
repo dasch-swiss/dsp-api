@@ -23,8 +23,8 @@ import zio.test.*
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.valueobjects.UuidUtil
+import org.apache.commons.codec.binary.Base32
 import org.knora.sipi.MockDspApiServer.verify.*
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -48,7 +48,7 @@ object SipiIT extends ZIOSpecDefault {
     uuid <- Random.nextUUID
     exp   = now.plusSeconds(3600)
     claim = JwtClaim(
-              issuer = Some("0.0.0.0:3333"),
+              issuer = Some(s"0.0.0.0:9999"),
               subject = Some("someUser"),
               audience = Some(Set("Knora", "Sipi")),
               issuedAt = Some(now.getEpochSecond),
@@ -61,6 +61,9 @@ object SipiIT extends ZIOSpecDefault {
     "UP 4888, nice 4-8-4 steam engine",
     JwtAlgorithm.HS256,
   )
+
+  private val cookieName: String =
+    "KnoraAuthentication" + new Base32('9'.toByte).encodeAsString("0.0.0.0:9999".getBytes)
 
   private val cookiesSuite =
     suite("Given a request is authorized using cookies")(
@@ -81,7 +84,7 @@ object SipiIT extends ZIOSpecDefault {
                               s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999aSecondCookie",
                               "anotherValueShouldBeIgnored",
                             ),
-                            Cookie.Request("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999", jwt),
+                            Cookie.Request(cookieName, jwt),
                           ),
                         ),
                       )
@@ -99,7 +102,7 @@ object SipiIT extends ZIOSpecDefault {
           jwt <- createJwt(AuthScope.admin)
           response <- requestGet(
                         Path.root / prefix / imageTestfile / "file",
-                        Header.Cookie(NonEmptyChunk(Cookie.Request("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999", jwt))),
+                        Header.Cookie(NonEmptyChunk(Cookie.Request(cookieName, jwt))),
                       )
           requestToDspApiContainsJwt <- MockDspApiServer.verifyAuthBearerTokenReceived(jwt)
         } yield assertTrue(response.status == Status.Ok, requestToDspApiContainsJwt)
@@ -114,7 +117,7 @@ object SipiIT extends ZIOSpecDefault {
           jwt <- createJwt(AuthScope.write(Shortcode.unsafeFrom(prefix)))
           response <- requestGet(
                         Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jpg",
-                        Header.Cookie(NonEmptyChunk(Cookie.Request("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999", jwt))),
+                        Header.Cookie(NonEmptyChunk(Cookie.Request(cookieName, jwt))),
                       )
           noInteraction <- MockDspApiServer.verifyNoInteraction
         } yield assertTrue(response.status == Status.Ok, noInteraction)
@@ -296,7 +299,7 @@ object SipiIT extends ZIOSpecDefault {
       },
     )
       .provideSomeLayerShared[Scope & Client & WireMockServer](
-        SharedVolumes.Images.layer >+> SipiTestContainer.layer,
+        SharedVolumes.Images.layer >+> SipiTestContainer.layer(9999),
       )
       .provideSomeLayerShared[Scope & Client](MockDspApiServer.layer)
       .provideSomeLayer[Scope](Client.default) @@ TestAspect.sequential @@ TestAspect.withLiveClock
@@ -379,7 +382,7 @@ object MockDspApiServer {
   }
 
   private def acquireWireMockServer: Task[WireMockServer] = ZIO.attempt {
-    val server = new WireMockServer(options().port(3333)); // No-args constructor will start on port 8080, no HTTPS
+    val server = new WireMockServer(options().port(9999)); // No-args constructor will start on port 8080, no HTTPS
     server.start()
     server
   }

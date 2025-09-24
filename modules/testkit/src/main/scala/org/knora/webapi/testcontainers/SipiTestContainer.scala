@@ -59,16 +59,16 @@ object SipiTestContainer {
   def resolveUrl(path: http.Path): URIO[SipiTestContainer, URL] =
     ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.path(path))
 
-  def make(imagesVolume: SharedVolumes.Images): SipiTestContainer =
+  def make(imagesVolume: SharedVolumes.Images, apiPort: Int = 3333): SipiTestContainer =
     new SipiTestContainer()
       .withExposedPorts(1024)
       .withEnv("KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST", "0.0.0.0")
-      .withEnv("KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT", "3333")
+      .withEnv("KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT", s"$apiPort")
       .withEnv("SIPI_EXTERNAL_PROTOCOL", "http")
       .withEnv("SIPI_EXTERNAL_HOSTNAME", "0.0.0.0")
       .withEnv("SIPI_EXTERNAL_PORT", "1024")
       .withEnv("SIPI_WEBAPI_HOSTNAME", SipiTestContainer.localHostAddress)
-      .withEnv("SIPI_WEBAPI_PORT", "3333")
+      .withEnv("SIPI_WEBAPI_PORT", s"$apiPort")
       .withEnv("CLEAN_TMP_DIR_USER", "clean_tmp_dir_user")
       .withEnv("CLEAN_TMP_DIR_PW", "clean_tmp_dir_pw")
       .withCommand("--config=/sipi/config/sipi.docker-config.lua")
@@ -90,6 +90,9 @@ object SipiTestContainer {
 
     } yield container,
   )
+
+  def layer(apiPort: Int = 3333): URLayer[SharedVolumes.Images, SipiTestContainer] =
+    (ZLayer.scoped(ZIO.serviceWithZIO[SharedVolumes.Images](make(_, apiPort).toZio)) >>> initSipi).orDie
 
   val layer: URLayer[SharedVolumes.Images, SipiTestContainer] = {
     val container = ZLayer.scoped(ZIO.serviceWithZIO[SharedVolumes.Images](make(_).toZio))
