@@ -13,10 +13,11 @@ final case class ResourcesApiServerEndpoints(
   private val standoffServerEndpoints: StandoffServerEndpoints,
   private val valuesServerEndpoints: ValuesServerEndpoints,
 ) {
-  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = valuesServerEndpoints.serverEndpoints ++
-    resourcesServerEndpoints.serverEndpoints ++
-    standoffServerEndpoints.serverEndpoints ++
-    metadataServerEndpoints.serverEndpoints
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
+    valuesServerEndpoints.serverEndpoints ++
+      resourcesServerEndpoints.serverEndpoints ++
+      standoffServerEndpoints.serverEndpoints ++
+      metadataServerEndpoints.serverEndpoints
 }
 object ResourcesApiServerEndpoints {
   val layer = ZLayer.derive[ResourcesApiServerEndpoints]

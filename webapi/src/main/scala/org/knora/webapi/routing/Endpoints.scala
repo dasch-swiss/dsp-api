@@ -11,35 +11,20 @@ import zio.*
 
 import org.knora.webapi.routing
 import org.knora.webapi.slice.admin.api.AdminApiServerEndpoints
+import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementServerEndpoints
-import org.knora.webapi.slice.lists.api.ListsV2ServerEndpoints
-import org.knora.webapi.slice.ontology.api.OntologiesServerEndpoints
-import org.knora.webapi.slice.resources.api.ResourceInfoServerEndpoints
-import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
-import org.knora.webapi.slice.search.api.SearchServerEndpoints
-import org.knora.webapi.slice.security.api.AuthenticationServerEndpoints
 import org.knora.webapi.slice.shacl.api.ShaclServerEndpoints
 
 final case class Endpoints(
-  adminApiServerEndpoints: AdminApiServerEndpoints,
-  authenticationServerEndpoints: AuthenticationServerEndpoints,
-  listsV2ServerEndpoints: ListsV2ServerEndpoints,
-  resourceInfoServerEndpoints: ResourceInfoServerEndpoints,
-  resourcesApiServerEndpoints: ResourcesApiServerEndpoints,
-  searchServerEndpoints: SearchServerEndpoints,
+  adminApiServerEndpoints: AdminApiServerEndpoints, // admin api
+  apiV2ServerEndpoints: ApiV2ServerEndpoints,
   shaclServerEndpoints: ShaclServerEndpoints,
   managementServerEndpoints: ManagementServerEndpoints,
-  ontologiesServerEndpoints: OntologiesServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
     adminApiServerEndpoints.serverEndpoints ++
-      authenticationServerEndpoints.serverEndpoints ++
-      listsV2ServerEndpoints.serverEndpoints ++
+      apiV2ServerEndpoints.serverEndpoints ++
       managementServerEndpoints.serverEndpoints ++
-      ontologiesServerEndpoints.serverEndpoints ++
-      resourceInfoServerEndpoints.serverEndpoints ++
-      resourcesApiServerEndpoints.serverEndpoints ++
-      searchServerEndpoints.serverEndpoints ++
       shaclServerEndpoints.serverEndpoints
 }
 object Endpoints {
