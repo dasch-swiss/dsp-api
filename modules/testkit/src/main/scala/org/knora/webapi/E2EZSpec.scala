@@ -9,14 +9,19 @@ import zio.*
 import zio.http.*
 import zio.test.*
 import zio.test.Assertion.*
+import zio.json.ast.Json
 
 import scala.reflect.ClassTag
-
 import org.knora.webapi.core.Db
+import org.knora.webapi.core.DspApiServer
 import org.knora.webapi.core.LayersTest
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.testservices.TestApiClient
+import sttp.client4.Response
+import sttp.client4.UriContext
+import sttp.model.StatusCode
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
@@ -28,7 +33,16 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
   type env = LayersTest.Environment with Client with Scope
 
-  private def prepare = Db.initWithTestData(rdfDataObjects)
+  private def prepare = for {
+    _ <- Db.initWithTestData(rdfDataObjects)
+    _ <- (DspApiServer.startup *> ZIO.never).provideSomeAuto(DspApiServer.layer).fork
+    // wait max 5 seconds until api is ready
+    _ <- TestApiClient
+           .getJson[Json](uri"/version")
+           .repeatWhile(_.code != StatusCode.Ok)
+           .retry(Schedule.duration(5.seconds))
+    _ <- ZIO.logInfo("API is ready")
+  } yield ()
 
   def e2eSpec: Spec[env, Any]
 

@@ -26,7 +26,8 @@ final case class DspApiServer(server: Server, endpoints: Endpoints, c: KnoraApi)
           CORSConfig.default.allowCredentials
             .allowMethods(GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH)
             .allowMatchingOrigins(_ => true)
-            .exposeAllHeaders,
+            .exposeAllHeaders
+            .maxAge(30.minutes.asScala),
         ),
       )
       .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
