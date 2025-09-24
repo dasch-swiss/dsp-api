@@ -14,15 +14,18 @@ import org.knora.webapi.routing.Endpoints
 import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.metrics.zio.ZioMetrics
+import sttp.model.Method.*
 
 final case class DspApiServer(server: Server, endpoints: Endpoints, c: KnoraApi) {
 
   private val serverOptions: ZioHttpServerOptions[Any] =
     ZioHttpServerOptions.customiseInterceptors
-      .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
       .corsInterceptor(
-        CORSInterceptor.customOrThrow(CORSConfig.default.allowAllMethods.allowAllOrigins.exposeAllHeaders),
+        CORSInterceptor.customOrThrow(
+          CORSConfig.default.allowAllMethods.allowAllOrigins.exposeAllHeaders,
+        ),
       )
+      .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
       .options
 
   def startup(): UIO[Unit] = for {

@@ -18,6 +18,7 @@ final class OntologiesServerEndpoints(
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getOntologiesMetadataProject.zServerLogic(restService.getOntologyMetadataByProjectOption),
+    endpoints.getOntologiesMetadataProjects.zServerLogic(restService.getOntologyMetadataByProjects),
     endpoints.getOntologyPathSegments.serverLogic(restService.dereferenceOntologyIri),
     endpoints.putOntologiesMetadata.serverLogic(restService.changeOntologyMetadata),
     endpoints.getOntologiesAllentities.serverLogic(restService.getOntologyEntities),
