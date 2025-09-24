@@ -61,6 +61,7 @@ nav:
               - 0006 Gradually Replace Akka-HTTP with ZIO-HTTP: 05-internals/design/adr/ADR-0006-use-zio-http.md
               - 0007 ZIO-fication of Responders: 05-internals/design/adr/ADR-0007-zio-fication-of-responders.md
               - 0008 Replace Akka with Pekko: 05-internals/design/adr/ADR-0008-replace-akka-with-pekko.md
+              - 0009 API `v3` for client-optimized endpoints: 05-internals/design/adr/ADR-0009-api-v3.md
           - DSP-API Design Principles:
               - Design Overview: 05-internals/design/principles/design-overview.md
               - Store Module: 05-internals/design/principles/store-module.md
