@@ -31,6 +31,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfSubject
 
 import java.time.Instant
 import java.util.UUID
+import scala.util.chaining.scalaUtilChainingOps
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
@@ -130,6 +131,7 @@ object CreateValueQueryBuilder {
       creationDate,
       nextOrder,
       currentVarOpt,
+      requestingUser,
     )
 
     // Build where clause
@@ -215,6 +217,7 @@ object CreateValueQueryBuilder {
     creationDate: Instant,
     nextOrder: Variable,
     currentValue: Option[Variable],
+    requestingUser: InternalIri,
   ): List[TriplePattern] = {
     // Resource modification date
     val resourceModPattern =
@@ -245,7 +248,7 @@ object CreateValueQueryBuilder {
     val typeSpecificPatterns = buildTypeSpecificPatterns(valueIri, value)
 
     // Link patterns
-    val linkPatterns = buildLinkPatterns(resource, linkUpdates, creationDate)
+    val linkPatterns = buildLinkPatterns(resource, linkUpdates, creationDate, requestingUser)
 
     // Resource to value link
     val resourceValuePattern = resource.has(property, valueIri)
@@ -473,6 +476,7 @@ object CreateValueQueryBuilder {
     resource: org.eclipse.rdf4j.sparqlbuilder.rdf.Iri,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     creationDate: Instant,
+    requestingUser: InternalIri,
   ): List[TriplePattern] =
     linkUpdates.flatMap { linkUpdate =>
       val directLink = if (linkUpdate.insertDirectLink) {
@@ -486,26 +490,36 @@ object CreateValueQueryBuilder {
         .andHas(RDF.OBJECT, iri(linkUpdate.linkTargetIri))
         .andHas(KB.valueHasString, literalOf(linkUpdate.linkTargetIri))
         .andHas(KB.valueHasRefCount, literalOf(linkUpdate.newReferenceCount))
-        .andHas(KB.isDeleted, literalOf(false))
         .andHas(KB.valueCreationDate, literalOfType(creationDate.toString, XSD.DATETIME))
         .andHas(KB.attachedToUser, iri(linkUpdate.newLinkValueCreator))
         .andHas(KB.hasPermissions, literalOf(linkUpdate.newLinkValuePermissions))
-
-      val linkValueWithUUID = if (linkUpdate.linkValueExists) {
-        val linkValueIndex    = linkUpdates.indexOf(linkUpdate)
-        val linkValueUUID     = variable(s"linkValueUUID$linkValueIndex")
-        val previousLinkValue = variable(s"linkValue$linkValueIndex")
-        linkValue
-          .andHas(KB.previousValue, previousLinkValue)
-          .andHas(KB.valueHasUUID, linkValueUUID)
-      } else {
-        linkValue.andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(UUID.randomUUID())))
-      }
+        .pipe { linkValue =>
+          if (linkUpdate.linkValueExists) {
+            val linkValueIndex    = linkUpdates.indexOf(linkUpdate)
+            val linkValueUUID     = variable(s"linkValueUUID$linkValueIndex")
+            val previousLinkValue = variable(s"linkValue$linkValueIndex")
+            linkValue
+              .andHas(KB.previousValue, previousLinkValue)
+              .andHas(KB.valueHasUUID, linkValueUUID)
+          } else {
+            linkValue.andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(UUID.randomUUID())))
+          }
+        }
+        .pipe { linkValue =>
+          if (linkUpdate.newReferenceCount == 0) {
+            linkValue
+              .andHas(KB.isDeleted, literalOf(true))
+              .andHas(KB.deleteDate, literalOfType(creationDate.toString, XSD.DATETIME))
+              .andHas(KB.deletedBy, iri(requestingUser.value))
+          } else {
+            linkValue.andHas(KB.isDeleted, literalOf(false))
+          }
+        }
 
       val resourceToLinkValue =
         resource.has(iri(linkUpdate.linkPropertyIri.toString + "Value"), iri(linkUpdate.newLinkValueIri))
 
-      List(directLink, Some(linkValueWithUUID), Some(resourceToLinkValue)).flatten
+      List(directLink, Some(linkValue), Some(resourceToLinkValue)).flatten
     }.toList
 
   private def buildWhereClause(

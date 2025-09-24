@@ -315,6 +315,7 @@ final case class ValuesResponderV2(
             valueCreationDate = valueToCreate.valueCreationDate,
             valueCreator = requestingUser.id,
             valuePermissions = newValuePermissionLiteral,
+            requestingUser = requestingUser,
           )
 
       } yield CreateValueResponseV2(
@@ -387,6 +388,7 @@ final case class ValuesResponderV2(
     valueCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
+    requestingUser: User,
   ): ZIO[Any, Throwable, UnverifiedValueV2] =
     value match {
       case linkValueContent: LinkValueContentV2 =>
@@ -413,6 +415,7 @@ final case class ValuesResponderV2(
           maybeValueCreationDate = valueCreationDate,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
+          requestingUser = requestingUser,
         )
     }
 
@@ -440,6 +443,7 @@ final case class ValuesResponderV2(
     maybeValueCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
+    requestingUser: User,
   ) =
     for {
 
@@ -483,6 +487,7 @@ final case class ValuesResponderV2(
       resourceIriInternal  <- ZIO.fromEither(InternalIri.from(resourceInfo.resourceIri))
       newValueIriInternal  <- ZIO.fromEither(InternalIri.from(newValueIri))
       valueCreatorInternal <- ZIO.fromEither(InternalIri.from(valueCreator))
+      requestingUserInternal  <- ZIO.fromEither(InternalIri.from(requestingUser.id))
 
       // Use repository method which handles dual validation
       _ <- valueRepo.createValue(
@@ -496,6 +501,7 @@ final case class ValuesResponderV2(
              valueCreator = valueCreatorInternal,
              valuePermissions = valuePermissions,
              creationDate = creationDate,
+             requestingUser = requestingUserInternal,
            )
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
