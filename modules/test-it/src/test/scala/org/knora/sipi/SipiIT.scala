@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
+import org.apache.commons.codec.binary.Base32
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtZIOJson
@@ -23,8 +24,8 @@ import zio.test.*
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+
 import dsp.valueobjects.UuidUtil
-import org.apache.commons.codec.binary.Base32
 import org.knora.sipi.MockDspApiServer.verify.*
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode

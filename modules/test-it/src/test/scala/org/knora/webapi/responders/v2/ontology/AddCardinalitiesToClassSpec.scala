@@ -27,9 +27,10 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.testservices.TestOntologyApiClient
+import org.knora.webapi.util.OntologyTestHelper
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].
@@ -67,12 +68,11 @@ object AddCardinalitiesToClassSpec extends E2EZSpec {
       val newPropertyIri = freetestOntologyIri.makeProperty("hasName")
 
       for {
-        ontologyLastModificationDate <- TestOntologyApiClient.getLastModificationDate(freetestOntologyIri)
-
         // assert that the cardinality for `:hasAuthor` is only once in the triplestore
         countInitial <- getCardinalityCountFromTriplestore(classIri, propertyIri)
 
         // add additional cardinality to the class
+        ontologyLastModificationDate <- OntologyTestHelper.lastModificationDate(freetestOntologyIri)
         _ <- ontologyResponder(
                _.addCardinalitiesToClass(
                  AddCardinalitiesToClassRequestV2(

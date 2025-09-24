@@ -44,7 +44,7 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
            .retry(Schedule.exponential(10.milli))
            .timeout(5.seconds)
            .orDie
-    _ <- ZIO.logInfo("API is ready")
+    _ <- ZIO.logInfo("API is ready, start running tests...")
   } yield ()
 
   def e2eSpec: Spec[env, Any]
