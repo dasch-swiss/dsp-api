@@ -11,7 +11,6 @@ import zio.ZLayer
 
 import java.time.Instant
 
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -111,40 +110,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / "cardinalities")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(
-      stringBody
-        .example(
-          s"""
-             |{
-             |  "@id" : "ONTOLOGY_IRI",
-             |  "@type" : "owl:Ontology",
-             |  "knora-api:lastModificationDate" : {
-             |    "@type" : "xsd:dateTimeStamp",
-             |    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
-             |  },
-             |  "@graph" : [
-             |    {
-             |      "@id" : "CLASS_IRI",
-             |      "@type" : "owl:Class",
-             |      "rdfs:subClassOf" : {
-             |        "@type": "owl:Restriction",
-             |        "OWL_CARDINALITY_PREDICATE": "OWL_CARDINALITY_VALUE",
-             |        "owl:onProperty": {
-             |          "@id" : "PROPERTY_IRI"
-             |        }
-             |      }
-             |    }
-             |  ],
-             |  "@context" : {
-             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-             |    "owl" : "http://www.w3.org/2002/07/owl#",
-             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-             |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-             |  }
-             |}
-             |""".stripMargin,
-        ),
-    )
+    .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
       "Add cardinalities to a class. " +
@@ -163,12 +129,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
         .example(Some(Cardinality.AtLeastOne.toString)),
     )
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody.example(s"""
-                               |{
-                               |  "${KnoraApiV2Complex.CanDo}": false,
-                               |  "${KnoraApiV2Complex.CannotDoReason}": "The new cardinality is not included in the cardinality of a super-class.",
-                               |}
-                               |""".stripMargin))
+    .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
       "If only a class IRI is provided, this endpoint checks if any cardinality of any of the class properties can " +
