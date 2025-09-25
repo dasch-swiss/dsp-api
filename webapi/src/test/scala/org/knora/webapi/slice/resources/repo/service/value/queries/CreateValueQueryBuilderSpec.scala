@@ -87,7 +87,7 @@ object CreateValueQueryBuilderTestSupport {
           valueCreator = testUserIri,
           valuePermissions = testPermissions,
           creationDate = testCreationDate,
-          requestingUser = null, // TODO
+          requestingUser = InternalIri.from(org.knora.webapi.TestDataFactory.User.rootUser.id).toOption.get,
         )
         .sparql
 

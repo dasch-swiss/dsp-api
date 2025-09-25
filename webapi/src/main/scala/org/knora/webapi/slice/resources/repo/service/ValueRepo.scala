@@ -228,7 +228,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
         valueCreator,
         valuePermissions,
         creationDate,
-        requestingUser ,
+        requestingUser,
       ),
     )
 
@@ -259,7 +259,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
           valueCreator,
           valuePermissions,
           creationDate,
-          requestingUser = requestingUser,
+          requestingUser,
         ),
       )
       .as(())
