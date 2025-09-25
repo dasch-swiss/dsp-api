@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.lists.api
 
-import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
 import zio.*
@@ -39,14 +38,14 @@ final case class ListsEndpointsV2(private val base: BaseEndpoints) {
     .in("v2" / "lists" / listIri)
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody.example(Examples.listGetResponseV2.format(FormatOptions.default, Examples.appConfig)))
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Returns a list (a graph with all list nodes).")
 
   val getV2Node = base.withUserEndpoint.get
     .in("v2" / "node" / listIri)
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody.example(Examples.nodeGetResponseV2.format(FormatOptions.default, Examples.appConfig)))
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Returns a list node.")
 
   val endpoints: Seq[AnyEndpoint] = Seq(

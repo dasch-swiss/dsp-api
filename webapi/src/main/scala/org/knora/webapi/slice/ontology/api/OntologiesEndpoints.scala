@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.ontology.api
 
-import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
 import zio.ZLayer
@@ -46,8 +45,8 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .in(allLanguages)
     .in(ApiV2.Inputs.formatOptions)
     .in(extractFromRequest(_.uri))
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description(
       "This is the route used to dereference an actual ontology IRI. " +
         "If the URL path looks like it belongs to a built-in API ontology (which has to contain \"knora-api\"), prefix it with http://api.knora.org to get the ontology IRI. " +
@@ -58,54 +57,54 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / "metadata")
     .in(header[Option[ProjectIri]](ApiV2.Headers.xKnoraAcceptProject))
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Get the metadata of an ontology")
 
   val putOntologiesMetadata = baseEndpoints.securedEndpoint.put
     .in(base / "metadata")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Change the metadata of an ontology")
 
   val getOntologiesMetadataProjects = baseEndpoints.publicEndpoint.get
     .in(base / "metadata" / paths.description("projectIris"))
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getOntologiesAllentities = baseEndpoints.withUserEndpoint.get
     .in(base / "allentities" / ontologyIriPath)
     .in(allLanguages)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Get all entities of an ontology")
 
   val postOntologiesClasses = baseEndpoints.withUserEndpoint.post
     .in(base / "classes")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Create a new class")
 
   val putOntologiesClasses = baseEndpoints.withUserEndpoint.put
     .in(base / "classes")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Change the labels or comments of a class")
 
   val deleteOntologiesClassesComment = baseEndpoints.withUserEndpoint.delete
     .in(base / "classes" / "comment" / resourceClassIriPath)
     .in(lastModificationDate)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Delete the comment of a class definition.")
 
   val postOntologiesCardinalities = baseEndpoints.withUserEndpoint.post
@@ -146,7 +145,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
              |""".stripMargin,
         ),
     )
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description(
       "Add cardinalities to a class. " +
         "For more info check out the <a href=\"https://docs.dasch.swiss/knora-api-v2/ontologies.html#add-cardinalities-to-a-class\">documentation</a>.",
@@ -170,7 +169,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
                                |  "${KnoraApiV2Complex.CannotDoReason}": "The new cardinality is not included in the cardinality of a super-class.",
                                |}
                                |""".stripMargin))
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description(
       "If only a class IRI is provided, this endpoint checks if any cardinality of any of the class properties can " +
         "be replaced. " +
@@ -184,124 +183,124 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / "cardinalities")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val postOntologiesCandeletecardinalities = baseEndpoints.withUserEndpoint.post
     .in(base / "candeletecardinalities")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val patchOntologiesCardinalities = baseEndpoints.withUserEndpoint.patch
     .in(base / "cardinalities")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val putOntologiesGuiorder = baseEndpoints.withUserEndpoint.put
     .in(base / "guiorder")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getOntologiesClassesIris = baseEndpoints.withUserEndpoint.get
     .in(base / "classes" / paths)
     .in(allLanguages)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getOntologiesCandeleteclass = baseEndpoints.withUserEndpoint.get
     .in(base / "candeleteclass" / resourceClassIriPath)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val deleteOntologiesClasses = baseEndpoints.withUserEndpoint.delete
     .in(base / "classes" / resourceClassIriPath)
     .in(lastModificationDate)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val deleteOntologiesComment = baseEndpoints.withUserEndpoint.delete
     .in(base / "comment" / ontologyIriPath)
     .in(lastModificationDate)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val postOntologiesProperties = baseEndpoints.withUserEndpoint.post
     .in(base / "properties")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val putOntologiesProperties = baseEndpoints.withUserEndpoint.put
     .in(base / "properties")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val deletePropertiesComment = baseEndpoints.withUserEndpoint.delete
     .in(base / "properties" / "comment" / propertyIriPath)
     .in(lastModificationDate)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val putOntologiesPropertiesGuielement = baseEndpoints.withUserEndpoint.put
     .in(base / "properties" / "guielement")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getOntologiesProperties = baseEndpoints.withUserEndpoint.get
     .in(base / "properties" / paths)
     .in(allLanguages)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getOntologiesCandeleteproperty = baseEndpoints.withUserEndpoint.get
     .in(base / "candeleteproperty" / propertyIriPath)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val deleteOntologiesProperty = baseEndpoints.securedEndpoint.delete
     .in(base / "properties" / propertyIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .in(lastModificationDate)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val postOntologies = baseEndpoints.securedEndpoint.post
     .in(base)
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getOntologiesCandeleteontology = baseEndpoints.securedEndpoint
     .in(base / "candeleteontology" / ontologyIriPath)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val deleteOntologies = baseEndpoints.securedEndpoint.delete
     .in(base / ontologyIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .in(lastModificationDate)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val endpoints = (
     Seq(

@@ -17,34 +17,39 @@ final class OntologiesServerEndpoints(
 ) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
+    // GET
     endpoints.getOntologiesMetadataProject.zServerLogic(restService.getOntologyMetadataByProjectOption),
     endpoints.getOntologiesMetadataProjects.zServerLogic(restService.getOntologyMetadataByProjects),
     endpoints.getOntologyPathSegments.serverLogic(restService.dereferenceOntologyIri),
-    endpoints.putOntologiesMetadata.serverLogic(restService.changeOntologyMetadata),
     endpoints.getOntologiesAllentities.serverLogic(restService.getOntologyEntities),
-    endpoints.postOntologiesClasses.serverLogic(restService.createClass),
-    endpoints.putOntologiesClasses.serverLogic(restService.changeClassLabelsOrComments),
-    endpoints.deleteOntologiesClassesComment.serverLogic(restService.deleteClassComment),
-    endpoints.postOntologiesCardinalities.serverLogic(restService.addCardinalities),
     endpoints.getOntologiesCanreplacecardinalities.serverLogic(restService.canChangeCardinality),
-    endpoints.putOntologiesCardinalities.serverLogic(restService.replaceCardinalities),
-    endpoints.postOntologiesCandeletecardinalities.serverLogic(restService.canDeleteCardinalitiesFromClass),
-    endpoints.patchOntologiesCardinalities.serverLogic(restService.deleteCardinalitiesFromClass),
-    endpoints.putOntologiesGuiorder.serverLogic(restService.changeGuiOrder),
     endpoints.getOntologiesClassesIris.serverLogic(restService.getClasses),
     endpoints.getOntologiesCandeleteclass.serverLogic(restService.canDeleteClass),
+    endpoints.getOntologiesProperties.serverLogic(restService.getProperties), // CAUSING 405 with postOntologiesProperties
+    endpoints.getOntologiesCandeleteproperty.serverLogic(restService.canDeleteProperty),
+    endpoints.getOntologiesCandeleteontology.serverLogic(restService.canDeleteOntology),
+    // DELETE
+    endpoints.deleteOntologiesClassesComment.serverLogic(restService.deleteClassComment),
     endpoints.deleteOntologiesClasses.serverLogic(restService.deleteClass),
     endpoints.deleteOntologiesComment.serverLogic(restService.deleteOntologyComment),
-    endpoints.postOntologiesProperties.serverLogic(restService.createProperty),
-    endpoints.putOntologiesProperties.serverLogic(restService.changePropertyLabelsOrComments),
     endpoints.deletePropertiesComment.serverLogic(restService.deletePropertyComment),
-    endpoints.putOntologiesPropertiesGuielement.serverLogic(restService.changePropertyGuiElement),
-    endpoints.getOntologiesProperties.serverLogic(restService.getProperties),
-    endpoints.getOntologiesCandeleteproperty.serverLogic(restService.canDeleteProperty),
     endpoints.deleteOntologiesProperty.serverLogic(restService.deleteProperty),
-    endpoints.postOntologies.serverLogic(restService.createOntology),
-    endpoints.getOntologiesCandeleteontology.serverLogic(restService.canDeleteOntology),
     endpoints.deleteOntologies.serverLogic(restService.deleteOntology),
+    // PATCH
+    endpoints.patchOntologiesCardinalities.serverLogic(restService.deleteCardinalitiesFromClass),
+    // POST
+    endpoints.postOntologiesClasses.serverLogic(restService.createClass),
+    endpoints.postOntologiesCardinalities.serverLogic(restService.addCardinalities),
+    endpoints.postOntologiesCandeletecardinalities.serverLogic(restService.canDeleteCardinalitiesFromClass),
+    endpoints.postOntologiesProperties.serverLogic(restService.createProperty),
+    endpoints.postOntologies.serverLogic(restService.createOntology),
+    // PUT
+    endpoints.putOntologiesMetadata.serverLogic(restService.changeOntologyMetadata),
+    endpoints.putOntologiesClasses.serverLogic(restService.changeClassLabelsOrComments),
+    endpoints.putOntologiesCardinalities.serverLogic(restService.replaceCardinalities),
+    endpoints.putOntologiesGuiorder.serverLogic(restService.changeGuiOrder),
+    endpoints.putOntologiesProperties.serverLogic(restService.changePropertyLabelsOrComments),
+    endpoints.putOntologiesPropertiesGuielement.serverLogic(restService.changePropertyGuiElement),
   )
 }
 object OntologiesServerEndpoints {

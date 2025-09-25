@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.resources.api
 
-import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
 import zio.ZLayer
@@ -31,7 +30,7 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .in(version)
     .in(ApiV2.Inputs.formatOptions)
     .out(stringJsonBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description(linkToValuesDocumentation)
 
   val postValues = baseEndpoint.withUserEndpoint.post
@@ -42,7 +41,7 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
       ),
     )
     .out(stringJsonBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description(linkToValuesDocumentation)
 
   val putValues = baseEndpoint.withUserEndpoint.put
@@ -53,28 +52,28 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
       ),
     )
     .out(stringJsonBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description(linkToValuesDocumentation)
 
   val deleteValues = baseEndpoint.withUserEndpoint.post
     .in(base / "delete")
     .in(stringJsonBody.example(ValuesEndpoints.Examples.deleteValue))
     .out(stringJsonBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description(linkToValuesDocumentation)
 
   val postValuesErase = baseEndpoint.securedEndpoint.post
     .in(base / "erase")
     .in(stringJsonBody.example(ValuesEndpoints.Examples.deleteValue))
     .out(stringJsonBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description(s"Erase a Value and all of its old versions from the database completely. $linkToValuesDocumentation")
 
   val postValuesErasehistory = baseEndpoint.securedEndpoint.post
     .in(base / "erasehistory")
     .in(stringJsonBody.example(ValuesEndpoints.Examples.deleteValue))
     .out(stringJsonBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description(
       s"Erase all old versions of a Value from the database completely and keep only the latest version. $linkToValuesDocumentation",
     )
