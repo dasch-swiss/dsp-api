@@ -25,7 +25,9 @@ final class OntologiesServerEndpoints(
     endpoints.getOntologiesCanreplacecardinalities.serverLogic(restService.canChangeCardinality),
     endpoints.getOntologiesClassesIris.serverLogic(restService.getClasses),
     endpoints.getOntologiesCandeleteclass.serverLogic(restService.canDeleteClass),
-    endpoints.getOntologiesProperties.serverLogic(restService.getProperties), // CAUSING 405 with postOntologiesProperties
+    endpoints.getOntologiesProperties.serverLogic(
+      restService.getProperties,
+    ), // CAUSING 405 with postOntologiesProperties
     endpoints.getOntologiesCandeleteproperty.serverLogic(restService.canDeleteProperty),
     endpoints.getOntologiesCandeleteontology.serverLogic(restService.canDeleteOntology),
     // DELETE
