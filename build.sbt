@@ -310,7 +310,6 @@ lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
     Test / fork               := true,
     Test / testForkedParallel := false,
     Test / parallelExecution  := false,
-    Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "pekko"),
     Test / testOptions += Tests.Argument("-oDF"), // full stack traces and durations
     Test / baseDirectory := (ThisBuild / baseDirectory).value,
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,
@@ -342,7 +341,6 @@ lazy val e2e: Project = Project(id = "test-e2e", base = file("modules/test-e2e")
     Test / fork               := true,
     Test / testForkedParallel := false,
     Test / parallelExecution  := false,
-    Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "pekko"),
     Test / testOptions += Tests.Argument("-oDF"),
     Test / baseDirectory := (ThisBuild / baseDirectory).value,
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,

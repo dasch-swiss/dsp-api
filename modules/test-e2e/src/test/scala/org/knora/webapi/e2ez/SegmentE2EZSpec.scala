@@ -16,6 +16,7 @@ import org.knora.webapi.e2ez.KnoraBaseJsonModels.ResourceResponses.AudioSegmentR
 import org.knora.webapi.e2ez.KnoraBaseJsonModels.ResourceResponses.ResourcePreviewResponse
 import org.knora.webapi.e2ez.KnoraBaseJsonModels.ResourceResponses.VideoSegmentResourceResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestOntologyApiClient

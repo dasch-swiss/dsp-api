@@ -16,9 +16,6 @@ object Dependencies {
 
   val ScalaVersion = "3.3.6"
 
-  val PekkoActorVersion = "1.2.0"
-  val PekkoHttpVersion  = "1.2.0"
-
   val MonocleVersion = "3.3.0"
 
   val Rdf4jVersion         = "5.1.5"
@@ -90,12 +87,6 @@ object Dependencies {
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
 
-  // pekko
-  val pekkoHttp     = "org.apache.pekko" %% "pekko-http"      % PekkoHttpVersion
-  val pekkoHttpCors = "org.apache.pekko" %% "pekko-http-cors" % PekkoHttpVersion
-  val pekkoSlf4j    = "org.apache.pekko" %% "pekko-slf4j"     % PekkoActorVersion
-  val pekkoStream   = "org.apache.pekko" %% "pekko-stream"    % PekkoActorVersion
-
   // rdf and graph libraries
   val jenaCore      = "org.apache.jena"   % "jena-core"           % JenaVersion
   val jenaText      = "org.apache.jena"   % "jena-text"           % JenaVersion
@@ -149,7 +140,6 @@ object Dependencies {
   val tapirVersion = "1.11.44"
 
   val tapir = Seq(
-    "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
@@ -179,10 +169,6 @@ object Dependencies {
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
   val webapiDependencies = monocle ++ refined ++ Seq(
-    pekkoHttp,
-    pekkoHttpCors,
-    pekkoSlf4j,
-    pekkoStream,
     bouncyCastle,
     commonsLang3,
     commonsValidator,

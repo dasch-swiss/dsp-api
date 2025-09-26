@@ -39,7 +39,6 @@ import org.knora.webapi.util.MutableTestIri
  * Tests interaction between Knora and Sipi using Knora API v2.
  */
 object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val stillImageResourceIri  = new MutableTestIri
   private val stillImageFileValueIri = new MutableTestIri

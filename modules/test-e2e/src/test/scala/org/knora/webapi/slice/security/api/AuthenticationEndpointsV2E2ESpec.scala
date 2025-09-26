@@ -12,6 +12,7 @@ import zio.json.JsonDecoder
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
