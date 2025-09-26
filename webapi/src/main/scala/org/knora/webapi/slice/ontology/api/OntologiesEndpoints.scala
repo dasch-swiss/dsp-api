@@ -36,6 +36,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val ontologyIriPath      = path[IriDto].name("ontologyIri")
   private val propertyIriPath      = path[IriDto].name("propertyIri")
   private val resourceClassIriPath = path[IriDto].name("resourceClassIri")
+  private val classIriPath         = path[IriDto].name("classIri")
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
@@ -169,7 +170,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
 
   val getOntologiesClassesIris = baseEndpoints.withUserEndpoint.get
-    .in(base / "classes" / paths)
+    .in(base / "classes" / classIriPath)
     .in(allLanguages)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
@@ -224,7 +225,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
 
   val getOntologiesProperties = baseEndpoints.withUserEndpoint.get
-    .in(base / "properties" / paths)
+    .in(base / "properties" / propertyIriPath)
     .in(allLanguages)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)

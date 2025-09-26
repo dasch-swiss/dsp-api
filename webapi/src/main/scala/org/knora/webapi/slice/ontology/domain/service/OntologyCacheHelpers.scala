@@ -25,12 +25,8 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo: OntologyRepo) {
 
-  def getClasses(
-    classIris: Seq[ResourceClassIri],
-    allLanguages: Boolean,
-    requestingUser: User,
-  ): Task[ReadOntologyV2] =
-    getClassDefinitionsFromOntologyV2(classIris.map(_.smartIri).toSet, allLanguages, requestingUser)
+  def getClassAsReadOntologyV2(classIri: ResourceClassIri, allLanguages: Boolean, requestingUser: User): Task[ReadOntologyV2] =
+    getClassDefinitionsFromOntologyV2(Set(classIri.smartIri), allLanguages, requestingUser)
 
   /**
    * Requests information about OWL classes in a single ontology.
