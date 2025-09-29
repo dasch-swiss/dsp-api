@@ -21,6 +21,7 @@ import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestOntologyApiClient
 
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 object SegmentE2EZSpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata

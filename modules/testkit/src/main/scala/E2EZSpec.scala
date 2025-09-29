@@ -11,22 +11,18 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import scala.reflect.ClassTag
-
 import org.knora.webapi.core.Db
 import org.knora.webapi.core.LayersTest
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.util.Logger
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
-  // test data
-  val rootUser: User = SharedTestDataADM.rootUser
 
-  private val testLayers = org.knora.webapi.util.Logger.testSafe() >>> LayersTest.layer
+  private val testLayers = Logger.text >>> LayersTest.layer
 
   def rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
 
