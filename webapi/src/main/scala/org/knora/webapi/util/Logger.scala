@@ -53,7 +53,5 @@ object Logger {
 
   def json(): ULayer[Unit] = Runtime.removeDefaultLoggers >>> jsonLogger >+> Slf4jBridge.initialize
 
-  def text(): ULayer[Unit] = Runtime.removeDefaultLoggers >>> textLogger >+> Slf4jBridge.initialize
-
-  def testSafe(): ULayer[Unit] = Runtime.removeDefaultLoggers >>> textLogger
+  val text: ULayer[Unit] = Runtime.removeDefaultLoggers >>> textLogger >+> Slf4jBridge.initialize
 }
