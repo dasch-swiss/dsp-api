@@ -23,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
+
 object CardinalitiesV2E2ESpec extends E2EZSpec {
 
   private val ontologyName = "inherit"
