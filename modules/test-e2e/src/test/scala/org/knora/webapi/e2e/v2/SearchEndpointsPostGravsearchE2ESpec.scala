@@ -1621,5 +1621,39 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResult(query, "ProjectsWithOptionalPersonOrBiblio.jsonld")
     },
+    suiteAll("Queries for link objects") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |CONSTRUCT {
+          |     ?linkObj knora-api:isMainResource true .
+          |} WHERE {
+          |     ?linkObj a knora-api:Resource .
+          |     ?linkObj a knora-api:LinkObj .
+          |}
+          |""".stripMargin
+
+      test("do a Gravsearch query for link objects without project restriction") {
+        verifyQueryResultWithUser(query, "LinkObjectsUnrestricted.jsonld", anythingUser1)
+      }
+
+      test("do a Gravsearch query for link objects restricted to the anything project") {
+        verifyQueryResultWithUser(
+          query,
+          "LinkObjectsLimitedToAnythingProject.jsonld",
+          anythingUser1,
+          Some("http://rdfh.ch/projects/0001"),
+        )
+      }
+
+      test("do a Gravsearch query for link objects restricted to the incunabula project") {
+        verifyQueryResultWithUser(
+          query,
+          "LinkObjectsLimitedToIncunabulaProject.jsonld",
+          anythingUser1,
+          Some("http://rdfh.ch/projects/0803"),
+        )
+      }
+    },
   )
 }
