@@ -6,37 +6,37 @@
 package org.knora.webapi
 
 import zio.*
-import zio.http.*
 import zio.test.*
 import zio.test.Assertion.*
 
 import scala.reflect.ClassTag
+
 import org.knora.webapi.core.Db
 import org.knora.webapi.core.LayersTest
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.util.Logger
 
-abstract class E2EZSpec extends ZIOSpecDefault {
+abstract class E2EZSpec extends ZIOSpec[LayersTest.Environment] {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private val testLayers = Logger.text >>> LayersTest.layer
+  override val bootstrap: ULayer[LayersTest.Environment] = Logger.text >>> LayersTest.layer
 
   def rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
 
-  type env = LayersTest.Environment with Client with Scope
+  type env = LayersTest.Environment with Scope
 
   private def prepare = Db.initWithTestData(rdfDataObjects)
 
   def e2eSpec: Spec[env, Any]
 
-  final override def spec = (
-    e2eSpec
+  final override def spec =
+    e2eSpec.provideSomeAuto(Scope.default)
       @@ TestAspect.beforeAll(prepare)
       @@ TestAspect.sequential
-  ).provideShared(testLayers, Client.default, Scope.default)
-    @@ TestAspect.withLiveEnvironment
+      @@ TestAspect.withLiveEnvironment
+
 }
 
 object E2EZSpec {

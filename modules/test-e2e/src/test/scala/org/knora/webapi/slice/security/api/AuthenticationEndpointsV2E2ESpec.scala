@@ -12,6 +12,7 @@ import zio.json.JsonDecoder
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
@@ -20,7 +21,6 @@ import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutRespo
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 
 object AuthenticationEndpointsV2E2ESpec extends E2EZSpec {
 

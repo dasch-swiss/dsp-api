@@ -17,11 +17,10 @@ import org.knora.webapi.e2ez.KnoraBaseJsonModels.ResourceResponses.ResourcePrevi
 import org.knora.webapi.e2ez.KnoraBaseJsonModels.ResourceResponses.VideoSegmentResourceResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingRdfTestdata
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestOntologyApiClient
-
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 object SegmentE2EZSpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata
