@@ -46,7 +46,7 @@ object SearchEndpointE2ESpecHelper {
     ),
   )
 
-  def loadFile(filename: String): ZIO[TestDataFileUtil, Nothing, String] =
+  def loadFile(filename: String): ZIO[TestDataFileUtil, Throwable, String] =
     TestDataFileUtil.readTestData("searchR2RV2", filename)
 
   def verifyQueryResult(
@@ -74,6 +74,6 @@ object SearchEndpointE2ESpecHelper {
     for {
       resultJsonLd <- response.assert200
       actual       <- ZIO.attempt(RdfModel.fromJsonLD(resultJsonLd))
-      expected     <- loadFile(expectedFile).mapAttempt(RdfModel.fromJsonLD)
+      expected     <- loadFile(expectedFile).map(RdfModel.fromJsonLD)
     } yield assertTrue(actual == expected)
 }

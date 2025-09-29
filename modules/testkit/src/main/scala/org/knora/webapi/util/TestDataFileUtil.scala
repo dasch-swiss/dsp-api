@@ -36,8 +36,8 @@ final case class TestDataFileUtil(private val sipi: Sipi) {
 
 object TestDataFileUtil {
 
-  def readTestData(folder: String, filename: String): ZIO[TestDataFileUtil, Nothing, String] =
-    ZIO.serviceWith[TestDataFileUtil](_.readTestData(folder, filename))
+  def readTestData(folder: String, filename: String): ZIO[TestDataFileUtil, Throwable, String] =
+    ZIO.serviceWithZIO[TestDataFileUtil](fileUtil => ZIO.attempt(fileUtil.readTestData(folder, filename)))
 
   def writeTestData(folder: String, filename: String, content: String): ZIO[TestDataFileUtil, Nothing, Path] =
     ZIO.serviceWith[TestDataFileUtil](_.writeTestData(folder, filename, content))
