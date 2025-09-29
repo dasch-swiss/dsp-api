@@ -49,26 +49,53 @@ object SearchEndpointE2ESpecHelper {
   def loadFile(filename: String): ZIO[TestDataFileUtil, Throwable, String] =
     TestDataFileUtil.readTestData("searchR2RV2", filename)
 
-  def verifyQueryResult(
-    query: String,
-    expectedFile: String,
-    f: RequestUpdate[String] = identity,
-  ): ZIO[TestDataFileUtil & TestApiClient, Throwable, TestResult] =
-    postGravsearchQuery(query, f = f).flatMap(compare(_, expectedFile))
+  private def fileExists(filename: String): ZIO[TestDataFileUtil, Throwable, Boolean] =
+    TestDataFileUtil.readTestData("searchR2RV2", filename).as(true).orElseSucceed(false)
 
   def verifyQueryResult(
     query: String,
     expectedFile: String,
-    user: User,
+    f: RequestUpdate[String] = identity,
+    limitToProject: Option[String] = None,
   ): ZIO[TestDataFileUtil & TestApiClient, Throwable, TestResult] =
-    postGravsearchQuery(query, Some(user)).flatMap(compare(_, expectedFile))
+    postGravsearchQuery(query, f = f).flatMap(compare(_, expectedFile))
+
+  def verifyQueryResultWithUser(
+    query: String,
+    expectedFile: String,
+    user: User,
+    limitToProject: Option[String] = None,
+  ): ZIO[TestDataFileUtil & TestApiClient, Throwable, TestResult] =
+    postGravsearchQuery(query, Some(user), limitToProject = limitToProject).flatMap(compare(_, expectedFile))
+
+  // use this variant to create the expected result file if it doesn't exist yet
+  def verifyQueryResultOrWrite(
+    query: String,
+    expectedFile: String,
+    user: User,
+    limitToProject: Option[String] = None,
+  ): ZIO[TestDataFileUtil & TestApiClient, Throwable, TestResult] =
+    postGravsearchQuery(query, Some(user), limitToProject = limitToProject).flatMap(compareOrWrite(_, expectedFile))
 
   def postGravsearchQuery(
     query: String,
     user: Option[User] = None,
     f: RequestUpdate[String] = identity,
+    limitToProject: Option[String] = None,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
-    TestApiClient.postSparql(uri"/v2/searchextended", query, user, f)
+    TestApiClient.postSparql(uri"/v2/searchextended".addParam("limitToProject", limitToProject), query, user, f)
+
+  private def compareOrWrite(response: Response[Either[String, String]], expectedFile: String) =
+    for {
+      resultJsonLd <- response.assert200
+      fileExists   <- fileExists(expectedFile)
+      result <- if (fileExists) compare(response, expectedFile)
+                else
+                  TestDataFileUtil
+                    .writeTestData("searchR2RV2", expectedFile, resultJsonLd)
+                    .as(assertTrue(false).label(s"Expected result file $expectedFile did not exist, created it."))
+
+    } yield result
 
   private def compare(response: Response[Either[String, String]], expectedFile: String) =
     for {
