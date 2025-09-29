@@ -20,6 +20,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
@@ -59,7 +60,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestAdminApiClient
-
 object ProjectEraseIT extends E2EZSpec {
 
   private val users    = ZIO.serviceWithZIO[KnoraUserService]

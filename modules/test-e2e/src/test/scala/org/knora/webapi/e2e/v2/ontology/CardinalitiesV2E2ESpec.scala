@@ -16,13 +16,13 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
-
 object CardinalitiesV2E2ESpec extends E2EZSpec {
 
   private val ontologyName = "inherit"
