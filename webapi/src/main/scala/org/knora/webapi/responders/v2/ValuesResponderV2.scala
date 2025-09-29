@@ -352,7 +352,7 @@ final case class ValuesResponderV2(
    * @return an [[UnverifiedValueV2]].
    */
   private def createValueV2AfterChecks(
-    dataNamedGraph: IRI,
+    dataNamedGraph: InternalIri,
     resourceInfo: ReadResourceV2,
     propertyIri: SmartIri,
     value: ValueContentV2,
@@ -365,7 +365,7 @@ final case class ValuesResponderV2(
     value match {
       case linkValueContent: LinkValueContentV2 =>
         createLinkValueV2AfterChecks(
-          dataNamedGraph = dataNamedGraph,
+          dataNamedGraph = dataNamedGraph.value,
           resourceInfo = resourceInfo,
           linkPropertyIri = propertyIri,
           linkValueContent = linkValueContent,
@@ -393,6 +393,7 @@ final case class ValuesResponderV2(
   /**
    * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
    *
+   * @param dataNamedGraph         the named graph in which the value is to be created.
    * @param resourceInfo           information about the resource in which to create the value.
    * @param propertyIri            the property that should point to the value.
    * @param value                  an [[ValueContentV2]] describing the value.
@@ -404,7 +405,7 @@ final case class ValuesResponderV2(
    * @return an [[UnverifiedValueV2]].
    */
   private def createOrdinaryValueV2AfterChecks(
-    dataNamedGraph: IRI,
+    dataNamedGraph: InternalIri,
     resourceInfo: ReadResourceV2,
     propertyIri: SmartIri,
     value: ValueContentV2,
@@ -453,22 +454,23 @@ final case class ValuesResponderV2(
           case _ => ZIO.succeed(Vector.empty[SparqlTemplateLinkUpdate])
         }
 
-      // Generate a SPARQL update string.
-      sparqlUpdate = sparql.v2.txt.createValue(
-                       dataNamedGraph = dataNamedGraph,
-                       resourceIri = resourceInfo.resourceIri,
-                       propertyIri = propertyIri,
-                       newValueIri = newValueIri,
-                       newValueUUID = newValueUUID,
-                       value = value,
-                       linkUpdates = standoffLinkUpdates,
-                       valueCreator = valueCreator,
-                       valuePermissions = valuePermissions,
-                       creationDate = creationDate,
-                       stringFormatter = stringFormatter,
-                     )
+      resourceIriInternal  <- ZIO.fromEither(InternalIri.from(resourceInfo.resourceIri))
+      newValueIriInternal  <- ZIO.fromEither(InternalIri.from(newValueIri))
+      valueCreatorInternal <- ZIO.fromEither(InternalIri.from(valueCreator))
 
-      _ <- triplestoreService.query(Update(sparqlUpdate))
+      // Use repository method which handles dual validation
+      _ <- valueRepo.createValue(
+             dataNamedGraph = dataNamedGraph,
+             resourceIri = resourceIriInternal,
+             propertyIri = propertyIri,
+             newValueIri = newValueIriInternal,
+             newValueUUID = newValueUUID,
+             value = value,
+             linkUpdates = standoffLinkUpdates,
+             valueCreator = valueCreatorInternal,
+             valuePermissions = valuePermissions,
+             creationDate = creationDate,
+           )
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
       newValueUUID = newValueUUID,
