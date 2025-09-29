@@ -17,12 +17,11 @@ import zio.test.*
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
 object CORSSupportE2ESpec extends E2EZSpec {
 
-  override val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-  )
+  override val rdfDataObjects: List[RdfDataObject] = anythingRdfOntologyAndData
 
   private val corsClient = ZIO.serviceWithZIO[CorsClient]
 
