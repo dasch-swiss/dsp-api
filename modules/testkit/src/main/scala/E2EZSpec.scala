@@ -13,12 +13,11 @@ import zio.test.Assertion.*
 import scala.reflect.ClassTag
 import org.knora.webapi.core.Db
 import org.knora.webapi.core.LayersTest
-import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.util.Logger
 
-abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
+abstract class E2EZSpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
