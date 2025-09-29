@@ -83,7 +83,7 @@ object CreateValueQueryBuilder {
     resourceIri: InternalIri,
     propertyIri: SmartIri,
     newValueIri: InternalIri,
-    newValueUUIDOrCurrentValueIri: Either[UUID, InternalIri],
+    newUuidOrCurrentIri: Either[UUID, InternalIri],
     value: ValueContentV2,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     valueCreator: InternalIri,
@@ -99,10 +99,10 @@ object CreateValueQueryBuilder {
     val property = iri(propertyIri.toString)
     val valueIri = iri(newValueIri.value)
 
-    val currentValue     = newValueUUIDOrCurrentValueIri.toOption
+    val currentValue     = newUuidOrCurrentIri.toOption
     val currentVarOpt    = currentValue.map(_ => currentVar)
     val currentValueUUID = variable("currentValueUuid")
-    val newValueUUID     = newValueUUIDOrCurrentValueIri.map(_ => currentValueUUID)
+    val newValueUUID     = newUuidOrCurrentIri.map(_ => currentValueUUID)
 
     val resourceLastModDate = variable("resourceLastModificationDate")
     val nextOrder           = variable("nextOrder")

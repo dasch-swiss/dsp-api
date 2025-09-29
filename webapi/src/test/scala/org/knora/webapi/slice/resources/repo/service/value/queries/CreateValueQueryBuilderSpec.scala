@@ -34,6 +34,8 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.common.domain.InternalIri
 
+import org.knora.webapi.GoldenTest
+
 object CreateValueQueryBuilderTestSupport {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
@@ -74,6 +76,7 @@ object CreateValueQueryBuilderTestSupport {
     def createBuilderQuery(
       value: ValueContentV2,
       linkUpdates: Seq[SparqlTemplateLinkUpdate] = Seq.empty,
+      newUuidOrCurrentIri: Either[UUID, InternalIri] = Left(testValueUUID),
     ): String =
       CreateValueQueryBuilder
         .createValueQuery(
@@ -81,7 +84,7 @@ object CreateValueQueryBuilderTestSupport {
           resourceIri = testResourceIri,
           propertyIri = testPropertyIri,
           newValueIri = testValueIri,
-          newValueUUIDOrCurrentValueIri = Left(testValueUUID),
+          newUuidOrCurrentIri = newUuidOrCurrentIri,
           value = value,
           linkUpdates = linkUpdates,
           valueCreator = testUserIri,
@@ -257,7 +260,9 @@ object CreateValueQueryBuilderTestSupport {
       )
     }
 
-    def createSparqlTemplateLinkUpdate(): SparqlTemplateLinkUpdate =
+    def createSparqlTemplateLinkUpdate(
+      newReferenceCount: Int = 1,
+    ): SparqlTemplateLinkUpdate =
       SparqlTemplateLinkUpdate(
         linkPropertyIri = sf.toSmartIri("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
         directLinkExists = false,
@@ -268,7 +273,7 @@ object CreateValueQueryBuilderTestSupport {
         newLinkValueIri = "http://0.0.0.0:3333/0001/thing/linkValue",
         linkTargetIri = "http://0.0.0.0:3333/0001/thing/linkedResource",
         currentReferenceCount = 0,
-        newReferenceCount = 1,
+        newReferenceCount = newReferenceCount,
         newLinkValueCreator = testUserIri.value,
         newLinkValuePermissions = testPermissions,
       )
@@ -630,14 +635,14 @@ object CreateValueQueryBuilderTestSupport {
       assertEqual          = assertTrue(normalizedBuilder == normalizedTwirl)
     } yield assertEqual
 
-  private def replaceUuidPatterns(sparqlQuery: String): String = {
-    val uuidPattern = """knora-base:valueHasUUID\s+"[^"]+"\s*\.""".r
-    uuidPattern.replaceAllIn(sparqlQuery, """knora-base:valueHasUUID "***" .""")
+  def replaceUuidPatterns(sparqlQuery: String): String = {
+    val uuidPattern = """knora-base:valueHasUUID\s+"[^"]+"\s*[.;]""".r
+    uuidPattern.replaceAllIn(sparqlQuery, """knora-base:valueHasUUID "0000000000000000000000" .""")
   }
-
 }
 
-object CreateValueQueryBuilderSpec extends ZIOSpecDefault {
+object CreateValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
+  val rewriteAll: Boolean = false
 
   import CreateValueQueryBuilderTestSupport.*
 
@@ -1157,6 +1162,48 @@ object CreateValueQueryBuilderSpec extends ZIOSpecDefault {
           assertOnlyOneOperation = assertTrue(parsedQuery.getOperations.size == 1)
           assertNoMaliciousOps   = assertTrue(validationResult.isSuccess)
         } yield assertOnlyOneOperation && assertNoMaliciousOps
+      },
+    ),
+    suite("With currentValue")(
+      test("Basic case") {
+        for {
+          testValue <- ZIO.succeed(TestDataFactory.createTextValue())
+          builderQuery <- ZIO.attempt(
+                            TestDataFactory.createBuilderQuery(
+                              testValue,
+                              newUuidOrCurrentIri =
+                                Right(InternalIri.from("http://rdfh.ch/0803/861b5644b302").toOption.get),
+                            ),
+                          )
+        } yield assertGolden(builderQuery, "currentValue")
+      },
+      test("With link updates") {
+        for {
+          testValue   <- ZIO.succeed(TestDataFactory.createTextValue())
+          linkUpdates <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate()))
+          builderQuery <- ZIO.attempt(
+                            TestDataFactory.createBuilderQuery(
+                              testValue,
+                              linkUpdates = linkUpdates,
+                              newUuidOrCurrentIri =
+                                Right(InternalIri.from("http://rdfh.ch/0803/861b5644b302").toOption.get),
+                            ),
+                          )
+        } yield assertGolden(replaceUuidPatterns(builderQuery), "currentValue__withLinkUpdates")
+      },
+      test("With a deleted link update") {
+        for {
+          testValue   <- ZIO.succeed(TestDataFactory.createTextValue())
+          linkUpdates <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate(newReferenceCount = 0)))
+          builderQuery <- ZIO.attempt(
+                            TestDataFactory.createBuilderQuery(
+                              testValue,
+                              linkUpdates = linkUpdates,
+                              newUuidOrCurrentIri =
+                                Right(InternalIri.from("http://rdfh.ch/0803/861b5644b302").toOption.get),
+                            ),
+                          )
+        } yield assertGolden(replaceUuidPatterns(builderQuery), "currentValue__withLinkUpdatesDeleted")
       },
     ),
   )
