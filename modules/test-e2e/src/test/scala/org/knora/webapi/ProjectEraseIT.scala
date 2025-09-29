@@ -60,6 +60,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestAdminApiClient
+
 object ProjectEraseIT extends E2EZSpec {
 
   private val users    = ZIO.serviceWithZIO[KnoraUserService]
