@@ -483,6 +483,8 @@ object CreateValueQueryBuilder {
         Some(resource.has(iri(linkUpdate.linkPropertyIri.toString), iri(linkUpdate.linkTargetIri)))
       } else None
 
+      val isDeleted = linkUpdate.newReferenceCount == 0
+
       val linkValue = iri(linkUpdate.newLinkValueIri)
         .isA(KB.linkValue)
         .andHas(RDF.SUBJECT, resource)
@@ -490,6 +492,7 @@ object CreateValueQueryBuilder {
         .andHas(RDF.OBJECT, iri(linkUpdate.linkTargetIri))
         .andHas(KB.valueHasString, literalOf(linkUpdate.linkTargetIri))
         .andHas(KB.valueHasRefCount, literalOf(linkUpdate.newReferenceCount))
+        .andHas(KB.isDeleted, literalOf(isDeleted))
         .andHas(KB.valueCreationDate, literalOfType(creationDate.toString, XSD.DATETIME))
         .andHas(KB.attachedToUser, iri(linkUpdate.newLinkValueCreator))
         .andHas(KB.hasPermissions, literalOf(linkUpdate.newLinkValuePermissions))
@@ -506,13 +509,12 @@ object CreateValueQueryBuilder {
           }
         }
         .pipe { linkValue =>
-          if (linkUpdate.newReferenceCount == 0) {
+          if (isDeleted) {
             linkValue
-              .andHas(KB.isDeleted, literalOf(true))
               .andHas(KB.deleteDate, literalOfType(creationDate.toString, XSD.DATETIME))
               .andHas(KB.deletedBy, iri(requestingUser.value))
           } else {
-            linkValue.andHas(KB.isDeleted, literalOf(false))
+            linkValue
           }
         }
 
