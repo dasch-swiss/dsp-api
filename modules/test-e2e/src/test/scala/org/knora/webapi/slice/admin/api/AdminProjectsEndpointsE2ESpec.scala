@@ -28,12 +28,7 @@ import org.knora.webapi.util.MutableTestIri
 
 object AdminProjectsEndpointsE2ESpec extends E2EZSpec {
 
-  override val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(
-      path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything",
-    ),
-  )
+  override val rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata
 
   private val customProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/wahxssy1TDqPuSk6ee8EdQ")
   private val newProjectIri    = new MutableTestIri

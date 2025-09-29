@@ -23,7 +23,7 @@ import org.knora.webapi.util.FileUtil.*
 
 object ListsEndpointsV2E2ESpec extends E2EZSpec {
 
-  override val rdfDataObjects: List[RdfDataObject] = List(incunabulaRdfData, imagesRdfData, anythingRdfData)
+  override val rdfDataObjects: List[RdfDataObject] = incunabulaRdfTestdata ++ anythingRdfTestdata :+ imagesRdfData
 
   // FIXME: Move to correct package. These are tests for /v2/lists
   val e2eSpec = suite("The lists v2 endpoint")(

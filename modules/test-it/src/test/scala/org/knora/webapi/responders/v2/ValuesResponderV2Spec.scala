@@ -59,22 +59,12 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
   private def asInstanceOf[A](value: Any)(implicit tag: ClassTag[A]): IO[AssertionException, A] =
     ZIO.succeed(value).collect(AssertionException(s"Expected value to be of type $tag")) { case v: A => v }
 
-  override val rdfDataObjects = List(
-    RdfDataObject(
-      path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest",
-    ),
-    RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
+  override val rdfDataObjects = anythingRdfTestdata ++ freetestRdfTestdata ++ List(
     RdfDataObject(
       path = "test_data/generated_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
       name = "http://www.knora.org/data/0803/incunabula",
     ),
     RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(
-      path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything",
-    ),
   )
 
   private val zeitgloeckleinCommentWithoutStandoffIri    = new MutableTestIri

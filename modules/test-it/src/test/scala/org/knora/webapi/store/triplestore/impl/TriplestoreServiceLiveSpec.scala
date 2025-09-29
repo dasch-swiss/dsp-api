@@ -14,6 +14,7 @@ import zio.test.*
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingRdfTestdata
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -22,9 +23,7 @@ object TriplestoreServiceLiveSpec extends E2EZSpec { self =>
 
   private val triplestore = ZIO.serviceWithZIO[TriplestoreService]
 
-  override val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject("test_data/project_data/anything-data.ttl", "http://www.knora.org/data/0001/anything"),
-  )
+  override val rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata
 
   private val countTriplesQuery: String =
     """

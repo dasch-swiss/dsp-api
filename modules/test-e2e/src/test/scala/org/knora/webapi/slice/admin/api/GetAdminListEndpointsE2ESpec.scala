@@ -19,16 +19,11 @@ import org.knora.webapi.testservices.TestApiClient
 
 object GetAdminListEndpointsE2ESpec extends E2EZSpec {
 
-  override val rdfDataObjects = List(
-    RdfDataObject(
-      path = "test_data/project_data/images-demo-data.ttl",
-      name = "http://www.knora.org/data/00FF/images",
-    ),
-    RdfDataObject(
-      path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything",
-    ),
+  override val rdfDataObjects = anythingRdfTestdata :+ RdfDataObject(
+    path = "test_data/project_data/images-demo-data.ttl",
+    name = "http://www.knora.org/data/00FF/images",
   )
+
   val treeListIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")
 
   override val e2eSpec = suite("The admin lists route (/admin/lists)")(

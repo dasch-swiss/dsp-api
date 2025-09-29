@@ -18,6 +18,7 @@ import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.test
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.testservices.RequestsUpdates.addAcceptHeaderRdfXml
@@ -31,17 +32,7 @@ import org.knora.webapi.util.TestDataFileUtil
 
 object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
 
-  override val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(
-      path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula",
-    ),
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(
-      path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything",
-    ),
-  )
+  override val rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata ++ incunabulaRdfTestdata
 
   private val instanceChecker: InstanceChecker = InstanceChecker.make
 

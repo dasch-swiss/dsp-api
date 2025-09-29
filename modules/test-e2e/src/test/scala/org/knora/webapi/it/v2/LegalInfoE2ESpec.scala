@@ -52,9 +52,7 @@ import org.knora.webapi.testservices.TestResourcesApiClient
 
 object LegalInfoE2ESpec extends E2EZSpec {
 
-  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
-
-  override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
+  override def rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata
 
   private val projectService = ZIO.serviceWithZIO[KnoraProjectService]
 

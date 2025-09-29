@@ -21,7 +21,7 @@ import org.knora.webapi.testservices.TestApiClient
 object ManagementEndpointsE2ESpec extends E2EZSpec {
 
   // load just a single small set even though it is not used.
-  override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
+  override def rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata
 
   private val getVersion = TestApiClient.getJson[VersionResponse](uri"/version")
   private val getHealth  = TestApiClient.getJson[HealthResponse](uri"/health")

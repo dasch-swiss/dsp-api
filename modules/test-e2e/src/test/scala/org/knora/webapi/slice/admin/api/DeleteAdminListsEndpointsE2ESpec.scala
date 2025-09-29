@@ -20,12 +20,7 @@ import org.knora.webapi.testservices.TestApiClient
 
 object DeleteAdminListsEndpointsE2ESpec extends E2EZSpec {
 
-  override val rdfDataObjects = List(
-    RdfDataObject(
-      path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything",
-    ),
-  )
+  override val rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata
 
   override val e2eSpec = suite("The admin lists route (/admin/lists)")(
     suite("deleting list items")(

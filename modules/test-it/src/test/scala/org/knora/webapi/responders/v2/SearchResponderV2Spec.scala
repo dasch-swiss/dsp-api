@@ -22,21 +22,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
 object SearchResponderV2Spec extends E2EZSpec {
 
-  override val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(
-      path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula",
-    ),
-    RdfDataObject(
-      path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything",
-    ),
-    RdfDataObject(
-      path = "test_data/project_ontologies/books-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/books",
-    ),
-    RdfDataObject(path = "test_data/project_data/books-data.ttl", name = "http://www.knora.org/data/0001/books"),
-  )
+  override val rdfDataObjects: List[RdfDataObject] = incunabulaRdfTestdata ++ anythingRdfTestdata ++ booksRdfTestdata
 
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
   private val bookClassIri                  = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri.toComplexSchema

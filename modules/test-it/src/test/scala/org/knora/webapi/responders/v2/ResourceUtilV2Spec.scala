@@ -16,7 +16,7 @@ object ResourceUtilV2Spec extends E2EZSpec {
 
   private val resourceUtil = ZIO.serviceWithZIO[ResourceUtilV2]
 
-  override val rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
+  override val rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata
 
   override val e2eSpec = suite("ResourceUtil")(
     suite("checkListNodeExistsAndIsRootNode should")(

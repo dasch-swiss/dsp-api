@@ -58,29 +58,10 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
   private val ontologyCache      = ZIO.serviceWithZIO[OntologyCache]
   private val triplestoreService = ZIO.serviceWithZIO[TriplestoreService]
 
-  override val rdfDataObjects: List[RdfDataObject] =
-    List(
-      RdfDataObject(
-        path = "test_data/project_ontologies/example-box.ttl",
-        name = "http://www.knora.org/ontology/shared/example-box",
-      ),
-      RdfDataObject(
-        path = "test_data/project_data/anything-data.ttl",
-        name = "http://www.knora.org/data/0001/anything",
-      ),
-      RdfDataObject(
-        path = "test_data/project_ontologies/anything-onto.ttl",
-        name = "http://www.knora.org/ontology/0001/anything",
-      ),
-      RdfDataObject(
-        path = "test_data/project_ontologies/freetest-onto.ttl",
-        name = "http://www.knora.org/ontology/0001/freetest",
-      ),
-      RdfDataObject(
-        path = "test_data/project_data/freetest-data.ttl",
-        name = "http://www.knora.org/data/0001/freetest",
-      ),
-    )
+  override val rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata ++ freetestRdfTestdata :+ RdfDataObject(
+    path = "test_data/project_ontologies/example-box.ttl",
+    name = "http://www.knora.org/ontology/shared/example-box",
+  )
 
   private val fooIri                   = new MutableTestIri
   private val barIri                   = new MutableTestIri

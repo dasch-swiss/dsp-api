@@ -14,18 +14,14 @@ import zio.test.*
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 
 object SearchE2EZSpec extends E2EZSpec {
 
-  override def rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(
-      path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything",
-    ),
-  )
+  override def rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata
 
   private val searchIncomingLinksSuite = suiteAll("Search Incoming Links endpoint") {
     val resourceIri = "http://rdfh.ch/0001/a-thing-picture"

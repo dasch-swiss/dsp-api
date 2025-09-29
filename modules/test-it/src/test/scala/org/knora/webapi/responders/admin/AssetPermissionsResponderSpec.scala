@@ -20,7 +20,7 @@ object AssetPermissionsResponderSpec extends E2EZSpec {
   private val assetPermissionResponder = ZIO.serviceWithZIO[AssetPermissionsResponder]
   private val asset                    = SparqlEncodedString.unsafeFrom("incunabula_0000003328.jp2")
 
-  override val rdfDataObjects: List[RdfDataObject] = List(incunabulaRdfData)
+  override val rdfDataObjects: List[RdfDataObject] = incunabulaRdfTestdata
 
   override val e2eSpec = suite("The AssetPermissionsResponder")(
     test("return details of a full quality file value") {

@@ -32,16 +32,11 @@ import org.knora.webapi.util.MutableTestIri
 
 object ListsResponderSpec extends E2EZSpec {
 
-  override val rdfDataObjects = List(
-    RdfDataObject(
-      path = "test_data/project_data/images-demo-data.ttl",
-      name = "http://www.knora.org/data/00FF/images",
-    ),
-    RdfDataObject(
-      path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything",
-    ),
+  override val rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata :+ RdfDataObject(
+    path = "test_data/project_data/images-demo-data.ttl",
+    name = "http://www.knora.org/data/00FF/images",
   )
+
   private val listsResponder = ZIO.serviceWithZIO[ListsResponder]
 
   private val treeListInfo: ListRootNodeInfoADM      = SharedListsTestDataADM.treeListInfo

@@ -16,7 +16,7 @@ object CardinalityHandlerE2ESpec extends E2EZSpec {
 
   private val cardinalityHandler = ZIO.serviceWithZIO[CardinalityHandler]
 
-  override val rdfDataObjects: List[RdfDataObject] = freetestRdfOntologyAndData ++ anythingRdfOntologyAndData
+  override val rdfDataObjects: List[RdfDataObject] = freetestRdfTestdata ++ anythingRdfTestdata
 
   override val e2eSpec: Spec[CardinalityHandler, Any] = suite("CardinalityHandler.isPropertyUsedInResources()")(
     test("detect that property is in use, when used in a resource") {

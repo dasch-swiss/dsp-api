@@ -65,9 +65,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
   private var integerValueUUID = UUID.randomUUID
   private var linkValueUUID    = UUID.randomUUID
 
-  override val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-  )
+  override val rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata
 
   object AThing {
     val iri: IRI = "http://rdfh.ch/0001/a-thing"

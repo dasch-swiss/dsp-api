@@ -42,7 +42,7 @@ object PermissionsResponderSpec extends E2EZSpec {
   private val permissionRestService = ZIO.serviceWithZIO[PermissionRestService]
 
   override val rdfDataObjects: List[RdfDataObject] =
-    anythingRdfOntologyAndData ++ incunabulaRdfOntologyAndData :+
+    anythingRdfTestdata ++ incunabulaRdfTestdata :+
       RdfDataObject(
         path =
           "test_data/generated_test_data/responders.admin.PermissionsResponderADMSpec/additional_permissions-data.ttl",

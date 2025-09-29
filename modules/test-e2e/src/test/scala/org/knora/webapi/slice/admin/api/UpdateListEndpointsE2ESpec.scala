@@ -23,12 +23,7 @@ import org.knora.webapi.testservices.TestApiClient
 
 object UpdateListEndpointsE2ESpec extends E2EZSpec {
 
-  override val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(
-      path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything",
-    ),
-  )
+  override val rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata
 
   private val treeChildNode: ListChildNodeADM = treeListChildNodes.head
   private val treeListInfoIri: ListIri        = ListIri.unsafeFrom(treeListInfo.id)

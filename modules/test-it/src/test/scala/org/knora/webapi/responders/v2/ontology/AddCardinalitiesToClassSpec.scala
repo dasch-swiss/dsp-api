@@ -40,7 +40,7 @@ object AddCardinalitiesToClassSpec extends E2EZSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val ontologyResponder                         = ZIO.serviceWithZIO[OntologyResponderV2]
 
-  override val rdfDataObjects: List[RdfDataObject] = List(freetestRdfOntology)
+  override val rdfDataObjects: List[RdfDataObject] = freetestRdfTestdata
 
   private def getCardinalityCountFromTriplestore(
     classIri: ResourceClassIri,

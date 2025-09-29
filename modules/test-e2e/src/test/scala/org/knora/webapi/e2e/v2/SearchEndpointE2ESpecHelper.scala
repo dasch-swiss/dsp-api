@@ -12,6 +12,7 @@ import zio.test.*
 
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
 import org.knora.webapi.testservices.ResponseOps
@@ -20,31 +21,22 @@ import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.TestDataFileUtil
 
 object SearchEndpointE2ESpecHelper {
-  val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(
-      path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula",
-    ),
-    RdfDataObject(path = "test_data/project_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
-    RdfDataObject(
-      path = "test_data/project_ontologies/books-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/books",
-    ),
-    RdfDataObject(path = "test_data/project_data/books-data.ttl", name = "http://www.knora.org/data/0001/books"),
-    RdfDataObject(
-      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl",
-      name = "http://www.knora.org/data/admin",
-    ),
-    RdfDataObject(
-      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl",
-      name = "http://www.knora.org/ontology/0666/gravsearchtest1",
-    ),
-    RdfDataObject(
-      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl",
-      name = "http://www.knora.org/data/0666/gravsearchtest1",
-    ),
-  )
+  val rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata ++ incunabulaRdfTestdata ++ booksRdfTestdata ++
+    List(
+      RdfDataObject(path = "test_data/project_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
+      RdfDataObject(
+        path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl",
+        name = "http://www.knora.org/data/admin",
+      ),
+      RdfDataObject(
+        path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl",
+        name = "http://www.knora.org/ontology/0666/gravsearchtest1",
+      ),
+      RdfDataObject(
+        path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl",
+        name = "http://www.knora.org/data/0666/gravsearchtest1",
+      ),
+    )
 
   def loadFile(filename: String): ZIO[TestDataFileUtil, Nothing, String] =
     TestDataFileUtil.readTestData("searchR2RV2", filename)

@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.resources.api
+
 import zio.*
 import zio.test.*
 
@@ -18,7 +19,7 @@ import org.knora.webapi.testservices.TestResourcesApiClient
 
 object MetadataEndpointsE2ESpec extends E2EZSpec {
 
-  override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
+  override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfOntologyTestdata)
 
   private val createThingPicture = for {
     file <- TestDspIngestClient.createImageAsset(anythingShortcode)

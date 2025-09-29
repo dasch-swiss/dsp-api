@@ -43,7 +43,7 @@ import org.knora.webapi.util.*
 
 object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
 
-  override val rdfDataObjects = List(
+  override val rdfDataObjects = freetestRdfTestdata ++ anythingRdfTestdata ++ List(
     RdfDataObject(
       path = "test_data/project_ontologies/example-box.ttl",
       name = "http://www.knora.org/ontology/shared/example-box",
@@ -52,16 +52,6 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
       path = "test_data/project_ontologies/minimal-onto.ttl",
       name = "http://www.knora.org/ontology/0001/minimal",
     ),
-    RdfDataObject(
-      path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest",
-    ),
-    RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
-    RdfDataObject(
-      path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything",
-    ),
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
   )
 
   private case class LastModRef(private var value: Instant) {

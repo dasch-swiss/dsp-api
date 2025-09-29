@@ -24,10 +24,6 @@ object OntologyCacheLiveSpec extends ZIOSpecDefault {
       path = "test_data/project_ontologies/books-onto.ttl",
       name = "http://www.knora.org/ontology/0001/books",
     ),
-    RdfDataObject(
-      path = "test_data/project_data/books-data.ttl",
-      name = "http://www.knora.org/data/0001/books",
-    ),
   )
 
   override val spec = suite("OntologyCache")(

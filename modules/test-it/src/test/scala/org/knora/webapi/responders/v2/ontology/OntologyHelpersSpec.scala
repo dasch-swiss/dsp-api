@@ -10,7 +10,6 @@ import zio.test.*
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -19,8 +18,6 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 object OntologyHelpersSpec extends E2EZSpec {
-
-  private implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

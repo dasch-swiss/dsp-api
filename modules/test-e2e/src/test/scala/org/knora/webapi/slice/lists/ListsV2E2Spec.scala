@@ -11,6 +11,7 @@ import zio.test.*
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingRdfTestdata
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
@@ -23,13 +24,7 @@ object ListsV2E2Spec extends E2EZSpec {
   private val knownRootNode = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
   private val knownSubNode  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
 
-  override def rdfDataObjects: List[RdfDataObject] =
-    List(
-      RdfDataObject(
-        path = "test_data/project_data/anything-data.ttl",
-        name = "http://www.knora.org/data/0001/anything",
-      ),
-    )
+  override def rdfDataObjects: List[RdfDataObject] = anythingRdfTestdata
 
   override def e2eSpec: Spec[env, Any] = suite("the lists API v2 for")(
     suite("/v2/lists/:listIri should")(
