@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import org.apache.jena.query.QueryExecution
-import org.apache.jena.query.ResultSet
 import org.apache.jena.rdfconnection.RDFConnection
 import org.apache.jena.rdfconnection.RDFConnectionFuseki
 import zio.*
@@ -62,14 +60,6 @@ final case class ProjectImportService(
       _            <- ZIO.logDebug(s"Imported $absolutePath into ${config.fuseki.repositoryName}")
     } yield ()
   }
-
-  def query(query: String)(executor: QueryExecution => ResultSet): ZIO[Scope, Throwable, ResultSet] = {
-    val acquire                            = connect().map(_.query(query))
-    def release(queryExec: QueryExecution) = ZIO.attempt(queryExec.close()).unit.logError.ignore
-    ZIO.acquireRelease(acquire)(release).map(executor)
-  }
-
-  def querySelect(queryString: String): ZIO[Scope, Throwable, ResultSet] = query(queryString)(_.execSelect())
 
   def importProject(projectShortcode: Shortcode): Task[Option[Path]] = {
     val projectImport = exportStorage.projectExportFullPath(projectShortcode)
