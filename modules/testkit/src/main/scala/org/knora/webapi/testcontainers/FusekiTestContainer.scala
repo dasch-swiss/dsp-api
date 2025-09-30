@@ -30,6 +30,7 @@ object FusekiTestContainer {
     .withExposedPorts(3030)
     .withEnv("ADMIN_PASSWORD", adminPassword)
     .withEnv("JVM_ARGS", "-Xmx3G")
+//    .withLogConsumer(frame => print("FUSEKI:" + frame.getUtf8String))
 
   val layer: ULayer[FusekiTestContainer] = make.toLayer
 }
