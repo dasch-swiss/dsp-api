@@ -37,7 +37,7 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
 
   def rdfDataObjects: List[RdfDataObject] = List.empty
 
-  type env = E2EZSpec.Environment with Scope
+  type env = E2EZSpec.Environment & Scope
 
   private def prepare = for {
     _ <- Db.initWithTestData(rdfDataObjects)
