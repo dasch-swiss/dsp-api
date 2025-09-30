@@ -52,7 +52,7 @@ import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 
-object DspIngestClientLiveSpec extends ZIOSpecDefault {
+object DspIngestClientSpec extends ZIOSpecDefault {
 
   private val testShortcodeStr = "0001"
   private val testShortcode    = Shortcode.unsafeFrom(testShortcodeStr)
@@ -121,7 +121,7 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
       exportProjectSuite,
       getAssetInfoSuite,
     ).provideSome[Scope](
-      DspIngestClientLive.layer,
+      DspIngestClient.layer,
       HttpMockServer.layer,
       TestPort.random,
       dspIngestConfigLayer,

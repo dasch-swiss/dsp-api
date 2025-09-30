@@ -143,7 +143,7 @@ object LayersLive { self =>
       CardinalityHandler.layer,
       CommonModule.layer,
       ConstructResponseUtilV2.layer,
-      DspIngestClientLive.layer,
+      DspIngestClient.layer,
       Endpoints.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,

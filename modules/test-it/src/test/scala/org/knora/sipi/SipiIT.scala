@@ -35,21 +35,24 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 
 object SipiIT extends ZIOSpecDefault {
 
+  val dspApiPort: Int       = 5555
   private val imageTestfile = "FGiLaT4zzuV-CqwbEDFAFeS.jp2"
   private val prefix        = "0001"
 
+  private val cookieName = {
+    val base32 = new Base32('9'.toByte)
+    "KnoraAuthentication" + base32.encodeAsString(s"0.0.0.0:$dspApiPort".getBytes)
+  }
+
   private def requestGet(path: Path, headers: Header*) =
-    SipiTestContainer
-      .resolveUrl(path)
-      .map(url => Request.get(url).addHeaders(Headers(headers)))
-      .flatMap(Client.batched)
+    SipiTestContainer.resolveUrl(path).map(url => Request.get(url).addHeaders(Headers(headers))).flatMap(Client.batched)
 
   private def createJwt(scope: AuthScope): UIO[String] = for {
     now  <- Clock.instant
     uuid <- Random.nextUUID
     exp   = now.plusSeconds(3600)
     claim = JwtClaim(
-              issuer = Some(s"0.0.0.0:9999"),
+              issuer = Some(s"0.0.0.0:$dspApiPort"),
               subject = Some("someUser"),
               audience = Some(Set("Knora", "Sipi")),
               issuedAt = Some(now.getEpochSecond),
@@ -62,9 +65,6 @@ object SipiIT extends ZIOSpecDefault {
     "UP 4888, nice 4-8-4 steam engine",
     JwtAlgorithm.HS256,
   )
-
-  private val cookieName: String =
-    "KnoraAuthentication" + new Base32('9'.toByte).encodeAsString("0.0.0.0:9999".getBytes)
 
   private val cookiesSuite =
     suite("Given a request is authorized using cookies")(
@@ -82,7 +82,7 @@ object SipiIT extends ZIOSpecDefault {
                         Header.Cookie(
                           NonEmptyChunk(
                             Cookie.Request(
-                              s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999aSecondCookie",
+                              s"${cookieName}SecondCookie",
                               "anotherValueShouldBeIgnored",
                             ),
                             Cookie.Request(cookieName, jwt),
@@ -286,6 +286,13 @@ object SipiIT extends ZIOSpecDefault {
       ),
     )
 
+  private val sipiTestContainerLayer = SipiTestContainer.layerWithCustomEnv(
+    Map(
+      "KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT" -> s"$dspApiPort",
+      "SIPI_WEBAPI_PORT"                     -> s"$dspApiPort",
+    ),
+  )
+
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("Sipi integration tests with mocked dsp-api")(
       cookiesSuite,
@@ -300,10 +307,11 @@ object SipiIT extends ZIOSpecDefault {
       },
     )
       .provideSomeLayerShared[Scope & Client & WireMockServer](
-        SharedVolumes.Images.layer >+> SipiTestContainer.layer(9999),
+        SharedVolumes.Images.layer >+> sipiTestContainerLayer,
       )
       .provideSomeLayerShared[Scope & Client](MockDspApiServer.layer)
       .provideSomeLayer[Scope](Client.default) @@ TestAspect.sequential @@ TestAspect.withLiveClock
+
 }
 
 object MockDspApiServer {
@@ -383,7 +391,8 @@ object MockDspApiServer {
   }
 
   private def acquireWireMockServer: Task[WireMockServer] = ZIO.attempt {
-    val server = new WireMockServer(options().port(9999)); // No-args constructor will start on port 8080, no HTTPS
+    val server =
+      new WireMockServer(options().port(SipiIT.dspApiPort)); // No-args constructor will start on port 8080, no HTTPS
     server.start()
     server
   }

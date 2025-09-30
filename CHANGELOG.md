@@ -1,5 +1,19 @@
 # Changelog
 
+## [32.3.1](https://github.com/dasch-swiss/dsp-api/compare/v32.3.0...v32.3.1) (2025-09-23)
+
+
+### Maintenances
+
+* **dsp-api:** Align *RestService method signature and simplify *Handlers ([#3793](https://github.com/dasch-swiss/dsp-api/issues/3793)) ([e3adf23](https://github.com/dasch-swiss/dsp-api/commit/e3adf2346f8f6d42f9cc6b339af8b9f31087cf48))
+* **dsp-api:** Align *RestService method signature and simplify *Handlers (pt.2) ([#3796](https://github.com/dasch-swiss/dsp-api/issues/3796)) ([94a299a](https://github.com/dasch-swiss/dsp-api/commit/94a299ac2a7c93e62b167671d614390ae1999ad7))
+* Remove unnecessary requirements installation from gh action ([#3794](https://github.com/dasch-swiss/dsp-api/issues/3794)) ([0be3061](https://github.com/dasch-swiss/dsp-api/commit/0be3061876df6900704b0503f4d980d1a22f421b))
+
+
+### Documentation
+
+* Add ADR for RFC-018 ([#3792](https://github.com/dasch-swiss/dsp-api/issues/3792)) ([c8ef244](https://github.com/dasch-swiss/dsp-api/commit/c8ef2446333d0798e06637f8b19c65146a2171c8))
+
 ## [32.3.0](https://github.com/dasch-swiss/dsp-api/compare/v32.2.0...v32.3.0) (2025-09-22)
 
 

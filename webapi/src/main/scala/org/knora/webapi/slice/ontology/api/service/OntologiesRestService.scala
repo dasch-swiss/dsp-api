@@ -7,6 +7,7 @@ package org.knora.webapi.slice.ontology.api.service
 
 import sttp.model.MediaType
 import zio.*
+
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.ApiV2Schema

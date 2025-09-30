@@ -25,7 +25,11 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo: OntologyRepo) {
 
-  def getClassAsReadOntologyV2(classIri: ResourceClassIri, allLanguages: Boolean, requestingUser: User): Task[ReadOntologyV2] =
+  def getClassAsReadOntologyV2(
+    classIri: ResourceClassIri,
+    allLanguages: Boolean,
+    requestingUser: User,
+  ): Task[ReadOntologyV2] =
     getClassDefinitionsFromOntologyV2(Set(classIri.smartIri), allLanguages, requestingUser)
 
   /**

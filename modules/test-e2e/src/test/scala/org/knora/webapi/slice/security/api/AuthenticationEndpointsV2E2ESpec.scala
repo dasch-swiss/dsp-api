@@ -21,7 +21,6 @@ import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutRespo
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
-
 object AuthenticationEndpointsV2E2ESpec extends E2EZSpec {
 
   private val validPassword = "test"
