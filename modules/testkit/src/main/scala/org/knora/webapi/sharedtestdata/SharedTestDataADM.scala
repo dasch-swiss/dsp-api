@@ -564,7 +564,7 @@ object SharedTestDataADM {
 
   val anythingRdfData: RdfDataObject = RdfDataObject(
     path = "test_data/project_data/anything-data.ttl",
-    name = anythingOntologyIri.toInternalSchema.toIri,
+    name = "http://www.knora.org/data/0001/anything",
   )
   val anythingRdfOntology: RdfDataObject = RdfDataObject(
     path = "test_data/project_ontologies/anything-onto.ttl",
