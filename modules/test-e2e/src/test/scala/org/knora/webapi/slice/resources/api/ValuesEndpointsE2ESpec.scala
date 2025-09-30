@@ -2610,7 +2610,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         expectedValueIri = valueIri,
                       )
         savedTextValueAsXml <- ZIO.fromEither(savedValue.getRequiredString(KA.TextValueAsXml))
-        expectedText = """<p>&quot;&quot;&quot;</p>""".stripMargin
+        expectedText         = """<p>&quot;&quot;&quot;</p>""".stripMargin
       } yield assertTrue(savedTextValueAsXml.contains(expectedText))
     },
     test("update a text value with a comment") {

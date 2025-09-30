@@ -1,10 +1,12 @@
 package org.knora.webapi
 
-import java.nio.file.{Files, Paths, Path}
 import zio.test.*
 
-import scala.util.chaining.scalaUtilChainingOps
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import scala.quoted.*
+import scala.util.chaining.scalaUtilChainingOps
 
 /* Extend your testing Spec object with GoldenTest and use assertGolden("content", "testCaseNr1") to
  * validate its content while enabling automatic updates to the standard with

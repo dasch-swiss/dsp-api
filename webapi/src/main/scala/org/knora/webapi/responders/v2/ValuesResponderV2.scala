@@ -9,8 +9,8 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
-import scala.jdk.CollectionConverters._
 import scala.PartialFunction.cond
+import scala.jdk.CollectionConverters.*
 
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil

@@ -20,8 +20,8 @@ import scala.language.implicitConversions
 
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2

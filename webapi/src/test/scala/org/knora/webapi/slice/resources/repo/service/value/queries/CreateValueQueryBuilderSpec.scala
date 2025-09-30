@@ -19,6 +19,7 @@ import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -33,8 +34,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagTimeAt
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.common.domain.InternalIri
-
-import org.knora.webapi.GoldenTest
 
 object CreateValueQueryBuilderTestSupport {
 
