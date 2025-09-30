@@ -34,16 +34,6 @@ import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.infrastructure.JwtService
 
-trait DspIngestClient {
-  def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path]
-
-  def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path]
-
-  def eraseProject(shortcode: Shortcode): Task[Unit]
-
-  def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse]
-}
-
 final case class AssetInfoResponse(
   internalFilename: String,
   originalInternalFilename: String,
@@ -61,11 +51,11 @@ object AssetInfoResponse {
   implicit val decoder: JsonDecoder[AssetInfoResponse] = DeriveJsonDecoder.gen[AssetInfoResponse]
 }
 
-final case class DspIngestClientLive(
+final case class DspIngestClient(
   jwtService: JwtService,
   dspIngestConfig: DspIngestConfig,
   backend: StreamBackend[Task, ZioStreams],
-) extends DspIngestClient {
+) {
 
   private def projectsPath(shortcode: Shortcode) = s"${dspIngestConfig.baseUrl}/projects/${shortcode.value}"
 
@@ -75,7 +65,7 @@ final case class DspIngestClientLive(
       .map(_.jwtString)
       .map(basicRequest.auth.bearer(_))
 
-  override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
+  def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
     for {
       request  <- authenticatedRequest.map(_.get(uri"${projectsPath(shortcode)}/assets/$assetId"))
       response <- request.send(backend)
@@ -87,7 +77,7 @@ final case class DspIngestClientLive(
                   .mapError(err => new IOException(s"Error parsing response: $err"))
     } yield result
 
-  override def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path] =
+  def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path] =
     for {
       tempDir   <- Files.createTempDirectoryScoped(Some("export"), List.empty)
       exportFile = tempDir / "export.zip"
@@ -100,13 +90,13 @@ final case class DspIngestClientLive(
       _        <- ZIO.logInfo(s"Response from ingest :${response.code}")
     } yield exportFile
 
-  override def eraseProject(shortcode: Shortcode): Task[Unit] = for {
+  def eraseProject(shortcode: Shortcode): Task[Unit] = for {
     request  <- authenticatedRequest.map(_.delete(uri"${projectsPath(shortcode)}/erase"))
     response <- request.send(backend)
     _        <- ZIO.logInfo(s"Response from ingest :${response.body}")
   } yield ()
 
-  override def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = ZIO.scoped {
+  def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = ZIO.scoped {
     for {
       importUrl <- ZIO.fromEither(URL.decode(s"${projectsPath(shortcode)}/import"))
       token     <- jwtService.createJwtForDspIngest()
@@ -126,6 +116,6 @@ final case class DspIngestClientLive(
   }
 }
 
-object DspIngestClientLive {
-  val layer = HttpClientZioBackend.layer().orDie >+> ZLayer.derive[DspIngestClientLive]
+object DspIngestClient {
+  val layer = HttpClientZioBackend.layer().orDie >+> ZLayer.derive[DspIngestClient]
 }

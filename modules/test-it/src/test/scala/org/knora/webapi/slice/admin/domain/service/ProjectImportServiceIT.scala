@@ -11,47 +11,19 @@ import zio.test.*
 
 import java.io.IOException
 
-import org.knora.webapi.config.Fuseki
-import org.knora.webapi.config.Triplestore
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.E2EZSpec
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
-object ProjectImportServiceIT extends ZIOSpecDefault {
+object ProjectImportServiceE2ESpec extends E2EZSpec {
+
+  // this test itself does not use the data of the rdfDataObjects, but we need a triplestore and have to import a small set
+  override val rdfDataObjects: List[RdfDataObject] = List.empty
 
   private val projectImportService = ZIO.serviceWithZIO[ProjectImportService]
-
-  private val storageServiceLayer: Layer[IOException, ProjectExportStorageServiceLive] = ZLayer.fromZIO {
-    for {
-      exportDirectory <- Files.createTempDirectory(Path(""), None, List.empty)
-    } yield ProjectExportStorageServiceLive(exportDirectory)
-  }
-
-  private val importServiceTestLayer
-    : URLayer[FusekiTestContainer with ProjectExportStorageService, ProjectImportService] = ZLayer.fromZIO {
-    (for {
-      exportStorageService <- ZIO.service[ProjectExportStorageService]
-      container            <- ZIO.service[FusekiTestContainer]
-      dspIngestClient      <- ZIO.service[DspIngestClient]
-      config =
-        Triplestore(
-          dbtype = "tdb2",
-          useHttps = false,
-          host = container.getHost,
-          queryTimeout = java.time.Duration.ofSeconds(5),
-          maintenanceTimeout = java.time.Duration.ofSeconds(5),
-          gravsearchTimeout = java.time.Duration.ofSeconds(5),
-          fuseki = Fuseki(
-            port = container.getFirstMappedPort,
-            username = "admin",
-            password = "test",
-          ),
-          profileQueries = false,
-        )
-    } yield ProjectImportService(config, exportStorageService, dspIngestClient))
-      .provideSomeLayer[FusekiTestContainer with ProjectExportStorageService](DspIngestClientITMock.layer)
-  }
+  private val triplestore          = ZIO.serviceWithZIO[TriplestoreService]
 
   private val trigContent =
     """
@@ -63,14 +35,23 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
       |}
       |""".stripMargin
 
-  def spec: Spec[Any, Throwable] =
+  override val e2eSpec =
     suite("ImportService")(test("should import a trig file into a named graph and the default graph") {
-      ZIO.scoped {
-        for {
-          filePath <- FileTestUtil.createTempTextFileScoped(trigContent, ".trig")
-          _        <- projectImportService(_.importTrigFile(filePath))
-          nrResultsInNamedGraph <- projectImportService(
-                                     _.querySelect(
+      val queryDefaultGraph = Select(
+        """
+          |SELECT ?subject ?predicate ?object
+          |WHERE {
+          |  ?subject ?predicate ?object.
+          |}
+          |""".stripMargin,
+      )
+      for {
+        sizeDefaultGraphBefore <- triplestore(_.query(queryDefaultGraph)).map(_.size)
+        filePath               <- FileTestUtil.createTempTextFileScoped(trigContent, ".trig")
+        _                      <- projectImportService(_.importTrigFile(filePath))
+        nrResultsInNamedGraph <- triplestore(
+                                   _.query(
+                                     Select(
                                        """
                                          |SELECT ?subject ?predicate ?object
                                          |FROM NAMED <http://example.org/graph>
@@ -81,26 +62,11 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
                                          |}
                                          |""".stripMargin,
                                      ),
-                                   )
-                                     .map(_.rewindable.size())
-          nrResultsInDefaultGraph <- projectImportService(
-                                       _.querySelect(
-                                         """
-                                           |SELECT ?subject ?predicate ?object
-                                           |WHERE {
-                                           |  ?subject ?predicate ?object.
-                                           |}
-                                           |""".stripMargin,
-                                       ),
-                                     )
-                                       .map(_.rewindable.size())
-          _ <- ZIO.logDebug("loaded")
-        } yield assertTrue(nrResultsInNamedGraph == 1, nrResultsInDefaultGraph == 1)
-      }
+                                   ),
+                                 ).map(_.size)
+        sizeDefaultGraphAfter <- triplestore(_.query(queryDefaultGraph)).map(_.size)
+      } yield assertTrue(nrResultsInNamedGraph == 1, sizeDefaultGraphAfter == sizeDefaultGraphBefore + 1)
     })
-      .provideSomeLayer[FusekiTestContainer with ProjectExportStorageService](importServiceTestLayer)
-      .provideSomeLayer[FusekiTestContainer](storageServiceLayer)
-      .provideSomeLayerShared(FusekiTestContainer.layer)
 }
 
 object FileTestUtil {
@@ -108,29 +74,4 @@ object FileTestUtil {
     filePath <- Files.createTempFileScoped(suffix)
     _        <- Files.writeBytes(filePath, Chunk.fromIterable(content.getBytes))
   } yield filePath
-}
-
-final case class DspIngestClientITMock() extends DspIngestClient {
-  override def exportProject(shortcode: KnoraProject.Shortcode): ZIO[Scope, Throwable, Path] =
-    ZIO.succeed(Path("/tmp/test.zip"))
-  override def importProject(shortcode: KnoraProject.Shortcode, fileToImport: Path): Task[Path] =
-    ZIO.succeed(Path("/tmp/test.zip"))
-
-  override def getAssetInfo(shortcode: KnoraProject.Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
-    ZIO.succeed(
-      AssetInfoResponse(
-        s"$assetId.txt",
-        s"$assetId.txt.orig",
-        "test.txt",
-        "bfd3192ea04d5f42d79836cf3b8fbf17007bab71",
-        "17bab70071fbf8b3fc63897d24f5d40ae2913dfb",
-        internalMimeType = Some("text/plain"),
-        originalMimeType = Some("text/plain"),
-      ),
-    )
-
-  override def eraseProject(shortcode: Shortcode): Task[Unit] = ZIO.unit
-}
-object DspIngestClientITMock {
-  val layer = ZLayer.derive[DspIngestClientITMock]
 }

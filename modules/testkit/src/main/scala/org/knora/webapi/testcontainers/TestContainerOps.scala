@@ -5,22 +5,26 @@
 
 package org.knora.webapi.testcontainers
 
-import org.testcontainers.lifecycle.Startable
+import org.testcontainers.containers.GenericContainer
 import zio.*
 
 object ZioTestContainers {
 
-  def toZio[T <: Startable](self: T): URIO[Scope, T] = {
-    val acquire = ZIO.attemptBlocking(self.start()).orDie.as(self)
+  def toZio[T <: GenericContainer[_]](self: T): URIO[Scope, T] = {
+    val acquire = ZIO
+      .attemptBlocking(self.start())
+      .orDie
+      .as(self)
+      .tap(it => ZIO.logInfo(s"Started test container: ${it.getDockerImageName} on port ${it.getFirstMappedPort}"))
     val release = (container: T) => ZIO.succeed(container.stop())
     ZIO.acquireRelease(acquire)(release)
   }
 
-  def toLayer[T <: Startable: Tag](self: T): ULayer[T] = ZLayer.scoped(toZio(self))
+  def toLayer[T <: GenericContainer[_]: Tag](self: T): ULayer[T] = ZLayer.scoped(toZio(self))
 }
 
 object TestContainerOps {
-  extension [T <: Startable](self: T) {
+  extension [T <: GenericContainer[_]](self: T) {
     def toZio: URIO[Scope, T]                   = ZioTestContainers.toZio(self)
     def toLayer(implicit ev: Tag[T]): ULayer[T] = ZioTestContainers.toLayer(self)
   }
