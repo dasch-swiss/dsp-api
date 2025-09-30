@@ -93,14 +93,15 @@ object SearchEndpointE2ESpecHelper {
                 else
                   TestDataFileUtil
                     .writeTestData("searchR2RV2", expectedFile, resultJsonLd)
-                    .as(assertTrue(false).label(s"Expected result file $expectedFile did not exist, created it."))
+                    .as(assertNever(s"Expected result file $expectedFile did not exist, created it."))
 
     } yield result
 
   private def compare(response: Response[Either[String, String]], expectedFile: String) =
     for {
-      resultJsonLd <- response.assert200
-      actual       <- ZIO.attempt(RdfModel.fromJsonLD(resultJsonLd))
-      expected     <- loadFile(expectedFile).map(RdfModel.fromJsonLD)
-    } yield assertTrue(actual == expected)
+      resultJsonLd   <- response.assert200
+      actual         <- ZIO.attempt(RdfModel.fromJsonLD(resultJsonLd))
+      expectedJsonLd <- loadFile(expectedFile)
+      expected       <- ZIO.attempt(RdfModel.fromJsonLD(expectedJsonLd))
+    } yield assertTrue(actual == expected) || assertTrue(resultJsonLd == expectedJsonLd)
 }
