@@ -91,8 +91,14 @@ object SipiTestContainer {
     } yield container,
   )
 
-  val layer: URLayer[SharedVolumes.Images, SipiTestContainer] = {
-    val container = ZLayer.scoped(ZIO.serviceWithZIO[SharedVolumes.Images](make(_).toZio))
+  val layer: URLayer[SharedVolumes.Images, SipiTestContainer] = layerWithCustomEnv(Map.empty)
+
+  def layerWithCustomEnv(env: Map[String, String]): URLayer[SharedVolumes.Images, SipiTestContainer] = {
+    val container = ZLayer.scoped(ZIO.serviceWithZIO[SharedVolumes.Images] { volume =>
+      val imagesToContainer = make(volume)
+      env.foreach { case (k, v) => imagesToContainer.withEnv(k, v) }
+      imagesToContainer.toZio
+    })
     (container >>> initSipi).orDie
   }
 }
