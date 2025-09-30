@@ -47,7 +47,7 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
     _ <- TestApiClient
            .getJson[Json](uri"/version")
            .repeatWhile(_.code != StatusCode.Ok)
-           .retry(Schedule.exponential(10.milli))
+           .retry(Schedule.fixed(10.milli))
            .timeout(5.seconds)
            .orDie
     _ <- ZIO.logInfo("API is ready, start running tests...")
