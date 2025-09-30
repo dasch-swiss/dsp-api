@@ -89,7 +89,6 @@ object CreateValueQueryBuilder {
     valueCreator: InternalIri,
     valuePermissions: String,
     creationDate: Instant,
-    requestingUser: InternalIri,
   ): Update = {
     val dataGraphVar = variable("dataNamedGraph")
     val resourceVar  = variable("resource")
@@ -131,7 +130,6 @@ object CreateValueQueryBuilder {
       creationDate,
       nextOrder,
       currentVarOpt,
-      requestingUser,
     )
 
     // Build where clause
@@ -217,7 +215,6 @@ object CreateValueQueryBuilder {
     creationDate: Instant,
     nextOrder: Variable,
     currentValue: Option[Variable],
-    requestingUser: InternalIri,
   ): List[TriplePattern] = {
     // Resource modification date
     val resourceModPattern =
@@ -248,7 +245,7 @@ object CreateValueQueryBuilder {
     val typeSpecificPatterns = buildTypeSpecificPatterns(valueIri, value)
 
     // Link patterns
-    val linkPatterns = buildLinkPatterns(resource, linkUpdates, creationDate, requestingUser)
+    val linkPatterns = buildLinkPatterns(resource, linkUpdates, creationDate, valueCreator)
 
     // Resource to value link
     val resourceValuePattern = resource.has(property, valueIri)
@@ -476,7 +473,7 @@ object CreateValueQueryBuilder {
     resource: org.eclipse.rdf4j.sparqlbuilder.rdf.Iri,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     creationDate: Instant,
-    requestingUser: InternalIri,
+    valueCreator: InternalIri,
   ): List[TriplePattern] =
     linkUpdates.flatMap { linkUpdate =>
       val directLink = if (linkUpdate.insertDirectLink) {
@@ -512,7 +509,7 @@ object CreateValueQueryBuilder {
           if (isDeleted) {
             linkValue
               .andHas(KB.deleteDate, literalOfType(creationDate.toString, XSD.DATETIME))
-              .andHas(KB.deletedBy, iri(requestingUser.value))
+              .andHas(KB.deletedBy, iri(valueCreator.value))
           } else {
             linkValue
           }

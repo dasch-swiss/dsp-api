@@ -214,7 +214,6 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     valueCreator: InternalIri,
     valuePermissions: String,
     creationDate: Instant,
-    requestingUser: InternalIri,
   ): Task[Unit] =
     triplestore.query(
       CreateValueQueryBuilder.createValueQuery(
@@ -228,7 +227,6 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
         valueCreator,
         valuePermissions,
         creationDate,
-        requestingUser,
       ),
     )
 
@@ -244,7 +242,6 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     valuePermissions: String,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     creationDate: Instant,
-    requestingUser: InternalIri,
   ): Task[Unit] =
     triplestore
       .query(
@@ -259,7 +256,6 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
           valueCreator,
           valuePermissions,
           creationDate,
-          requestingUser,
         ),
       )
       .as(())

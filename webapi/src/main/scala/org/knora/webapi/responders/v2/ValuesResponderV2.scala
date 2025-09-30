@@ -353,7 +353,7 @@ final case class ValuesResponderV2(
    * @return an [[UnverifiedValueV2]].
    */
   private def createValueV2AfterChecks(
-    dataNamedGraph: InternalIri,
+    dataNamedGraph: IRI,
     resourceInfo: ReadResourceV2,
     propertyIri: SmartIri,
     value: ValueContentV2,
@@ -362,12 +362,11 @@ final case class ValuesResponderV2(
     valueCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
-    requestingUser: User,
   ): ZIO[Any, Throwable, UnverifiedValueV2] =
     value match {
       case linkValueContent: LinkValueContentV2 =>
         createLinkValueV2AfterChecks(
-          dataNamedGraph = dataNamedGraph.value,
+          dataNamedGraph = dataNamedGraph,
           resourceInfo = resourceInfo,
           linkPropertyIri = propertyIri,
           linkValueContent = linkValueContent,
@@ -389,7 +388,6 @@ final case class ValuesResponderV2(
           maybeValueCreationDate = valueCreationDate,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
-          requestingUser = requestingUser,
         )
     }
 
@@ -408,7 +406,7 @@ final case class ValuesResponderV2(
    * @return an [[UnverifiedValueV2]].
    */
   private def createOrdinaryValueV2AfterChecks(
-    dataNamedGraph: InternalIri,
+    dataNamedGraph: IRI,
     resourceInfo: ReadResourceV2,
     propertyIri: SmartIri,
     value: ValueContentV2,
@@ -417,7 +415,6 @@ final case class ValuesResponderV2(
     maybeValueCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
-    requestingUser: User,
   ) =
     for {
 
@@ -458,14 +455,14 @@ final case class ValuesResponderV2(
           case _ => ZIO.succeed(Vector.empty[SparqlTemplateLinkUpdate])
         }
 
-      resourceIriInternal  <- ZIO.fromEither(InternalIri.from(resourceInfo.resourceIri))
-      newValueIriInternal  <- ZIO.fromEither(InternalIri.from(newValueIri))
-      valueCreatorInternal <- ZIO.fromEither(InternalIri.from(valueCreator))
-      requestingUserInternal  <- ZIO.fromEither(InternalIri.from(requestingUser.id))
+      dataNamedGraphInternal <- ZIO.fromEither(InternalIri.from(dataNamedGraph))
+      resourceIriInternal    <- ZIO.fromEither(InternalIri.from(resourceInfo.resourceIri))
+      newValueIriInternal    <- ZIO.fromEither(InternalIri.from(newValueIri))
+      valueCreatorInternal   <- ZIO.fromEither(InternalIri.from(valueCreator))
 
       // Use repository method which handles dual validation
       _ <- valueRepo.createValue(
-             dataNamedGraph = dataNamedGraph,
+             dataNamedGraph = dataNamedGraphInternal,
              resourceIri = resourceIriInternal,
              propertyIri = propertyIri,
              newValueIri = newValueIriInternal,
@@ -475,7 +472,6 @@ final case class ValuesResponderV2(
              valueCreator = valueCreatorInternal,
              valuePermissions = valuePermissions,
              creationDate = creationDate,
-             requestingUser = requestingUserInternal,
            )
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
@@ -726,7 +722,6 @@ final case class ValuesResponderV2(
               valuePermissions = newValueVersionPermissionLiteral,
               valueCreationDate = updateValue.valueCreationDate,
               newValueVersionIri = updateValue.newValueVersionIri,
-              requestingUser = requestingUser,
             )
         }
     } yield UpdateValueResponseV2(
@@ -879,7 +874,6 @@ final case class ValuesResponderV2(
     valuePermissions: String,
     valueCreationDate: Option[Instant],
     newValueVersionIri: Option[SmartIri],
-    requestingUser: User,
   ): Task[UnverifiedValueV2] =
     for {
       newValueIri <-
@@ -953,7 +947,6 @@ final case class ValuesResponderV2(
       currentValueIriInternal <- ZIO.fromEither(InternalIri.from(currentValue.valueIri))
       newValueIriInternal     <- ZIO.fromEither(InternalIri.from(newValueIri))
       valueCreatorInternal    <- ZIO.fromEither(InternalIri.from(valueCreator))
-      requestingUserInternal  <- ZIO.fromEither(InternalIri.from(requestingUser.id))
       // Generate a SPARQL update.
       _ <- valueRepo.updateValue(
              dataNamedGraph = dataNamedGraphInternal,
@@ -967,7 +960,6 @@ final case class ValuesResponderV2(
              valuePermissions = valuePermissions,
              linkUpdates = standoffLinkUpdates,
              creationDate = currentTime,
-             requestingUser = requestingUserInternal,
            )
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
