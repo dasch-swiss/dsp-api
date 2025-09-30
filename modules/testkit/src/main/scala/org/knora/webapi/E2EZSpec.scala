@@ -52,6 +52,7 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
            .orDie
     _ <- ZIO.logInfo("API is ready, start running tests...")
   } yield ()
+
   def e2eSpec: Spec[env, Any]
 
   final override def spec: Spec[env, Any] =
