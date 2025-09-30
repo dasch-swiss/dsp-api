@@ -716,6 +716,7 @@ final case class SearchResponderV2Live(
         new SelectTransformer(
           simulateInference = gravsearchToCountTransformer.useInference,
           sparqlTransformerLive,
+          gravsearchToCountTransformer.mainResourceVariable,
           stringFormatter,
         )
 
@@ -728,6 +729,7 @@ final case class SearchResponderV2Live(
                       inputQuery = prequery,
                       transformer = selectTransformer,
                       ontologiesForInferenceMaybe,
+                      limitToProject,
                     )
 
       countResponse <- triplestore.query(Select.gravsearch(countQuery.toSparql))
@@ -793,17 +795,20 @@ final case class SearchResponderV2Live(
         new SelectTransformer(
           simulateInference = gravsearchToPrequeryTransformer.useInference,
           sparqlTransformerLive,
+          mainResourceVar,
           stringFormatter,
         )
 
       // Convert the preprocessed query to a non-triplestore-specific query.
 
       transformedPrequery <-
-        queryTraverser.transformSelectToSelect(
-          inputQuery = prequery,
-          transformer = selectTransformer,
-          limitInferenceToOntologies = ontologiesForInferenceMaybe,
-        )
+        queryTraverser
+          .transformSelectToSelect(
+            inputQuery = prequery,
+            transformer = selectTransformer,
+            limitInferenceToOntologies = ontologiesForInferenceMaybe,
+            limitResultsToProject = limitToProject,
+          )
 
       prequerySparql = transformedPrequery.toSparql
 
