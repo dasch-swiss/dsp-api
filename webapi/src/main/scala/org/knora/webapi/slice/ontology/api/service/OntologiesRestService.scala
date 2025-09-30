@@ -316,7 +316,7 @@ final case class OntologiesRestService(
                 .fromOption(propertyIri.ontologySchema.collect { case s: ApiV2Schema => s })
                 .orElseFail(BadRequestException(s"Property IRI must have an API V2 schema: $propertyIri"))
     result   <- ontologyResponder.getPropertyFromOntologyV2(propertyIri, allLanguages, user)
-    response <- renderer.render(result, formatOptions)
+    response <- renderer.render(result, formatOptions.copy(schema = schema))
   } yield response
 
   def canDeleteProperty(
