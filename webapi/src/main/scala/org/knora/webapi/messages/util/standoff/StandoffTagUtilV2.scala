@@ -844,10 +844,10 @@ object StandoffTagUtilV2 {
         val uriValue = StandoffTagUriAttributeV2(
           standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri.toSmartIri,
           value = Iri
-            .validateAndEscapeIri(uriString) // XXX
+            .validateAndEscapeIri(uriString)
             .orElse(
               if (uriString.startsWith("www.")) {
-                Iri.validateAndEscapeIri(s"https://$uriString") // XXX
+                Iri.validateAndEscapeIri(s"https://$uriString")
               } else {
                 throw BadRequestException(s"URI invalid: $uriString")
               },
