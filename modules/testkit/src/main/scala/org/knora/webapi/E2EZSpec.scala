@@ -12,27 +12,32 @@ import zio.*
 import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
-
 import scala.reflect.ClassTag
 
 import org.knora.webapi.core.Db
 import org.knora.webapi.core.DspApiServer
-import org.knora.webapi.core.LayersTest
+import org.knora.webapi.core.LayersLive
+import org.knora.webapi.core.TestContainerLayers
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.testservices.TestApiClient
+import org.knora.webapi.testservices.TestClientsModule
 import org.knora.webapi.util.Logger
 
-abstract class E2EZSpec extends ZIOSpec[LayersTest.Environment] {
+abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  override val bootstrap: ULayer[LayersTest.Environment] = Logger.text >>> LayersTest.layer
+  override val bootstrap: ULayer[E2EZSpec.Environment] =
+    Logger.text >>>
+      TestContainerLayers.all >+>
+      LayersLive.remainingLayer >+>
+      TestClientsModule.layer
 
   def rdfDataObjects: List[RdfDataObject] = List.empty
 
-  type env = LayersTest.Environment with Scope
+  type env = E2EZSpec.Environment with Scope
 
   private def prepare = for {
     _ <- Db.initWithTestData(rdfDataObjects)
@@ -57,6 +62,14 @@ abstract class E2EZSpec extends ZIOSpec[LayersTest.Environment] {
 }
 
 object E2EZSpec {
+
+  type Environment =
+    // format: off
+    LayersLive.Environment &
+    TestClientsModule.Provided &
+    TestContainerLayers.Environment
+    // format: on
+
   def failsWithMessageEqualTo[A <: Throwable](messsage: String)(implicit
     tag: ClassTag[A],
   ): Assertion[Exit[Any, Any]] =
