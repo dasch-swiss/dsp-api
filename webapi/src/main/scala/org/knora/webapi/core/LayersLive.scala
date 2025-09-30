@@ -112,7 +112,7 @@ object LayersLive { self =>
   val intermediateLayers2
     : ZLayer[JwtService & DspIngestConfig & IriConverter, Nothing, DspIngestClient & PredicateObjectMapper] =
     ZLayer.makeSome[JwtService & DspIngestConfig & IriConverter, DspIngestClient & PredicateObjectMapper](
-      DspIngestClientLive.layer,
+      DspIngestClient.layer,
       PredicateObjectMapper.layer,
     )
 
