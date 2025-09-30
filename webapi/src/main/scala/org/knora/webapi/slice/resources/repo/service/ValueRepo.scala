@@ -258,7 +258,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
           creationDate,
         ),
       )
-      .as(())
+      .unit
 }
 
 object ValueRepo {
