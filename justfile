@@ -4,7 +4,6 @@ openapiDir := "./docs/03-endpoints/generated-openapi"
 default:
     @just --list
 
-alias dog := docs-openapi-generate
 alias ssl := stack-start-latest
 alias stop := stack-stop
 alias ssd := stack-start-dev
@@ -81,15 +80,6 @@ stack-init-test: && stack-start
 
 ## Documentation
 
-# Generate the OpenApi in {{openapiDir}} yml from the tapir endpoints
-docs-openapi-generate:
-    # The generated files are stored in the docs/03-endpoints/generated-openapi directory
-    # You can specify the directory where the files are stored by setting the openapiDir variable
-    # e.g. `just openapiDir=/tmp/openapi docs-openapi-generate`
-    mkdir -p {{ openapiDir }}
-    rm {{ openapiDir }}/*.yml >> /dev/null 2>&1 || true
-    ./sbtx "webapi/runMain org.knora.webapi.slice.common.api.DocsGenerator {{ openapiDir }}"
-
 docs-install-requirements:
     python -m pip install --upgrade pip
     pip3 install -r docs/requirements.txt
@@ -106,12 +96,7 @@ docs-serve: docs-build-dependent
 docs-build: docs-build-dependent docs-ingest-build
     mkdocs build --strict
 
-# Updates the OpenApi yml files by generating these from the tAPIr specs
-docs-ingest-openapi-generate:
-    rm -f ./ingest/docs/openapi/openapi-*.yml
-    ./sbtx "project ingest" "runMain swiss.dasch.DocsGenerator ./ingest/docs/openapi"
-
-docs-ingest-build: docs-ingest-openapi-generate
+docs-ingest-build:
     (cd ingest; mkdocs build --clean)
 
 markdownlint:
