@@ -112,7 +112,7 @@ object Dependencies {
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.81"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.82"
 
   // caching
   val ehcache = "org.ehcache" % "ehcache" % "3.11.1"
@@ -201,7 +201,7 @@ object Dependencies {
   val flywayVersion         = "11.12.0"
   val otelAgentVersion      = "v2.18.1"
   val otelPyroscopeVersion  = "v1.0.4"
-  val hikariVersion         = "6.3.3"
+  val hikariVersion         = "7.0.2"
   val quillVersion          = "4.8.6"
   val sqliteVersion         = "3.50.3.0"
   val testContainersVersion = "1.20.4"
