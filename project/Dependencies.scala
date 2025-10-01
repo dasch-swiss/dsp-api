@@ -17,7 +17,7 @@ object Dependencies {
   val ScalaVersion = "3.3.6"
 
   val PekkoActorVersion = "1.2.1"
-  val PekkoHttpVersion  = "1.2.1"
+  val PekkoHttpVersion  = "1.2.0"
 
   val MonocleVersion = "3.3.0"
 
