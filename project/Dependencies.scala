@@ -215,7 +215,7 @@ object Dependencies {
   val flywayVersion         = "11.12.0"
   val otelAgentVersion      = "v2.18.1"
   val otelPyroscopeVersion  = "v1.0.4"
-  val hikariVersion         = "6.3.3"
+  val hikariVersion         = "7.0.2"
   val quillVersion          = "4.8.6"
   val sqliteVersion         = "3.50.3.0"
   val testContainersVersion = "1.20.4"
