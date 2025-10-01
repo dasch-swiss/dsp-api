@@ -26,9 +26,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 
-/**
- * Tests [[InputOntologyV2]].
- */
 object InputOntologyV2Spec extends E2EZSpec {
 
   private val PropertyDef = InputOntologyV2(
@@ -113,7 +110,6 @@ object InputOntologyV2Spec extends E2EZSpec {
 
   override val e2eSpec = suite("InputOntologyV2")(
     test("parse a property definition") {
-
       val params =
         """
           |{
@@ -212,7 +208,6 @@ object InputOntologyV2Spec extends E2EZSpec {
       assertTrue(actual == ClassDef)
     },
     test("reject an entity definition with an invalid IRI") {
-
       val params =
         s"""
            |{
