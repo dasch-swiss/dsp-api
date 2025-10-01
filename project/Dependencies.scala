@@ -16,12 +16,12 @@ object Dependencies {
 
   val ScalaVersion = "3.3.6"
 
-  val PekkoActorVersion = "1.2.0"
+  val PekkoActorVersion = "1.2.1"
   val PekkoHttpVersion  = "1.2.0"
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion         = "5.1.5"
+  val Rdf4jVersion         = "5.1.6"
   val TopbraidShaclVersion = "1.4.4"
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
@@ -67,7 +67,7 @@ object Dependencies {
     "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.3.1"        % Test,
   )
 
-  val SttpClientVersion = "4.0.11"
+  val SttpClientVersion = "4.0.12"
   val zioSttpClient = Seq(
     "com.softwaremill.sttp.client4" %% "zio"      % SttpClientVersion,
     "com.softwaremill.sttp.client4" %% "zio-json" % SttpClientVersion,
@@ -117,7 +117,7 @@ object Dependencies {
   // authentication
   val jwtZioJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.3"
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.5.3" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.5.5" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -146,7 +146,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.19.0"
 
-  val tapirVersion = "1.11.44"
+  val tapirVersion = "1.11.46"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
@@ -162,7 +162,7 @@ object Dependencies {
   )
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"  %% "zio-opentelemetry"              % "3.1.9",
+    "dev.zio"  %% "zio-opentelemetry"              % "3.1.10",
     "io.sentry" % "sentry-opentelemetry-agentless" % "8.22.0",
   )
 
