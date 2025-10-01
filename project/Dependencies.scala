@@ -121,7 +121,7 @@ object Dependencies {
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.81"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.82"
 
   // caching
   val ehcache = "org.ehcache" % "ehcache" % "3.11.1"
@@ -144,7 +144,7 @@ object Dependencies {
   val wiremock = "org.wiremock" % "wiremock" % "3.13.1"
 
   // found/added by the plugin but deleted anyway
-  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.18.0"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.19.0"
 
   val tapirVersion = "1.11.46"
 
@@ -163,7 +163,7 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"  %% "zio-opentelemetry"              % "3.1.10",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.21.1",
+    "io.sentry" % "sentry-opentelemetry-agentless" % "8.22.0",
   )
 
   val integrationTestDependencies = Seq(
@@ -212,10 +212,10 @@ object Dependencies {
     zioPrelude,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion         = "11.12.0"
+  val flywayVersion         = "11.13.2"
   val otelAgentVersion      = "v2.18.1"
   val otelPyroscopeVersion  = "v1.0.4"
-  val hikariVersion         = "6.3.3"
+  val hikariVersion         = "7.0.2"
   val quillVersion          = "4.8.6"
   val sqliteVersion         = "3.50.3.0"
   val testContainersVersion = "1.20.4"
