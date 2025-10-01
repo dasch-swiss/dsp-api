@@ -1,0 +1,636 @@
+{
+    "@graph": [
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/036d6b907006c",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "identischer Holzschnitt",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/036d6b907006c.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/036d6b907006"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/0b2e70d7f919S",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Der Holzschnitt wird auf den Seiten p7r und q4v verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/0b2e70d7f919S.20160302T150555Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:55Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/0b2e70d7f919"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/1b8a1c6e9b0a_",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Der Holzschnitt wird au den Seiten g1r und i4v verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/1b8a1c6e9b0a_.20160302T150555Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:55Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/1b8a1c6e9b0a"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/1bc4dfb2a3f1E",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Weiedervwendung des selben Holzschnittes. In der deutschen Ausgabe ist in der Illustration noch eine handschriftliche Bemerkung",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/1bc4dfb2a3f1E.20160302T150556Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:56Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/1bc4dfb2a3f1"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/25af78c2a00d023",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "STAB und",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/25af78c2a00d023.20160302T150556Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:56Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/25af78c2a00d02"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/2a15a6faa906U",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Auf den Seiten e1r und q8r wird derselbe Holzschnitt verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/2a15a6faa906U.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/2a15a6faa906"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/2cab2cedaf06y",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Der Holzschnitt wird auf Seite d1r der lateinischen Ausgabe des Narrenschiffs (1.Aug. 1497) und auf Seite c3v der deutschen Ausgabe des Narrenschiffs verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/2cab2cedaf06y.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/2cab2cedaf06"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/39caf3857f0al",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Derselbe Holzschnitt wird auf den Seiten e3r und e4r verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/39caf3857f0al.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/39caf3857f0a"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/3f7725dead063",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Derselbe Holzschnitt wird auf Seite b7v der deutschen Ausgabe des Narrenschiffs und auf Seite c6r der lateinischen Ausgabe des narrenschiffs verwendet. ",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/3f7725dead063.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/3f7725dead06"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/42931169f4da01k",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "GLEICHERHOLZSCHNITT",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/42931169f4da01k.20160302T150556Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:56Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/42931169f4da01"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/512f6e3f1835S",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Derselbe Holzschnitt",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/512f6e3f1835S.20160302T150555Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:55Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/512f6e3f1835"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/58cab735f806W",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Der Holzschnitt wird auf den Seiten f6v und g6v verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/58cab735f806W.20160302T150533Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:33Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/58cab735f806"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/5a3f1d87fa19p",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Derselbe Holzschnitt wird auf den Seiten D1r und I7r verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/5a3f1d87fa19p.20160302T150555Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:55Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/5a3f1d87fa19"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/5dcdbdcfaaf7T",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Mehrfachverwendung desselben Holzschnitts",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/5dcdbdcfaaf7T.20160302T150556Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:56Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/5dcdbdcfaaf7"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/654a11316f06E",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Verkündigung, Test Lothar",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/654a11316f06E.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/654a11316f06"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/6a9bc91d9c0az",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Der Holzschnitt wird auf den Seiten a4v und b1r verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/6a9bc91d9c0az.20160302T150555Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:55Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/6a9bc91d9c0a"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/792653aaaa06K",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Der Holzschnitt wird zweimal verwendet: Auf den Seiten b1v (Das Narrenschiff (dt.)) und b8r (Das Narrenschiff (lat.)).",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/792653aaaa06K.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/792653aaaa06"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/7bbcd99cb006V",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Der Holzschnitt wird auf den Seiten c5v und u1r verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/7bbcd99cb006V.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/7bbcd99cb006"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/7c6c2a17edbd7",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "TEST",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/7c6c2a17edbd7.20160302T150555Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:55Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/7c6c2a17edbd"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/881405205304a",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Lateinische Übersetzung",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/881405205304a.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/881405205304"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/88dba035800aq",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Derselbe Holzschnitt wird auf den Seiten e6r und e7r verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/88dba035800aq.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/88dba035800a"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8cf24b9ba806U",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Auf den Seiten f7r und h8r wird derselbe Holzschnitt verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8cf24b9ba806U.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/8cf24b9ba806"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8e88d28dae06P",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Der Holzschnitt wird auf Seite b8v der deutschen Ausgabe des Narrenschiffs und c7r der lateinischen Ausgabe des Narrenschiffs verwendet.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8e88d28dae06P.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/8e88d28dae06"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8f382308ebbdM",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Beide haben miteinander zu tun",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8f382308ebbdM.20160302T150555Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:55Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/8f382308ebbd"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/a154cb7eac06o",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "Der Holzschnitt wird viermal verwendet: In der lateinischen Fassung des Narrenschiffs auf den Seiten  c3r und m5r und in der deutschen Fassung des Narrenschiffs auf den Seiten b4v und o7v.",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/a154cb7eac06o.20160302T150554Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "V",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:54Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/b83acc5f05"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+            "@type": "knora-api:LinkObj",
+            "@id": "http://rdfh.ch/0803/a154cb7eac06"
+        }
+    ],
+    "knora-api:mayHaveMoreResults": true,
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+    }
+}

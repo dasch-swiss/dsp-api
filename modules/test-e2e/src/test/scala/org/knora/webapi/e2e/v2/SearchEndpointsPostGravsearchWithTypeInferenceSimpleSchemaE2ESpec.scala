@@ -931,7 +931,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |     FILTER(?decimal = "2.1"^^xsd:decimal)
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingEqualsDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingEqualsDecimal.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that has a decimal value bigger than 2.0 (with type inference)") {
       val query =
@@ -952,7 +952,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |     FILTER(?decimal > "2"^^xsd:decimal)
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingBiggerThanDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingBiggerThanDecimal.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that has a decimal value smaller than 3.0 (with type inference)") {
       val query =
@@ -973,7 +973,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |     FILTER(?decimal < "3"^^xsd:decimal)
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingSmallerThanDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingSmallerThanDecimal.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that has a Boolean value that is true 2 (with type inference)") {
       val query =
@@ -995,7 +995,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingWithBoolean.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithBoolean.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that may have a Boolean value that is true (with type inference)") {
       // set OFFSET to 1 to get "Testding for extended search"
@@ -1022,7 +1022,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |         FILTER(?intVal = 123454321 || ?intVal = 999999999)
           |     }
           |} OFFSET 1""".stripMargin
-      verifyQueryResult(query, "ThingWithBooleanOptionalOffset1.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithBooleanOptionalOffset1.jsonld", anythingUser1)
     },
     test(
       "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both) (with type inference)",
@@ -1055,7 +1055,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |} OFFSET 0
           |""".stripMargin
-      verifyQueryResult(query, "ThingWithBooleanOrDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithBooleanOrDecimal.jsonld", anythingUser1)
     },
     test("search for a book whose title contains 'Zeit' using the regex function (with type inference)") {
       val query =
@@ -1078,7 +1078,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |   FILTER regex(?propVal0, "Zeit", "i")
           |
           |}""".stripMargin
-      verifyQueryResult(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
     },
     test("search for a book whose title contains 'Zeitglöcklein' using the match function (with type inference)") {
       val query =
@@ -1102,7 +1102,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
     },
     test(
       "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function (with type inference)",
@@ -1128,7 +1128,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
     },
     test("search for 'Zeitglöcklein des Lebens' using dcterms:title (with type inference)") {
       val query =
@@ -1150,7 +1150,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |} OFFSET 0
           |""".stripMargin
-      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
     },
     test("search for an anything:Thing with a list value (with type inference)") {
       val query =
@@ -1170,7 +1170,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |} OFFSET 0
           |""".stripMargin
-      verifyQueryResult(query, "ThingWithListValue.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithListValue.jsonld", anythingUser1)
     },
     test("search for a text using the lang function (with type inference)") {
       val query =
@@ -1190,7 +1190,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |     FILTER(lang(?text) = "fr")
           |}
           |""".stripMargin
-      verifyQueryResult(query, "LanguageFulltextSearch.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "LanguageFulltextSearch.jsonld", anythingUser1)
     },
     test("search for a specific text using the lang function (with type inference)") {
       val query =
@@ -1210,7 +1210,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |     FILTER(lang(?text) = "fr" && ?text = "Bonjour")
           |}
           |""".stripMargin
-      verifyQueryResult(query, "LanguageFulltextSearch.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "LanguageFulltextSearch.jsonld", anythingUser1)
     },
     test("do a Gravsearch query for link objects that link to an incunabula book (with type inference)") {
       val query =
@@ -1234,7 +1234,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "LinkObjectsToBooks.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "LinkObjectsToBooks.jsonld", anythingUser1)
     },
     test(
       "do a Gravsearch query for a letter that links to a specific person via two possible properties (with type inference)",
@@ -1265,7 +1265,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |} ORDER BY ?date
           |""".stripMargin
-      verifyQueryResult(query, "letterWithAuthor.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "letterWithAuthor.jsonld", anythingUser1)
     },
     test("do a Gravsearch query for a letter that links to a person with a specified name (with type inference)") {
       val query =
@@ -1299,7 +1299,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |} ORDER BY ?date
           |""".stripMargin
-      verifyQueryResult(query, "letterWithPersonWithName.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "letterWithPersonWithName.jsonld", anythingUser1)
     },
     test(
       "do a Gravsearch query for a letter that links to another person with a specified name (with type inference)",
@@ -1366,7 +1366,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "foafPerson.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "foafPerson.jsonld", anythingUser1)
     },
     test("run a Gravsearch query that searches for a single resource specified by its IRI (with type inference)") {
       val query =
@@ -1387,7 +1387,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |     ?thing anything:hasInteger ?integer .
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingByIriWithRequestedValues.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingByIriWithRequestedValues.jsonld", anythingUser1)
     },
     test(
       "do a Gravsearch query for a letter and get information about the persons associated with it (with type inference)",
@@ -1453,7 +1453,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "incomingPagesForBook.jsonld", incunabulaMemberUser)
+      verifyQueryResultWithUser(query, "incomingPagesForBook.jsonld", incunabulaMemberUser)
     },
     test(
       "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY (with type inference)",
@@ -1519,7 +1519,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceSimpleSchemaE2ESpec extends
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "regionsOfZeitgloecklein.jsonld", incunabulaMemberUser)
+      verifyQueryResultWithUser(query, "regionsOfZeitgloecklein.jsonld", incunabulaMemberUser)
     },
     test("do a Gravsearch query containing a UNION nested in an OPTIONAL (with type inference)") {
       val query =
