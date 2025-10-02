@@ -10,6 +10,7 @@ import zio.*
 import java.time.Instant
 import java.util.UUID
 import scala.PartialFunction.cond
+import scala.jdk.CollectionConverters.*
 
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
@@ -393,6 +394,7 @@ final case class ValuesResponderV2(
   /**
    * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
    *
+   * @param dataNamedGraph         the named graph in which the value is to be created.
    * @param resourceInfo           information about the resource in which to create the value.
    * @param propertyIri            the property that should point to the value.
    * @param value                  an [[ValueContentV2]] describing the value.
@@ -453,22 +455,24 @@ final case class ValuesResponderV2(
           case _ => ZIO.succeed(Vector.empty[SparqlTemplateLinkUpdate])
         }
 
-      // Generate a SPARQL update string.
-      sparqlUpdate = sparql.v2.txt.createValue(
-                       dataNamedGraph = dataNamedGraph,
-                       resourceIri = resourceInfo.resourceIri,
-                       propertyIri = propertyIri,
-                       newValueIri = newValueIri,
-                       newValueUUID = newValueUUID,
-                       value = value,
-                       linkUpdates = standoffLinkUpdates,
-                       valueCreator = valueCreator,
-                       valuePermissions = valuePermissions,
-                       creationDate = creationDate,
-                       stringFormatter = stringFormatter,
-                     )
+      dataNamedGraphInternal <- iriConverter.asInternalIri(dataNamedGraph)
+      resourceIriInternal    <- iriConverter.asInternalIri(resourceInfo.resourceIri)
+      newValueIriInternal    <- iriConverter.asInternalIri(newValueIri)
+      valueCreatorInternal   <- iriConverter.asInternalIri(valueCreator)
 
-      _ <- triplestoreService.query(Update(sparqlUpdate))
+      // Use repository method which handles dual validation
+      _ <- valueRepo.createValue(
+             dataNamedGraph = dataNamedGraphInternal,
+             resourceIri = resourceIriInternal,
+             propertyIri = propertyIri,
+             newValueIri = newValueIriInternal,
+             newValueUUID = newValueUUID,
+             value = value,
+             linkUpdates = standoffLinkUpdates,
+             valueCreator = valueCreatorInternal,
+             valuePermissions = valuePermissions,
+             creationDate = creationDate,
+           )
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
       newValueUUID = newValueUUID,
@@ -718,7 +722,6 @@ final case class ValuesResponderV2(
               valuePermissions = newValueVersionPermissionLiteral,
               valueCreationDate = updateValue.valueCreationDate,
               newValueVersionIri = updateValue.newValueVersionIri,
-              requestingUser = requestingUser,
             )
         }
     } yield UpdateValueResponseV2(
@@ -871,7 +874,6 @@ final case class ValuesResponderV2(
     valuePermissions: String,
     valueCreationDate: Option[Instant],
     newValueVersionIri: Option[SmartIri],
-    requestingUser: User,
   ): Task[UnverifiedValueV2] =
     for {
       newValueIri <-
@@ -939,28 +941,26 @@ final case class ValuesResponderV2(
 
       // If no custom value creation date was provided, make a timestamp to indicate when the value
       // was updated.
-      currentTime: Instant = valueCreationDate.getOrElse(Instant.now)
-
+      currentTime: Instant     = valueCreationDate.getOrElse(Instant.now)
+      dataNamedGraphInternal  <- iriConverter.asInternalIri(dataNamedGraph)
+      resourceIriInternal     <- iriConverter.asInternalIri(resourceInfo.resourceIri)
+      currentValueIriInternal <- iriConverter.asInternalIri(currentValue.valueIri)
+      newValueIriInternal     <- iriConverter.asInternalIri(newValueIri)
+      valueCreatorInternal    <- iriConverter.asInternalIri(valueCreator)
       // Generate a SPARQL update.
-      sparqlUpdate = sparql.v2.txt.addValueVersion(
-                       dataNamedGraph = dataNamedGraph,
-                       resourceIri = resourceInfo.resourceIri,
-                       propertyIri = propertyIri,
-                       currentValueIri = currentValue.valueIri,
-                       newValueIri = newValueIri,
-                       valueTypeIri = currentValue.valueContent.valueType,
-                       value = newValueVersion,
-                       valueCreator = valueCreator,
-                       valuePermissions = valuePermissions,
-                       maybeComment = newValueVersion.comment,
-                       linkUpdates = standoffLinkUpdates,
-                       currentTime = currentTime,
-                       requestingUser = requestingUser.id,
-                     )
-
-      // Do the update.
-      _ <- triplestoreService.query(Update(sparqlUpdate))
-
+      _ <- valueRepo.updateValue(
+             dataNamedGraph = dataNamedGraphInternal,
+             resourceIri = resourceIriInternal,
+             propertyIri = propertyIri,
+             currentValueIri = currentValueIriInternal,
+             newValueIri = newValueIriInternal,
+             valueTypeIri = currentValue.valueContent.valueType,
+             value = newValueVersion,
+             valueCreator = valueCreatorInternal,
+             valuePermissions = valuePermissions,
+             linkUpdates = standoffLinkUpdates,
+             creationDate = currentTime,
+           )
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
       newValueUUID = currentValue.valueHasUUID,

@@ -1,0 +1,35 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+DELETE { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate ?resourceLastModificationDate . } }
+INSERT { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
+<http://0.0.0.0:3333/0001/thing/value> a <http://api.knora.org/ontology/knora-api/v2#BooleanValue> ;
+    knora-base:isDeleted false ;
+    knora-base:valueHasString "true" ;
+    knora-base:valueHasUUID "0000000000000000000000" .
+<http://0.0.0.0:3333/0001/thing/value> knora-base:valueHasBoolean true .
+<http://0.0.0.0:3333/0001/thing/value> knora-base:attachedToUser <http://0.0.0.0:3333/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+    knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
+    knora-base:valueHasOrder ?nextOrder ;
+    knora-base:valueCreationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
+<http://0.0.0.0:3333/0001/thing/resource> <http://www.knora.org/ontology/0001/anything#hasText> <http://0.0.0.0:3333/0001/thing/value> . } }
+WHERE { BIND( IRI( "http://0.0.0.0:3333/data/0001/thing" ) AS ?dataNamedGraph )
+BIND( IRI( "http://0.0.0.0:3333/0001/thing/resource" ) AS ?resource )
+?resource a ?resourceClass ;
+    knora-base:isDeleted false .
+?resourceClass rdfs:subClassOf* knora-base:Resource .
+OPTIONAL { ?resource knora-base:lastModificationDate ?resourceLastModificationDate . }
+BIND( IRI( "http://www.knora.org/ontology/0001/anything#hasText" ) AS ?property )
+BIND( IRI( "http://api.knora.org/ontology/knora-api/v2#BooleanValue" ) AS ?valueType )
+?property knora-base:objectClassConstraint ?propertyRange .
+?valueType rdfs:subClassOf* ?propertyRange .
+?resourceClass rdfs:subClassOf* ?restriction .
+?restriction a owl:Restriction ;
+    owl:onProperty ?property .
+{ SELECT ( MAX( ?order ) AS ?maxOrder ) ( IF( BOUND( ?maxOrder ), ( ?maxOrder + 1 ), 0 ) AS ?nextOrder )
+WHERE { <http://0.0.0.0:3333/0001/thing/resource> <http://www.knora.org/ontology/0001/anything#hasText> ?otherValue .
+?otherValue knora-base:valueHasOrder ?order ;
+    knora-base:isDeleted false . }
+ } }
