@@ -664,105 +664,117 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
         test("without comment or language") {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValue()))
-          } yield assertGolden(builderQuery, "commentOrLanguage")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_commentOrLanguage")
         },
         test("with comment") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValue(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withComment")
         },
         test("with language") {
           for {
             testValue <- ZIO.succeed(TestDataFactory.createTextValue(withLanguage = true))
             builderQuery <-
               ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withLanguage")
         },
         test("with comment and language") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValue(withComment = true, withLanguage = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withCommentAndLanguage")
         },
         test("with standoff") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoff())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withStandoff")
         },
         test("with standoff and comment") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoff(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withStandoffAndComment")
         },
         test("with standoff link") {
           val linkUpdates = Seq(TestDataFactory.createSparqlTemplateLinkUpdate())
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoffLink())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue, linkUpdates))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withStandoffLink")
         },
         test("with virtual hierarchy standoff") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithVirtualHierarchyStandoff())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withVirtualHierarchyStandoff")
         },
         test("with virtual hierarchy standoff and comment") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithVirtualHierarchyStandoff(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(
+            replaceUuidPatterns(builderQuery),
+            "TextValueContentV2_withVirtualHierarchyStandoffAndComment",
+          )
         },
         test("with hierarchical standoff") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithHierarchicalStandoff())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withHierarchicalStandoff")
         },
         test("with hierarchical standoff and comment") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithHierarchicalStandoff(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(
+            replaceUuidPatterns(builderQuery),
+            "TextValueContentV2_withHierarchicalStandoffAndComment",
+          )
         },
         test("with XML ID standoff") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithXMLIDStandoff())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withXmlIdStandoff")
         },
         test("with XML ID standoff and comment") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithXMLIDStandoff(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withXmlIdStandoffAndComment")
         },
         test("with standoff integer attribute") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoffInteger())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withStandoffIntegerAttribute")
         },
         test("with standoff integer attribute and comment") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoffInteger(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(
+            replaceUuidPatterns(builderQuery),
+            "TextValueContentV2_withStandoffIntegerAttributeAndComment",
+          )
         },
         test("with standoff time attribute") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoffTime())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withStandoffTimeAttribute")
         },
         test("with standoff time attribute and comment") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoffTime(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(
+            replaceUuidPatterns(builderQuery),
+            "TextValueContentV2_withStandoffTimeAttributeAndComment",
+          )
         },
       ),
       suite("IntegerValueContentV2")(
@@ -770,76 +782,76 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createIntegerValue())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "IntegerValueContentV2_withoutComment")
         },
         test("with comment") {
           for {
             testValue    <- ZIO.succeed(TestDataFactory.createIntegerValue(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "IntegerValueContentV2_withComment")
         },
       ),
       suite("DecimalValueContentV2")(
         test("without comment") {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDecimalValue()))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "DecimalValueContentV2_withoutComment")
         },
       ),
       suite("BooleanValueContentV2")(
         test("without comment") {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createBooleanValue()))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "BooleanValueContentV2")
         },
       ),
       suite("UriValueContentV2")(
         test("without comment") {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createUriValue()))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "UriValueContentV2")
         },
       ),
       suite("DateValueContentV2")(
         test("without comment") {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDateValue()))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "DateValueContentV2")
         },
       ),
       suite("ColorValueContentV2")(
         test("without comment") {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createColorValue()))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "ColorValueConte")
         },
       ),
       suite("GeomValueContentV2")(
         test("without comment") {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createGeomValue()))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "GeomValueContentV2")
         },
       ),
       suite("IntervalValueContentV2")(
         test("without comment") {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createIntervalValue()))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "IntervalValueContentV2")
         },
       ),
       suite("TimeValueContentV2")(
         test("without comment") {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTimeValue()))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TimeValueContentV2")
         },
       ),
       suite("GeonameValueContentV2")(
         test("without comment") {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createGeonameValue()))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "GeonameValueContentV2")
         },
       ),
       suite("HierarchicalListValueContentV2")(
@@ -847,7 +859,7 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
           for {
             builderQuery <-
               ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createHierarchicalListValue()))
-          } yield assertGolden(builderQuery, "")
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "HierarchicalListValueContentV2")
         },
       ),
     ),
@@ -875,59 +887,59 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
         for {
           builderQuery <-
             ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValueWithEmptyString()))
-        } yield assertGolden(builderQuery, "")
+        } yield assertGolden(builderQuery, "EdgeCases_textValueWithEmptyString")
       },
       test("Text value with Unicode characters") {
         for {
           builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValueWithUnicode()))
-        } yield assertGolden(builderQuery, "")
+        } yield assertGolden(replaceUuidPatterns(builderQuery), "EdgeCases_textValueWithUnicodeCharacters")
       },
       test("Text value with very long string") {
         for {
           builderQuery <-
             ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValueWithVeryLongString()))
-        } yield assertGolden(builderQuery, "")
+        } yield assertGolden(replaceUuidPatterns(builderQuery), "EdgeCases_textValueWithVeryLongString")
       },
       test("Integer value with maximum value") {
         for {
           builderQuery <-
             ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createIntegerValueWithMaxValue()))
-        } yield assertGolden(builderQuery, "")
+        } yield assertGolden(replaceUuidPatterns(builderQuery), "EdgeCases_integerValueWithMaximumValue")
       },
       test("Integer value with minimum value") {
         for {
           builderQuery <-
             ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createIntegerValueWithMinValue()))
-        } yield assertGolden(builderQuery, "")
+        } yield assertGolden(replaceUuidPatterns(builderQuery), "EdgeCases_integerValueWithMinimumValue")
       },
       test("Decimal value with zero") {
         for {
           builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDecimalValueWithZero()))
-        } yield assertGolden(builderQuery, "")
+        } yield assertGolden(replaceUuidPatterns(builderQuery), "EdgeCases_decimalValueWithZero")
       },
       test("Decimal value with very high precision") {
         for {
           builderQuery <-
             ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDecimalValueWithVeryPrecise()))
-        } yield assertGolden(builderQuery, "")
+        } yield assertGolden(replaceUuidPatterns(builderQuery), "EdgeCases_decimalValueWithVeryHighPrecision")
       },
       test("URI value with special characters") {
         for {
           builderQuery <-
             ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createUriValueWithSpecialChars()))
-        } yield assertGolden(builderQuery, "")
+        } yield assertGolden(replaceUuidPatterns(builderQuery), "EdgeCases_uriValueWithSpecialCharacters")
       },
       test("Color value with transparency") {
         for {
           builderQuery <-
             ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createColorValueWithTransparent()))
-        } yield assertGolden(builderQuery, "")
+        } yield assertGolden(replaceUuidPatterns(builderQuery), "EdgeCases_colorValueWithTransparency")
       },
       test("Interval value with zero range") {
         for {
           builderQuery <-
             ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createIntervalValueWithZeroRange()))
-        } yield assertGolden(builderQuery, "")
+        } yield assertGolden(replaceUuidPatterns(builderQuery), "EdgeCases_intervalValueWithZeroRange")
       },
     ),
     suite("Security - Input sanitization and injection prevention")(
