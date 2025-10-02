@@ -37,9 +37,7 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagAttributeV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -47,38 +45,6 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 object InsertValueQueryBuilder {
-  private[service] def createValueQueryTwirl(
-    dataNamedGraph: InternalIri,
-    resourceIri: InternalIri,
-    propertyIri: SmartIri,
-    newValueIri: InternalIri,
-    newValueUUID: UUID,
-    value: ValueContentV2,
-    linkUpdates: Seq[SparqlTemplateLinkUpdate],
-    valueCreator: InternalIri,
-    valuePermissions: String,
-    creationDate: Instant,
-  )(implicit sf: StringFormatter): Update = {
-    val twirlSparql = sparql.v2.txt
-      .createValue(
-        dataNamedGraph = dataNamedGraph.value,
-        resourceIri = resourceIri.value,
-        propertyIri = propertyIri,
-        newValueIri = newValueIri.value,
-        newValueUUID = newValueUUID,
-        value = value,
-        linkUpdates = linkUpdates,
-        valueCreator = valueCreator.value,
-        valuePermissions = valuePermissions,
-        creationDate = creationDate,
-        stringFormatter = sf,
-      )
-      .toString
-      .strip
-
-    Update(twirlSparql)
-  }
-
   def createValueQuery(
     dataNamedGraph: InternalIri,
     resourceIri: InternalIri,

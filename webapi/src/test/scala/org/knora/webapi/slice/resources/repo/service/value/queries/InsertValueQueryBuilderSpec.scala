@@ -24,7 +24,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
@@ -49,27 +48,6 @@ object InsertValueQueryBuilderTestSupport {
     val testPermissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
     val testCreationDate = Instant.parse("2023-08-01T10:30:00Z")
-
-    def createTwirlQuery(
-      value: ValueContentV2,
-      linkUpdates: Seq[SparqlTemplateLinkUpdate] = Seq.empty,
-    ): String =
-      sparql.v2.txt
-        .createValue(
-          dataNamedGraph = testDataGraph.value,
-          resourceIri = testResourceIri.value,
-          propertyIri = testPropertyIri,
-          newValueIri = testValueIri.value,
-          newValueUUID = testValueUUID,
-          value = value,
-          linkUpdates = linkUpdates,
-          valueCreator = testUserIri.value,
-          valuePermissions = testPermissions,
-          creationDate = testCreationDate,
-          stringFormatter = sf,
-        )
-        .toString()
-        .strip
 
     def createBuilderQuery(
       value: ValueContentV2,
@@ -621,16 +599,6 @@ object InsertValueQueryBuilderTestSupport {
         comment = None,
       )
   }
-
-  // Helper to compare SPARQL queries for strict equivalence
-  def compareSparqlQueries(twirlQuery: String, builderQuery: String) =
-    for {
-      parsedTwirlUpdate   <- ZIO.attempt(UpdateFactory.create(twirlQuery))
-      parsedBuilderUpdate <- ZIO.attempt(UpdateFactory.create(builderQuery))
-      normalizedTwirl      = replaceUuidPatterns(parsedTwirlUpdate.toString)
-      normalizedBuilder    = replaceUuidPatterns(parsedBuilderUpdate.toString)
-      assertEqual          = assertTrue(normalizedBuilder == normalizedTwirl)
-    } yield assertEqual
 
   def replaceUuidPatterns(sparqlQuery: String): String = {
     val uuidPattern = """knora-base:valueHasUUID\s+"[^"]+"\s*[.;]""".r
