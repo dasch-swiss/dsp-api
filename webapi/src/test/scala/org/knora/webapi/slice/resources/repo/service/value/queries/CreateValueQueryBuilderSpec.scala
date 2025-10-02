@@ -34,13 +34,12 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagTimeAt
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.common.service.IriConverter
 
 object CreateValueQueryBuilderTestSupport {
-
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   object TestDataFactory {
-
     val testDataGraph   = InternalIri("http://0.0.0.0:3333/data/0001/thing")
     val testResourceIri = InternalIri("http://0.0.0.0:3333/0001/thing/resource")
     val testPropertyIri = SmartIri("http://www.knora.org/ontology/0001/anything#hasText")
@@ -1165,44 +1164,44 @@ object CreateValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
     suite("With currentValue")(
       test("Basic case") {
         for {
-          testValue <- ZIO.succeed(TestDataFactory.createTextValue())
+          testValue       <- ZIO.succeed(TestDataFactory.createTextValue())
+          currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
           builderQuery <- ZIO.attempt(
                             TestDataFactory.createBuilderQuery(
                               testValue,
-                              newUuidOrCurrentIri =
-                                Right(InternalIri.from("http://rdfh.ch/0803/861b5644b302").toOption.get),
+                              newUuidOrCurrentIri = Right(currentValueIri),
                             ),
                           )
         } yield assertGolden(builderQuery, "currentValue")
       },
       test("With link updates") {
         for {
-          testValue   <- ZIO.succeed(TestDataFactory.createTextValue())
-          linkUpdates <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate()))
+          testValue       <- ZIO.succeed(TestDataFactory.createTextValue())
+          linkUpdates     <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate()))
+          currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
           builderQuery <- ZIO.attempt(
                             TestDataFactory.createBuilderQuery(
                               testValue,
                               linkUpdates = linkUpdates,
-                              newUuidOrCurrentIri =
-                                Right(InternalIri.from("http://rdfh.ch/0803/861b5644b302").toOption.get),
+                              newUuidOrCurrentIri = Right(currentValueIri),
                             ),
                           )
         } yield assertGolden(replaceUuidPatterns(builderQuery), "currentValue__withLinkUpdates")
       },
       test("With a deleted link update") {
         for {
-          testValue   <- ZIO.succeed(TestDataFactory.createTextValue())
-          linkUpdates <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate(newReferenceCount = 0)))
+          testValue       <- ZIO.succeed(TestDataFactory.createTextValue())
+          linkUpdates     <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate(newReferenceCount = 0)))
+          currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
           builderQuery <- ZIO.attempt(
                             TestDataFactory.createBuilderQuery(
                               testValue,
                               linkUpdates = linkUpdates,
-                              newUuidOrCurrentIri =
-                                Right(InternalIri.from("http://rdfh.ch/0803/861b5644b302").toOption.get),
+                              newUuidOrCurrentIri = Right(currentValueIri),
                             ),
                           )
         } yield assertGolden(replaceUuidPatterns(builderQuery), "currentValue__withLinkUpdatesDeleted")
       },
     ),
-  )
+  ).provide(IriConverter.layer, StringFormatter.test)
 }

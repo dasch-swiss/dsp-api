@@ -455,10 +455,10 @@ final case class ValuesResponderV2(
           case _ => ZIO.succeed(Vector.empty[SparqlTemplateLinkUpdate])
         }
 
-      dataNamedGraphInternal <- ZIO.fromEither(InternalIri.from(dataNamedGraph))
-      resourceIriInternal    <- ZIO.fromEither(InternalIri.from(resourceInfo.resourceIri))
-      newValueIriInternal    <- ZIO.fromEither(InternalIri.from(newValueIri))
-      valueCreatorInternal   <- ZIO.fromEither(InternalIri.from(valueCreator))
+      dataNamedGraphInternal <- iriConverter.asInternalIri(dataNamedGraph)
+      resourceIriInternal    <- iriConverter.asInternalIri(resourceInfo.resourceIri)
+      newValueIriInternal    <- iriConverter.asInternalIri(newValueIri)
+      valueCreatorInternal   <- iriConverter.asInternalIri(valueCreator)
 
       // Use repository method which handles dual validation
       _ <- valueRepo.createValue(
@@ -942,11 +942,11 @@ final case class ValuesResponderV2(
       // If no custom value creation date was provided, make a timestamp to indicate when the value
       // was updated.
       currentTime: Instant     = valueCreationDate.getOrElse(Instant.now)
-      dataNamedGraphInternal  <- ZIO.fromEither(InternalIri.from(dataNamedGraph))
-      resourceIriInternal     <- ZIO.fromEither(InternalIri.from(resourceInfo.resourceIri))
-      currentValueIriInternal <- ZIO.fromEither(InternalIri.from(currentValue.valueIri))
-      newValueIriInternal     <- ZIO.fromEither(InternalIri.from(newValueIri))
-      valueCreatorInternal    <- ZIO.fromEither(InternalIri.from(valueCreator))
+      dataNamedGraphInternal  <- iriConverter.asInternalIri(dataNamedGraph)
+      resourceIriInternal     <- iriConverter.asInternalIri(resourceInfo.resourceIri)
+      currentValueIriInternal <- iriConverter.asInternalIri(currentValue.valueIri)
+      newValueIriInternal     <- iriConverter.asInternalIri(newValueIri)
+      valueCreatorInternal    <- iriConverter.asInternalIri(valueCreator)
       // Generate a SPARQL update.
       _ <- valueRepo.updateValue(
              dataNamedGraph = dataNamedGraphInternal,
