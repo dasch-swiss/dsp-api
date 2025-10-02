@@ -84,7 +84,7 @@ object CreateValueQueryBuilderTestSupport {
           propertyIri = testPropertyIri,
           newValueIri = testValueIri,
           newUuidOrCurrentIri = newUuidOrCurrentIri,
-          value = value,
+          valueInitial = value,
           linkUpdates = linkUpdates,
           valueCreator = testUserIri,
           valuePermissions = testPermissions,

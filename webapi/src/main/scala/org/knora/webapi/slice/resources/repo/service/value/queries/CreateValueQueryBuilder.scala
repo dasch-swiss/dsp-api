@@ -44,6 +44,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.ApiV2Complex
 
 object CreateValueQueryBuilder {
   private[service] def createValueQueryTwirl(
@@ -84,12 +85,14 @@ object CreateValueQueryBuilder {
     propertyIri: SmartIri,
     newValueIri: InternalIri,
     newUuidOrCurrentIri: Either[UUID, InternalIri],
-    value: ValueContentV2,
+    valueInitial: ValueContentV2,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     valueCreator: InternalIri,
     valuePermissions: String,
     creationDate: Instant,
   ): Update = {
+    val value = valueInitial.toOntologySchema(ApiV2Complex)
+
     val dataGraphVar = variable("dataNamedGraph")
     val resourceVar  = variable("resource")
     val currentVar   = variable("currentValue")
