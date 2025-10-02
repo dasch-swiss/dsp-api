@@ -639,7 +639,7 @@ object CreateValueQueryBuilderTestSupport {
 }
 
 object CreateValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
-  val rewriteAll: Boolean = false
+  // override val rewriteAll: Boolean = true
 
   import CreateValueQueryBuilderTestSupport.*
 

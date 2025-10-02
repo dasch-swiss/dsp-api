@@ -22,7 +22,7 @@ import scala.util.chaining.scalaUtilChainingOps
  * Beware: running sbt tests with the "~" prefix and rewrite = true will introduce an indefinite loop.
  */
 trait GoldenTest {
-  val rewriteAll: Boolean
+  val rewriteAll: Boolean = false
 
   // NOTE: adding an implicit en-/decoding interface is advisable
 
