@@ -662,259 +662,192 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
     suite("Builder vs Twirl template comparison")(
       suite("TextValueContentV2")(
         test("without comment or language") {
-          val testValue = TestDataFactory.createTextValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValue()))
+          } yield assertGolden(builderQuery, "commentOrLanguage")
         },
         test("with comment") {
-          val testValue = TestDataFactory.createTextValue(withComment = true)
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValue(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with language") {
-          val testValue = TestDataFactory.createTextValue(withLanguage = true)
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            testValue <- ZIO.succeed(TestDataFactory.createTextValue(withLanguage = true))
+            builderQuery <-
+              ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
+          } yield assertGolden(builderQuery, "")
         },
         test("with comment and language") {
-          val testValue = TestDataFactory.createTextValue(withComment = true, withLanguage = true)
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValue(withComment = true, withLanguage = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with standoff") {
-          val testValue = TestDataFactory.createTextValueWithStandoff()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoff())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with standoff and comment") {
-          val testValue = TestDataFactory.createTextValueWithStandoff(withComment = true)
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoff(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with standoff link") {
-          val testValue   = TestDataFactory.createTextValueWithStandoffLink()
           val linkUpdates = Seq(TestDataFactory.createSparqlTemplateLinkUpdate())
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue, linkUpdates))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoffLink())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue, linkUpdates))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with virtual hierarchy standoff") {
-          val testValue = TestDataFactory.createTextValueWithVirtualHierarchyStandoff()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithVirtualHierarchyStandoff())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with virtual hierarchy standoff and comment") {
-          val testValue = TestDataFactory.createTextValueWithVirtualHierarchyStandoff(withComment = true)
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithVirtualHierarchyStandoff(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with hierarchical standoff") {
-          val testValue = TestDataFactory.createTextValueWithHierarchicalStandoff()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithHierarchicalStandoff())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with hierarchical standoff and comment") {
-          val testValue = TestDataFactory.createTextValueWithHierarchicalStandoff(withComment = true)
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithHierarchicalStandoff(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with XML ID standoff") {
-          val testValue = TestDataFactory.createTextValueWithXMLIDStandoff()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithXMLIDStandoff())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with XML ID standoff and comment") {
-          val testValue = TestDataFactory.createTextValueWithXMLIDStandoff(withComment = true)
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithXMLIDStandoff(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with standoff integer attribute") {
-          val testValue = TestDataFactory.createTextValueWithStandoffInteger()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoffInteger())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with standoff integer attribute and comment") {
-          val testValue = TestDataFactory.createTextValueWithStandoffInteger(withComment = true)
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoffInteger(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with standoff time attribute") {
-          val testValue = TestDataFactory.createTextValueWithStandoffTime()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoffTime())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with standoff time attribute and comment") {
-          val testValue = TestDataFactory.createTextValueWithStandoffTime(withComment = true)
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoffTime(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
       ),
       suite("IntegerValueContentV2")(
         test("without comment") {
-          val testValue = TestDataFactory.createIntegerValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createIntegerValue())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
         test("with comment") {
-          val testValue = TestDataFactory.createIntegerValue(withComment = true)
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
+            testValue    <- ZIO.succeed(TestDataFactory.createIntegerValue(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+          } yield assertGolden(builderQuery, "")
         },
       ),
       suite("DecimalValueContentV2")(
         test("without comment") {
-          val testValue = TestDataFactory.createDecimalValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDecimalValue()))
+          } yield assertGolden(builderQuery, "")
         },
       ),
       suite("BooleanValueContentV2")(
         test("without comment") {
-          val testValue = TestDataFactory.createBooleanValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createBooleanValue()))
+          } yield assertGolden(builderQuery, "")
         },
       ),
       suite("UriValueContentV2")(
         test("without comment") {
-          val testValue = TestDataFactory.createUriValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createUriValue()))
+          } yield assertGolden(builderQuery, "")
         },
       ),
       suite("DateValueContentV2")(
         test("without comment") {
-          val testValue = TestDataFactory.createDateValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDateValue()))
+          } yield assertGolden(builderQuery, "")
         },
       ),
       suite("ColorValueContentV2")(
         test("without comment") {
-          val testValue = TestDataFactory.createColorValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createColorValue()))
+          } yield assertGolden(builderQuery, "")
         },
       ),
       suite("GeomValueContentV2")(
         test("without comment") {
-          val testValue = TestDataFactory.createGeomValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createGeomValue()))
+          } yield assertGolden(builderQuery, "")
         },
       ),
       suite("IntervalValueContentV2")(
         test("without comment") {
-          val testValue = TestDataFactory.createIntervalValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createIntervalValue()))
+          } yield assertGolden(builderQuery, "")
         },
       ),
       suite("TimeValueContentV2")(
         test("without comment") {
-          val testValue = TestDataFactory.createTimeValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTimeValue()))
+          } yield assertGolden(builderQuery, "")
         },
       ),
       suite("GeonameValueContentV2")(
         test("without comment") {
-          val testValue = TestDataFactory.createGeonameValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createGeonameValue()))
+          } yield assertGolden(builderQuery, "")
         },
       ),
       suite("HierarchicalListValueContentV2")(
         test("without comment") {
-          val testValue = TestDataFactory.createHierarchicalListValue()
           for {
-            twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-            assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-          } yield assertion
+            builderQuery <-
+              ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createHierarchicalListValue()))
+          } yield assertGolden(builderQuery, "")
         },
       ),
     ),
@@ -939,84 +872,62 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
     ),
     suite("Edge cases")(
       test("Text value with empty string") {
-        val testValue = TestDataFactory.createTextValueWithEmptyString()
         for {
-          twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-        } yield assertion
+          builderQuery <-
+            ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValueWithEmptyString()))
+        } yield assertGolden(builderQuery, "")
       },
       test("Text value with Unicode characters") {
-        val testValue = TestDataFactory.createTextValueWithUnicode()
         for {
-          twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-        } yield assertion
+          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValueWithUnicode()))
+        } yield assertGolden(builderQuery, "")
       },
       test("Text value with very long string") {
-        val testValue = TestDataFactory.createTextValueWithVeryLongString()
         for {
-          twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-        } yield assertion
+          builderQuery <-
+            ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValueWithVeryLongString()))
+        } yield assertGolden(builderQuery, "")
       },
       test("Integer value with maximum value") {
-        val testValue = TestDataFactory.createIntegerValueWithMaxValue()
         for {
-          twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-        } yield assertion
+          builderQuery <-
+            ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createIntegerValueWithMaxValue()))
+        } yield assertGolden(builderQuery, "")
       },
       test("Integer value with minimum value") {
-        val testValue = TestDataFactory.createIntegerValueWithMinValue()
         for {
-          twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-        } yield assertion
+          builderQuery <-
+            ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createIntegerValueWithMinValue()))
+        } yield assertGolden(builderQuery, "")
       },
       test("Decimal value with zero") {
-        val testValue = TestDataFactory.createDecimalValueWithZero()
         for {
-          twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-        } yield assertion
+          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDecimalValueWithZero()))
+        } yield assertGolden(builderQuery, "")
       },
       test("Decimal value with very high precision") {
-        val testValue = TestDataFactory.createDecimalValueWithVeryPrecise()
         for {
-          twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-        } yield assertion
+          builderQuery <-
+            ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDecimalValueWithVeryPrecise()))
+        } yield assertGolden(builderQuery, "")
       },
       test("URI value with special characters") {
-        val testValue = TestDataFactory.createUriValueWithSpecialChars()
         for {
-          twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-        } yield assertion
+          builderQuery <-
+            ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createUriValueWithSpecialChars()))
+        } yield assertGolden(builderQuery, "")
       },
       test("Color value with transparency") {
-        val testValue = TestDataFactory.createColorValueWithTransparent()
         for {
-          twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-        } yield assertion
+          builderQuery <-
+            ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createColorValueWithTransparent()))
+        } yield assertGolden(builderQuery, "")
       },
       test("Interval value with zero range") {
-        val testValue = TestDataFactory.createIntervalValueWithZeroRange()
         for {
-          twirlQuery   <- ZIO.attempt(TestDataFactory.createTwirlQuery(testValue))
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          assertion    <- compareSparqlQueries(twirlQuery, builderQuery)
-        } yield assertion
+          builderQuery <-
+            ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createIntervalValueWithZeroRange()))
+        } yield assertGolden(builderQuery, "")
       },
     ),
     suite("Security - Input sanitization and injection prevention")(
