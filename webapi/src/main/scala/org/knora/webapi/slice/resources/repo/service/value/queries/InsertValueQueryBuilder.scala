@@ -46,7 +46,7 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object CreateValueQueryBuilder {
+object InsertValueQueryBuilder {
   private[service] def createValueQueryTwirl(
     dataNamedGraph: InternalIri,
     resourceIri: InternalIri,

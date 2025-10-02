@@ -33,7 +33,7 @@ import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_Strin
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
-import org.knora.webapi.slice.resources.repo.service.value.queries.CreateValueQueryBuilder
+import org.knora.webapi.slice.resources.repo.service.value.queries.InsertValueQueryBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -216,7 +216,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     creationDate: Instant,
   ): Task[Unit] =
     triplestore.query(
-      CreateValueQueryBuilder.createValueQuery(
+      InsertValueQueryBuilder.createValueQuery(
         dataNamedGraph,
         resourceIri,
         propertyIri,
@@ -245,7 +245,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
   ): Task[Unit] =
     triplestore
       .query(
-        CreateValueQueryBuilder.createValueQuery(
+        InsertValueQueryBuilder.createValueQuery(
           dataNamedGraph,
           resourceIri,
           propertyIri,

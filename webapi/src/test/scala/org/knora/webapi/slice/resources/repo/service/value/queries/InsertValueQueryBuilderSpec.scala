@@ -36,7 +36,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 
-object CreateValueQueryBuilderTestSupport {
+object InsertValueQueryBuilderTestSupport {
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   object TestDataFactory {
@@ -76,7 +76,7 @@ object CreateValueQueryBuilderTestSupport {
       linkUpdates: Seq[SparqlTemplateLinkUpdate] = Seq.empty,
       newUuidOrCurrentIri: Either[UUID, InternalIri] = Left(testValueUUID),
     ): String =
-      CreateValueQueryBuilder
+      InsertValueQueryBuilder
         .createValueQuery(
           dataNamedGraph = testDataGraph,
           resourceIri = testResourceIri,
@@ -638,10 +638,10 @@ object CreateValueQueryBuilderTestSupport {
   }
 }
 
-object CreateValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
+object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
   // override val rewriteAll: Boolean = true
 
-  import CreateValueQueryBuilderTestSupport.*
+  import InsertValueQueryBuilderTestSupport.*
 
   private def validateLiteralContains(
     parsedQuery: UpdateRequest,
@@ -690,7 +690,7 @@ object CreateValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
 
   // Comparison test suites per value type
 
-  def spec = suite("CreateValueQueryBuilderSpec")(
+  def spec = suite("InsertValueQueryBuilderSpec")(
     suite("Builder vs Twirl template comparison")(
       suite("TextValueContentV2")(
         test("without comment or language") {
