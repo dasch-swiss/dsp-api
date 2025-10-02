@@ -4,13 +4,12 @@
  */
 
 package org.knora.webapi.slice.security.api
+
 import zio.json.*
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 
 object LoginPayloadSpec extends ZIOSpecDefault {

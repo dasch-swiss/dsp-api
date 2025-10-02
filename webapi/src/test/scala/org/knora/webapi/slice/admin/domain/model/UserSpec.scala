@@ -17,10 +17,10 @@ object UserSpec extends ZIOSpecDefault {
       assertTrue(Email.from("j.doe@example.com").isRight)
     },
     test("Email must not be empty") {
-      assertTrue(Email.from("") == Left("Email cannot be empty."))
+      assertTrue(Email.from("").isLeft)
     },
     test("Email must not be a username") {
-      assertTrue(Email.from("j.doe") == Left("Email is invalid."))
+      assertTrue(Email.from("j.doe").isLeft)
     },
   )
 

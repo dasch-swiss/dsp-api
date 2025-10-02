@@ -7,25 +7,18 @@ package org.knora.webapi.slice.security.api
 
 import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.tapir.*
+import sttp.tapir.codec.refined.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.*
-import zio.json.DeriveJsonCodec
-import zio.json.JsonCodec
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
+import zio.json.*
 import zio.json.internal.Write
+import zio.json.interop.refined.*
 
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.security.Authenticator
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginForm
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
+import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.*
 
 case class AuthenticationEndpointsV2(
   private val baseEndpoints: BaseEndpoints,
