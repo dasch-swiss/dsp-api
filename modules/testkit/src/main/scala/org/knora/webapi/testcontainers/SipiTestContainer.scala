@@ -21,7 +21,7 @@ import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.testcontainers.TestContainerOps.toZio
 
 final class SipiTestContainer
-    extends GenericContainer[SipiTestContainer](s"daschswiss/knora-sipi:${SipiTestContainer.imageVersion}") {
+    extends GenericContainer[SipiTestContainer](s"daschswiss/knora-sipi:latest") {
 
   def sipiBaseUrl: URL = {
     val urlString = s"http://${SipiTestContainer.localHostAddress}:$getFirstMappedPort"
