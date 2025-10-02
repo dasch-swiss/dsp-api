@@ -34,6 +34,7 @@ import java.util.UUID
 import scala.util.chaining.scalaUtilChainingOps
 
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -44,7 +45,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.ApiV2Complex
 
 object CreateValueQueryBuilder {
   private[service] def createValueQueryTwirl(
