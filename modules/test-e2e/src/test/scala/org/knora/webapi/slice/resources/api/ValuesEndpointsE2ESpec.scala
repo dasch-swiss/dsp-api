@@ -1566,7 +1566,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         endEra == dateValueHasStartEra,
       )
     },
-    test("create a text value with standoff containing a footnote with apostrophe (encode apostrophe correctly)") {
+    test("create a text value with standoff containing a footnote with apostrophe (no extra slashes)") {
       val resourceIri: IRI = AThing.iri
       val textValueAsXml: String =
         """|<?xml version="1.0" encoding="UTF-8"?>
@@ -1600,7 +1600,6 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                                  savedValue.getRequiredString(KA.TextValueAsXml),
                                )
       } yield {
-        // The apostrophe should be preserved as-is, not escaped as "\&apos;"
         assertTrue(savedTextValueAsXml.contains("Apostrophe start &apos; end"))
       }
     },
