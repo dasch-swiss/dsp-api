@@ -387,11 +387,6 @@ object CreateValueQueryBuilder {
           .andHas(KB.standoffTagHasEnd, literalOf(createStandoff.standoffNode.endPosition))
           .andHas(RDF.TYPE, iri(createStandoff.standoffNode.standoffTagClassIri.toString))
 
-        // Add standoff class specific properties (attributes)
-        // val finalPattern = createStandoff.standoffNode.attributes.foldLeft(baseStandoffPattern) { (pattern, attr) =>
-        //   pattern.andHas(iri(attr.standoffPropertyIri.toString), standoffAttributeToRdfValue(attr))
-        // }
-
         List(valueHasStandoffPattern, standoffPattern)
       }.toList
     } else {
