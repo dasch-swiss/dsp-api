@@ -41,7 +41,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 final case class KnoraUserRepoLive(
   private val triplestore: TriplestoreService,
   private val mapper: RdfEntityMapper[KnoraUser],
-) extends AbstractEntityRepo[KnoraUser, UserIri](triplestore, mapper)
+  private val entityCache: EntityCache[UserIri, KnoraUser],
+) extends CachingEntityRepo[KnoraUser, UserIri](triplestore, mapper, entityCache)
     with KnoraUserRepo {
 
   override protected val resourceClass: ParsedIRI = ParsedIRI.create(KnoraAdmin.User)
@@ -133,5 +134,6 @@ object KnoraUserRepoLive {
         .andHas(isInProjectAdminGroup, u.isInProjectAdminGroup.map(p => Rdf.iri(p.value)).toList: _*)
   }
 
-  val layer = ZLayer.succeed(mapper) >>> ZLayer.derive[KnoraUserRepoLive]
+  val layer =
+    (ZLayer.succeed(mapper) >+> EntityCache.layer[UserIri, KnoraUser]("knoraUser")) >>> ZLayer.derive[KnoraUserRepoLive]
 }
