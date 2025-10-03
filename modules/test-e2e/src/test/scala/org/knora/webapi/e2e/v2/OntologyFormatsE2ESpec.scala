@@ -20,8 +20,10 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.JsonLD
 import org.knora.webapi.messages.util.rdf.RdfFormatUtil
 import org.knora.webapi.messages.util.rdf.RdfModel
+import org.knora.webapi.messages.util.rdf.RdfXml
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -78,15 +80,11 @@ object OntologyFormatsE2ESpec extends E2EZSpec {
     }
   }
 
-  private val mediaTypeJsonLd: MediaType = MediaType.unsafeParse("application/ld+json")
-  private val mediaTypeTurtle: MediaType = MediaType.unsafeParse("text/turtle")
-  private val mediaTypeRdfXml: MediaType = MediaType.unsafeParse("application/rdf+xml")
-
   private def checkTestCase(httpGetTest: HttpGetTest) =
     for {
-      responseJsonLd <- getResponse(httpGetTest.uri, mediaTypeJsonLd)
-      responseTtl    <- getResponse(httpGetTest.uri, mediaTypeTurtle)
-      responseRdfXml <- getResponse(httpGetTest.uri, mediaTypeRdfXml)
+      responseJsonLd <- getResponse(httpGetTest.uri, JsonLD.mediaType)
+      responseTtl    <- getResponse(httpGetTest.uri, Turtle.mediaType)
+      responseRdfXml <- getResponse(httpGetTest.uri, RdfXml.mediaType)
       _ = if (!httpGetTest.fileExists) {
             httpGetTest.writeReceived(responseJsonLd)
             throw new AssertionError(s"File not found ${httpGetTest.makeFile().toAbsolutePath}")
@@ -229,9 +227,9 @@ object OntologyFormatsE2ESpec extends E2EZSpec {
       for {
         allEntities <- getResponse(
                          uri"/v2/ontologies/allentities/${KnoraApiV2Simple.KnoraApiOntologyIri}",
-                         mediaTypeJsonLd,
+                         JsonLD.mediaType,
                        )
-        knoraApi <- getResponse(uri"/ontology/knora-api/simple/v2", mediaTypeJsonLd)
+        knoraApi <- getResponse(uri"/ontology/knora-api/simple/v2", JsonLD.mediaType)
       } yield assertTrue(
         RdfModel.fromJsonLD(allEntities) == RdfModel.fromJsonLD(knoraApi),
       )
@@ -241,9 +239,9 @@ object OntologyFormatsE2ESpec extends E2EZSpec {
         ontologyAllEntitiesResponseTurtle <-
           getResponse(
             uri"/v2/ontologies/allentities/${KnoraApiV2Simple.KnoraApiOntologyIri}",
-            mediaTypeTurtle,
+            Turtle.mediaType,
           )
-        knoraApiResponseTurtle <- getResponse(uri"/ontology/knora-api/simple/v2", mediaTypeTurtle)
+        knoraApiResponseTurtle <- getResponse(uri"/ontology/knora-api/simple/v2", Turtle.mediaType)
       } yield assertTrue(
         RdfModel.fromTurtle(ontologyAllEntitiesResponseTurtle) == RdfModel.fromTurtle(knoraApiResponseTurtle),
       )
@@ -253,9 +251,9 @@ object OntologyFormatsE2ESpec extends E2EZSpec {
         ontologyAllEntitiesResponseRdfXml <-
           getResponse(
             uri"/v2/ontologies/allentities/${KnoraApiV2Simple.KnoraApiOntologyIri}",
-            mediaTypeRdfXml,
+            RdfXml.mediaType,
           )
-        knoraApiResponseRdfXml <- getResponse(uri"/ontology/knora-api/simple/v2", mediaTypeRdfXml)
+        knoraApiResponseRdfXml <- getResponse(uri"/ontology/knora-api/simple/v2", RdfXml.mediaType)
       } yield assertTrue(
         RdfModel.fromRdfXml(ontologyAllEntitiesResponseRdfXml) == RdfModel.fromRdfXml(knoraApiResponseRdfXml),
       )
@@ -263,8 +261,8 @@ object OntologyFormatsE2ESpec extends E2EZSpec {
     test("serve the knora-api in the complex schema on two separate endpoints JSON-LD") {
       for {
         ontologyAllEntitiesResponseJson <-
-          getResponse(uri"/v2/ontologies/allentities/${KnoraApiV2Complex.KnoraApiOntologyIri}", mediaTypeJsonLd)
-        knoraApiResponseJson <- getResponse(uri"/ontology/knora-api/v2", mediaTypeJsonLd)
+          getResponse(uri"/v2/ontologies/allentities/${KnoraApiV2Complex.KnoraApiOntologyIri}", JsonLD.mediaType)
+        knoraApiResponseJson <- getResponse(uri"/ontology/knora-api/v2", JsonLD.mediaType)
       } yield assertTrue(
         RdfModel.fromJsonLD(ontologyAllEntitiesResponseJson) == RdfModel.fromJsonLD(knoraApiResponseJson),
       )
@@ -274,9 +272,9 @@ object OntologyFormatsE2ESpec extends E2EZSpec {
         ontologyAllEntitiesResponseTurtle <-
           getResponse(
             uri"/v2/ontologies/allentities/${KnoraApiV2Complex.KnoraApiOntologyIri}",
-            mediaTypeTurtle,
+            Turtle.mediaType,
           )
-        knoraApiResponseTurtle <- getResponse(uri"/ontology/knora-api/v2", mediaTypeTurtle)
+        knoraApiResponseTurtle <- getResponse(uri"/ontology/knora-api/v2", Turtle.mediaType)
       } yield assertTrue(
         RdfModel.fromTurtle(ontologyAllEntitiesResponseTurtle) == RdfModel.fromTurtle(knoraApiResponseTurtle),
       )
@@ -286,9 +284,9 @@ object OntologyFormatsE2ESpec extends E2EZSpec {
         ontologyAllEntitiesResponseRdfXml <-
           getResponse(
             uri"/v2/ontologies/allentities/${KnoraApiV2Complex.KnoraApiOntologyIri}",
-            mediaTypeRdfXml,
+            RdfXml.mediaType,
           )
-        knoraApiResponseRdfXml <- getResponse(uri"/ontology/knora-api/v2", mediaTypeRdfXml)
+        knoraApiResponseRdfXml <- getResponse(uri"/ontology/knora-api/v2", RdfXml.mediaType)
       } yield assertTrue(
         RdfModel.fromRdfXml(ontologyAllEntitiesResponseRdfXml) == RdfModel.fromRdfXml(knoraApiResponseRdfXml),
       )
@@ -298,9 +296,9 @@ object OntologyFormatsE2ESpec extends E2EZSpec {
         ontologyAllEntitiesResponseTurtle <-
           getResponse(
             uri"/v2/ontologies/allentities/${KnoraApiV2Complex.KnoraApiOntologyIri}",
-            mediaTypeTurtle,
+            Turtle.mediaType,
           )
-        knoraApiResponseTurtle <- getResponse(uri"/ontology/knora-api/v2", mediaTypeTurtle)
+        knoraApiResponseTurtle <- getResponse(uri"/ontology/knora-api/v2", Turtle.mediaType)
       } yield assertTrue(
         RdfModel.fromTurtle(ontologyAllEntitiesResponseTurtle) == RdfModel.fromTurtle(knoraApiResponseTurtle),
       )
@@ -310,9 +308,9 @@ object OntologyFormatsE2ESpec extends E2EZSpec {
         ontologyAllEntitiesResponseRdfXml <-
           getResponse(
             uri"/v2/ontologies/allentities/${KnoraApiV2Complex.KnoraApiOntologyIri}",
-            mediaTypeRdfXml,
+            RdfXml.mediaType,
           )
-        knoraApiResponseRdfXml <- getResponse(uri"/ontology/knora-api/v2", mediaTypeRdfXml)
+        knoraApiResponseRdfXml <- getResponse(uri"/ontology/knora-api/v2", RdfXml.mediaType)
       } yield assertTrue(
         RdfModel.fromRdfXml(ontologyAllEntitiesResponseRdfXml) == RdfModel.fromRdfXml(knoraApiResponseRdfXml),
       )

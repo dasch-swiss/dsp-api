@@ -19,9 +19,10 @@ object Logger {
 
   private val logFilter = LogFilter.LogLevelByNameConfig(
     rootLogLevel,
-    ("org.apache.jena", LogLevel.Info),
+    ("org.apache.jena", LogLevel.Debug),
     ("io.netty", LogLevel.Info),
     ("org.ehcache", LogLevel.Info),
+    ("zio.http.*", LogLevel.Debug),
     // Uncomment the following lines to change the log level for specific loggers:
     // ("zio.logging.slf4j", LogLevel.Debug)
     // ("SLF4J-LOGGER", LogLevel.Warning)
@@ -53,5 +54,8 @@ object Logger {
 
   def json(): ULayer[Unit] = Runtime.removeDefaultLoggers >>> jsonLogger >+> Slf4jBridge.initialize
 
-  val text: ULayer[Unit] = Runtime.removeDefaultLoggers >>> textLogger >+> Slf4jBridge.initialize
+  val text: ULayer[Unit] = Runtime.removeDefaultLoggers >>> consoleLogger(
+    config = ConsoleLoggerConfig.default
+      .copy(format = logFormatText, filter = ConsoleLoggerConfig.default.filter.withRootLevel(LogLevel.Debug)),
+  )
 }

@@ -30,6 +30,8 @@ object KnoraIris {
     final def toInternalSchema: SmartIri                    = self.smartIri.toInternalSchema
     final def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
 
+    final def ontologySchema: Option[OntologySchema] = smartIri.getOntologySchema
+
     override def toString: String = self.smartIri.toString
     def toShortString             = s"${self.smartIri.getOntologyName}:${self.smartIri.getEntityName}"
 

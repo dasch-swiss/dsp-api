@@ -51,6 +51,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.OntologyTestHelper
 
 object OntologyResponderV2Spec extends E2EZSpec { self =>
 
@@ -181,13 +182,6 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       subClassOf = Set(anythingOntologyIri.makeEntityIri("Nothing")),
       ontologySchema = ApiV2Complex,
     )
-
-  private def getLastModificationDate(r: ReadOntologyMetadataV2, ontologyIri: OntologyIri): Instant =
-    r.toOntologySchema(ApiV2Complex)
-      .ontologies
-      .find(_.ontologyIri == ontologyIri.toComplexSchema)
-      .flatMap(_.lastModificationDate)
-      .getOrElse(throw AssertionException(s"$ontologyIri has no last modification date"))
 
   override val e2eSpec = suite("The ontology responder v2")(
     test("create an empty ontology called 'foo' with a project code") {
@@ -403,7 +397,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("not delete the 'anything' ontology, because it is used in data and in the 'something' ontology") {
       for {
         metadataResponse   <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
-        anythingLastModDate = getLastModificationDate(metadataResponse, anythingOntologyIri)
+        anythingLastModDate = OntologyTestHelper.lastModificationDate(metadataResponse, anythingOntologyIri)
         exit               <- ontologyResponder(_.deleteOntology(anythingOntologyIri, anythingLastModDate, randomUUID)).exit
       } yield assertTrue(metadataResponse.ontologies.size == 3) &&
         assert(exit)(
@@ -608,7 +602,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     ) {
       for {
         metadataResponse   <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
-        anythingLastModDate = getLastModificationDate(metadataResponse, anythingOntologyIri)
+        anythingLastModDate = OntologyTestHelper.lastModificationDate(metadataResponse, anythingOntologyIri)
         propertyIri         = anythingOntologyIri.makeEntityIri("hasInterestingThing")
         propertyInfoContent = PropertyInfoContentV2(
                                 propertyIri = propertyIri,
@@ -4860,7 +4854,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
 
       for {
         metadataResponse   <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
-        anythingLastModDate = getLastModificationDate(metadataResponse, anythingOntologyIri)
+        anythingLastModDate = OntologyTestHelper.lastModificationDate(metadataResponse, anythingOntologyIri)
 
         // create the property anything:hasFoafName
         propertyIri: SmartIri = anythingOntologyIri.makeEntityIri("hasFoafName")

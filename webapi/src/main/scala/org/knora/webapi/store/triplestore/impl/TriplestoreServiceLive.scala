@@ -224,7 +224,7 @@ case class TriplestoreServiceLive(
     for {
       _      <- ZIO.logDebug("==>> Loading Data Start")
       objects = DefaultRdfData.data.toList.filter(_ => prependDefaults) ++ rdfDataObjects
-      _      <- ZIO.foreachDiscard(objects)(insertObjectIntoTriplestore)
+      _      <- ZIO.foreachDiscard(objects.toSet)(insertObjectIntoTriplestore)
       _      <- ZIO.logDebug("==>> Loading Data End")
     } yield ()
 

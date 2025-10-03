@@ -6,6 +6,8 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
+import zio.nio.file.Files
+import zio.stream.ZStream
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
@@ -177,16 +179,17 @@ final case class ProjectRestService(
    * @param id   the [[IriIdentifier]] of the project
    * @param user the [[User]] making the request
    * @return
-   *     '''success''': data of the project as [[ProjectDataGetResponseADM]]
+   *     '''success''': data of the project for download as a stream of bytes, along with a suggested filename and a MIME type
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[IriIdentifier]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def getAllProjectData(user: User)(id: ProjectIri): Task[ProjectDataGetResponseADM] =
+  def getAllProjectData(user: User)(id: ProjectIri): Task[(String, String, ZStream[Any, Throwable, Byte])] =
     for {
       project <- auth.ensureSystemAdminOrProjectAdminById(user, id)
-      result  <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
-    } yield ProjectDataGetResponseADM(result)
+      path    <- projectExportService.exportProjectTriples(project)
+      stream   = ZStream.fromPath(path.toFile.toPath).ensuringWith(_ => ZIO.attempt(Files.deleteIfExists(path)).ignore)
+    } yield (s"attachment; filename=project-data.trig", "application/octet-stream", stream)
 
   def getProjectMembersById(user: User)(id: ProjectIri): Task[ProjectMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(findProjectMembers)
