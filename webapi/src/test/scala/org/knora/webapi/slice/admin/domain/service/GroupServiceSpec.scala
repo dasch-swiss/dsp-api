@@ -25,7 +25,6 @@ import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
@@ -64,7 +63,6 @@ object GroupServiceSpec extends ZIOSpecDefault {
       },
     ).provide(
       AppConfig.layer,
-      CacheManager.layer,
       GroupService.layer,
       IriConverter.layer,
       IriService.layer,
