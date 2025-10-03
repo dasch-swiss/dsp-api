@@ -13,7 +13,6 @@ import sttp.model.Part
 import sttp.model.Uri
 import zio.*
 import zio.json.*
-
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -46,8 +45,21 @@ final case class TestApiClient(
     val request: Request[Either[String, A]] = basicRequest
       .delete(relativeUri)
       .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
-    f(request).send(backend)
+    sendRequest(f(request))
   }
+
+  private def sendRequest[A](request: Request[Either[String, A]], user: User): Task[Response[Either[String, A]]] =
+    sendRequest(request, Some(user))
+
+  private def sendRequest[A](
+    request: Request[Either[String, A]],
+    user: Option[User] = None,
+  ): Task[Response[Either[String, A]]] =
+    addAuthIfNeeded(user, request).flatMap { req =>
+      req
+//        .copy(options = req.options.copy(readTimeout = 5.seconds.asScala))
+        .send(backend)
+    }
 
   def deleteJsonLd(
     relativeUri: Uri,
@@ -57,7 +69,7 @@ final case class TestApiClient(
     val request = update(basicRequest.delete(relativeUri))
       .contentType(MediaType.unsafeApply("application", "ld+json"))
       .response(asString)
-    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+    sendRequest(request, user)
   }
 
   def deleteJsonLdDocument(
@@ -71,15 +83,14 @@ final case class TestApiClient(
         .contentType(MediaType.unsafeApply("application", "ld+json"))
         .response(asJsonLdDocument),
     )
-    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+    sendRequest(request, user)
   }
 
   def getAsString(
     relativeUri: Uri,
     f: Request[Either[String, String]] => Request[Either[String, String]],
   ): Task[Response[Either[String, String]]] =
-    val request: Request[Either[String, String]] = f(basicRequest.get(relativeUri).response(asString))
-    request.send(backend)
+    sendRequest(f(basicRequest.get(relativeUri).response(asString)))
 
   def getJson[A: JsonDecoder](relativeUri: Uri): Task[Response[Either[String, A]]] =
     getJson(relativeUri, (r: Request[Either[String, A]]) => r)
@@ -87,12 +98,9 @@ final case class TestApiClient(
   def getJson[A: JsonDecoder](
     relativeUri: Uri,
     f: Request[Either[String, A]] => Request[Either[String, A]],
-  ): Task[Response[Either[String, A]]] = {
-    val request: Request[Either[String, A]] = basicRequest
-      .get(relativeUri)
-      .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.getMessage))
-    f(request).send(backend)
-  }
+  ): Task[Response[Either[String, A]]] = sendRequest(
+    f(basicRequest.get(relativeUri).response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.getMessage))),
+  )
 
   def getJson[A: JsonDecoder](relativeUri: Uri, user: User): Task[Response[Either[String, A]]] =
     jwtFor(user).flatMap(jwt => getJson(relativeUri, _.auth.bearer(jwt)))
@@ -108,7 +116,7 @@ final case class TestApiClient(
         .contentType(MediaType.unsafeApply("application", "ld+json"))
         .response(asString),
     )
-    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+    sendRequest(request, user)
   }
 
   def getJsonLdDocument(
@@ -122,7 +130,7 @@ final case class TestApiClient(
         .contentType(MediaType.unsafeApply("application", "ld+json"))
         .response(asJsonLdDocument),
     )
-    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+    sendRequest(request, user)
   }
 
   private def addAuthIfNeeded[A](user: Option[User], request: Request[Either[String, A]]) = user match {
@@ -134,41 +142,36 @@ final case class TestApiClient(
     relativeUri: Uri,
     body: B,
     user: User,
-  ): Task[Response[Either[String, A]]] =
-    jwtFor(user).flatMap { jwt =>
-      basicRequest
-        .post(relativeUri)
-        .body(body.toJson)
-        .contentType(MediaType.ApplicationJson)
-        .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
-        .auth
-        .bearer(jwt)
-        .send(backend)
-    }
+  ): Task[Response[Either[String, A]]] = {
+    val request = basicRequest
+      .post(relativeUri)
+      .body(body.toJson)
+      .contentType(MediaType.ApplicationJson)
+      .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
+    sendRequest(request, Some(user))
+  }
 
-  def postJson[A: JsonDecoder, B: JsonEncoder](relativeUri: Uri, body: B): Task[Response[Either[String, A]]] =
-    basicRequest
+  def postJson[A: JsonDecoder, B: JsonEncoder](relativeUri: Uri, body: B): Task[Response[Either[String, A]]] = {
+    val request = basicRequest
       .post(relativeUri)
       .body(body.toJson)
       .contentType(MediaType.ApplicationJson)
       .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.getMessage))
-      .send(backend)
+    sendRequest(request)
+  }
 
   def postJsonLd(
     relativeUri: Uri,
     jsonLdBody: String,
     user: User,
-  ): ZIO[Any, Throwable, Response[Either[String, String]]] =
-    jwtFor(user).flatMap { jwt =>
-      basicRequest
-        .post(relativeUri)
-        .body(jsonLdBody)
-        .contentType(MediaType.unsafeApply("application", "ld+json"))
-        .auth
-        .bearer(jwt)
-        .response(asString)
-        .send(backend)
-    }
+  ): Task[Response[Either[String, String]]] = {
+    val request = basicRequest
+      .post(relativeUri)
+      .body(jsonLdBody)
+      .contentType(MediaType.unsafeApply("application", "ld+json"))
+      .response(asString)
+    sendRequest(request, user)
+  }
 
   def postJsonLdDocument(
     relativeUri: Uri,
@@ -183,23 +186,20 @@ final case class TestApiClient(
         .contentType(MediaType.unsafeApply("application", "ld+json"))
         .response(asJsonLdDocument),
     )
-    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+    sendRequest(request, user)
   }
 
   def postMultiPart[A: JsonDecoder](
     relativeUri: Uri,
     body: Seq[Part[BasicBodyPart]],
     user: User,
-  ): Task[Response[Either[String, A]]] =
-    jwtFor(user).flatMap { jwt =>
-      basicRequest
-        .post(relativeUri)
-        .multipartBody(body)
-        .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
-        .auth
-        .bearer(jwt)
-        .send(backend)
-    }
+  ): Task[Response[Either[String, A]]] = {
+    val request = basicRequest
+      .post(relativeUri)
+      .multipartBody(body)
+      .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
+    sendRequest(request, user)
+  }
 
   def patchJsonLdDocument(
     relativeUri: Uri,
@@ -214,40 +214,34 @@ final case class TestApiClient(
         .contentType(MediaType.unsafeApply("application", "ld+json"))
         .response(asJsonLdDocument),
     )
-    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+    sendRequest(request, user)
   }
 
   def putJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,
     body: B,
     user: User,
-  ): Task[Response[Either[String, A]]] =
-    jwtFor(user).flatMap { jwt =>
-      basicRequest
-        .put(relativeUri)
-        .body(body.toJson)
-        .contentType(MediaType.ApplicationJson)
-        .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
-        .auth
-        .bearer(jwt)
-        .send(backend)
-    }
+  ): Task[Response[Either[String, A]]] = {
+    val request = basicRequest
+      .put(relativeUri)
+      .body(body.toJson)
+      .contentType(MediaType.ApplicationJson)
+      .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
+    sendRequest(request, user)
+  }
 
   def putJsonLd(
     relativeUri: Uri,
     jsonLdBody: String,
     user: User,
-  ): ZIO[Any, Throwable, Response[Either[String, String]]] =
-    jwtFor(user).flatMap { jwt =>
-      basicRequest
-        .put(relativeUri)
-        .body(jsonLdBody)
-        .contentType(MediaType.unsafeApply("application", "ld+json"))
-        .auth
-        .bearer(jwt)
-        .response(asString)
-        .send(backend)
-    }
+  ): ZIO[Any, Throwable, Response[Either[String, String]]] = {
+    val request = basicRequest
+      .put(relativeUri)
+      .body(jsonLdBody)
+      .contentType(MediaType.unsafeApply("application", "ld+json"))
+      .response(asString)
+    sendRequest(request, user)
+  }
 
   def putJsonLdDocument(
     relativeUri: Uri,
@@ -262,18 +256,19 @@ final case class TestApiClient(
         .contentType(MediaType.unsafeApply("application", "ld+json"))
         .response(asJsonLdDocument),
     )
-    addAuthIfNeeded(user, request).flatMap(_.send(backend))
+    sendRequest(request, user)
   }
 
   def postSparql(
     relativeUri: Uri,
     sparqlQuery: String,
     f: RequestUpdate[String],
-  ): Task[Response[Either[String, String]]] =
-    f(basicRequest.post(relativeUri).body(sparqlQuery))
+  ): Task[Response[Either[String, String]]] = {
+    val request = f(basicRequest.post(relativeUri).body(sparqlQuery))
       .contentType(MediaType.unsafeApply("application", "sparql-query"))
       .response(asString)
-      .send(backend)
+    sendRequest(request)
+  }
 
   def postSparql(
     relativeUri: Uri,
