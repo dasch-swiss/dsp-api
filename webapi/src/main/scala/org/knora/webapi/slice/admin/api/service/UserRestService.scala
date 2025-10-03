@@ -92,21 +92,25 @@ final case class UserRestService(
     } yield external
 
   def getProjectMemberShipsByUserIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
-    for {
+    (for {
       kUser    <- getKnoraUserOrNotFound(userIri)
       projects <- projectService.findByIds(kUser.isInProject)
       external <- format.toExternal(UserProjectMembershipsGetResponseADM(projects))
-    } yield external
+    } yield external).timed.flatMap { case (duration, result) =>
+      ZIO.logWarning(s"getProjectMemberShipsByUserIri took ${duration.toMillis} ms").as(result)
+    }
 
   private def getKnoraUserOrNotFound(userIri: UserIri) =
     knoraUserService.findById(userIri).someOrFail(NotFoundException(s"User with iri ${userIri.value} not found."))
 
   def getProjectAdminMemberShipsByUserIri(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
-    for {
+    (for {
       kUser    <- getKnoraUserOrNotFound(userIri)
       projects <- projectService.findByIds(kUser.isInProjectAdminGroup)
       external <- format.toExternal(UserProjectAdminMembershipsGetResponseADM(projects))
-    } yield external
+    } yield external).timed.flatMap { case (duration, result) =>
+      ZIO.logWarning(s"getProjectAdminMemberShipsByUserIri took ${duration.toMillis} ms").as(result)
+    }
 
   def getUserByUsername(requestingUser: User)(username: Username): Task[UserResponse] = for {
     user <- userService
@@ -115,10 +119,12 @@ final case class UserRestService(
     external <- asExternalUserResponse(requestingUser, user)
   } yield external
 
-  def getUserByIri(requestingUser: User)(userIri: UserIri): Task[UserResponse] = for {
+  def getUserByIri(requestingUser: User)(userIri: UserIri): Task[UserResponse] = (for {
     internal <- userService.findUserByIri(userIri).someOrFail(NotFoundException(s"User '${userIri.value}' not found"))
     external <- asExternalUserResponse(requestingUser, internal)
-  } yield external
+  } yield external).timed.flatMap { case (duration, result) =>
+    ZIO.logWarning(s"getUserByIri took ${duration.toMillis} ms").as(result)
+  }
 
   private def ensureSelfUpdateOrSystemAdmin(userIri: UserIri, requestingUser: User) =
     ZIO.when(userIri != requestingUser.userIri)(auth.ensureSystemAdmin(requestingUser))
@@ -192,14 +198,16 @@ final case class UserRestService(
     userIri: UserIri,
     projectIri: ProjectIri,
   ): Task[UserResponse] =
-    for {
+    (for {
       _           <- ensureNotABuiltInUser(userIri)
       _           <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
       kUser       <- getKnoraUserOrNotFound(userIri)
       project     <- getProjectADMOrBadRequest(projectIri)
       updatedUser <- knoraUserService.addUserToProject(kUser, project).mapError(BadRequestException.apply)
       external    <- asExternalUserResponse(requestingUser, updatedUser)
-    } yield external
+    } yield external).timed.flatMap { case (duration, result) =>
+      ZIO.logWarning(s"addUserToProject took ${duration.toMillis} ms").as(result)
+    }
 
   private def getProjectADMOrBadRequest(projectIri: ProjectIri) =
     projectService
@@ -229,14 +237,16 @@ final case class UserRestService(
     userIri: UserIri,
     projectIri: ProjectIri,
   ): Task[UserResponse] =
-    for {
+    (for {
       _           <- ensureNotABuiltInUser(userIri)
       _           <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
       user        <- getKnoraUserOrNotFound(userIri)
       project     <- getProjectADMOrBadRequest(projectIri)
       updatedUser <- knoraUserService.addUserToProjectAsAdmin(user, project).mapError(BadRequestException.apply)
       external    <- asExternalUserResponse(requestingUser, updatedUser)
-    } yield external
+    } yield external).timed.flatMap { case (duration, result) =>
+      ZIO.logWarning(s"addUserToProjectAsAdmin took ${duration.toMillis} ms").as(result)
+    }
 
   def removeUserFromProject(requestingUser: User)(
     userIri: UserIri,
