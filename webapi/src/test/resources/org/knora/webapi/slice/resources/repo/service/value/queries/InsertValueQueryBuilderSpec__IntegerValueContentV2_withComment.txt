@@ -5,7 +5,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 DELETE { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate ?resourceLastModificationDate . } }
 INSERT { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-<http://0.0.0.0:3333/0001/thing/value> a <http://api.knora.org/ontology/knora-api/v2#IntValue> ;
+<http://0.0.0.0:3333/0001/thing/value> a knora-base:IntValue ;
     knora-base:isDeleted false ;
     knora-base:valueHasString "42" ;
     knora-base:valueHasUUID "0000000000000000000000" .
@@ -23,7 +23,7 @@ BIND( IRI( "http://0.0.0.0:3333/0001/thing/resource" ) AS ?resource )
 ?resourceClass rdfs:subClassOf* knora-base:Resource .
 OPTIONAL { ?resource knora-base:lastModificationDate ?resourceLastModificationDate . }
 BIND( IRI( "http://www.knora.org/ontology/0001/anything#hasText" ) AS ?property )
-BIND( IRI( "http://api.knora.org/ontology/knora-api/v2#IntValue" ) AS ?valueType )
+BIND( IRI( "http://www.knora.org/ontology/knora-base#IntValue" ) AS ?valueType )
 ?property knora-base:objectClassConstraint ?propertyRange .
 ?valueType rdfs:subClassOf* ?propertyRange .
 ?resourceClass rdfs:subClassOf* ?restriction .

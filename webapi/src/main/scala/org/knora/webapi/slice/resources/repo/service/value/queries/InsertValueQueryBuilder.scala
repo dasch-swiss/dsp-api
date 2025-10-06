@@ -34,7 +34,7 @@ import java.util.UUID
 import scala.util.chaining.scalaUtilChainingOps
 
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
@@ -57,7 +57,7 @@ object InsertValueQueryBuilder {
     valuePermissions: String,
     creationDate: Instant,
   ): Update = {
-    val value = valueInitial.toOntologySchema(ApiV2Complex)
+    val value = valueInitial.toOntologySchema(InternalSchema)
 
     val dataGraphVar = variable("dataNamedGraph")
     val resourceVar  = variable("resource")
