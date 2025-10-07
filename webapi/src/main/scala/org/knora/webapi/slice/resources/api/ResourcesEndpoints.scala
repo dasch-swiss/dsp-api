@@ -8,6 +8,8 @@ package org.knora.webapi.slice.resources.api
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
+import sttp.tapir.generic.auto.*
+import sttp.tapir.json.zio.*
 import sttp.tapir.server.PartialServerEndpoint
 import zio.ZLayer
 
@@ -19,6 +21,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.resources.api.model.ExportRequest
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.api.model.VersionDate
@@ -161,6 +164,14 @@ final case class ResourcesEndpoints(
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
 
+  val postResourcesExport = baseEndpoints.withUserEndpoint.post
+    .in(base / "export")
+    .in(header[ProjectIri](ApiV2.Headers.xKnoraAcceptProject))
+    .in(jsonBody[ExportRequest])
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .out(header[String]("Content-Disposition"))
+
   val endpoints: Seq[AnyEndpoint] = Seq(
     getResourcesIiifManifest,
     getResourcesPreview,
@@ -176,6 +187,7 @@ final case class ResourcesEndpoints(
     postResourcesDelete,
     postResources,
     putResources,
+    postResourcesExport,
   ).map(_.endpoint).map(_.tag("V2 Resources"))
 }
 

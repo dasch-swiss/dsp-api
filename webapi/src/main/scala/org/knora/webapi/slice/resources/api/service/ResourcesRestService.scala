@@ -17,9 +17,11 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.resources.api.model.ExportRequest
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.api.model.VersionDate
+import org.knora.webapi.slice.resources.domain.service.ResourceExportService
 
 final case class ResourcesRestService(
   private val resourcesService: ResourcesResponderV2,
@@ -27,6 +29,7 @@ final case class ResourcesRestService(
   private val iriConverter: IriConverter,
   private val requestParser: ApiComplexV2JsonLdRequestParser,
   private val renderer: KnoraResponseRenderer,
+  private val exportService: ResourceExportService,
 ) {
   def getResourcesIiifManifest(user: User)(
     resourceIri: IriDto,
@@ -186,6 +189,15 @@ final case class ResourcesRestService(
       result   <- resourcesService.updateResourceMetadataV2(eraseRequest)
       response <- renderer.render(result, formatOptions)
     } yield response
+
+  def exportResources(user: User)(
+    projectIri: ProjectIri,
+    exportRequest: ExportRequest,
+  ): Task[(String, MediaType, String)] =
+    for {
+      result            <- exportService.exportResourcesByClass(exportRequest, projectIri, user)
+      contentDisposition = s"attachment; filename=\"${result.filename}\""
+    } yield (result.data, result.mediaType, contentDisposition)
 }
 
 object ResourcesRestService {

@@ -42,6 +42,7 @@ object ResourcesApiModule { self =>
     IriConverter &
     KnoraProjectService &
     KnoraResponseRenderer &
+    org.knora.webapi.slice.ontology.domain.service.OntologyRepo &
     ResourcesModule.Provided &
     ResourcesResponderV2 &
     SearchResponderV2 &
@@ -71,5 +72,6 @@ object ResourcesApiModule { self =>
       ResourceInfoRestService.layer,
       ResourceInfoEndpoints.layer,
       ResourceInfoRoutes.layer,
+      org.knora.webapi.slice.resources.domain.service.ResourceExportService.layer,
     )
 }

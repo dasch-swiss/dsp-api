@@ -6,8 +6,10 @@
 package org.knora.webapi.slice.resources.api
 import zio.*
 
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
+import org.knora.webapi.slice.resources.api.model.ExportRequest
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 
 final class ResourcesEndpointsHandler(
@@ -47,6 +49,7 @@ final class ResourcesEndpointsHandler(
       SecuredEndpointHandler(resourcesEndpoints.postResourcesDelete, resourcesRestService.deleteResource),
       SecuredEndpointHandler(resourcesEndpoints.postResources, resourcesRestService.createResource),
       SecuredEndpointHandler(resourcesEndpoints.putResources, resourcesRestService.updateResourceMetadata),
+      SecuredEndpointHandler(resourcesEndpoints.postResourcesExport, resourcesRestService.exportResources),
     ).map(mapper.mapSecuredEndpointHandler(_))
 }
 
