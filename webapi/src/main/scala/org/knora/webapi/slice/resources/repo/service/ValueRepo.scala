@@ -10,18 +10,21 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
 import zio.*
 
 import java.time.Instant
+import java.util.UUID
 import scala.language.implicitConversions
 
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
@@ -30,6 +33,7 @@ import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_Strin
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.resources.repo.service.value.queries.InsertValueQueryBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -198,6 +202,62 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
 
     triplestore.query(Update(query))
   }
+
+  def createValue(
+    dataNamedGraph: InternalIri,
+    resourceIri: InternalIri,
+    propertyIri: SmartIri,
+    newValueIri: InternalIri,
+    newValueUUID: UUID,
+    value: ValueContentV2,
+    linkUpdates: Seq[SparqlTemplateLinkUpdate],
+    valueCreator: InternalIri,
+    valuePermissions: String,
+    creationDate: Instant,
+  ): Task[Unit] =
+    triplestore.query(
+      InsertValueQueryBuilder.createValueQuery(
+        dataNamedGraph,
+        resourceIri,
+        propertyIri,
+        newValueIri,
+        Left(newValueUUID),
+        value,
+        linkUpdates,
+        valueCreator,
+        valuePermissions,
+        creationDate,
+      ),
+    )
+
+  def updateValue(
+    dataNamedGraph: InternalIri,
+    resourceIri: InternalIri,
+    propertyIri: SmartIri,
+    currentValueIri: InternalIri,
+    newValueIri: InternalIri,
+    valueTypeIri: SmartIri,
+    value: ValueContentV2,
+    valueCreator: InternalIri,
+    valuePermissions: String,
+    linkUpdates: Seq[SparqlTemplateLinkUpdate],
+    creationDate: Instant,
+  ): Task[Unit] =
+    triplestore
+      .query(
+        InsertValueQueryBuilder.createValueQuery(
+          dataNamedGraph,
+          resourceIri,
+          propertyIri,
+          newValueIri,
+          Right(currentValueIri),
+          value,
+          linkUpdates,
+          valueCreator,
+          valuePermissions,
+          creationDate,
+        ),
+      )
 }
 
 object ValueRepo {

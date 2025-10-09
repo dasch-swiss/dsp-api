@@ -372,9 +372,7 @@ object StandoffTagUtilV2 {
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.String))) =>
                 StandoffTagStringAttributeV2(
                   standoffPropertyIri = standoffTagPropIri,
-                  value = Iri
-                    .toSparqlEncodedString(attr.value)
-                    .getOrElse(throw BadRequestException(s"Invalid string attribute: '${attr.value}'")),
+                  value = attr.value,
                 )
 
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Integer))) =>

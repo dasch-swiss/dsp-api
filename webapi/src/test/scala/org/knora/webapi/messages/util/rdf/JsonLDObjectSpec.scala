@@ -16,8 +16,8 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.service.IriConverter
-object JsonLDObjectSpec extends ZIOSpecDefault {
 
+object JsonLDObjectSpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("JsonLDObject")(
       iriValueSuite +

@@ -41,7 +41,7 @@ object StandoffStringUtil {
     s: String,
     acceptClientIDs: Boolean,
   ): Validation[ValidationException, IRI] =
-    if (acceptClientIDs && isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
+    if (acceptClientIDs && StandoffStringUtil.isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
     else Iri.validateAndEscapeIri(s)
 
   /**
