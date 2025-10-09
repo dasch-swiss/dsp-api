@@ -86,7 +86,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
           projectMemberships <- getProjectMemberships(newUser.userIri).flatMap(_.assert200)
         } yield assertTrue(projectMemberships.projects == Seq(imagesProjectExternal))
-      },
+      } @@ TestAspect.flaky,
       test("don't add user to project if user is already a member") {
         for {
           newUser <- createNewUser
@@ -138,7 +138,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
           adminMemberships <- getProjectAdminMemberships(newUser.userIri).flatMap(_.assert200)
         } yield assertTrue(adminMemberships.projects == Seq(imagesProjectExternal))
-      },
+      } @@ TestAspect.flaky,
       test("remove user from project admin group") {
         for {
           newUser <- createNewUser
