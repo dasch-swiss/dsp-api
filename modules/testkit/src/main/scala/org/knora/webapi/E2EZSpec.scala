@@ -11,9 +11,9 @@ import sttp.client4.UriContext
 import sttp.model.StatusCode
 import zio.*
 import zio.json.ast.Json
+import zio.logging.*
 import zio.test.*
 import zio.test.Assertion.*
-import zio.logging.*
 
 import scala.reflect.ClassTag
 
