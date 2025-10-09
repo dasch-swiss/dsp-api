@@ -1,5 +1,25 @@
 # Changelog
 
+## [32.3.2](https://github.com/dasch-swiss/dsp-api/compare/v32.3.1...v32.3.2) (2025-10-06)
+
+
+### Maintenances
+
+* Dependency updates ([#3806](https://github.com/dasch-swiss/dsp-api/issues/3806)) ([dc69f65](https://github.com/dasch-swiss/dsp-api/commit/dc69f65334f838aabaf65eab7636e05a9be3ec7a))
+* Major dependency updates ([#3805](https://github.com/dasch-swiss/dsp-api/issues/3805)) ([86b9b47](https://github.com/dasch-swiss/dsp-api/commit/86b9b4770ccafe326cd6fdf2c83cb2c670923d07))
+* Minor dependency updates ([#3804](https://github.com/dasch-swiss/dsp-api/issues/3804)) ([a8d19d4](https://github.com/dasch-swiss/dsp-api/commit/a8d19d4483c3587f3bba7f08612a755a45f49d51))
+* Patch dependency updates ([#3803](https://github.com/dasch-swiss/dsp-api/issues/3803)) ([8bfb042](https://github.com/dasch-swiss/dsp-api/commit/8bfb042439627b01e627a9fc6eff28fa9c7976b6))
+
+
+### Bug Fixes
+
+* Footnote contents get double encoded with SPARQL-safe encoding, but decoded only once (DEV-4880, DEV-4796, DEV-5274) ([#3737](https://github.com/dasch-swiss/dsp-api/issues/3737)) ([a5820eb](https://github.com/dasch-swiss/dsp-api/commit/a5820eb8be1de117f46c1c24cadb2bc8777cdccd))
+
+
+### Tests
+
+* **dsp-api:** Reuse test layers across all e2e and it tests ([#3800](https://github.com/dasch-swiss/dsp-api/issues/3800)) ([a083591](https://github.com/dasch-swiss/dsp-api/commit/a0835910d3778f3ef50e92b981fe17af199c2c62))
+
 ## [32.3.1](https://github.com/dasch-swiss/dsp-api/compare/v32.3.0...v32.3.1) (2025-09-23)
 
 
