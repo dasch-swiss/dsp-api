@@ -10,6 +10,7 @@ import zio.json.JsonCodec
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 
 final case class UserDto(
   id: String,
@@ -22,7 +23,9 @@ final case class UserDto(
   groups: Seq[Group],
   projects: Seq[Project],
   permissions: PermissionsDataADM,
-)
+) {
+  def userIri: UserIri = UserIri.unsafeFrom(id)
+}
 object UserDto {
 
   given JsonCodec[UserDto] = DeriveJsonCodec.gen[UserDto]

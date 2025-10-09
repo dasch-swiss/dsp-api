@@ -68,12 +68,11 @@ final case class MaintenanceEndpointsHandler(
               .as("work in progress"),
       )
 
-  val endpoints: List[ZServerEndpoint[Any, Any]] =
-    List(
-      postMaintenanceEndpoint,
-      needsTopLeftCorrectionEndpoint,
-      wasTopLeftCorrectionAppliedEndpoint,
-    )
+  val endpoints: List[ZServerEndpoint[Any, Any]] = List(
+    postMaintenanceEndpoint,
+    needsTopLeftCorrectionEndpoint,
+    wasTopLeftCorrectionAppliedEndpoint,
+  )
 }
 
 object MaintenanceEndpointsHandler {

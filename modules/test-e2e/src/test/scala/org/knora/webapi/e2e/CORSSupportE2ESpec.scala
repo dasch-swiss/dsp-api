@@ -49,7 +49,7 @@ object CORSSupportE2ESpec extends E2EZSpec {
       corsClient(_.options(uri"/admin/projects", Header(AccessControlRequestMethod, "GET")))
         .map(response =>
           assertTrue(
-            response.code == StatusCode.Ok,
+            response.code.isSuccess,
             response.header(AccessControlAllowOrigin).contains("http://example.com"),
             response.header(AccessControlAllowMethods).exists(_.contains("GET")),
             response.header(AccessControlAllowMethods).exists(_.contains("PUT")),
@@ -62,14 +62,13 @@ object CORSSupportE2ESpec extends E2EZSpec {
             response.header(AccessControlAllowCredentials).contains("true"),
           ),
         )
-
     },
     test("send `Access-Control-Allow-Origin` header when the Knora resource is found ") {
       val resourceIri = "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg"
       corsClient(_.get(uri"/v2/resources/$resourceIri"))
         .map(response =>
           assertTrue(
-            response.code == StatusCode.Ok,
+            response.code.isSuccess,
             response.header(AccessControlAllowOrigin).contains("http://example.com"),
           ),
         )

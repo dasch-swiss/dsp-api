@@ -13,8 +13,6 @@ import zio.config.typesafe.*
 
 import java.time.Duration
 
-import org.knora.webapi.core.LayersLive
-
 /**
  * Represents the configuration as defined in application.conf.
  */
@@ -187,7 +185,8 @@ final case class OpenTelemetryConfig(
 )
 
 object AppConfig {
-  type AppConfigurations = LayersLive.Config & InstrumentationServerConfig & JwtConfig & DspIngestConfig
+  type AppConfigurations = AppConfig & DspIngestConfig & InstrumentationServerConfig & KnoraApi & Sipi & Triplestore &
+    Features & GraphRoute & JwtConfig & OpenTelemetryConfig
 
   val parseConfig: UIO[AppConfig] = {
     val descriptor = deriveConfig[AppConfig].mapKey(toKebabCase)

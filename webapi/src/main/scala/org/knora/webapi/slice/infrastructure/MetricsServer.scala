@@ -41,6 +41,7 @@ object MetricsServer {
 
   val make: ZIO[MetricsServerEnv, Throwable, Unit] =
     for {
+      _                 <- ZIO.logInfo("Starting metrics and docs server...")
       knoraApiConfig    <- ZIO.service[KnoraApi]
       apiV2Endpoints    <- ZIO.service[ApiV2Endpoints]
       adminApiEndpoints <- ZIO.service[AdminApiEndpoints]
@@ -49,10 +50,12 @@ object MetricsServer {
       port               = config.port
       interval           = config.interval
       metricsConfig      = MetricsConfig(interval)
-      _ <- ZIO.logInfo(
-             s"Starting api on ${knoraApiConfig.externalKnoraApiBaseUrl}, " +
-               s"find docs on ${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:$port/docs",
-           )
+      _ <-
+        ZIO.logInfo(
+          s"Docs and metrics available at " +
+            s"${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:$port/docs & " +
+            s"${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:$port/metrics",
+        )
       _ <- metricsServer.provide(
              ZLayer.succeed(knoraApiConfig),
              ZLayer.succeed(adminApiEndpoints),

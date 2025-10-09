@@ -37,7 +37,7 @@ final case class ListsV2RestService(
    */
   def getList(user: User)(listIri: ListIri, opts: FormatOptions): Task[(RenderedResponse, MediaType)] =
     listsResponder
-      .listGetRequestADM(listIri.value)
+      .listGetRequestADM(listIri)
       .flatMap(r => ZIO.getOrFailWith(NotFoundException(s"List $listIri not found."))(r.asOpt[ListGetResponseADM]))
       .map(_.list)
       .map(ListGetResponseV2(_, user.lang, appConfig.fallbackLanguage))
