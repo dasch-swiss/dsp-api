@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.util
+
 import zio.*
 import zio.logging.*
 import zio.logging.LogFormat.*
@@ -54,8 +55,4 @@ object Logger {
 
   def json(): ULayer[Unit] = Runtime.removeDefaultLoggers >>> jsonLogger >+> Slf4jBridge.initialize
 
-  val text: ULayer[Unit] = Runtime.removeDefaultLoggers >>> consoleLogger(
-    config = ConsoleLoggerConfig.default
-      .copy(format = logFormatText, filter = ConsoleLoggerConfig.default.filter.withRootLevel(LogLevel.Debug)),
-  )
 }

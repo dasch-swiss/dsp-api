@@ -13,6 +13,7 @@ import zio.*
 import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
+import zio.logging.*
 
 import scala.reflect.ClassTag
 
@@ -25,15 +26,21 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestClientsModule
-import org.knora.webapi.util.Logger
 
 abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
   val faker: Faker                 = new Faker()
 
+  private val testLogger: ULayer[Unit] = Runtime.removeDefaultLoggers >>> consoleLogger(
+    config = {
+      val default = ConsoleLoggerConfig.default
+      default.copy(filter = default.filter.withRootLevel(LogLevel.Error))
+    },
+  )
+
   override val bootstrap: ULayer[E2EZSpec.Environment] =
-    Logger.text >>>
+    testLogger >>>
       TestContainerLayers.all >+>
       LayersLive.remainingLayer >+>
       TestClientsModule.layer
