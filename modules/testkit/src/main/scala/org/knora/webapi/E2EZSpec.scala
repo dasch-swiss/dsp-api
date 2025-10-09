@@ -5,6 +5,7 @@
 
 package org.knora.webapi
 
+import net.datafaker.Faker
 import sttp.client4.Response
 import sttp.client4.UriContext
 import sttp.model.StatusCode
@@ -29,6 +30,7 @@ import org.knora.webapi.util.Logger
 abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+  val faker: Faker                 = new Faker()
 
   override val bootstrap: ULayer[E2EZSpec.Environment] =
     Logger.text >>>

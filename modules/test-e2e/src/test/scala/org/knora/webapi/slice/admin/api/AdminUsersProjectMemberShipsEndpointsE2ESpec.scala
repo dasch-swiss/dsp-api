@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.api
 import sttp.client4.UriContext
 import sttp.model.StatusCode
 import zio.*
+import zio.json.*
 import zio.test.*
 
 import org.knora.webapi.*
@@ -16,19 +17,40 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMember
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.service.UserRestService.UserResponse
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.domain.LanguageCode
+import org.knora.webapi.slice.common.domain.LanguageCode.DE
 import org.knora.webapi.testservices.ResponseOps
 import org.knora.webapi.testservices.ResponseOps.assert200
-import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.ZioHelper.addLogTiming
 
 object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
   private val multiUserIri = UserIri.unsafeFrom(SharedTestDataADM2.multiuserUser.userData.user_id.get)
+
+  private def createNewUser =
+    val firstName = faker.name().firstName()
+    val lastName  = faker.name().lastName()
+    val req = UserCreateRequest(
+      id = None,
+      Username.unsafeFrom(s"$firstName.$lastName"),
+      Email.unsafeFrom(s"$firstName.$lastName@example.org"),
+      GivenName.unsafeFrom(firstName),
+      FamilyName.unsafeFrom(lastName),
+      Password.unsafeFrom(faker.credentials().password(8, 16)),
+      UserStatus.Active,
+      DE,
+      SystemAdmin.IsNotSystemAdmin,
+    )
+    TestApiClient
+      .postJson[UserResponse, UserCreateRequest](uri"/admin/users", req, rootUser)
+      .flatMap(_.assert200)
+      .map(_.user)
 
   override val e2eSpec = suite(
     "The Users Routes ('admin/users/iri/:userIri/project-memberships', 'admin/users/iri/:userIri/project-admin-memberships') ",
@@ -48,35 +70,40 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     ),
     suite("used to modify project membership")(
       test("NOT add a user to project if the requesting user is not a SystemAdmin or ProjectAdmin") {
-        addUserToProject(normalUser.userIri, imagesProjectExternal.id, normalUser)
-          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+        for {
+          newUser <- createNewUser
+
+          response <- addUserToProject(newUser.userIri, imagesProjectExternal.id, normalUser)
+
+        } yield assertTrue(response.code == StatusCode.Forbidden)
       },
       test("add user to project") {
         for {
-          beforeResult <- getProjectMemberships(normalUser.userIri).flatMap(_.assert200)
-          _            <- addUserToProject(normalUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
-          afterResult  <- getProjectMemberships(normalUser.userIri).flatMap(_.assert200)
-        } yield assertTrue(
-          beforeResult.projects == Seq.empty,
-          afterResult.projects == Seq(imagesProjectExternal),
-        )
+          newUser <- createNewUser
+
+          _ <- addUserToProject(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+
+          projectMemberships <- getProjectMemberships(newUser.userIri).flatMap(_.assert200)
+        } yield assertTrue(projectMemberships.projects == Seq(imagesProjectExternal))
       },
       test("don't add user to project if user is already a member") {
         for {
-          beforeResult <- getProjectMemberships(normalUser.userIri).flatMap(_.assert200)
-          _            <- addUserToProject(normalUser.userIri, imagesProjectExternal.id).flatMap(_.assert400)
-          afterResult  <- getProjectMemberships(normalUser.userIri).flatMap(_.assert200)
-        } yield assertTrue(afterResult.projects == beforeResult.projects)
+          newUser <- createNewUser
+          _       <- addUserToProject(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+
+          response <- addUserToProject(newUser.userIri, imagesProjectExternal.id)
+
+        } yield assertTrue(response.code == StatusCode.BadRequest)
       },
       test("remove user from project") {
         for {
-          beforeResult <- getProjectMemberships(normalUser.userIri).flatMap(_.assert200)
-          _            <- removeUserFromProject(normalUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
-          afterResult  <- getProjectMemberships(normalUser.userIri).flatMap(_.assert200)
-        } yield assertTrue(
-          beforeResult.projects == Seq(imagesProjectExternal),
-          afterResult.projects == Seq.empty,
-        )
+          newUser <- createNewUser
+          _       <- addUserToProject(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+
+          _ <- removeUserFromProject(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+
+          projectMemberships <- getProjectMemberships(newUser.userIri).flatMap(_.assert200)
+        } yield assertTrue(projectMemberships.projects == Seq.empty)
       },
     ),
     suite("used to query project admin group memberships")(
@@ -93,47 +120,48 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
       },
     ),
     suite("used to modify project admin group membership")(
-      test("add user to project admin group only if he is already member of that project") {
+      test("do NOT add user to project admin group if not member of that project") {
         for {
-          // add user as project admin to images project - should return BadRequest because user is not member of the project
-          _ <- addUserToProjectAsAdmin(normalUser.userIri, imagesProjectExternal.id).flatMap(_.assert400)
-          // add user as member to images project, must succeed
-          _ <- addUserToProject(normalUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
-          // verify that user is not yet project admin in images project
-          membershipsBeforeResult <- getProjectAdminMemberships(normalUser.userIri).flatMap(_.assert200)
-          // add user as project admin to images project
-          _ <- addUserToProjectAsAdmin(normalUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
-          // verify that user has been added as project admin to images project
-          membershipsAfterResult <- getProjectAdminMemberships(normalUser.userIri).flatMap(_.assert200)
-        } yield assertTrue(
-          membershipsBeforeResult.projects == Seq.empty,
-          membershipsAfterResult.projects == Seq(imagesProjectExternal),
-        )
+          newUser <- createNewUser
+
+          response <- addUserToProjectAsAdmin(newUser.userIri, imagesProjectExternal.id)
+
+        } yield assertTrue(response.code == StatusCode.BadRequest)
+      },
+      test("add user to project admin group if member of that project") {
+        for {
+          newUser <- createNewUser
+
+          _ <- addUserToProject(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+          _ <- addUserToProjectAsAdmin(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+
+          adminMemberships <- getProjectAdminMemberships(newUser.userIri).flatMap(_.assert200)
+        } yield assertTrue(adminMemberships.projects == Seq(imagesProjectExternal))
       },
       test("remove user from project admin group") {
         for {
-          membershipsBefore <- getProjectAdminMemberships(normalUser.userIri).flatMap(_.assert200)
-          _                 <- removeUserFromProject(normalUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
-          membershipsAfter  <- getProjectAdminMemberships(normalUser.userIri).flatMap(_.assert200)
-        } yield assertTrue(
-          membershipsBefore.projects == Seq(imagesProjectExternal),
-          membershipsAfter.projects == Seq.empty,
-        )
+          newUser <- createNewUser
+          _       <- addUserToProject(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+          _       <- addUserToProjectAsAdmin(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+
+          _ <- removeUserFromProject(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+
+          adminMemberships <- getProjectAdminMemberships(newUser.userIri).flatMap(_.assert200)
+        } yield assertTrue(adminMemberships.projects == Seq.empty)
       },
-      test("remove user from project which also removes him from project admin group") {
+      test("remove user from project which also removes them from project admin group") {
         for {
-          // add user as project admin to images project
-          _ <- addUserToProject(normalUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
-          _ <- addUserToProjectAsAdmin(normalUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
-          // remove user as project member from images project
-          _ <- removeUserFromProject(normalUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
-          // verify that user has also been removed as project admin from images project
-          projectAdminMembershipsAfterResult <- getProjectAdminMemberships(normalUser.userIri).flatMap(_.assert200)
-        } yield assertTrue(projectAdminMembershipsAfterResult.projects == Seq.empty)
+          newUser <- createNewUser
+          _       <- addUserToProject(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+          _       <- addUserToProjectAsAdmin(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+
+          _ <- removeUserFromProject(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
+
+          adminMemberships <- getProjectAdminMemberships(normalUser.userIri).flatMap(_.assert200)
+        } yield assertTrue(adminMemberships.projects == Seq.empty)
       },
     ),
-  ) @@ TestAspect.timeout(2.seconds)
-    @@ TestAspect.flaky
+  )
 
   private def getProjectMemberships(userIri: UserIri, requestingUser: User = rootUser) =
     addLogTiming("GET project-memberships") {

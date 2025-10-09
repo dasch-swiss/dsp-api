@@ -285,6 +285,7 @@ lazy val testkit: Project = Project(id = "testkit", base = file("modules/testkit
       Dependencies.zioTest,
       Dependencies.testcontainers,
       Dependencies.wiremock,
+      Dependencies.dataFaker,
     ),
     publish / skip := true,
     name           := "testkit",
