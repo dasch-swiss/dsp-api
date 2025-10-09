@@ -19,6 +19,9 @@ object UsernameSpec extends ZIOSpecDefault {
     "user.123",
     "use",
     "Mose.Dooley",
+    "Wayne.1576803472",
+    "Stacey.1811737105",
+    "a".repeat(50), // (50 characters)
   )
   private val invalidNames = Seq(
     "_username",   // (starts with underscore)

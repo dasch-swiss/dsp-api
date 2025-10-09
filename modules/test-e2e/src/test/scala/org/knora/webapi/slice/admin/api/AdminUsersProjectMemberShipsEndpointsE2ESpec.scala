@@ -17,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMember
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.api.AdminUsersProjectMemberShipsEndpointsE2ESpec.faker
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.service.UserRestService.UserResponse
@@ -38,7 +39,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     val lastName  = faker.name().lastName()
     val req = UserCreateRequest(
       id = None,
-      Username.unsafeFrom(s"$firstName.$lastName"),
+      Username.unsafeFrom(s"$firstName.${faker.number().positive()}"),
       Email.unsafeFrom(s"$firstName.$lastName@example.org"),
       GivenName.unsafeFrom(firstName),
       FamilyName.unsafeFrom(lastName),
