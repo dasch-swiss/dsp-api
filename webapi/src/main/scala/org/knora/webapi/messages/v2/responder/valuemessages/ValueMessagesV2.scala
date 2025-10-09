@@ -1206,11 +1206,12 @@ object TextValueContentV2 {
         )
     }
 
-  private def objectSparqlStringOption(r: Resource, property: String) = for {
+  private def objectSparqlStringOption(r: Resource, property: String): Either[String, Option[String]] = for {
     str <- r.objectStringOption(property)
     iri <- str match
-             case Some(s) => Right(Iri.toSparqlEncodedString(s))
-             case None    => Right(None)
+             case Some(s) if s.strip.isEmpty => Right(None)
+             case None                       => Right(None)
+             case Some(s)                    => Right(Some(s))
   } yield iri
 
   def from(r: Resource): ZIO[MessageRelay, IRI, TextValueContentV2] = for {
@@ -1228,7 +1229,6 @@ object TextValueContentV2 {
     textValue <-
       getTextValue(maybeValueAsString, maybeTextValueAsXml, maybeValueHasLanguage, maybeMappingResponse, comment)
         .mapError(_.getMessage)
-
   } yield textValue
 }
 
