@@ -16,6 +16,7 @@ import SparqlTransformer.*
 class SelectTransformer(
   simulateInference: Boolean,
   sparqlTransformerLive: OntologyInferencer,
+  mainRes: QueryVariable,
   implicit val stringFormatter: StringFormatter,
 ) extends WhereTransformer {
 
@@ -48,4 +49,6 @@ class SelectTransformer(
    * @return the FROM clause to be used, if any.
    */
   def getFromClause: Task[Option[FromClause]] = ZIO.succeed(None)
+
+  def getMainResourceVariable: QueryVariable = mainRes
 }

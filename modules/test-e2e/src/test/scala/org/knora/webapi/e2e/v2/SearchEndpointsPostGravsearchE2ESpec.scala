@@ -781,7 +781,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |     FILTER(?decimal = "2.1"^^xsd:decimal)
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingEqualsDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingEqualsDecimal.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that has a decimal value bigger than 2.0") {
       val query =
@@ -806,7 +806,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |     FILTER(?decimal > "2"^^xsd:decimal)
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingBiggerThanDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingBiggerThanDecimal.jsonld", anythingUser1)
     },
     test("perform a Gravsearch query for books that have been published 1497 or later (Julian Calendar)") {
       val query =
@@ -862,7 +862,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |     FILTER(?decimal < "3"^^xsd:decimal)
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingSmallerThanDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingSmallerThanDecimal.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that has a specific URI value") {
       val query =
@@ -884,7 +884,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |     FILTER(?uri = "http://www.google.ch"^^xsd:anyURI)
           |}
           |""".stripMargin
-      verifyQueryResult(query, "thingWithURI.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "thingWithURI.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that has a Boolean value that is true") {
       val query =
@@ -910,7 +910,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingWithBoolean.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithBoolean.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that may have a Boolean value that is true") {
       val query =
@@ -945,7 +945,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |     }
           |} OFFSET 0
           |""".stripMargin
-      verifyQueryResult(query, "ThingWithBooleanOptionalOffset0.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithBooleanOptionalOffset0.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that may have a Boolean value that is true using an increased offset") {
       // set OFFSET to 1 to get "Testding for extended search"
@@ -982,7 +982,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |} OFFSET 1
           |
                 """.stripMargin
-      verifyQueryResult(query, "ThingWithBooleanOptionalOffset1.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithBooleanOptionalOffset1.jsonld", anythingUser1)
     },
     test(
       "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both)",
@@ -1021,7 +1021,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |} OFFSET 0
           |""".stripMargin
-      verifyQueryResult(query, "ThingWithBooleanOrDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithBooleanOrDecimal.jsonld", anythingUser1)
     },
     test("search for a book whose title contains 'Zeitglöcklein' using the match function") {
       val query =
@@ -1046,7 +1046,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |   FILTER knora-api:matchText(?propVal0, "Zeitglöcklein")
           |
           |}""".stripMargin
-      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
     },
     test("search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function") {
       val query =
@@ -1072,7 +1072,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
     },
     test("search for 'Zeitglöcklein des Lebens' using dcterms:title") {
       val query =
@@ -1098,7 +1098,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |    } OFFSET 0
                 """.stripMargin
-      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
     },
     test("search for an anything:Thing with a list value") {
       val query =
@@ -1122,7 +1122,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |    } OFFSET 0
                 """.stripMargin
-      verifyQueryResult(query, "ThingWithListValue.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithListValue.jsonld", anythingUser1)
     },
     test("search for a text using the lang function") {
       val query =
@@ -1148,7 +1148,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |     FILTER(lang(?text) = "fr")
           |}
           |""".stripMargin
-      verifyQueryResult(query, "LanguageFulltextSearch.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "LanguageFulltextSearch.jsonld", anythingUser1)
     },
     test("search for a specific text using the lang function") {
       val query =
@@ -1174,7 +1174,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |     FILTER(lang(?text) = "fr" && ?text = "Bonjour")
           |}
           |""".stripMargin
-      verifyQueryResult(query, "LanguageFulltextSearch.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "LanguageFulltextSearch.jsonld", anythingUser1)
     },
     test("search for a book whose title contains 'Zeit' using the regex function") {
       val query =
@@ -1201,7 +1201,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
     },
     test("do a Gravsearch query for link objects that link to an incunabula book") {
       val query =
@@ -1232,7 +1232,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "LinkObjectsToBooks.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "LinkObjectsToBooks.jsonld", anythingUser1)
     },
     test("do a Gravsearch query for a letter that links to a specific person via two possible properties") {
       val query =
@@ -1270,7 +1270,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-      verifyQueryResult(query, "letterWithAuthor.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "letterWithAuthor.jsonld", anythingUser1)
     },
     test("do a Gravsearch query for a letter that links to a person with a specified name") {
       val query =
@@ -1317,7 +1317,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-      verifyQueryResult(query, "letterWithPersonWithName.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "letterWithPersonWithName.jsonld", anythingUser1)
     },
     test("do a Gravsearch query for a letter that links to another person with a specified name") {
       val query =
@@ -1398,7 +1398,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "foafPerson.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "foafPerson.jsonld", anythingUser1)
     },
     test("run a Gravsearch query that searches for a single resource specified by its IRI") {
       val query =
@@ -1424,7 +1424,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |     ?integer a xsd:integer.
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingByIriWithRequestedValues.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingByIriWithRequestedValues.jsonld", anythingUser1)
     },
     test("do a Gravsearch query for a letter and get information about the persons associated with it") {
       val query =
@@ -1508,7 +1508,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |    ?seqnum a xsd:integer .
           |
           |}""".stripMargin
-      verifyQueryResult(query, "incomingPagesForBook.jsonld", incunabulaMemberUser)
+      verifyQueryResultWithUser(query, "incomingPagesForBook.jsonld", incunabulaMemberUser)
     },
     test(
       "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY",
@@ -1596,7 +1596,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "regionsOfZeitgloecklein.jsonld", incunabulaMemberUser)
+      verifyQueryResultWithUser(query, "regionsOfZeitgloecklein.jsonld", incunabulaMemberUser)
     },
     test("do a Gravsearch query containing a UNION nested in an OPTIONAL") {
       val query =
@@ -1620,6 +1620,40 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |}
           |""".stripMargin
       verifyQueryResult(query, "ProjectsWithOptionalPersonOrBiblio.jsonld")
+    },
+    suiteAll("Queries for link objects") {
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |CONSTRUCT {
+          |     ?linkObj knora-api:isMainResource true .
+          |} WHERE {
+          |     ?linkObj a knora-api:Resource .
+          |     ?linkObj a knora-api:LinkObj .
+          |}
+          |""".stripMargin
+
+      test("do a Gravsearch query for link objects without project restriction") {
+        verifyQueryResultWithUser(query, "LinkObjectsUnrestricted.jsonld", anythingUser1)
+      }
+
+      test("do a Gravsearch query for link objects restricted to the anything project") {
+        verifyQueryResultWithUser(
+          query,
+          "LinkObjectsLimitedToAnythingProject.jsonld",
+          anythingUser1,
+          Some("http://rdfh.ch/projects/0001"),
+        )
+      }
+
+      test("do a Gravsearch query for link objects restricted to the incunabula project") {
+        verifyQueryResultWithUser(
+          query,
+          "LinkObjectsLimitedToIncunabulaProject.jsonld",
+          anythingUser1,
+          Some("http://rdfh.ch/projects/0803"),
+        )
+      }
     },
   )
 }

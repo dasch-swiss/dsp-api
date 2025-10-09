@@ -749,7 +749,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |     ?decimal knora-api:decimalValueAsDecimal "2.1"^^xsd:decimal .
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingEqualsDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingEqualsDecimal.jsonld", anythingUser1)
     },
     test(
       "search for an anything:Thing that has a decimal value of 2.1 (submitting the complex schema), without inference",
@@ -767,7 +767,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |    ?thing anything:hasDecimal ?decimal .
           |    ?decimal knora-api:decimalValueAsDecimal "2.1"^^xsd:decimal .
           |}""".stripMargin
-      verifyQueryResult(query, "ThingEqualsDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingEqualsDecimal.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that has a decimal value bigger than 2.0 (submitting the complex schema)") {
       val query =
@@ -790,7 +790,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |     FILTER(?decimalDec > "2"^^xsd:decimal)
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingBiggerThanDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingBiggerThanDecimal.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that has a decimal value smaller than 3.0 (submitting the complex schema)") {
       val query =
@@ -806,7 +806,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |     ?decimal knora-api:decimalValueAsDecimal ?decimalDec .
           |     FILTER(?decimalDec < "3"^^xsd:decimal)
           |}""".stripMargin
-      verifyQueryResult(query, "ThingSmallerThanDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingSmallerThanDecimal.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that has a link to a specified other thing") {
       val query =
@@ -820,7 +820,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |    ?thing a anything:Thing .
           |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
           |}""".stripMargin
-      verifyQueryResult(query, "ThingWithLinkToStart.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithLinkToStart.jsonld", anythingUser1)
     },
     test("return a page of anything:Thing resources") {
       val query =
@@ -832,7 +832,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |} WHERE {
           |    ?thing a anything:Thing .
           |}""".stripMargin
-      verifyQueryResult(query, "PageOfThings.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "PageOfThings.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that has a Boolean value that is true (submitting the complex schema)") {
       val query =
@@ -854,7 +854,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingWithBoolean.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithBoolean.jsonld", anythingUser1)
     },
     test("search for an anything:Thing that may have a Boolean value that is true (submitting the complex schema)") {
       // set OFFSET to 1 to get "Testding for extended search"
@@ -888,7 +888,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |} OFFSET 1
           |""".stripMargin
-      verifyQueryResult(query, "ThingWithBooleanOptionalOffset1.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithBooleanOptionalOffset1.jsonld", anythingUser1)
     },
     test(
       "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both) (submitting the complex schema)",
@@ -923,7 +923,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |} OFFSET 0
           |
           |""".stripMargin
-      verifyQueryResult(query, "ThingWithBooleanOrDecimal.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithBooleanOrDecimal.jsonld", anythingUser1)
     },
     test("search for a book whose title contains 'Zeit' using the regex function (submitting the complex schema)") {
       val query =
@@ -949,7 +949,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
     },
     test(
       "search for a book whose title contains 'Zeitglöcklein' using the match function (submitting the complex schema)",
@@ -975,7 +975,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
     },
     test(
       "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function (submitting the complex schema)",
@@ -1001,7 +1001,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "BooksWithTitleContainingZeitgloecklein.jsonld", anythingUser1)
     },
     test("search for an anything:Thing with a list value (submitting the complex schema)") {
       val query =
@@ -1021,7 +1021,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |} OFFSET 0
           |""".stripMargin
-      verifyQueryResult(query, "ThingWithListValue.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithListValue.jsonld", anythingUser1)
     },
     test("search for a text in a particular language (submitting the complex schema)") {
       val query =
@@ -1041,7 +1041,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |     ?text knora-api:textValueHasLanguage "fr" .
           |}
           |""".stripMargin
-      verifyQueryResult(query, "LanguageFulltextSearch.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "LanguageFulltextSearch.jsonld", anythingUser1)
     },
     test("search for a specific text using the lang function (submitting the complex schema)") {
       val query =
@@ -1063,7 +1063,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |     ?text knora-api:textValueHasLanguage "fr" .
           |}
           |""".stripMargin
-      verifyQueryResult(query, "LanguageFulltextSearch.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "LanguageFulltextSearch.jsonld", anythingUser1)
     },
     test("do a Gravsearch query for link objects that link to an incunabula book (submitting the complex schema)") {
       val query =
@@ -1087,7 +1087,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "LinkObjectsToBooks.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "LinkObjectsToBooks.jsonld", anythingUser1)
     },
     test(
       "do a Gravsearch query for a letter that links to a specific person via two possible properties (submitting the complex schema)",
@@ -1118,7 +1118,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |} ORDER BY ?date
           |""".stripMargin
-      verifyQueryResult(query, "letterWithAuthor.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "letterWithAuthor.jsonld", anythingUser1)
     },
     test(
       "do a Gravsearch query for a letter that links to a person with a specified name (submitting the complex schema)",
@@ -1153,7 +1153,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |} ORDER BY ?date
           |""".stripMargin
-      verifyQueryResult(query, "letterWithPersonWithName.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "letterWithPersonWithName.jsonld", anythingUser1)
     },
     test(
       "do a Gravsearch query for a letter that links to another person with a specified name (submitting the complex schema)",
@@ -1211,7 +1211,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |     ?thing anything:hasInteger ?integer .
           |}
           |""".stripMargin
-      verifyQueryResult(query, "ThingByIriWithRequestedValues.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingByIriWithRequestedValues.jsonld", anythingUser1)
     },
     test(
       "do a Gravsearch query for a letter and get information about the persons associated with it (submitting the complex schema)",
@@ -1279,7 +1279,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "incomingPagesForBook.jsonld", incunabulaMemberUser)
+      verifyQueryResultWithUser(query, "incomingPagesForBook.jsonld", incunabulaMemberUser)
     },
     test(
       "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY (submitting the complex schema)",
@@ -1348,7 +1348,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "regionsOfZeitgloecklein.jsonld", incunabulaMemberUser)
+      verifyQueryResultWithUser(query, "regionsOfZeitgloecklein.jsonld", incunabulaMemberUser)
     },
     test("reject a Gravsearch query in the complex schema that uses knora-api:isMainResource in the simple schema") {
       val query =
@@ -1496,7 +1496,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "thingReferringToSpecificListNode.jsonld", incunabulaMemberUser)
+      verifyQueryResultWithUser(query, "thingReferringToSpecificListNode.jsonld", incunabulaMemberUser)
     },
     test("search for a list value that does not refer to a particular list node (submitting the complex schema)") {
       val query =
@@ -1517,7 +1517,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |    }
           |}
           |""".stripMargin
-      verifyQueryResult(query, "thingNotReferringToSpecificListNode.jsonld", incunabulaMemberUser)
+      verifyQueryResultWithUser(query, "thingNotReferringToSpecificListNode.jsonld", incunabulaMemberUser)
     },
     test(
       "search for a list value that refers to a particular list node that has subnodes (submitting the complex schema)",
@@ -1539,7 +1539,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "thingReferringToSpecificListNodeWithSubnodes.jsonld", incunabulaMemberUser)
+      verifyQueryResultWithUser(query, "thingReferringToSpecificListNodeWithSubnodes.jsonld", incunabulaMemberUser)
     },
     test(
       "search for a beol:letter with list value that refers to a particular list node (submitting the complex schema)",
@@ -1563,7 +1563,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |
           |}
           |""".stripMargin
-      verifyQueryResult(query, "letterWithSubject.jsonld", incunabulaMemberUser)
+      verifyQueryResultWithUser(query, "letterWithSubject.jsonld", incunabulaMemberUser)
     },
     test("search for a standoff link using the knora-api:standoffLink function (submitting the complex schema)") {
       val query =
@@ -1584,7 +1584,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |    ?otherThing a anything:Thing .
           |}
           |""".stripMargin
-      verifyQueryResult(query, "thingsWithStandoffLinks.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "thingsWithStandoffLinks.jsonld", anythingUser1)
     },
     test(
       "search for a standoff link using the knora-api:standoffLink function, referring to the target resource in the function call only (submitting the complex schema)",
@@ -1608,7 +1608,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |    # Note that ?otherThing is only used as a argument in the function, not in any other statement
           |}
           |""".stripMargin
-      verifyQueryResult(query, "thingsWithStandoffLinks.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "thingsWithStandoffLinks.jsonld", anythingUser1)
     },
     test(
       "search for a standoff link using the knora-api:standoffLink function specifying an Iri for the target resource (submitting the complex schema)",
@@ -1631,7 +1631,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |    <http://rdfh.ch/0001/a-thing> a anything:Thing .
           |}
           |""".stripMargin
-      verifyQueryResult(query, "thingsWithStandoffLinksToSpecificThing.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "thingsWithStandoffLinksToSpecificThing.jsonld", anythingUser1)
     },
     test(
       "search for a standoff link using the knora-api:standoffLink function specifying an Iri for the target resource, referring to the target resource in the function call only (submitting the complex schema)",
@@ -1655,7 +1655,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
           |    # Note that <http://rdfh.ch/0001/a-thing> is only used as a argument in the function, not in any other statement
           |}
           |""".stripMargin
-      verifyQueryResult(query, "thingsWithStandoffLinksToSpecificThing.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "thingsWithStandoffLinksToSpecificThing.jsonld", anythingUser1)
     },
     test("search for matching words in a particular type of standoff tag (submitting the complex schema)") {
       val query =
@@ -1890,7 +1890,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
            |    FILTER(?timeStamp > "2019-08-30T10:45:26.365863Z"^^xsd:dateTimeStamp)
            |}
            |""".stripMargin
-      verifyQueryResult(query, "ThingWithTimeStamp.jsonld", anythingUser1)
+      verifyQueryResultWithUser(query, "ThingWithTimeStamp.jsonld", anythingUser1)
     },
     test("get a resource with a link to another resource that the user doesn't have permission to see") {
       val query =
