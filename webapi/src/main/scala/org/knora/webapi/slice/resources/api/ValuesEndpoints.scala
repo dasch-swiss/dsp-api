@@ -77,15 +77,6 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .description(
       s"Erase all old versions of a Value from the database completely and keep only the latest version. $linkToValuesDocumentation",
     )
-
-  val endpoints: Seq[AnyEndpoint] = Seq(
-    getValue,
-    postValues,
-    putValues,
-    deleteValues,
-    postValuesErase,
-    postValuesErasehistory,
-  ).map(_.endpoint.tag("V2 Values"))
 }
 
 object ValuesEndpoints {

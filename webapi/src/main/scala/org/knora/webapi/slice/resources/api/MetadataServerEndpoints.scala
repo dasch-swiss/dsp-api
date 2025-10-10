@@ -16,7 +16,7 @@ final case class MetadataServerEndpoints(
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getResourcesMetadata.serverLogic(restService.getResourcesMetadata),
-  )
+  ).map(_.withTag("V2 Metadata"))
 }
 object MetadataServerEndpoints {
   val layer = ZLayer.derive[MetadataServerEndpoints]

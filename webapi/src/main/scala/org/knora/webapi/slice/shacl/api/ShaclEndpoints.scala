@@ -51,8 +51,6 @@ case class ShaclEndpoints(baseEndpoints: BaseEndpoints) {
                        |] .
                        |```
                        |""".stripMargin))
-
-  val endpoints = Seq(validate).map(_.tag("Shacl"))
 }
 
 object ShaclEndpoints {

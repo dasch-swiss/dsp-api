@@ -34,7 +34,7 @@ final case class AdminListsServerEndpoints(
     adminListsEndpoints.putListsByIri.serverLogic(restService.listChange),
     adminListsEndpoints.deleteListsByIri.serverLogic(restService.deleteListItemRequestADM),
     adminListsEndpoints.deleteListsComment.serverLogic(restService.deleteListNodeCommentsADM),
-  )
+  ).map(_.withTag("Admin Lists"))
 }
 
 object AdminListsServerEndpoints {

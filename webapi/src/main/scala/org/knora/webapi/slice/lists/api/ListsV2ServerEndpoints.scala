@@ -17,7 +17,7 @@ final case class ListsV2ServerEndpoints(
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getV2Lists.serverLogic(restService.getList),
     endpoints.getV2Node.serverLogic(restService.getNode),
-  )
+  ).map(_.endpoint.tag("V2 Lists"))
 }
 
 object ListsV2ServerEndpoints {

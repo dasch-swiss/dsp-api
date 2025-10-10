@@ -19,9 +19,9 @@ final case class StoreServerEndpoints(
 ) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
-    if (appConfig.allowReloadOverHttp)
-      List(endpoints.postStoreResetTriplestoreContent.zServerLogic(restService.resetTriplestoreContent))
-    else List.empty
+    (if (appConfig.allowReloadOverHttp)
+       List(endpoints.postStoreResetTriplestoreContent.zServerLogic(restService.resetTriplestoreContent))
+     else List.empty).map(_.withTag("Admin Store"))
 }
 
 object StoreServerEndpoints {

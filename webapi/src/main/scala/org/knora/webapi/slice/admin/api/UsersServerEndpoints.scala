@@ -45,7 +45,7 @@ case class UsersServerEndpoints(
     usersEndpoints.delete.usersByIriProjectMemberShips.serverLogic(restService.removeUserFromProject),
     usersEndpoints.delete.usersByIriProjectAdminMemberShips.serverLogic(restService.removeUserFromProjectAsAdmin),
     usersEndpoints.delete.usersByIriGroupMemberShips.serverLogic(restService.removeUserFromGroup),
-  )
+  ).map(_.withTag("Admin Users"))
 }
 
 object UsersServerEndpoints {

@@ -47,11 +47,6 @@ final case class ListsEndpointsV2(private val base: BaseEndpoints) {
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description("Returns a list node.")
-
-  val endpoints: Seq[AnyEndpoint] = Seq(
-    getV2Lists,
-    getV2Node,
-  ).map(_.endpoint.tag("V2 Lists"))
 }
 
 object ListsEndpointsV2 {

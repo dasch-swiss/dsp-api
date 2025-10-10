@@ -102,8 +102,6 @@ final case class MetadataEndpoints(private val baseEndpoints: BaseEndpoints) {
         "The metadata is returned with complex schema IRIs in the payload. " +
         "This endpoint is only available for system and project admins.",
     )
-
-  val endpoints: Seq[AnyEndpoint] = Seq(getResourcesMetadata).map(_.endpoint).map(_.tag("V2 Metadata"))
 }
 object MetadataEndpoints {
   val layer = ZLayer.derive[MetadataEndpoints]

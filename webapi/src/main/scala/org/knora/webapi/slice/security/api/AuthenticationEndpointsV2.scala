@@ -54,10 +54,6 @@ case class AuthenticationEndpointsV2(
     .in(formBody[LoginForm])
     .out(setCookie(cookieName))
     .out(jsonBody[TokenResponse])
-
-  val endpoints: Seq[AnyEndpoint] =
-    Seq(getV2Authentication.endpoint, postV2Authentication, deleteV2Authentication, getV2Login, postV2Login)
-      .map(_.tag("V2 Authentication"))
 }
 
 object AuthenticationEndpointsV2 {

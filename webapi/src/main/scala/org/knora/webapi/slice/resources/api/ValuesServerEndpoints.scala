@@ -25,7 +25,7 @@ final class ValuesServerEndpoints(
     endpoints.deleteValues.serverLogic(valuesRestService.deleteValue),
     endpoints.postValuesErase.serverLogic(valuesRestService.eraseValue),
     endpoints.postValuesErasehistory.serverLogic(valuesRestService.eraseValueHistory),
-  )
+  ).map(_.endpoint.tag("V2 Values"))
 }
 object ValuesServerEndpoints {
   val layer = ZLayer.derive[ValuesServerEndpoints]

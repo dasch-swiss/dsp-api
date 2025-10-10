@@ -34,7 +34,7 @@ final case class SearchServerEndpoints(
       searchRestService.getSearchStillImageRepresentationsCount,
     ),
     searchEndpoints.getSearchIncomingRegions.serverLogic(searchRestService.searchIncomingRegions),
-  )
+  ).map(_.endpoint.tag("V2 Search"))
 }
 object SearchServerEndpoints {
   val layer = SearchRestService.layer >+> SearchEndpoints.layer >>> ZLayer.derive[SearchServerEndpoints]

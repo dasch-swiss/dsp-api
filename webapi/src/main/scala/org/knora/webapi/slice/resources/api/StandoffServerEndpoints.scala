@@ -16,7 +16,7 @@ final case class StandoffServerEndpoints(
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.postMapping.serverLogic(restService.createMapping),
-  )
+  ).map(_.endpoint.tag("V2 Standoff"))
 }
 object StandoffServerEndpoints {
   val layer = ZLayer.derive[StandoffServerEndpoints]

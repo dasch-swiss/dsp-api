@@ -117,23 +117,6 @@ case class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
   val deleteListsComment = baseEndpoints.securedEndpoint.delete
     .in(base / "comments" / listIriPathVar)
     .out(jsonBody[ListNodeCommentsDeleteResponseADM])
-
-  private val secured =
-    List(
-      postLists,
-      postListsChild,
-      putListsByIriName,
-      putListsByIriLabels,
-      putListsByIriComments,
-      putListsByIriPosition,
-      putListsByIri,
-      deleteListsByIri,
-      deleteListsComment,
-    ).map(_.endpoint)
-
-  private val public = List(getListsQueryByProjectIriOption, getListsByIri, getListsByIriInfo, getListsCanDeleteByIri)
-
-  val endpoints = (secured ++ public).map(_.tag("Admin Lists"))
 }
 
 object Requests {

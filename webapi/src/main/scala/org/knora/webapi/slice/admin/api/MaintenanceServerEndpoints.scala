@@ -18,7 +18,7 @@ final case class MaintenanceServerEndpoints(
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.postMaintenance.serverLogic(restService.executeMaintenanceAction),
-  )
+  ).map(_.withTag("Admin Maintenance"))
 }
 object MaintenanceServerEndpoints {
   val layer = ZLayer.derive[MaintenanceServerEndpoints]

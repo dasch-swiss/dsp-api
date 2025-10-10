@@ -60,7 +60,7 @@ final case class ProjectsServerEndpoints(
     projectsEndpoints.Secured.postAdminProjectsByShortcodeImport.serverLogic(restService.importProject),
     projectsEndpoints.Secured.postAdminProjects.serverLogic(restService.createProject),
     projectsEndpoints.Secured.putAdminProjectsByIri.serverLogic(restService.updateProject),
-  )
+  ).map(_.withTag("Admin Projects"))
 }
 
 object ProjectsServerEndpoints {

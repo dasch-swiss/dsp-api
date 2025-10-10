@@ -22,7 +22,7 @@ final case class FilesServerEndpoints(
     filesEndpoints.getAdminFilesShortcodeFileIri.serverLogic(
       assetPermissionsResponder.getPermissionCodeAndProjectRestrictedViewSettings,
     ),
-  )
+  ).map(_.withTag("Admin Files"))
 }
 
 object FilesServerEndpoints {

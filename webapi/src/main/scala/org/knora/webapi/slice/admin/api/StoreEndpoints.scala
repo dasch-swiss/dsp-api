@@ -35,8 +35,6 @@ final case class StoreEndpoints(baseEndpoints: BaseEndpoints) {
       .description(
         "Resets the content of the triplestore, only available if configuration `allowReloadOverHttp` is set to `true`.",
       )
-
-  val endpoints = Seq(postStoreResetTriplestoreContent).map(_.tag("Admin Store"))
 }
 
 object StoreEndpoints {

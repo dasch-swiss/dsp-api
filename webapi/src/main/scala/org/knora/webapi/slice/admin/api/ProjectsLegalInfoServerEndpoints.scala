@@ -22,7 +22,7 @@ final class ProjectsLegalInfoServerEndpoints(
     endpoints.getProjectCopyrightHolders.serverLogic(restService.findCopyrightHolders),
     endpoints.postProjectCopyrightHolders.serverLogic(restService.addCopyrightHolders),
     endpoints.putProjectCopyrightHolders.serverLogic(restService.replaceCopyrightHolder),
-  )
+  ).map(_.withTag("Admin Projects (Legal Info)"))
 }
 
 object ProjectsLegalInfoServerEndpoints {

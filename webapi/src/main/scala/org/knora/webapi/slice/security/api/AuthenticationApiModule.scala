@@ -13,8 +13,11 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.security.Authenticator
 
 object AuthenticationApiModule { self =>
+
   type Dependencies = AppConfig & Authenticator & BaseEndpoints
-  type Provided     = AuthenticationServerEndpoints & AuthenticationEndpointsV2
+
+  type Provided = AuthenticationServerEndpoints
+
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       AuthenticationEndpointsV2.layer,

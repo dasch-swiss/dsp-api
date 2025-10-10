@@ -141,16 +141,6 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
       "Update a particular allowed copyright holder for use within this project, does not update existing values on assets. " +
         "The user must be a system admin.",
     )
-
-  val endpoints: Seq[AnyEndpoint] = (Seq(getProjectLicenses, getProjectLicensesIri) ++
-    Seq(
-      getProjectAuthorships,
-      putProjectLicensesEnable,
-      putProjectLicensesDisable,
-      getProjectCopyrightHolders,
-      postProjectCopyrightHolders,
-      putProjectCopyrightHolders,
-    ).map(_.endpoint)).map(_.tag("Admin Projects (Legal Info)"))
 }
 
 object ProjectsLegalInfoEndpoints {
