@@ -32,6 +32,8 @@ import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
+import org.knora.webapi.slice.api.v3.ApiV3Module
+import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.CommonModule
 import org.knora.webapi.slice.common.CommonModule.Provided
@@ -136,6 +138,7 @@ object LayersLive { self =>
       ApiComplexV2JsonLdRequestParser.layer,
       ApiV2Endpoints.layer,
       ApiV2ServerEndpoints.layer,
+      ApiV3Module.layer,
       AssetPermissionsResponder.layer,
       AuthenticationApiModule.layer,
       AuthorizationRestService.layer,

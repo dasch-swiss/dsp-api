@@ -20,15 +20,12 @@ import zio.metrics.jvm.DefaultJvmMetrics
 import org.knora.webapi.config.InstrumentationServerConfig
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.core.State
-import org.knora.webapi.slice.admin.api.AdminApiEndpoints
-import org.knora.webapi.slice.common.api.ApiV2Endpoints
+import org.knora.webapi.routing.Endpoints
 import org.knora.webapi.slice.infrastructure.api.PrometheusRoutes
-import org.knora.webapi.slice.shacl.api.ShaclEndpoints
 
 object MetricsServer {
 
-  private val metricsServer
-    : ZIO[AdminApiEndpoints & ApiV2Endpoints & KnoraApi & ShaclEndpoints & PrometheusRoutes & Server, Nothing, Unit] =
+  private val metricsServer: ZIO[Endpoints & KnoraApi & PrometheusRoutes & Server, Nothing, Unit] =
     for {
       docs       <- DocsServer.docsEndpoints.map(endpoints => ZioHttpInterpreter().toHttp(endpoints))
       prometheus <- ZIO.service[PrometheusRoutes]
@@ -36,20 +33,17 @@ object MetricsServer {
       _          <- ZIO.never.unit
     } yield ()
 
-  type MetricsServerEnv = KnoraApi & State & InstrumentationServerConfig & ApiV2Endpoints & ShaclEndpoints &
-    AdminApiEndpoints
+  type MetricsServerEnv = KnoraApi & State & InstrumentationServerConfig & Endpoints
 
   val make: ZIO[MetricsServerEnv, Throwable, Unit] =
     for {
-      _                 <- ZIO.logInfo("Starting metrics and docs server...")
-      knoraApiConfig    <- ZIO.service[KnoraApi]
-      apiV2Endpoints    <- ZIO.service[ApiV2Endpoints]
-      adminApiEndpoints <- ZIO.service[AdminApiEndpoints]
-      shaclApiEndpoints <- ZIO.service[ShaclEndpoints]
-      config            <- ZIO.service[InstrumentationServerConfig]
-      port               = config.port
-      interval           = config.interval
-      metricsConfig      = MetricsConfig(interval)
+      _              <- ZIO.logInfo("Starting metrics and docs server...")
+      knoraApiConfig <- ZIO.service[KnoraApi]
+      endpoints      <- ZIO.service[Endpoints]
+      config         <- ZIO.service[InstrumentationServerConfig]
+      port            = config.port
+      interval        = config.interval
+      metricsConfig   = MetricsConfig(interval)
       _ <-
         ZIO.logInfo(
           s"Docs and metrics available at " +
@@ -58,9 +52,7 @@ object MetricsServer {
         )
       _ <- metricsServer.provide(
              ZLayer.succeed(knoraApiConfig),
-             ZLayer.succeed(adminApiEndpoints),
-             ZLayer.succeed(apiV2Endpoints),
-             ZLayer.succeed(shaclApiEndpoints),
+             ZLayer.succeed(endpoints),
              Server.defaultWithPort(port),
              prometheus.publisherLayer,
              ZLayer.succeed(metricsConfig) >>> prometheus.prometheusLayer,
@@ -76,11 +68,8 @@ object DocsServer {
 
   val docsEndpoints =
     for {
-      config      <- ZIO.service[KnoraApi]
-      apiV2       <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
-      admin       <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
-      shacl       <- ZIO.serviceWith[ShaclEndpoints](_.endpoints)
-      allEndpoints = List(apiV2, admin, shacl).flatten
+      config          <- ZIO.service[KnoraApi]
+      serverEndpoints <- ZIO.serviceWith[Endpoints](_.serverEndpoints)
       info = Info(
                title = "DSP-API",
                version = BuildInfo.version,
@@ -90,7 +79,7 @@ object DocsServer {
                contact = Some(Contact(name = Some("DaSCH"), url = Some("https://www.dasch.swiss/"))),
              )
     } yield SwaggerInterpreter(customiseDocsModel = addServer(config))
-      .fromEndpoints[Task](allEndpoints, info)
+      .fromServerEndpoints[Task](serverEndpoints, info)
 
   private def addServer(config: KnoraApi) = (openApi: OpenAPI) => {
     openApi.copy(servers =
