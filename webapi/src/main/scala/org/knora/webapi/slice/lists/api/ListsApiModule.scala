@@ -23,7 +23,8 @@ object ListsApiModule { self =>
     ListsResponder
     // format: on
 
-  type Provided = ListsV2ServerEndpoints & ListsEndpointsV2
+  type Provided = ListsV2ServerEndpoints
+
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       ListsV2ServerEndpoints.layer,

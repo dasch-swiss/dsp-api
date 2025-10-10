@@ -17,7 +17,7 @@ final case class ResourceInfoServerEndpoints(
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getResourcesInfo.zServerLogic(resourceInfoService.findByProjectAndResourceClass),
-  )
+  ).map(_.withTag("V2 Resources"))
 }
 object ResourceInfoServerEndpoints {
   val layer = ZLayer.derive[ResourceInfoServerEndpoints]

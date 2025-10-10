@@ -50,7 +50,7 @@ final class OntologiesServerEndpoints(
     endpoints.putOntologiesGuiorder.serverLogic(restService.changeGuiOrder),
     endpoints.putOntologiesProperties.serverLogic(restService.changePropertyLabelsOrComments),
     endpoints.putOntologiesPropertiesGuielement.serverLogic(restService.changePropertyGuiElement),
-  )
+  ).map(_.withTag("V2 Ontologies"))
 }
 object OntologiesServerEndpoints {
   val layer = ZLayer.derive[OntologiesServerEndpoints]

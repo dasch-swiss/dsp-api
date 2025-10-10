@@ -21,7 +21,7 @@ case class AuthenticationServerEndpoints(
     endpoints.deleteV2Authentication.zServerLogic(restService.logout),
     endpoints.getV2Login.zServerLogic(restService.loginForm),
     endpoints.postV2Login.zServerLogic(restService.authenticate),
-  )
+  ).map(_.withTag("V2 Authentication"))
 }
 
 object AuthenticationServerEndpoints {

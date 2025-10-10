@@ -49,13 +49,8 @@ object ResourcesApiModule { self =>
 
   type Provided =
     // format: off
-    MetadataEndpoints &
-    ResourceInfoEndpoints &
     ResourceInfoServerEndpoints &
-    ResourcesApiServerEndpoints &
-    ResourcesEndpoints &
-    StandoffEndpoints &
-    ValuesEndpoints
+    ResourcesApiServerEndpoints
     //format: on
 
   def layer: URLayer[self.Dependencies, self.Provided] =

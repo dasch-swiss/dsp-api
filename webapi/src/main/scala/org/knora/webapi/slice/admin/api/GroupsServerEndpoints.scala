@@ -25,7 +25,7 @@ case class GroupsServerEndpoints(
     endpoints.putGroup.serverLogic(restService.putGroup),
     endpoints.putGroupStatus.serverLogic(restService.putGroupStatus),
     endpoints.deleteGroup.serverLogic(restService.deleteGroup),
-  )
+  ).map(_.withTag("Admin Groups"))
 }
 object GroupsServerEndpoints {
   val layer = ZLayer.derive[GroupsServerEndpoints]

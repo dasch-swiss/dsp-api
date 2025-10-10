@@ -25,9 +25,6 @@ final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(Order.queryParam)
     .in(OrderBy.queryParam.default(OrderBy.LastModificationDate))
     .out(jsonBody[ListResponseDto])
-
-  val endpoints: Seq[AnyEndpoint] =
-    Seq(getResourcesInfo).map(_.tag("V2 Resources"))
 }
 
 object ResourceInfoEndpoints {

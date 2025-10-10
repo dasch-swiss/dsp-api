@@ -154,23 +154,6 @@ final case class ResourcesEndpoints(
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-
-  val endpoints: Seq[AnyEndpoint] = Seq(
-    getResourcesIiifManifest,
-    getResourcesPreview,
-    getResourcesProjectHistoryEvents,
-    getResourcesHistoryEvents,
-    getResourcesHistory,
-    getResources,
-    getResourcesParams,
-    getResourcesGraph,
-    getResourcesTei,
-    getResourcesCanDelete,
-    postResourcesErase,
-    postResourcesDelete,
-    postResources,
-    putResources,
-  ).map(_.endpoint).map(_.tag("V2 Resources"))
 }
 
 object ResourcesEndpoints {

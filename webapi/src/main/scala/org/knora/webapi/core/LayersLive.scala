@@ -78,7 +78,6 @@ object LayersLive { self =>
    */
   type Environment =
     // format: off
-    AdminApiEndpoints &
     AdminApiModule.Provided &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &

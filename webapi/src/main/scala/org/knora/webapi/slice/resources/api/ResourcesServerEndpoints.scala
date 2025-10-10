@@ -32,7 +32,7 @@ final class ResourcesServerEndpoints(
     resourcesEndpoints.postResourcesDelete.serverLogic(resourcesRestService.deleteResource),
     resourcesEndpoints.postResources.serverLogic(resourcesRestService.createResource),
     resourcesEndpoints.putResources.serverLogic(resourcesRestService.updateResourceMetadata),
-  )
+  ).map(_.endpoint).map(_.withTag("V2 Resources"))
 }
 
 object ResourcesServerEndpoints {

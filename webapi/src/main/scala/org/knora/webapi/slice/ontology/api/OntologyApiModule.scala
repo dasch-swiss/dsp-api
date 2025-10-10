@@ -35,7 +35,7 @@ object OntologyApiModule { self =>
     StringFormatter
     // format: on
 
-  type Provided = OntologiesServerEndpoints & OntologiesEndpoints & OntologyV2RequestParser
+  type Provided = OntologiesServerEndpoints & OntologyV2RequestParser
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](

@@ -11,8 +11,11 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 
 object ShaclApiModule { self =>
+
   type Dependencies = BaseEndpoints & ShaclValidator
-  type Provided     = ShaclServerEndpoints & ShaclEndpoints
+
+  type Provided = ShaclServerEndpoints
+
   val layer: URLayer[self.Dependencies, self.Provided] = ZLayer.makeSome[self.Dependencies, self.Provided](
     ShaclEndpoints.layer,
     ShaclServerEndpoints.layer,

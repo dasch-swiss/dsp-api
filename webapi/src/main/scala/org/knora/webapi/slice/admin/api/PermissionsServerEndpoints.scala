@@ -40,7 +40,7 @@ final case class PermissionsServerEndpoints(
     permissionsEndpoints.putPermisssionsResourceClass.serverLogic(restService.updatePermissionResourceClass),
     permissionsEndpoints.deletePermission.serverLogic(restService.deletePermission),
     permissionsEndpoints.postPermissionsDoap.serverLogic(restService.createDefaultObjectAccessPermission),
-  )
+  ).map(_.endpoint.tag("Admin Permissions"))
 }
 object PermissionsServerEndpoints {
   val layer = ZLayer.derive[PermissionsServerEndpoints]

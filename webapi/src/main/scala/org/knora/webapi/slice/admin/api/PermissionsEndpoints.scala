@@ -149,21 +149,6 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
     .in(jsonBody[ChangePermissionPropertyApiRequestADM])
     .out(jsonBody[DefaultObjectAccessPermissionGetResponseADM])
     .deprecated()
-
-  val endpoints: Seq[AnyEndpoint] = Seq(
-    postPermissionsAp,
-    getPermissionsApByProjectIri,
-    getPermissionsApByProjectAndGroupIri,
-    getPermissionsDoapByProjectIri,
-    getPermissionsByProjectIri,
-    deletePermission,
-    postPermissionsDoap,
-    putPermissionsDoapForWhat,
-    putPermissionsProjectIriGroup,
-    putPerrmissionsHasPermissions,
-    putPermisssionsResourceClass,
-    putPermissionsProperty,
-  ).map(_.endpoint.tag("Admin Permissions"))
 }
 
 object PermissionsEndpoints {
