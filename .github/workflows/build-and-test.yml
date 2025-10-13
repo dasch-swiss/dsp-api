@@ -2,7 +2,7 @@ name: CI-build-and-test
 
 on:
   pull_request:
-    types: [ opened, reopened, synchronize ]
+    types: [opened, reopened, synchronize]
     branches-ignore:
       - "**/graphite-base/**"
 
@@ -73,7 +73,7 @@ jobs:
 
   test-e2e:
     name: Build and E2E test
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: buildjet-32vcpu-ubuntu-2204
     concurrency:
       group: ${{ github.ref }}-e2e
       cancel-in-progress: true
@@ -83,7 +83,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
       - name: Run end-to-end tests
-        run: make test-e2e
+        run: ./sbtx "test-e2e/test"
       - name: WebApi E2E Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
@@ -91,15 +91,6 @@ jobs:
           name: WebApi E2E Test Results
           path: ./modules/test-e2e/target/test-reports/TEST-*.xml
           reporter: java-junit
-      - name: Upload coverage data to codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ./target/scala-3.3.6/coverage-report/cobertura.xml
-      - name: Upload coverage data to codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./target/scala-3.3.6/coverage-report/cobertura.xml
 
   test-ingest-integration:
     runs-on: ubuntu-latest

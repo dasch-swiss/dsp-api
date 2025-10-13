@@ -15,7 +15,6 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
@@ -28,17 +27,17 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.testservices.TestOntologyApiClient
+import org.knora.webapi.util.OntologyTestHelper
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].
  */
 object AddCardinalitiesToClassSpec extends E2EZSpec {
 
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val ontologyResponder                         = ZIO.serviceWithZIO[OntologyResponderV2]
+  private val ontologyResponder = ZIO.serviceWithZIO[OntologyResponderV2]
 
   override val rdfDataObjects: List[RdfDataObject] = List(freetestRdfOntology)
 
@@ -69,12 +68,11 @@ object AddCardinalitiesToClassSpec extends E2EZSpec {
       val newPropertyIri = freetestOntologyIri.makeProperty("hasName")
 
       for {
-        ontologyLastModificationDate <- TestOntologyApiClient.getLastModificationDate(freetestOntologyIri)
-
         // assert that the cardinality for `:hasAuthor` is only once in the triplestore
         countInitial <- getCardinalityCountFromTriplestore(classIri, propertyIri)
 
         // add additional cardinality to the class
+        ontologyLastModificationDate <- OntologyTestHelper.lastModificationDate(freetestOntologyIri)
         _ <- ontologyResponder(
                _.addCardinalitiesToClass(
                  AddCardinalitiesToClassRequestV2(

@@ -34,7 +34,7 @@ final case class GroupRestService(
 ) {
 
   def getGroups: Task[GroupsGetResponseADM] = for {
-    internal <- groupService.findAllRegularGroups
+    internal <- groupService.findAllRegularGroups.orDie
     external <- format.toExternal(GroupsGetResponseADM(internal))
   } yield external
 

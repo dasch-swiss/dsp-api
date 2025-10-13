@@ -210,7 +210,7 @@ object Username extends StringValueCompanion[Username] {
     } else {
       UsernameRegex.findFirstIn(value) match {
         case Some(value) => Right(Username(value))
-        case None        => Left(UserErrorMessages.UsernameInvalid)
+        case None        => Left(UserErrorMessages.UsernameInvalid + s" $value")
       }
     }
 }

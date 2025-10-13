@@ -5,44 +5,47 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.nio.file.Paths
 
+import org.knora.webapi.E2EZSpec
 import org.knora.webapi.util.FileUtil
 
-/**
- * Tests [[ResponseCheckerV2]].
- */
-class ResponseCheckerV2Spec extends AnyWordSpec with Matchers {
+object ResponseCheckerV2Spec extends E2EZSpec {
 
-  "ResponseCheckerV2" should {
-    "not throw an exception if received and expected resource responses are the same" in {
+  override val e2eSpec = suite("ResponseCheckerV2")(
+    test("not throw an exception if received and expected resource responses are the same") {
       val expectedAnswerJSONLD =
-        FileUtil.readTextFile(
-          Paths.get("test_data/generated_test_data/resourcesR2RV2/ThingWithLinkComplex.jsonld"),
+        FileUtil.readTextFile(Paths.get("test_data/generated_test_data/resourcesR2RV2/ThingWithLinkComplex.jsonld"))
+
+      ZIO
+        .attempt(
+          ResponseCheckerV2.compareJSONLDForResourcesResponse(
+            expectedJSONLD = expectedAnswerJSONLD,
+            receivedJSONLD = expectedAnswerJSONLD,
+          ),
         )
-
-      ResponseCheckerV2.compareJSONLDForResourcesResponse(
-        expectedJSONLD = expectedAnswerJSONLD,
-        receivedJSONLD = expectedAnswerJSONLD,
-      )
-    }
-
-    "not throw an exception if received and expected mapping responses are the same" in {
+        .as(assertCompletes)
+    },
+    test("not throw an exception if received and expected mapping responses are the same") {
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld"),
         )
 
-      ResponseCheckerV2.compareJSONLDForMappingCreationResponse(
-        expectedJSONLD = expectedAnswerJSONLD,
-        receivedJSONLD = expectedAnswerJSONLD,
-      )
-    }
-
-    "throw an exception if received and expected resource responses are different" in {
+      ZIO
+        .attempt(
+          ResponseCheckerV2.compareJSONLDForMappingCreationResponse(
+            expectedJSONLD = expectedAnswerJSONLD,
+            receivedJSONLD = expectedAnswerJSONLD,
+          ),
+        )
+        .as(assertCompletes)
+    },
+    test("throw an exception if received and expected resource responses are different") {
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/resourcesR2RV2/ThingWithLinkComplex.jsonld"),
@@ -50,15 +53,14 @@ class ResponseCheckerV2Spec extends AnyWordSpec with Matchers {
       val receivedAnswerJSONLD =
         FileUtil.readTextFile(Paths.get("test_data/generated_test_data/resourcesR2RV2/ThingWithListValue.jsonld"))
 
-      assertThrows[AssertionError] {
+      ZIO.attempt {
         ResponseCheckerV2.compareJSONLDForResourcesResponse(
           expectedJSONLD = expectedAnswerJSONLD,
           receivedJSONLD = receivedAnswerJSONLD,
         )
-      }
-    }
-
-    "throw an exception if the values of the received and expected resource responses are different" in {
+      }.exit.flatMap(exit => assert(exit)(failsWithA[AssertionError]))
+    },
+    test("throw an exception if the values of the received and expected resource responses are different") {
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
@@ -68,15 +70,14 @@ class ResponseCheckerV2Spec extends AnyWordSpec with Matchers {
           Paths.get("test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLandPreview.jsonld"),
         )
 
-      assertThrows[AssertionError] {
+      ZIO.attempt {
         ResponseCheckerV2.compareJSONLDForResourcesResponse(
           expectedJSONLD = expectedAnswerJSONLD,
           receivedJSONLD = receivedAnswerJSONLD,
         )
-      }
-    }
-
-    "throw an exception if the number of values of the received and expected resource responses are different" in {
+      }.exit.flatMap(exit => assert(exit)(failsWithA[AssertionError]))
+    },
+    test("throw an exception if the number of values of the received and expected resource responses are different") {
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
@@ -87,15 +88,14 @@ class ResponseCheckerV2Spec extends AnyWordSpec with Matchers {
           Paths.get("test_data/generated_test_data/responseCheckerR2RV2/NarrenschiffFirstPageWrong.jsonld"),
         )
 
-      assertThrows[AssertionError] {
+      ZIO.attempt {
         ResponseCheckerV2.compareJSONLDForResourcesResponse(
           expectedJSONLD = expectedAnswerJSONLD,
           receivedJSONLD = receivedAnswerJSONLD,
         )
-      }
-    }
-
-    "throw an exception if received and expected mapping responses are different" in {
+      }.exit.flatMap(exit => assert(exit)(failsWithA[AssertionError]))
+    },
+    test("throw an exception if received and expected mapping responses are different") {
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld"),
@@ -107,12 +107,12 @@ class ResponseCheckerV2Spec extends AnyWordSpec with Matchers {
           ),
         )
 
-      assertThrows[AssertionError] {
+      ZIO.attempt {
         ResponseCheckerV2.compareJSONLDForMappingCreationResponse(
           expectedJSONLD = expectedAnswerJSONLD,
           receivedJSONLD = receivedAnswerJSONLD,
         )
-      }
-    }
-  }
+      }.exit.flatMap(exit => assert(exit)(failsWithA[AssertionError]))
+    },
+  )
 }
