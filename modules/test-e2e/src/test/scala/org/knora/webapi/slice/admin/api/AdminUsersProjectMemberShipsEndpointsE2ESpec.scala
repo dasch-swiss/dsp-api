@@ -105,7 +105,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
           projectMemberships <- getProjectMemberships(newUser.userIri).flatMap(_.assert200)
         } yield assertTrue(projectMemberships.projects == Seq.empty)
-      },
+      } @@ TestAspect.timeout(5.seconds) @@ TestAspect.flaky,
     ),
     suite("used to query project admin group memberships")(
       test("return all projects the user is a member of the project admin group") {

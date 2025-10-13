@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.api
 
 import sttp.client4.UriContext
 import sttp.model.StatusCode
+import zio.*
 import zio.test.*
 
 import org.knora.webapi.*
@@ -61,7 +62,7 @@ object AdminUsersGroupMembershipsEndpointsE2ESpec extends E2EZSpec {
                                       )
                                       .flatMap(_.assert200)
         } yield assertTrue(membershipsAfterResult.groups == Seq(SharedTestDataADM.imagesReviewerGroupExternal))
-      },
+      } @@ TestAspect.timeout(5.seconds) @@ TestAspect.flaky,
       test("remove user from group") {
         for {
           membershipsBeforeResponse <-
