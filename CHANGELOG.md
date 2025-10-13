@@ -1,5 +1,18 @@
 # Changelog
 
+## [32.3.3](https://github.com/dasch-swiss/dsp-api/compare/v32.3.2...v32.3.3) (2025-10-13)
+
+
+### Maintenances
+
+* Remove docs generators for ingest and api ([#3807](https://github.com/dasch-swiss/dsp-api/issues/3807)) ([6fc5d05](https://github.com/dasch-swiss/dsp-api/commit/6fc5d051852ca0b2e79146830747ec50b23dcb52))
+
+
+### Bug Fixes
+
+* Gravsearch limiting to project wrongly excludes knora-api entities ([#3797](https://github.com/dasch-swiss/dsp-api/issues/3797)) ([92c565b](https://github.com/dasch-swiss/dsp-api/commit/92c565b3ce13c1e49699d669f23d93b9f34e0ddb))
+* OpenAPI treat Email as string (DEV-5457) ([#3808](https://github.com/dasch-swiss/dsp-api/issues/3808)) ([f7a573d](https://github.com/dasch-swiss/dsp-api/commit/f7a573d917cf9d0693920ed6eba8f065d6b88b7a))
+
 ## [32.3.2](https://github.com/dasch-swiss/dsp-api/compare/v32.3.1...v32.3.2) (2025-10-06)
 
 
