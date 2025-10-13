@@ -5,6 +5,9 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.RefinedTypeOps
+import eu.timepit.refined.string.MatchesRegex
 import zio.Chunk
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
@@ -212,21 +215,8 @@ object Username extends StringValueCompanion[Username] {
     }
 }
 
-final case class Email private (value: String) extends StringValue
-
-object Email extends StringValueCompanion[Email] {
-  private val EmailRegex: Regex = """^.+@.+$""".r
-
-  def from(value: String): Either[String, Email] =
-    if (value.isEmpty) {
-      Left(UserErrorMessages.EmailMissing)
-    } else {
-      EmailRegex.findFirstIn(value) match {
-        case Some(value) => Right(Email(value))
-        case None        => Left(UserErrorMessages.EmailInvalid)
-      }
-    }
-}
+type Email = String Refined MatchesRegex["^.+@.+$"]
+object Email extends RefinedTypeOps[Email, String]
 
 final case class GivenName private (value: String) extends StringValue
 
@@ -296,7 +286,6 @@ object SystemAdmin {
 object UserErrorMessages {
   val UsernameMissing         = "Username cannot be empty."
   val UsernameInvalid         = "Username is invalid."
-  val EmailMissing            = "Email cannot be empty."
   val EmailInvalid            = "Email is invalid."
   val PasswordMissing         = "Password cannot be empty."
   val PasswordInvalid         = "Password is invalid."
