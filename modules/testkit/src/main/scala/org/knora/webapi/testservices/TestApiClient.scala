@@ -49,18 +49,14 @@ final case class TestApiClient(
     sendRequest(f(request))
   }
 
-  private def sendRequest[A](request: Request[Either[String, A]], user: User): Task[Response[Either[String, A]]] =
-    sendRequest(request, Some(user))
-
   private def sendRequest[A](
     request: Request[Either[String, A]],
     user: Option[User] = None,
   ): Task[Response[Either[String, A]]] =
-    addAuthIfNeeded(user, request).flatMap { req =>
-      req
-//        .copy(options = req.options.copy(readTimeout = 5.seconds.asScala))
-        .send(backend)
-    }
+    (user match {
+      case Some(u) => jwtFor(u).map(jwt => request.auth.bearer(jwt))
+      case None    => ZIO.succeed(request)
+    }).flatMap(_.send(backend))
 
   def deleteJsonLd(
     relativeUri: Uri,
@@ -134,11 +130,6 @@ final case class TestApiClient(
     sendRequest(request, user)
   }
 
-  private def addAuthIfNeeded[A](user: Option[User], request: Request[Either[String, A]]) = user match {
-    case Some(u) => jwtFor(u).map(jwt => request.auth.bearer(jwt))
-    case None    => ZIO.succeed(request)
-  }
-
   def postJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,
     body: B,
@@ -171,7 +162,7 @@ final case class TestApiClient(
       .body(jsonLdBody)
       .contentType(MediaType.unsafeApply("application", "ld+json"))
       .response(asString)
-    sendRequest(request, user)
+    sendRequest(request, Some(user))
   }
 
   def postJsonLdDocument(
@@ -199,7 +190,7 @@ final case class TestApiClient(
       .post(relativeUri)
       .multipartBody(body)
       .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
-    sendRequest(request, user)
+    sendRequest(request, Some(user))
   }
 
   def patchJsonLdDocument(
@@ -228,7 +219,7 @@ final case class TestApiClient(
       .body(body.toJson)
       .contentType(MediaType.ApplicationJson)
       .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
-    sendRequest(request, user)
+    sendRequest(request, Some(user))
   }
 
   def putJsonLd(
@@ -241,7 +232,7 @@ final case class TestApiClient(
       .body(jsonLdBody)
       .contentType(MediaType.unsafeApply("application", "ld+json"))
       .response(asString)
-    sendRequest(request, user)
+    sendRequest(request, Some(user))
   }
 
   def putJsonLdDocument(
