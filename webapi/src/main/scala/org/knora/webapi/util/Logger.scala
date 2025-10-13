@@ -52,7 +52,4 @@ object Logger {
   private val logger: ULayer[Unit] = if (useJsonLogger) jsonLogger else textLogger
 
   def fromEnv(): ULayer[Unit] = Runtime.removeDefaultLoggers >>> logger >+> Slf4jBridge.initialize
-
-  def json(): ULayer[Unit] = Runtime.removeDefaultLoggers >>> jsonLogger >+> Slf4jBridge.initialize
-
 }
