@@ -7,15 +7,18 @@ package org.knora.webapi.messages.util.search
 
 import zio.*
 
+import dsp.errors.GravsearchException
 import dsp.errors.GravsearchOptimizationException
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.WhereTransformer
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
@@ -77,8 +80,13 @@ final case class QueryTraverser(private val messageRelay: MessageRelay, private 
     inputOrderBy: Seq[OrderCriterion],
     whereTransformer: WhereTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]],
+    limitResultsToProject: Option[ProjectIri] = None,
   ): Task[Seq[QueryPattern]] =
     for {
+      patterns <-
+        ZIO.succeed(
+          patterns ++ limitResultsToProject.map(limit => getLimitToProjectPattern(limit, whereTransformer)).toSeq,
+        )
       // Optimization has to be called before WhereTransformer.transformStatementInWhere,
       // because optimisation might remove statements that would otherwise be expanded by transformStatementInWhere.
       optimisedPatterns <- whereTransformer.optimiseQueryPatterns(patterns)
@@ -141,6 +149,21 @@ final case class QueryTraverser(private val messageRelay: MessageRelay, private 
                                case bindPattern: BindPattern => ZIO.succeed(Seq(bindPattern))
                              }
     } yield transformedPatterns.flatten
+
+  private def getLimitToProjectPattern(
+    limitResultsToProject: ProjectIri,
+    whereTransformer: WhereTransformer,
+  ): QueryPattern = {
+    val x = whereTransformer match {
+      case s: SelectTransformer => s.getMainResourceVariable
+      case _                    => throw GravsearchException(s"Unexpected transformer")
+    }
+    StatementPattern(
+      subj = x,
+      pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.AttachedToProject)),
+      obj = IriRef(limitResultsToProject.value.toSmartIri),
+    )
+  }
 
   /**
    * Traverses a WHERE clause, delegating transformation tasks to a [[WhereVisitor]].
@@ -305,6 +328,7 @@ final case class QueryTraverser(private val messageRelay: MessageRelay, private 
     inputQuery: SelectQuery,
     transformer: SelectTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]],
+    limitResultsToProject: Option[ProjectIri],
   ): Task[SelectQuery] =
     for {
       fromClause <- transformer.getFromClause
@@ -313,6 +337,7 @@ final case class QueryTraverser(private val messageRelay: MessageRelay, private 
                     inputOrderBy = inputQuery.orderBy,
                     whereTransformer = transformer,
                     limitInferenceToOntologies = limitInferenceToOntologies,
+                    limitResultsToProject = limitResultsToProject,
                   )
       whereClause = WhereClause(patterns)
     } yield inputQuery.copy(fromClause = fromClause, whereClause = whereClause)

@@ -716,6 +716,7 @@ final case class SearchResponderV2Live(
         new SelectTransformer(
           simulateInference = gravsearchToCountTransformer.useInference,
           sparqlTransformerLive,
+          gravsearchToCountTransformer.mainResourceVariable,
           stringFormatter,
         )
 
@@ -728,6 +729,7 @@ final case class SearchResponderV2Live(
                       inputQuery = prequery,
                       transformer = selectTransformer,
                       ontologiesForInferenceMaybe,
+                      limitToProject,
                     )
 
       countResponse <- triplestore.query(Select.gravsearch(countQuery.toSparql))
@@ -793,17 +795,20 @@ final case class SearchResponderV2Live(
         new SelectTransformer(
           simulateInference = gravsearchToPrequeryTransformer.useInference,
           sparqlTransformerLive,
+          mainResourceVar,
           stringFormatter,
         )
 
       // Convert the preprocessed query to a non-triplestore-specific query.
 
       transformedPrequery <-
-        queryTraverser.transformSelectToSelect(
-          inputQuery = prequery,
-          transformer = selectTransformer,
-          limitInferenceToOntologies = ontologiesForInferenceMaybe,
-        )
+        queryTraverser
+          .transformSelectToSelect(
+            inputQuery = prequery,
+            transformer = selectTransformer,
+            limitInferenceToOntologies = ontologiesForInferenceMaybe,
+            limitResultsToProject = limitToProject,
+          )
 
       prequerySparql = transformedPrequery.toSparql
 
@@ -1330,7 +1335,9 @@ final case class SearchResponderV2Live(
   private def getProjectOntologies(projectIri: ProjectIri): Task[Option[Set[SmartIri]]] =
     ontologyRepo.findByProject(projectIri).map { ontologies =>
       val ontologyIris = ontologies.map(_.ontologyMetadata.ontologyIri)
-      Option.when(ontologyIris.nonEmpty)(ontologyIris.toSet)
+      Option.when(ontologyIris.nonEmpty)(
+        ontologyIris.toSet + stringFormatter.toSmartIri(OntologyConstants.KnoraBase.KnoraBaseOntologyIri),
+      )
     }
 }
 
