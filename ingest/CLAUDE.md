@@ -24,7 +24,6 @@ The project uses both SBT and Just for build and development tasks:
 - `just build-docker` - Build Docker image
 - `just build-and-run-docker` - Build and run with docker-compose
 - `just run-integration-tests` - Run integration tests (builds Docker first)
-- `just docs-openapi-generate` - Generate OpenAPI specs from tAPIr endpoints
 - `just docs-serve` - Serve documentation locally with MkDocs
 
 ### Testing
