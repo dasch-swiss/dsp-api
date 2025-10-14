@@ -166,26 +166,27 @@ object AdminUsersGroupProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     suite("admin/users/iri/:userIri/group-member-ships...")(
       test("GET admin/users/iri/:userIri/group-member-ships - return all groups the user is a member of") {
         getGroupMemberships(multiUserIri)
+          .flatMap(_.assert200)
           .map(result => assertTrue(result.groups.contains(imagesReviewerGroupExternal)))
       },
       suite("used to modify group membership")(
         test("add user to group") {
           for {
             newUser           <- createNewUser
-            _                 <- addUserToGroup(newUser.userIri, imagesReviewerGroupExternal)
-            actualMemberships <- getGroupMemberships(newUser.userIri)
+            _                 <- addUserToGroup(newUser.userIri, imagesReviewerGroupExternal).flatMap(_.assert200)
+            actualMemberships <- getGroupMemberships(newUser.userIri).flatMap(_.assert200)
           } yield assertTrue(actualMemberships.groups == Seq(imagesReviewerGroupExternal))
         } @@ TestAspect.timeout(5.seconds) @@ TestAspect.flaky,
         test("remove user from group") {
           for {
             newUser           <- createNewUser
-            _                 <- addUserToGroup(newUser.userIri, imagesReviewerGroupExternal)
-            _                 <- removeUserFromGroup(newUser.userIri, imagesReviewerGroupExternal)
-            actualMemberships <- getGroupMemberships(newUser.userIri)
+            _                 <- addUserToGroup(newUser.userIri, imagesReviewerGroupExternal).flatMap(_.assert200)
+            _                 <- removeUserFromGroup(newUser.userIri, imagesReviewerGroupExternal).flatMap(_.assert200)
+            actualMemberships <- getGroupMemberships(newUser.userIri).flatMap(_.assert200)
           } yield assertTrue(actualMemberships.groups == Seq.empty)
         } @@ TestAspect.timeout(5.seconds) @@ TestAspect.flaky,
       ),
-    ),
+    ),  
   )
 
   private def getProjectMemberships(userIri: UserIri, requestingUser: User = rootUser) =
@@ -231,7 +232,6 @@ object AdminUsersGroupProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
         uri"/admin/users/iri/$userIri/group-memberships/${group.groupIri}",
         requestingUser,
       )
-      .flatMap(_.assert200)
 
   private def getGroupMemberships(userIri: UserIri, requestingUser: User = rootUser) =
     TestApiClient
@@ -239,7 +239,6 @@ object AdminUsersGroupProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
         uri"/admin/users/iri/$userIri/group-memberships",
         requestingUser,
       )
-      .flatMap(_.assert200)
 
   private def addUserToGroup(userIri: UserIri, group: Group, requestingUser: User = rootUser) =
     TestApiClient
@@ -248,5 +247,4 @@ object AdminUsersGroupProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
         "",
         requestingUser,
       )
-      .flatMap(_.assert200)
 }
