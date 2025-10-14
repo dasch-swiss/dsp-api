@@ -8,7 +8,6 @@ package org.knora.webapi.slice.search.api
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Greater
-import sttp.model.MediaType
 import sttp.tapir.*
 import sttp.tapir.codec.refined.*
 import zio.ZIO
@@ -17,11 +16,9 @@ import zio.ZLayer
 import dsp.valueobjects.Iri
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.*
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 
 object SearchEndpointsInputs {
