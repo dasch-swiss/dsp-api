@@ -16,8 +16,9 @@ final case class ManagementServerEndpoints(
     endpoint.getVersion.zServerLogic(_ => ZIO.succeed(VersionResponse.current)),
     endpoint.getHealth.zServerLogic(_ => restService.healthCheck),
     endpoint.postStartCompaction.serverLogic(restService.startCompaction),
-  )
+  ).map(_.tag("Management API"))
 }
+
 object ManagementServerEndpoints {
   val layer = ZLayer.derive[ManagementServerEndpoints]
 }

@@ -72,7 +72,6 @@ object AdminApiModule { self =>
 
   type Provided =
       // format: off
-      AdminApiEndpoints &
       AdminApiServerEndpoints &
       // the `*RestService`s are only exposed for the integration tests
       GroupRestService &
@@ -83,7 +82,6 @@ object AdminApiModule { self =>
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
-      AdminApiEndpoints.layer,
       AdminApiServerEndpoints.layer,
       AdminListRestService.layer,
       AdminListsEndpoints.layer,
