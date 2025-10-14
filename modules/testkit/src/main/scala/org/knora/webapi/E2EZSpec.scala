@@ -35,7 +35,7 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
   private val testLogger: ULayer[Unit] = Runtime.removeDefaultLoggers >>> consoleLogger(
     config = {
       val default = ConsoleLoggerConfig.default
-      default.copy(filter = default.filter.withRootLevel(LogLevel.Error))
+      default.copy(filter = default.filter.withRootLevel(LogLevel.Info))
     },
   )
 
