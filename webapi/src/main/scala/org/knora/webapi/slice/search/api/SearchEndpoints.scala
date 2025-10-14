@@ -185,22 +185,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description("Search for resources by label.")
-
-  val endpoints: Seq[AnyEndpoint] =
-    Seq(
-      postGravsearch,
-      getGravsearch,
-      postGravsearchCount,
-      getGravsearchCount,
-      getSearchIncomingLinks,
-      getSearchStillImageRepresentations,
-      getSearchStillImageRepresentationsCount,
-      getSearchIncomingRegions,
-      getSearchByLabel,
-      getSearchByLabelCount,
-      getFullTextSearch,
-      getFullTextSearchCount,
-    ).map(_.endpoint.tag("V2 Search"))
 }
 
 object SearchEndpoints {

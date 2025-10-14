@@ -59,7 +59,6 @@ import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
-import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
@@ -83,7 +82,6 @@ object LayersLive { self =>
     AdminApiModule.Provided &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
-    ApiV2Endpoints &
     AssetPermissionsResponder &
     AuthenticationApiModule.Provided &
     AuthorizationRestService &
@@ -135,7 +133,6 @@ object LayersLive { self =>
       AdminApiModule.layer,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
-      ApiV2Endpoints.layer,
       ApiV2ServerEndpoints.layer,
       ApiV3Module.layer,
       AssetPermissionsResponder.layer,
@@ -173,7 +170,6 @@ object LayersLive { self =>
       ResourcesModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
-      SearchEndpoints.layer,
       SearchResponderV2Module.layer,
       SearchServerEndpoints.layer,
       SecurityModule.layer,
