@@ -59,6 +59,7 @@ final case class SearchRestService(
     opts: FormatOptions,
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] = for {
+    _            <- ZIO.logInfo(s"${user}, ${query}, ${opts}, $limitToProject")
     searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, limitToProject)
     response     <- renderer.render(searchResult, opts)
   } yield response
