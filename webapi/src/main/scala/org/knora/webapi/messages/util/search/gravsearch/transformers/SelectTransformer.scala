@@ -15,7 +15,7 @@ import SparqlTransformer.*
 
 class SelectTransformer(
   simulateInference: Boolean,
-  sparqlTransformerLive: OntologyInferencer,
+  inferencer: OntologyInferencer,
   mainRes: QueryVariable,
   implicit val stringFormatter: StringFormatter,
 ) extends WhereTransformer {
@@ -34,7 +34,7 @@ class SelectTransformer(
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None,
   ): Task[Seq[QueryPattern]] =
-    sparqlTransformerLive.transformStatementInWhere(
+    inferencer.transformStatementInWhere(
       statementPattern = statementPattern,
       simulateInference = simulateInference,
       limitInferenceToOntologies = limitInferenceToOntologies,
