@@ -66,7 +66,7 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
   def e2eSpec: Spec[env, Any]
 
   final override def spec: Spec[env, Any] =
-    e2eSpec
+    e2eSpec.provideSomeAuto(Scope.default)
       @@ TestAspect.withLiveEnvironment
       @@ TestAspect.sequential
       @@ TestAspect.beforeAll(prepare)
