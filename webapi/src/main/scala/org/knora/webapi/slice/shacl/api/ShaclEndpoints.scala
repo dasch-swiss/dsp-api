@@ -11,7 +11,6 @@ import sttp.tapir.*
 import sttp.tapir.Schema.annotations.description
 import sttp.tapir.generic.auto.*
 import zio.*
-import zio.stream.ZStream
 
 import java.io.File
 
@@ -51,8 +50,6 @@ case class ShaclEndpoints(baseEndpoints: BaseEndpoints) {
                        |] .
                        |```
                        |""".stripMargin))
-
-  val endpoints = Seq(validate).map(_.tag("Shacl"))
 }
 
 object ShaclEndpoints {

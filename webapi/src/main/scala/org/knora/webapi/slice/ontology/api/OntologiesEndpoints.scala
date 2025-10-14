@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.ontology.api
 
-import sttp.model.MediaType
 import sttp.tapir.*
 import zio.ZLayer
 
@@ -263,39 +262,6 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .in(lastModificationDate)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-
-  val endpoints = (
-    Seq(
-      getOntologiesMetadataProject,
-      getOntologiesMetadataProjects,
-    ) ++ Seq(
-      getOntologyPathSegments,
-      putOntologiesMetadata,
-      getOntologiesAllentities,
-      postOntologiesClasses,
-      putOntologiesClasses,
-      deleteOntologiesClassesComment,
-      postOntologiesCardinalities,
-      getOntologiesCanreplacecardinalities,
-      putOntologiesCardinalities,
-      postOntologiesCandeletecardinalities,
-      patchOntologiesCardinalities,
-      putOntologiesGuiorder,
-      getOntologiesClassesIris,
-      getOntologiesCandeleteclass,
-      deleteOntologiesClasses,
-      deleteOntologiesComment,
-      postOntologiesProperties,
-      putOntologiesProperties,
-      deletePropertiesComment,
-      putOntologiesPropertiesGuielement,
-      getOntologiesProperties,
-      deleteOntologiesProperty,
-      postOntologies,
-      getOntologiesCandeleteontology,
-      deleteOntologies,
-    ).map(_.endpoint)
-  ).map(_.tag("V2 Ontologies"))
 }
 
 object OntologiesEndpoints {

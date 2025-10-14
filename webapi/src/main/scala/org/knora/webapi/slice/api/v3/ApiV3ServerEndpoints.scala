@@ -9,7 +9,7 @@ import sttp.tapir.ztapir.*
 import zio.*
 
 final case class ApiV3ServerEndpoints() {
-  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List.empty
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List.empty[ZServerEndpoint[Any, Any]].map(_.tag("API v3"))
 }
 
 object ApiV3ServerEndpoints {

@@ -36,6 +36,7 @@ final case class SearchServerEndpoints(
     searchEndpoints.getSearchIncomingRegions.serverLogic(searchRestService.searchIncomingRegions),
   )
 }
+
 object SearchServerEndpoints {
   val layer = SearchRestService.layer >+> SearchEndpoints.layer >>> ZLayer.derive[SearchServerEndpoints]
 }
