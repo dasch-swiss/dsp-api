@@ -19,8 +19,6 @@ import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.api.AdminPathVariables.permissionIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapRequest
-import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
@@ -149,21 +147,6 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
     .in(jsonBody[ChangePermissionPropertyApiRequestADM])
     .out(jsonBody[DefaultObjectAccessPermissionGetResponseADM])
     .deprecated()
-
-  val endpoints: Seq[AnyEndpoint] = Seq(
-    postPermissionsAp,
-    getPermissionsApByProjectIri,
-    getPermissionsApByProjectAndGroupIri,
-    getPermissionsDoapByProjectIri,
-    getPermissionsByProjectIri,
-    deletePermission,
-    postPermissionsDoap,
-    putPermissionsDoapForWhat,
-    putPermissionsProjectIriGroup,
-    putPerrmissionsHasPermissions,
-    putPermisssionsResourceClass,
-    putPermissionsProperty,
-  ).map(_.endpoint.tag("Admin Permissions"))
 }
 
 object PermissionsEndpoints {

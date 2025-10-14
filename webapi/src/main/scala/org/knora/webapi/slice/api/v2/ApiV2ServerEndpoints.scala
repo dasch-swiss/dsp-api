@@ -25,12 +25,13 @@ class ApiV2ServerEndpoints(
 ) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
-    authenticationServerEndpoints.serverEndpoints ++
+    (authenticationServerEndpoints.serverEndpoints ++
       listsV2ServerEndpoints.serverEndpoints ++
       resourceInfoServerEndpoints.serverEndpoints ++
       resourcesApiServerEndpoints.serverEndpoints ++
       searchServerEndpoints.serverEndpoints ++
-      ontologiesServerEndpoints.serverEndpoints
+      ontologiesServerEndpoints.serverEndpoints)
+      .map(_.tag("API v2"))
 }
 object ApiV2ServerEndpoints {
   val layer = ZLayer.derive[ApiV2ServerEndpoints]

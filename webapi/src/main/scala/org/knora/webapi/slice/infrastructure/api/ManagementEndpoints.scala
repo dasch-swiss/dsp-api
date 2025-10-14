@@ -5,11 +5,10 @@
 
 package org.knora.webapi.slice.infrastructure.api
 
-import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
-import zio.ZIO
+import zio.*
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
@@ -80,10 +79,8 @@ final case class ManagementEndpoints(baseEndpoints: BaseEndpoints) {
     .in("start-compaction")
     .out(jsonBody[String])
     .out(statusCode)
-
-  val endpoints: Seq[AnyEndpoint] = List(getVersion, getHealth).map(_.tag("Management"))
 }
 
 object ManagementEndpoints {
-  val layer = zio.ZLayer.derive[ManagementEndpoints]
+  val layer = ZLayer.derive[ManagementEndpoints]
 }

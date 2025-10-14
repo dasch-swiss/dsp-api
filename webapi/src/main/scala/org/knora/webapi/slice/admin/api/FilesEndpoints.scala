@@ -29,10 +29,6 @@ final case class FilesEndpoints(base: BaseEndpoints) {
     .description(
       "Returns the permission code and the project's restricted view settings for a given shortcode and filename.",
     )
-
-  val endpoints: Seq[AnyEndpoint] = Seq(
-    getAdminFilesShortcodeFileIri,
-  ).map(_.endpoint.tag("Admin Files"))
 }
 
 object FilesEndpoints {
