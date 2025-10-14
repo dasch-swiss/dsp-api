@@ -7,6 +7,7 @@ package org.knora.webapi.messages.util.search.gravsearch.transformers
 
 import zio.*
 
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
@@ -15,26 +16,23 @@ import SparqlTransformer.*
 
 class SelectTransformer(
   simulateInference: Boolean,
-  sparqlTransformerLive: OntologyInferencer,
+  inferencer: OntologyInferencer,
   mainRes: QueryVariable,
   implicit val stringFormatter: StringFormatter,
 ) extends WhereTransformer {
 
-  /**
-   * Transforms a [[StatementPattern]] in a SELECT's WHERE clause into zero or more statement patterns.
-   *
-   * @param statementPattern the statement to be transformed.
-   * @return the result of the transformation.
-   */
-  def transformStatementInSelect(statementPattern: StatementPattern): Task[Seq[StatementPattern]] =
-    ZIO.succeed(Seq(statementPattern))
+  override def enteringUnionBlock(): Task[Unit] = ZIO.unit
+
+  override def leavingUnionBlock(): Task[Unit] = ZIO.unit
+
+  override def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]] = ZIO.succeed(Seq(filterPattern))
 
   override def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None,
   ): Task[Seq[QueryPattern]] =
-    sparqlTransformerLive.transformStatementInWhere(
+    inferencer.transformStatementInWhere(
       statementPattern = statementPattern,
       simulateInference = simulateInference,
       limitInferenceToOntologies = limitInferenceToOntologies,
@@ -43,12 +41,9 @@ class SelectTransformer(
     moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns)))
   }
 
-  /**
-   * Specifies a FROM clause, if needed.
-   *
-   * @return the FROM clause to be used, if any.
-   */
-  def getFromClause: Task[Option[FromClause]] = ZIO.succeed(None)
-
-  def getMainResourceVariable: QueryVariable = mainRes
+  def limitToProjectPattern(projectIri: SmartIri) = StatementPattern(
+    subj = mainRes,
+    pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.AttachedToProject)),
+    obj = IriRef(projectIri),
+  )
 }
