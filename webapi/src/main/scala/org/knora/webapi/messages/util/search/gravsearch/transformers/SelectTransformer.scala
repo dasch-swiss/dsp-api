@@ -7,6 +7,7 @@ package org.knora.webapi.messages.util.search.gravsearch.transformers
 
 import zio.*
 
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
@@ -40,11 +41,9 @@ class SelectTransformer(
     moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns)))
   }
 
-   * Specifies a FROM clause, if needed.
-   *
-   * @return the FROM clause to be used, if any.
-   */
-  def getFromClause: Task[Option[FromClause]] = ZIO.succeed(None)
-
-  def getMainResourceVariable: QueryVariable = mainRes
+  def limitToProjectPattern(projectIri: SmartIri) = StatementPattern(
+    subj = mainRes,
+    pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.AttachedToProject)),
+    obj = IriRef(projectIri),
+  )
 }
