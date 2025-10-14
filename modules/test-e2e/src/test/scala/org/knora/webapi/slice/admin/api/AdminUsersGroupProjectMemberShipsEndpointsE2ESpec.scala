@@ -186,7 +186,7 @@ object AdminUsersGroupProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
           } yield assertTrue(actualMemberships.groups == Seq.empty)
         } @@ TestAspect.timeout(5.seconds) @@ TestAspect.flaky,
       ),
-    ),  
+    ),
   )
 
   private def getProjectMemberships(userIri: UserIri, requestingUser: User = rootUser) =
