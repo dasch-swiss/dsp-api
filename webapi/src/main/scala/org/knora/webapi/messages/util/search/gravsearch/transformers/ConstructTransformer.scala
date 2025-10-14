@@ -11,7 +11,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.slice.common.service.IriConverter
 final case class ConstructTransformer(
-  sparqlTransformerLive: OntologyInferencer,
+  inferencer: OntologyInferencer,
   iriConverter: IriConverter,
 ) {
 
@@ -51,7 +51,7 @@ final case class ConstructTransformer(
   ): Task[Seq[QueryPattern]] =
     pattern match {
       case statementPattern: StatementPattern =>
-        sparqlTransformerLive.transformStatementInWhere(
+        inferencer.transformStatementInWhere(
           statementPattern = statementPattern,
           simulateInference = true,
           limitInferenceToOntologies = limit,
