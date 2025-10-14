@@ -35,7 +35,7 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
   private val testLogger: ULayer[Unit] = Runtime.removeDefaultLoggers >>> consoleLogger(
     config = {
       val default = ConsoleLoggerConfig.default
-      default.copy(filter = default.filter.withRootLevel(LogLevel.Error))
+      default.copy(filter = default.filter.withRootLevel(LogLevel.Info))
     },
   )
 
@@ -60,16 +60,16 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
            .retry(Schedule.fixed(10.milli))
            .timeout(5.seconds)
            .orDie
-    _ <- ZIO.logInfo("API is ready, start running tests...")
+    _ <- ZIO.logInfo("API is ready, start running tests..." + this.getClass.getSimpleName)
   } yield ()
 
   def e2eSpec: Spec[env, Any]
 
   final override def spec: Spec[env, Any] =
-    e2eSpec
-      @@ TestAspect.beforeAll(prepare)
-      @@ TestAspect.sequential
+    e2eSpec.provideSomeAuto(Scope.default)
       @@ TestAspect.withLiveEnvironment
+      @@ TestAspect.sequential
+      @@ TestAspect.beforeAll(prepare)
 }
 
 object E2EZSpec {

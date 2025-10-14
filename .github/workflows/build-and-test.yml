@@ -73,7 +73,8 @@ jobs:
 
   test-e2e:
     name: Build and E2E test
-    runs-on: buildjet-32vcpu-ubuntu-2204
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 30
     concurrency:
       group: ${{ github.ref }}-e2e
       cancel-in-progress: true
