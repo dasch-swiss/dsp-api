@@ -15,7 +15,6 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.api.AdminUsersProjectMemberShipsEndpointsE2ESpec.faker
@@ -30,7 +29,7 @@ import org.knora.webapi.testservices.ResponseOps
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
-object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
+object AdminUsersGroupProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
   private val multiUserIri = UserIri.unsafeFrom(SharedTestDataADM2.multiuserUser.userData.user_id.get)
 
@@ -86,7 +85,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
             projectMemberships <- getProjectMemberships(newUser.userIri).flatMap(_.assert200)
           } yield assertTrue(projectMemberships.projects == Seq(imagesProjectExternal))
         } @@ TestAspect.timeout(5.seconds) @@ TestAspect.flaky,
-        test("don not add user to project if user is already a member") {
+        test("do not add user to project if user is already a member") {
           for {
             newUser <- createNewUser
             _       <- addUserToProject(newUser.userIri, imagesProjectExternal.id).flatMap(_.assert200)
@@ -94,7 +93,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
             response <- addUserToProject(newUser.userIri, imagesProjectExternal.id)
 
           } yield assertTrue(response.code == StatusCode.BadRequest)
-        },
+        } @@ TestAspect.timeout(5.seconds) @@ TestAspect.flaky,
         test("remove user from project") {
           for {
             newUser <- createNewUser
@@ -168,11 +167,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     suite("admin/users/iri/:userIri/group-member-ships...")(
       test("GET admin/users/iri/:userIri/group-member-ships - return all groups the user is a member of") {
         getGroupMemberships(multiUserIri)
-          .map(result =>
-            assertTrue(
-              result.groups.contains(SharedTestDataADM.imagesReviewerGroupExternal),
-            ),
-          )
+          .map(result => assertTrue(result.groups.contains(imagesReviewerGroupExternal)))
       },
       suite("used to modify group membership")(
         test("add user to group") {
