@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.capabilities.pekko.PekkoStreams
+import sttp.capabilities.zio.ZioStreams
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
@@ -210,7 +210,7 @@ final case class ProjectsEndpoints(
       .in(projectsByIri / "AllData")
       .out(header[String]("Content-Disposition"))
       .out(header[String]("Content-Type"))
-      .out(streamBinaryBody(PekkoStreams)(CodecFormat.OctetStream()))
+      .out(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
       .description("Returns all ontologies, data, and configuration belonging to a project identified by the IRI.")
   }
 

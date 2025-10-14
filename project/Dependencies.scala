@@ -10,14 +10,11 @@ import sbt._
 object Dependencies {
   // should be the same version as in docker-compose.yml,
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
-  val fusekiImage = "daschswiss/apache-jena-fuseki:5.5.0-1"
+  val fusekiImage = "daschswiss/apache-jena-fuseki:5.5.0-2"
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.16.3"
 
   val ScalaVersion = "3.3.6"
-
-  val PekkoActorVersion = "1.2.1"
-  val PekkoHttpVersion  = "1.2.0"
 
   val MonocleVersion = "3.3.0"
 
@@ -90,12 +87,6 @@ object Dependencies {
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
 
-  // pekko
-  val pekkoHttp     = "org.apache.pekko" %% "pekko-http"      % PekkoHttpVersion
-  val pekkoHttpCors = "org.apache.pekko" %% "pekko-http-cors" % PekkoHttpVersion
-  val pekkoSlf4j    = "org.apache.pekko" %% "pekko-slf4j"     % PekkoActorVersion
-  val pekkoStream   = "org.apache.pekko" %% "pekko-stream"    % PekkoActorVersion
-
   // rdf and graph libraries
   val jenaCore      = "org.apache.jena"   % "jena-core"           % JenaVersion
   val jenaText      = "org.apache.jena"   % "jena-text"           % JenaVersion
@@ -137,6 +128,8 @@ object Dependencies {
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
+  val dataFaker = "net.datafaker" % "datafaker" % "2.5.1"
+
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.21.3"
@@ -149,7 +142,6 @@ object Dependencies {
   val tapirVersion = "1.11.46"
 
   val tapir = Seq(
-    "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
@@ -179,10 +171,6 @@ object Dependencies {
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
   val webapiDependencies = monocle ++ refined ++ Seq(
-    pekkoHttp,
-    pekkoHttpCors,
-    pekkoSlf4j,
-    pekkoStream,
     bouncyCastle,
     commonsLang3,
     commonsValidator,

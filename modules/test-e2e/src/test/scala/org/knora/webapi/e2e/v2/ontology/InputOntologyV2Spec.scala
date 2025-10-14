@@ -13,9 +13,9 @@ import java.time.Instant
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ontology
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
@@ -26,11 +26,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 
-/**
- * Tests [[InputOntologyV2]].
- */
-object InputOntologyV2Spec extends ZIOSpecDefault {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getInitializedTestInstance
+object InputOntologyV2Spec extends E2EZSpec {
 
   private val PropertyDef = InputOntologyV2(
     ontologyMetadata = OntologyMetadataV2(
@@ -112,9 +108,8 @@ object InputOntologyV2Spec extends ZIOSpecDefault {
     properties = Map(),
   )
 
-  val spec = suite("InputOntologyV2")(
+  override val e2eSpec = suite("InputOntologyV2")(
     test("parse a property definition") {
-
       val params =
         """
           |{
@@ -213,7 +208,6 @@ object InputOntologyV2Spec extends ZIOSpecDefault {
       assertTrue(actual == ClassDef)
     },
     test("reject an entity definition with an invalid IRI") {
-
       val params =
         s"""
            |{

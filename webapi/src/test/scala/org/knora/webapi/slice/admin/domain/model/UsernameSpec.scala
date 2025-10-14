@@ -18,6 +18,10 @@ object UsernameSpec extends ZIOSpecDefault {
     "user-123",
     "user.123",
     "use",
+    "Mose.Dooley",
+    "Wayne.1576803472",
+    "Stacey.1811737105",
+    "a".repeat(50), // (50 characters)
   )
   private val invalidNames = Seq(
     "_username",   // (starts with underscore)
@@ -41,7 +45,7 @@ object UsernameSpec extends ZIOSpecDefault {
       check(Gen.fromIterable(validNames))(it => assertTrue(Username.from(it).map(_.value) == Right(it)))
     },
     test("should reject invalid names") {
-      check(Gen.fromIterable(invalidNames))(it => assertTrue(Username.from(it) == Left("Username is invalid.")))
+      check(Gen.fromIterable(invalidNames))(it => assertTrue(Username.from(it) == Left(s"Username is invalid. $it")))
     },
   )
 }

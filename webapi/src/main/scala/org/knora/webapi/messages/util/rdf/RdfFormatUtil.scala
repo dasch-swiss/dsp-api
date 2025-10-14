@@ -7,6 +7,7 @@ package org.knora.webapi.messages.util.rdf
 
 import org.apache.jena
 import sttp.model.MediaType
+import sttp.tapir.CodecFormat
 
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -28,9 +29,7 @@ import org.knora.webapi.SchemaOptions
 /**
  * A trait for supported RDF formats.
  */
-sealed trait RdfFormat {
-  def mediaType: MediaType
-}
+sealed trait RdfFormat extends CodecFormat
 
 /**
  * A trait for formats other than JSON-LD.

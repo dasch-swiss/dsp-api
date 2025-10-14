@@ -100,7 +100,7 @@ object ListsResponderSpec extends E2EZSpec {
           .map(actual => assertTrue(actual.nodeinfo.sorted == summerNodeInfo.sorted))
       },
       test("return a full list response") {
-        listsResponder(_.listGetRequestADM("http://rdfh.ch/lists/0001/treeList"))
+        listsResponder(_.listGetRequestADM(ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")))
           .flatMap(expectType[ListGetResponseADM])
           .map(actual =>
             assertTrue(
@@ -423,7 +423,7 @@ object ListsResponderSpec extends E2EZSpec {
             UUID.randomUUID,
           ),
         ).map(_.node)
-        val actual = listsResponder(_.listGetRequestADM(oldParentIri.value)).flatMap(expectType[ListNodeGetResponseADM])
+        val actual = listsResponder(_.listGetRequestADM(oldParentIri)).flatMap(expectType[ListNodeGetResponseADM])
 
         (parentNode <*> actual).map { (parentNode: ListNodeADM, actual: ListNodeGetResponseADM) =>
 
@@ -471,7 +471,7 @@ object ListsResponderSpec extends E2EZSpec {
           ),
         ).map(_.node)
 
-        val actual = listsResponder(_.listGetRequestADM(oldParentIri.value))
+        val actual = listsResponder(_.listGetRequestADM(oldParentIri))
           .flatMap(expectType[ListNodeGetResponseADM])
 
         (parentNode <*> actual).map { (parentNode: ListNodeADM, actual: ListNodeGetResponseADM) =>

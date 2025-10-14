@@ -346,6 +346,13 @@ final case class OntologyResponderV2(
       userLang = Some(requestingUser.lang).filter(_ => !allLanguages)
     } yield ontology.copy(userLang = userLang)
 
+  def getPropertyFromOntologyV2(
+    propertyIri: PropertyIri,
+    allLanguages: Boolean,
+    requestingUser: User,
+  ): Task[ReadOntologyV2] =
+    getPropertyDefinitionsFromOntologyV2(Set(propertyIri.smartIri), allLanguages, requestingUser)
+
   /**
    * Requests information about properties in a single ontology.
    *
@@ -1979,8 +1986,7 @@ final case class OntologyResponderV2(
                          .someOrFail(NotFoundException(s"Class ${classIri.toComplexSchema} not found"))
       hasComment = classToUpdate.entityInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)
       _         <- IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteCommentTask).when(hasComment)
-      response <-
-        ontologyCacheHelpers.getClasses(classIris = Seq(classIri), allLanguages = true, requestingUser = requestingUser)
+      response  <- ontologyCacheHelpers.getClassAsReadOntologyV2(classIri, allLanguages = true, requestingUser)
     } yield response
   }
 }

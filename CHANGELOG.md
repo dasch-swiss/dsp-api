@@ -1,5 +1,17 @@
 # Changelog
 
+## [32.4.0](https://github.com/dasch-swiss/dsp-api/compare/v32.3.3...v32.4.0) (2025-10-14)
+
+
+### Maintenances
+
+* **dsp-api:** Replace Pekko HTTP server with zio-http (DEV-4870) ([#3798](https://github.com/dasch-swiss/dsp-api/issues/3798)) ([63bc41a](https://github.com/dasch-swiss/dsp-api/commit/63bc41af5a3891613343a20ddc3e5b502b44ffea))
+
+
+### Enhancements
+
+* Prepare v3 api base definitions in own package ([#3813](https://github.com/dasch-swiss/dsp-api/issues/3813)) ([57ba713](https://github.com/dasch-swiss/dsp-api/commit/57ba713fec993a08f62b7d9eb81634915bc6cb1b))
+
 ## [32.3.3](https://github.com/dasch-swiss/dsp-api/compare/v32.3.2...v32.3.3) (2025-10-13)
 
 

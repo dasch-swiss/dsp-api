@@ -63,6 +63,8 @@ ingest/docs/openapi/*.yml
 # Claude Code
 .claude/settings.local.json
 /.claude/tmp
+.claude-flow/*
+.swarm/*
 
 # ingest
 localdev/storage/
