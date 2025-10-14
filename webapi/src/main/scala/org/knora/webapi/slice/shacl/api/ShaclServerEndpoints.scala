@@ -15,7 +15,7 @@ case class ShaclServerEndpoints(
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(
     shaclEndpoints.validate.zServerLogic(shaclApiService.validate),
-  )
+  ).map(_.tag("Shacl API"))
 }
 
 object ShaclServerEndpoints {

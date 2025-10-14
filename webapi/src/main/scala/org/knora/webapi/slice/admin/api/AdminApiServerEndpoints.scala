@@ -22,7 +22,7 @@ final case class AdminApiServerEndpoints(
 ) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
-    filesServerEndpoints.serverEndpoints ++
+    (filesServerEndpoints.serverEndpoints ++
       groupsServerEndpoints.serverEndpoints ++
       adminListsServerEndpoints.serverEndpoints ++
       maintenanceServerEndpoints.serverEndpoints ++
@@ -30,7 +30,8 @@ final case class AdminApiServerEndpoints(
       projectsLegalInfoServerEndpoints.serverEndpoints ++
       projectsServerEndpoints.serverEndpoints ++
       storeServerEndpoints.serverEndpoints ++
-      usersServerEndpoints.serverEndpoints
+      usersServerEndpoints.serverEndpoints)
+      .map(_.tag("Admin API"))
 }
 
 object AdminApiServerEndpoints {

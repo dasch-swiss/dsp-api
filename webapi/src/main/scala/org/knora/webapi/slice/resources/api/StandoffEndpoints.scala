@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.resources.api
 
-import sttp.model.MediaType
 import sttp.tapir.*
 import zio.ZLayer
 
@@ -26,8 +25,6 @@ final case class StandoffEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
-
-  val endpoints: Seq[AnyEndpoint] = Seq(postMapping).map(_.endpoint.tag("V2 Standoff"))
 }
 
 object StandoffEndpoints {

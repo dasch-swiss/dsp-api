@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.lists.api
 
-import sttp.model.MediaType
 import sttp.tapir.*
 import zio.*
 
@@ -25,7 +24,6 @@ import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 
 final case class ListsEndpointsV2(private val base: BaseEndpoints) {
   val listIri =
@@ -47,11 +45,6 @@ final case class ListsEndpointsV2(private val base: BaseEndpoints) {
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description("Returns a list node.")
-
-  val endpoints: Seq[AnyEndpoint] = Seq(
-    getV2Lists,
-    getV2Node,
-  ).map(_.endpoint.tag("V2 Lists"))
 }
 
 object ListsEndpointsV2 {

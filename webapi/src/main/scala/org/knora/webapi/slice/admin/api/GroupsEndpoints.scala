@@ -69,11 +69,6 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / groupIriPathVar)
     .out(groupGetResponse)
     .description("Deletes a group by changing its status to 'false'.")
-
-  private val securedEndpoints = Seq(getGroupMembers, postGroup, putGroup, putGroupStatus, deleteGroup).map(_.endpoint)
-
-  val endpoints: Seq[AnyEndpoint] = (Seq(getGroups, getGroupByIri) ++ securedEndpoints)
-    .map(_.tag("Admin Groups"))
 }
 
 object GroupsRequests {
