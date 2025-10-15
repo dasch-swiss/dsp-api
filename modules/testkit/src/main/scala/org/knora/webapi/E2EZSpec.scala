@@ -51,7 +51,7 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
   private def prepare = for {
     _ <- Db.initWithTestData(rdfDataObjects)
     _ <- ZIO.serviceWithZIO[CacheManager](_.clearAll())
-    _ <- (DspApiServer.startup *> ZIO.never).provideSomeAuto(DspApiServer.layer).fork
+    _ <- (DspApiServer.startup *> ZIO.never).provideSomeAuto(DspApiServer.layer).forkScoped
     // wait max 5 seconds until api is ready
     _ <- TestApiClient
            .getJson[Json](uri"/version")
