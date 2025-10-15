@@ -21,6 +21,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
+import scala.annotation.unused
 
 final case class SearchRestService(
   searchResponderV2: SearchResponderV2,
@@ -42,7 +43,7 @@ final case class SearchRestService(
     response <- renderer.render(searchResult, opts)
   } yield response
 
-  def searchResourcesByLabelCountV2(ignored: User)(
+  def searchResourcesByLabelCountV2(@unused ignored: User)(
     query: String,
     opts: FormatOptions,
     project: Option[ProjectIri],
@@ -189,7 +190,7 @@ final case class SearchRestService(
     response <- renderer.render(searchResult, opts)
   } yield response
 
-  def fullTextSearchCount(ignored: User)(
+  def fullTextSearchCount(@unused ignored: User)(
     query: RenderedResponse,
     opts: FormatOptions,
     project: Option[ProjectIri],

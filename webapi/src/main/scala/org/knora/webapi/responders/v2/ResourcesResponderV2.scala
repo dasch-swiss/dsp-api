@@ -604,7 +604,6 @@ final case class ResourcesResponderV2(
       valueUuid,
       versionDate,
       withDeleted,
-      showDeletedValues,
       targetSchema,
       schemaOptions,
       requestingUser,
@@ -623,15 +622,14 @@ final case class ResourcesResponderV2(
   /**
    * Get one or several resources and return them as a sequence.
    *
-   * @param resourceIris      the IRIs of the resources to be queried.
-   * @param propertyIri       if defined, requests only the values of the specified explicit property.
-   * @param valueUuid         if defined, requests only the value with the specified UUID.
-   * @param versionDate       if defined, requests the state of the resources at the specified time in the past.
-   * @param withDeleted       if defined, indicates if the deleted resource and values should be returned or not.
-   * @param showDeletedValues if false, deleted values will be shown as DeletedValue
-   * @param targetSchema      the target API schema.
-   * @param schemaOptions     the schema options submitted with the request.
-   * @param requestingUser    the user making the request.
+   * @param resourceIris    the IRIs of the resources to be queried.
+   * @param propertyIri     if defined, requests only the values of the specified explicit property.
+   * @param valueUuid       if defined, requests only the value with the specified UUID.
+   * @param versionDate     if defined, requests the state of the resources at the specified time in the past.
+   * @param withDeleted     if defined, indicates if the deleted resource and values should be returned or not.
+   * @param targetSchema    the target API schema.
+   * @param schemaOptions   the schema options submitted with the request.
+   * @param requestingUser  the user making the request.
    * @return a [[ReadResourcesSequenceV2]].
    */
   def getResources(
@@ -640,7 +638,6 @@ final case class ResourcesResponderV2(
     valueUuid: Option[UUID] = None,
     versionDate: Option[VersionDate] = None,
     withDeleted: Boolean = true,
-    showDeletedValues: Boolean,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[Rendering],
     requestingUser: User,

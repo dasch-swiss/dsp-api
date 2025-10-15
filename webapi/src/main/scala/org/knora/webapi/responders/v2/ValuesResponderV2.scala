@@ -1163,7 +1163,6 @@ final case class ValuesResponderV2(
                         targetSchema = ApiV2Complex,
                         schemaOptions = Set.empty,
                         requestingUser = KnoraSystemInstances.Users.SystemUser,
-                        showDeletedValues = true,
                       )
                       .map(_.toResource(deleteValue.resourceIri.toString))
 

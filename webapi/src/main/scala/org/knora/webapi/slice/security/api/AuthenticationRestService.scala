@@ -23,13 +23,14 @@ import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayloa
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.UsernamePassword
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
+import scala.annotation.unused
 
 final case class AuthenticationRestService(
   private val authenticator: Authenticator,
   private val appConfig: AppConfig,
 ) {
 
-  def loginForm(ignored: Unit): UIO[String] =
+  def loginForm(@unused ignored: Unit): UIO[String] =
     val apiUrl = appConfig.knoraApi.externalKnoraApiBaseUrl
     val form =
       s"""
