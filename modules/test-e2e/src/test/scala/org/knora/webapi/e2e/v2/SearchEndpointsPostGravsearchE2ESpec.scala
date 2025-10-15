@@ -17,7 +17,6 @@ import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
-import org.knora.webapi.util.TestDataFileUtil
 
 object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
 

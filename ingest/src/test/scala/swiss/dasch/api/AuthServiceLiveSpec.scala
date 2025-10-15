@@ -11,7 +11,6 @@ import swiss.dasch.config.Configuration.JwtConfig
 import swiss.dasch.domain.AuthScope
 import swiss.dasch.domain.AuthScope.ScopeValue.*
 import swiss.dasch.domain.ProjectShortcode
-import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConfigurations.jwtConfigLayer
 import zio.*
 import zio.test.TestAspect

@@ -8,12 +8,10 @@ package org.knora.webapi.slice.ontology.domain.service
 import zio.*
 
 import java.time.Instant
-import scala.collection.immutable
 
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.Features
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.queries.sparql

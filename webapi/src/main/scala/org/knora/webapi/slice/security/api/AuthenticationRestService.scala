@@ -9,6 +9,7 @@ import sttp.model.headers.CookieValueWithMeta
 import zio.*
 
 import java.time.Instant
+import scala.annotation.unused
 
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
@@ -29,7 +30,7 @@ final case class AuthenticationRestService(
   private val appConfig: AppConfig,
 ) {
 
-  def loginForm(ignored: Unit): UIO[String] =
+  def loginForm(@unused ignored: Unit): UIO[String] =
     val apiUrl = appConfig.knoraApi.externalKnoraApiBaseUrl
     val form =
       s"""

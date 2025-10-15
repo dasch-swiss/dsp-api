@@ -13,7 +13,6 @@ import zio.test.*
 
 import org.knora.webapi.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.*
 import org.knora.webapi.slice.admin.api.service.UserRestService.UserResponse
@@ -22,7 +21,6 @@ import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
-import org.knora.webapi.testservices.ResponseOps
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.MutableTestIri

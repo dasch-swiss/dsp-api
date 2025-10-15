@@ -33,7 +33,6 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri

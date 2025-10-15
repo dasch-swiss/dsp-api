@@ -18,7 +18,7 @@ sealed trait V3ErrorInfo {
 case class NotFound(message: String = "Not Found", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
 object NotFound {
 
-  private def singleError(code: V3ErrorCode, message: String, details: Map[String, String] = Map.empty): NotFound =
+  private def singleError(code: V3ErrorCode, message: String, details: Map[String, String]): NotFound =
     NotFound(message, Chunk(ErrorDetail(code, message, details)))
 
   def from(resourceIri: ResourceIri): NotFound =

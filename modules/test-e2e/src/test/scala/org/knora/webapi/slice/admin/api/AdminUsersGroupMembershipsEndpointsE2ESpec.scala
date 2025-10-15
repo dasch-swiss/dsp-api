@@ -19,7 +19,6 @@ import org.knora.webapi.slice.admin.api.model.UserDto
 import org.knora.webapi.slice.admin.api.service.UserRestService.UserResponse
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.domain.LanguageCode.DE
-import org.knora.webapi.testservices.ResponseOps
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 

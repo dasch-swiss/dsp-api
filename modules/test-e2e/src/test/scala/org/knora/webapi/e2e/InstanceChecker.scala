@@ -102,7 +102,7 @@ case class InstanceChecker()(implicit val stringFormatter: StringFormatter) { se
       // Make a map of property IRIs to property names used in the instance.
       propertyIrisToInstancePropertyNames: Map[SmartIri, String] =
         classDef.directCardinalities.keySet.map { propertyIri =>
-          propertyIri -> instanceInspector.propertyIriToInstancePropertyName(classIri, propertyIri)
+          propertyIri -> instanceInspector.propertyIriToInstancePropertyName(propertyIri)
         }.toMap
 
       // Check that there are no extra properties.
@@ -460,7 +460,7 @@ case class JsonLDInstanceInspector()(implicit private val stringFormatter: Strin
     InstanceElement(elementType = elementType, propertyObjects = propertyObjects)
   }
 
-  def propertyIriToInstancePropertyName(classIri: SmartIri, propertyIri: SmartIri): String =
+  def propertyIriToInstancePropertyName(propertyIri: SmartIri): String =
     propertyIri.toString
 
   def elementIsIri(element: InstanceElement): Boolean =

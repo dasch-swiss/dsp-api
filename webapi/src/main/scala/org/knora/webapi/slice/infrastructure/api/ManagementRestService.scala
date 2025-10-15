@@ -8,6 +8,8 @@ package org.knora.webapi.slice.infrastructure.api
 import sttp.model.StatusCode
 import zio.*
 
+import scala.annotation.unused
+
 import org.knora.webapi.core.State
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -25,7 +27,7 @@ final case class ManagementRestService(
       (response, if (response.status) StatusCode.Ok else StatusCode.ServiceUnavailable)
     }
 
-  def startCompaction(user: User)(ignored: Unit): Task[(String, StatusCode)] =
+  def startCompaction(user: User)(@unused ignored: Unit): Task[(String, StatusCode)] =
     auth.ensureSystemAdmin(user) *>
       triplestore.compact().map(success => if (success) ("ok", StatusCode.Ok) else ("forbidden", StatusCode.Forbidden))
 }

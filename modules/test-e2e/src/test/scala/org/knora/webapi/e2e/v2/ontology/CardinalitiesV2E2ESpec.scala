@@ -268,7 +268,7 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
         lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty1, lmd)
         lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty2, lmd)
         lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty1, lmd)
-        lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty2, lmd)
+        _   <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty2, lmd)
 
         superStatus <-
           createValue(projectIri, ontologyIri, superClassName, List(superClassProperty1, superClassProperty2))
@@ -289,7 +289,7 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
         lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty1, lmd)
         lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty2, lmd)
         lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty1, lmd)
-        lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty2, lmd)
+        _   <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty2, lmd)
 
         superStatus <-
           createValue(projectIri, ontologyIri, superClassName, List(superClassProperty1, superClassProperty2))
@@ -315,7 +315,7 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
         lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty1, lmd)
         lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty2, lmd)
         lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty1, lmd)
-        lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty2, lmd)
+        _   <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty2, lmd)
 
         // trying to create an instance of the sub class, but missing mandatory props defined on super class
         status <- createValue(projectIri, ontologyIri, subClassName, List(subClassProperty1, subClassProperty2))
@@ -332,7 +332,7 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
         lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty1, lmd)
         lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty2, lmd)
         lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty1, lmd)
-        lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty2, lmd)
+        _   <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty2, lmd)
 
         status <- createValue(projectIri, ontologyIri, subClassName, List(subClassProperty1, subClassProperty2))
       } yield assertTrue(status == StatusCode.BadRequest)

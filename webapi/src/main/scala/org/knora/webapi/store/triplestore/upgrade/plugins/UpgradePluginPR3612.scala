@@ -5,7 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.*

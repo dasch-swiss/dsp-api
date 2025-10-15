@@ -24,7 +24,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequ
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 
 /**
@@ -833,12 +832,11 @@ final case class InferringGravsearchTypeInspector(
   def inspectTypes(
     previousResult: IntermediateTypeInspectionResult,
     whereClause: WhereClause,
-    requestingUser: User,
   ): Task[IntermediateTypeInspectionResult] =
 
     for {
       // get index of entity usage in the query and ontology information about all the Knora class and property IRIs mentioned in the query
-      t            <- getUsageIndexAndEntityInfos(whereClause, requestingUser)
+      t            <- getUsageIndexAndEntityInfos(whereClause)
       usageIndex    = t._1
       allEntityInfo = t._2
 
@@ -868,10 +866,7 @@ final case class InferringGravsearchTypeInspector(
    * @param requestingUser the user requesting the query.
    * @return a tuple containing the usage index and all entity information acquired from the ontology.
    */
-  def getUsageIndexAndEntityInfos(
-    whereClause: WhereClause,
-    requestingUser: User,
-  ): Task[(UsageIndex, EntityInfoGetResponseV2)] =
+  def getUsageIndexAndEntityInfos(whereClause: WhereClause): Task[(UsageIndex, EntityInfoGetResponseV2)] =
     for {
       // Make an index of entity usage in the query.
       usageIndex <- ZIO.attempt(makeUsageIndex(whereClause))
@@ -881,13 +876,11 @@ final case class InferringGravsearchTypeInspector(
       initialEntityInfoRequest = EntityInfoGetRequestV2(
                                    classIris = usageIndex.knoraClassIris,
                                    propertyIris = usageIndex.knoraPropertyIris,
-                                   requestingUser = requestingUser,
                                  )
 
       initialEntityInfo <- ontologyCacheHelpers.getEntityInfoResponseV2(
                              initialEntityInfoRequest.classIris,
                              initialEntityInfoRequest.propertyIris,
-                             requestingUser,
                            )
 
       // The ontology responder may return the requested information in the internal schema. Convert each entity
@@ -934,15 +927,11 @@ final case class InferringGravsearchTypeInspector(
                                                acc ++ maybeSubjectType ++ maybeObjectType
                                              }
 
-      additionalEntityInfoRequest = EntityInfoGetRequestV2(
-                                      classIris = subjectAndObjectTypes,
-                                      requestingUser = requestingUser,
-                                    )
+      additionalEntityInfoRequest = EntityInfoGetRequestV2(classIris = subjectAndObjectTypes)
 
       additionalEntityInfo <- ontologyCacheHelpers.getEntityInfoResponseV2(
                                 additionalEntityInfoRequest.classIris,
                                 additionalEntityInfoRequest.propertyIris,
-                                requestingUser,
                               )
 
       // Add the additional classes to the usage index.

@@ -10,8 +10,6 @@ import swiss.dasch.infrastructure.HealthCheckService
 import zio.*
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 
-import scala.util.chaining.*
-
 case class MonitoringEndpointsHandler(
   monitoringEndpoints: MonitoringEndpoints,
   healthService: HealthCheckService,

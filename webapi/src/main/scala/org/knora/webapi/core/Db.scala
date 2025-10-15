@@ -12,7 +12,6 @@ import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 
