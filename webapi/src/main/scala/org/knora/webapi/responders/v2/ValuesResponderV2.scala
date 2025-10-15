@@ -93,8 +93,6 @@ final case class ValuesResponderV2(
       _ <- auth.ensureUserIsNotAnonymous(requestingUser)
       _ <- valueValidator.validate(valueToCreate).mapError(BadRequestException.apply)
 
-      resourceIri <- iriConverter.asResourceIri(valueToCreate.resourceIri).mapError(e => BadRequestException(e))
-
       // Convert the submitted value to the internal schema.
       submittedInternalPropertyIri <- ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
       submittedInternalValueContent = valueToCreate.valueContent.toOntologySchema(InternalSchema)

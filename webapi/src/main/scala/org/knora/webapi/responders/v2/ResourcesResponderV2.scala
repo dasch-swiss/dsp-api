@@ -640,7 +640,7 @@ final case class ResourcesResponderV2(
     valueUuid: Option[UUID] = None,
     versionDate: Option[VersionDate] = None,
     withDeleted: Boolean = true,
-    showDeletedValues: Boolean = false,
+    showDeletedValues: Boolean,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[Rendering],
     requestingUser: User,
