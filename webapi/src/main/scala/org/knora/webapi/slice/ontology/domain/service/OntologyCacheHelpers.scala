@@ -7,8 +7,6 @@ package org.knora.webapi.slice.ontology.domain.service
 
 import zio.*
 
-import scala.collection.immutable
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.SmartIri
@@ -20,7 +18,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo: OntologyRepo) {

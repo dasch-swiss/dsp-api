@@ -11,7 +11,6 @@ import zio.prelude.Validation
 
 import java.time.Instant
 import java.util.UUID
-import scala.collection.immutable
 
 import dsp.errors.*
 import org.knora.webapi.*
@@ -21,7 +20,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.Rdfs
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2

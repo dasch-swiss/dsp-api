@@ -12,7 +12,6 @@ import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
-import zio.*
 import zio.prelude.Validation
 
 import java.time.Instant
@@ -1542,7 +1541,7 @@ final case class ReadClassInfoV2Builder(
     copy(predicates = rdfType :: self.predicates)
   }
 
-  def withBaseClass(classIri: SmartIri)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
+  def withBaseClass(classIri: SmartIri): ReadClassInfoV2Builder =
     copy(allBaseClasses = classIri :: self.allBaseClasses)
 
   def withRdfsLabelEn(label: String)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
@@ -1755,7 +1754,7 @@ final case class ReadPropertyInfoV2Builder private (
     withSubjectType(sf.toSmartIri(subjectType.toString))
   def withSubjectType(subjectType: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
     withSubjectType(sf.toSmartIri(subjectType))
-  def withSubjectType(subjectType: SmartIri)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+  def withSubjectType(subjectType: SmartIri): ReadPropertyInfoV2Builder =
     self.copy(subjectType = Some(subjectType))
 
   private def withObjectType(valueType: SmartIri): ReadPropertyInfoV2Builder = self.copy(objectType = Some(valueType))

@@ -6,7 +6,6 @@
 package org.knora.webapi
 
 import net.datafaker.Faker
-import sttp.client4.Response
 import sttp.client4.UriContext
 import sttp.model.StatusCode
 import zio.*

@@ -5,7 +5,6 @@
 
 package swiss.dasch.domain
 
-import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*

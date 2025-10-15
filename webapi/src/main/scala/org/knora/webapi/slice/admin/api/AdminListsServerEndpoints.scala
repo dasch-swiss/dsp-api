@@ -9,8 +9,6 @@ import sttp.tapir.ztapir.*
 import zio.*
 
 import org.knora.webapi.slice.admin.api.Requests.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
 
