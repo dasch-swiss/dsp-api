@@ -610,7 +610,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         case typ if typ == OntologyConstants.Xsd.Uri || typ == "xsd:anyURI" =>
           obj.getRequiredString(JsonLDKeywords.VALUE).flatMap { str =>
             Try(URI.create(str)).toEither.left.map {
-              case e: IllegalArgumentException => s"Invalid URI: '$str'"
+              case _: IllegalArgumentException => s"Invalid URI: '$str'"
               case e: Throwable                => e.getMessage
             }
           }

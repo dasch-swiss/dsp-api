@@ -7,7 +7,6 @@ package org.knora.webapi.slice.admin.api
 
 import sttp.tapir.ztapir.*
 import zio.*
-import zio.json.ast.Json
 
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.domain.model.User

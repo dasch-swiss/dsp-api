@@ -73,7 +73,7 @@ object ProjectRepositoryLiveSpec extends ZIOSpecDefault {
     test("refuse to create a project twice") {
       val shortcode = newShortcode
       for {
-        prj  <- repo(_.addProject(shortcode))
+        _    <- repo(_.addProject(shortcode))
         exit <- repo(_.addProject(shortcode)).exit
       } yield assert(exit)(
         failsWithA[SQLException] &&

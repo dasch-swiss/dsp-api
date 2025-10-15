@@ -14,7 +14,6 @@ import zio.ZIO
 import zio.ZLayer
 
 import dsp.valueobjects.Iri
-import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue

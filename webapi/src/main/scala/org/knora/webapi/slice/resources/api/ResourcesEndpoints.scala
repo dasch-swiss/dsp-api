@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.resources.api
 
-import sttp.model.MediaType
 import sttp.tapir.*
 import zio.ZLayer
 

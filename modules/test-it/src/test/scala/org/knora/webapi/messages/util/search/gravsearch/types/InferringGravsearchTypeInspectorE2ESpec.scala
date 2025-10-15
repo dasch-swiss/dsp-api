@@ -13,7 +13,6 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.types.*
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
 object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
 
@@ -68,11 +67,8 @@ object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
       for {
         typeInspectionRunner <- ZIO.service[InferringGravsearchTypeInspector]
         parsedQuery           = GravsearchParser.parseQuery(queryRdfTypeRule)
-        result <- typeInspectionRunner.getUsageIndexAndEntityInfos(
-                    parsedQuery.whereClause,
-                    requestingUser = anythingAdminUser,
-                  )
-        (_, entityInfo) = result
+        result               <- typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause)
+        (_, entityInfo)       = result
         multipleDetectedTypes = IntermediateTypeInspectionResult(
                                   entities = Map(
                                     TypeableVariable(variableName = "letter") -> Set(
@@ -123,12 +119,9 @@ object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
     },
     test("sanitize inconsistent resource types that only have knora-base:Resource as base class in common") {
       for {
-        typeInspectionRunner <- ZIO.service[InferringGravsearchTypeInspector]
-        parsedQuery           = GravsearchParser.parseQuery(queryRdfTypeRule)
-        result <- typeInspectionRunner.getUsageIndexAndEntityInfos(
-                    parsedQuery.whereClause,
-                    requestingUser = anythingAdminUser,
-                  )
+        typeInspectionRunner    <- ZIO.service[InferringGravsearchTypeInspector]
+        parsedQuery              = GravsearchParser.parseQuery(queryRdfTypeRule)
+        result                  <- typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause)
         (usageIndex, entityInfo) = result
         inconsistentTypes = IntermediateTypeInspectionResult(
                               entities = Map(
@@ -202,12 +195,9 @@ object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
     },
     test("sanitize inconsistent resource types that have common base classes other than knora-base:Resource") {
       for {
-        typeInspectionRunner <- ZIO.service[InferringGravsearchTypeInspector]
-        parsedQuery           = GravsearchParser.parseQuery(queryWithInconsistentTypes3)
-        result <- typeInspectionRunner.getUsageIndexAndEntityInfos(
-                    parsedQuery.whereClause,
-                    requestingUser = anythingAdminUser,
-                  )
+        typeInspectionRunner    <- ZIO.service[InferringGravsearchTypeInspector]
+        parsedQuery              = GravsearchParser.parseQuery(queryWithInconsistentTypes3)
+        result                  <- typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause)
         (usageIndex, entityInfo) = result
         inconsistentTypes = IntermediateTypeInspectionResult(
                               entities = Map(

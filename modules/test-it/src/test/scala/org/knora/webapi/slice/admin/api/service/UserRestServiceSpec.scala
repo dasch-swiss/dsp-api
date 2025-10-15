@@ -16,9 +16,7 @@ import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
-import org.knora.webapi.sharedtestdata.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.*
 import org.knora.webapi.slice.admin.api.model.UserDto

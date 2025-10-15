@@ -25,7 +25,6 @@ import java.io.IOException
 import java.nio.file.CopyOption
 import java.nio.file.DirectoryNotEmptyException
 import java.nio.file.OpenOption
-import java.nio.file.StandardOpenOption
 import java.nio.file.StandardOpenOption.*
 import java.nio.file.attribute.FileAttribute
 import java.text.ParseException

@@ -45,7 +45,7 @@ object OntologyName extends StringValueCompanion[OntologyName] {
       "simple",
     )
 
-  private def matchesRegexes(regex: List[Regex], msg: Option[String] = None): String => Validation[String, String] =
+  private def matchesRegexes(regex: List[Regex], msg: Option[String]): String => Validation[String, String] =
     (str: String) => {
       val msgStr = msg.getOrElse(s"must match regexes: ${regex.mkString("'", "', '", "'")}")
       Validation.fromPredicateWith(msgStr)(str)(value => regex.forall(_.matches(value)))

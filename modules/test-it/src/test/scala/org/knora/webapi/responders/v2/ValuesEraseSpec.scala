@@ -6,11 +6,11 @@
 package org.knora.webapi.responders.v2
 
 import zio.*
-import zio.json.*
 import zio.json.ast.*
 import zio.test.*
 
 import java.util.UUID
+import scala.annotation.unused
 import scala.collection.SortedSet
 
 import org.knora.webapi.ApiV2Complex
@@ -167,7 +167,7 @@ object ValuesEraseSpec extends E2EZSpec {
             <text documentType="html">Link: $linkXml, $suffix</text>"""
       }
 
-      def testCase(lastVersionHasLink: Boolean) = for {
+      for {
         res1 <- TestHelper.createResource
         res2 <- TestHelper.createResource
 
@@ -177,8 +177,6 @@ object ValuesEraseSpec extends E2EZSpec {
       } yield assertTrue(
         eraseResult.left.toOption.map(_.getMessage) == Some("Erasing standoff text values with links is not supported"),
       )
-
-      testCase(lastVersionHasLink = false) && testCase(lastVersionHasLink = true)
     },
     test("erasing a soft-deleted value") {
       for {
@@ -627,7 +625,7 @@ object TestHelper {
   def eraseLinkValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
     ZIO.serviceWithZIO[TestHelper](_.eraseLinkValueHistory(value, resource))
 
-  def ensureLinkWasRemoved(res1: ActiveResource, res2: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
+  def ensureLinkWasRemoved(res1: ActiveResource, @unused res2: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
     for {
       links <- findLinks(res1.iri)
       _     <- ZIO.fail(IllegalStateException(s"Link was not removed: $links")).when(links.nonEmpty)

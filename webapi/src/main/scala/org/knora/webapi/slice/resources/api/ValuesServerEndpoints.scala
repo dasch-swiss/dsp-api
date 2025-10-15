@@ -10,7 +10,6 @@ import zio.*
 
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.resources.api.model.ValueUuid
-import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
 
 final class ValuesServerEndpoints(

@@ -238,11 +238,11 @@ object ProjectEraseIT extends E2EZSpec {
                         .from(ProjectResourceCreateAll)
                         .getOrElse(throw Exception("should not happen")),
                     )
-            ap         <- aps(_.create(project, group, perms))
+            _          <- aps(_.create(project, group, perms))
             wasPresent <- aps(_.findByGroupAndProject(group.id, project.id)).map(_.nonEmpty)
 
             // when
-            erased <- TestAdminApiClient.eraseProject(shortcode, rootUser)
+            _ <- TestAdminApiClient.eraseProject(shortcode, rootUser)
 
             // then
             wasDeleted <- aps(_.findByGroupAndProject(group.id, project.id)).map(_.isEmpty)
@@ -256,11 +256,11 @@ object ProjectEraseIT extends E2EZSpec {
                       DefaultObjectAccessPermissionPart(Permission.ObjectAccess.View, NonEmptyChunk(group.id)),
                       DefaultObjectAccessPermissionPart(Permission.ObjectAccess.Modify, NonEmptyChunk(group.id)),
                     )
-            doap       <- doaps(_.create(project, Group(group.id), perms))
+            _          <- doaps(_.create(project, Group(group.id), perms))
             wasPresent <- doaps(_.findByProject(project.id)).map(_.nonEmpty)
 
             // when
-            erased <- TestAdminApiClient.eraseProject(shortcode, rootUser)
+            _ <- TestAdminApiClient.eraseProject(shortcode, rootUser)
 
             // then
             wasDeleted <- doaps(_.findByProject(project.id)).map(_.isEmpty)
