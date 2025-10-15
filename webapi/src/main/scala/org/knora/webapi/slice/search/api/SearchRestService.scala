@@ -12,6 +12,8 @@ import sttp.model.MediaType
 import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
 
+import scala.annotation.unused
+
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
@@ -21,7 +23,6 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
-import scala.annotation.unused
 
 final case class SearchRestService(
   searchResponderV2: SearchResponderV2,

@@ -9,6 +9,7 @@ import sttp.model.headers.CookieValueWithMeta
 import zio.*
 
 import java.time.Instant
+import scala.annotation.unused
 
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
@@ -23,7 +24,6 @@ import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayloa
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.UsernamePassword
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
-import scala.annotation.unused
 
 final case class AuthenticationRestService(
   private val authenticator: Authenticator,

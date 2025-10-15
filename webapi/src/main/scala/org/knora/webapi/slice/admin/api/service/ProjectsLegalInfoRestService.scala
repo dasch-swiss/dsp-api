@@ -9,7 +9,6 @@ import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.json.JsonCodec
 
 import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.api.CopyrightHolderAddRequest
@@ -62,7 +61,7 @@ final case class ProjectsLegalInfoRestService(
                  .someOrFail(NotFoundException(s"License $licenseIri not found in project $shortcode"))
   } yield ProjectLicenseDto.from(license, prj)
 
-  private def slice[A: JsonCodec](
+  private def slice[A](
     all: Seq[A],
     pageAndSize: PageAndSize,
     filterAndOrder: FilterAndOrder,
