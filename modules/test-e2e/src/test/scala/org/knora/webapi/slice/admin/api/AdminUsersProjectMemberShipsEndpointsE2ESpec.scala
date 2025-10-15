@@ -56,6 +56,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
       DE,
       SystemAdmin.IsNotSystemAdmin,
     )
+    println(s"Creating new user: $firstName $lastName")
     TestApiClient
       .postJson[UserResponse, UserCreateRequest](uri"/admin/users", req, rootUser)
       .flatMap(_.assert200)

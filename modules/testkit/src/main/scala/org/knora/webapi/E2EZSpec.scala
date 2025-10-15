@@ -59,6 +59,7 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
            .repeatWhile(_.code != StatusCode.Ok)
            .retry(Schedule.fixed(10.milli))
            .timeout(5.seconds)
+           .logError
            .orDie
     _ <- ZIO.logInfo("API is ready, start running tests...")
   } yield ()
