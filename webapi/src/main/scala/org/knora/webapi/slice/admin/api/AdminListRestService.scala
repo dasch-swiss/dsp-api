@@ -10,6 +10,8 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import scala.annotation.unused
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.CanDeleteListResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
@@ -111,7 +113,7 @@ final case class AdminListRestService(
   def canDeleteListRequestADM(iri: ListIri): Task[CanDeleteListResponseADM] =
     listsResponder.canDeleteListRequestADM(iri)
 
-  def deleteListNodeCommentsADM(ignored: User)(iri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
+  def deleteListNodeCommentsADM(@unused user: User)(iri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
     listsResponder.deleteListNodeCommentsADM(iri)
 }
 

@@ -9,7 +9,6 @@ import sttp.tapir.ztapir.*
 import zio.*
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.admin.api.service.StoreRestService
 
 final case class StoreServerEndpoints(

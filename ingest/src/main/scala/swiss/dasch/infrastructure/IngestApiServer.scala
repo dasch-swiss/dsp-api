@@ -9,7 +9,6 @@ import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSConfig.AllowedOrigin
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.metrics.zio.ZioMetrics
-import sttp.tapir.server.ziohttp
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import swiss.dasch.Endpoints
@@ -31,7 +30,7 @@ object IngestApiServer {
     _   <- ZIO.logInfo(s"Starting ${BuildInfo.name}")
     app <- ZIO.serviceWith[Endpoints](_.endpoints).map(ZioHttpInterpreter(serverOptions).toHttp(_))
     c   <- ZIO.service[ServiceConfig]
-    _   <- ZIO.serviceWithZIO[Server](_.install(app)): @annotation.nowarn
+    _   <- ZIO.serviceWithZIO[Server](_.install(app))
     _   <- ZIO.logInfo(s"Started ${BuildInfo.name}/${BuildInfo.version}, see http://${c.host}:${c.port}/docs")
   } yield ()
 

@@ -18,7 +18,6 @@ import zio.json.JsonEncoder
 
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.slice.admin.domain.model.*
-import org.knora.webapi.slice.api.v3.V3ErrorInfo.*
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError.*
 

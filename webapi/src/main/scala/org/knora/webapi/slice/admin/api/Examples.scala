@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.api
 
-import zio.json.JsonCodec
-
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -40,10 +38,10 @@ import org.knora.webapi.slice.admin.domain.model.Username
 object Examples {
 
   object PagedResponse {
-    def fromSlice[A: JsonCodec](data: Seq[A]): model.PagedResponse[A] =
+    def fromSlice[A](data: Seq[A]): model.PagedResponse[A] =
       model.PagedResponse.from(data, data.size * 5, PageAndSize(1, data.size))
 
-    def fromTotal[A: JsonCodec](data: Seq[A]): model.PagedResponse[A] =
+    def fromTotal[A](data: Seq[A]): model.PagedResponse[A] =
       model.PagedResponse.from(data, data.size, PageAndSize(1, data.size))
   }
 

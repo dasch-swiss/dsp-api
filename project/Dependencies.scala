@@ -14,11 +14,11 @@ object Dependencies {
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.16.3"
 
-  val ScalaVersion = "3.3.6"
+  val ScalaVersion = "3.3.7"
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion         = "5.1.6"
+  val Rdf4jVersion         = "5.2.0"
   val TopbraidShaclVersion = "1.4.4"
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
@@ -26,7 +26,7 @@ object Dependencies {
   val ZioLoggingVersion           = "2.5.1"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.5.0"
-  val ZioPreludeVersion           = "1.0.0-RC41"
+  val ZioPreludeVersion           = "1.0.0-RC42"
   val ZioSchemaVersion            = "1.7.5"
   val ZioMockVersion              = "1.0.0-RC12"
   val ZioVersion                  = "2.1.21"
@@ -123,12 +123,12 @@ object Dependencies {
   val jakartaJSON    = "org.glassfish"         % "jakarta.json"     % "2.0.1"
   val saxonHE        = "net.sf.saxon"          % "Saxon-HE"         % "12.9"
   val scalaGraph     = "org.scala-graph"      %% "graph-core"       % "2.0.2"
-  val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.6.0"
+  val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.7.0"
   val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.10.4"
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
-  val dataFaker = "net.datafaker" % "datafaker" % "2.5.1"
+  val dataFaker = "net.datafaker" % "datafaker" % "2.5.2"
 
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
@@ -139,7 +139,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.19.0"
 
-  val tapirVersion = "1.11.46"
+  val tapirVersion = "1.11.49"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -155,7 +155,7 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"  %% "zio-opentelemetry"              % "3.1.10",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.22.0",
+    "io.sentry" % "sentry-opentelemetry-agentless" % "8.23.0",
   )
 
   val integrationTestDependencies = Seq(
@@ -200,7 +200,7 @@ object Dependencies {
     zioPrelude,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion         = "11.13.2"
+  val flywayVersion         = "11.13.3"
   val otelAgentVersion      = "v2.18.1"
   val otelPyroscopeVersion  = "v1.0.4"
   val hikariVersion         = "7.0.2"

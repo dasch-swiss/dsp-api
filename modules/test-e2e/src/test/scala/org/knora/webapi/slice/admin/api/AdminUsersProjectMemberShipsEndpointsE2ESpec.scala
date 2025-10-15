@@ -14,7 +14,6 @@ import zio.test.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.api.AdminUsersProjectMemberShipsEndpointsE2ESpec.faker
@@ -23,9 +22,7 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.service.UserRestService.UserResponse
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.domain.LanguageCode.DE
-import org.knora.webapi.testservices.ResponseOps
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.ZioHelper.addLogTiming

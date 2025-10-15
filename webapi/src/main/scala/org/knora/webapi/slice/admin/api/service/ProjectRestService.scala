@@ -9,6 +9,8 @@ import zio.*
 import zio.nio.file.Files
 import zio.stream.ZStream
 
+import scala.annotation.unused
+
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
@@ -60,7 +62,7 @@ final case class ProjectRestService(
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
-  def listAllProjects(ignored: Unit): Task[ProjectsGetResponse] = for {
+  def listAllProjects(@unused ignored: Unit): Task[ProjectsGetResponse] = for {
     internal <- projectService.findAllRegularProjects
     projects  = internal.filter(_.id.isRegularProjectIri)
     external <- format.toExternal(ProjectsGetResponse(projects))
@@ -220,7 +222,7 @@ final case class ProjectRestService(
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
-  def listAllKeywords(ignored: Unit): Task[ProjectsKeywordsGetResponse] = for {
+  def listAllKeywords(@unused ignored: Unit): Task[ProjectsKeywordsGetResponse] = for {
     projects <- knoraProjectService.findAll()
     internal  = ProjectsKeywordsGetResponse(projects.flatMap(_.keywords.map(_.value)).distinct.sorted)
     external <- format.toExternal(internal)
@@ -316,7 +318,7 @@ final case class ProjectRestService(
     _ <- ontologyCache.refreshCache()
   } yield ProjectImportResponse(path.toString)
 
-  def listExports(user: User)(ignored: Unit): Task[Chunk[ProjectExportInfoResponse]] = for {
+  def listExports(user: User)(@unused ignored: Unit): Task[Chunk[ProjectExportInfoResponse]] = for {
     _       <- auth.ensureSystemAdmin(user)
     exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
   } yield exports

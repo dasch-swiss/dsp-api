@@ -16,8 +16,6 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertCompletes
 import zio.test.assertTrue
 
-import java.io.IOException
-
 object FileSystemHealthIndicatorLiveSpec extends ZIOSpecDefault {
 
   val createOnlyAssetAndTempFolder: ZIO[Scope, Throwable, (String, String)] = for {

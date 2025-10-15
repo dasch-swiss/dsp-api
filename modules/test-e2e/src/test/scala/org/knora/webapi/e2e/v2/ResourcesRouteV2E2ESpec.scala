@@ -1239,7 +1239,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                            |  }
                            |}""".stripMargin
-        responseJsonDoc <-
+        _ <-
           TestApiClient
             .postJsonLdDocument(uri"/v2/resources/delete", jsonLDEntity, anythingUser1)
             .flatMap(_.assert400)

@@ -10,7 +10,6 @@ import zio.*
 import java.time.Instant
 import java.util.UUID
 import scala.PartialFunction.cond
-import scala.jdk.CollectionConverters.*
 
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
@@ -93,8 +92,6 @@ final case class ValuesResponderV2(
     for {
       _ <- auth.ensureUserIsNotAnonymous(requestingUser)
       _ <- valueValidator.validate(valueToCreate).mapError(BadRequestException.apply)
-
-      resourceIri <- iriConverter.asResourceIri(valueToCreate.resourceIri).mapError(e => BadRequestException(e))
 
       // Convert the submitted value to the internal schema.
       submittedInternalPropertyIri <- ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
@@ -954,7 +951,6 @@ final case class ValuesResponderV2(
              propertyIri = propertyIri,
              currentValueIri = currentValueIriInternal,
              newValueIri = newValueIriInternal,
-             valueTypeIri = currentValue.valueContent.valueType,
              value = newValueVersion,
              valueCreator = valueCreatorInternal,
              valuePermissions = valuePermissions,
@@ -1167,7 +1163,6 @@ final case class ValuesResponderV2(
                         targetSchema = ApiV2Complex,
                         schemaOptions = Set.empty,
                         requestingUser = KnoraSystemInstances.Users.SystemUser,
-                        showDeletedValues = true,
                       )
                       .map(_.toResource(deleteValue.resourceIri.toString))
 
