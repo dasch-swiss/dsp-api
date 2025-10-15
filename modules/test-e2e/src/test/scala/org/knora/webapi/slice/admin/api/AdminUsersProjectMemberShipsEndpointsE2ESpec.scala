@@ -28,9 +28,15 @@ import org.knora.webapi.slice.common.domain.LanguageCode.DE
 import org.knora.webapi.testservices.ResponseOps
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
-import org.knora.webapi.util.ZioHelper.addLogTiming
 
 object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
+
+  private def addLogTiming[R, E, A](msg: String, logLevel: LogLevel = LogLevel.Debug)(zio: ZIO[R, E, A]): ZIO[R, E, A] =
+    ZIO.logLevel(logLevel) {
+      zio.timed.flatMap { case (duration, res) =>
+        ZIO.log(s"$msg took: ${duration.toMillis} ms").as(res)
+      }
+    }
 
   private val multiUserIri = UserIri.unsafeFrom(SharedTestDataADM2.multiuserUser.userData.user_id.get)
 
