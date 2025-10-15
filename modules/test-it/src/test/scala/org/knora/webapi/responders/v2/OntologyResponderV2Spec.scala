@@ -698,8 +698,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       "create a subproperty of an existing custom link property and add it to a resource class, check if the correct link and link value properties were added to the class",
     ) {
       for {
-        metadataResponse           <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
-        (_, newFreetestLastModDate) = self.freetestLastModDate.updateFrom(metadataResponse)
+        metadataResponse <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
+        _                 = self.freetestLastModDate.updateFrom(metadataResponse)
         // Create class freetest:ComicBook which is a subclass of freetest:Book
         comicBookClassIri = freeTestOntologyIri.makeEntityIri("ComicBook")
         comicBookClassInfoContent = ClassInfoContentV2(
@@ -3289,7 +3289,6 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       for {
         msg <-
           ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
-        externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
         classInfoContent = ClassInfoContentV2(
                              classIri = classIri,

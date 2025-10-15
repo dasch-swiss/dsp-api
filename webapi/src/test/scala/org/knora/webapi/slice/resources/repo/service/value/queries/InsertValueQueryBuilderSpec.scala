@@ -7,7 +7,6 @@ package org.knora.webapi.slice.resources.repo.service.value.queries
 
 import org.apache.jena.sparql.modify.request.UpdateModify
 import org.apache.jena.sparql.modify.request.UpdateVisitorBase
-import org.apache.jena.update.Update
 import org.apache.jena.update.UpdateFactory
 import org.apache.jena.update.UpdateRequest
 import zio.*

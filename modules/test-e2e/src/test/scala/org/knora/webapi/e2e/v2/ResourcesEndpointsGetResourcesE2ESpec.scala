@@ -13,8 +13,6 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.aThingWithHistoryIri
 import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.reiseInsHeiligeLandIri
-import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.suite
-import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.test
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel

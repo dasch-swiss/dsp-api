@@ -14,7 +14,6 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
-import org.knora.webapi.testservices.ResponseOps
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.TestDataFileUtil
@@ -56,7 +55,6 @@ object SearchEndpointE2ESpecHelper {
     query: String,
     expectedFile: String,
     f: RequestUpdate[String] = identity,
-    limitToProject: Option[String] = None,
   ): ZIO[TestDataFileUtil & TestApiClient, Throwable, TestResult] =
     postGravsearchQuery(query, f = f).flatMap(compare(_, expectedFile))
 

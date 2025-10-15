@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.v2
 
 import zio.*
-import zio.json.*
 import zio.json.ast.*
 import zio.test.*
 
@@ -167,7 +166,7 @@ object ValuesEraseSpec extends E2EZSpec {
             <text documentType="html">Link: $linkXml, $suffix</text>"""
       }
 
-      def testCase(lastVersionHasLink: Boolean) = for {
+      for {
         res1 <- TestHelper.createResource
         res2 <- TestHelper.createResource
 
@@ -177,8 +176,6 @@ object ValuesEraseSpec extends E2EZSpec {
       } yield assertTrue(
         eraseResult.left.toOption.map(_.getMessage) == Some("Erasing standoff text values with links is not supported"),
       )
-
-      testCase(lastVersionHasLink = false) && testCase(lastVersionHasLink = true)
     },
     test("erasing a soft-deleted value") {
       for {
