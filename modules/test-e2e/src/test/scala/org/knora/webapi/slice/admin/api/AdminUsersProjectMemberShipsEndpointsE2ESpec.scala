@@ -171,7 +171,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
   )
 
   private def getProjectMemberships(userIri: UserIri, requestingUser: User = rootUser) =
-    addLogTiming("GET project-memberships") {
+    addLogTiming("GET project-memberships", LogLevel.Warning) {
       TestApiClient
         .getJson[UserProjectMembershipsGetResponseADM](
           uri"/admin/users/iri/$userIri/project-memberships",
@@ -180,7 +180,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     }
 
   private def getProjectAdminMemberships(userIri: UserIri, requestingUser: User = rootUser) =
-    addLogTiming("GET project-admin-memberships") {
+    addLogTiming("GET project-admin-memberships", LogLevel.Warning) {
       TestApiClient
         .getJson[UserProjectAdminMembershipsGetResponseADM](
           uri"/admin/users/iri/$userIri/project-admin-memberships",
@@ -189,7 +189,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     }
 
   private def addUserToProject(userIri: UserIri, projectIri: ProjectIri, requestingUser: User = rootUser) =
-    addLogTiming("POST project-memberships") {
+    addLogTiming("POST project-memberships", LogLevel.Warning) {
       TestApiClient
         .postJson[UserResponse, String](
           uri"/admin/users/iri/$userIri/project-memberships/$projectIri",
@@ -199,7 +199,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     }
 
   private def addUserToProjectAsAdmin(userIri: UserIri, projectIri: ProjectIri, requestingUser: User = rootUser) =
-    addLogTiming("POST project-admin-memberships") {
+    addLogTiming("POST project-admin-memberships", LogLevel.Warning) {
       TestApiClient
         .postJson[UserResponse, String](
           uri"/admin/users/iri/$userIri/project-admin-memberships/$projectIri",
@@ -209,7 +209,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     }
 
   private def removeUserFromProject(userIri: UserIri, projectIri: ProjectIri, requestingUser: User = rootUser) =
-    addLogTiming("DELETE project-memberships") {
+    addLogTiming("DELETE project-memberships", LogLevel.Warning) {
       TestApiClient
         .deleteJson[UserResponse](
           uri"/admin/users/iri/$userIri/project-memberships/$projectIri",
