@@ -18,7 +18,7 @@ object Dependencies {
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion         = "5.1.6"
+  val Rdf4jVersion         = "5.2.0"
   val TopbraidShaclVersion = "1.4.4"
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
@@ -123,7 +123,7 @@ object Dependencies {
   val jakartaJSON    = "org.glassfish"         % "jakarta.json"     % "2.0.1"
   val saxonHE        = "net.sf.saxon"          % "Saxon-HE"         % "12.9"
   val scalaGraph     = "org.scala-graph"      %% "graph-core"       % "2.0.2"
-  val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.6.0"
+  val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.7.0"
   val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.10.4"
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
@@ -155,7 +155,7 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"  %% "zio-opentelemetry"              % "3.1.10",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.22.0",
+    "io.sentry" % "sentry-opentelemetry-agentless" % "8.23.0",
   )
 
   val integrationTestDependencies = Seq(
