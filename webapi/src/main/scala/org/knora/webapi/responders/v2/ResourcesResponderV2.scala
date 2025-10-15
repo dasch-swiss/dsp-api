@@ -49,7 +49,6 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -57,7 +56,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo

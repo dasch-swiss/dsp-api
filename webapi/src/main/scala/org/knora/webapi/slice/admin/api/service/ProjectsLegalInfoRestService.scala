@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import cats.syntax.traverse.*
 import zio.IO
 import zio.Task
 import zio.ZIO
@@ -21,7 +20,6 @@ import org.knora.webapi.slice.admin.api.model.PageAndSize
 import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.User

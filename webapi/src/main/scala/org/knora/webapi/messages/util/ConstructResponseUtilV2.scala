@@ -29,7 +29,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatStatements
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MainResourcesAndValueRdfData
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.PredicateObjects
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfData
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfPropertyValues
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfResources

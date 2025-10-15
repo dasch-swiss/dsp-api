@@ -31,7 +31,6 @@ import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_String_Property
 import org.knora.webapi.slice.common.jena.ResourceOps.*
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.service.value.queries.InsertValueQueryBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService

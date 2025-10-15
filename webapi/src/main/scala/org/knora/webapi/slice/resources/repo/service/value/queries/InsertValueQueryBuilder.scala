@@ -13,7 +13,6 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.Bind
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
@@ -21,7 +20,6 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfType
