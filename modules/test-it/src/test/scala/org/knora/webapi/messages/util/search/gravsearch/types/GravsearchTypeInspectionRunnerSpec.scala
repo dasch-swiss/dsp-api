@@ -12,7 +12,6 @@ import dsp.errors.GravsearchException
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
 object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
 

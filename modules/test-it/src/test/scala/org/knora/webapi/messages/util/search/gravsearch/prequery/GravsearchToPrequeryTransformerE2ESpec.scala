@@ -21,7 +21,6 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
 object GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec {
 

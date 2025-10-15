@@ -5089,7 +5089,7 @@ case class LastModRef(private var value: Instant) {
     updateFrom(r, Some(ontologyIri))
   def updateFrom(r: ReadOntologyMetadataV2): (Instant, Instant) =
     updateFrom(r, None)
-  private def updateFrom(r: ReadOntologyMetadataV2, ontologyIri: Option[OntologyIri] = None): (Instant, Instant) = {
+  private def updateFrom(r: ReadOntologyMetadataV2, ontologyIri: Option[OntologyIri]): (Instant, Instant) = {
     val oldValue = value
     // Find the specified ontology in the response. If no ontology is specified, use the first one of the response.
     val onto = ontologyIri.map(_.smartIri).getOrElse(r.ontologies.head.ontologyIri).toComplexSchema

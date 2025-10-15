@@ -10,6 +10,7 @@ import zio.json.ast.*
 import zio.test.*
 
 import java.util.UUID
+import scala.annotation.unused
 import scala.collection.SortedSet
 
 import org.knora.webapi.ApiV2Complex
@@ -41,7 +42,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 import TestHelper.ResourceWithValues
-import scala.annotation.unused
 
 object ValuesEraseSpec extends E2EZSpec {
   import TestHelper.DiffLib._

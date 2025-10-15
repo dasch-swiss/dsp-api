@@ -13,7 +13,6 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.types.*
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
 object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
 
