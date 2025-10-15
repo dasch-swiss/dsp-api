@@ -11,9 +11,15 @@ import zio.logging.LogFormat.*
 import zio.logging.slf4j.bridge.Slf4jBridge
 
 object Logger {
+  private val envLogLevel = sys.env.getOrElse("DSP_API_LOG_LEVEL", "INFO").toUpperCase
+
+  private def rootLogLevel: LogLevel =
+    LogLevel.levels
+      .find(_.label == envLogLevel)
+      .getOrElse(throw new Exception(s"Expected a log level, but found $envLogLevel"))
 
   private val logFilter = LogFilter.LogLevelByNameConfig(
-    LogLevel.Debug,
+    rootLogLevel,
     ("org.apache.jena", LogLevel.Debug),
     ("io.netty", LogLevel.Info),
     ("org.ehcache", LogLevel.Info),

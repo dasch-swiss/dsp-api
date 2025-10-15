@@ -25,17 +25,9 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.domain.LanguageCode.DE
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
+import org.knora.webapi.util.ZioHelper.addLogTiming
 
 object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
-
-  private def addLogTiming[R, E, A](msg: String, logLevel: LogLevel)(zio: ZIO[R, E, A]): ZIO[R, E, A] =
-    ZIO.logLevel(logLevel) {
-      zio.timed.flatMap { case (duration, res) =>
-        ZIO.log(s"$msg took: ${duration.toMillis} ms").as(res) <* ZIO.succeed(
-          println(s"$msg took: ${duration.toMillis} ms"),
-        )
-      }
-    }
 
   private val multiUserIri = UserIri.unsafeFrom(SharedTestDataADM2.multiuserUser.userData.user_id.get)
 
@@ -53,7 +45,6 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
       DE,
       SystemAdmin.IsNotSystemAdmin,
     )
-    println(s"Creating new user: $firstName $lastName")
     TestApiClient
       .postJson[UserResponse, UserCreateRequest](uri"/admin/users", req, rootUser)
       .flatMap(_.assert200)
@@ -171,7 +162,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
   )
 
   private def getProjectMemberships(userIri: UserIri, requestingUser: User = rootUser) =
-    addLogTiming("GET project-memberships", LogLevel.Warning) {
+    addLogTiming("GET project-memberships") {
       TestApiClient
         .getJson[UserProjectMembershipsGetResponseADM](
           uri"/admin/users/iri/$userIri/project-memberships",
@@ -180,7 +171,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     }
 
   private def getProjectAdminMemberships(userIri: UserIri, requestingUser: User = rootUser) =
-    addLogTiming("GET project-admin-memberships", LogLevel.Warning) {
+    addLogTiming("GET project-admin-memberships") {
       TestApiClient
         .getJson[UserProjectAdminMembershipsGetResponseADM](
           uri"/admin/users/iri/$userIri/project-admin-memberships",
@@ -189,7 +180,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     }
 
   private def addUserToProject(userIri: UserIri, projectIri: ProjectIri, requestingUser: User = rootUser) =
-    addLogTiming("POST project-memberships", LogLevel.Warning) {
+    addLogTiming("POST project-memberships") {
       TestApiClient
         .postJson[UserResponse, String](
           uri"/admin/users/iri/$userIri/project-memberships/$projectIri",
@@ -199,7 +190,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     }
 
   private def addUserToProjectAsAdmin(userIri: UserIri, projectIri: ProjectIri, requestingUser: User = rootUser) =
-    addLogTiming("POST project-admin-memberships", LogLevel.Warning) {
+    addLogTiming("POST project-admin-memberships") {
       TestApiClient
         .postJson[UserResponse, String](
           uri"/admin/users/iri/$userIri/project-admin-memberships/$projectIri",
@@ -209,11 +200,15 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
     }
 
   private def removeUserFromProject(userIri: UserIri, projectIri: ProjectIri, requestingUser: User = rootUser) =
-    addLogTiming("DELETE project-memberships", LogLevel.Warning) {
+    addLogTiming("DELETE project-memberships") {
       TestApiClient
         .deleteJson[UserResponse](
           uri"/admin/users/iri/$userIri/project-memberships/$projectIri",
           requestingUser,
         )
     }
+
+  // private def getUserEnsuring(userIri: UserIri) = TestApiClient
+  //   .getJson[UserResponse](uri"/admin/users/iri/$userIri", rootUser)
+  //   .flatMap(_.assert200)
 }

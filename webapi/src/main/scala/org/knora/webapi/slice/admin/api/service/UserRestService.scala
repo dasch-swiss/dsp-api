@@ -86,7 +86,9 @@ final case class UserRestService(
   def createUser(requestingUser: User)(userCreateRequest: Requests.UserCreateRequest): Task[UserResponse] = for {
     _ <- if (userCreateRequest.systemAdmin.value) { auth.ensureSystemAdmin(requestingUser) }
          else { auth.ensureSystemAdminOrProjectAdminInAnyProject(requestingUser) }
+    _        <- Console.printLine("API: Creating new user...").orDie
     internal <- knoraUserService.createNewUser(userCreateRequest)
+    _        <- Console.printLine("API: User created.").orDie
     external <- asExternalUserResponse(requestingUser, internal)
   } yield external
 
@@ -178,10 +180,12 @@ final case class UserRestService(
     changeRequest: SystemAdminChangeRequest,
   ): Task[UserResponse] =
     for {
+      _        <- Console.printLine(s"API: Changing system admin status of user $userIri...").orDie
       _        <- ensureNotABuiltInUser(userIri)
       _        <- auth.ensureSystemAdmin(requestingUser)
       user     <- getKnoraUserOrNotFound(userIri)
       updated  <- knoraUserService.updateSystemAdminStatus(user, changeRequest.systemAdmin)
+      _        <- Console.printLine(s"API: System admin status of user $userIri changed.").orDie
       response <- asExternalUserResponse(requestingUser, updated)
     } yield response
 
@@ -189,12 +193,18 @@ final case class UserRestService(
     userIri: UserIri,
     projectIri: ProjectIri,
   ): Task[UserResponse] = for {
-    _           <- ensureNotABuiltInUser(userIri)
-    _           <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
-    kUser       <- getKnoraUserOrNotFound(userIri)
-    project     <- getProjectOrBadRequest(projectIri)
-    updatedUser <- knoraUserService.addUserToProject(kUser, project).mapError(BadRequestException.apply)
-    external    <- asExternalUserResponse(requestingUser, updatedUser)
+    _       <- Console.printLine(s"API: Adding user $userIri to project $projectIri...").orDie
+    _       <- ensureNotABuiltInUser(userIri)
+    _       <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
+    kUser   <- getKnoraUserOrNotFound(userIri)
+    project <- getProjectOrBadRequest(projectIri)
+    updatedUser <-
+      knoraUserService
+        .addUserToProject(kUser, project)
+        .mapError(BadRequestException.apply)
+        .debug("+++ DBG: add to project")
+    _        <- Console.printLine(s"API: User $userIri added to project $projectIri.").orDie
+    external <- asExternalUserResponse(requestingUser, updatedUser)
   } yield external
 
   private def getProjectOrBadRequest(projectIri: ProjectIri) =
@@ -226,11 +236,13 @@ final case class UserRestService(
     projectIri: ProjectIri,
   ): Task[UserResponse] =
     for {
+      _           <- Console.printLine(s"API: Adding user $userIri to project admin group of project $projectIri...").orDie
       _           <- ensureNotABuiltInUser(userIri)
       _           <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
       user        <- getKnoraUserOrNotFound(userIri)
       project     <- getProjectOrBadRequest(projectIri)
       updatedUser <- knoraUserService.addUserToProjectAsAdmin(user, project).mapError(BadRequestException.apply)
+      _           <- Console.printLine(s"API: User $userIri added to project admin group of project $projectIri.").orDie
       external    <- asExternalUserResponse(requestingUser, updatedUser)
     } yield external
 
@@ -239,11 +251,13 @@ final case class UserRestService(
     projectIri: ProjectIri,
   ): Task[UserResponse] =
     for {
+      _          <- Console.printLine(s"API: Removing user $userIri from project $projectIri...").orDie
       _          <- ensureNotABuiltInUser(userIri)
       _          <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
       user       <- getKnoraUserOrNotFound(userIri)
       project    <- getProjectOrBadRequest(projectIri)
       updateUser <- knoraUserService.removeUserFromProject(user, project).mapError(BadRequestException.apply)
+      _          <- Console.printLine(s"API: User $userIri removed from project $projectIri.").orDie
       response   <- asExternalUserResponse(requestingUser, updateUser)
     } yield response
 
@@ -252,6 +266,7 @@ final case class UserRestService(
     projectIri: ProjectIri,
   ): Task[UserResponse] =
     for {
+      _       <- Console.printLine(s"API: Removing user $userIri from project admin group of project $projectIri...").orDie
       _       <- ensureNotABuiltInUser(userIri)
       _       <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
       user    <- getKnoraUserOrNotFound(userIri)
@@ -259,6 +274,7 @@ final case class UserRestService(
       updatedUser <- knoraUserService
                        .removeUserFromProjectAsAdmin(user, project)
                        .mapError(BadRequestException.apply)
+      _        <- Console.printLine(s"API: User $userIri removed from project admin group of project $projectIri.").orDie
       response <- asExternalUserResponse(requestingUser, updatedUser)
     } yield response
 
@@ -267,6 +283,7 @@ final case class UserRestService(
     groupIri: GroupIri,
   ): Task[UserResponse] =
     for {
+      _     <- Console.printLine(s"API: Adding user $userIri to group $groupIri...").orDie
       _     <- ensureNotABuiltInUser(userIri)
       _     <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
       kUser <- getKnoraUserOrNotFound(userIri)
@@ -274,6 +291,7 @@ final case class UserRestService(
                  .findById(groupIri)
                  .someOrFail(BadRequestException(s"Group with IRI: ${groupIri.value} not found."))
       updatedKUser <- knoraUserService.addUserToGroup(kUser, group).mapError(BadRequestException.apply)
+      _            <- Console.printLine(s"API: User $userIri added to group $groupIri.").orDie
       external     <- asExternalUserResponse(requestingUser, updatedKUser)
     } yield external
 
@@ -282,6 +300,7 @@ final case class UserRestService(
     groupIri: GroupIri,
   ): Task[UserResponse] =
     for {
+      _    <- Console.printLine(s"API: Removing user $userIri from group $groupIri...").orDie
       _    <- ensureNotABuiltInUser(userIri)
       _    <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
       user <- getKnoraUserOrNotFound(userIri)
@@ -289,6 +308,7 @@ final case class UserRestService(
                  .findById(groupIri)
                  .someOrFail(BadRequestException(s"Group with IRI: ${groupIri.value} not found."))
       updateUser <- knoraUserService.removeUserFromGroup(user, group).mapError(BadRequestException.apply)
+      _          <- Console.printLine(s"API: User $userIri removed from group $groupIri.").orDie
       response   <- asExternalUserResponse(requestingUser, updateUser)
     } yield response
 }
