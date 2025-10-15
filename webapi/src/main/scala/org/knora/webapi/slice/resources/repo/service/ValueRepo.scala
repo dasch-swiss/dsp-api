@@ -235,7 +235,6 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     propertyIri: SmartIri,
     currentValueIri: InternalIri,
     newValueIri: InternalIri,
-    valueTypeIri: SmartIri,
     value: ValueContentV2,
     valueCreator: InternalIri,
     valuePermissions: String,

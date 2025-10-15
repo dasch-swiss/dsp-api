@@ -951,7 +951,6 @@ final case class ValuesResponderV2(
              propertyIri = propertyIri,
              currentValueIri = currentValueIriInternal,
              newValueIri = newValueIriInternal,
-             valueTypeIri = currentValue.valueContent.valueType,
              value = newValueVersion,
              valueCreator = valueCreatorInternal,
              valuePermissions = valuePermissions,
