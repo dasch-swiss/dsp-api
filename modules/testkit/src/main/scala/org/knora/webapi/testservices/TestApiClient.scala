@@ -54,9 +54,11 @@ final case class TestApiClient(
     user: Option[User] = None,
   ): Task[Response[Either[String, A]]] =
     (user match {
-      case Some(u) => jwtFor(u).map(jwt => request.auth.bearer(jwt))
-      case None    => ZIO.succeed(request)
-    }).flatMap(_.send(backend))
+      case Some(u) =>
+        Console.printLine("Getting auh token...") *> jwtFor(u).map(jwt => request.auth.bearer(jwt)) <* Console
+          .printLine("...got auth token")
+      case None => Console.printLine("No auth token required") *> ZIO.succeed(request)
+    }).flatMap(_.send(backend)) <* Console.printLine("Request sent")
 
   def deleteJsonLd(
     relativeUri: Uri,
