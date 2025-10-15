@@ -41,6 +41,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 import TestHelper.ResourceWithValues
+import scala.annotation.unused
 
 object ValuesEraseSpec extends E2EZSpec {
   import TestHelper.DiffLib._
@@ -624,7 +625,7 @@ object TestHelper {
   def eraseLinkValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
     ZIO.serviceWithZIO[TestHelper](_.eraseLinkValueHistory(value, resource))
 
-  def ensureLinkWasRemoved(res1: ActiveResource, res2: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
+  def ensureLinkWasRemoved(res1: ActiveResource, @unused res2: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
     for {
       links <- findLinks(res1.iri)
       _     <- ZIO.fail(IllegalStateException(s"Link was not removed: $links")).when(links.nonEmpty)

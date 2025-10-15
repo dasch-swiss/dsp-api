@@ -4902,7 +4902,6 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
         ontologyFromCreateProperty = createPropertyResponse.toOntologySchema(ApiV2Complex)
         property                   = ontologyFromCreateProperty.properties(propertyIri)
-        metadataFromCreateProperty = ontologyFromCreateProperty.ontologyMetadata
         (lastModDateBeforeCreateProperty, lastModDateAfterCreateProperty) =
           self.anythingLastModDate.updateFrom(createPropertyResponse)
       } yield assertTrue(

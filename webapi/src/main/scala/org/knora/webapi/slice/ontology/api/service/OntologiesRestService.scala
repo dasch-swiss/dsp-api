@@ -8,6 +8,8 @@ package org.knora.webapi.slice.ontology.api.service
 import sttp.model.MediaType
 import zio.*
 
+import scala.annotation.unused
+
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.ApiV2Schema
@@ -43,7 +45,7 @@ final case class OntologiesRestService(
 ) {
 
   def dereferenceOntologyIri(user: User)(
-    ignored: List[String],
+    @unused ignored: List[String],
     allLanguages: Boolean,
     formatOptions: FormatOptions,
     serverUri: sttp.model.Uri,

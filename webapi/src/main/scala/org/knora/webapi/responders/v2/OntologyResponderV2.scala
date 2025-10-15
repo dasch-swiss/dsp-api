@@ -91,8 +91,8 @@ final case class OntologyResponderV2(
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[OntologiesResponderRequestV2]
 
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) =>
-      getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
+    case EntityInfoGetRequestV2(classIris, propertyIris) =>
+      getEntityInfoResponseV2(classIris, propertyIris)
     case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris) =>
       getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris)
     case StandoffClassesWithDataTypeGetRequestV2(_) =>
@@ -134,9 +134,8 @@ final case class OntologyResponderV2(
   private def getEntityInfoResponseV2(
     classIris: Set[SmartIri] = Set.empty[SmartIri],
     propertyIris: Set[SmartIri],
-    requestingUser: User,
   ): Task[EntityInfoGetResponseV2] =
-    ontologyCacheHelpers.getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
+    ontologyCacheHelpers.getEntityInfoResponseV2(classIris, propertyIris)
 
   /**
    * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV2]] describing both resource and property entities.
@@ -376,7 +375,7 @@ final case class OntologyResponderV2(
                        .filterOrFail(_.size == 1)(BadRequestException(s"Only one ontology may be queried per request"))
                        .map(_.head)
       ontology             <- getOntologyOrFailNotFound(ontologyIri)
-      propertyInfoResponse <- getEntityInfoResponseV2(propertyIris = propertyIris, requestingUser = requestingUser)
+      propertyInfoResponse <- getEntityInfoResponseV2(propertyIris = propertyIris)
       userLang              = if allLanguages then None else Some(requestingUser.lang)
     } yield ReadOntologyV2(
       ontologyMetadata = ontology.ontologyMetadata,

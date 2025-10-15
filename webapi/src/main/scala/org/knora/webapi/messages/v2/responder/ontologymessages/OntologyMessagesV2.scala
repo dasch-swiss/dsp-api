@@ -199,7 +199,6 @@ object LabelOrComment {
 case class EntityInfoGetRequestV2(
   classIris: Set[SmartIri] = Set.empty[SmartIri],
   propertyIris: Set[SmartIri] = Set.empty[SmartIri],
-  requestingUser: User,
 ) extends OntologiesResponderRequestV2
 
 /**
