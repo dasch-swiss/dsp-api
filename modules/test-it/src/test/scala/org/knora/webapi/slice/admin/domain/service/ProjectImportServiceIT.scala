@@ -13,7 +13,6 @@ import java.io.IOException
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 

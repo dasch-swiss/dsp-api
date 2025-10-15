@@ -14,7 +14,7 @@ object Dependencies {
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.16.3"
 
-  val ScalaVersion = "3.3.6"
+  val ScalaVersion = "3.3.7"
 
   val MonocleVersion = "3.3.0"
 
@@ -128,7 +128,7 @@ object Dependencies {
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
-  val dataFaker = "net.datafaker" % "datafaker" % "2.5.1"
+  val dataFaker = "net.datafaker" % "datafaker" % "2.5.2"
 
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
@@ -139,7 +139,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.19.0"
 
-  val tapirVersion = "1.11.46"
+  val tapirVersion = "1.11.49"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -200,7 +200,7 @@ object Dependencies {
     zioPrelude,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion         = "11.13.2"
+  val flywayVersion         = "11.13.3"
   val otelAgentVersion      = "v2.18.1"
   val otelPyroscopeVersion  = "v1.0.4"
   val hikariVersion         = "7.0.2"

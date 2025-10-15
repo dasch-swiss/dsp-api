@@ -31,7 +31,6 @@ import org.knora.webapi.messages.OntologyConstants.Xsd
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
@@ -699,8 +698,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       "create a subproperty of an existing custom link property and add it to a resource class, check if the correct link and link value properties were added to the class",
     ) {
       for {
-        metadataResponse           <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
-        (_, newFreetestLastModDate) = self.freetestLastModDate.updateFrom(metadataResponse)
+        metadataResponse <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
+        _                 = self.freetestLastModDate.updateFrom(metadataResponse)
         // Create class freetest:ComicBook which is a subclass of freetest:Book
         comicBookClassIri = freeTestOntologyIri.makeEntityIri("ComicBook")
         comicBookClassInfoContent = ClassInfoContentV2(
@@ -3290,7 +3289,6 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       for {
         msg <-
           ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
-        externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
         classInfoContent = ClassInfoContentV2(
                              classIri = classIri,
@@ -4904,7 +4902,6 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
         ontologyFromCreateProperty = createPropertyResponse.toOntologySchema(ApiV2Complex)
         property                   = ontologyFromCreateProperty.properties(propertyIri)
-        metadataFromCreateProperty = ontologyFromCreateProperty.ontologyMetadata
         (lastModDateBeforeCreateProperty, lastModDateAfterCreateProperty) =
           self.anythingLastModDate.updateFrom(createPropertyResponse)
       } yield assertTrue(
@@ -5092,7 +5089,7 @@ case class LastModRef(private var value: Instant) {
     updateFrom(r, Some(ontologyIri))
   def updateFrom(r: ReadOntologyMetadataV2): (Instant, Instant) =
     updateFrom(r, None)
-  private def updateFrom(r: ReadOntologyMetadataV2, ontologyIri: Option[OntologyIri] = None): (Instant, Instant) = {
+  private def updateFrom(r: ReadOntologyMetadataV2, ontologyIri: Option[OntologyIri]): (Instant, Instant) = {
     val oldValue = value
     // Find the specified ontology in the response. If no ontology is specified, use the first one of the response.
     val onto = ontologyIri.map(_.smartIri).getOrElse(r.ontologies.head.ontologyIri).toComplexSchema

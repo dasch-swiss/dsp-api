@@ -50,7 +50,7 @@ object CacheManager {
   val layer: ULayer[CacheManager] = ZLayer.scoped {
     val acquire = ZIO
       .succeed(CacheManagerBuilder.newCacheManagerBuilder().build(true))
-      .tap(mgr => ZIO.logInfo("CacheManager created and initialized"))
+      <* ZIO.logInfo("CacheManager created and initialized")
 
     val release = (mgr: org.ehcache.CacheManager) => ZIO.succeed(mgr.close()) *> ZIO.logInfo("CacheManager closed")
 

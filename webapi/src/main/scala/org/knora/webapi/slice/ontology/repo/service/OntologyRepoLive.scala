@@ -18,7 +18,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter

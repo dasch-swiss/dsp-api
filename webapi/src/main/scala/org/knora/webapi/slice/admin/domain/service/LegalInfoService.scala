@@ -9,6 +9,8 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 import zio.prelude.Validation
 
+import scala.annotation.unused
+
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.api.model.FilterAndOrder
@@ -37,7 +39,7 @@ case class LegalInfoService(
    * @param id the Project for which the licenses are retrieved.
    * @return Returns the licenses available in the project.
    */
-  def findAvailableLicenses(id: Shortcode): UIO[Set[License]] =
+  def findAvailableLicenses(@unused id: Shortcode): UIO[Set[License]] =
     licenses.findAll().map(_.toSet).orDie
 
   def findEnabledLicenses(id: Shortcode): UIO[Set[License]] = for {

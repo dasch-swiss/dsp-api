@@ -5,7 +5,6 @@
 
 package swiss.dasch.config
 
-import com.typesafe.config
 import com.typesafe.config.ConfigFactory
 import zio.*
 import zio.config.*

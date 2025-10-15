@@ -10,8 +10,6 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyP
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.{`var` as variable, *}
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 

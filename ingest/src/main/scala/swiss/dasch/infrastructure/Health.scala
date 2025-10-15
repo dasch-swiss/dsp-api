@@ -8,7 +8,6 @@ package swiss.dasch.infrastructure
 import swiss.dasch.infrastructure.Health.Status
 import swiss.dasch.infrastructure.Health.Status.*
 import zio.json.DeriveJsonCodec
-import zio.json.DeriveJsonEncoder
 import zio.json.JsonCodec
 import zio.json.JsonEncoder
 

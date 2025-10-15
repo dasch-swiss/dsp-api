@@ -8,7 +8,6 @@ package swiss.dasch.domain
 import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.OrigFile
-import swiss.dasch.infrastructure.CommandExecutor
 import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.infrastructure.ProcessOutput
 import swiss.dasch.test.SpecConfigurations
@@ -19,7 +18,6 @@ import zio.nio.file.Files
 import zio.test.*
 import zio.test.Assertion.*
 
-import java.io.IOException
 import scala.language.implicitConversions
 
 object MovingImageServiceSpec extends ZIOSpecDefault {

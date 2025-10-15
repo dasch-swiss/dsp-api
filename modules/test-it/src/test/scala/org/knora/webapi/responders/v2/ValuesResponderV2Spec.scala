@@ -31,7 +31,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.models.filemodels.FileModelUtil
 import org.knora.webapi.models.filemodels.FileType
-import org.knora.webapi.sharedtestdata.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.*
@@ -2454,9 +2453,8 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         ),
       )
       for {
-        maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
-        updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
-        _                         = geonameValueIri.set(updateValueResponse.valueIri)
+        updateValueResponse <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
+        _                    = geonameValueIri.set(updateValueResponse.valueIri)
         valueFromTriplestore <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = None,

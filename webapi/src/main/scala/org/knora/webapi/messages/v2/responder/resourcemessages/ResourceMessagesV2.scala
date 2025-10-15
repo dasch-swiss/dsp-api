@@ -21,7 +21,6 @@ import org.knora.webapi.messages.OntologyConstants.*
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil

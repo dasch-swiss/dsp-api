@@ -29,7 +29,7 @@ object MetricsServer {
     for {
       docs       <- DocsServer.docsEndpoints.map(endpoints => ZioHttpInterpreter().toHttp(endpoints))
       prometheus <- ZIO.service[PrometheusRoutes]
-      _          <- Server.install(prometheus.routes ++ docs): @annotation.nowarn
+      _          <- Server.install(prometheus.routes ++ docs)
       _          <- ZIO.never.unit
     } yield ()
 

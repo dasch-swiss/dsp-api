@@ -7,8 +7,6 @@ package org.knora.webapi.slice.admin.domain.model
 
 import zio.test.*
 
-import org.knora.webapi.slice.admin.domain.model.UserSpec.test
-
 object UserIriSpec extends ZIOSpecDefault {
 
   private val validIris = Seq(

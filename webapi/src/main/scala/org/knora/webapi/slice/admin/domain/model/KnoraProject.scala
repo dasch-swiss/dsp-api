@@ -9,7 +9,6 @@ import zio.NonEmptyChunk
 
 import scala.util.matching.Regex
 
-import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.isIri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil

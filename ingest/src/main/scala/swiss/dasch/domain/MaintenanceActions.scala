@@ -15,13 +15,11 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.json.JsonEncoder
 import zio.json.interop.refined.*
-import zio.nio.file
 import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.stream.ZSink
 import zio.stream.ZStream
 
-import java.io.IOException
 import scala.language.implicitConversions
 
 trait MaintenanceActions {
