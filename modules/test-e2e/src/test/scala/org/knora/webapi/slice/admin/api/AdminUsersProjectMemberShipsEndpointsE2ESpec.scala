@@ -34,7 +34,9 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
   private def addLogTiming[R, E, A](msg: String, logLevel: LogLevel = LogLevel.Debug)(zio: ZIO[R, E, A]): ZIO[R, E, A] =
     ZIO.logLevel(logLevel) {
       zio.timed.flatMap { case (duration, res) =>
-        ZIO.log(s"$msg took: ${duration.toMillis} ms").as(res)
+        ZIO.log(s"$msg took: ${duration.toMillis} ms").as(res) <* ZIO.succeed(
+          println(s"$msg took: ${duration.toMillis} ms"),
+        )
       }
     }
 

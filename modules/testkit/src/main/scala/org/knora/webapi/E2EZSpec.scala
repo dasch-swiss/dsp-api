@@ -67,10 +67,10 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
 
   final override def spec: Spec[env, Any] =
     e2eSpec
-      @@ TestAspect.beforeAll(prepare <* ZIO.logInfo("------- All tests started -------"))
+      @@ TestAspect.beforeAll(prepare <* ZIO.succeed(println("------- All tests started -------")))
       @@ TestAspect.sequential
       @@ TestAspect.withLiveEnvironment
-      @@ TestAspect.afterAll(ZIO.logInfo("------- All tests finished -------"))
+      @@ TestAspect.afterAll(ZIO.succeed(println("------- All tests finished -------")))
 }
 
 object E2EZSpec {
