@@ -18,9 +18,7 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
 
   private def inspectTypes(query: String) = for {
     parsedQuery <- ZIO.attempt(GravsearchParser.parseQuery(query))
-    result <- ZIO.serviceWithZIO[GravsearchTypeInspectionRunner](
-                _.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser),
-              )
+    result      <- ZIO.serviceWithZIO[GravsearchTypeInspectionRunner](_.inspectTypes(parsedQuery.whereClause))
   } yield result
 
   private val queryWithInconsistentTypes3: String =

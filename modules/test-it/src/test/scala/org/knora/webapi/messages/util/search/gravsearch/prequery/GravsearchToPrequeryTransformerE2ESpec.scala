@@ -35,7 +35,7 @@ object GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec {
   ): ZIO[AppConfig & QueryTraverser & GravsearchTypeInspectionRunner, Throwable, SelectQuery] = for {
     query                <- ZIO.attempt(GravsearchParser.parseQuery(query))
     sanitizedWhereClause <- GravsearchTypeInspectionUtil.removeTypeAnnotations(query.whereClause)
-    typeInspectionResult <- inspectionRunner(_.inspectTypes(query.whereClause, anythingAdminUser))
+    typeInspectionResult <- inspectionRunner(_.inspectTypes(query.whereClause))
     _                    <- GravsearchQueryChecker.checkConstructClause(query.constructClause, typeInspectionResult)
     querySchema          <- ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
     appConfig            <- ZIO.service[AppConfig]
