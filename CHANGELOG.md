@@ -1,5 +1,33 @@
 # Changelog
 
+## [32.4.1](https://github.com/dasch-swiss/dsp-api/compare/v32.4.0...v32.4.1) (2025-10-16)
+
+
+### Maintenances
+
+* Dependency updates ([#3822](https://github.com/dasch-swiss/dsp-api/issues/3822)) ([03ed8cf](https://github.com/dasch-swiss/dsp-api/commit/03ed8cf8021794cce324c73956aab3d8b2752629))
+* Dump all gravsearch queries ([#3818](https://github.com/dasch-swiss/dsp-api/issues/3818)) ([e80eb58](https://github.com/dasch-swiss/dsp-api/commit/e80eb581a51e943c0b375f8883323326d5ac6689))
+* Major dependency updates ([#3821](https://github.com/dasch-swiss/dsp-api/issues/3821)) ([8600723](https://github.com/dasch-swiss/dsp-api/commit/8600723b29e331087164c47297a3f434c5d285e2))
+* Minor dependency updates ([#3820](https://github.com/dasch-swiss/dsp-api/issues/3820)) ([a04dc49](https://github.com/dasch-swiss/dsp-api/commit/a04dc49eb59e74286f2bdf9d43e158e3e472bfbc))
+* Patch dependency updates ([#3819](https://github.com/dasch-swiss/dsp-api/issues/3819)) ([1eb663e](https://github.com/dasch-swiss/dsp-api/commit/1eb663e787709b099099f9ef16e9adf2c340adb3))
+* Slightly improve Gravsearch query traversal logic ([#3815](https://github.com/dasch-swiss/dsp-api/issues/3815)) ([4886a5e](https://github.com/dasch-swiss/dsp-api/commit/4886a5e36c66caecbf84fb8b286b06ec2400547d))
+* Use server endpoints for swagger UI and OpenAPI yaml ([#3812](https://github.com/dasch-swiss/dsp-api/issues/3812)) ([322c125](https://github.com/dasch-swiss/dsp-api/commit/322c125fbc79f5ccffcadb179785cd34db12bf85))
+
+
+### Documentation
+
+* Fix typo in OpenAPI specification ([#3826](https://github.com/dasch-swiss/dsp-api/issues/3826)) ([326431c](https://github.com/dasch-swiss/dsp-api/commit/326431c9c5a1db73256d4fe39440ac904bab2d32))
+
+
+### Bug Fixes
+
+* Use correct version for OpenAPI yaml and Swagger UI ([#3825](https://github.com/dasch-swiss/dsp-api/issues/3825)) ([0217ee4](https://github.com/dasch-swiss/dsp-api/commit/0217ee4f8a4a439d43b1cfc66b9dcdce3e28d8e2))
+
+
+### Tests
+
+* Possibly fix issues with hanging tests ([#3824](https://github.com/dasch-swiss/dsp-api/issues/3824)) ([c7f8c92](https://github.com/dasch-swiss/dsp-api/commit/c7f8c9209691ac20c7558e62e91d654dcf7a4a8a))
+
 ## [32.4.0](https://github.com/dasch-swiss/dsp-api/compare/v32.3.3...v32.4.0) (2025-10-14)
 
 
