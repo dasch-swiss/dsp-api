@@ -245,6 +245,17 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
         |CMD bash /opt/docker/scripts/healthcheck.sh || exit 1""".stripMargin,
     ),
+    // Add Opentelemetry java agent and Grafana Pyroscope extension
+    dockerCommands += Cmd(
+      "ADD",
+      s"https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/${Dependencies.otelAgentVersion}/opentelemetry-javaagent.jar",
+      "/usr/local/lib/opentelemetry-javaagent.jar",
+    ),
+    dockerCommands += Cmd(
+      "ADD",
+      s"https://github.com/grafana/otel-profiling-java/releases/download/${Dependencies.otelPyroscopeVersion}/pyroscope-otel.jar",
+      "/usr/local/lib/pyroscope-otel.jar",
+    ),
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
       // Remove USER command
