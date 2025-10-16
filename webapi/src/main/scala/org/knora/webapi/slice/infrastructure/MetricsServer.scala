@@ -74,7 +74,7 @@ object DocsServer {
                title = "DSP-API",
                version = BuildInfo.version,
                summary = Some(
-                 "DSP-API is part of the the DaSCH Service Platform, a repository for the long-term preservation and reuse of data in the humanities.",
+                 "DSP-API is part of the DaSCH Service Platform, a repository for the long-term preservation and reuse of data in the humanities.",
                ),
                contact = Some(Contact(name = Some("DaSCH"), url = Some("https://www.dasch.swiss/"))),
              )
