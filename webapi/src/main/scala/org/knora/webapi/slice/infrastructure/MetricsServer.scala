@@ -4,7 +4,6 @@
  */
 
 package org.knora.webapi.slice.infrastructure
-
 import sttp.apispec.openapi
 import sttp.apispec.openapi.Contact
 import sttp.apispec.openapi.Info
@@ -20,6 +19,7 @@ import zio.metrics.jvm.DefaultJvmMetrics
 import org.knora.webapi.config.InstrumentationServerConfig
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.core.State
+import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.routing.Endpoints
 import org.knora.webapi.slice.infrastructure.api.PrometheusRoutes
 
