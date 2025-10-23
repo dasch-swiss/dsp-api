@@ -85,7 +85,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private def extractOntologyMetadata(m: Model): ZIO[Scope, String, OntologyMetadata] =
     for {
-      r                    <- ZIO.fromEither(m.singleRootResource).orElseFail("No root resource found")
+      r                    <- ZIO.fromEither(m.singleRootResource)
       ontologyIri          <- uriAsOntologyIri(r)
       label                <- ZIO.fromEither(r.objectStringOption(RDFS.label))
       comment              <- ZIO.fromEither(ontologyRdfsComment(r))
