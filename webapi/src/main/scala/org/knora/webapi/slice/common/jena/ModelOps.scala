@@ -52,8 +52,9 @@ object ModelOps { self =>
       val candidates = subs -- objs
       candidates match {
         case iris if iris.size == 1 => Right(iris.head)
-        case iris if iris.isEmpty   => Left("No root resource found in model")
-        case iris                   => Left(s"Multiple root resources found in model: ${iris.mkString(", ")}")
+        case iris if iris.isEmpty   => Left("Expected a single root resource. No root resource found in model")
+        case iris =>
+          Left(s"Expected a single root resource. Multiple root resources found in model: ${iris.mkString(", ")}")
       }
 
     def singleSubjectWithPropertyOption(property: Property): Either[String, Option[Resource]] =
