@@ -63,7 +63,7 @@ object ModelOpsSpec extends ZIOSpecDefault {
       for {
         model <- ModelOps.fromTurtle("")
       } yield assertTrue(
-        model.singleRootResource == Left("No root resource found in model"),
+        model.singleRootResource == Left("Expected a single root resource. No root resource found in model"),
       )
     },
     test("should fail with more than a single root resource, uri resources") {
