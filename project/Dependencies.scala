@@ -154,8 +154,10 @@ object Dependencies {
   )
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"  %% "zio-opentelemetry"              % "3.1.10",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.23.0",
+    "dev.zio"                 %% "zio-opentelemetry"              % "3.1.10",
+    "io.sentry"                % "sentry-opentelemetry-agentless" % "8.23.0",
+    "io.opentelemetry"         % "opentelemetry-sdk"              % "1.51.0",
+    "io.opentelemetry.semconv" % "opentelemetry-semconv"          % "1.34.0",
   )
 
   val integrationTestDependencies = Seq(
@@ -198,6 +200,7 @@ object Dependencies {
     zioLoggingSlf4jBridge,
     zioNio,
     zioPrelude,
+    zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
   val flywayVersion         = "11.13.3"
