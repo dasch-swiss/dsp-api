@@ -17,6 +17,7 @@ import zio.ZIO
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.*
+import org.apache.jena.vocabulary.RDF
 
 object ModelOps { self =>
 
@@ -55,6 +56,13 @@ object ModelOps { self =>
         case iris if iris.isEmpty   => Left("Expected a single root resource. No root resource found in model")
         case iris =>
           Left(s"Expected a single root resource. Multiple root resources found in model: ${iris.mkString(", ")}")
+      }
+
+    def singleRootResourceByType(resType: String): Either[String, Resource] =
+      model.listResourcesWithProperty(RDF.`type`, model.createResource(resType)).asScala.toList match {
+        case r :: Nil => Right(r)
+        case Nil      => Left("Expected a single root resource of type owl:Ontology. No such resource found in model")
+        case _        => Left("Expected a single root resource of type owl:Ontology. Multiple such resources found in model")
       }
 
     def singleSubjectWithPropertyOption(property: Property): Either[String, Option[Resource]] =

@@ -9,6 +9,7 @@ import zio.*
 import zio.test.*
 
 import org.knora.webapi.slice.common.jena.ModelOps.*
+import org.knora.webapi.messages.OntologyConstants.Owl
 
 object ModelOpsSpec extends ZIOSpecDefault {
 
@@ -109,8 +110,50 @@ object ModelOpsSpec extends ZIOSpecDefault {
     },
   )
 
+  private val singleRootResourceByTypeSuite = suite("singleRootResourceByType")(
+    test("should return the single root resource of type owl:Ontology") {
+      for {
+        model <- ModelOps.fromTurtle(
+                   """|@prefix owl: <http://www.w3.org/2002/07/owl#> .
+                      |@prefix ex: <http://example.org/> .
+                      |ex:root a owl:Ontology .
+                      |ex:root ex:hasChild ex:child .
+                      |""".stripMargin,
+                 )
+
+      } yield assertTrue(model.singleRootResourceByType(Owl.Ontology).map(_.getURI) == Right("http://example.org/root"))
+    },
+    test("should fail with no resources given") {
+      for {
+        model <- ModelOps.fromTurtle("")
+      } yield assertTrue(
+        model.singleRootResourceByType(Owl.Ontology) == Left(
+          "Expected a single root resource of type owl:Ontology. No such resource found in model",
+        ),
+      )
+    },
+    test("should fail with more than a single root resource of type owl:Ontology") {
+      for {
+        model <- ModelOps.fromTurtle(
+                   """|@prefix owl: <http://www.w3.org/2002/07/owl#> .
+                      |@prefix ex: <http://example.org/> .
+                      |ex:root1 a owl:Ontology .
+                      |ex:root1 ex:hasChild ex:child1 .
+                      |ex:root2 a owl:Ontology .
+                      |ex:root2 ex:hasChild ex:child2 .
+                      |""".stripMargin,
+                 )
+      } yield assertTrue(
+        model.singleRootResourceByType(Owl.Ontology) == Left(
+          "Expected a single root resource of type owl:Ontology. Multiple such resources found in model",
+        ),
+      )
+    },
+  )
+
   val spec = suite("ModelOps")(
     singleRootResourceSuite,
+    singleRootResourceByTypeSuite,
     suite("fromJsonLd")(
       test("should parse the json ld") {
         ModelOps.fromJsonLd(jsonLd).flatMap { model =>

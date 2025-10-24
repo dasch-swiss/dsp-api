@@ -55,6 +55,7 @@ import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.messages.OntologyConstants.Owl
 
 final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
@@ -85,7 +86,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private def extractOntologyMetadata(m: Model): ZIO[Scope, String, OntologyMetadata] =
     for {
-      r                    <- ZIO.fromEither(m.singleRootResource)
+      r                    <- ZIO.fromEither(m.singleRootResourceByType(Owl.Ontology))
       ontologyIri          <- uriAsOntologyIri(r)
       label                <- ZIO.fromEither(r.objectStringOption(RDFS.label))
       comment              <- ZIO.fromEither(ontologyRdfsComment(r))
