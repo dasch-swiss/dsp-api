@@ -8,8 +8,8 @@ package org.knora.webapi.slice.common.jena
 import zio.*
 import zio.test.*
 
-import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.messages.OntologyConstants.Owl
+import org.knora.webapi.slice.common.jena.ModelOps.*
 
 object ModelOpsSpec extends ZIOSpecDefault {
 

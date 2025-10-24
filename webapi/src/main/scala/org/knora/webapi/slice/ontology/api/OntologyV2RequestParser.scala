@@ -24,6 +24,7 @@ import dsp.valueobjects.Schema.GuiObject
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
+import org.knora.webapi.messages.OntologyConstants.Owl
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
@@ -55,7 +56,6 @@ import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-import org.knora.webapi.messages.OntologyConstants.Owl
 
 final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
