@@ -33,12 +33,13 @@ final case class DspApiServer(
           Handler.scoped[Env1] {
             Handler.fromFunctionZIO { request =>
               (for {
-                span     <- tracing.getCurrentSpanUnsafe // TODO: requires handling an exception?
-                traceId   = span.getSpanContext().getTraceId
+                traceId <- tracing.getCurrentSpanUnsafe
+                            .map(_.getSpanContext().getTraceId)
+                            .catchAllDefect(_ => ZIO.logWarning("Could not get current span") *> ZIO.succeed(""))
                 response <- ZIO.logAnnotate("traceId", traceId)(handler(request))
               } yield response)
                 @@ tracing.aspects.span(
-                  spanName = "root",
+                  spanName = "zio-http-middleware",
                   attributes = Attributes
                     .builder()
                     .put("url.route", request.path.toString)
