@@ -5,7 +5,6 @@
 
 package org.knora.webapi.core
 
-import io.opentelemetry.api.common.Attributes
 import sttp.model.Method.*
 import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
@@ -32,19 +31,12 @@ final case class DspApiServer(
         routes.transform { handler =>
           Handler.scoped[Env1] {
             Handler.fromFunctionZIO { request =>
-              (for {
+              for {
                 traceId <- tracing.getCurrentSpanUnsafe
-                            .map(_.getSpanContext().getTraceId)
-                            .catchAllDefect(_ => ZIO.logWarning("Could not get current span") *> ZIO.succeed(""))
+                             .map(_.getSpanContext().getTraceId)
+                             .catchAllDefect(_ => ZIO.logWarning("Could not get current span") *> ZIO.succeed(""))
                 response <- ZIO.logAnnotate("traceId", traceId)(handler(request))
-              } yield response)
-                @@ tracing.aspects.span(
-                  spanName = "zio-http-middleware",
-                  attributes = Attributes
-                    .builder()
-                    .put("url.route", request.path.toString)
-                    .build(),
-                )
+              } yield response
             }
           }
         }
