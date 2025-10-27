@@ -60,11 +60,20 @@ final case class SearchRestService(
     query: String,
     opts: FormatOptions,
     limitToProject: Option[ProjectIri],
-  ): Task[(RenderedResponse, MediaType)] = for {
-    _            <- ZIO.logInfo(s"${user}, ${query}, ${opts}, $limitToProject")
-    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, limitToProject)
-    response     <- renderer.render(searchResult, opts)
-  } yield response
+  ): Task[(RenderedResponse, MediaType)] =
+    (for {
+      searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, limitToProject)
+      response     <- renderer.render(searchResult, opts)
+    } yield response) @@ tracing.aspects.root(
+      spanName = "gravsearch",
+      attributes = Attributes
+        .builder()
+        .put("user", user.id)
+        .put("query", query)
+        .put("opts", opts.toString)
+        .put("limitToProject", limitToProject.toString)
+        .build,
+    )
 
   def gravsearchCount(user: User)(
     query: String,
