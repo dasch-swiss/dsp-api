@@ -509,6 +509,7 @@ final case class ConstructResponseUtilV2(
           (linkValue: ValueRdfData) =>
             // get the source of the link value (it points to the resource that is currently processed)
             val sourceIri: IRI = linkValue.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
+            println(s"ConstructResponseUtilV2: alreadyTraversed: $alreadyTraversed")
             val source = Some(
               nestResources(
                 resourceIri = sourceIri,
