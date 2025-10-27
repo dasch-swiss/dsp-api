@@ -6,6 +6,7 @@
 package org.knora.webapi.core
 
 import zio.*
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
@@ -110,6 +111,7 @@ object LayersLive { self =>
     StandoffResponderV2 &
     StandoffTagUtilV2 &
     State &
+    Tracing &
     ValuesResponderV2
     // format: on
 
