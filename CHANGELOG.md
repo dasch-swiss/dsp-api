@@ -1,5 +1,18 @@
 # Changelog
 
+## [32.5.0](https://github.com/dasch-swiss/dsp-api/compare/v32.4.1...v32.5.0) (2025-10-27)
+
+
+### Maintenances
+
+* Add otel java agent and grafana pyroscope otel extension to the webapi docker image ([#3827](https://github.com/dasch-swiss/dsp-api/issues/3827)) ([e90a62d](https://github.com/dasch-swiss/dsp-api/commit/e90a62dac1ced3b74df6e87a0eb245299004b278))
+* Improve error message when cardinality creation fails ([#3829](https://github.com/dasch-swiss/dsp-api/issues/3829)) ([6e4047d](https://github.com/dasch-swiss/dsp-api/commit/6e4047d0eabd6a64134d9b3047187a6f0aff5c80))
+
+
+### Enhancements
+
+* Middleware traceId annotation, dump gravsearch queries into a span ([#3831](https://github.com/dasch-swiss/dsp-api/issues/3831)) ([62b3445](https://github.com/dasch-swiss/dsp-api/commit/62b3445e1bc8ac0a519499adb011027a93fdd603))
+
 ## [32.4.1](https://github.com/dasch-swiss/dsp-api/compare/v32.4.0...v32.4.1) (2025-10-16)
 
 
