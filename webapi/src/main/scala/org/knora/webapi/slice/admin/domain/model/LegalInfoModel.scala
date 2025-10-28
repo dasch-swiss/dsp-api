@@ -217,7 +217,7 @@ object License {
     License(
       NOC_NC_1_0,
       URI.create("http://rightsstatements.org/vocab/NoC-NC/1.0/"),
-      "No Copyright - Non-Commercial Use Only 1.0",
+      "No Copyright - Non-Commercial Use Only",
       IsDaschRecommended.No,
     ),
   )
