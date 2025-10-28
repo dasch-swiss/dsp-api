@@ -1,0 +1,1073 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix standoff: <http://www.knora.org/ontology/standoff#> .
+@prefix incunabula: <http://www.knora.org/ontology/0803/incunabula#> .
+
+<http://rdfh.ch/0803/2e0252679a35> a knora-base:Region;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:hasComment <http://rdfh.ch/0803/2e0252679a35/values/47d3c5ec758701>;
+  knora-base:isRegionOf <http://rdfh.ch/0803/3f89a693a501>;
+  knora-base:isRegionOfValue <http://rdfh.ch/0803/2e0252679a35/values/498d07ec-dddb-4051-bfd1-62626f282fc5>;
+  knora-base:hasGeometry <http://rdfh.ch/0803/2e0252679a35/values/0afd1826768701>;
+  knora-base:hasColor <http://rdfh.ch/0803/2e0252679a35/values/cd266c5f768701>;
+  rdfs:label "DEMOX";
+  knora-base:creationDate "2016-03-02T15:05:55Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/2e0252679a35/values/0afd1826768701> a knora-base:GeomValue;
+  knora-base:valueHasUUID "0afd1826768701"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "{\"status\":\"active\",\"lineColor\":\"#33ff33\",\"lineWidth\":2,\"points\":[{\"x\":0.3519736842105263,\"y\":0.22755905511811023},{\"x\":0.33223684210526316,\"y\":0.27165354330708663},{\"x\":0.34539473684210525,\"y\":0.3173228346456693},{\"x\":0.37719298245614036,\"y\":0.32047244094488186},{\"x\":0.4276315789473684,\"y\":0.30787401574803147},{\"x\":0.45614035087719296,\"y\":0.2677165354330709},{\"x\":0.43859649122807015,\"y\":0.22362204724409449}],\"type\":\"polygon\",\"original_index\":0}";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasGeometry "{\"status\":\"active\",\"lineColor\":\"#33ff33\",\"lineWidth\":2,\"points\":[{\"x\":0.3519736842105263,\"y\":0.22755905511811023},{\"x\":0.33223684210526316,\"y\":0.27165354330708663},{\"x\":0.34539473684210525,\"y\":0.3173228346456693},{\"x\":0.37719298245614036,\"y\":0.32047244094488186},{\"x\":0.4276315789473684,\"y\":0.30787401574803147},{\"x\":0.45614035087719296,\"y\":0.2677165354330709},{\"x\":0.43859649122807015,\"y\":0.22362204724409449}],\"type\":\"polygon\",\"original_index\":0}";
+  knora-base:valueCreationDate "2016-03-02T15:05:55Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/2e0252679a35/values/47d3c5ec758701> a knora-base:TextValue;
+  knora-base:valueHasUUID "47d3c5ec758701"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "DEMOX";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:55Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/2e0252679a35/values/498d07ec-dddb-4051-bfd1-62626f282fc5> a knora-base:LinkValue;
+  knora-base:valueHasUUID "498d07ec-dddb-4051-bfd1-62626f282fc5"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/2e0252679a35>;
+  rdf:predicate knora-base:isRegionOf;
+  rdf:object <http://rdfh.ch/0803/3f89a693a501>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:55Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "1843";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/2e0252679a35/values/cd266c5f768701> a knora-base:ColorValue;
+  knora-base:valueHasUUID "cd266c5f768701"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "#33ff33";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasColor "#33ff33";
+  knora-base:valueCreationDate "2016-03-02T15:05:55Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/3f89a693a501> a incunabula:page;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  incunabula:pagenum <http://rdfh.ch/0803/3f89a693a501/values/f023b8559006>;
+  incunabula:partOf <http://rdfh.ch/0803/ff17e5ef9601>;
+  incunabula:partOfValue <http://rdfh.ch/0803/3f89a693a501/values/133ea4ce-b9a5-4c66-a3ab-38be07ccd201>;
+  incunabula:seqnum <http://rdfh.ch/0803/3f89a693a501/values/76775ec89006>;
+  incunabula:description <http://rdfh.ch/0803/3f89a693a501/values/55358febb622>;
+  incunabula:page_comment <http://rdfh.ch/0803/3f89a693a501/values/75debe6acc22>, <http://rdfh.ch/0803/3f89a693a501/values/380812a4cc22>;
+  incunabula:origname <http://rdfh.ch/0803/3f89a693a501/values/39a1b1019106>;
+  rdfs:label "d8r";
+  knora-base:hasStillImageFileValue <http://rdfh.ch/0803/3f89a693a501/values/acd4585b3503>;
+  knora-base:creationDate "2016-03-02T15:05:24Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/3f89a693a501/values/133ea4ce-b9a5-4c66-a3ab-38be07ccd201> a knora-base:LinkValue;
+  knora-base:valueHasUUID "133ea4ce-b9a5-4c66-a3ab-38be07ccd201"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/3f89a693a501>;
+  rdf:predicate incunabula:partOf;
+  rdf:object <http://rdfh.ch/0803/ff17e5ef9601>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:24Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "1779";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/3f89a693a501/values/380812a4cc22> a knora-base:TextValue;
+  knora-base:valueHasUUID "380812a4cc22"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05>;
+  knora-base:valueHasString """Platzierung:
+- Das Bild bezieht sich auf den Text auf dieser Seite. ???""";
+  knora-base:valueHasOrder 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:24Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/3f89a693a501/values/39a1b1019106> a knora-base:TextValue;
+  knora-base:valueHasUUID "39a1b1019106"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "IBB_1_002645085_0063.tif";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:24Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/3f89a693a501/values/55358febb622> a knora-base:TextValue;
+  knora-base:valueHasUUID "55358febb622"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05>;
+  knora-base:valueHasString """ein neuer Textabschnitt unten:
+\"De Petro et Joha(n)ne.\"
+Rubrizierung: Blau, Rot.
+Holzschnitt: Verspottung Jesu.
+69 x 51 mm.
+Kolorierung: Hellrot, Rot, Grün, Blau, Gelb, Grau, Hellbraun, Schwarz, Silberhöhung?.""";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:24Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/3f89a693a501/values/75debe6acc22> a knora-base:TextValue;
+  knora-base:valueHasUUID "75debe6acc22"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05>;
+  knora-base:valueHasString "Schramm, Bd. 21, Abb. 695.";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:24Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/3f89a693a501/values/76775ec89006> a knora-base:IntValue;
+  knora-base:valueHasUUID "76775ec89006"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "63";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasInteger 63;
+  knora-base:valueCreationDate "2016-03-02T15:05:24Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/3f89a693a501/values/acd4585b3503> a knora-base:StillImageFileValue;
+  knora-base:valueHasUUID "acd4585b3503"^^xsd:string;
+  knora-base:valueHasString "IBB_1_002645085_0063.tif";
+  knora-base:originalFilename "IBB_1_002645085_0063.tif";
+  knora-base:originalMimeType "image/tiff";
+  knora-base:internalFilename "incunabula_0000001843.jp2";
+  knora-base:internalMimeType "image/jp2";
+  knora-base:valueCreationDate "2012-11-21T16:50:06Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:dimX 3553;
+  knora-base:dimY 4949;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/3f89a693a501/values/f023b8559006> a knora-base:TextValue;
+  knora-base:valueHasUUID "f023b8559006"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "d8r";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:24Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/4e2223eb204c01> a knora-base:Region;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:hasComment <http://rdfh.ch/0803/4e2223eb204c01/values/f599c93a663506>;
+  knora-base:isRegionOf <http://rdfh.ch/0803/6240ce899801>;
+  knora-base:isRegionOfValue <http://rdfh.ch/0803/4e2223eb204c01/values/97188bdc-292a-48f0-9373-29e67afbbd81>;
+  knora-base:hasGeometry <http://rdfh.ch/0803/4e2223eb204c01/values/ac1cd08e653506>;
+  knora-base:hasColor <http://rdfh.ch/0803/4e2223eb204c01/values/6f4623c8653506>;
+  rdfs:label "This is a saint";
+  knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/4e2223eb204c01/values/32707601663506> a knora-base:TextValue;
+  knora-base:valueHasUUID "32707601663506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "This is a saint";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/4e2223eb204c01/values/6f4623c8653506> a knora-base:ColorValue;
+  knora-base:valueHasUUID "6f4623c8653506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "#ff3333";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasColor "#ff3333";
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/4e2223eb204c01/values/97188bdc-292a-48f0-9373-29e67afbbd81> a
+    knora-base:LinkValue;
+  knora-base:valueHasUUID "97188bdc-292a-48f0-9373-29e67afbbd81"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/4e2223eb204c01>;
+  rdf:predicate knora-base:isRegionOf;
+  rdf:object <http://rdfh.ch/0803/6240ce899801>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "1786";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/4e2223eb204c01/values/ac1cd08e653506> a knora-base:GeomValue;
+  knora-base:valueHasUUID "ac1cd08e653506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.6650197628458498,\"y\":0.4268802228412256},{\"x\":0.6511857707509882,\"y\":0.46448467966573814},{\"x\":0.6758893280632411,\"y\":0.5020891364902507},{\"x\":0.6600790513833992,\"y\":0.5536211699164345},{\"x\":0.650197628458498,\"y\":0.6246518105849582},{\"x\":0.6462450592885376,\"y\":0.6942896935933147},{\"x\":0.6086956521739131,\"y\":0.7158774373259053},{\"x\":0.6610671936758893,\"y\":0.7409470752089137},{\"x\":0.7233201581027668,\"y\":0.729108635097493},{\"x\":0.8191699604743083,\"y\":0.7325905292479109},{\"x\":0.8349802371541502,\"y\":0.564066852367688},{\"x\":0.8013833992094862,\"y\":0.4972144846796657},{\"x\":0.7806324110671937,\"y\":0.431058495821727},{\"x\":0.7381422924901185,\"y\":0.40459610027855153},{\"x\":0.6897233201581028,\"y\":0.4087743732590529}],\"type\":\"polygon\",\"original_index\":1}";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasGeometry "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.6650197628458498,\"y\":0.4268802228412256},{\"x\":0.6511857707509882,\"y\":0.46448467966573814},{\"x\":0.6758893280632411,\"y\":0.5020891364902507},{\"x\":0.6600790513833992,\"y\":0.5536211699164345},{\"x\":0.650197628458498,\"y\":0.6246518105849582},{\"x\":0.6462450592885376,\"y\":0.6942896935933147},{\"x\":0.6086956521739131,\"y\":0.7158774373259053},{\"x\":0.6610671936758893,\"y\":0.7409470752089137},{\"x\":0.7233201581027668,\"y\":0.729108635097493},{\"x\":0.8191699604743083,\"y\":0.7325905292479109},{\"x\":0.8349802371541502,\"y\":0.564066852367688},{\"x\":0.8013833992094862,\"y\":0.4972144846796657},{\"x\":0.7806324110671937,\"y\":0.431058495821727},{\"x\":0.7381422924901185,\"y\":0.40459610027855153},{\"x\":0.6897233201581028,\"y\":0.4087743732590529}],\"type\":\"polygon\",\"original_index\":1}";
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/4e2223eb204c01/values/f599c93a663506> a knora-base:TextValue;
+  knora-base:valueHasUUID "f599c93a663506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Kein Wert";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/6240ce899801> a incunabula:page;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  incunabula:pagenum <http://rdfh.ch/0803/6240ce899801/values/44f2a6475d06>;
+  incunabula:partOf <http://rdfh.ch/0803/ff17e5ef9601>;
+  incunabula:partOfValue <http://rdfh.ch/0803/6240ce899801/values/e29da7bf-bfa5-4842-a4fc-e455c72dbb0a>;
+  incunabula:seqnum <http://rdfh.ch/0803/6240ce899801/values/ca454dba5d06>;
+  incunabula:description <http://rdfh.ch/0803/6240ce899801/values/0d4bc38bb122>;
+  incunabula:page_comment <http://rdfh.ch/0803/6240ce899801/values/939e69feb122>, <http://rdfh.ch/0803/6240ce899801/values/56c8bc37b222>;
+  incunabula:origname <http://rdfh.ch/0803/6240ce899801/values/8d6fa0f35d06>;
+  rdfs:label "a3v";
+  knora-base:hasStillImageFileValue <http://rdfh.ch/0803/6240ce899801/values/9e0552d41b03>;
+  knora-base:creationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/6240ce899801/values/0d4bc38bb122> a knora-base:TextValue;
+  knora-base:valueHasUUID "0d4bc38bb122"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05>;
+  knora-base:valueHasString """Textabschnitt mit der Überschrift \"Adiuua me d(omi)ne Jesu ...\".
+Holzschnitt: Verkündigung an Maria.
+Masse: 71 x 49 mm.
+Kolorierung: Hellrot, Rot, Blau, Grün, Gelb, Silberhöhung.
+unten das Wort \"prefecisti\" teilweise gestrichen (Feder, braun).""";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/6240ce899801/values/44f2a6475d06> a knora-base:TextValue;
+  knora-base:valueHasUUID "44f2a6475d06"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "a3v";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/6240ce899801/values/56c8bc37b222> a knora-base:TextValue;
+  knora-base:valueHasUUID "56c8bc37b222"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05>;
+  knora-base:valueHasString """Platzierung:
+- die Überschrift nennt Maria und den Verkündigungsengel""";
+  knora-base:valueHasOrder 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/6240ce899801/values/8d6fa0f35d06> a knora-base:TextValue;
+  knora-base:valueHasUUID "8d6fa0f35d06"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "IBB_1_002645085_0006.tif";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/6240ce899801/values/939e69feb122> a knora-base:TextValue;
+  knora-base:valueHasUUID "939e69feb122"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05>;
+  knora-base:valueHasString "Schramm, Bd. 21, Abb. 679";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/6240ce899801/values/9e0552d41b03> a knora-base:StillImageFileValue;
+  knora-base:valueHasUUID "9e0552d41b03"^^xsd:string;
+  knora-base:valueHasString "IBB_1_002645085_0006.tif";
+  knora-base:originalFilename "IBB_1_002645085_0006.tif";
+  knora-base:originalMimeType "image/tiff";
+  knora-base:internalFilename "incunabula_0000001786.jp2";
+  knora-base:internalMimeType "image/jp2";
+  knora-base:valueCreationDate "2012-11-21T16:50:04Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:dimX 3482;
+  knora-base:dimY 4942;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/6240ce899801/values/ca454dba5d06> a knora-base:IntValue;
+  knora-base:valueHasUUID "ca454dba5d06"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "6";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasInteger 6;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/6240ce899801/values/e29da7bf-bfa5-4842-a4fc-e455c72dbb0a> a knora-base:LinkValue;
+  knora-base:valueHasUUID "e29da7bf-bfa5-4842-a4fc-e455c72dbb0a"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/6240ce899801>;
+  rdf:predicate incunabula:partOf;
+  rdf:object <http://rdfh.ch/0803/ff17e5ef9601>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "1779";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/c2807e831a4c01> a knora-base:Region;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:hasComment <http://rdfh.ch/0803/c2807e831a4c01/values/a77ac2be433506>;
+  knora-base:isRegionOf <http://rdfh.ch/0803/c568b7239a01>;
+  knora-base:isRegionOfValue <http://rdfh.ch/0803/c2807e831a4c01/values/39c732db-d191-44b9-b091-d764e6e0eff8>;
+  knora-base:hasGeometry <http://rdfh.ch/0803/c2807e831a4c01/values/5efdc812433506>;
+  knora-base:hasColor <http://rdfh.ch/0803/c2807e831a4c01/values/21271c4c433506>;
+  rdfs:label "TEST";
+  knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c2807e831a4c01/values/e4506f85433506> a knora-base:TextValue;
+  knora-base:valueHasUUID "e4506f85433506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "TEST";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c2807e831a4c01/values/39c732db-d191-44b9-b091-d764e6e0eff8> a
+    knora-base:LinkValue;
+  knora-base:valueHasUUID "39c732db-d191-44b9-b091-d764e6e0eff8"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/c2807e831a4c01>;
+  rdf:predicate knora-base:isRegionOf;
+  rdf:object <http://rdfh.ch/0803/c568b7239a01>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "1793";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c2807e831a4c01/values/5efdc812433506> a knora-base:GeomValue;
+  knora-base:valueHasUUID "5efdc812433506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.11544991511035653,\"y\":0.11842105263157894},{\"x\":0.5789473684210527,\"y\":0.5777511961722488}],\"type\":\"rectangle\",\"original_index\":0}";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasGeometry "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.11544991511035653,\"y\":0.11842105263157894},{\"x\":0.5789473684210527,\"y\":0.5777511961722488}],\"type\":\"rectangle\",\"original_index\":0}";
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c2807e831a4c01/values/a77ac2be433506> a knora-base:TextValue;
+  knora-base:valueHasUUID "a77ac2be433506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Kein Wert";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c2807e831a4c01/values/e4506f85433506> a knora-base:TextValue;
+  knora-base:valueHasUUID "e4506f85433506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "TEST";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+
+<http://rdfh.ch/0803/c4160576204c01> a knora-base:Region;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:hasComment <http://rdfh.ch/0803/c4160576204c01/values/dd4b3070643506>;
+  knora-base:isRegionOf <http://rdfh.ch/0803/6240ce899801>;
+  knora-base:isRegionOfValue <http://rdfh.ch/0803/c4160576204c01/values/8f499fc5-2884-4876-8887-4aa83504d937>;
+  knora-base:hasGeometry <http://rdfh.ch/0803/c4160576204c01/values/94ce36c4633506>;
+  knora-base:hasColor <http://rdfh.ch/0803/c4160576204c01/values/57f889fd633506>;
+  rdfs:label "Image with angel and saint";
+  knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/c4160576204c01/values/1a22dd36643506> a knora-base:TextValue;
+  knora-base:valueHasUUID "1a22dd36643506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Image with angel and saint";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c4160576204c01/values/57f889fd633506> a knora-base:ColorValue;
+  knora-base:valueHasUUID "57f889fd633506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "#ff3333";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasColor "#ff3333";
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/c4160576204c01/values/8f499fc5-2884-4876-8887-4aa83504d937> a
+    knora-base:LinkValue;
+  knora-base:valueHasUUID "8f499fc5-2884-4876-8887-4aa83504d937"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/c4160576204c01>;
+  rdf:predicate knora-base:isRegionOf;
+  rdf:object <http://rdfh.ch/0803/6240ce899801>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "1786";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c4160576204c01/values/94ce36c4633506> a knora-base:GeomValue;
+  knora-base:valueHasUUID "94ce36c4633506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.42061855670103093,\"y\":0.3062409288824383},{\"x\":0.8969072164948454,\"y\":0.7634252539912917}],\"type\":\"rectangle\",\"original_index\":0}";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasGeometry "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.42061855670103093,\"y\":0.3062409288824383},{\"x\":0.8969072164948454,\"y\":0.7634252539912917}],\"type\":\"rectangle\",\"original_index\":0}";
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c4160576204c01/values/dd4b3070643506> a knora-base:TextValue;
+  knora-base:valueHasUUID "dd4b3070643506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Kein Wert";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c568b7239a01> a incunabula:page;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  incunabula:pagenum <http://rdfh.ch/0803/c568b7239a01/values/9883bf8c6306>;
+  incunabula:partOf <http://rdfh.ch/0803/ff17e5ef9601>;
+  incunabula:partOfValue <http://rdfh.ch/0803/c568b7239a01/values/46951e64-8f06-47fb-a07a-c8b19c146447>;
+  incunabula:seqnum <http://rdfh.ch/0803/c568b7239a01/values/1ed765ff6306>;
+  incunabula:description <http://rdfh.ch/0803/c568b7239a01/values/c4cdc9dfb022>;
+  incunabula:page_comment <http://rdfh.ch/0803/c568b7239a01/values/01a476a6b022>, <http://rdfh.ch/0803/c568b7239a01/values/19f20f71b222>;
+  incunabula:origname <http://rdfh.ch/0803/c568b7239a01/values/e100b9386406>;
+  rdfs:label "a7r";
+  knora-base:hasStillImageFileValue <http://rdfh.ch/0803/c568b7239a01/values/1016def61e03>;
+  knora-base:creationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/c568b7239a01/values/01a476a6b022> a knora-base:TextValue;
+  knora-base:valueHasUUID "01a476a6b022"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05>;
+  knora-base:valueHasString "Schramm, Bd. 21, Abb. 680";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c568b7239a01/values/1016def61e03> a knora-base:StillImageFileValue;
+  knora-base:valueHasUUID "1016def61e03"^^xsd:string;
+  knora-base:valueHasString "IBB_1_002645085_0013.tif";
+  knora-base:originalFilename "IBB_1_002645085_0013.tif";
+  knora-base:originalMimeType "image/tiff";
+  knora-base:internalFilename "incunabula_0000001793.jp2";
+  knora-base:internalMimeType "image/jp2";
+  knora-base:valueCreationDate "2012-11-21T16:50:04Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:dimX 3498;
+  knora-base:dimY 4963;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/c568b7239a01/values/19f20f71b222> a knora-base:TextValue;
+  knora-base:valueHasUUID "19f20f71b222"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05>;
+  knora-base:valueHasString """Platzierung:
+- die Überschrift nennt die Geburt Jesu.""";
+  knora-base:valueHasOrder 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c568b7239a01/values/1ed765ff6306> a knora-base:IntValue;
+  knora-base:valueHasUUID "1ed765ff6306"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "13";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasInteger 13;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/c568b7239a01/values/46951e64-8f06-47fb-a07a-c8b19c146447> a knora-base:LinkValue;
+  knora-base:valueHasUUID "46951e64-8f06-47fb-a07a-c8b19c146447"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/c568b7239a01>;
+  rdf:predicate incunabula:partOf;
+  rdf:object <http://rdfh.ch/0803/ff17e5ef9601>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "1779";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/c568b7239a01/values/9883bf8c6306> a knora-base:TextValue;
+  knora-base:valueHasUUID "9883bf8c6306"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "a7r";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c568b7239a01/values/c4cdc9dfb022> a knora-base:TextValue;
+  knora-base:valueHasUUID "c4cdc9dfb022"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05>;
+  knora-base:valueHasString """oben die Überschrift \"De miseria natiuitatis d(omi)ni Jesu.\"
+Rubrizierung: Blau, Rot.
+Holzschnitt: Anbetung des Kindes.
+Masse: 70 x 50 mm.
+Kolorierung: Hellrot, Rot, Grün, Gelb, Blau, Silberhöhung.""";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c568b7239a01/values/e100b9386406> a knora-base:TextValue;
+  knora-base:valueHasUUID "e100b9386406"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "IBB_1_002645085_0013.tif";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/ff17e5ef9601> a incunabula:book;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  incunabula:title <http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006>, <http://rdfh.ch/0803/ff17e5ef9601/values/9ccf75bd5006>;
+  incunabula:hasAuthor <http://rdfh.ch/0803/ff17e5ef9601/values/5ff9c8f65006>;
+  incunabula:publisher <http://rdfh.ch/0803/ff17e5ef9601/values/22231c305106>;
+  incunabula:publoc <http://rdfh.ch/0803/ff17e5ef9601/values/e54c6f695106>;
+  incunabula:pubdate <http://rdfh.ch/0803/ff17e5ef9601/values/a876c2a25106>;
+  incunabula:location <http://rdfh.ch/0803/ff17e5ef9601/values/6ba015dc5106>;
+  incunabula:url <http://rdfh.ch/0803/ff17e5ef9601/values/bbbbc6e8ca2704>;
+  incunabula:physical_desc <http://rdfh.ch/0803/ff17e5ef9601/values/2eca68155206>;
+  incunabula:note <http://rdfh.ch/0803/ff17e5ef9601/values/f1f3bb4e5206>, <http://rdfh.ch/0803/ff17e5ef9601/values/b41d0f885206>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/774762c15206>, <http://rdfh.ch/0803/ff17e5ef9601/values/3a71b5fa5206>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/fd9a08345306>, <http://rdfh.ch/0803/ff17e5ef9601/values/70ffdaede322>;
+  incunabula:citation <http://rdfh.ch/0803/ff17e5ef9601/values/c0c45b6d5306>, <http://rdfh.ch/0803/ff17e5ef9601/values/83eeaea65306>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/461802e05306>, <http://rdfh.ch/0803/ff17e5ef9601/values/094255195406>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/cc6ba8525406>, <http://rdfh.ch/0803/ff17e5ef9601/values/8f95fb8b5406>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/52bf4ec55406>, <http://rdfh.ch/0803/ff17e5ef9601/values/15e9a1fe5406>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/d812f5375506>, <http://rdfh.ch/0803/ff17e5ef9601/values/9b3c48715506>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/5e669baa5506>, <http://rdfh.ch/0803/ff17e5ef9601/values/2190eee35506>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/e4b9411d5606>, <http://rdfh.ch/0803/ff17e5ef9601/values/a7e394565606>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/6a0de88f5606>, <http://rdfh.ch/0803/ff17e5ef9601/values/2d373bc95606>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/f0608e025706>, <http://rdfh.ch/0803/ff17e5ef9601/values/b38ae13b5706>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/76b434755706>, <http://rdfh.ch/0803/ff17e5ef9601/values/39de87ae5706>,
+    <http://rdfh.ch/0803/ff17e5ef9601/values/fc07dbe75706>;
+  incunabula:book_comment <http://rdfh.ch/0803/ff17e5ef9601/values/bf312e215806>;
+  rdfs:label "Zeitglöcklein des Lebens und Leidens Christi";
+  knora-base:creationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/094255195406> a knora-base:TextValue;
+  knora-base:valueHasUUID "094255195406"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Schr 3442";
+  knora-base:valueHasOrder 3;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/15e9a1fe5406> a knora-base:TextValue;
+  knora-base:valueHasUUID "15e9a1fe5406"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "IDL 801";
+  knora-base:valueHasOrder 7;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/2190eee35506> a knora-base:TextValue;
+  knora-base:valueHasUUID "2190eee35506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Hubay(Augsburg) 351";
+  knora-base:valueHasOrder 11;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/22231c305106> a knora-base:TextValue;
+  knora-base:valueHasUUID "22231c305106"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Johann Amerbach";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/2d373bc95606> a knora-base:TextValue;
+  knora-base:valueHasUUID "2d373bc95606"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Rhodes(Oxford Colleges) 340";
+  knora-base:valueHasOrder 15;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/2eca68155206> a knora-base:TextValue;
+  knora-base:valueHasUUID "2eca68155206"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Extent: 1 Bd.; Other physical details: Ill.; Dimensions: 8°";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/39de87ae5706> a knora-base:TextValue;
+  knora-base:valueHasUUID "39de87ae5706"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "BSB-Ink B-398";
+  knora-base:valueHasOrder 19;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/3a71b5fa5206> a knora-base:TextValue;
+  knora-base:valueHasUUID "3a71b5fa5206"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Holzschnitte koloriert";
+  knora-base:valueHasOrder 3;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/461802e05306> a knora-base:TextValue;
+  knora-base:valueHasUUID "461802e05306"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "H 2990* (I) = HC 2993* = H 8928*";
+  knora-base:valueHasOrder 2;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/52bf4ec55406> a knora-base:TextValue;
+  knora-base:valueHasUUID "52bf4ec55406"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Polain(B) 629";
+  knora-base:valueHasOrder 6;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/5e669baa5506> a knora-base:TextValue;
+  knora-base:valueHasUUID "5e669baa5506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Voull(Trier) 184";
+  knora-base:valueHasOrder 10;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/5ff9c8f65006> a knora-base:TextValue;
+  knora-base:valueHasUUID "5ff9c8f65006"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Berthold, der Bruder";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/6a0de88f5606> a knora-base:TextValue;
+  knora-base:valueHasUUID "6a0de88f5606"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Oates 2799, 2800";
+  knora-base:valueHasOrder 14;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/6ba015dc5106> a knora-base:TextValue;
+  knora-base:valueHasUUID "6ba015dc5106"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Basel UB, Sign: Aleph E X 18:2";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/70ffdaede322> a knora-base:TextValue;
+  knora-base:valueHasUUID "70ffdaede322"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05>;
+  knora-base:valueHasString "Blattgrösse: ca. 155 x 110 mm";
+  knora-base:valueHasOrder 5;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/76b434755706> a knora-base:TextValue;
+  knora-base:valueHasUUID "76b434755706"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "BMC III 753";
+  knora-base:valueHasOrder 18;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/774762c15206> a knora-base:TextValue;
+  knora-base:valueHasUUID "774762c15206"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Rot und blau rubr. mit Init., Zierinit. Q im Maiglöckchen-Stil auf Bl. 2a";
+  knora-base:valueHasOrder 2;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/83eeaea65306> a knora-base:TextValue;
+  knora-base:valueHasUUID "83eeaea65306"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Goff B506";
+  knora-base:valueHasOrder 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/8f95fb8b5406> a knora-base:TextValue;
+  knora-base:valueHasUUID "8f95fb8b5406"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Pell 2247";
+  knora-base:valueHasOrder 5;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/9b3c48715506> a knora-base:TextValue;
+  knora-base:valueHasUUID "9b3c48715506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Voull(B) 477";
+  knora-base:valueHasOrder 9;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/9ccf75bd5006> a knora-base:TextValue;
+  knora-base:valueHasUUID "9ccf75bd5006"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Horologium devotionis circa vitam Christi";
+  knora-base:valueHasOrder 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/a7e394565606> a knora-base:TextValue;
+  knora-base:valueHasUUID "a7e394565606"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Finger 177";
+  knora-base:valueHasOrder 13;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/a876c2a25106> a knora-base:DateValue;
+  knora-base:valueHasUUID "a876c2a25106"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "1490-01-01 - 1490-12-31";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasCalendar "JULIAN";
+  knora-base:valueHasStartJDN 2265281;
+  knora-base:valueHasStartPrecision "YEAR";
+  knora-base:valueHasEndJDN 2265645;
+  knora-base:valueHasEndPrecision "YEAR";
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/b38ae13b5706> a knora-base:TextValue;
+  knora-base:valueHasUUID "b38ae13b5706"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Pr 7635";
+  knora-base:valueHasOrder 17;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/b41d0f885206> a knora-base:TextValue;
+  knora-base:valueHasUUID "b41d0f885206"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "A copy in the Basel University Library has a rubricator's date 1490. Woodcuts";
+  knora-base:valueHasOrder 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/bbbbc6e8ca2704> a knora-base:TextValue;
+  knora-base:valueHasUUID "bbbbc6e8ca2704"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002645085";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/bf312e215806> a knora-base:TextValue;
+  knora-base:valueHasUUID "bf312e215806"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Katalogaufnahme anhand ISTC und v.d.Haegen";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/c0c45b6d5306> a knora-base:TextValue;
+  knora-base:valueHasUUID "c0c45b6d5306"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Van der Haegen I: 16,46";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/cc6ba8525406> a knora-base:TextValue;
+  knora-base:valueHasUUID "cc6ba8525406"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Schramm XXI p.27";
+  knora-base:valueHasOrder 4;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/d812f5375506> a knora-base:TextValue;
+  knora-base:valueHasUUID "d812f5375506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "IGI 1617";
+  knora-base:valueHasOrder 8;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006> a knora-base:TextValue;
+  knora-base:valueHasUUID "d9a522845006"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Zeitglöcklein des Lebens und Leidens Christi";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/e4b9411d5606> a knora-base:TextValue;
+  knora-base:valueHasUUID "e4b9411d5606"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Sack(Freiburg) 604";
+  knora-base:valueHasOrder 12;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/e54c6f695106> a knora-base:TextValue;
+  knora-base:valueHasUUID "e54c6f695106"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Basel";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:ProjectMember,knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/f0608e025706> a knora-base:TextValue;
+  knora-base:valueHasUUID "f0608e025706"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Sheppard 2435";
+  knora-base:valueHasOrder 16;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/f1f3bb4e5206> a knora-base:TextValue;
+  knora-base:valueHasUUID "f1f3bb4e5206"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Datum nach V.d.Haegen: nicht nach 1489";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/fc07dbe75706> a knora-base:TextValue;
+  knora-base:valueHasUUID "fc07dbe75706"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "GW 4175";
+  knora-base:valueHasOrder 20;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/ff17e5ef9601/values/fd9a08345306> a knora-base:TextValue;
+  knora-base:valueHasUUID "fd9a08345306"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Zusammengebunden mit 2 weiteren Drucken";
+  knora-base:valueHasOrder 4;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/4e2223eb204c01/values/32707601663506> a knora-base:TextValue;
+  knora-base:valueHasUUID "32707601663506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "This is a saint";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c2807e831a4c01/values/e4506f85433506> a knora-base:TextValue;
+  knora-base:valueHasUUID "e4506f85433506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "TEST";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/c4160576204c01/values/1a22dd36643506> a knora-base:TextValue;
+  knora-base:valueHasUUID "1a22dd36643506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Image with angel and saint";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+
+
+
+<http://rdfh.ch/0803/d697ba6d1b4c01> a knora-base:LinkObj;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:hasComment <http://rdfh.ch/0803/d697ba6d1b4c01/values/08465535463506>;
+  knora-base:hasLinkTo <http://rdfh.ch/0803/c2807e831a4c01>, <http://rdfh.ch/0803/4c8c9cf81a4c01>;
+  knora-base:hasLinkToValue <http://rdfh.ch/0803/d697ba6d1b4c01/values/fe17a614-c7cc-405c-a105-9d8a69c9d918>,
+    <http://rdfh.ch/0803/d697ba6d1b4c01/values/980d2c38-b9ec-429f-8f68-b5adecfa9846>;
+  rdfs:label "TEST3";
+  knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/d697ba6d1b4c01/values/08465535463506> a knora-base:TextValue;
+  knora-base:valueHasUUID "08465535463506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "TEST3";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/d697ba6d1b4c01/values/980d2c38-b9ec-429f-8f68-b5adecfa9846> a
+    knora-base:LinkValue;
+  knora-base:valueHasUUID "980d2c38-b9ec-429f-8f68-b5adecfa9846"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/d697ba6d1b4c01>;
+  rdf:predicate knora-base:hasLinkTo;
+  rdf:object <http://rdfh.ch/0803/4c8c9cf81a4c01>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "371676";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/d697ba6d1b4c01/values/fe17a614-c7cc-405c-a105-9d8a69c9d918> a
+    knora-base:LinkValue;
+  knora-base:valueHasUUID "fe17a614-c7cc-405c-a105-9d8a69c9d918"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/d697ba6d1b4c01>;
+  rdf:predicate knora-base:hasLinkTo;
+  rdf:object <http://rdfh.ch/0803/c2807e831a4c01>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "371674";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/4c8c9cf81a4c01> a knora-base:Region;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:hasComment <http://rdfh.ch/0803/4c8c9cf81a4c01/values/bfc85b89453506>;
+  knora-base:isRegionOf <http://rdfh.ch/0803/b24f430cdf06>;
+  knora-base:isRegionOfValue <http://rdfh.ch/0803/4c8c9cf81a4c01/values/08b53553-30bc-4829-ba9e-5f7177ca19d1>;
+  knora-base:hasGeometry <http://rdfh.ch/0803/4c8c9cf81a4c01/values/764b62dd443506>;
+  knora-base:hasColor <http://rdfh.ch/0803/4c8c9cf81a4c01/values/3975b516453506>;
+  rdfs:label "TEST2";
+  knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/4c8c9cf81a4c01/values/08b53553-30bc-4829-ba9e-5f7177ca19d1> a
+    knora-base:LinkValue;
+  knora-base:valueHasUUID "08b53553-30bc-4829-ba9e-5f7177ca19d1"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/4c8c9cf81a4c01>;
+  rdf:predicate knora-base:isRegionOf;
+  rdf:object <http://rdfh.ch/0803/b24f430cdf06>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "7690";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/4c8c9cf81a4c01/values/3975b516453506> a knora-base:ColorValue;
+  knora-base:valueHasUUID "3975b516453506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "#ff3333";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasColor "#ff3333";
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0803/4c8c9cf81a4c01/values/764b62dd443506> a knora-base:GeomValue;
+  knora-base:valueHasUUID "764b62dd443506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.2476489028213166,\"y\":0.13059250302297462},{\"x\":0.8495297805642633,\"y\":0.7230955259975816}],\"type\":\"rectangle\",\"original_index\":0}";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasGeometry "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.2476489028213166,\"y\":0.13059250302297462},{\"x\":0.8495297805642633,\"y\":0.7230955259975816}],\"type\":\"rectangle\",\"original_index\":0}";
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/4c8c9cf81a4c01/values/bfc85b89453506> a knora-base:TextValue;
+  knora-base:valueHasUUID "bfc85b89453506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "Kein Wert";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
+
+<http://rdfh.ch/0803/4c8c9cf81a4c01/values/fc9e0850453506> a knora-base:TextValue;
+  knora-base:valueHasUUID "fc9e0850453506"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "TEST2";
+  knora-base:valueHasOrder 0;
+  knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser" .
