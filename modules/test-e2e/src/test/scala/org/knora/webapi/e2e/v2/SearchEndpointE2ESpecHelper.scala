@@ -83,6 +83,14 @@ object SearchEndpointE2ESpecHelper {
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     TestApiClient.postSparql(uri"/v2/searchextended".addParam("limitToProject", limitToProject), query, user, f)
 
+  def postGravsearchQuerySuccessfully(
+    query: String,
+    user: Option[User] = None,
+    f: RequestUpdate[String] = identity,
+    limitToProject: Option[String] = None,
+  ): ZIO[TestApiClient, Throwable, String] =
+    TestApiClient.postSparql(uri"/v2/searchextended".addParam("limitToProject", limitToProject), query, user, f).flatMap(_.assert200)
+
   private def compareOrWrite(response: Response[Either[String, String]], expectedFile: String) =
     for {
       resultJsonLd <- response.assert200

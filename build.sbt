@@ -340,7 +340,7 @@ lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
 //////////////////////////////////////
 
 lazy val e2e: Project = Project(id = "test-e2e", base = file("modules/test-e2e"))
-  .dependsOn(webapi, sipi, testkit)
+  .dependsOn(webapi % "test->test; compile->compile", sipi, testkit)
   .settings(buildSettings)
   .settings(
     inConfig(Test) {
