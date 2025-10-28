@@ -59,7 +59,7 @@ object GoldenTest {
     val suffix          = suffixExpr.valueOrAbort
     val suffixDefaulted = if (suffix == "") "" else s"__$suffix"
 
-    val baseName = absPath.getFileName.toString.stripSuffix(".scala") // Demo
+    val baseName = absPath.getFileName.toString.stripSuffix(".scala")
     val name     = s"${baseName}${suffixDefaulted}"
     val outPath =
       s"${absPath.getParent}/$name.txt"
