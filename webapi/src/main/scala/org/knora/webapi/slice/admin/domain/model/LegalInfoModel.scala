@@ -25,6 +25,7 @@ import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_SA_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_ND_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_SA_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_PDM_1_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.NOC_NC_1_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.OPEN_LICENCE_2_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.PUBLIC_DOMAIN
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.UNKNOWN
@@ -98,6 +99,7 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
   val CC_PDM_1_0: LicenseIri       = LicenseIri("http://rdfh.ch/licenses/cc-pdm-1.0")
   val BORIS: LicenseIri            = LicenseIri("http://rdfh.ch/licenses/boris")
   val OPEN_LICENCE_2_0: LicenseIri = LicenseIri("http://rdfh.ch/licenses/open-licence-2.0")
+  val NOC_NC_1_0: LicenseIri       = LicenseIri("http://rdfh.ch/licenses/noc-nc-1.0")
 
   val BUILT_IN: Set[LicenseIri] =
     Set(
@@ -114,6 +116,7 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
       CC_PDM_1_0,
       BORIS,
       OPEN_LICENCE_2_0,
+      NOC_NC_1_0,
     )
 
   private def isLicenseIri(iri: String) = licenseIriRegEx.matches(iri) || BUILT_IN.map(_.value).contains(iri)
@@ -209,6 +212,12 @@ object License {
       OPEN_LICENCE_2_0,
       URI.create("https://www.etalab.gouv.fr/wp-content/uploads/2018/11/open-licence.pdf"),
       "LICENCE OUVERTE 2.0",
+      IsDaschRecommended.No,
+    ),
+    License(
+      NOC_NC_1_0,
+      URI.create("http://rightsstatements.org/vocab/NoC-NC/1.0/"),
+      "No Copyright - Non-Commercial Use Only 1.0",
       IsDaschRecommended.No,
     ),
   )
