@@ -1,5 +1,12 @@
 # Changelog
 
+## [32.6.0](https://github.com/dasch-swiss/dsp-api/compare/v32.5.0...v32.6.0) (2025-10-28)
+
+
+### Enhancements
+
+* Add additional license statement (DEV-5544) ([#3832](https://github.com/dasch-swiss/dsp-api/issues/3832)) ([c1cac07](https://github.com/dasch-swiss/dsp-api/commit/c1cac079b28a110269ecce31423b577c3881577b))
+
 ## [32.5.0](https://github.com/dasch-swiss/dsp-api/compare/v32.4.1...v32.5.0) (2025-10-27)
 
 
