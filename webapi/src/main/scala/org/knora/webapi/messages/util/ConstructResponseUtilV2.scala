@@ -451,6 +451,8 @@ final case class ConstructResponseUtilV2(
   )(implicit stringFormatter: StringFormatter): ResourceWithValueRdfData = {
     val resource = visibleResources(resourceIri)
 
+    // println(s"ConstructResponseUtilV2: ${flatResourcesWithValues}")
+
     val transformedValuePropertyAssertions: RdfPropertyValues = resource.valuePropertyAssertions.map {
       case (propIri: SmartIri, values: Seq[ValueRdfData]) =>
         val transformedValues: Seq[ValueRdfData] = transformValuesByNestingResources(
@@ -464,6 +466,7 @@ final case class ConstructResponseUtilV2(
         )
 
         propIri -> transformedValues
+        // Raitis: use Some().filter(nonEmpty).map(-> _)
     }.filter { case (_: SmartIri, values: Seq[ValueRdfData]) =>
       // If we filtered out all the values for the property, filter out the property, too.
       values.nonEmpty
@@ -487,9 +490,11 @@ final case class ConstructResponseUtilV2(
     // link value assertions that point to this resource
     val incomingLinkAssertions: RdfPropertyValues = referringResources.values.foldLeft(emptyRdfPropertyValues) {
       case (acc: RdfPropertyValues, assertions: ResourceWithValueRdfData) =>
+        // Raitis inline
         val values: RdfPropertyValues = assertions.valuePropertyAssertions.flatMap {
           case (propIri: SmartIri, values: Seq[ValueRdfData]) =>
             // check if the property Iri already exists (there could be several instances of the same property)
+            // Raitis: unify cases
             if (acc.contains(propIri)) {
               // add values to property Iri (keeping the already existing values)
               acc + (propIri -> (acc(propIri) ++ values).sortBy(_.subjectIri))
@@ -502,14 +507,16 @@ final case class ConstructResponseUtilV2(
         values
     }
 
+    // Raitis: always copy
     if (incomingLinkAssertions.nonEmpty) {
       // create a virtual property representing an incoming link
+      println(incomingLinkAssertions.values.flatten.map(_._1).map(toIri => s"ConstructResponseUtilV2: 1 ${resource._1} -> ${toIri}").mkString("\n"))
       val incomingProps: (SmartIri, Seq[ValueRdfData]) =
         OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri -> incomingLinkAssertions.values.toSeq.flatten.map {
           (linkValue: ValueRdfData) =>
             // get the source of the link value (it points to the resource that is currently processed)
             val sourceIri: IRI = linkValue.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
-            println(s"ConstructResponseUtilV2: alreadyTraversed: $alreadyTraversed")
+            // println(s"ConstructResponseUtilV2: alreadyTraversed: $alreadyTraversed")
             val source = Some(
               nestResources(
                 resourceIri = sourceIri,
@@ -569,6 +576,7 @@ final case class ConstructResponseUtilV2(
         } else {
           // Do we have the dependent resource?
           if (dependentResourceIrisVisible.contains(dependentResourceIri)) {
+            println(s"ConstructResponseUtilV2: 2 ${value._1} -> ${dependentResourceIri}")
             // Yes. Nest it in the link value.
             val dependentResource: ResourceWithValueRdfData = nestResources(
               dependentResourceIri,

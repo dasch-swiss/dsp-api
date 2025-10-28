@@ -83,6 +83,18 @@
   knora-base:valueHasUUID "133ea4ce-b9a5-4c66-a3ab-38be07ccd201"^^xsd:string;
   rdf:subject <http://rdfh.ch/0803/3f89a693a501>;
   rdf:predicate incunabula:partOf;
+  rdf:object <http://rdfh.ch/0803/3f89a693a501/values/133ea4ce-b9a5-4c66-a3ab-38be07ccd201>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:24Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "1779";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
+<http://rdfh.ch/0803/3f89a693a501/values/133ea4ce-b9a5-4c66-a3ab-38be07ccd201> a knora-base:LinkValue;
+  knora-base:valueHasUUID "133ea4ce-b9a5-4c66-a3ab-38be07ccd201"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/3f89a693a501>;
+  rdf:predicate incunabula:partOf;
   rdf:object <http://rdfh.ch/0803/ff17e5ef9601>;
   knora-base:valueHasRefCount 1;
   knora-base:valueCreationDate "2016-03-02T15:05:24Z"^^xsd:dateTime;
@@ -531,6 +543,18 @@ unten das Wort \"prefecisti\" teilweise gestrichen (Feder, braun).""";
   knora-base:valueHasString "1779";
   knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
 
+<http://rdfh.ch/0803/ff17e5ef9601/values/46951e64-8f06-47fb-a07a-c8b19c146447> a knora-base:LinkValue;
+  knora-base:valueHasUUID "46951e64-8f06-47fb-a07a-c8b19c146447"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0803/ff17e5ef9601>;
+  rdf:predicate incunabula:partOf;
+  rdf:object <http://rdfh.ch/0803/c568b7239a01>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:valueHasString "1779";
+  knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember" .
+
 <http://rdfh.ch/0803/c568b7239a01/values/9883bf8c6306> a knora-base:TextValue;
   knora-base:valueHasUUID "9883bf8c6306"^^xsd:string;
   knora-base:isDeleted false;
@@ -591,6 +615,7 @@ Kolorierung: Hellrot, Rot, Grün, Gelb, Blau, Silberhöhung.""";
   incunabula:book_comment <http://rdfh.ch/0803/ff17e5ef9601/values/bf312e215806>;
   rdfs:label "Zeitglöcklein des Lebens und Leidens Christi";
   knora-base:creationDate "2016-03-02T15:05:23Z"^^xsd:dateTime;
+  incunabula:partOfValue <http://rdfh.ch/0803/ff17e5ef9601/values/46951e64-8f06-47fb-a07a-c8b19c146447>;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/0803/ff17e5ef9601/values/094255195406> a knora-base:TextValue;
