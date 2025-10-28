@@ -96,3 +96,6 @@ Notable **CC BY 4.0** (Attribution 4.0 International) and **CC BY-SA 4.0** (Attr
 - **LICENCE OUVERTE 2.0**
     - Id: "<http://rdfh.ch/licenses/open-licence-2.0>
     - URI: <https://www.etalab.gouv.fr/wp-content/uploads/2018/11/open-licence.pdf>
+- **No Copyright - Non-Commercial Use Only 1.0**
+    - Id: <http://rdfh.ch/licenses/noc-nc-1.0>
+    - URI: <http://rightsstatements.org/vocab/NoC-NC/1.0/>
