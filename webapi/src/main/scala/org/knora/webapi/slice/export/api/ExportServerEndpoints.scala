@@ -12,10 +12,11 @@ import org.knora.webapi.slice.api.v3.V3BaseEndpoint.EndpointT
 
 final case class ExportServerEndpoints(
   exportEndpoints: ExportEndpoints,
+  exportRestService: ExportRestService,
 ) {
   val endpoints: List[EndpointT] =
     List(
-      exportEndpoints.getVersion.serverLogic(null),
+      exportEndpoints.getVersion.serverLogic(exportRestService.getVersion),
     )
 }
 
