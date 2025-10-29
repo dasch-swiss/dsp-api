@@ -7,12 +7,17 @@ package org.knora.webapi.slice.api.v3
 
 import zio.*
 
+import org.knora.webapi.slice.export_.api.ExportServerEndpoints
 import org.knora.webapi.slice.security.Authenticator
 
 object ApiV3Module {
 
-  type Dependencies = Authenticator
-  type Provided     = ApiV3ServerEndpoints
+  type Dependencies =
+    // format: off
+    Authenticator &
+    ExportServerEndpoints
+    // format: on
+  type Provided = ApiV3ServerEndpoints
 
   val layer: URLayer[Dependencies, ApiV3ServerEndpoints] =
     V3BaseEndpoint.layer >>> ApiV3ServerEndpoints.layer

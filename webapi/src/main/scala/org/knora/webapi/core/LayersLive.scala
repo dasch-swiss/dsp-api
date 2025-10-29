@@ -37,6 +37,8 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.CommonModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
+import org.knora.webapi.slice.export_.api.ExportApiModule
+import org.knora.webapi.slice.export_.api.ExportServerEndpoints
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OpenTelemetry
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -136,6 +138,7 @@ object LayersLive { self =>
       ConstructResponseUtilV2.layer,
       DspIngestClient.layer,
       Endpoints.layer,
+      ExportApiModule.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
       IriService.layer,
