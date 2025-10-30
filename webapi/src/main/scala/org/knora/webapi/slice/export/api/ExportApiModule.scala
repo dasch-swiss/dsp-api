@@ -10,11 +10,13 @@ import zio.ZLayer
 
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 import org.knora.webapi.slice.security.Authenticator
+import org.knora.webapi.slice.common.service.IriConverter
 
 object ExportApiModule { self =>
   type Dependencies =
     // format: off
-    Authenticator
+    Authenticator &
+    IriConverter
     // format: on
 
   type Provided =
