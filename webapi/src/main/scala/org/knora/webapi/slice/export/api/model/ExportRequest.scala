@@ -10,7 +10,7 @@ import zio.json.JsonCodec
 
 final case class ExportRequest(
   resourceClass: String,
-  selectedProperties: String,
+  selectedProperties: List[String],
 )
 
 object ExportRequest {
