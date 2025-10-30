@@ -5,19 +5,19 @@
 
 package org.knora.webapi.slice.export_.api
 
-import org.knora.webapi.slice.api.v3.V3ErrorInfo
 import zio.*
+
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.IriConversions.ConvertibleIri
+import org.knora.webapi.slice.api.v3.V3ErrorInfo
 import org.knora.webapi.slice.common.service.IriConverter
 
 final case class ExportRestService(
   iriConverter: IriConverter,
 ) {
-  def getVersion(user: User)(body: ExportRequest): ZIO[Any, V3ErrorInfo, String] =
+  def getVersion(user: User)(request: ExportRequest): ZIO[Any, V3ErrorInfo, String] =
     (for {
-      _ <- iriConverter.asSmartIri(body.resourceClass)
+      resourceClassIri <- iriConverter.asSmartIri(request.resourceClass)
+      fields           <- ZIO.foreach(request.selectedProperties)(iriConverter.asSmartIri)
     } yield "").mapError(_ => ???)
 }
 

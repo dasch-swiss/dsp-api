@@ -22,7 +22,9 @@ final case class ExportEndpoints(
       jsonBody[ExportRequest].example(
         ExportRequest(
           resourceClass = "classLink",
-          selectedProperties = "http://www.knora.org/ontology/knora-base#hasStillImageFileValue",
+          selectedProperties = List(
+            "http://www.knora.org/ontology/knora-base#hasStillImageFileValue",
+          ),
         ),
       ),
     )
