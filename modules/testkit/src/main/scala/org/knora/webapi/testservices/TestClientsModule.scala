@@ -25,6 +25,7 @@ object TestClientsModule { self =>
     TestDataFileUtil &
     TestDspIngestClient &
     TestMetadataApiClient &
+    TestExportApiClient &
     TestOntologyApiClient &
     TestResourcesApiClient &
     TestSipiApiClient
@@ -48,6 +49,7 @@ object TestClientsModule { self =>
         TestDataFileUtil.layer ++
         TestDspIngestClient.layer ++
         TestMetadataApiClient.layer ++
+        TestExportApiClient.layer ++
         TestOntologyApiClient.layer ++
         TestResourcesApiClient.layer ++
         TestSipiApiClient.layer
