@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.export_.model
 
-import zio.ZLayer
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
@@ -13,19 +12,19 @@ import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.{`var` as variable, *}
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
-import java.time.Instant
+import zio.ZLayer
+
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.messages.IriConversions.ConvertibleIri
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.export_.api.ExportedResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
-import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
 
 // TODO: this file is not done
 final case class ExportService(
@@ -43,6 +42,7 @@ final case class ExportService(
     resourceIriVar,
   ) = ("classIri", "createdAt", "creator", "deletedAt", "label", "modifiedAt", "resourceIri")
 
+  // TODO: just do for comprehension on plain Eithers with propertyIri in the Left channel, then collect at last step
   def getSmartIriOrThrow(map: Map[String, String], field: String): Task[SmartIri] = {
     val m = s"ExportService query for project {project.shortcode} returned inconsistent data for $field"
     for {
@@ -51,18 +51,25 @@ final case class ExportService(
     } yield smartIri
   }
 
-  def findResources(
+  def exportResources(
+    project: KnoraProject,
+    classIri: ResourceClassIri,
+  ): Task[List[ExportedResource]] =
+    for {
+      rows              <- findResources(project, List(classIri))
+      exportedResources <- ZIO.foreach(rows)(formatRow(_))
+    } yield exportedResources.toList
+
+  private def findResources(
     project: KnoraProject,
     classIris: List[ResourceClassIri],
-  ) =
+  ): Task[Seq[VariableResultsRow]] =
     for {
       query           <- ZIO.succeed(resourceQuery(project, classIris))
       dr              <- triplestore.selectWithTimeout(query, SparqlTimeout.Gravsearch).map(_.results.bindings).timed
       (duration, rows) = dr
-      _               <- ZIO.logInfo(s"ExportService: ${rows.size} in ${duration.toMillis}: ${query.getQueryString}")
-      // now  <- Clock.instant
-      meta <- ZIO.foreach(rows)(row => formatRow(row))
-    } yield meta
+      _               <- ZIO.logInfo(s"ExportService: ${rows.size} rows in ${duration.toMillis} ms: ${query.getQueryString}")
+    } yield rows
 
   private def resourceQuery(
     project: KnoraProject,
@@ -105,17 +112,17 @@ final case class ExportService(
       .prefix(prefix(KB.NS), prefix(RDFS.NS))
   }
 
-  private def formatRow(row: VariableResultsRow) =
+  private def formatRow(row: VariableResultsRow): Task[ExportedResource] =
     for {
-      classIri    <- getSmartIriOrThrow(row.rowMap, classIriVar).map(_.toComplexSchema.toIri)
-      _            = row.rowMap
+      classIri <- getSmartIriOrThrow(row.rowMap, classIriVar).map(_.toComplexSchema.toIri)
+      // _            = row.rowMap
       resourceIri <- getSmartIriOrThrow(row.rowMap, resourceIriVar)
-      label       <- getSmartIriOrThrow(row.rowMap, labelVar)
-      creatorIri  <- getSmartIriOrThrow(row.rowMap, creatorIriVar).map(_.toComplexSchema.toIri)
+      // label       <- getSmartIriOrThrow(row.rowMap, labelVar)
+      // creatorIri  <- getSmartIriOrThrow(row.rowMap, creatorIriVar).map(_.toComplexSchema.toIri)
       // createdAt    = row.rowMap.get(creationDateVar).map(Instant.parse).getOrThrow(creationDateVar)
       // deletedAt    = row.rowMap.get(deleteDateVar).map(Instant.parse)
       // lastModAt    = row.rowMap.get(lastModificationDateVar).map(Instant.parse)
-    } yield ()
+    } yield ExportedResource(classIri.toString, resourceIri.toString)
 }
 
 object ExportService {

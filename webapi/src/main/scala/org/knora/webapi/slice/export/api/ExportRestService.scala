@@ -29,13 +29,12 @@ final case class ExportRestService(
     request: ExportRequest,
   ): ZIO[Any, V3ErrorInfo, String] =
     (for {
-      resourceClassIri <- iriConverter.asSmartIri(request.resourceClass)
-      shortcode        <- ZIO.fromEither(resourceClassIri.getProjectShortcode)
+      resourceClassIri <- iriConverter.asResourceClassIri(request.resourceClass)
+      shortcode        <- ZIO.fromEither(resourceClassIri.smartIri.getProjectShortcode)
       project          <- authService.ensureProject(shortcode)
       fields           <- ZIO.foreach(request.selectedProperties)(iriConverter.asSmartIri)
-      // data <- metadataService.getResourcesMetadata(prj, iris).orDie
-      fakeData = List(ExportedResource("say", "see"), ExportedResource("sew", "sow"))
-      csv     <- ZIO.scoped(csvService.writeToString(fakeData)).orDie
+      data             <- exportService.exportResources(project, resourceClassIri).orDie
+      csv              <- ZIO.scoped(csvService.writeToString(data)).orDie
     } yield csv).mapError(t => BadRequest(t.toString))
 
   // /Users/raitisveinbahs/work/dsp-api/webapi/src/main/scala/org/knora/webapi/slice/resources/api/MetadataEndpoints.scala
