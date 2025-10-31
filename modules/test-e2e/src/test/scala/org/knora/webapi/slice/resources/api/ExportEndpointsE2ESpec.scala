@@ -16,9 +16,12 @@ import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestExportApiClient
 import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.slice.export_.api.ExportRequest
+import org.knora.webapi.GoldenTest
 
-object ExportEndpointsE2ESpec extends E2EZSpec {
+// TODO: this file is not done
+object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
   override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfOntology)
+  override val rewriteAll: Boolean = true
 
   private val createThingPicture = for {
     file <- TestDspIngestClient.createImageAsset(anythingShortcode)
@@ -42,15 +45,9 @@ object ExportEndpointsE2ESpec extends E2EZSpec {
         ExportRequest(resourceClassName, List("http://www.knora.org/ontology/knora-base#hasStillImageFileValue"))
 
       createThingPicture.repeatN(noResources - 1) *> TestExportApiClient
-        .postExportResources(exportResource, anythingAdminUser).map(r => {
-          println(s"ExportEndpointsE2ESpec: body/code: ${r.body} / ${r.code}")
-          r
-        })
+        .postExportResources(exportResource, anythingAdminUser)
         .flatMap(_.assert200)
-        .map { response =>
-          println(s"ExportEndpointsE2ESpec: $response")
-          assertCompletes
-        }
+        .map(assertGolden(_, ""))
     },
   )
 }

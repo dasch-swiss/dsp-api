@@ -1,0 +1,3 @@
+Amorphous,Bulletin
+say,see
+sew,sow

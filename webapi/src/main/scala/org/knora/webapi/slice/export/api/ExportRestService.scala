@@ -16,6 +16,7 @@ import org.knora.webapi.slice.export_.model.ExportService
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 
+// TODO: this file is not done
 final case class ExportRestService(
   private val iriConverter: IriConverter,
   private val exportService: ExportService,
@@ -33,7 +34,9 @@ final case class ExportRestService(
       project          <- authService.ensureProject(shortcode)
       fields           <- ZIO.foreach(request.selectedProperties)(iriConverter.asSmartIri)
       // data <- metadataService.getResourcesMetadata(prj, iris).orDie
-    } yield "").mapError(t => BadRequest(t.toString))
+      fakeData = List(ExportedResource("say", "see"), ExportedResource("sew", "sow"))
+      csv     <- ZIO.scoped(csvService.writeToString(fakeData)).orDie
+    } yield csv).mapError(t => BadRequest(t.toString))
 
   // /Users/raitisveinbahs/work/dsp-api/webapi/src/main/scala/org/knora/webapi/slice/resources/api/MetadataEndpoints.scala
   // ): IO[RequestRejectedException, (MediaType, String, String)] = for {
