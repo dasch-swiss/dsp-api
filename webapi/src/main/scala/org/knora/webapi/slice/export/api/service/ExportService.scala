@@ -27,6 +27,7 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 
+// TODO: this file is not done
 final case class ExportService(
   private val projectService: KnoraProjectService,
   private val triplestore: TriplestoreService,

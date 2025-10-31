@@ -13,6 +13,7 @@ import zio.ZLayer
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 
+// TODO: this file is not done
 final case class ExportEndpoints(
   baseEndpoints: V3BaseEndpoint,
 ) {
