@@ -8,6 +8,7 @@ package org.knora.webapi.slice.common.jena
 import org.apache.jena.rdf.model.*
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
+import org.apache.jena.vocabulary.RDF
 import zio.Console
 import zio.Scope
 import zio.Task
@@ -55,6 +56,13 @@ object ModelOps { self =>
         case iris if iris.isEmpty   => Left("Expected a single root resource. No root resource found in model")
         case iris =>
           Left(s"Expected a single root resource. Multiple root resources found in model: ${iris.mkString(", ")}")
+      }
+
+    def singleRootResourceByType(resType: String): Either[String, Resource] =
+      model.listResourcesWithProperty(RDF.`type`, model.createResource(resType)).asScala.toList match {
+        case r :: Nil => Right(r)
+        case Nil      => Left("Expected a single root resource of type owl:Ontology. No such resource found in model")
+        case _        => Left("Expected a single root resource of type owl:Ontology. Multiple such resources found in model")
       }
 
     def singleSubjectWithPropertyOption(property: Property): Either[String, Option[Resource]] =
