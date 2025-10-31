@@ -11,12 +11,21 @@ import zio.ZLayer
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.export_.model.ExportService
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.infrastructure.CsvService
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 
 object ExportApiModule { self =>
   type Dependencies =
     // format: off
     Authenticator &
-    IriConverter
+    AuthorizationRestService &
+    CsvService &
+    IriConverter &
+    KnoraProjectService &
+    TriplestoreService
     // format: on
 
   type Provided =
@@ -27,6 +36,7 @@ object ExportApiModule { self =>
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       ExportEndpoints.layer,
+      ExportService.layer,
       ExportRestService.layer,
       ExportServerEndpoints.layer,
       V3BaseEndpoint.layer,

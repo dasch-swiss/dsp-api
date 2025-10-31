@@ -67,7 +67,7 @@ final case class AuthorizationRestService(
   ): IO[ForbiddenException, KnoraProject] =
     ensureProject(shortcode).tap(ensureSystemAdminOrProjectAdmin(user, _))
 
-  private def ensureProject(shortcode: Shortcode): IO[ForbiddenException, KnoraProject] =
+  def ensureProject(shortcode: Shortcode): IO[ForbiddenException, KnoraProject] =
     knoraProjectService
       .findByShortcode(shortcode)
       .orDie

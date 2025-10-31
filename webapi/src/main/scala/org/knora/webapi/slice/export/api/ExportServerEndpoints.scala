@@ -16,7 +16,7 @@ final case class ExportServerEndpoints(
 ) {
   val endpoints: List[EndpointT] =
     List(
-      exportEndpoints.getVersion.serverLogic(exportRestService.getVersion),
+      exportEndpoints.postExportResources.serverLogic(exportRestService.exportResources),
     )
 }
 

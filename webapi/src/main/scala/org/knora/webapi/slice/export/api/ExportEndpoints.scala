@@ -16,8 +16,8 @@ import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 final case class ExportEndpoints(
   baseEndpoints: V3BaseEndpoint,
 ) {
-  val getVersion = baseEndpoints.withUserEndpoint.post
-    .in(ApiV3.basePath / "export")
+  val postExportResources = baseEndpoints.withUserEndpoint.post
+    .in(ApiV3.basePath / "export" / "resources")
     .in(
       jsonBody[ExportRequest].example(
         ExportRequest(
@@ -29,6 +29,7 @@ final case class ExportEndpoints(
       ),
     )
     .out(stringBody)
+  // TODO: out(header[ContentType/ContentDisposition]) like in MetadataEndpoints.scala
 }
 
 object ExportEndpoints {
