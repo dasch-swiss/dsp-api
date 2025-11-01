@@ -170,7 +170,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           storageConfig <- ZIO.service[StorageConfig]
           body          <- bodyFromZipFile
           response      <- postImport(emptyProject, body, validContentTypeHeaders)
-          importExists <- Files.isDirectory(storageConfig.assetPath / emptyProject.toString)
+          importExists  <- Files.isDirectory(storageConfig.assetPath / emptyProject.toString)
                             && Files.isDirectory(storageConfig.assetPath / emptyProject.toString / "fg")
           status = response.status
         } yield {
@@ -204,7 +204,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           contents   <- ZIO.succeed("123".toList.map(_.toByte))
           contentType = Some(""""originalMimeType": "text/plain"""")
           ref        <- AssetInfoFileTestHelper.createInfoFile("txt", "txt", contentType, Some(contents)).map(_.assetRef)
-          req = Request
+          req         = Request
                   .get(URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value / "original"))
                   .addHeader("Authorization", "Bearer fakeToken")
           response <- executeRequest(req)
@@ -225,7 +225,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           contents   <- ZIO.succeed("123".toList.map(_.toByte))
           contentType = Some(""""originalMimeType": "text/plain"""")
           ref        <- AssetInfoFileTestHelper.createInfoFile("txt", "txt", contentType, Some(contents)).map(_.assetRef)
-          req =
+          req         =
             Request.get(
               URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value / "original"),
             )
@@ -258,7 +258,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       testWithScope("given a basic asset info file exists it should return the info") {
         for {
           ref <- AssetInfoFileTestHelper.createInfoFile("txt", "txt").map(_.assetRef)
-          req = Request
+          req  = Request
                   .get(URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value))
                   .addHeader("Authorization", "Bearer fakeToken")
           // when

@@ -27,7 +27,7 @@ final case class MaintenanceEndpointsHandler(
     maintenanceEndpoints.postMaintenanceActionEndpoint
       .serverLogic(userSession => { case (action, shortcodes) =>
         for {
-          _ <- authorizationHandler.ensureAdminScope(userSession)
+          _     <- authorizationHandler.ensureAdminScope(userSession)
           paths <-
             ZIO
               .ifZIO(ZIO.succeed(shortcodes.isEmpty))(

@@ -97,7 +97,7 @@ case class RestCardinalityService(
   private def toCanDoResponseV2(
     result: Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type],
   ): Task[CanDoResponseV2] = result match {
-    case Right(_) => ZIO.succeed(CanDoResponseV2.yes)
+    case Right(_)       => ZIO.succeed(CanDoResponseV2.yes)
     case Left(failures) =>
       for {
         reason  <- ZIO.foreach(failures)(toExternalErrorMessage).map(_.mkString(" "))

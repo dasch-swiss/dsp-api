@@ -30,7 +30,7 @@ final case class ResourceInfoRepoFake(entitiesRef: Ref[Map[(ProjectIri, Internal
     val key = (projectIRI, resourceClass)
     for {
       current <- entitiesRef.get
-      updated = current.get(key) match {
+      updated  = current.get(key) match {
                   case Some(existing) => current + (key -> (existing :+ entity))
                   case None           => current + (key -> List(entity))
                 }

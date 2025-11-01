@@ -33,11 +33,11 @@ final case class TestDspIngestClient(
 
   def uploadFile(path: zio.nio.file.Path, shortcode: Shortcode): Task[UploadedFile] =
     for {
-      contents   <- Files.readAllBytes(path)
-      filename    = path.filename.toString
-      loginToken <- jwtService.createJwtForDspIngest().map(_.jwtString)
-      url         = ingestUrl.addPath("projects", shortcode.value, "assets", "ingest", filename)
-      request     = quickRequest.post(url).header("Authorization", s"Bearer $loginToken").body(contents.toArray)
+      contents     <- Files.readAllBytes(path)
+      filename      = path.filename.toString
+      loginToken   <- jwtService.createJwtForDspIngest().map(_.jwtString)
+      url           = ingestUrl.addPath("projects", shortcode.value, "assets", "ingest", filename)
+      request       = quickRequest.post(url).header("Authorization", s"Bearer $loginToken").body(contents.toArray)
       responseBody <-
         request
           .send(backend)

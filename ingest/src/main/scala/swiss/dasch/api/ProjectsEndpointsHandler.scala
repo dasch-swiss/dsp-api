@@ -130,13 +130,13 @@ final case class ProjectsEndpointsHandler(
           ),
       )
 
-  private val ChunkSize = 64 * 1024 // larger chunk size; better for larger files
+  private val ChunkSize                                                  = 64 * 1024 // larger chunk size; better for larger files
   private val postProjectAssetEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postProjectAsset
     .serverLogic(principal => { case (shortcode, filename, stream) =>
       authorizationHandler.ensureProjectWritable(principal, shortcode) *>
         ZIO.scoped {
           for {
-            prj <- projectService.findOrCreateProject(shortcode).mapError(InternalServerError(_))
+            prj    <- projectService.findOrCreateProject(shortcode).mapError(InternalServerError(_))
             tmpDir <-
               storageService.createTempDirectoryScoped(s"${prj.shortcode}-ingest").mapError(InternalServerError(_))
             tmpFile = tmpDir / filename.value

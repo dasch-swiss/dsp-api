@@ -29,7 +29,7 @@ final case class TestResourcesApiClient(private val apiClient: TestApiClient) {
     legalInfo: LegalInfo,
   ): Task[Response[Either[String, String]]] = {
     val resourceClassIri = ontologyIri.makeClass(resourceClassName)
-    val jsonLd = UploadFileRequest
+    val jsonLd           = UploadFileRequest
       .make(
         FileType.StillImageFile(),
         img.internalFilename,

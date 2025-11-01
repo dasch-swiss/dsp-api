@@ -59,7 +59,7 @@ class IngestServiceLive(
   private def ingestAsset(fileToIngest: Path, assetDir: AssetFolder): ZIO[Any, Throwable, Asset] =
     for {
       original <- createOriginalFileInAssetDir(fileToIngest, assetDir)
-      asset <- ZIO
+      asset    <- ZIO
                  .fromOption(SupportedFileType.fromPath(fileToIngest))
                  .orElseFail(new IllegalArgumentException("Unsupported file type."))
                  .flatMap {

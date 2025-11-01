@@ -56,7 +56,7 @@ final case class GravsearchTypeInspectionRunner(
       lastResult <- typeInspectionPipeline(whereClause, initialResult)
 
       untypedEntities: Set[TypeableEntity] = lastResult.untypedEntities
-      _ <- ZIO
+      _                                   <- ZIO
              .fail(
                GravsearchException(
                  s"Types could not be determined for one or more entities: ${untypedEntities.mkString(", ")}",
@@ -65,7 +65,7 @@ final case class GravsearchTypeInspectionRunner(
              .when(untypedEntities.nonEmpty)
 
       inconsistentEntities = lastResult.entitiesWithInconsistentTypes
-      _ <- ZIO.fail {
+      _                   <- ZIO.fail {
              val inconsistentStr = inconsistentEntities.map { case (entity, entityTypes) =>
                s"$entity ${entityTypes.mkString(" ; ")} ."
              }.mkString(" ")

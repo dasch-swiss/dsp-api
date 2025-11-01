@@ -126,7 +126,7 @@ final case class ProjectRestService(
    */
   def deleteProject(user: User)(projectIri: ProjectIri): Task[ProjectOperationResponseADM] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
+      project  <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
       internal <- projectService
                     .updateProject(project, ProjectUpdateRequest(status = Some(Status.Inactive)))
                     .map(ProjectOperationResponseADM.apply)
@@ -294,7 +294,7 @@ final case class ProjectRestService(
   } yield ()
 
   def exportProjectAwaiting(user: User)(shortcode: Shortcode): Task[ProjectExportInfoResponse] = for {
-    _ <- auth.ensureSystemAdmin(user)
+    _       <- auth.ensureSystemAdmin(user)
     project <- knoraProjectService
                  .findByShortcode(shortcode)
                  .someOrFail(NotFoundException(s"Project ${shortcode.value} not found."))

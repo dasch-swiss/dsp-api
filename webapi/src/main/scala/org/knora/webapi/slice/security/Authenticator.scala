@@ -88,7 +88,7 @@ final case class AuthenticatorLive(
   private def createToken(user: User) = scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _))
 
   override def authenticate(jwtToken: String): IO[AuthenticatorError, User] = for {
-    _ <- ZIO.fail(BadCredentials).when(invalidTokens.contains(jwtToken))
+    _       <- ZIO.fail(BadCredentials).when(invalidTokens.contains(jwtToken))
     userIri <-
       jwtService.extractUserIriFromToken(jwtToken).logError.some.map(UserIri.from).right.orElseFail(BadCredentials)
     user <- getUserByIri(userIri)

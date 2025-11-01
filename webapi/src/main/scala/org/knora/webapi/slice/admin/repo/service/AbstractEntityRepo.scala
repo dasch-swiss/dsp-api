@@ -117,7 +117,7 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
     )
 
   private def runQuery(construct: Construct): Task[Iterator[RdfResource]] = for {
-    model <- triplestore.queryRdfModel(construct)
+    model     <- triplestore.queryRdfModel(construct)
     resources <- model
                    .getResourcesRdfType(resourceClass.toString)
                    .orElseFail(TriplestoreResponseException("Error while querying the triplestore"))
@@ -127,8 +127,8 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
     triplestore.query(saveQuery(entity)).as(entity)
 
   private def saveQuery(entity: E): Update = {
-    val iris  = self.entityProperties.all
-    val idIri = Rdf.iri(entity.id.value)
+    val iris          = self.entityProperties.all
+    val idIri         = Rdf.iri(entity.id.value)
     val deletePattern =
       iris.zipWithIndex.foldLeft(idIri.isA(Rdf.iri(resourceClass.toString))) { case (p, (iri, index)) =>
         p.andHas(iri, variable(s"n$index"))

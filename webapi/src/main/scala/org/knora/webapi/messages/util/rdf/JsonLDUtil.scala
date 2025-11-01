@@ -828,7 +828,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       resourceProps match {
         case _ if resourceProps.isEmpty  => ZIO.fail("No value submitted")
         case _ if resourceProps.size > 1 => ZIO.fail(s"Only one value can be submitted per request using this route")
-        case singleProp =>
+        case singleProp                  =>
           singleProp.head match {
             case (key: IRI, jsonLDValue: JsonLDValue) =>
               for {

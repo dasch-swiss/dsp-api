@@ -26,7 +26,7 @@ object PasswordServiceSpec extends ZIOSpecDefault {
   private val strength: PasswordStrength = PasswordStrength.unsafeFrom(10)
   private val bCryptEncoder              = new BCryptPasswordEncoder(strength.value, new SecureRandom())
   // legacy encoders
-  private val sCryptEncoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
+  private val sCryptEncoder                   = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
   private def sha1Encode(rawPassword: String) = PasswordHash.unsafeFrom(
     MessageDigest.getInstance("SHA-1").digest(rawPassword.getBytes("UTF-8")).map("%02x".format(_)).mkString,
   )

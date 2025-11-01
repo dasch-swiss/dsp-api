@@ -87,7 +87,7 @@ class RdfFormatUtilSpec extends AnyWordSpec with Matchers {
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
         )
-      val inputModel = RdfModel.fromTurtle(inputTurtle)
+      val inputModel                          = RdfModel.fromTurtle(inputTurtle)
       val inputJsonLDDocument: JsonLDDocument =
         RdfFormatUtilSpec.parseToJsonLDDocument(inputTurtle, Turtle)
       checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
@@ -107,7 +107,7 @@ class RdfFormatUtilSpec extends AnyWordSpec with Matchers {
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf"),
         )
-      val inputModel = RdfModel.fromRdfXml(inputRdfXml)
+      val inputModel                          = RdfModel.fromRdfXml(inputRdfXml)
       val inputJsonLDDocument: JsonLDDocument =
         RdfFormatUtilSpec.parseToJsonLDDocument(inputRdfXml, RdfXml)
       checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
@@ -123,7 +123,7 @@ class RdfFormatUtilSpec extends AnyWordSpec with Matchers {
     }
 
     "parse RDF in TriG format" in {
-      val graphIri = "http://example.org/data#"
+      val graphIri  = "http://example.org/data#"
       val inputTrig = FileUtil.readTextFile(
         Paths.get("test_data/generated_test_data/rdfFormatUtil/BookReiseInsHeiligeLand.trig"),
       )
@@ -132,7 +132,7 @@ class RdfFormatUtilSpec extends AnyWordSpec with Matchers {
     }
 
     "parse RDF in N-Quads format" in {
-      val graphIri = "http://example.org/data#"
+      val graphIri  = "http://example.org/data#"
       val inputTrig =
         FileUtil.readTextFile(Paths.get("test_data/generated_test_data/rdfFormatUtil/BookReiseInsHeiligeLand.nq"))
       val inputModel = RdfModel.fromNQuads(inputTrig)
@@ -140,7 +140,7 @@ class RdfFormatUtilSpec extends AnyWordSpec with Matchers {
     }
 
     "read Turtle, add a graph IRI to it, write it to a TriG file, and read back the TriG file" in {
-      val graphIri = "http://example.org/data#"
+      val graphIri  = "http://example.org/data#"
       val rdfSource = RdfInputStreamSource(
         new BufferedInputStream(
           Files.newInputStream(
@@ -162,7 +162,7 @@ class RdfFormatUtilSpec extends AnyWordSpec with Matchers {
     }
 
     "read Turtle, add a graph IRI to it, write it to an N-Quads file, and read back the N-Quads file" in {
-      val graphIri = "http://example.org/data#"
+      val graphIri  = "http://example.org/data#"
       val rdfSource = RdfInputStreamSource(
         new BufferedInputStream(
           Files.newInputStream(
@@ -192,7 +192,7 @@ class RdfFormatUtilSpec extends AnyWordSpec with Matchers {
         RdfFormatUtilSpec.parseToJsonLDDocument(inputTurtle, JsonLD)
       checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
 
-      val outputJsonLD: String = inputJsonLDDocument.toPrettyString()
+      val outputJsonLD: String                 = inputJsonLDDocument.toPrettyString()
       val outputJsonLDDocument: JsonLDDocument =
         RdfFormatUtilSpec.parseToJsonLDDocument(outputJsonLD, JsonLD)
       checkJsonLDDocumentForRdfTypeBook(outputJsonLDDocument)
@@ -240,7 +240,7 @@ class RdfFormatUtilSpec extends AnyWordSpec with Matchers {
       )
       byteArrayOutputStream.close()
 
-      val byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray)
+      val byteArrayInputStream     = new ByteArrayInputStream(byteArrayOutputStream.toByteArray)
       val copyOfRdfModel: RdfModel =
         RdfFormatUtil.inputStreamToRdfModel(inputStream = byteArrayInputStream, rdfFormat = Turtle)
       byteArrayInputStream.close()

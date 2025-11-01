@@ -59,7 +59,7 @@ final case class ConstructTransformer(
       case FilterNotExistsPattern(patterns) => transformInner(patterns, limit, FilterNotExistsPattern.apply)
       case MinusPattern(patterns)           => transformInner(patterns, limit, MinusPattern.apply)
       case OptionalPattern(patterns)        => transformInner(patterns, limit, OptionalPattern.apply)
-      case UnionPattern(blocks) =>
+      case UnionPattern(blocks)             =>
         ZIO.foreach(blocks)(optimizeAndTransformPatterns(_, limit)).map(block => Seq(UnionPattern(block)))
       case pattern: QueryPattern => ZIO.succeed(Seq(pattern))
     }

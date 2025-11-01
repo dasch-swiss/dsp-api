@@ -67,7 +67,7 @@ object DefaultObjectAccessPermission {
         case (None, None, Some(p: InternalIri))                  => Right(Property(p))
         case (None, Some(rc: InternalIri), None)                 => Right(ResourceClass(rc))
         case (Some(g: GroupIri), None, None)                     => Right(Group(g))
-        case _ =>
+        case _                                                   =>
           Left(
             s"DOAP restrictions must be either for a group, a resource class, a property, " +
               s"or a combination of a resource class and a property. ",
@@ -83,13 +83,13 @@ object DefaultObjectAccessPermission {
     def from(adm: PermissionADM): Either[String, DefaultObjectAccessPermissionPart] =
       for {
         group <- adm.additionalInformation.toRight("No object access group present").flatMap(GroupIri.from)
-        perm <- (adm.permissionCode, adm.name) match
-                  case (None, name) => Permission.ObjectAccess.fromToken(name)
+        perm  <- (adm.permissionCode, adm.name) match
+                  case (None, name)                        => Permission.ObjectAccess.fromToken(name)
                   case (Some(code), name) if name.nonEmpty =>
                     for {
                       perm1 <- Permission.ObjectAccess.from(code)
                       perm2 <- Permission.ObjectAccess.fromToken(name)
-                      p <- if perm1 == perm2 then Right(perm1)
+                      p     <- if perm1 == perm2 then Right(perm1)
                            else Left(s"Given permission code '$code' and permission name '$name' are not consistent.")
                     } yield p
                   case (Some(code), _) => Permission.ObjectAccess.from(code)

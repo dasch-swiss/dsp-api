@@ -238,7 +238,7 @@ object ProjectRestServiceSpec extends E2EZSpec {
         val longnameWithSpecialCharacter    = """New "Longname""""
         val descriptionWithSpecialCharacter = """project "description""""
         val keywordWithSpecialCharacter     = """new "keyword""""
-        val createRequest = ProjectCreateRequest(
+        val createRequest                   = ProjectCreateRequest(
           None,
           Shortname.unsafeFrom("project_with_char"),
           Shortcode.unsafeFrom("1312"),

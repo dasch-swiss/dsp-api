@@ -139,8 +139,8 @@ object LegalInfoE2ESpec extends E2EZSpec {
         ) {
           val expected = (someAuthorship ++ anotherAuthorship).sortBy(_.value)
           for {
-            _ <- createStillImageResourceWithInfos(authorship = Some(someAuthorship))
-            _ <- createStillImageResourceWithInfos(authorship = Some(anotherAuthorship))
+            _           <- createStillImageResourceWithInfos(authorship = Some(someAuthorship))
+            _           <- createStillImageResourceWithInfos(authorship = Some(anotherAuthorship))
             authorships <- TestApiClient
                              .getJson[PagedResponse[Authorship]](
                                uri"/admin/projects/shortcode/$anythingShortcode/legal-info/authorships",
@@ -191,7 +191,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
             (resourceCreated, asset) = created
             resourceId              <- resourceId(resourceCreated)
             valueIdOld              <- valueId(resourceCreated)
-            _ <- putUpdateValue(asset, resourceId, valueIdOld, aCopyrightHolder, someAuthorship, newLicenseIri)
+            _                       <- putUpdateValue(asset, resourceId, valueIdOld, aCopyrightHolder, someAuthorship, newLicenseIri)
                    .flatMap(_.assert200)
             createdResourceModel <- getResourceFromApi(resourceId)
             info                 <- copyrightAndLicenseInfo(createdResourceModel)
@@ -206,7 +206,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
             (resourceCreated, asset) = created
             resourceId              <- resourceId(resourceCreated)
             valueIdOld              <- valueId(resourceCreated)
-            response <-
+            response                <-
               putUpdateValue(asset, resourceId, valueIdOld, aCopyrightHolder, someAuthorship, invalidLicenseIri)
           } yield assertTrue(response.code == StatusCode.BadRequest)
         },
@@ -219,7 +219,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
             (resourceCreated, asset) = created
             resourceId              <- resourceId(resourceCreated)
             valueIdOld              <- valueId(resourceCreated)
-            response <- putUpdateValue(
+            response                <- putUpdateValue(
                           asset,
                           resourceId,
                           valueIdOld,

@@ -23,7 +23,7 @@ object StandoffResponderV2Spec extends E2EZSpec {
   override val e2eSpec = suite("The standoff responder")(
     test("create a standoff mapping") {
       val mappingName = "customMapping"
-      val xmlContent =
+      val xmlContent  =
         s"""<?xml version="1.0" encoding="UTF-8"?>
            |<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            |         xsi:noNamespaceSchemaLocation="../../../webapi/src/main/resources/mappingXMLToStandoff.xsd">
@@ -80,7 +80,7 @@ object StandoffResponderV2Spec extends E2EZSpec {
                       _.createMappingV2(createRequest, rootUser, UUID.randomUUID()),
                     )
         expectedMappingIRI = f"${anythingProjectIri.value}/mappings/$mappingName"
-        mappingFromDB <- ZIO.serviceWithZIO[TriplestoreService](
+        mappingFromDB     <- ZIO.serviceWithZIO[TriplestoreService](
                            _.query(Construct(sparql.v2.txt.getMapping(response.mappingIri))),
                          )
       } yield assertTrue(

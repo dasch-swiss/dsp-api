@@ -89,14 +89,14 @@ object CachingEntityRepoSpec extends ZIOSpecDefault {
     TestRepo.layer,
   )
 
-  private def checkAllEntityRemovedFromCache(entity: TestEntity) = checkAllEntitiesRemovedFromCache(Seq(entity))
+  private def checkAllEntityRemovedFromCache(entity: TestEntity)          = checkAllEntitiesRemovedFromCache(Seq(entity))
   private def checkAllEntitiesRemovedFromCache(entities: Seq[TestEntity]) =
     cache(c => entities.map(_.id).map(id => c.cache.get(id).isEmpty).forall(b => b))
 }
 
 final case class TestId(value: String)                extends StringValue
 final case class TestEntity(id: TestId, name: String) extends EntityWithId[TestId]
-final case class TestMapper() extends RdfEntityMapper[TestEntity] {
+final case class TestMapper()                         extends RdfEntityMapper[TestEntity] {
   override def toTriples(entity: TestEntity): TriplePattern =
     Rdf
       .iri(entity.id.value)

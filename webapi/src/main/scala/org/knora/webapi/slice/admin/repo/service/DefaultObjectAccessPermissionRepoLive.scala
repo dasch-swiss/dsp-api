@@ -61,7 +61,7 @@ final case class DefaultObjectAccessPermissionRepoLive(
     findOneByPattern(p =>
       val pattern = p.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value))
       forWhat match {
-        case Group(g) => pattern.andHas(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(g.value))
+        case Group(g)          => pattern.andHas(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(g.value))
         case ResourceClass(rc) =>
           pattern
             .andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
@@ -82,7 +82,7 @@ final case class DefaultObjectAccessPermissionRepoLive(
 
 object DefaultObjectAccessPermissionRepoLive {
   private val permissionsDelimiter = '|'
-  private val mapper = new RdfEntityMapper[DefaultObjectAccessPermission] {
+  private val mapper               = new RdfEntityMapper[DefaultObjectAccessPermission] {
 
     override def toEntity(resource: RdfResource): IO[RdfError, DefaultObjectAccessPermission] = for {
       id <- resource.iri.flatMap { iri =>
@@ -92,7 +92,7 @@ object DefaultObjectAccessPermissionRepoLive {
       forGroup            <- resource.getObjectIrisConvert[GroupIri](KnoraAdmin.ForGroup).map(_.headOption)
       forResourceClass    <- resource.getObjectIrisConvert[InternalIri](KnoraAdmin.ForResourceClass).map(_.headOption)
       forResourceProperty <- resource.getObjectIrisConvert[InternalIri](KnoraAdmin.ForProperty).map(_.headOption)
-      forWhat <-
+      forWhat             <-
         ZIO.fromEither(ForWhat.from(forGroup, forResourceClass, forResourceProperty)).mapError(ConversionError.apply)
       permissions <- parsePermissions(resource)
     } yield DefaultObjectAccessPermission(id, forProject, forWhat, permissions)
@@ -133,16 +133,16 @@ object DefaultObjectAccessPermissionRepoLive {
     }
 
     override def toTriples(entity: DefaultObjectAccessPermission): TriplePattern = {
-      val id = Rdf.iri(entity.id.value)
+      val id                 = Rdf.iri(entity.id.value)
       val pat: TriplePattern = id
         .isA(Vocabulary.KnoraAdmin.DefaultObjectAccessPermission)
         .andHas(Vocabulary.KnoraAdmin.forProject, Rdf.iri(entity.forProject.value))
         .andHas(Vocabulary.KnoraBase.hasPermissions, toStringLiteral(entity.permission))
 
       entity.forWhat match {
-        case ForWhat.Group(g)          => pat.andHas(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(g.value))
-        case ForWhat.ResourceClass(rc) => pat.andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
-        case ForWhat.Property(p)       => pat.andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(p.value))
+        case ForWhat.Group(g)                        => pat.andHas(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(g.value))
+        case ForWhat.ResourceClass(rc)               => pat.andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
+        case ForWhat.Property(p)                     => pat.andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(p.value))
         case ForWhat.ResourceClassAndProperty(rc, p) =>
           pat
             .andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))

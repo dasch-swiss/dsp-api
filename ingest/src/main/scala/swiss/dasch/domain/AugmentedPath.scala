@@ -111,7 +111,7 @@ object AugmentedPath {
       def from(path: Path): Either[String, ProjectFolder] =
         path match {
           case _ if path.isHidden => Left(hiddenFile)
-          case _ =>
+          case _                  =>
             ProjectShortcode
               .from(path.elements.last.toString)
               .map(ProjectFolder(path, _))
@@ -127,14 +127,14 @@ object AugmentedPath {
     create: (Path, AssetId) => A,
   ): Either[String, A] =
     path match {
-      case _ if path.isHidden => Left(hiddenFile)
+      case _ if path.isHidden                              => Left(hiddenFile)
       case _ if fileExtensionSupported(path.fileExtension) =>
         AssetId.fromPath(path).map(create(path, _)).toRight(noAssetIdInFilename)
       case _ => Left(unsupportedFileType)
     }
 
   final case class JpxDerivativeFile private (path: Path, assetId: AssetId) extends DerivativeFile
-  object JpxDerivativeFile extends WithSmartConstructors[JpxDerivativeFile] {
+  object JpxDerivativeFile                                                  extends WithSmartConstructors[JpxDerivativeFile] {
     given AugmentedPathBuilder[JpxDerivativeFile] with {
       def from(path: Path): Either[String, JpxDerivativeFile] =
         AugmentedPath.from(path, Jpx.acceptsExtension, JpxDerivativeFile.apply)
@@ -142,7 +142,7 @@ object AugmentedPath {
   }
 
   final case class MovingImageDerivativeFile private (path: Path, assetId: AssetId) extends DerivativeFile
-  object MovingImageDerivativeFile extends WithSmartConstructors[MovingImageDerivativeFile] {
+  object MovingImageDerivativeFile                                                  extends WithSmartConstructors[MovingImageDerivativeFile] {
     given AugmentedPathBuilder[MovingImageDerivativeFile] with {
       def from(path: Path): Either[String, MovingImageDerivativeFile] =
         AugmentedPath.from(path, MovingImage.acceptsExtension, MovingImageDerivativeFile.apply)
@@ -150,7 +150,7 @@ object AugmentedPath {
   }
 
   final case class AudioDerivativeFile private (path: Path, assetId: AssetId) extends DerivativeFile
-  object AudioDerivativeFile extends WithSmartConstructors[AudioDerivativeFile] {
+  object AudioDerivativeFile                                                  extends WithSmartConstructors[AudioDerivativeFile] {
     given AugmentedPathBuilder[AudioDerivativeFile] with {
       def from(path: Path): Either[String, AudioDerivativeFile] =
         AugmentedPath.from(path, Audio.acceptsExtension, AudioDerivativeFile.apply)
@@ -158,7 +158,7 @@ object AugmentedPath {
   }
 
   final case class OrigFile private (path: Path, assetId: AssetId) extends AssetFile
-  object OrigFile extends WithSmartConstructors[OrigFile] {
+  object OrigFile                                                  extends WithSmartConstructors[OrigFile] {
     given AugmentedPathBuilder[OrigFile] with {
       def from(path: Path): Either[String, OrigFile] =
         AugmentedPath.from(path, _ == "orig", OrigFile.apply)
@@ -166,7 +166,7 @@ object AugmentedPath {
   }
 
   final case class OtherDerivativeFile private (path: Path, assetId: AssetId) extends DerivativeFile
-  object OtherDerivativeFile extends WithSmartConstructors[OtherDerivativeFile] {
+  object OtherDerivativeFile                                                  extends WithSmartConstructors[OtherDerivativeFile] {
     given AugmentedPathBuilder[OtherDerivativeFile] with {
       def from(path: Path): Either[String, OtherDerivativeFile] =
         AugmentedPath.from(path, OtherFiles.acceptsExtension, OtherDerivativeFile.apply)

@@ -103,7 +103,7 @@ final case class ResourceUtilV2(triplestore: TriplestoreService, sipiService: Si
     val query = Construct(sparql.admin.txt.getListNode(nodeIri))
     for {
       statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements)
-      maybeList =
+      maybeList   =
         if (statements.nonEmpty) {
           val propToCheck: SmartIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsRootNode)
           val isRootNode: Boolean   = statements.map(_._2.contains(propToCheck)).head

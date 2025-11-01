@@ -44,7 +44,7 @@ object ListsEndpointsV2E2ESpec extends E2EZSpec {
         .map(actual => assertTrue(actual == expected))
     },
     test("perform a request for the anything othertreelist list in JSON-LD") {
-      val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/otherTreeList")
+      val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/otherTreeList")
       val expected =
         readAsJsonLd(Paths.get("test_data/generated_test_data/listsR2RV2/othertreelist.jsonld"))
       TestApiClient

@@ -87,7 +87,7 @@ final class ValuesRestService(
     for {
       eraseReq <- requestParser.eraseValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
       _        <- auth.ensureSystemAdmin(user)
-      project <- knoraProjectService
+      project  <- knoraProjectService
                    .findByShortcode(eraseReq.shortcode)
                    .orDie
                    .someOrFail(NotFoundException(s"Project with shortcode ${eraseReq.shortcode.value} not found."))
@@ -99,7 +99,7 @@ final class ValuesRestService(
     for {
       eraseReq <- requestParser.eraseValueHistoryV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
       _        <- auth.ensureSystemAdmin(user)
-      project <- knoraProjectService
+      project  <- knoraProjectService
                    .findByShortcode(eraseReq.shortcode)
                    .orDie
                    .someOrFail(NotFoundException(s"Project with shortcode ${eraseReq.shortcode.value} not found."))

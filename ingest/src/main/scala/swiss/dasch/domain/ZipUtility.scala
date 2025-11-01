@@ -79,7 +79,7 @@ object ZipUtility {
     out: ZipOutputStream,
   ) = for {
     fis <- ScopedIoStreams.fileInputStream(entry)
-    _ <- ZIO.attemptBlocking {
+    _   <- ZIO.attemptBlocking {
            out.putNextEntry(getZipEntry(entry, srcFolder))
            fis.transferTo(out)
            out.closeEntry()
@@ -105,9 +105,9 @@ object ZipUtility {
       .flatMap(entry => unzip(zipInput, destinationFolder).when(entry.isDefined))
       .as(destinationFolder)
   private def unzipNextEntry(zipInput: ZipInputStream, destinationFolder: Path) = {
-    val acquire  = ZIO.attemptBlocking(Option(zipInput.getNextEntry))
-    val release  = ZIO.attemptBlocking(zipInput.closeEntry()).logError.ignore
-    val getEntry = ZIO.acquireRelease(acquire)(_ => release)
+    val acquire                 = ZIO.attemptBlocking(Option(zipInput.getNextEntry))
+    val release                 = ZIO.attemptBlocking(zipInput.closeEntry()).logError.ignore
+    val getEntry                = ZIO.acquireRelease(acquire)(_ => release)
     val createParentIfNotExists = (path: Path) =>
       path.parent.map(d => Files.createDirectories(d).whenZIO(Files.notExists(d)).unit).getOrElse(ZIO.unit)
     val unzipToFile = (path: Path) =>

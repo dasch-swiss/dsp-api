@@ -529,7 +529,7 @@ object CalendarDateRangeV2 {
     // Get the calendar name.
     val parsedDate              = validDateStr.split(StringFormatter.CalendarSeparator)
     val calendarNameStr: String = parsedDate(0)
-    val calendarName =
+    val calendarName            =
       CalendarNameV2.parse(calendarNameStr, throw BadRequestException(s"Invalid calendar: $calendarNameStr"))
 
     // Is there a start date and an end date?

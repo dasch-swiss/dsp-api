@@ -20,7 +20,7 @@ object UpgradePluginPR3110Spec extends ZIOSpecDefault with UpgradePluginTestOps 
     ) {
       // given
       val plugin = new UpgradePluginPR3110()
-      val triG =
+      val triG   =
         s"""
            |@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
            |

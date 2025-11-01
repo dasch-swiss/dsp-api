@@ -50,7 +50,7 @@ lazy val knoraSipiVersion = gitVersion
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, testkit, it, e2e)
 
-lazy val year = java.time.LocalDate.now().getYear
+lazy val year           = java.time.LocalDate.now().getYear
 lazy val projectLicense = Some(
   HeaderLicense.Custom(
     s"""|Copyright © 2021 - $year Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
@@ -83,7 +83,7 @@ lazy val root: Project = Project(id = "root", file("."))
     Global / onChangedBuildSource := ReloadOnSourceChanges,
     ThisBuild / licenses          := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
     ThisBuild / homepage          := Some(url("https://github.com/dasch-swiss/dsp-api")),
-    ThisBuild / scmInfo := Some(
+    ThisBuild / scmInfo           := Some(
       ScmInfo(url("https://github.com/dasch-swiss/dsp-api"), "scm:git:git@github.com:dasch-swiss/dsp-api.git"),
     ),
     Global / scalaVersion := Dependencies.ScalaVersion,
@@ -232,7 +232,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Docker / maintainer       := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333, 3339),
     Docker / defaultLinuxInstallLocation := "/opt/docker",
-    dockerLabels := Map[String, Option[String]](
+    dockerLabels                         := Map[String, Option[String]](
       "org.opencontainers.image.version"  -> (ThisBuild / version).value.some,
       "org.opencontainers.image.revision" -> Some(gitCommit),
       "org.opencontainers.image.source"   -> Some("github.com/dasch-swiss/dsp-api"),

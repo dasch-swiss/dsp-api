@@ -36,7 +36,7 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
   private val projectDataNamedGraphIri = ProjectService.projectDataNamedGraphV2(testProject).value
   private val testAssetId              = AssetId.unsafeFrom("some-asset-id")
   private val expectedDimension        = Dimensions.unsafeFrom(5202, 3602)
-  private val testReport = ProjectsWithBakfilesReport(
+  private val testReport               = ProjectsWithBakfilesReport(
     Chunk(ProjectWithBakFiles(testProject.shortcode, Chunk(ReportAsset(testAssetId, expectedDimension)))),
   )
   private val testValueIri = "http://rdfh.ch/some-value-iri"

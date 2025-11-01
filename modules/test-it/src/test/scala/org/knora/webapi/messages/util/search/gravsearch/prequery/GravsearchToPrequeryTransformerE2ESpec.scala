@@ -38,7 +38,7 @@ object GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec {
     _                    <- GravsearchQueryChecker.checkConstructClause(query.constructClause, typeInspectionResult)
     querySchema          <- ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
     appConfig            <- ZIO.service[AppConfig]
-    transformer <- ZIO.attempt(
+    transformer          <- ZIO.attempt(
                      new GravsearchToPrequeryTransformer(
                        constructClause = query.constructClause,
                        typeInspectionResult = typeInspectionResult,

@@ -37,8 +37,8 @@ final case class KnoraGroupRepoLive(
   private val cache: EntityCache[GroupIri, KnoraGroup],
 ) extends CachingEntityRepo[KnoraGroup, GroupIri](triplestore, mapper, cache)
     with KnoraGroupRepo {
-  override protected def resourceClass: ParsedIRI = ParsedIRI.create(KnoraAdmin.UserGroup)
-  override protected def namedGraphIri: Iri       = Vocabulary.NamedGraphs.dataAdmin
+  override protected def resourceClass: ParsedIRI           = ParsedIRI.create(KnoraAdmin.UserGroup)
+  override protected def namedGraphIri: Iri                 = Vocabulary.NamedGraphs.dataAdmin
   override protected def entityProperties: EntityProperties = EntityProperties(
     NonEmptyChunk(groupName, groupDescriptions, status, hasSelfJoinEnabled),
     Chunk(belongsToProject),

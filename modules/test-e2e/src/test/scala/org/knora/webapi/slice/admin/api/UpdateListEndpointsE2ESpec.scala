@@ -270,7 +270,7 @@ object UpdateListEndpointsE2ESpec extends E2EZSpec {
           )
       },
       test("update basic list information with repeated comment and label in different languages") {
-        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")
+        val listIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")
         val changeReq = ListChangeRequest(
           listIri = listIri,
           projectIri = anythingProjectIri,

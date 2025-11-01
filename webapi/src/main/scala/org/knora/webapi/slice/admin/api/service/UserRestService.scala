@@ -53,7 +53,7 @@ final case class UserRestService(
 ) {
 
   def getAllUsers(requestingUser: User): Task[UsersResponse] = for {
-    _ <- auth.ensureSystemAdminOrProjectAdminInAnyProject(requestingUser)
+    _        <- auth.ensureSystemAdminOrProjectAdminInAnyProject(requestingUser)
     internal <- userService.findAllRegularUsers
                   .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
                   .map(_.map(filterUserInformation(requestingUser, _, UserInformationType.Restricted)).sorted)
@@ -126,9 +126,9 @@ final case class UserRestService(
     userIri: UserIri,
     changeRequest: BasicUserInformationChangeRequest,
   ): Task[UserResponse] = for {
-    _    <- ensureNotABuiltInUser(userIri)
-    _    <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
-    user <- getKnoraUserOrNotFound(userIri)
+    _       <- ensureNotABuiltInUser(userIri)
+    _       <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
+    user    <- getKnoraUserOrNotFound(userIri)
     updated <- knoraUserService.updateUser(
                  user,
                  changeRequest.username,
@@ -155,7 +155,7 @@ final case class UserRestService(
                  PasswordHash.unsafeFrom(requestingUser.password.getOrElse("")),
                ),
              )
-      user <- getKnoraUserOrNotFound(userIri)
+      user     <- getKnoraUserOrNotFound(userIri)
       response <- knoraUserService
                     .changePassword(user, changeRequest.newPassword)
                     .flatMap(asExternalUserResponse(requestingUser, _))
@@ -252,10 +252,10 @@ final case class UserRestService(
     projectIri: ProjectIri,
   ): Task[UserResponse] =
     for {
-      _       <- ensureNotABuiltInUser(userIri)
-      _       <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
-      user    <- getKnoraUserOrNotFound(userIri)
-      project <- getProjectOrBadRequest(projectIri)
+      _           <- ensureNotABuiltInUser(userIri)
+      _           <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
+      user        <- getKnoraUserOrNotFound(userIri)
+      project     <- getProjectOrBadRequest(projectIri)
       updatedUser <- knoraUserService
                        .removeUserFromProjectAsAdmin(user, project)
                        .mapError(BadRequestException.apply)
@@ -282,9 +282,9 @@ final case class UserRestService(
     groupIri: GroupIri,
   ): Task[UserResponse] =
     for {
-      _    <- ensureNotABuiltInUser(userIri)
-      _    <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
-      user <- getKnoraUserOrNotFound(userIri)
+      _     <- ensureNotABuiltInUser(userIri)
+      _     <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
+      user  <- getKnoraUserOrNotFound(userIri)
       group <- groupService
                  .findById(groupIri)
                  .someOrFail(BadRequestException(s"Group with IRI: ${groupIri.value} not found."))

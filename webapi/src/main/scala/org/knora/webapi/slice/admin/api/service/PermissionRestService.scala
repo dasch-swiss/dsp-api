@@ -110,8 +110,8 @@ final case class PermissionRestService(
     request: ChangePermissionHasPermissionsApiRequestADM,
   ): Task[PermissionGetResponseADM] =
     for {
-      _    <- auth.ensureSystemAdmin(user)
-      uuid <- Random.nextUUID
+      _                 <- auth.ensureSystemAdmin(user)
+      uuid              <- Random.nextUUID
       newHasPermissions <- ZIO
                              .fromOption(NonEmptyChunk.fromIterableOption(request.hasPermissions))
                              .mapBoth(_ => BadRequestException("hasPermissions must not be empty"), identity)
@@ -179,7 +179,7 @@ final case class PermissionRestService(
     groupIri: GroupIri,
   ): Task[AdministrativePermissionGetResponseADM] =
     for {
-      _ <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+      _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
       result <-
         administrativePermissionService
           .findByGroupAndProject(groupIri, projectIri)

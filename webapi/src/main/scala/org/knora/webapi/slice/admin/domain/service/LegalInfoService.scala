@@ -69,7 +69,7 @@ case class LegalInfoService(
     shortcode: Shortcode,
   ): UIO[Validation[String, Unit]] =
     licenseIri match
-      case None => ZIO.succeed(Validation.unit)
+      case None      => ZIO.succeed(Validation.unit)
       case Some(iri) =>
         findEnabledLicenses(shortcode).map { licenses =>
           if (licenses.map(_.id).contains(iri)) { Validation.unit }
@@ -81,13 +81,13 @@ case class LegalInfoService(
     shortcode: Shortcode,
   ): UIO[Validation[String, Unit]] =
     copyrightHolder match
-      case None => ZIO.succeed(Validation.unit)
+      case None         => ZIO.succeed(Validation.unit)
       case Some(holder) =>
         projects
           .findByShortcode(shortcode)
           .orDie
           .map {
-            case None => Validation.fail(s"Project $shortcode not found")
+            case None          => Validation.fail(s"Project $shortcode not found")
             case Some(project) =>
               val holders = project.allowedCopyrightHolders
               if (holders.contains(holder)) { Validation.unit }
@@ -102,13 +102,13 @@ case class LegalInfoService(
     val graph                 = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
     val searchTermQueryString = filterAndOrder.filter.map(Rdf.literalOf).map(_.getQueryString)
     val authorVar             = "author"
-    val graphPattern =
+    val graphPattern          =
       s"""GRAPH ${graph.getQueryString} {
          |  ?fileValue ${Vocabulary.KnoraBase.hasAuthorship.getQueryString} ?$authorVar .
          |  ${searchTermQueryString.fold("")(term => s"FILTER(CONTAINS(LCASE(STR(?$authorVar)), ${term.toLowerCase}))")}
          |}""".stripMargin
 
-    val order = filterAndOrder.order.toQueryString
+    val order            = filterAndOrder.order.toQueryString
     val authorshipsQuery =
       s"""
          |SELECT DISTINCT ?$authorVar WHERE {
@@ -116,14 +116,14 @@ case class LegalInfoService(
          |} ORDER BY $order(?$authorVar) LIMIT ${paging.size} OFFSET ${paging.size * (paging.page - 1)}
          |""".stripMargin
     val runAuthorshipsQuery = for {
-      result <- triplestore.query(Select(authorshipsQuery)).map(_.results.bindings)
+      result  <- triplestore.query(Select(authorshipsQuery)).map(_.results.bindings)
       authors <-
         ZIO
           .fromEither(result.flatMap(_.rowMap.get(authorVar)).traverse(Authorship.from))
           .mapError(e => InconsistentRepositoryDataException(e))
     } yield authors
 
-    val countVar = "count"
+    val countVar   = "count"
     val countQuery =
       s"""
          |SELECT (COUNT(DISTINCT ?$authorVar) AS ?$countVar) WHERE {

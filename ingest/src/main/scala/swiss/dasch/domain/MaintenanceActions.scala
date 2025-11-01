@@ -96,7 +96,7 @@ final case class MaintenanceActionsLive(
       _        <- ZIO.logInfo(s"Checking for top left correction")
       tmpDir   <- storageService.getTempFolder()
       projects <- projectService.listAllProjects()
-      _ <-
+      _        <-
         ZIO
           .foreach(projects)(prj =>
             Files
@@ -127,9 +127,9 @@ final case class MaintenanceActionsLive(
 
   override def createWasTopLeftCorrectionAppliedReport(): Task[Unit] =
     for {
-      _        <- ZIO.logInfo(s"Checking where top left correction was applied")
-      tmpDir   <- storageService.getTempFolder()
-      projects <- projectService.listAllProjects()
+      _             <- ZIO.logInfo(s"Checking where top left correction was applied")
+      tmpDir        <- storageService.getTempFolder()
+      projects      <- projectService.listAllProjects()
       assetsWithBak <-
         ZIO
           .foreach(projects) { prj =>

@@ -146,7 +146,7 @@ case class InstanceChecker()(implicit val stringFormatter: StringFormatter) { se
 
              val objectTypeStr                          = objectType.toString
              val objectTypeIsKnoraDefinedClass: Boolean = isKnoraDefinedClass(objectType)
-             val objectTypeIsKnoraDatatype: Boolean =
+             val objectTypeIsKnoraDatatype: Boolean     =
                OntologyConstants.KnoraApiV2Simple.KnoraDatatypes.contains(objectTypeStr)
              val objectsOfProp: Vector[InstanceElement] =
                instanceElement.propertyObjects.getOrElse(instancePropertyName, Vector.empty)

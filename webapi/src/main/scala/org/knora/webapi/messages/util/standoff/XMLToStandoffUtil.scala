@@ -356,7 +356,7 @@ class XMLToStandoffUtil(
       val proc = new net.sf.saxon.s9api.Processor(false)
       val comp = proc.newXsltCompiler()
 
-      val exp = comp.compile(new StreamSource(new StringReader(XSLT)))
+      val exp    = comp.compile(new StreamSource(new StringReader(XSLT)))
       val source =
         try {
           proc.newDocumentBuilder().build(new StreamSource(new StringReader(xmlStr)))

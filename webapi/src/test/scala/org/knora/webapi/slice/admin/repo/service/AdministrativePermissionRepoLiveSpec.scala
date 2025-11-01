@@ -29,11 +29,11 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object AdministrativePermissionRepoLiveSpec extends ZIOSpecDefault {
-  private val repo       = ZIO.serviceWithZIO[AdministrativePermissionRepo]
-  private val db         = ZIO.serviceWithZIO[TriplestoreService]
-  private val shortcode  = Shortcode.unsafeFrom("0001")
-  private val groupIri   = GroupIri.makeNew(shortcode)
-  private val projectIri = ProjectIri.makeNew
+  private val repo                                                         = ZIO.serviceWithZIO[AdministrativePermissionRepo]
+  private val db                                                           = ZIO.serviceWithZIO[TriplestoreService]
+  private val shortcode                                                    = Shortcode.unsafeFrom("0001")
+  private val groupIri                                                     = GroupIri.makeNew(shortcode)
+  private val projectIri                                                   = ProjectIri.makeNew
   private def permission(permissions: Chunk[AdministrativePermissionPart]) =
     AdministrativePermission(PermissionIri.makeNew(shortcode), groupIri, projectIri, permissions)
 

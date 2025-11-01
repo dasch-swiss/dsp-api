@@ -83,7 +83,7 @@ final case class QueryTraverser(private val messageRelay: MessageRelay, private 
     for {
       // Optimization has to be called before WhereTransformer.transformStatementInWhere,
       // because optimisation might remove statements that would otherwise be expanded by transformStatementInWhere.
-      optimisedPatterns <- whereTransformer.optimiseQueryPatterns(patterns)
+      optimisedPatterns   <- whereTransformer.optimiseQueryPatterns(patterns)
       transformedPatterns <- ZIO.foreach(optimisedPatterns) {
                                case statementPattern: StatementPattern =>
                                  whereTransformer.transformStatementInWhere(

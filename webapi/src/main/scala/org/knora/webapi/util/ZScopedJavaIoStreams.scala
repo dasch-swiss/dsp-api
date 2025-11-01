@@ -49,7 +49,7 @@ object ZScopedJavaIoStreams {
 
   def fileOutputStream(path: zio.nio.file.Path): ZIO[Scope, Throwable, FileOutputStream] = fileOutputStream(path.toFile)
   def fileOutputStream(path: Path): ZIO[Scope, Throwable, FileOutputStream]              = fileOutputStream(path.toFile)
-  def fileOutputStream(file: File): ZIO[Scope, Throwable, FileOutputStream] = {
+  def fileOutputStream(file: File): ZIO[Scope, Throwable, FileOutputStream]              = {
     def acquire = ZIO.attempt(new FileOutputStream(file))
     ZIO.acquireRelease(acquire)(release)
   }
@@ -60,7 +60,7 @@ object ZScopedJavaIoStreams {
   }
 
   def zipInputStream(path: nio.file.Path): ZIO[Scope, Throwable, ZipInputStream] = zipInputStream(path.toFile)
-  def zipInputStream(file: File): ZIO[Scope, Throwable, ZipInputStream] = {
+  def zipInputStream(file: File): ZIO[Scope, Throwable, ZipInputStream]          = {
     def acquire(fis: InputStream) = ZIO.attempt(new ZipInputStream(fis))
     fileInputStream(file).flatMap(fis => ZIO.acquireRelease(acquire(fis))(release))
   }

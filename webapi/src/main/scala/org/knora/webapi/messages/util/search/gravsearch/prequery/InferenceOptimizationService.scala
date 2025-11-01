@@ -63,11 +63,11 @@ final case class InferenceOptimizationService(
   private def resolveEntityByShortcode(entityIri: SmartIri): Task[Seq[SmartIri]] = {
     val shortcode = entityIri.getProjectCode
     shortcode match {
-      case None => ZIO.succeed(Seq.empty)
+      case None        => ZIO.succeed(Seq.empty)
       case Some(value) =>
         for {
-          shortcode    <- ZIO.fromEither(Shortcode.from(value)).mapError(ValidationException.apply)
-          projectMaybe <- projectService.findByShortcode(shortcode)
+          shortcode        <- ZIO.fromEither(Shortcode.from(value)).mapError(ValidationException.apply)
+          projectMaybe     <- projectService.findByShortcode(shortcode)
           projectOntologies =
             projectMaybe match {
               case None          => Seq.empty
@@ -108,8 +108,8 @@ final case class InferenceOptimizationService(
       // from the cache, get the map from entity to the ontology where the entity is defined
       entityMap = ontoCache.entityDefinedInOntology
       // resolve all entities from the WHERE clause to the ontology where they are defined
-      relevantOntologies   <- ZIO.foreach(entities)(resolveEntity(_, entityMap))
-      relevantOntologiesSet = relevantOntologies.flatten.toSet
+      relevantOntologies     <- ZIO.foreach(entities)(resolveEntity(_, entityMap))
+      relevantOntologiesSet   = relevantOntologies.flatten.toSet
       relevantOntologiesMaybe =
         relevantOntologiesSet match {
           case ontologies =>

@@ -59,7 +59,7 @@ final case class GroupRestService(
 
   def postGroup(user: User)(request: GroupCreateRequest): Task[GroupGetResponseADM] =
     for {
-      _ <- auth.ensureSystemAdminOrProjectAdminById(user, request.project)
+      _       <- auth.ensureSystemAdminOrProjectAdminById(user, request.project)
       project <- knoraProjectService
                    .findById(request.project)
                    .someOrFail(NotFoundException(s"Project <${request.project}> not found."))

@@ -17,8 +17,8 @@ object ProjectRepositoryLiveSpec extends ZIOSpecDefault {
 
   private val repo = ZIO.serviceWithZIO[ProjectRepository]
 
-  private val counter      = new AtomicInteger()
-  private def newShortcode = ProjectShortcode.unsafeFrom(numberFormatter(counter.getAndIncrement()))
+  private val counter                             = new AtomicInteger()
+  private def newShortcode                        = ProjectShortcode.unsafeFrom(numberFormatter(counter.getAndIncrement()))
   private def numberFormatter(value: Int): String = {
     val hexString = value.toHexString
     "0" * (4 - hexString.length) + hexString

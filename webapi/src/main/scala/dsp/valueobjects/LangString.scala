@@ -74,9 +74,9 @@ object MultiLangString {
    */
   def make(values: Set[LangString]): Validation[ValidationException, MultiLangString] =
     values match {
-      case v if v.isEmpty => Validation.fail(ValidationException(MultiLangStringErrorMessages.MultiLangStringEmptySet))
+      case v if v.isEmpty                       => Validation.fail(ValidationException(MultiLangStringErrorMessages.MultiLangStringEmptySet))
       case v if v.size > v.map(_.language).size =>
-        val languages = v.toList.map(_.language)
+        val languages     = v.toList.map(_.language)
         val languageCount = languages.foldLeft[Map[LanguageCode, Int]](Map.empty) { (acc, lang) =>
           acc.updated(lang, acc.getOrElse(lang, 0) + 1)
         }
@@ -92,7 +92,7 @@ object LangStringErrorMessages {
 
 object MultiLangStringErrorMessages {
   val MultiLangStringEmptySet = "MultiLangString must consist of at least one LangStirng."
-  val LanguageNotUnique = (nonUniqueLanguages: Set[LanguageCode]) => {
+  val LanguageNotUnique       = (nonUniqueLanguages: Set[LanguageCode]) => {
     val issuesString = nonUniqueLanguages.toList.map(_.value).sorted
     s"Each Language must only appear once. $issuesString"
   }

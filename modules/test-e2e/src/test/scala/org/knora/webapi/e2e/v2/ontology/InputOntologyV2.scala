@@ -133,7 +133,7 @@ object InputOntologyV2 {
   ): InputOntologyV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val ontologyObj: JsonLDObject = jsonLDDocument.body
+    val ontologyObj: JsonLDObject     = jsonLDDocument.body
     val externalOntologyIri: SmartIri =
       ontologyObj.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.toSmartIriWithErr)
 
@@ -361,7 +361,7 @@ object InputOntologyV2 {
                               .getInt(OntologyConstants.Owl.MaxCardinality)
                               .fold(msg => throw BadRequestException(msg), identity) match {
                               case Some(value) => OntologyConstants.Owl.MaxCardinality -> value
-                              case None =>
+                              case None        =>
                                 throw BadRequestException(
                                   s"Missing OWL cardinality predicate in the definition of $classIri",
                                 )

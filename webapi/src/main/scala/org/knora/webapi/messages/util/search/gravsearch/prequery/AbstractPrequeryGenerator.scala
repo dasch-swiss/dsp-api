@@ -457,7 +457,7 @@ abstract class AbstractPrequeryGenerator(
         statementPattern.obj match {
           case _: IriRef                => ()
           case objectVar: QueryVariable => checkSubjectInOrderBy(objectVar)
-          case other =>
+          case other                    =>
             throw GravsearchException(
               s"Object of a linking statement must be an IRI or a variable, but ${other.toSparql} given.",
             )
@@ -1275,7 +1275,7 @@ abstract class AbstractPrequeryGenerator(
               // arguments are consistent, because this already been checked during type inspection.
               compareExpression.rightArg match {
                 case _: QueryVariable | _: IriRef => TransformedFilterPattern(Some(compareExpression))
-                case other =>
+                case other                        =>
                   throw GravsearchException(
                     s"Invalid right argument ${other.toSparql} in comparison (expected a variable or IRI representing a resource)",
                   )
@@ -1957,7 +1957,7 @@ abstract class AbstractPrequeryGenerator(
 
     typeInspectionResult.getTypeOfEntity(linkSourceEntity) match {
       case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) if nonPropertyTypeInfo.isResourceType => ()
-      case _ =>
+      case _                                                                                    =>
         throw GravsearchException(s"The first argument of ${functionIri.toSparql} must represent a knora-api:Resource")
     }
 
@@ -2038,7 +2038,7 @@ abstract class AbstractPrequeryGenerator(
         case OntologyConstants.KnoraApiV2Complex.MatchLabelFunction          => handleMatchLabelFunctionInComplexSchema
         case OntologyConstants.KnoraApiV2Complex.MatchTextInStandoffFunction => handleMatchTextInStandoffFunction
         case OntologyConstants.KnoraApiV2Complex.StandoffLinkFunction        => handleStandoffLinkFunction
-        case OntologyConstants.KnoraApiV2Complex.ToSimpleDateFunction =>
+        case OntologyConstants.KnoraApiV2Complex.ToSimpleDateFunction        =>
           throw GravsearchException(s"Function ${functionIri.toSparql} must be used in a comparison expression")
 
         case _ => throw NotImplementedException(s"Function ${functionCallExpression.functionIri} not found")

@@ -102,7 +102,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       propertyIri: SmartIri,
     ): DataCreated = {
       val cardinalities = OntologyCacheDataBuilder.cardinalitiesMap(propertyIri, cardinality)
-      val data =
+      val data          =
         OntologyCacheDataBuilder.builder
           .addOntology(
             ReadOntologyV2Builder
@@ -185,7 +185,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 iris.propertyIri,
               )
               for {
-                _ <- OntologyCacheFake.set(d.data)
+                _      <- OntologyCacheFake.set(d.data)
                 actual <- ZIO.serviceWithZIO[CardinalityService](
                             _.canSetCardinality(iris.classIri, iris.propertyIri, cardinality),
                           )
@@ -196,7 +196,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
         test("Given no super-class or subclass exists then setting a cardinality is possible") {
           val classIri    = CanSetCardinalityTestData.thingSmartIri
           val propertyIri = CanSetCardinalityTestData.hasValueSmartIri
-          val data = OntologyCacheDataBuilder.builder
+          val data        = OntologyCacheDataBuilder.builder
             .addOntology(
               ReadOntologyV2Builder
                 .builder(CanSetCardinalityTestData.anythingOntologySmartIri)
@@ -210,7 +210,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
 
           check(cardinalitiesGen()) { cardinality =>
             for {
-              _ <- OntologyCacheFake.set(data)
+              _      <- OntologyCacheFake.set(data)
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](
                   _.canSetCardinality(classIri.toInternalIri, propertyIri.toInternalIri, cardinality),
@@ -228,7 +228,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               check(cardinalitiesGen(AtLeastOne, Unbounded, ZeroOrOne)) { newCardinality =>
                 val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ExactlyOne)
                 for {
-                  _ <- OntologyCacheFake.set(d.data)
+                  _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
                               _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
                             )
@@ -242,7 +242,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             ) {
               val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ExactlyOne)
               for {
-                _ <- OntologyCacheFake.set(d.data)
+                _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.subclassIri, d.propertyIri, ExactlyOne))
               } yield assertTrue(actual.isRight)
@@ -257,7 +257,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               check(cardinalitiesGen(Unbounded, ZeroOrOne)) { newCardinality =>
                 val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(AtLeastOne)
                 for {
-                  _ <- OntologyCacheFake.set(d.data)
+                  _      <- OntologyCacheFake.set(d.data)
                   actual <-
                     ZIO.serviceWithZIO[CardinalityService](
                       _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
@@ -273,7 +273,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               check(cardinalitiesGen(AtLeastOne, ExactlyOne)) { newCardinality =>
                 val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(AtLeastOne)
                 for {
-                  _ <- OntologyCacheFake.set(d.data)
+                  _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
                               _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
                             )
@@ -290,7 +290,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               check(cardinalitiesGen(AtLeastOne, Unbounded)) { newCardinality =>
                 val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ZeroOrOne)
                 for {
-                  _ <- OntologyCacheFake.set(d.data)
+                  _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
                               _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
                             )
@@ -305,7 +305,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               check(cardinalitiesGen(ExactlyOne, ZeroOrOne)) { newCardinality =>
                 val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ZeroOrOne)
                 for {
-                  _ <- OntologyCacheFake.set(d.data)
+                  _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
                               _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
                             )
@@ -322,7 +322,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             check(cardinalitiesGen()) { newCardinality =>
               val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(Unbounded)
               for {
-                _ <- OntologyCacheFake.set(d.data)
+                _      <- OntologyCacheFake.set(d.data)
                 actual <- ZIO.serviceWithZIO[CardinalityService](
                             _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
                           )
@@ -339,7 +339,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
           ) {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(Unbounded)
             for {
-              _ <- OntologyCacheFake.set(d.data)
+              _      <- OntologyCacheFake.set(d.data)
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, Unbounded))
             } yield assertTrue(actual.isRight)
@@ -353,7 +353,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(Unbounded)
             check(cardinalitiesGen(AtLeastOne, ExactlyOne, ZeroOrOne)) { newCardinality =>
               for {
-                _ <- OntologyCacheFake.set(d.data)
+                _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
               } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
@@ -368,7 +368,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(ExactlyOne)
             check(cardinalitiesGen()) { newCardinality =>
               for {
-                _ <- OntologyCacheFake.set(d.data)
+                _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
               } yield assertTrue(actual.isRight)
@@ -383,7 +383,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(AtLeastOne)
             check(cardinalitiesGen(Unbounded, AtLeastOne)) { newCardinality =>
               for {
-                _ <- OntologyCacheFake.set(d.data)
+                _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
               } yield assertTrue(actual.isRight)
@@ -398,7 +398,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(AtLeastOne)
             check(cardinalitiesGen(ExactlyOne, ZeroOrOne)) { newCardinality =>
               for {
-                _ <- OntologyCacheFake.set(d.data)
+                _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
               } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
@@ -413,7 +413,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(ZeroOrOne)
             check(cardinalitiesGen(ZeroOrOne, Unbounded)) { newCardinality =>
               for {
-                _ <- OntologyCacheFake.set(d.data)
+                _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
               } yield assertTrue(actual.isRight)
@@ -428,7 +428,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(ZeroOrOne)
             check(cardinalitiesGen(ExactlyOne, AtLeastOne)) { newCardinality =>
               for {
-                _ <- OntologyCacheFake.set(d.data)
+                _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
               } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
@@ -456,7 +456,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             )
           check(cardinalitiesGen(ZeroOrOne, ExactlyOne)) { newCardinality =>
             for {
-              _ <- OntologyCacheFake.set(data.build)
+              _      <- OntologyCacheFake.set(data.build)
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](
                   _.canSetCardinality(
@@ -512,7 +512,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             )
           check(cardinalitiesGen(AtLeastOne)) { newCardinality =>
             for {
-              _ <- OntologyCacheFake.set(data.build)
+              _      <- OntologyCacheFake.set(data.build)
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](
                   _.canSetCardinality(
@@ -561,7 +561,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             )
           check(cardinalitiesGen(AtLeastOne, ZeroOrOne, ExactlyOne)) { newCardinality =>
             for {
-              _ <- OntologyCacheFake.set(data.build)
+              _      <- OntologyCacheFake.set(data.build)
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](
                   _.canSetCardinality(
@@ -609,7 +609,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
           )
           .build
         for {
-          _ <- OntologyCacheFake.set(ontologyCacheData)
+          _      <- OntologyCacheFake.set(ontologyCacheData)
           result <- ZIO.serviceWithZIO[CardinalityService](
                       _.canSetCardinality(Biblio.Class.Article, Biblio.Property.hasTitle, AtLeastOne),
                     )

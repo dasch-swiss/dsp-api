@@ -215,8 +215,8 @@ final case class CardinalityServiceLive(
     predicate: Cardinality => Boolean,
   ): List[ReadClassInfoV2] => Task[List[InternalIri]] = { classes =>
     for {
-      propSmartIri <- iriConverter.asInternalSmartIri(propertyIri)
-      classesInfo   = classes.map(_.entityInfoContent)
+      propSmartIri           <- iriConverter.asInternalSmartIri(propertyIri)
+      classesInfo             = classes.map(_.entityInfoContent)
       classesAndCardinalities =
         classesInfo.flatMap(it => getCardinalityForProperty(it, propSmartIri).map(c => (it.classIri.toInternalIri, c)))
       filteredClasses = classesAndCardinalities.filter { case (_, cardinality) => predicate.apply(cardinality) }
@@ -254,7 +254,7 @@ final case class CardinalityServiceLive(
     check: CheckCardinalitySubject,
   ): Task[List[InternalIri]] =
     for {
-      subclassIris <- ontologyRepo.findAllSubclassesBy(check.classIri).map(toClassIris)
+      subclassIris           <- ontologyRepo.findAllSubclassesBy(check.classIri).map(toClassIris)
       instancesAndTheirUsage <-
         predicateRepository.getCountForPropertyUsedNumberOfTimesWithClasses(
           check.propertyIri,

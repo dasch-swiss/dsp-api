@@ -19,10 +19,10 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 
 class SearchResponderV2SpecFullData(implicit sf: StringFormatter) {
 
-  val booksBookIri: String     = "http://www.knora.org/ontology/0001/books#Book"
-  val booksHasTextType: String = "http://www.knora.org/ontology/0001/books#hasTextType"
-  val testUser1: String        = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-  val testUser2: String        = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+  val booksBookIri: String                     = "http://www.knora.org/ontology/0001/books#Book"
+  val booksHasTextType: String                 = "http://www.knora.org/ontology/0001/books#hasTextType"
+  val testUser1: String                        = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+  val testUser2: String                        = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
   val bookTemplateReadResource: ReadResourceV2 = ReadResourceV2(
     label = "",
     resourceIri = "",

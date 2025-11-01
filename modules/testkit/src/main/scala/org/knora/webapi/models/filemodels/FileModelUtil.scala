@@ -70,8 +70,8 @@ object FileModelUtil {
   }
 
   def getFileValueTypeIRI(fileType: FileType): SmartIri = fileType match {
-    case FileType.DocumentFile(_, _, _) => OntologyConstants.KnoraApiV2Complex.DocumentFileValue.toSmartIri
-    case FileType.StillImageFile(_, _)  => OntologyConstants.KnoraApiV2Complex.StillImageFileValue.toSmartIri
+    case FileType.DocumentFile(_, _, _)     => OntologyConstants.KnoraApiV2Complex.DocumentFileValue.toSmartIri
+    case FileType.StillImageFile(_, _)      => OntologyConstants.KnoraApiV2Complex.StillImageFileValue.toSmartIri
     case FileType.StillImageExternalFile(_) =>
       OntologyConstants.KnoraApiV2Complex.StillImageExternalFileValue.toSmartIri
     case FileType.MovingImageFile(_, _) => OntologyConstants.KnoraApiV2Complex.MovingImageFileValue.toSmartIri
@@ -227,7 +227,7 @@ object FileModelConstants {
   val archiveRepresentation     = "ArchiveRepresentation"
   val knoraApiPrefix            = "knora-api"
   val anythingShortcode         = "0001"
-  val defaultJsonLdContextMap = Map(
+  val defaultJsonLdContextMap   = Map(
     "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
     "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#",

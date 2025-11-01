@@ -27,7 +27,7 @@ sealed trait Cardinality {
    * @return `true` if this cardinality is included in the `other`, `false` otherwise.
    */
   def isIncludedIn(other: Cardinality): Boolean = {
-    val lowerBoundIsIncluded = this.min >= other.min && other.max.forall(this.min <= _)
+    val lowerBoundIsIncluded      = this.min >= other.min && other.max.forall(this.min <= _)
     lazy val upperBoundIsIncluded = (this.max, other.max) match {
       case (_, None)                       => true
       case (None, Some(_))                 => false

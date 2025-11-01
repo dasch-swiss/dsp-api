@@ -59,7 +59,7 @@ trait TriplestoreService {
    * @return A [[SparqlSelectResult]].
    */
   def query(sparql: Select): Task[SparqlSelectResult]
-  final def select(sparql: SelectQuery): Task[SparqlSelectResult] = query(Select(sparql))
+  final def select(sparql: SelectQuery): Task[SparqlSelectResult]                                    = query(Select(sparql))
   final def selectWithTimeout(sparql: SelectQuery, timeout: SparqlTimeout): Task[SparqlSelectResult] =
     query(Select(sparql, timeout))
 

@@ -87,7 +87,7 @@ object SearchEndpointE2ESpecHelper {
     for {
       resultJsonLd <- response.assert200
       fileExists   <- fileExists(expectedFile)
-      result <- if (fileExists) compare(response, expectedFile)
+      result       <- if (fileExists) compare(response, expectedFile)
                 else
                   TestDataFileUtil
                     .writeTestData("searchR2RV2", expectedFile, resultJsonLd)

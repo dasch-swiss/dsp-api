@@ -27,14 +27,14 @@ object ResponseOps {
     def assert400: IO[ResponseError, String] =
       (r.body, r.code) match
         case (Left(error), StatusCode.BadRequest) => ZIO.succeed(error)
-        case (Right(_), StatusCode.BadRequest) =>
+        case (Right(_), StatusCode.BadRequest)    =>
           ZIO.fail(ResponseError("Expected 400 Bad Request but got a successful response"))
         case _ => ZIO.fail(ResponseError.from(StatusCode.BadRequest, r))
 
     def assert404: IO[ResponseError, String] =
       (r.body, r.code) match
         case (Left(error), StatusCode.NotFound) => ZIO.succeed(error)
-        case (Right(_), StatusCode.NotFound) =>
+        case (Right(_), StatusCode.NotFound)    =>
           ZIO.fail(ResponseError("Expected 404 Not Found but got a successful response"))
         case _ => ZIO.fail(ResponseError.from(StatusCode.NotFound, r))
 

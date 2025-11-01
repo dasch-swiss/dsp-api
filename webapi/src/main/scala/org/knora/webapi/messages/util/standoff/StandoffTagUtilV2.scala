@@ -120,7 +120,7 @@ final case class StandoffTagUtilV2Live(messageRelay: MessageRelay)(implicit val 
 
                        // The start index in the tag's IRI should match the one in its assertions.
 
-                       val startIndexFromIri: Int = standoffTagSmartIri.getStandoffStartIndex.get
+                       val startIndexFromIri: Int        = standoffTagSmartIri.getStandoffStartIndex.get
                        val startIndexFromAssertions: Int =
                          standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt
 
@@ -444,7 +444,7 @@ object StandoffTagUtilV2 {
       mustExistOnce.foreach { propIri =>
         attrsGroupedByPropIri.get(propIri) match {
           case Some(_) => ()
-          case None =>
+          case None    =>
             throw BadRequestException(
               s"the min cardinalities were not respected for the property $propIri (missing attribute for element ${standoffNodeFromXML.tagName})",
             )

@@ -37,7 +37,7 @@ object UserProfile {
       val projectsWithoutBuiltinProjects = userADM.projects
         .filter(_.id != KnoraProjectRepo.builtIn.SystemProject.id)
         .filter(_.id != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject)
-      val projectInfosV1 = projectsWithoutBuiltinProjects.map(ProjectInfo.from)
+      val projectInfosV1                          = projectsWithoutBuiltinProjects.map(ProjectInfo.from)
       val projects_info_v1: Map[IRI, ProjectInfo] =
         projectInfosV1.map(_.id).zip(projectInfosV1).toMap[IRI, ProjectInfo]
 

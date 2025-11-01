@@ -42,7 +42,7 @@ object DefaultObjectAccessPermissionRepoLiveSpec extends ZIOSpecDefault {
 
   private val resourceClassIri: InternalIri = InternalIri("https://example.com/rc")
   private val propertyIri: InternalIri      = InternalIri("https://example.com/p")
-  private val expected = permission(
+  private val expected                      = permission(
     ForWhat.ResourceClassAndProperty(resourceClassIri, propertyIri),
     Chunk(
       DefaultObjectAccessPermissionPart(RestrictedView, NonEmptyChunk(groupIri)),

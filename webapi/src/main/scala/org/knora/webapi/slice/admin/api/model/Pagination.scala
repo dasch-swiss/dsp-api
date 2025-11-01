@@ -25,7 +25,7 @@ object Pagination {
 final case class PagedResponse[A] private (data: Seq[A], pagination: Pagination)
 object PagedResponse {
   given [A: JsonCodec]: JsonCodec[PagedResponse[A]] = DeriveJsonCodec.gen[PagedResponse[A]]
-  inline given [A]: Schema[PagedResponse[A]] = Schema
+  inline given [A]: Schema[PagedResponse[A]]        = Schema
     .derived[PagedResponse[A]]
     .modify(_.data)(_.copy(isOptional = false))
 

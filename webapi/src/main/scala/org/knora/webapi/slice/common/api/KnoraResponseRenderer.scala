@@ -87,13 +87,13 @@ final class KnoraResponseRenderer(config: AppConfig, stringFormatter: StringForm
         case ProjectGetResponse(project)   => ProjectGetResponse(projectAsExternalRepresentation(project))
         case ProjectsGetResponse(projects) => ProjectsGetResponse(projects.map(projectAsExternalRepresentation))
 
-        case GroupsGetResponseADM(groups) => GroupsGetResponseADM(groups.map(groupAsExternalRepresentation))
-        case GroupGetResponseADM(group)   => GroupGetResponseADM(groupAsExternalRepresentation(group))
+        case GroupsGetResponseADM(groups)        => GroupsGetResponseADM(groups.map(groupAsExternalRepresentation))
+        case GroupGetResponseADM(group)          => GroupGetResponseADM(groupAsExternalRepresentation(group))
         case GroupMembersGetResponseADM(members) =>
           GroupMembersGetResponseADM(members.map(userDtoAsExternalRepresentation))
 
-        case UsersResponse(users) => UsersResponse(users.map(userDtoAsExternalRepresentation))
-        case UserResponse(user)   => UserResponse(userDtoAsExternalRepresentation(user))
+        case UsersResponse(users)                           => UsersResponse(users.map(userDtoAsExternalRepresentation))
+        case UserResponse(user)                             => UserResponse(userDtoAsExternalRepresentation(user))
         case UserProjectMembershipsGetResponseADM(projects) =>
           UserProjectMembershipsGetResponseADM(projects.map(projectAsExternalRepresentation))
         case UserProjectAdminMembershipsGetResponseADM(projects) =>

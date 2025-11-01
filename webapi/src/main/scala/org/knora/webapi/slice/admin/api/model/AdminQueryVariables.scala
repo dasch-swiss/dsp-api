@@ -38,7 +38,7 @@ object AdminQueryVariables {
       .mapDecode[Option[Either[ProjectIri, Shortcode]]] {
         case (Some(iri), None)       => DecodeResult.Value(Some(Left(iri)))
         case (None, Some(shortcode)) => DecodeResult.Value(Some(Right(shortcode)))
-        case (Some(_), Some(_)) =>
+        case (Some(_), Some(_))      =>
           DecodeResult.Error(
             "Query params project IRI and shortcode are mutually exclusive",
             BadRequestException("Provide either a project IRI or a project shortcode"),

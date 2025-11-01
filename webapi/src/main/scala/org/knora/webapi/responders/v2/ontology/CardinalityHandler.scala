@@ -66,7 +66,7 @@ final case class CardinalityHandler(
 
       // Check that the submitted cardinality to delete is defined on this class
       cardinalitiesToDelete: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] = internalClassInfo.directCardinalities
-      isDefinedOnClassList <- ZIO.foreach(cardinalitiesToDelete.toList) { case (k, v) =>
+      isDefinedOnClassList                                                     <- ZIO.foreach(cardinalitiesToDelete.toList) { case (k, v) =>
                                 isCardinalityDefinedOnClass(cacheData, k, v, internalClassIri, internalOntologyIri)
                               }
       atLeastOneCardinalityNotDefinedOnClass: Boolean = isDefinedOnClassList.contains(false)
@@ -74,7 +74,7 @@ final case class CardinalityHandler(
       // Check if property is used in resources of this class
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
-      propertyIsUsed <- isPropertyUsedInResources(
+      propertyIsUsed                     <- isPropertyUsedInResources(
                           internalClassIri.toInternalIri,
                           submittedPropertyToDelete.toInternalIri,
                         )
@@ -204,7 +204,7 @@ final case class CardinalityHandler(
 
       // Check that the submitted cardinality to delete is defined on this class
       cardinalitiesToDelete: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] = internalClassInfo.directCardinalities
-      isDefinedOnClassList <- ZIO.foreach(cardinalitiesToDelete.toList) { case (k, v) =>
+      isDefinedOnClassList                                                     <- ZIO.foreach(cardinalitiesToDelete.toList) { case (k, v) =>
                                 isCardinalityDefinedOnClass(cacheData, k, v, internalClassIri, internalOntologyIri)
                               }
       _ <- ZIO
@@ -214,7 +214,7 @@ final case class CardinalityHandler(
       // Check if property is used in resources of this class
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
-      propertyIsUsed <-
+      propertyIsUsed                     <-
         isPropertyUsedInResources(internalClassIri.toInternalIri, submittedPropertyToDelete.toInternalIri)
       _ <- ZIO
              .fail(BadRequestException("Property is used in data. The cardinality cannot be deleted."))
@@ -278,7 +278,7 @@ final case class CardinalityHandler(
 
       // Add the cardinalities to the class definition in the triplestore.
       currentTime: Instant = Instant.now
-      updateSparql = sparql.v2.txt.replaceClassCardinalities(
+      updateSparql         = sparql.v2.txt.replaceClassCardinalities(
                        ontologyNamedGraphIri = internalOntologyIri,
                        ontologyIri = internalOntologyIri,
                        classIri = internalClassIri,

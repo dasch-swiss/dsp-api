@@ -33,9 +33,9 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
   private val ontologySmartIri: SmartIri    = aKnownClassSmartIri.getOntologyFromEntity
 
   // accessor
-  private def findById(id: InternalIri)          = ZIO.serviceWithZIO[OntologyRepo](_.findById(id))
-  private def findAll()                          = ZIO.serviceWithZIO[OntologyRepo](_.findAll())
-  private def findClassBy(classIri: InternalIri) = ZIO.serviceWithZIO[OntologyRepo](_.findClassBy(classIri))
+  private def findById(id: InternalIri)                    = ZIO.serviceWithZIO[OntologyRepo](_.findById(id))
+  private def findAll()                                    = ZIO.serviceWithZIO[OntologyRepo](_.findAll())
+  private def findClassBy(classIri: InternalIri)           = ZIO.serviceWithZIO[OntologyRepo](_.findClassBy(classIri))
   private def findAllSuperClassesBy(classIri: InternalIri) =
     ZIO.serviceWithZIO[OntologyRepo](_.findAllSuperClassesBy(classIri))
   private def findAllSubclassesBy(classIri: InternalIri) =
@@ -60,7 +60,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
       suite("findClassBy(InternalIri)")(
         test("when searching for a known iri => return Some(ReadClassInfoV2])") {
           val knownClass = ReadClassInfoV2Builder.builder(aKnownClassIri).build
-          val data = OntologyCacheDataBuilder.builder
+          val data       = OntologyCacheDataBuilder.builder
             .addOntology(
               ReadOntologyV2Builder
                 .builder(ontologySmartIri)

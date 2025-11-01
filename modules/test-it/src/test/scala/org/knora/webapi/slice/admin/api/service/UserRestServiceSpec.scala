@@ -274,12 +274,12 @@ object UserRestServiceSpec extends E2EZSpec {
       },
       test("DELETE user from project and also as project admin") {
         for {
-          membershipsBeforeUpdate <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
-          _                       <- userRestService(_.addUserToProjectAsAdmin(rootUser)(normalUser.userIri, imagesProject.id))
+          membershipsBeforeUpdate             <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
+          _                                   <- userRestService(_.addUserToProjectAsAdmin(rootUser)(normalUser.userIri, imagesProject.id))
           projectAdminMembershipsBeforeUpdate <-
             userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
-          _                      <- userRestService(_.removeUserFromProject(rootUser)(normalUser.userIri, imagesProject.id))
-          membershipsAfterUpdate <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
+          _                                  <- userRestService(_.removeUserFromProject(rootUser)(normalUser.userIri, imagesProject.id))
+          membershipsAfterUpdate             <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
           projectAdminMembershipsAfterUpdate <-
             userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
           received <- projectRestService(_.getProjectMembersById(rootUser)(imagesProject.id))
@@ -297,7 +297,7 @@ object UserRestServiceSpec extends E2EZSpec {
       test("Not ADD user to project admin group if he is not a member of that project") {
         for {
           membershipsBeforeUpdate <- userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
-          _ <- ZIO
+          _                       <- ZIO
                  .fail(IllegalStateException("This test assumes the user is not a member of the project"))
                  .unless(membershipsBeforeUpdate.projects == Seq())
           exit <- userRestService(_.addUserToProjectAsAdmin(rootUser)(normalUser.userIri, imagesProject.id)).exit
@@ -312,7 +312,7 @@ object UserRestServiceSpec extends E2EZSpec {
           membershipsBeforeUpdate <- userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
           _                       <- userRestService(_.addUserToProject(rootUser)(normalUser.userIri, imagesProject.id))
           _                       <- userRestService(_.addUserToProjectAsAdmin(rootUser)(normalUser.userIri, imagesProject.id))
-          membershipsAfterUpdate <-
+          membershipsAfterUpdate  <-
             userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
           received <- projectRestService(_.getProjectAdminMembersById(rootUser)(imagesProject.id))
         } yield assertTrue(
@@ -339,7 +339,7 @@ object UserRestServiceSpec extends E2EZSpec {
         for {
           membershipsBeforeUpdate <-
             userService(_.findUserByIri(normalUser.userIri)).map(_.map(_.groups).getOrElse(Seq.empty))
-          _ <- userRestService(_.addUserToGroup(rootUser)(normalUser.userIri, imagesReviewerGroup.groupIri))
+          _                      <- userRestService(_.addUserToGroup(rootUser)(normalUser.userIri, imagesReviewerGroup.groupIri))
           membershipsAfterUpdate <-
             userService(_.findUserByIri(normalUser.userIri)).map(_.map(_.groups).getOrElse(Seq.empty))
           received <- groupRestService(_.getGroupMembers(rootUser)(imagesReviewerGroup.groupIri))
@@ -353,7 +353,7 @@ object UserRestServiceSpec extends E2EZSpec {
         for {
           membershipsBeforeUpdate <-
             userService(_.findUserByIri(normalUser.userIri).map(_.map(_.groups).getOrElse(Seq.empty)))
-          _ <- userRestService(_.removeUserFromGroup(rootUser)(normalUser.userIri, imagesReviewerGroup.groupIri))
+          _                      <- userRestService(_.removeUserFromGroup(rootUser)(normalUser.userIri, imagesReviewerGroup.groupIri))
           membershipsAfterUpdate <-
             userService(_.findUserByIri(normalUser.userIri)).map(_.map(_.groups).getOrElse(Seq.empty))
           received <- groupRestService(_.getGroupMembers(rootUser)(imagesReviewerGroup.groupIri))

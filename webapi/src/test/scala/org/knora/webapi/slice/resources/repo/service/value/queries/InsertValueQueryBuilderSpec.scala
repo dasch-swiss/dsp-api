@@ -673,7 +673,7 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
         },
         test("with language") {
           for {
-            testValue <- ZIO.succeed(TestDataFactory.createTextValue(withLanguage = true))
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValue(withLanguage = true))
             builderQuery <-
               ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
           } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withLanguage")
@@ -945,8 +945,8 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
       test("Text value with SPARQL injection attempt is properly sanitized") {
         val testValue = TestDataFactory.createTextValueWithSparqlInjection()
         for {
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          parsedQuery  <- ZIO.attempt(UpdateFactory.create(builderQuery))
+          builderQuery     <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
+          parsedQuery      <- ZIO.attempt(UpdateFactory.create(builderQuery))
           validationResult <- validateLiteralContains(
                                 parsedQuery,
                                 OntologyConstants.KnoraBase.ValueHasString,
@@ -962,8 +962,8 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
       test("Text value with quotes and newlines are properly escaped") {
         val testValue = TestDataFactory.createTextValueWithQuotesAndNewlines()
         for {
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          parsedQuery  <- ZIO.attempt(UpdateFactory.create(builderQuery))
+          builderQuery     <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
+          parsedQuery      <- ZIO.attempt(UpdateFactory.create(builderQuery))
           validationResult <- validateLiteralContains(
                                 parsedQuery,
                                 OntologyConstants.KnoraBase.ValueHasString,
@@ -979,8 +979,8 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
       test("Text value with control characters are safely handled") {
         val testValue = TestDataFactory.createTextValueWithControlChars()
         for {
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          parsedQuery  <- ZIO.attempt(UpdateFactory.create(builderQuery))
+          builderQuery     <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
+          parsedQuery      <- ZIO.attempt(UpdateFactory.create(builderQuery))
           validationResult <- validateLiteralContains(
                                 parsedQuery,
                                 OntologyConstants.KnoraBase.ValueHasString,
@@ -994,8 +994,8 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
       test("URI value with SPARQL keywords is treated as literal data") {
         val testValue = TestDataFactory.createUriValueWithSparqlKeywords()
         for {
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          parsedQuery  <- ZIO.attempt(UpdateFactory.create(builderQuery))
+          builderQuery     <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
+          parsedQuery      <- ZIO.attempt(UpdateFactory.create(builderQuery))
           validationResult <- validateUriContains(
                                 parsedQuery,
                                 value =>
@@ -1009,8 +1009,8 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
       test("Comment with injection attempt is properly sanitized") {
         val testValue = TestDataFactory.createTextValueWithCommentInjection()
         for {
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          parsedQuery  <- ZIO.attempt(UpdateFactory.create(builderQuery))
+          builderQuery     <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
+          parsedQuery      <- ZIO.attempt(UpdateFactory.create(builderQuery))
           validationResult <- validateLiteralContains(
                                 parsedQuery,
                                 OntologyConstants.KnoraBase.ValueHasComment,
@@ -1024,8 +1024,8 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
       test("Geoname value with malicious code is sanitized") {
         val testValue = TestDataFactory.createGeonameValueWithMaliciousCode()
         for {
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          parsedQuery  <- ZIO.attempt(UpdateFactory.create(builderQuery))
+          builderQuery     <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
+          parsedQuery      <- ZIO.attempt(UpdateFactory.create(builderQuery))
           validationResult <- validateLiteralContains(
                                 parsedQuery,
                                 OntologyConstants.KnoraBase.ValueHasGeonameCode,
@@ -1039,8 +1039,8 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
       test("Data URI with encoded SPARQL is treated as literal") {
         val testValue = TestDataFactory.createUriValueWithDataUri()
         for {
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
-          parsedQuery  <- ZIO.attempt(UpdateFactory.create(builderQuery))
+          builderQuery     <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
+          parsedQuery      <- ZIO.attempt(UpdateFactory.create(builderQuery))
           validationResult <- validateUriContains(
                                 parsedQuery,
                                 _.contains("data:text/plain;base64"),
@@ -1056,7 +1056,7 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
         for {
           testValue       <- ZIO.succeed(TestDataFactory.createTextValue())
           currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
-          builderQuery <- ZIO.attempt(
+          builderQuery    <- ZIO.attempt(
                             TestDataFactory.createBuilderQuery(
                               testValue,
                               newUuidOrCurrentIri = Right(currentValueIri),
@@ -1069,7 +1069,7 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
           testValue       <- ZIO.succeed(TestDataFactory.createTextValue())
           linkUpdates     <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate()))
           currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
-          builderQuery <- ZIO.attempt(
+          builderQuery    <- ZIO.attempt(
                             TestDataFactory.createBuilderQuery(
                               testValue,
                               linkUpdates = linkUpdates,
@@ -1083,7 +1083,7 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
           testValue       <- ZIO.succeed(TestDataFactory.createTextValue())
           linkUpdates     <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate(newReferenceCount = 0)))
           currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
-          builderQuery <- ZIO.attempt(
+          builderQuery    <- ZIO.attempt(
                             TestDataFactory.createBuilderQuery(
                               testValue,
                               linkUpdates = linkUpdates,

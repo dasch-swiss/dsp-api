@@ -234,7 +234,7 @@ object DateUtil {
     val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
     // val monthsInYear = Calendar.MONTH // will be used to determine the number of months in the given year (generic for other calendars)
     val dateStringSplitByEra: Array[String] = dateString.split(StringFormatter.EraSeparator)
-    val era: Int = dateStringSplitByEra.length match {
+    val era: Int                            = dateStringSplitByEra.length match {
 
       case 1 =>
         // no era indicated, assume AD/CE
@@ -458,7 +458,7 @@ object DateUtil {
   private def getGregorianCalendarChangeDate(calendarType: KnoraCalendarType.Value): Date =
     // https://docs.oracle.com/javase/7/docs/api/java/util/GregorianCalendar.html#setGregorianChange%28java.util.Date%29
     calendarType match {
-      case KnoraCalendarType.JULIAN => new Date(java.lang.Long.MAX_VALUE) // for Julian: if calendar given in Julian cal
+      case KnoraCalendarType.JULIAN    => new Date(java.lang.Long.MAX_VALUE) // for Julian: if calendar given in Julian cal
       case KnoraCalendarType.GREGORIAN =>
         new Date(java.lang.Long.MIN_VALUE) // for Gregorian: if calendar given in Gregorian cal
       case _ => throw BadRequestException(s"Invalid calendar name: $calendarType")

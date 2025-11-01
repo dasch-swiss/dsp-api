@@ -31,7 +31,7 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
   private val validCopyrightHolder = CopyrightHolder.unsafeFrom("DaSCH")
   private val enabledLicense       = LicenseIri.CC_BY_4_0
   private val disabledLicense      = LicenseIri.AI_GENERATED
-  private val fileValueValid =
+  private val fileValueValid       =
     FileValueV2("unused", "unused", None, None, Some(validCopyrightHolder), None, Some(enabledLicense))
   private val setupProject = projectRepo(
     _.save(
@@ -94,7 +94,7 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
     },
     test("A FileValue with not enabled LicenseIri should be invalid") {
       for {
-        prj <- setupProject
+        prj    <- setupProject
         actual <-
           service(_.validateLegalInfo(fileValueValid.copy(licenseIri = Some(disabledLicense)), prj.shortcode)).exit
       } yield assert(actual)(fails(equalTo(s"License $disabledLicense is not allowed in project ${prj.shortcode}")))
@@ -111,7 +111,7 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
         prj          <- setupProject
         invalidHolder = CopyrightHolder.unsafeFrom("this-is-not-allowed")
         invalidIri    = LicenseIri.makeNew
-        actual <-
+        actual       <-
           service(
             _.validateLegalInfo(
               fileValueValid.copy(copyrightHolder = Some(invalidHolder), licenseIri = Some(invalidIri)),

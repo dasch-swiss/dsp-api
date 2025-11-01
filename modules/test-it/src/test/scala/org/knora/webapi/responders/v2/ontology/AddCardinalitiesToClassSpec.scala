@@ -71,7 +71,7 @@ object AddCardinalitiesToClassSpec extends E2EZSpec {
 
         // add additional cardinality to the class
         ontologyLastModificationDate <- OntologyTestHelper.lastModificationDate(freetestOntologyIri)
-        _ <- ontologyResponder(
+        _                            <- ontologyResponder(
                _.addCardinalitiesToClass(
                  AddCardinalitiesToClassRequestV2(
                    classInfoContent = ClassInfoContentV2(

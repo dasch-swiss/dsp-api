@@ -85,12 +85,12 @@ object OntologyFormatsE2ESpec extends E2EZSpec {
       responseJsonLd <- getResponse(httpGetTest.uri, JsonLD.mediaType)
       responseTtl    <- getResponse(httpGetTest.uri, Turtle.mediaType)
       responseRdfXml <- getResponse(httpGetTest.uri, RdfXml.mediaType)
-      _ = if (!httpGetTest.fileExists) {
+      _               = if (!httpGetTest.fileExists) {
             httpGetTest.writeReceived(responseJsonLd)
             throw new AssertionError(s"File not found ${httpGetTest.makeFile().toAbsolutePath}")
           }
       approvedJsonLd = httpGetTest.readFile()
-      _ = if (responseJsonLd.fromJson[Json] != approvedJsonLd.fromJson[Json]) {
+      _              = if (responseJsonLd.fromJson[Json] != approvedJsonLd.fromJson[Json]) {
             httpGetTest.writeReceived(responseJsonLd)
             throw new AssertionError(
               s"""|

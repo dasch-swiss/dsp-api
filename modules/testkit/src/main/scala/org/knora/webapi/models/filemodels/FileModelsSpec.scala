@@ -91,11 +91,11 @@ object FileModelsSpec extends ZIOSpecDefault {
           )
         },
         test("create a valid representation of a DocumentRepresentation with custom values") {
-          val internalFilename = "document-file.doc"
-          val dimX             = Some(20)
-          val dimY             = Some(30)
-          val pageCount        = Some(550)
-          val customLabel      = "a custom label"
+          val internalFilename       = "document-file.doc"
+          val dimX                   = Some(20)
+          val dimY                   = Some(30)
+          val pageCount              = Some(550)
+          val customLabel            = "a custom label"
           val documentRepresentation = UploadFileRequest.make(
             fileType = FileType.DocumentFile(
               pageCount = pageCount,
@@ -200,9 +200,9 @@ object FileModelsSpec extends ZIOSpecDefault {
             fileType = FileType.DocumentFile(),
             internalFilename = fileNamePDF,
           )
-          val actual = documentRepresentation.toJsonLd().fromJson[Json]
+          val actual   = documentRepresentation.toJsonLd().fromJson[Json]
           val expected = Json.Obj(
-            "@type" -> Json.Str("knora-api:DocumentRepresentation"),
+            "@type"                          -> Json.Str("knora-api:DocumentRepresentation"),
             "knora-api:hasDocumentFileValue" -> Json.Obj(
               "@type"                          -> Json.Str("knora-api:DocumentFileValue"),
               "knora-api:fileValueHasFilename" -> Json.Str(fileNamePDF),
@@ -211,7 +211,7 @@ object FileModelsSpec extends ZIOSpecDefault {
               "@id" -> Json.Str("http://rdfh.ch/projects/0001"),
             ),
             "rdfs:label" -> Json.Str("test label"),
-            "@context" -> Json.Obj(
+            "@context"   -> Json.Obj(
               "rdf"       -> Json.Str("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
               "knora-api" -> Json.Str("http://api.knora.org/ontology/knora-api/v2#"),
               "rdfs"      -> Json.Str("http://www.w3.org/2000/01/rdf-schema#"),
@@ -241,7 +241,7 @@ object FileModelsSpec extends ZIOSpecDefault {
             )
             .fromJson[Json]
           val expected = Json.Obj(
-            "@type" -> Json.Str(s"$ontologyName:${className.get}"),
+            "@type"                          -> Json.Str(s"$ontologyName:${className.get}"),
             "knora-api:hasDocumentFileValue" -> Json.Obj(
               "@type"                          -> Json.Str("knora-api:DocumentFileValue"),
               "knora-api:fileValueHasFilename" -> Json.Str(fileNamePDF),
@@ -250,7 +250,7 @@ object FileModelsSpec extends ZIOSpecDefault {
               "@id" -> Json.Str(s"http://rdfh.ch/projects/$shortcode"),
             ),
             "rdfs:label" -> Json.Str(label),
-            "@context" -> Json.Obj(
+            "@context"   -> Json.Obj(
               "rdf"        -> Json.Str("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
               "knora-api"  -> Json.Str("http://api.knora.org/ontology/knora-api/v2#"),
               "rdfs"       -> Json.Str("http://www.w3.org/2000/01/rdf-schema#"),
@@ -547,10 +547,10 @@ object FileModelsSpec extends ZIOSpecDefault {
             resourceIri = resourceIRI,
             valueIri = valueIRI,
           )
-          val actual = documentRepresentation.toJsonLd.fromJson[Json]
+          val actual   = documentRepresentation.toJsonLd.fromJson[Json]
           val expected = Json.Obj(
-            "@id"   -> Json.Str(resourceIRI),
-            "@type" -> Json.Str("knora-api:DocumentRepresentation"),
+            "@id"                            -> Json.Str(resourceIRI),
+            "@type"                          -> Json.Str("knora-api:DocumentRepresentation"),
             "knora-api:hasDocumentFileValue" -> Json.Obj(
               "@id"                            -> Json.Str(valueIRI),
               "@type"                          -> Json.Str("knora-api:DocumentFileValue"),
@@ -579,10 +579,10 @@ object FileModelsSpec extends ZIOSpecDefault {
             className = Some(className),
             ontologyName = prefix,
           )
-          val actual = documentRepresentation.toJsonLd.fromJson[Json]
+          val actual   = documentRepresentation.toJsonLd.fromJson[Json]
           val expected = Json.Obj(
-            "@id"   -> Json.Str(resourceIRI),
-            "@type" -> Json.Str(s"$prefix:$className"),
+            "@id"                            -> Json.Str(resourceIRI),
+            "@type"                          -> Json.Str(s"$prefix:$className"),
             "knora-api:hasDocumentFileValue" -> Json.Obj(
               "@id"                            -> Json.Str(valueIRI),
               "@type"                          -> Json.Str("knora-api:DocumentFileValue"),

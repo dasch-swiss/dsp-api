@@ -98,7 +98,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
   }
 
   private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Scope, Dataset] = {
-    val acquire = getDataset.tap(ds => ZIO.succeed(ds.begin(readWrite)))
+    val acquire              = getDataset.tap(ds => ZIO.succeed(ds.begin(readWrite)))
     def release(ds: Dataset) = ZIO.succeed(try {
       ds.commit()
     } finally { ds.end() })
@@ -119,7 +119,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
 
   private def asVariableResultsRow(solution: QuerySolution): VariableResultsRow = {
     val keyValueMap = solution.varNames.asScala.map { key =>
-      val node = solution.get(key).asNode
+      val node          = solution.get(key).asNode
       val value: String = // do not include datatype in string if node is a literal
         if (node.isLiteral) { node.getLiteralLexicalForm }
         else { node.toString }
@@ -133,7 +133,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
 
   override def query(query: Construct): Task[SparqlConstructResponse] =
     for {
-      turtle <- queryRdf(query)
+      turtle   <- queryRdf(query)
       rdfModel <- ZIO
                     .attempt(RdfModel.fromTurtle(turtle))
                     .foldZIO(
@@ -193,7 +193,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
       fos <- fileOutputStream(outputFile)
       ds  <- getDataset
       lang = RdfFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
-      _ <- ZIO.attemptBlocking {
+      _   <- ZIO.attemptBlocking {
              ds.begin(ReadWrite.READ)
              try { ds.getNamedModel(graphIri.value).write(fos, lang.getName) }
              finally { ds.end() }
@@ -261,7 +261,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
   override def checkTriplestore(): Task[TriplestoreStatus] = ZIO.succeed(Available)
 
   override def setDataset(ds: Dataset): UIO[Unit] = datasetRef.set(ds)
-  override def getDataset: UIO[Dataset] =
+  override def getDataset: UIO[Dataset]           =
     datasetRef.get
 
   override def printDataset(prefix: String = ""): UIO[Unit] =

@@ -93,7 +93,7 @@ private object TriGCombiner {
 
   def combineTrigFiles(inputFiles: Iterable[Path], outputFile: Path): Task[Path] = ZIO.scoped {
     for {
-      outFile <- ZScopedJavaIoStreams.fileBufferedOutputStream(outputFile)
+      outFile   <- ZScopedJavaIoStreams.fileBufferedOutputStream(outputFile)
       outWriter <- createPrefixDedupStreamRDF(outFile).map { it =>
                      it.start(); it
                    }
@@ -115,7 +115,7 @@ private object TriGCombiner {
 
   // Define a custom StreamRDF implementation to filter out duplicate @prefix directives
   private def dedupPrefixStream(writer: StreamRDF): StreamRDF = new StreamRDFBase {
-    private val prefixes = mutable.Set[String]()
+    private val prefixes                                   = mutable.Set[String]()
     override def prefix(prefix: String, iri: String): Unit =
       if (!prefixes.contains(prefix)) {
         writer.prefix(prefix, iri)
@@ -181,7 +181,7 @@ final case class ProjectExportServiceLive(
     val (projectPred, projectObj)    = (`var`("projectPred"), `var`("projectObj"))
     val (user, userPred, userObj)    = (`var`("user"), `var`("userPred"), `var`("userObj"))
     val (group, groupPred, groupObj) = (`var`("group"), `var`("groupPred"), `var`("groupObj"))
-    val q = Queries
+    val q                            = Queries
       .CONSTRUCT(
         projectIri.has(projectPred, projectObj),
         user.has(userPred, userObj),

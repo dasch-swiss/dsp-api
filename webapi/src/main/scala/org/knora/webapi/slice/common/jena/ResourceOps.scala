@@ -21,7 +21,7 @@ import org.knora.webapi.slice.common.jena.StatementOps.*
 object ResourceOps {
 
   extension (res: Resource) {
-    def statementOption(p: Property): Option[Statement] = Option(res.getProperty(p))
+    def statementOption(p: Property): Option[Statement]   = Option(res.getProperty(p))
     def statement(p: Property): Either[String, Statement] =
       statementOption(p).toRight(s"Required property not found ${p.getURI}")
 
@@ -70,9 +70,9 @@ object ResourceOps {
     def objectStringListOption[A](p: Property, mapper: String => Either[String, A]): Either[String, Option[List[A]]] =
       objectStringListOption(p).flatMap(_.traverse(_.traverse(mapper)))
 
-    def objectUri(p: Property): Either[String, String]                                    = statement(p).flatMap(stmt => stmt.objectAsUri)
-    def objectUri[A](p: Property, mapper: String => Either[String, A]): Either[String, A] = objectUri(p).flatMap(mapper)
-    def objectUriOption(p: Property): Either[String, Option[String]]                      = fromStatement(p, _.objectAsUri)
+    def objectUri(p: Property): Either[String, String]                                                  = statement(p).flatMap(stmt => stmt.objectAsUri)
+    def objectUri[A](p: Property, mapper: String => Either[String, A]): Either[String, A]               = objectUri(p).flatMap(mapper)
+    def objectUriOption(p: Property): Either[String, Option[String]]                                    = fromStatement(p, _.objectAsUri)
     def objectUriOption[A](p: Property, mapper: String => Either[String, A]): Either[String, Option[A]] =
       objectUriOption(p).flatMap(_.traverse(mapper))
 

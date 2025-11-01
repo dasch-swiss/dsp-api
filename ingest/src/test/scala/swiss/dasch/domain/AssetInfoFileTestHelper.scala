@@ -28,15 +28,15 @@ object AssetInfoFileTestHelper {
   ): ZIO[StorageService, Throwable, AssetFolder] =
     for {
       assetRef <- AssetRef.makeNew(testProject)
-      json = s"""{
-                |    ${customJsonProps.map(_ + ",").getOrElse("")}
-                |    "internalFilename" : "${assetRef.id}.$derivativeFileExt",
-                |    "originalInternalFilename" : "${assetRef.id}.$originalFileExt.orig",
-                |    "originalFilename" : "test.$originalFileExt",
-                |    "checksumOriginal" : "$testChecksumOriginal",
-                |    "checksumDerivative" : "$testChecksumDerivative"
-                |}
-                |""".stripMargin
+      json      = s"""{
+                     |    ${customJsonProps.map(_ + ",").getOrElse("")}
+                     |    "internalFilename" : "${assetRef.id}.$derivativeFileExt",
+                     |    "originalInternalFilename" : "${assetRef.id}.$originalFileExt.orig",
+                     |    "originalFilename" : "test.$originalFileExt",
+                     |    "checksumOriginal" : "$testChecksumOriginal",
+                     |    "checksumDerivative" : "$testChecksumDerivative"
+                     |}
+                     |""".stripMargin
       info <- ZIO
                 .fromEither(json.fromJson[AssetInfoFileContent])
                 .orElseFail(new IllegalArgumentException(s"Invalid AssetInfoFileContent:\n$json"))

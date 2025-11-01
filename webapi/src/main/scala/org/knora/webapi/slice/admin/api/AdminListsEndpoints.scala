@@ -40,19 +40,19 @@ case class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
     )
 
   private val listIriPathVar = path[ListIri].description("The IRI of the list.")
-  val getListsByIri = baseEndpoints.publicEndpoint.get
+  val getListsByIri          = baseEndpoints.publicEndpoint.get
     .in(base / listIriPathVar)
     .out(jsonBody[ListItemGetResponseADM])
     .description("Returns a list node, root or child, with children (if exist).")
 
   private val getListInfoDesc = "Returns basic information about a list node, root or child, w/o children (if exist)."
-  val getListsByIriInfo = baseEndpoints.publicEndpoint.get
+  val getListsByIriInfo       = baseEndpoints.publicEndpoint.get
     .in(base / listIriPathVar / "info")
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDesc)
 
   private val getListInfoDeprecation = "*Deprecated*. Use GET admin/lists/<listIri>/info instead. "
-  val getListsInfosByIri = baseEndpoints.publicEndpoint.get
+  val getListsInfosByIri             = baseEndpoints.publicEndpoint.get
     .in(base / "infos" / listIriPathVar)
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDeprecation + getListInfoDesc)

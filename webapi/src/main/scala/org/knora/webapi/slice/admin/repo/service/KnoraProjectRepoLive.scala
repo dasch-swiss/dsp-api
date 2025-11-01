@@ -88,22 +88,22 @@ object KnoraProjectRepoLive {
     def toEntity(resource: RdfResource): IO[RdfError, KnoraProject] = {
       def getRestrictedView =
         for {
-          size <- resource.getStringLiteral[RestrictedView.Size](ProjectRestrictedViewSize)(RestrictedView.Size.from)
+          size      <- resource.getStringLiteral[RestrictedView.Size](ProjectRestrictedViewSize)(RestrictedView.Size.from)
           watermark <- resource.getBooleanLiteral[RestrictedView.Watermark](ProjectRestrictedViewWatermark)(b =>
                          Right(RestrictedView.Watermark.from(b)),
                        )
         } yield size.orElse(watermark).getOrElse(RestrictedView.default)
 
       for {
-        iri         <- resource.getSubjectIri
-        shortcode   <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
-        shortname   <- resource.getStringLiteralOrFail[Shortname](ProjectShortname)
-        longname    <- resource.getStringLiteral[Longname](ProjectLongname)
-        description <- resource.getLangStringLiteralsOrFail[Description](ProjectDescription)
-        keywords    <- resource.getStringLiterals[Keyword](ProjectKeyword)
-        logo        <- resource.getStringLiteral[Logo](ProjectLogo)
-        status      <- resource.getBooleanLiteralOrFail[Status](StatusProp)
-        selfjoin    <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
+        iri                     <- resource.getSubjectIri
+        shortcode               <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
+        shortname               <- resource.getStringLiteralOrFail[Shortname](ProjectShortname)
+        longname                <- resource.getStringLiteral[Longname](ProjectLongname)
+        description             <- resource.getLangStringLiteralsOrFail[Description](ProjectDescription)
+        keywords                <- resource.getStringLiterals[Keyword](ProjectKeyword)
+        logo                    <- resource.getStringLiteral[Logo](ProjectLogo)
+        status                  <- resource.getBooleanLiteralOrFail[Status](StatusProp)
+        selfjoin                <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
         allowedCopyrightHolders <-
           resource.getStringLiterals(hasAllowedCopyrightHolder)(CopyrightHolder.from).map(_.toSet)
         enabledLicenses <- resource.getObjectIrisConvert(hasEnabledLicense)(LicenseIri.from).map(_.toSet)

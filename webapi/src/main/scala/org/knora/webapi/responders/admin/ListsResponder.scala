@@ -84,7 +84,7 @@ final case class ListsResponder(
       lists <-
         ZIO.foreach(statements.toList) { case (listIri: SubjectV2, objs: ConstructPredicateObjects) =>
           for {
-            name <- mapper.getSingleOption[StringLiteralV2](KnoraBase.ListNodeName, objs).map(_.map(_.value))
+            name   <- mapper.getSingleOption[StringLiteralV2](KnoraBase.ListNodeName, objs).map(_.map(_.value))
             labels <-
               mapper.getList[StringLiteralV2](Rdfs.Label, objs).map(_.toVector).map(StringLiteralSequenceV2.apply)
             comments <-
@@ -117,7 +117,7 @@ final case class ListsResponder(
 
             rootNodeInfo = maybeRootNodeInfo match {
                              case Some(info: ListRootNodeInfoADM) => info
-                             case Some(_: ListChildNodeInfoADM) =>
+                             case Some(_: ListChildNodeInfoADM)   =>
                                throw InconsistentRepositoryDataException(
                                  "A child node info was found, although we are expecting a root node info. Please report this as a possible bug.",
                                )
@@ -148,7 +148,7 @@ final case class ListsResponder(
     def getNodeADM(childNode: ListChildNodeADM): Task[ListNodeGetResponseADM] =
       for {
         maybeNodeInfo <- listNodeInfoGetADM(nodeIri.value)
-        nodeInfo <- maybeNodeInfo match {
+        nodeInfo      <- maybeNodeInfo match {
                       case Some(childNodeInfo: ListChildNodeInfoADM) => ZIO.succeed(childNodeInfo)
                       case _                                         => ZIO.fail(NotFoundException(s"Information not found for node '$nodeIri'"))
                     }
@@ -201,7 +201,7 @@ final case class ListsResponder(
                   case Some(iris: Seq[LiteralV2]) =>
                     iris.headOption match {
                       case Some(iri: IriLiteralV2) => Some(iri.value)
-                      case other =>
+                      case other                   =>
                         throw InconsistentRepositoryDataException(
                           s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other",
                         )
@@ -215,7 +215,7 @@ final case class ListsResponder(
                   case Some(iris: Seq[LiteralV2]) =>
                     iris.headOption match {
                       case Some(iri: IriLiteralV2) => Some(iri.value)
-                      case other =>
+                      case other                   =>
                         throw InconsistentRepositoryDataException(
                           s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other",
                         )
@@ -228,7 +228,7 @@ final case class ListsResponder(
                 case Some(values: Seq[LiteralV2]) =>
                   values.headOption match {
                     case Some(value: BooleanLiteralV2) => value.value
-                    case Some(other) =>
+                    case Some(other)                   =>
                       throw InconsistentRepositoryDataException(
                         s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other",
                       )
@@ -336,7 +336,7 @@ final case class ListsResponder(
                                         case Some(iris: Seq[LiteralV2]) =>
                                           iris.headOption match {
                                             case Some(iri: IriLiteralV2) => Some(iri.value)
-                                            case other =>
+                                            case other                   =>
                                               throw InconsistentRepositoryDataException(
                                                 s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other",
                                               )
@@ -350,7 +350,7 @@ final case class ListsResponder(
                                         case Some(iris: Seq[LiteralV2]) =>
                                           iris.headOption match {
                                             case Some(iri: IriLiteralV2) => Some(iri.value)
-                                            case other =>
+                                            case other                   =>
                                               throw InconsistentRepositoryDataException(
                                                 s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other",
                                               )
@@ -364,7 +364,7 @@ final case class ListsResponder(
                                         case Some(values: Seq[LiteralV2]) =>
                                           values.headOption match {
                                             case Some(value: BooleanLiteralV2) => value.value
-                                            case Some(other) =>
+                                            case Some(other)                   =>
                                               throw InconsistentRepositoryDataException(
                                                 s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other",
                                               )
@@ -552,8 +552,8 @@ final case class ListsResponder(
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
         parentListNode <- listNodeGetADM(parentNodeIri, shallow = true)
                             .someOrFail(BadRequestException(s"List node '$parentNodeIri' not found."))
-        children = parentListNode.children
-        size     = children.size
+        children  = parentListNode.children
+        size      = children.size
         position <- {
           position.map(_.value) match {
             case Some(pos) if pos > size =>
@@ -665,17 +665,17 @@ final case class ListsResponder(
     changeNodeRequest: ListChangeRequest,
     apiRequestID: UUID,
   ): Task[NodeInfoGetResponseADM] = {
-    val nodeIri = changeNodeRequest.listIri.value
+    val nodeIri            = changeNodeRequest.listIri.value
     val nodeInfoChangeTask =
       for {
         changeNodeInfoSparql <- getUpdateNodeInfoSparqlStatement(changeNodeRequest)
         _                    <- triplestore.query(Update(changeNodeInfoSparql))
         maybeNodeADM         <- listNodeInfoGetADM(changeNodeRequest.listIri.value)
-        updated <-
+        updated              <-
           maybeNodeADM match {
             case Some(rootNode: ListRootNodeInfoADM)   => ZIO.succeed(RootNodeInfoGetResponseADM(rootNode))
             case Some(childNode: ListChildNodeInfoADM) => ZIO.succeed(ChildNodeInfoGetResponseADM(childNode))
-            case _ =>
+            case _                                     =>
               ZIO.fail(
                 UpdateNotPerformedException(
                   s"Node $nodeIri was not updated. Please report this as a possible bug.",
@@ -708,9 +708,9 @@ final case class ListsResponder(
         newListNodeIri <- createNode(createChildNodeRequest)
         // Verify that the list node was created.
         maybeNewListNode <- listNodeInfoGetADM(nodeIri = newListNodeIri)
-        newListNode <- maybeNewListNode match {
+        newListNode      <- maybeNewListNode match {
                          case Some(childNode: ListChildNodeInfoADM) => ZIO.succeed(childNode)
-                         case Some(_: ListRootNodeInfoADM) =>
+                         case Some(_: ListRootNodeInfoADM)          =>
                            ZIO.fail(
                              UpdateNotPerformedException(
                                s"Child node ${createChildNodeRequest.name} could not be created. Probably parent node Iri is missing in payload.",
@@ -926,7 +926,7 @@ final case class ListsResponder(
 
         // verify that node is among children of specified parent in correct position
         updatedNode = rest.head
-        _ <- ZIO.when(updatedNode.id != nodeIri.value || updatedNode.position != newPosition) {
+        _          <- ZIO.when(updatedNode.id != nodeIri.value || updatedNode.position != newPosition) {
                ZIO.fail(
                  UpdateNotPerformedException(
                    s"Node is not repositioned correctly in specified parent node. Please report this as a bug.",
@@ -934,7 +934,7 @@ final case class ListsResponder(
                )
              }
         leftPositions = siblingsPositionedBefore.map(child => child.position)
-        _ <- ZIO.when(leftPositions != leftPositions.sorted) {
+        _            <- ZIO.when(leftPositions != leftPositions.sorted) {
                ZIO.fail(
                  UpdateNotPerformedException(
                    s"Something has gone wrong with shifting nodes. Please report this as a bug.",
@@ -943,7 +943,7 @@ final case class ListsResponder(
              }
         siblingsPositionedAfter = rest.slice(1, rest.length)
         rightSiblings           = siblingsPositionedAfter.map(child => child.position)
-        _ <- ZIO.when(rightSiblings != rightSiblings.sorted) {
+        _                      <- ZIO.when(rightSiblings != rightSiblings.sorted) {
                ZIO.fail(
                  UpdateNotPerformedException(
                    s"Something has gone wrong with shifting nodes. Please report this as a bug.",
@@ -1074,7 +1074,7 @@ final case class ListsResponder(
 
         // get node's current parent
         currentParentNodeIri <- getParentNodeIRI(nodeIri.value)
-        newPosition <-
+        newPosition          <-
           if (currentParentNodeIri == changeNodePositionRequest.parentNodeIri.value) {
             updatePositionWithinSameParent(
               node = node,
@@ -1113,7 +1113,7 @@ final case class ListsResponder(
   def deleteListNodeCommentsADM(nodeIri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
     for {
       node <- listNodeInfoGetADM(nodeIri.value).someOrFail(NotFoundException(s"Node ${nodeIri.value} not found."))
-      _ <- ZIO
+      _    <- ZIO
              .fail(BadRequestException("Root node comments cannot be deleted."))
              .when(!node.isInstanceOf[ListChildNodeInfoADM])
       _ <- ZIO
@@ -1276,8 +1276,8 @@ final case class ListsResponder(
 
                     case Some(childNode: ListChildNodeADM) =>
                       for {
-                        _             <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
-                        parentNodeIri <- getParentNodeIRI(nodeIri.value)
+                        _              <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
+                        parentNodeIri  <- getParentNodeIRI(nodeIri.value)
                         dataNamedGraph <-
                           deleteListItem(childNode.id, projectIri, childNode.children, isRootNode = false)
                         updatedParentNode <-
@@ -1391,7 +1391,7 @@ final case class ListsResponder(
                          case Some(childNode: ListChildNodeADM) =>
                            for {
                              maybeRoot <- listNodeGetADM(childNode.hasRootNode, shallow = true)
-                             iriStr <- maybeRoot.collect { case it: ListRootNodeADM => it }
+                             iriStr    <- maybeRoot.collect { case it: ListRootNodeADM => it }
                                          .map(rootNode => ZIO.succeed(rootNode.projectIri))
                                          .getOrElse(ZIO.fail {
                                            val msg =
@@ -1522,7 +1522,7 @@ final case class ListsResponder(
     // get old parent node with its immediate children
     maybeOldParent     <- listNodeGetADM(nodeIri = oldParentIri, shallow = true)
     childrenOfOldParent = maybeOldParent.get.children
-    _ <- ZIO.when(childrenOfOldParent.exists(node => node.id == nodeIri)) {
+    _                  <- ZIO.when(childrenOfOldParent.exists(node => node.id == nodeIri)) {
            ZIO.fail(
              UpdateNotPerformedException(
                s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug.",
@@ -1532,7 +1532,7 @@ final case class ListsResponder(
     // get new parent node with its immediate children
     maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri, shallow = true)
     childrenOfNewParent = maybeNewParentNode.get.children
-    _ <- ZIO.when(!childrenOfNewParent.exists(node => node.id == nodeIri)) {
+    _                  <- ZIO.when(!childrenOfNewParent.exists(node => node.id == nodeIri)) {
            ZIO.fail(UpdateNotPerformedException(s"Node $nodeIri is not added to parent node $newParentIri. "))
          }
 

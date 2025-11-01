@@ -81,7 +81,7 @@ final case class StandoffResponderV2(
    * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case GetMappingRequestV2(mappingIri) => getMappingV2(mappingIri)
+    case GetMappingRequestV2(mappingIri)                                => getMappingV2(mappingIri)
     case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) =>
       getXSLTransformation(xsltTextReprIri, requestingUser)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
@@ -128,7 +128,7 @@ final case class StandoffResponderV2(
               case value: ReadValueV2 =>
                 value.valueContent match {
                   case textRepr: TextFileValueContentV2 => (value.valueIri, textRepr)
-                  case _ =>
+                  case _                                =>
                     throw InconsistentRepositoryDataException(
                       s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}",
                     )

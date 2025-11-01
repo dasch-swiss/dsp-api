@@ -19,7 +19,7 @@ import zio.test.assertTrue
 object FileSystemHealthIndicatorLiveSpec extends ZIOSpecDefault {
 
   val createOnlyAssetAndTempFolder: ZIO[Scope, Throwable, (String, String)] = for {
-    tempStorage <- Files.createTempDirectoryScoped(None, List.empty)
+    tempStorage          <- Files.createTempDirectoryScoped(None, List.empty)
     assetDirAbsolutePath <- {
       val assetDir = tempStorage / "assets"
       Files.createDirectories(assetDir) *> assetDir.toAbsolutePath

@@ -54,11 +54,11 @@ object AuthenticatorLiveSpec extends ZIOSpecDefault {
   private val userRepo      = ZIO.serviceWithZIO[KnoraUserRepo]
   private val jwtService    = ZIO.serviceWithZIO[JwtService]
 
-  private val password = "secret"
+  private val password                       = "secret"
   private def createUser(status: UserStatus) =
     for {
       passwordHash <- ZIO.serviceWith[PasswordService](_.hashPassword(Password.unsafeFrom(password)))
-      user = KnoraUser(
+      user          = KnoraUser(
                UserIri.makeNew,
                Username.unsafeFrom("username"),
                Email.unsafeFrom("foo@example.com"),

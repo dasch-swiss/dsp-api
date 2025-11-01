@@ -139,7 +139,7 @@ final case class ResourcesRestService(
 
   def eraseResource(user: User)(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
-      uuid <- Random.nextUUID
+      uuid         <- Random.nextUUID
       eraseRequest <- requestParser
                         .deleteOrEraseResourceRequestV2(jsonLd, user, uuid)
                         .mapError(BadRequestException.apply)
@@ -149,7 +149,7 @@ final case class ResourcesRestService(
 
   def canDeleteResource(user: User)(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
-      uuid <- Random.nextUUID
+      uuid         <- Random.nextUUID
       eraseRequest <- requestParser
                         .deleteOrEraseResourceRequestV2(jsonLd, user, uuid)
                         .mapError(BadRequestException.apply)
@@ -159,7 +159,7 @@ final case class ResourcesRestService(
 
   def deleteResource(user: User)(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
-      uuid <- Random.nextUUID
+      uuid         <- Random.nextUUID
       eraseRequest <- requestParser
                         .deleteOrEraseResourceRequestV2(jsonLd, user, uuid)
                         .mapError(BadRequestException.apply)
@@ -179,7 +179,7 @@ final case class ResourcesRestService(
     user: User,
   )(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
-      uuid <- Random.nextUUID
+      uuid         <- Random.nextUUID
       eraseRequest <- requestParser
                         .updateResourceMetadataRequestV2(jsonLd, user, uuid)
                         .mapError(BadRequestException.apply)
