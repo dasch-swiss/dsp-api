@@ -26,6 +26,8 @@ import org.knora.webapi.slice.export_.api.ExportedResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
+import scala.util.chaining.scalaUtilChainingOps
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 
 // TODO: this file is not done
 // TODO: respect permissions on the resource and value level
@@ -43,7 +45,7 @@ final case class ExportService(
   def exportResources(
     project: KnoraProject,
     classIri: ResourceClassIri,
-    selectedProperties: List[SmartIri],
+    selectedProperties: List[PropertyIri],
   ): Task[List[ExportedResource]] =
     for {
       rows              <- findResources(project, classIri, selectedProperties)
@@ -53,7 +55,7 @@ final case class ExportService(
   private def findResources(
     project: KnoraProject,
     classIri: ResourceClassIri,
-    selectedProperties: List[SmartIri],
+    selectedProperties: List[PropertyIri],
   ): Task[Seq[VariableResultsRow]] =
     for {
       query           <- ZIO.succeed(resourceQuery(project, classIri, selectedProperties))
@@ -65,21 +67,23 @@ final case class ExportService(
   private def resourceQuery(
     project: KnoraProject,
     classIri: ResourceClassIri,
-    selectedProperties: List[SmartIri],
+    selectedProperties: List[PropertyIri],
   ): SelectQuery = {
+    val (propConstraints, propVariables) = selectedProperties.zipWithIndex.map { case (property, index) =>
+      val v = variable(s"p${index}")
+      ((Rdf.iri(property.toInternalSchema.toString), v), v)
+    }.unzip
+
     val selectPattern = SparqlBuilder
-      .select(
-        variable(classIriVar),
-        variable(resourceIriVar),
-      )
+      .select(variable(resourceIriVar))
+      // .select(propVariables: _*)
       .distinct()
 
     val projectGraph = projectService.getDataGraphForProject(project)
-    val wherePattern =
+    val resourceWhere =
       variable(resourceIriVar)
         .isA(variable(classIriVar))
-        // .andHas(KB.attachedToUser, variable(creatorIriVar))
-        // .andHas(RDFS.LABEL, variable(labelVar))
+        // .pipe(propConstraints.foldLeft(_) { case (w, (p, v)) => w.andHas(p, v) })
         .from(Rdf.iri(projectGraph.value))
 
     val classConstraint = variable(resourceIriVar).isA(Rdf.iri(classIri.toInternalSchema.toIri))
@@ -89,7 +93,7 @@ final case class ExportService(
 
     Queries
       .SELECT(selectPattern)
-      .where(wherePattern, classConstraint, classSubclassOfResource)
+      .where(resourceWhere, classConstraint, classSubclassOfResource)
       .prefix(prefix(KB.NS), prefix(RDFS.NS))
   }
 
