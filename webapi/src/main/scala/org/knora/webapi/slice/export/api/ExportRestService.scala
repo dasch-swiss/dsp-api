@@ -32,8 +32,8 @@ final case class ExportRestService(
       resourceClassIri <- iriConverter.asResourceClassIri(request.resourceClass)
       shortcode        <- ZIO.fromEither(resourceClassIri.smartIri.getProjectShortcode)
       project          <- authService.ensureProject(shortcode)
-      fields           <- ZIO.foreach(request.selectedProperties)(iriConverter.asSmartIri)
-      data             <- exportService.exportResources(project, resourceClassIri).orDie
+      properties       <- ZIO.foreach(request.selectedProperties)(iriConverter.asSmartIri)
+      data             <- exportService.exportResources(project, resourceClassIri, properties).orDie
       csv              <- ZIO.scoped(csvService.writeToString(data)).orDie
     } yield csv).mapError(t => BadRequest(t.toString))
 

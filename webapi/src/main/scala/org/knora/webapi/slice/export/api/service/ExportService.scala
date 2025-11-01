@@ -25,6 +25,7 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.export_.api.ExportedResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
+import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 
 // TODO: this file is not done
 // TODO: respect permissions on the resource and value level
@@ -42,18 +43,20 @@ final case class ExportService(
   def exportResources(
     project: KnoraProject,
     classIri: ResourceClassIri,
+    selectedProperties: List[SmartIri],
   ): Task[List[ExportedResource]] =
     for {
-      rows              <- findResources(project, List(classIri))
+      rows              <- findResources(project, classIri, selectedProperties)
       exportedResources <- ZIO.foreach(rows)(formatRow(_))
     } yield exportedResources.toList
 
   private def findResources(
     project: KnoraProject,
-    classIris: List[ResourceClassIri],
+    classIri: ResourceClassIri,
+    selectedProperties: List[SmartIri],
   ): Task[Seq[VariableResultsRow]] =
     for {
-      query           <- ZIO.succeed(resourceQuery(project, classIris))
+      query           <- ZIO.succeed(resourceQuery(project, classIri, selectedProperties))
       dr              <- triplestore.selectWithTimeout(query, SparqlTimeout.Gravsearch).map(_.results.bindings).timed
       (duration, rows) = dr
       _               <- ZIO.logInfo(s"ExportService: ${rows.size} rows in ${duration.toMillis} ms: ${query.getQueryString}")
@@ -61,8 +64,9 @@ final case class ExportService(
 
   private def resourceQuery(
     project: KnoraProject,
-    classIris: List[ResourceClassIri],
-  ) = {
+    classIri: ResourceClassIri,
+    selectedProperties: List[SmartIri],
+  ): SelectQuery = {
     val selectPattern = SparqlBuilder
       .select(
         variable(classIriVar),
@@ -74,21 +78,18 @@ final case class ExportService(
     val wherePattern =
       variable(resourceIriVar)
         .isA(variable(classIriVar))
+        // .andHas(KB.attachedToUser, variable(creatorIriVar))
+        // .andHas(RDFS.LABEL, variable(labelVar))
         .from(Rdf.iri(projectGraph.value))
+
+    val classConstraint = variable(resourceIriVar).isA(Rdf.iri(classIri.toInternalSchema.toIri))
 
     val classSubclassOfResource =
       variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
 
-    val classConstraintPattern = classIris.map(_.toInternalSchema.toIri).map(Rdf.iri) match {
-      case Nil => List()
-      case head :: tail =>
-        List(variable(resourceIriVar).isA(head).union(tail.map(c => variable(resourceIriVar).isA(c)): _*))
-    }
-
     Queries
       .SELECT(selectPattern)
-      .where(wherePattern, classSubclassOfResource)
-      .where(classConstraintPattern: _*)
+      .where(wherePattern, classConstraint, classSubclassOfResource)
       .prefix(prefix(KB.NS), prefix(RDFS.NS))
   }
 
@@ -103,9 +104,8 @@ final case class ExportService(
 
   private def formatRow(row: VariableResultsRow): Task[ExportedResource] =
     for {
-      classIri    <- getSmartIriOrThrow(row.rowMap, classIriVar).map(_.toComplexSchema.toIri)
       resourceIri <- getSmartIriOrThrow(row.rowMap, resourceIriVar)
-    } yield ExportedResource(classIri.toString, resourceIri.toString)
+    } yield ExportedResource("", resourceIri.toString)
 }
 
 object ExportService {
