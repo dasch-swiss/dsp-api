@@ -143,8 +143,8 @@ final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfo
     val dim              = raw.width.flatMap(w => raw.height.flatMap(h => Dimensions.from(w, h).toOption))
     val internalMimeType = raw.internalMimeType.flatMap(it => MimeType.from(it.value).toOption)
     val originalMimeType = raw.originalMimeType.flatMap(it => MimeType.from(it.value).toOption)
-    val metadata = typ match {
-      case StillImage if dim.isDefined => StillImageMetadata(dim.get, internalMimeType, originalMimeType)
+    val metadata         = typ match {
+      case StillImage if dim.isDefined                                                         => StillImageMetadata(dim.get, internalMimeType, originalMimeType)
       case MovingImage if dim.isDefined && raw.duration.exists(_ > 0) && raw.fps.exists(_ > 0) => {
         val fps      = Fps.unsafeFrom(raw.fps.get)
         val duration = DurationSecs.unsafeFrom(raw.duration.get)

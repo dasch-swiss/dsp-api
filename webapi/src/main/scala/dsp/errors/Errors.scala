@@ -86,8 +86,8 @@ object RequestRejectedException {
  */
 final case class BadRequestException(message: String) extends RequestRejectedException(message)
 object BadRequestException {
-  def apply(e: Throwable): BadRequestException        = BadRequestException(e.getMessage)
-  def apply(e: UserServiceError): BadRequestException = BadRequestException(e.message)
+  def apply(e: Throwable): BadRequestException                 = BadRequestException(e.getMessage)
+  def apply(e: UserServiceError): BadRequestException          = BadRequestException(e.message)
   def invalidQueryParamValue(key: String): BadRequestException =
     BadRequestException(s"Invalid value for query parameter '$key'")
   def missingQueryParamValue(key: String): BadRequestException =
@@ -125,7 +125,7 @@ object ForbiddenException {
  */
 case class NotFoundException(message: String) extends RequestRejectedException(message)
 object NotFoundException {
-  val notFound: NotFoundException = NotFoundException("The requested data was not found")
+  val notFound: NotFoundException                   = NotFoundException("The requested data was not found")
   def notfound(iri: OntologyIri): NotFoundException =
     NotFoundException(s"The requested ontology ${iri.toComplexSchema.toIri} was not found")
   def from(shortcode: Shortcode): NotFoundException =

@@ -383,7 +383,7 @@ case class ReadResourceV2(
         KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
         KnoraApiV2Complex.HasPermissions    -> JsonLDString(permissions),
         KnoraApiV2Complex.UserHasPermission -> JsonLDString(userPermission.toString),
-        KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+        KnoraApiV2Complex.CreationDate      -> JsonLDUtil.datatypeValueToJsonLDObject(
           value = creationDate.toString,
           datatype = Xsd.DateTimeStamp.toSmartIri,
         ),
@@ -493,8 +493,8 @@ case class ReadResourceV2(
    * @return
    */
   def withDeletedValues(versionDate: Option[VersionDate] = None): ReadResourceV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val delIri: SmartIri                          = KnoraBase.DeletedValue.toSmartIri
+    implicit val stringFormatter: StringFormatter                = StringFormatter.getGeneralInstance
+    val delIri: SmartIri                                         = KnoraBase.DeletedValue.toSmartIri
     val valuesWithDeletedValues: Map[SmartIri, Seq[ReadValueV2]] =
       this.values.toList
         .foldLeft(Seq.empty[(SmartIri, ReadValueV2)])((aggregator, valueMap) =>
@@ -867,7 +867,7 @@ case class ReadResourcesSequenceV2(
         ZIO.fail(ForbiddenException(msg))
       case _ => {
         val missingResourceIris = targetResourceIris -- resourcesSequence.resources.map(_.resourceIri).toSet
-        lazy val msg =
+        lazy val msg            =
           s"One or more resources were not found:  ${missingResourceIris.map(iri => s"<$iri>").mkString(", ")}"
         ZIO.when(missingResourceIris.nonEmpty)(ZIO.fail(NotFoundException(msg))).unit
       }
@@ -1140,8 +1140,8 @@ case class ResourceMetadataEventBody(
 
     JsonLDObject(
       Map(
-        KnoraApiV2Complex.ResourceIri      -> JsonLDString(resourceIri),
-        KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
+        KnoraApiV2Complex.ResourceIri          -> JsonLDString(resourceIri),
+        KnoraApiV2Complex.ResourceClassIri     -> JsonLDString(resourceClassIri.toString),
         KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
           value = lastModificationDate.toString,
           datatype = Xsd.DateTimeStamp.toSmartIri,
@@ -1273,7 +1273,7 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
     val historyEventsAsJsonLD: Seq[JsonLDObject] = historyEvents.map { (historyEntry: ResourceAndValueHistoryEvent) =>
       // convert event body to JsonLD object
       val eventBodyAsJsonLD: JsonLDObject = historyEntry.eventBody match {
-        case valueEventBody: ValueEventBody => valueEventBody.toJsonLD(targetSchema, appConfig, schemaOptions)
+        case valueEventBody: ValueEventBody       => valueEventBody.toJsonLD(targetSchema, appConfig, schemaOptions)
         case resourceEventBody: ResourceEventBody =>
           resourceEventBody.toJsonLD(targetSchema, appConfig, schemaOptions)
         case resourceMetadataEventBody: ResourceMetadataEventBody =>
@@ -1283,7 +1283,7 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
 
       JsonLDObject(
         Map(
-          KnoraApiV2Complex.EventType -> JsonLDString(historyEntry.eventType),
+          KnoraApiV2Complex.EventType   -> JsonLDString(historyEntry.eventType),
           KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = historyEntry.versionDate.toString,
             datatype = Xsd.DateTimeStamp.toSmartIri,

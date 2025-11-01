@@ -104,7 +104,7 @@ final case class CreateResourceV2Handler(
       .ignore
 
   private def ensureClassBelongsToProjectOntology(createResourceRequestV2: CreateResourceRequestV2): Task[Unit] = for {
-    projectIri <- ZIO.succeed(createResourceRequestV2.createResource.projectADM.id)
+    projectIri             <- ZIO.succeed(createResourceRequestV2.createResource.projectADM.id)
     isSystemOrSharedProject =
       projectIri == KnoraProjectRepo.builtIn.SystemProject.id ||
         projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
@@ -326,7 +326,7 @@ final case class CreateResourceV2Handler(
       propsWithoutValues =
         internalCreateResource.values.collect { case (key, values) if values.nonEmpty => key }.toSet
       missingProps = requiredProps -- propsWithoutValues
-      _ <- ZIO.fail {
+      _           <- ZIO.fail {
              val externalResourceClassIri =
                s"<${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}>"
              val externalMissingPropIris =
@@ -524,7 +524,7 @@ final case class CreateResourceV2Handler(
           val v = attr match
             case StandoffTagIriAttributeV2(_, value, _) =>
               StandoffAttributeValue.IriAttribute(InternalIri(value))
-            case StandoffTagUriAttributeV2(_, value) => StandoffAttributeValue.UriAttribute(value)
+            case StandoffTagUriAttributeV2(_, value)               => StandoffAttributeValue.UriAttribute(value)
             case StandoffTagInternalReferenceAttributeV2(_, value) =>
               StandoffAttributeValue.InternalReferenceAttribute(InternalIri(value))
             case StandoffTagStringAttributeV2(_, value)  => StandoffAttributeValue.StringAttribute(value)
@@ -558,7 +558,7 @@ final case class CreateResourceV2Handler(
   ): IO[StandoffInternalException, TypeSpecificValueInfo] =
     ZIO
       .whenCase(textType) {
-        case TextValueType.FormattedText => ZIO.succeed(FormattedTextValueType.StandardMapping)
+        case TextValueType.FormattedText                   => ZIO.succeed(FormattedTextValueType.StandardMapping)
         case TextValueType.CustomFormattedText(mappingIri) =>
           ZIO.succeed(FormattedTextValueType.CustomMapping(mappingIri))
       }
@@ -685,7 +685,7 @@ final case class CreateResourceV2Handler(
         listNodesThatShouldExist.map { listNodeIri =>
           for {
             checkNode <- resourceUtilV2.checkListNodeExistsAndIsRootNode(listNodeIri)
-            _ <-
+            _         <-
               checkNode match {
                 // it doesn't have isRootNode property - it's a child node
                 case Right(false) => ZIO.unit

@@ -72,7 +72,7 @@ final case class DspIngestClient(
       _        <- ZIO.logInfo(s"asset info for $shortcode/$assetId")
       _        <- ZIO.logDebug(s"Response from ingest: ${response.code}")
       _        <- ZIO.logDebug(s"Response from ingest body: ${response.body.fold(identity, identity)}")
-      result <- ZIO
+      result   <- ZIO
                   .fromEither(response.body.flatMap(str => str.fromJson[AssetInfoResponse]))
                   .mapError(err => new IOException(s"Error parsing response: $err"))
     } yield result
@@ -81,7 +81,7 @@ final case class DspIngestClient(
     for {
       tempDir   <- Files.createTempDirectoryScoped(Some("export"), List.empty)
       exportFile = tempDir / "export.zip"
-      request <- authenticatedRequest.map {
+      request   <- authenticatedRequest.map {
                    _.post(uri"${projectsPath(shortcode)}/export")
                      .readTimeout(30.minutes)
                      .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(exportFile.toFile))))
@@ -101,7 +101,7 @@ final case class DspIngestClient(
       importUrl <- ZIO.fromEither(URL.decode(s"${projectsPath(shortcode)}/import"))
       token     <- jwtService.createJwtForDspIngest()
       body      <- Body.fromFile(fileToImport.toFile)
-      request = Request
+      request    = Request
                   .post(importUrl, body)
                   .addHeaders(
                     Headers(

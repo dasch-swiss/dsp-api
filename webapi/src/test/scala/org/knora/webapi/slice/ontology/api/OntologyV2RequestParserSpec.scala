@@ -90,7 +90,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
         }
       },
       test("should parse correct jsonLd without optional fields") {
-        val instant = Instant.parse("2017-12-19T15:23:42.166Z")
+        val instant        = Instant.parse("2017-12-19T15:23:42.166Z")
         val jsonLd: String =
           s"""
              |{
@@ -131,8 +131,8 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
 
   private val createOntologySuite = suite("CreateOntologyRequestV2")(
     test("should succeed") {
-      val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-      val comment    = NonEmptyString.unsafeFrom("Comment")
+      val projectIri     = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+      val comment        = NonEmptyString.unsafeFrom("Comment")
       val reqStr: String =
         s"""
            |{
@@ -156,7 +156,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
       )
     },
     test("should reject an empty comment") {
-      val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+      val projectIri     = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
       val reqStr: String =
         s"""
            |{

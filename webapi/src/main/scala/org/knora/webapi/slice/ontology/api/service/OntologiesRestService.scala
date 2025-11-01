@@ -59,7 +59,7 @@ final case class OntologiesRestService(
              } else {
                ZIO.fail(BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath"))
              }
-      ontologyIri <- iriConverter.asOntologyIri(iri).mapError(BadRequestException.apply)
+      ontologyIri  <- iriConverter.asOntologyIri(iri).mapError(BadRequestException.apply)
       targetSchema <-
         ZIO
           .fromOption(ontologyIri.smartIri.getOntologySchema.collect { case schema: ApiV2Schema => schema })
@@ -73,8 +73,8 @@ final case class OntologiesRestService(
     jsonLd: String,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
-    uuid <- Random.nextUUID()
-    req  <- requestParser.changeOntologyMetadataRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    uuid   <- Random.nextUUID()
+    req    <- requestParser.changeOntologyMetadataRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
     result <- ontologyResponder.changeOntologyMetadata(
                 req.ontologyIri,
                 req.label,
@@ -135,7 +135,7 @@ final case class OntologiesRestService(
     jsonLd: String,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
-    uuid <- Random.nextUUID()
+    uuid      <- Random.nextUUID()
     updateReq <-
       requestParser.changeClassLabelsOrCommentsRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
     result   <- ontologyResponder.changeClassLabelsOrComments(updateReq)
@@ -179,7 +179,7 @@ final case class OntologiesRestService(
   def replaceCardinalities(
     user: User,
   )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
-    uuid <- Random.nextUUID()
+    uuid      <- Random.nextUUID()
     updateReq <-
       requestParser.replaceClassCardinalitiesRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
     result   <- ontologyResponder.replaceClassCardinalities(updateReq)
@@ -189,7 +189,7 @@ final case class OntologiesRestService(
   def canDeleteCardinalitiesFromClass(
     user: User,
   )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
-    uuid <- Random.nextUUID()
+    uuid      <- Random.nextUUID()
     updateReq <-
       requestParser.canDeleteCardinalitiesFromClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
     result   <- ontologyResponder.canDeleteCardinalitiesFromClass(updateReq)
@@ -199,7 +199,7 @@ final case class OntologiesRestService(
   def deleteCardinalitiesFromClass(
     user: User,
   )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
-    uuid <- Random.nextUUID()
+    uuid      <- Random.nextUUID()
     updateReq <-
       requestParser.deleteCardinalitiesFromClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
     result   <- ontologyResponder.deleteCardinalitiesFromClass(updateReq)
@@ -220,7 +220,7 @@ final case class OntologiesRestService(
     formatOptions: FormatOptions,
   ) = for {
     classIri <- iriConverter.asResourceClassIri(classIriDto.value).mapError(BadRequestException.apply)
-    schema <- ZIO
+    schema   <- ZIO
                 .fromOption(classIri.ontologySchema.collect { case s: ApiV2Schema => s })
                 .orElseFail(BadRequestException(s"Class IRI must have an API V2 schema: $classIriDto"))
     result   <- ontologyCacheHelpers.getClassAsReadOntologyV2(classIri, allLanguages, user)
@@ -256,7 +256,7 @@ final case class OntologiesRestService(
     lastModificationDate: LastModificationDate,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
-    uuid <- Random.nextUUID()
+    uuid        <- Random.nextUUID()
     ontologyIri <- iriConverter
                      .asOntologyIriApiV2Complex(ontologyIri.value)
                      .mapError(BadRequestException.apply)
@@ -279,7 +279,7 @@ final case class OntologiesRestService(
     jsonLd: String,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
-    uuid <- Random.nextUUID()
+    uuid      <- Random.nextUUID()
     updateReq <- requestParser
                    .changePropertyLabelsOrCommentsRequestV2(jsonLd, uuid, user)
                    .mapError(BadRequestException.apply)
@@ -313,7 +313,7 @@ final case class OntologiesRestService(
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
     propertyIri <- iriConverter.asPropertyIri(propertyIri.value).mapError(BadRequestException.apply)
-    schema <- ZIO
+    schema      <- ZIO
                 .fromOption(propertyIri.ontologySchema.collect { case s: ApiV2Schema => s })
                 .orElseFail(BadRequestException(s"Property IRI must have an API V2 schema: $propertyIri"))
     result   <- ontologyResponder.getPropertyFromOntologyV2(propertyIri, allLanguages, user)

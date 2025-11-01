@@ -450,7 +450,7 @@ object RdfModel {
       val model = ModelFactory.createDefaultModel()
       for {
         reader <- ZIO.acquireRelease(ZIO.succeed(new StringReader(turtle)))(it => ZIO.succeed(it.close()))
-        _ <- ZIO
+        _      <- ZIO
                .attempt(model.read(reader, null, "TURTLE"))
                .orElseFail(RdfParsingError("Failed to parse the turtle string"))
       } yield RdfModel(model)

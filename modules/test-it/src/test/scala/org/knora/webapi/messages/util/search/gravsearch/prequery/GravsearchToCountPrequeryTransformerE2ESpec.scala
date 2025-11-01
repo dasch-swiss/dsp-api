@@ -33,7 +33,7 @@ object GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec {
     _                    <- GravsearchQueryChecker.checkConstructClause(query.constructClause, inspectionResult)
     sanitizedWhereClause <- GravsearchTypeInspectionUtil.removeTypeAnnotations(query.whereClause)
     querySchema          <- ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-    prequery <- queryTraverser(
+    prequery             <- queryTraverser(
                   _.transformConstructToSelect(
                     query.copy(whereClause = sanitizedWhereClause, orderBy = Seq.empty),
                     new GravsearchToCountPrequeryTransformer(query.constructClause, inspectionResult, querySchema),

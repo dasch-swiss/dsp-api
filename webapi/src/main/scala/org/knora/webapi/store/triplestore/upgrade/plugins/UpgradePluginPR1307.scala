@@ -16,9 +16,9 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  */
 class UpgradePluginPR1307() extends UpgradePlugin {
   // IRI objects representing the IRIs used in this transformation.
-  private val rdfTypeIri: IriNode          = JenaNodeFactory.makeIriNode(OntologyConstants.Rdf.Type)
-  private val TextValueIri: IriNode        = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.TextValue)
-  private val ValueHasStandoffIri: IriNode = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasStandoff)
+  private val rdfTypeIri: IriNode                  = JenaNodeFactory.makeIriNode(OntologyConstants.Rdf.Type)
+  private val TextValueIri: IriNode                = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.TextValue)
+  private val ValueHasStandoffIri: IriNode         = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasStandoff)
   private val StandoffTagHasStartIndexIri: IriNode =
     JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasStartIndex)
   private val StandoffTagHasStartParentIri: IriNode =
@@ -182,7 +182,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
       val standoffSubjects: Set[IriNode] = valueHasStandoffStatements.map { statement =>
         statement.obj match {
           case iriNode: IriNode => iriNode
-          case other =>
+          case other            =>
             throw InconsistentRepositoryDataException(
               s"Unexpected object for $textValueSubj $ValueHasStandoffIri: $other",
             )

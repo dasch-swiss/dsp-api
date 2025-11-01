@@ -44,7 +44,7 @@ object StillImageServiceLiveSpec extends ZIOSpecDefault {
         backup   <- backupFile
         info     <- AssetInfoService.findByAssetRef(asset).map(_.head)
         infoFile <- AssetInfoService.getInfoFilePath(asset)
-        _ <- StorageService.saveJsonFile[AssetInfoFileContent](
+        _        <- StorageService.saveJsonFile[AssetInfoFileContent](
                infoFile,
                AssetInfoFileContent(
                  internalFilename = info.derivative.filename,

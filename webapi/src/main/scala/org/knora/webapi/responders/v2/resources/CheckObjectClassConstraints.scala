@@ -63,7 +63,7 @@ object CheckObjectClassConstraints {
               // link property's object class constraint?
               linkTargetClass     = linkTargetClasses(linkValueContentV2.referredResourceIri)
               linkTargetClassInfo = entityInfo.classInfoMap(linkTargetClass)
-              _ <-
+              _                  <-
                 ZIO.when(!linkTargetClassInfo.allBaseClasses.exists(objectConstraints.contains)) {
                   // No. If the target resource already exists, use its IRI in the error message.
                   // Otherwise, use the client's ID for the resource.

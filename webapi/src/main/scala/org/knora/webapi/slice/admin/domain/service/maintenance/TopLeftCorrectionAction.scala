@@ -72,7 +72,7 @@ final case class TopLeftCorrectionAction[A <: ProjectsWithBakfilesReport](
                   ZIO.logDebug(s"No StillImageFileValue with dimensions found for $asset, skipping.")
                 }
       (actualDimensions, iri) = result
-      _ <- ZIO.when(actualDimensions == asset.dimensions)(
+      _                      <- ZIO.when(actualDimensions == asset.dimensions)(
              ZIO.logDebug(s"Dimensions for $asset already correct, skipping.") *> ZIO.fail(None),
            )
     } yield iri

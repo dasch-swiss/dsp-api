@@ -27,13 +27,13 @@ object AuthService {
 }
 
 sealed trait AuthenticationError { def message: String }
-object AuthenticationError {
+object AuthenticationError       {
   final case class JwtProblem(message: String)      extends AuthenticationError
   final case class InvalidContents(message: String) extends AuthenticationError
   final case class InvalidAudience(message: String) extends AuthenticationError
   final case class InvalidIssuer(message: String)   extends AuthenticationError
   final case class SubjectMissing(message: String)  extends AuthenticationError
-  def jwtProblem(e: Throwable): AuthenticationError = JwtProblem(e.getMessage)
+  def jwtProblem(e: Throwable): AuthenticationError       = JwtProblem(e.getMessage)
   def invalidContents(error: String): AuthenticationError =
     InvalidContents(s"Invalid contents: $error")
   def invalidAudience(jwtConfig: JwtConfig): AuthenticationError =

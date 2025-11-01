@@ -43,9 +43,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
   private val searchResponder = ZIO.serviceWithZIO[SearchResponderV2]
   private val valuesResponder = ZIO.serviceWithZIO[ValuesResponderV2]
 
-  private val zeitgloeckleinIri = "http://rdfh.ch/0803/c5058f3a"
-  private val generationeIri    = "http://rdfh.ch/0803/c3f913666f"
-  private val aThingIri         = "http://rdfh.ch/0001/a-thing"
+  private val zeitgloeckleinIri                            = "http://rdfh.ch/0803/c5058f3a"
+  private val generationeIri                               = "http://rdfh.ch/0803/c3f913666f"
+  private val aThingIri                                    = "http://rdfh.ch/0001/a-thing"
   private val freetestWithAPropertyFromAnythingOntologyIri =
     "http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology"
   private val aThingPictureIri     = "http://rdfh.ch/0001/a-thing-picture"
@@ -309,7 +309,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     checkLastModDateChanged: Boolean = true,
   ): ZIO[SearchResponderV2, Throwable, ReadValueV2] = for {
     resource <- getResourceWithValues(resourceIri, Seq(propertyIriForGravsearch), requestingUser)
-    _ <- checkLastModDate(resourceIri, maybePreviousLastModDate, resource.lastModificationDate).when(
+    _        <- checkLastModDate(resourceIri, maybePreviousLastModDate, resource.lastModificationDate).when(
            checkLastModDateChanged,
          )
   } yield getValueFromResource(resource, propertyIriInResult, expectedValueIri)
@@ -377,9 +377,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
 
     suite("Integer Values")(
       test("create an integer value") {
-        val resourceIri = aThingIri
-        val propertyIri = Anything.hasInteger.smartIri
-        val intValue    = 4
+        val resourceIri  = aThingIri
+        val propertyIri  = Anything.hasInteger.smartIri
+        val intValue     = 4
         val createParams = CreateValueV2(
           resourceIri,
           Anything.thingClass.smartIri,
@@ -392,7 +392,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           _                         = intValueIri.set(createValueResponse.valueIri)
           _                         = firstIntValueVersionIri.set(createValueResponse.valueIri)
           _                         = { integerValueUUID = createValueResponse.valueUUID }
-          valueFromTriplestore <- getValue(
+          valueFromTriplestore     <- getValue(
                                     resourceIri,
                                     maybeResourceLastModDate,
                                     propertyIri,
@@ -409,7 +409,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         val intValue    = 5
 
         for {
-          maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
+          maybeResourceLastModDate     <- getResourceLastModificationDate(resourceIri, anythingUser1)
           previousValueFromTriplestore <- getValue(
                                             resourceIri = resourceIri,
                                             maybePreviousLastModDate = maybeResourceLastModDate,
@@ -429,7 +429,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                          )
           updateValueResponse <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
           _                    = intValueIri.set(updateValueResponse.valueIri)
-          _ <- ZIO
+          _                   <- ZIO
                  .fail(AssertionException("The value UUID was not preserved"))
                  .unless(updateValueResponse.valueUUID == integerValueUUID)
           updatedValueFromTriplestore <- getValue(
@@ -456,7 +456,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         val resourceIri = freetestWithAPropertyFromAnythingOntologyIri
         val propertyIri = Anything.hasIntegerUsedByOtherOntologies.smartIri
         // Create the value.
-        val intValue = 40
+        val intValue     = 40
         val createParams = CreateValueV2(
           resourceIri,
           "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
@@ -468,7 +468,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           createValueResponse      <- valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID))
           _                         = intValueIriForFreetest.set(createValueResponse.valueIri)
           _                         = { integerValueUUID = createValueResponse.valueUUID }
-          valueFromTriplestore <- getValue(
+          valueFromTriplestore     <- getValue(
                                     resourceIri = resourceIri,
                                     maybePreviousLastModDate = maybeResourceLastModDate,
                                     propertyIriForGravsearch = propertyIri,
@@ -493,7 +493,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         )
         for {
           // Get the value before update.
-          maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser2)
+          maybeResourceLastModDate     <- getResourceLastModificationDate(resourceIri, anythingUser2)
           previousValueFromTriplestore <- getValue(
                                             resourceIri = resourceIri,
                                             maybePreviousLastModDate = maybeResourceLastModDate,
@@ -505,7 +505,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                           )
           updateValueResponse <- valuesResponder(_.updateValueV2(updateParams, anythingUser2, randomUUID))
           _                    = intValueIriForFreetest.set(updateValueResponse.valueIri)
-          actualValue <- getValue(
+          actualValue         <- getValue(
                            resourceIri = resourceIri,
                            maybePreviousLastModDate = maybeResourceLastModDate,
                            propertyIriForGravsearch = propertyIri,
@@ -527,8 +527,8 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("delete an integer value that belongs to a property of another ontology") {
-        val resourceIri = ResourceIri.unsafeFrom(freetestWithAPropertyFromAnythingOntologyIri.toSmartIri)
-        val propertyIri = Anything.hasIntegerUsedByOtherOntologies
+        val resourceIri      = ResourceIri.unsafeFrom(freetestWithAPropertyFromAnythingOntologyIri.toSmartIri)
+        val propertyIri      = Anything.hasIntegerUsedByOtherOntologies
         val resourceClassIri = ResourceClassIri.unsafeFrom(
           "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
         )
@@ -544,7 +544,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         for {
           maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri.toString, anythingUser2)
           _                        <- valuesResponder(_.deleteValueV2(deleteParams, anythingUser2))
-          _ <- checkValueIsDeleted(
+          _                        <- checkValueIsDeleted(
                  resourceIri,
                  maybeResourceLastModDate,
                  intValueIriForFreetest.asValueIri,
@@ -557,7 +557,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         val propertyIri = Anything.hasInteger.smartIri
         val comment     = "Added a comment"
 
-        val intValue = 5
+        val intValue     = 5
         val updateParams = UpdateValueContentV2(
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
@@ -568,7 +568,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
 
         // Get the value before update.
         for {
-          maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
+          maybeResourceLastModDate     <- getResourceLastModificationDate(resourceIri, anythingUser1)
           previousValueFromTriplestore <- getValue(
                                             resourceIri = resourceIri,
                                             maybePreviousLastModDate = maybeResourceLastModDate,
@@ -581,7 +581,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
 
           updateValueResponse <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
           _                    = intValueIri.set(updateValueResponse.valueIri)
-          actualValue <- getValue(
+          actualValue         <- getValue(
                            resourceIri = resourceIri,
                            maybePreviousLastModDate = maybeResourceLastModDate,
                            propertyIriForGravsearch = propertyIri,
@@ -607,7 +607,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         val propertyIri = Anything.hasInteger.smartIri
         val comment     = "An updated comment"
 
-        val intValue = 5
+        val intValue          = 5
         val updateValueParams = UpdateValueContentV2(
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
@@ -618,7 +618,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
 
         // Get the value before update.
         for {
-          maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
+          maybeResourceLastModDate     <- getResourceLastModificationDate(resourceIri, anythingUser1)
           previousValueFromTriplestore <- getValue(
                                             resourceIri = resourceIri,
                                             maybePreviousLastModDate = maybeResourceLastModDate,
@@ -630,7 +630,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                           )
           updateValueResponse <- valuesResponder(_.updateValueV2(updateValueParams, anythingUser1, randomUUID))
           _                    = intValueIri.set(updateValueResponse.valueIri)
-          actualValue <- getValue(
+          actualValue         <- getValue(
                            resourceIri = resourceIri,
                            maybePreviousLastModDate = maybeResourceLastModDate,
                            propertyIriForGravsearch = propertyIri,
@@ -652,10 +652,10 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("create an integer value with a comment") {
-        val resourceIri = aThingIri
-        val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-        val intValue    = 8
-        val comment     = "Initial comment"
+        val resourceIri       = aThingIri
+        val propertyIri       = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+        val intValue          = 8
+        val comment           = "Initial comment"
         val createValueParams = CreateValueV2(
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
@@ -670,7 +670,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
           createValueResponse      <- valuesResponder(_.createValueV2(createValueParams, anythingUser1, randomUUID))
           _                         = intValueIri.set(createValueResponse.valueIri)
-          actualValue <- getValue(
+          actualValue              <- getValue(
                            resourceIri = resourceIri,
                            maybePreviousLastModDate = maybeResourceLastModDate,
                            propertyIriForGravsearch = propertyIri,
@@ -692,7 +692,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
 
         for {
           maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
-          createValueResponse <- valuesResponder(
+          createValueResponse      <- valuesResponder(
                                    _.createValueV2(
                                      CreateValueV2(
                                        resourceIri = resourceIri,
@@ -708,7 +708,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                      apiRequestID = randomUUID,
                                    ),
                                  )
-          _ = intValueIriWithCustomPermissions.set(createValueResponse.valueIri)
+          _                     = intValueIriWithCustomPermissions.set(createValueResponse.valueIri)
           valueFromTriplestore <- getValue(
                                     resourceIri = resourceIri,
                                     maybePreviousLastModDate = maybeResourceLastModDate,
@@ -747,10 +747,10 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           .map(err => assert(err)(failsWithA[BadRequestException]))
       },
       test("not create an integer value with custom permissions referring to a nonexistent group") {
-        val resourceIri = aThingIri
-        val propertyIri = Anything.hasInteger.smartIri
-        val intValue    = 1024
-        val permissions = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
+        val resourceIri       = aThingIri
+        val propertyIri       = Anything.hasInteger.smartIri
+        val intValue          = 1024
+        val permissions       = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
         val createValueParams = CreateValueV2(
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
@@ -782,7 +782,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
           createValueResponse      <- valuesResponder(_.createValueV2(createValueParams, anythingUser1, randomUUID))
           _                         = intValueForRsyncIri.set(createValueResponse.valueIri)
-          valueFromTriplestore <- getValue(
+          valueFromTriplestore     <- getValue(
                                     resourceIri = resourceIri,
                                     maybePreviousLastModDate = maybeResourceLastModDate,
                                     propertyIriForGravsearch = propertyIri,
@@ -844,7 +844,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                 randomUUID,
               ),
             )
-          _ = intValueForRsyncIri.set(updateValueResponse.valueIri)
+          _                            = intValueForRsyncIri.set(updateValueResponse.valueIri)
           updatedValueFromTriplestore <- getValue(
                                            resourceIri = resourceIri,
                                            maybePreviousLastModDate = maybeResourceLastModDate,
@@ -877,8 +877,8 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         for {
           maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
           // Update the value.
-          updateValueResponse <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
-          _                    = intValueForRsyncIri.set(updateValueResponse.valueIri)
+          updateValueResponse         <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
+          _                            = intValueForRsyncIri.set(updateValueResponse.valueIri)
           updatedValueFromTriplestore <- getValue(
                                            resourceIri = resourceIri,
                                            maybePreviousLastModDate = maybeResourceLastModDate,
@@ -956,9 +956,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           permissions = Some(permissions),
         )
         for {
-          maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
-          updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
-          _                         = intValueIri.set(updateValueResponse.valueIri)
+          maybeResourceLastModDate    <- getResourceLastModificationDate(resourceIri, anythingUser1)
+          updateValueResponse         <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
+          _                            = intValueIri.set(updateValueResponse.valueIri)
           updatedValueFromTriplestore <- getValue(
                                            resourceIri = resourceIri,
                                            maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1058,9 +1058,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                        requestingUser = anythingUser1,
                                        checkLastModDateChanged = false,
                                      )
-          maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
-          updateValueResponse      <- valuesResponder(_.updateValueV2(updatePermissionParams, anythingUser1, randomUUID))
-          _                         = intValueIri.set(updateValueResponse.valueIri)
+          maybeResourceLastModDate    <- getResourceLastModificationDate(resourceIri, anythingUser1)
+          updateValueResponse         <- valuesResponder(_.updateValueV2(updatePermissionParams, anythingUser1, randomUUID))
+          _                            = intValueIri.set(updateValueResponse.valueIri)
           updatedValueFromTriplestore <- getValue(
                                            resourceIri = resourceIri,
                                            maybePreviousLastModDate = maybeResourceLastModDate,
@@ -1132,7 +1132,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         val resourceIri      = ResourceIri.unsafeFrom(aThingIri.toSmartIri)
         val propertyIri      = PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri)
         val resourceClassIri = ResourceClassIri.unsafeFrom(Anything.thingClass.smartIri)
-        val deleteParams = DeleteValueV2(
+        val deleteParams     = DeleteValueV2(
           resourceIri,
           resourceClassIri,
           propertyIri,
@@ -1148,7 +1148,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         val resourceIri      = ResourceIri.unsafeFrom(aThingIri.toSmartIri)
         val propertyIri      = PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri)
         val resourceClassIri = ResourceClassIri.unsafeFrom(Anything.thingClass.smartIri)
-        val deleteParams = DeleteValueV2(
+        val deleteParams     = DeleteValueV2(
           resourceIri,
           resourceClassIri,
           propertyIri,
@@ -1160,7 +1160,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         for {
           maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri.toString, anythingUser1)
           _                        <- valuesResponder(_.deleteValueV2(deleteParams, anythingUser1))
-          _ <- checkValueIsDeleted(
+          _                        <- checkValueIsDeleted(
                  resourceIri,
                  maybeResourceLastModDate,
                  intValueIri.asValueIri,
@@ -1188,7 +1188,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         for {
           maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri.toString, anythingUser1)
           _                        <- valuesResponder(_.deleteValueV2(deleteParams, anythingUser1))
-          _ <- checkValueIsDeleted(
+          _                        <- checkValueIsDeleted(
                  resourceIri,
                  maybeResourceLastModDate,
                  ValueIri.unsafeFrom(intValueForRsyncIri.get.toSmartIri),
@@ -1212,7 +1212,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test("create a text value without standoff") {
       val valueHasString = "Comment 1a"
       val propertyIri    = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-      val createParams = CreateValueV2(
+      val createParams   = CreateValueV2(
         resourceIri = zeitgloeckleinIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         propertyIri = propertyIri,
@@ -1227,7 +1227,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(zeitgloeckleinIri, incunabulaMemberUser)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, incunabulaMemberUser, randomUUID))
         _                         = zeitgloeckleinCommentWithoutStandoffIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = zeitgloeckleinIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1242,7 +1242,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       val valueHasString  = "this is a text value that has a comment"
       val valueHasComment = "this is a comment"
       val propertyIri     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-      val createParams = CreateValueV2(
+      val createParams    = CreateValueV2(
         resourceIri = zeitgloeckleinIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         propertyIri = propertyIri,
@@ -1257,7 +1257,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(zeitgloeckleinIri, incunabulaMemberUser)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, incunabulaMemberUser, randomUUID))
         _                         = zeitgloeckleinCommentWithCommentIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = zeitgloeckleinIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1274,7 +1274,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test("create a text value with standoff") {
       val valueHasString = "Comment 1aa"
       val propertyIri    = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-      val createParams = CreateValueV2(
+      val createParams   = CreateValueV2(
         resourceIri = zeitgloeckleinIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         propertyIri = propertyIri,
@@ -1292,7 +1292,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(zeitgloeckleinIri, incunabulaMemberUser)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, incunabulaMemberUser, randomUUID))
         _                         = zeitgloeckleinCommentWithStandoffIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = zeitgloeckleinIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1326,7 +1326,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID))
         _                         = decimalValueIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1355,7 +1355,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         createValueResponse      <- valuesResponder(_.createValueV2(createValue, anythingUser1, randomUUID))
         _                         = timeValueIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1389,7 +1389,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         createValueResponse      <- valuesResponder(_.createValueV2(createValuParams, anythingUser1, randomUUID))
         _                         = dateValueIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1407,9 +1407,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("create a boolean value") {
-      val resourceIri     = aThingIri
-      val propertyIri     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
-      val valueHasBoolean = true
+      val resourceIri       = aThingIri
+      val propertyIri       = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
+      val valueHasBoolean   = true
       val createValueParams = CreateValueV2(
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
@@ -1423,7 +1423,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         createValueResponse      <- valuesResponder(_.createValueV2(createValueParams, anythingUser1, randomUUID))
         _                         = booleanValueIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1437,8 +1437,8 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test("create a geometry value") {
       // Add the value.
 
-      val resourceIri = aThingIri
-      val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
+      val resourceIri      = aThingIri
+      val propertyIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
       val valueHasGeometry =
         """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
@@ -1455,7 +1455,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         createValueResponse      <- valuesResponder(_.createValueV2(createValueParams, anythingUser1, randomUUID))
         _                         = geometryValueIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1486,7 +1486,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         createValueResponse      <- valuesResponder(_.createValueV2(createValueParams, anythingUser1, randomUUID))
         _                         = intervalValueIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1515,7 +1515,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID))
         _                         = listValueIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1545,7 +1545,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       val resourceClassIri = "http://www.knora.org/ontology/0001/anything#BlueThing".toSmartIri
       val propertyIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
       val valueHasListNode = "http://rdfh.ch/lists/0001/otherTreeList"
-      val createParams = CreateValueV2(
+      val createParams     = CreateValueV2(
         resourceIri = resourceIri,
         resourceClassIri = resourceClassIri,
         propertyIri = propertyIri,
@@ -1572,7 +1572,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID))
         _                         = colorValueIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1601,7 +1601,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID))
         _                         = uriValueIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1630,7 +1630,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID))
         _                         = geonameValueIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -1660,7 +1660,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, incunabulaMemberUser, randomUUID))
         _                         = linkValueIri.set(createValueResponse.valueIri)
         _                         = { self.linkValueUUID = createValueResponse.valueUUID }
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = linkPropertyIri,
@@ -1770,7 +1770,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       "not add a new value that would violate a cardinality restriction: " +
         "The cardinality of incunabula:partOf in incunabula:page is 1, and page http://rdfh.ch/0803/4f11adaf is already part of a book.",
     ) {
-      val resourceIri = "http://rdfh.ch/0803/4f11adaf"
+      val resourceIri  = "http://rdfh.ch/0803/4f11adaf"
       val createParams = CreateValueV2(
         resourceIri = resourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
@@ -1841,12 +1841,12 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, incunabulaMemberUser)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, incunabulaMemberUser, randomUUID))
         _                         = lobComment1Iri.set(createValueResponse.valueIri)
-        updatedResource <- getResourceWithValues(
+        updatedResource          <- getResourceWithValues(
                              resourceIri = resourceIri,
                              propertyIrisForGravsearch = Seq(propertyIri, KA.HasStandoffLinkTo.toSmartIri),
                              requestingUser = incunabulaMemberUser,
                            )
-        _ <- checkLastModDate(resourceIri, maybeResourceLastModDate, updatedResource.lastModificationDate)
+        _                       <- checkLastModDate(resourceIri, maybeResourceLastModDate, updatedResource.lastModificationDate)
         textValueFromTriplestore = getValueFromResource(
                                      resource = updatedResource,
                                      propertyIriInResult = propertyIri,
@@ -1915,7 +1915,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, incunabulaMemberUser)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, incunabulaMemberUser, randomUUID))
         _                         = lobComment2Iri.set(createValueResponse.valueIri)
-        updatedResource <- getResourceWithValues(
+        updatedResource          <- getResourceWithValues(
                              resourceIri = resourceIri,
                              propertyIrisForGravsearch = Seq(propertyIri, KA.HasStandoffLinkTo.toSmartIri),
                              requestingUser = incunabulaMemberUser,
@@ -1971,7 +1971,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(zeitgloeckleinIri, incunabulaMemberUser)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, incunabulaMemberUser, randomUUID))
         _                         = zeitgloeckleinCommentWithoutStandoffIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = zeitgloeckleinIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2030,7 +2030,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(zeitgloeckleinIri, incunabulaMemberUser)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, incunabulaMemberUser, randomUUID))
         _                         = zeitgloeckleinCommentWithStandoffIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = zeitgloeckleinIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2084,7 +2084,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(zeitgloeckleinIri, incunabulaMemberUser)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, incunabulaMemberUser, randomUUID))
         _                         = zeitgloeckleinSecondCommentWithStandoffIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = zeitgloeckleinIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2122,7 +2122,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(zeitgloeckleinIri, incunabulaMemberUser)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, incunabulaMemberUser, randomUUID))
         _                         = zeitgloeckleinSecondCommentWithStandoffIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = zeitgloeckleinIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2157,7 +2157,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
         _                         = decimalValueIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2187,7 +2187,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
         _                         = timeValueIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2222,7 +2222,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
         _                         = dateValueIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2258,7 +2258,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
         _                         = booleanValueIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2270,8 +2270,8 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(savedValue.valueHasBoolean == valueHasBoolean)
     },
     test("update a geometry value") {
-      val resourceIri = aThingIri
-      val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
+      val resourceIri      = aThingIri
+      val propertyIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
       val valueHasGeometry =
         """{"status":"active","lineColor":"#ff3334","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
@@ -2289,7 +2289,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
         _                         = geometryValueIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2321,7 +2321,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
         _                         = intervalValueIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2351,7 +2351,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
         _                         = listValueIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2396,7 +2396,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
         _                         = colorValueIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2426,7 +2426,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParms, anythingUser1, randomUUID))
         _                         = uriValueIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
@@ -2453,8 +2453,8 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         ),
       )
       for {
-        updateValueResponse <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
-        _                    = geonameValueIri.set(updateValueResponse.valueIri)
+        updateValueResponse  <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
+        _                     = geonameValueIri.set(updateValueResponse.valueIri)
         valueFromTriplestore <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = None,
@@ -2485,9 +2485,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, incunabulaMemberUser)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, incunabulaMemberUser, randomUUID))
         // When you change a link value's target, it gets a new UUID.
-        oldLinkValueUUID = linkValueUUID
-        _                = linkValueIri.set(updateValueResponse.valueIri)
-        _                = { self.linkValueUUID = updateValueResponse.valueUUID }
+        oldLinkValueUUID      = linkValueUUID
+        _                     = linkValueIri.set(updateValueResponse.valueIri)
+        _                     = { self.linkValueUUID = updateValueResponse.valueUUID }
         valueFromTriplestore <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2524,7 +2524,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, incunabulaMemberUser)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, incunabulaMemberUser, randomUUID))
         _                         = linkValueIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = linkPropertyIri,
@@ -2562,7 +2562,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, incunabulaMemberUser)
         updateValueResponse      <- valuesResponder(_.updateValueV2(updateParams, incunabulaMemberUser, randomUUID))
         _                         = linkValueIri.set(updateValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = linkPropertyIri,
@@ -2599,7 +2599,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, incunabulaMemberUser)
         createValueResponse      <- valuesResponder(_.createValueV2(createParams, incunabulaMemberUser, randomUUID))
         _                         = linkValueIri.set(createValueResponse.valueIri)
-        valueFromTriplestore <- getValue(
+        valueFromTriplestore     <- getValue(
                                   resourceIri = resourceIri,
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = linkPropertyIri,
@@ -2653,7 +2653,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         internalMimeType = mimeTypeJP2
         originalFilename = Some("test.tiff")
         originalMimeType = Some(mimeTypeTIFF)
-        updateParams = UpdateValueContentV2(
+        updateParams     = UpdateValueContentV2(
                          resourceIri,
                          thingPictureClassIri.toSmartIri,
                          propertyIri,
@@ -2666,8 +2666,8 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                            originalMimeType,
                          ),
                        )
-        updateValueResponse <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
-        _                    = stillImageFileValueIri.set(updateValueResponse.valueIri)
+        updateValueResponse         <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
+        _                            = stillImageFileValueIri.set(updateValueResponse.valueIri)
         updatedValueFromTriplestore <- getValue(
                                          resourceIri = resourceIri,
                                          maybePreviousLastModDate = maybeResourceLastModDate,
@@ -2716,7 +2716,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(zeitgloeckleinIri, incunabulaMemberUser)
         _                        <- valuesResponder(_.deleteValueV2(deleteParams, incunabulaMemberUser))
-        _ <- checkValueIsDeleted(
+        _                        <- checkValueIsDeleted(
                ResourceIri.unsafeFrom(zeitgloeckleinIri.toSmartIri),
                maybeResourceLastModDate,
                ValueIri.unsafeFrom(zeitgloeckleinCommentWithStandoffIri.get.toSmartIri),
@@ -2734,7 +2734,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       val resourceIri          = ResourceIri.unsafeFrom("http://rdfh.ch/0803/cb1a74e3e2f6".toSmartIri)
       val linkValuePropertyIri = PropertyIri.unsafeFrom(KA.HasLinkToValue.toSmartIri)
       val linkValueIRI         = ValueIri.unsafeFrom(linkValueIri.get.toSmartIri)
-      val deleteParams = DeleteValueV2(
+      val deleteParams         = DeleteValueV2(
         resourceIri,
         ResourceClassIri.unsafeFrom(KA.LinkObj.toSmartIri),
         linkValuePropertyIri,
@@ -2745,7 +2745,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       for {
         maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri.toString, anythingUser1)
         _                        <- valuesResponder(_.deleteValueV2(deleteParams, incunabulaMemberUser))
-        _ <- checkValueIsDeleted(
+        _                        <- checkValueIsDeleted(
                resourceIri = resourceIri,
                maybePreviousLastModDate = maybeResourceLastModDate,
                valueIri = linkValueIRI,
@@ -2755,7 +2755,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       } yield assertCompletes
     },
     test("not delete a value if the property's cardinality doesn't allow it") {
-      val propertyIri = PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri)
+      val propertyIri  = PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri)
       val deleteParams = DeleteValueV2(
         ResourceIri.unsafeFrom(zeitgloeckleinIri.toSmartIri),
         ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri),
@@ -2770,7 +2770,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test(
       "not accept custom value permissions that would give the requesting user a higher permission on a value than the default",
     ) {
-      val resourceIri = sf.makeRandomResourceIri(imagesProject.shortcode)
+      val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
@@ -2784,7 +2784,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                _.createResource(CreateResourceRequestV2(inputResource, imagesUser01, randomUUID)),
              )
         propertyIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
-        actual <-
+        actual     <-
           valuesResponder(
             _.createValueV2(
               CreateValueV2(
@@ -2807,7 +2807,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test(
       "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin",
     ) {
-      val resourceIri = sf.makeRandomResourceIri(imagesProject.shortcode)
+      val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
@@ -2821,7 +2821,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                _.createResource(CreateResourceRequestV2(inputResource, imagesUser01, randomUUID)),
              )
         propertyIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
-        _ <- valuesResponder(
+        _          <- valuesResponder(
                _.createValueV2(
                  CreateValueV2(
                    resourceIri = resourceIri,
@@ -2858,7 +2858,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                _.createResource(CreateResourceRequestV2(inputResource, imagesUser01, randomUUID)),
              )
         propertyIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
-        _ <- valuesResponder(
+        _          <- valuesResponder(
                _.createValueV2(
                  CreateValueV2(
                    resourceIri = resourceIri,
@@ -2897,7 +2897,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       )
       for {
         createValueResponse1 <- valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID))
-        resourceVersion1 <- getResourceWithValues(
+        resourceVersion1     <- getResourceWithValues(
                               resourceIri = sierraIri,
                               propertyIrisForGravsearch = Seq(
                                 propertyIri,
@@ -2906,7 +2906,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                               requestingUser = anythingUser1,
                             )
         // Get the UUIDs of the text value and of the standoff link value.
-        textValue1 = resourceVersion1.values(propertyIri).head
+        textValue1                 = resourceVersion1.values(propertyIri).head
         standoffLinkValueVersion1 <-
           asInstanceOf[ReadLinkValueV2](resourceVersion1.values(KA.HasStandoffLinkToValue.toSmartIri).head)
         standoffLinkValueVersion1ValueUuid <- getValueUUID(standoffLinkValueVersion1.valueIri)

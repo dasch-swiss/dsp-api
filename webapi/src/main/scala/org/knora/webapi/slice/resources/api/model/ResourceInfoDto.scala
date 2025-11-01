@@ -14,7 +14,7 @@ import org.knora.webapi.slice.resources.domain.ResourceInfo
 
 final case class ListResponseDto private (resources: List[ResourceInfoDto], count: Int)
 object ListResponseDto {
-  val empty: ListResponseDto = ListResponseDto(List.empty, 0)
+  val empty: ListResponseDto                              = ListResponseDto(List.empty, 0)
   def apply(list: List[ResourceInfoDto]): ListResponseDto = list match {
     case Nil  => ListResponseDto.empty
     case list => ListResponseDto(list, list.size)

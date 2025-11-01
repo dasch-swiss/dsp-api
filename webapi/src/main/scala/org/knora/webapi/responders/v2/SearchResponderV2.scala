@@ -515,7 +515,7 @@ final case class SearchResponderV2Live(
       searchValue          <- validateSearchString(searchValue)
       limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
-      countSparql <- ZIO.attempt(
+      countSparql          <- ZIO.attempt(
                        sparql.v2.txt
                          .searchFulltext(
                            searchTerms = LuceneQueryString(searchValue),
@@ -530,7 +530,7 @@ final case class SearchResponderV2Live(
                          ),
                      )
       bindings <- triplestore.query(Select(countSparql)).map(_.results.bindings)
-      count <- // query response should contain one result with one row with the name "count"
+      count    <- // query response should contain one result with one row with the name "count"
         ZIO.fail {
           val msg = s"Fulltext count query is expected to return exactly one row, but ${bindings.size} given"
           GravsearchException(msg)
@@ -568,7 +568,7 @@ final case class SearchResponderV2Live(
       searchValue          <- validateSearchString(searchValue)
       limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
-      searchSparql <-
+      searchSparql         <-
         ZIO.attempt(
           sparql.v2.txt
             .searchFulltext(
@@ -965,7 +965,7 @@ final case class SearchResponderV2Live(
     schemaAndOptions: SchemaRendering,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
-    val internalClassIri = resourceClass.toOntologySchema(InternalSchema)
+    val internalClassIri                                  = resourceClass.toOntologySchema(InternalSchema)
     val maybeInternalOrderByPropertyIri: Option[SmartIri] =
       orderByProperty.map(_.toOntologySchema(InternalSchema))
 
@@ -1135,7 +1135,7 @@ final case class SearchResponderV2Live(
       searchValue          <- validateSearchString(searchValue)
       _                    <- ensureIsFulltextSearch(searchValue)
       limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
-      searchTerm <- ApacheLuceneSupport
+      searchTerm           <- ApacheLuceneSupport
                       .asLuceneQueryForSearchByLabel(searchValue)
                       .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
       countSparql =
@@ -1199,7 +1199,7 @@ final case class SearchResponderV2Live(
       searchValue          <- validateSearchString(searchValue)
       _                    <- ensureIsFulltextSearch(searchValue)
       limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
-      searchTerm <- ApacheLuceneSupport
+      searchTerm           <- ApacheLuceneSupport
                       .asLuceneQueryForSearchByLabel(searchValue)
                       .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
       searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(
@@ -1233,7 +1233,7 @@ final case class SearchResponderV2Live(
                                 if (subjectIsMainResource) {
                                   val subjIri: IRI = subject match {
                                     case IriSubjectV2(value) => value
-                                    case other =>
+                                    case other               =>
                                       throw InconsistentRepositoryDataException(
                                         s"Unexpected subject of resource: $other",
                                       )

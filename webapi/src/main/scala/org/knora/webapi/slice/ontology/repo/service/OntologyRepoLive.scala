@@ -115,7 +115,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
   ): Task[List[ReadClassInfoV2]] =
     for {
       upToClassIri <- toSmartIri(upToClass)
-      result <- smartIrisMapCache(classIris)((iris, cache) =>
+      result       <- smartIrisMapCache(classIris)((iris, cache) =>
                   findAllSuperClassesBy(iris, List.empty, cache, Some(upToClassIri)),
                 )
     } yield result.distinct

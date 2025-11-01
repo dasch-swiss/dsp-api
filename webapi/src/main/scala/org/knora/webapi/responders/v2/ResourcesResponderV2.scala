@@ -181,7 +181,7 @@ final case class ResourcesResponderV2(
     providedLastModificationDate: Option[Instant],
   ): IO[EditConflictException, Unit] = {
     val existingLastModificationDate = resource.lastModificationDate
-    val isConflict = (
+    val isConflict                   = (
       for {
         existingDate <- existingLastModificationDate
         providedDate <- providedLastModificationDate
@@ -386,7 +386,7 @@ final case class ResourcesResponderV2(
                .someOrFail(NotFoundException(s"Project ${resourceIri.shortcode} not found"))
 
       (other, otherClass, p) = (variable("other"), variable("otherClass"), variable("p"))
-      inUsePattern = other
+      inUsePattern           = other
                        .has(p, Rdf.iri(resourceIri.toString))
                        .andHas(KB.isDeleted, false)
                        .andIsA(otherClass)
@@ -422,7 +422,7 @@ final case class ResourcesResponderV2(
   ): Task[CanDoResponseV2] =
     (for {
       requestingUser <- ZIO.succeed(deleteResourceV2.requestingUser)
-      resource <- ZIO.succeed(resource).someOrElseZIO {
+      resource       <- ZIO.succeed(resource).someOrElseZIO {
                     getResourcePreviewWithDeletedResource(
                       resourceIris = Seq(deleteResourceV2.resourceIri),
                       targetSchema = ApiV2Complex,
@@ -444,7 +444,7 @@ final case class ResourcesResponderV2(
       _           <- ensureResourceIsNotInUse(resourceIri)
 
       lastModificationDate = resource.lastModificationDate.getOrElse(resource.creationDate)
-      _ <- ZIO.when(deleteResourceV2.maybeDeleteDate.exists(!_.isAfter(lastModificationDate))) {
+      _                   <- ZIO.when(deleteResourceV2.maybeDeleteDate.exists(!_.isAfter(lastModificationDate))) {
              val msg =
                s"A custom delete date must be later than the date when the resource was created or last modified"
              ZIO.fail(BadRequestException(msg))
@@ -612,7 +612,7 @@ final case class ResourcesResponderV2(
       apiResponse.copy(resources = apiResponse.resources.map { resource =>
         resource.deletionInfo match {
           case Some(_) => resource.asDeletedResource()
-          case None =>
+          case None    =>
             if (showDeletedValues) resource
             else resource.withDeletedValues(versionDate)
         }
@@ -807,7 +807,7 @@ final case class ResourcesResponderV2(
               case value: ReadValueV2 =>
                 value.valueContent match {
                   case textRepr: TextFileValueContentV2 => ZIO.succeed((value.valueIri, textRepr))
-                  case _ =>
+                  case _                                =>
                     val msg =
                       s"Resource $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}"
                     ZIO.fail(InconsistentRepositoryDataException(msg))
@@ -837,7 +837,7 @@ final case class ResourcesResponderV2(
 
     for {
       gravsearchTemplateUrl <- recoveredGravsearchUrlTask
-      response <- messageRelay
+      response              <- messageRelay
                     .ask[SipiGetTextFileResponse](
                       SipiGetTextFileRequest(
                         fileUrl = gravsearchTemplateUrl,
@@ -1236,7 +1236,7 @@ final case class ResourcesResponderV2(
 
             // Include only nodes that are reachable via edges that we're going to traverse (i.e. the user
             // has permission to see those edges, and we haven't already traversed them).
-            val visibleNodeIrisFromEdges: Set[IRI] = edges.map(_.sourceNodeIri) ++ edges.map(_.targetNodeIri)
+            val visibleNodeIrisFromEdges: Set[IRI]       = edges.map(_.sourceNodeIri) ++ edges.map(_.targetNodeIri)
             val filteredOtherNodes: Seq[QueryResultNode] =
               otherNodes.filter(node => visibleNodeIrisFromEdges.contains(node.nodeIri))
 
@@ -1482,7 +1482,7 @@ final case class ResourcesResponderV2(
       // Run the query.
 
       parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
-      searchResponse <- searchResponderV2.gravsearchV2(
+      searchResponse        <- searchResponderV2.gravsearchV2(
                           parsedGravsearchQuery,
                           apiV2SchemaWithOption(MarkupRendering.Standoff),
                           requestingUser,
@@ -1541,12 +1541,12 @@ final case class ResourcesResponderV2(
             "label"  -> JsonLDObject(Map("en" -> JsonLDArray(Seq(JsonLDString(representation.label))))),
             "height" -> JsonLDInt(imageValueContent.dimY),
             "width"  -> JsonLDInt(imageValueContent.dimX),
-            "items" -> JsonLDArray(
+            "items"  -> JsonLDArray(
               Seq(
                 JsonLDObject(
                   Map(
-                    "id"   -> JsonLDString(s"${imageValue.valueIri}/image"),
-                    "type" -> JsonLDString("AnnotationPage"),
+                    "id"    -> JsonLDString(s"${imageValue.valueIri}/image"),
+                    "type"  -> JsonLDString("AnnotationPage"),
                     "items" -> JsonLDArray(
                       Seq(
                         JsonLDObject(
@@ -1554,13 +1554,13 @@ final case class ResourcesResponderV2(
                             "id"         -> JsonLDString(imageValue.valueIri),
                             "type"       -> JsonLDString("Annotation"),
                             "motivation" -> JsonLDString("painting"),
-                            "body" -> JsonLDObject(
+                            "body"       -> JsonLDObject(
                               Map(
-                                "id"     -> JsonLDString(fileUrl),
-                                "type"   -> JsonLDString("Image"),
-                                "format" -> JsonLDString("image/jpeg"),
-                                "height" -> JsonLDInt(imageValueContent.dimY),
-                                "width"  -> JsonLDInt(imageValueContent.dimX),
+                                "id"      -> JsonLDString(fileUrl),
+                                "type"    -> JsonLDString("Image"),
+                                "format"  -> JsonLDString("image/jpeg"),
+                                "height"  -> JsonLDInt(imageValueContent.dimY),
+                                "width"   -> JsonLDInt(imageValueContent.dimX),
                                 "service" -> JsonLDArray(
                                   Seq(
                                     JsonLDObject(
@@ -1677,7 +1677,7 @@ final case class ResourcesResponderV2(
       fullReps <- ZIO.collectAll(histories)
 
       // Create an event for the resource at creation time
-      (creationTimeHist, resourceAtCreation) = fullReps.head
+      (creationTimeHist, resourceAtCreation)                   = fullReps.head
       resourceCreationEvent: Seq[ResourceAndValueHistoryEvent] = getResourceCreationEvent(
                                                                    resourceAtCreation,
                                                                    creationTimeHist,
@@ -2071,7 +2071,7 @@ object ResourcesResponderV2 {
       stringFormatter         <- ZIO.service[StringFormatter]
       triplestoreService      <- ZIO.service[TriplestoreService]
       valueContentValidator   <- ZIO.service[ValueContentValidator]
-      responder = new ResourcesResponderV2(
+      responder                = new ResourcesResponderV2(
                     appConfig,
                     constructResponseUtilV2,
                     iriConverter,

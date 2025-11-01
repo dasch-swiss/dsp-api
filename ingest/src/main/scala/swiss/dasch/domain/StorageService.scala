@@ -91,7 +91,7 @@ object StorageService {
     maxDepth: Int = Int.MaxValue,
   ): ZStream[Any, IOException, Path] =
     Files.walk(path, maxDepth).filterZIO(filter)
-  def maxParallelism(): Int = 10
+  def maxParallelism(): Int                                                                    = 10
   def getProjectFolder(projectShortcode: ProjectShortcode): RIO[StorageService, ProjectFolder] =
     ZIO.serviceWithZIO[StorageService](_.getProjectFolder(projectShortcode))
   def getAssetFolder(asset: AssetRef): RIO[StorageService, AssetFolder] =

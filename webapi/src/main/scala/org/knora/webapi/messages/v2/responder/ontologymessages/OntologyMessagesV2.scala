@@ -799,7 +799,7 @@ object PredicateInfoV2Builder {
 
   def makeRdfsLabel(literals: Map[LanguageCode, String])(implicit sf: StringFormatter): PredicateInfoV2Builder =
     makeRdfsLabel().withStringLiterals(literals)
-  def makeRdfsLabelEn(value: String)(implicit sf: StringFormatter): PredicateInfoV2Builder = makeRdfsLabel(EN, value)
+  def makeRdfsLabelEn(value: String)(implicit sf: StringFormatter): PredicateInfoV2Builder                           = makeRdfsLabel(EN, value)
   private def makeRdfsLabel(lang: LanguageCode, value: String)(implicit sf: StringFormatter): PredicateInfoV2Builder =
     makeRdfsLabel().withStringLiteral(lang, value)
   private def makeRdfsLabel()(implicit sf: StringFormatter): PredicateInfoV2Builder = make(RDFS.LABEL)
@@ -1554,7 +1554,7 @@ final case class ReadClassInfoV2Builder(
 
   def build(): ReadClassInfoV2 = {
     val predicatesMap = predicates.map(p => p.predicateIri -> p).toMap
-    val classInfo = ClassInfoContentV2(
+    val classInfo     = ClassInfoContentV2(
       classIri = classIri,
       datatypeInfo = datatypeInfo,
       predicates = predicatesMap,
@@ -1886,7 +1886,7 @@ case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2)
         if (predicateInfo.objects.nonEmpty) {
           val nonLanguageSpecificObjectsAsJson: Seq[JsonLDValue] = predicateInfo.objects.collect {
             case StringLiteralV2(str, None) => (JsonLDString(str), str)
-            case SmartIriLiteralV2(iri) =>
+            case SmartIriLiteralV2(iri)     =>
               val iriStr = iri.toString
               (JsonLDUtil.iriToJsonLDObject(iri.toString), iriStr)
           }
@@ -2052,7 +2052,7 @@ case class PropertyInfoContentV2(
     val predicatesWithAdjustedRdfType: Map[SmartIri, PredicateInfoV2] =
       if (ontologySchema == InternalSchema && targetSchema == ApiV2Simple) {
         // Yes. Is this an object property?
-        val rdfTypeIri = OntologyConstants.Rdf.Type.toSmartIri
+        val rdfTypeIri                   = OntologyConstants.Rdf.Type.toSmartIri
         val sourcePropertyType: SmartIri = getPredicateIriObject(rdfTypeIri).getOrElse(
           throw InconsistentRepositoryDataException(s"Property $propertyIri has no rdf:type"),
         )
@@ -2252,7 +2252,7 @@ case class OntologyMetadataV2(
   override def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 =
     if (ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
       targetSchema match {
-        case InternalSchema => this
+        case InternalSchema           => this
         case apiV2Schema: ApiV2Schema =>
           OntologyTransformationRules.getTransformationRules(apiV2Schema).ontologyMetadata
       }

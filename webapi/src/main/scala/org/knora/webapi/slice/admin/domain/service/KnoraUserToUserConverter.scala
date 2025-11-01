@@ -56,7 +56,7 @@ final case class KnoraUserToUserConverter(
     // materialize implicit memberships from User properties
     val projectMembers: Chunk[(ProjectIri, GroupIri)] = user.isInProject.map((_, builtIn.ProjectMember.id))
     val projectAdmins                                 = user.isInProjectAdminGroup.map((_, builtIn.ProjectAdmin.id))
-    val systemAdmin =
+    val systemAdmin                                   =
       if (user.isInSystemAdminGroup.value) { Seq((KnoraProjectRepo.builtIn.SystemProject.id, builtIn.SystemAdmin.id)) }
       else { Seq.empty }
     val materializedGroups: Chunk[(ProjectIri, GroupIri)] = projectMembers ++ projectAdmins ++ systemAdmin
@@ -104,7 +104,7 @@ final case class KnoraUserToUserConverter(
           (result: Option[Set[PermissionADM]], groups: Seq[GroupIri]) =>
             result match {
               case Some(value) => ZIO.some(value)
-              case None =>
+              case None        =>
                 administrativePermissionForGroupsGetADM(projectIri, groups)
                   .when(groups.forall(extendedUserGroups.contains))
                   .map(_.filter(_.nonEmpty))
