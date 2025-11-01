@@ -14,37 +14,28 @@ import org.knora.webapi.slice.admin.domain.model.LegalInfo
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestExportApiClient
-import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.slice.export_.api.ExportRequest
 import org.knora.webapi.GoldenTest
 
 // TODO: this file is not done
 object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
-  override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfOntology)
-  override val rewriteAll: Boolean = true
-
-  private val createThingPicture = for {
-    file <- TestDspIngestClient.createImageAsset(anythingShortcode)
-    response <- TestResourcesApiClient.createStillImageRepresentation(
-                  anythingShortcode,
-                  anythingOntologyIri,
-                  "ThingPicture",
-                  file,
-                  anythingAdminUser,
-                  LegalInfo.empty,
-                )
-    _ <- response.assert200
-  } yield ()
+  override def rdfDataObjects: List[RdfDataObject] = incunabulaRdfOntologyAndData
+  override val rewriteAll: Boolean                 = true
 
   val e2eSpec = suite("ExportEndpointsE2ESpec")(
     test("postExportResources should export CSV resources") {
-      val noResources = 10
-
-      val resourceClassName = anythingOntologyIri.makeClass("ThingPicture").toString
       val exportResource =
-        ExportRequest(resourceClassName, List("http://www.knora.org/ontology/knora-base#hasStillImageFileValue"))
+        ExportRequest(
+          "http://www.knora.org/ontology/0803/incunabula#book",
+          List(
+            "http://www.knora.org/ontology/0803/incunabula#title",
+            "http://www.knora.org/ontology/0803/incunabula#publisher",
+            "http://www.knora.org/ontology/0803/incunabula#partOf",
+            "http://www.w3.org/2000/01/rdf-schema#label",
+          ),
+        )
 
-      createThingPicture.repeatN(noResources - 1) *> TestExportApiClient
+      TestExportApiClient
         .postExportResources(exportResource, anythingAdminUser)
         .flatMap(_.assert200)
         .map(assertGolden(_, ""))

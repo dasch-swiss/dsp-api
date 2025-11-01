@@ -27,6 +27,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 // TODO: this file is not done
+// TODO: respect permissions on the resource and value level
+// TODO: verify that knora-base:hasPermissions is also allowed to be exproted (it is to anonymous users)
 final case class ExportService(
   private val projectService: KnoraProjectService,
   private val triplestore: TriplestoreService,
@@ -34,22 +36,8 @@ final case class ExportService(
 ) {
   val (
     classIriVar,
-    creationDateVar,
-    creatorIriVar,
-    deleteDateVar,
-    labelVar,
-    lastModificationDateVar,
     resourceIriVar,
-  ) = ("classIri", "createdAt", "creator", "deletedAt", "label", "modifiedAt", "resourceIri")
-
-  // TODO: just do for comprehension on plain Eithers with propertyIri in the Left channel, then collect at last step
-  def getSmartIriOrThrow(map: Map[String, String], field: String): Task[SmartIri] = {
-    val m = s"ExportService query for project {project.shortcode} returned inconsistent data for $field"
-    for {
-      value    <- ZIO.attempt(map.getOrElse(field, throw new InconsistentRepositoryDataException(m)))
-      smartIri <- iriConverter.asSmartIri(value)
-    } yield smartIri
-  }
+  ) = ("classIri", "resourceIri")
 
   def exportResources(
     project: KnoraProject,
@@ -78,11 +66,6 @@ final case class ExportService(
     val selectPattern = SparqlBuilder
       .select(
         variable(classIriVar),
-        variable(creationDateVar),
-        variable(creatorIriVar),
-        variable(deleteDateVar),
-        variable(labelVar),
-        variable(lastModificationDateVar),
         variable(resourceIriVar),
       )
       .distinct()
@@ -91,37 +74,37 @@ final case class ExportService(
     val wherePattern =
       variable(resourceIriVar)
         .isA(variable(classIriVar))
-        .andHas(KB.creationDate, variable(creationDateVar))
-        .andHas(KB.attachedToUser, variable(creatorIriVar))
-        .andHas(RDFS.LABEL, variable(labelVar))
-        .and(variable(resourceIriVar).has(KB.lastModificationDate, variable(lastModificationDateVar)).optional())
-        .and(variable(resourceIriVar).has(KB.deleteDate, variable(deleteDateVar)).optional())
         .from(Rdf.iri(projectGraph.value))
 
+    val classSubclassOfResource =
+      variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
+
     val classConstraintPattern = classIris.map(_.toInternalSchema.toIri).map(Rdf.iri) match {
-      case Nil         => variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
-      case head :: Nil => variable(resourceIriVar).isA(head)
+      case Nil => List()
       case head :: tail =>
-        val pat = variable(resourceIriVar).isA(head)
-        pat.union(tail.map(c => variable(resourceIriVar).isA(c)): _*)
+        List(variable(resourceIriVar).isA(head).union(tail.map(c => variable(resourceIriVar).isA(c)): _*))
     }
 
     Queries
       .SELECT(selectPattern)
-      .where(classConstraintPattern, wherePattern)
+      .where(wherePattern, classSubclassOfResource)
+      .where(classConstraintPattern: _*)
       .prefix(prefix(KB.NS), prefix(RDFS.NS))
+  }
+
+  // TODO: just do for comprehension on plain Eithers with propertyIri in the Left channel, then collect at last step
+  private def getSmartIriOrThrow(map: Map[String, String], field: String): Task[SmartIri] = {
+    val m = s"ExportService query for project {project.shortcode} returned inconsistent data for $field"
+    for {
+      value    <- ZIO.attempt(map.getOrElse(field, throw new InconsistentRepositoryDataException(m)))
+      smartIri <- iriConverter.asSmartIri(value)
+    } yield smartIri
   }
 
   private def formatRow(row: VariableResultsRow): Task[ExportedResource] =
     for {
-      classIri <- getSmartIriOrThrow(row.rowMap, classIriVar).map(_.toComplexSchema.toIri)
-      // _            = row.rowMap
+      classIri    <- getSmartIriOrThrow(row.rowMap, classIriVar).map(_.toComplexSchema.toIri)
       resourceIri <- getSmartIriOrThrow(row.rowMap, resourceIriVar)
-      // label       <- getSmartIriOrThrow(row.rowMap, labelVar)
-      // creatorIri  <- getSmartIriOrThrow(row.rowMap, creatorIriVar).map(_.toComplexSchema.toIri)
-      // createdAt    = row.rowMap.get(creationDateVar).map(Instant.parse).getOrThrow(creationDateVar)
-      // deletedAt    = row.rowMap.get(deleteDateVar).map(Instant.parse)
-      // lastModAt    = row.rowMap.get(lastModificationDateVar).map(Instant.parse)
     } yield ExportedResource(classIri.toString, resourceIri.toString)
 }
 
