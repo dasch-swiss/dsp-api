@@ -15,7 +15,6 @@ import org.knora.webapi.slice.export_.model.ExportService
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 
-// TODO: this file is not done
 final case class ExportRestService(
   private val iriConverter: IriConverter,
   private val exportService: ExportService,

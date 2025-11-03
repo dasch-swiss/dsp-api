@@ -39,7 +39,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
 
 import scala.collection.immutable.ListMap
 
-// TODO: verify that knora-base:hasPermissions is also allowed to be exproted (it is to anonymous users)
 final case class ExportService(
   private val projectService: KnoraProjectService,
   private val triplestore: TriplestoreService,
@@ -80,7 +79,6 @@ final case class ExportService(
           .flatMap(_.asExtended(iriConverter.sf))
           .map(constructResponseUtilV2.splitMainResourcesAndValueRdfData(_, requestingUser))
 
-      // TODO: will this omit results via pagination?
       readResources <-
         constructResponseUtilV2.createApiResponse(
           mainResourcesAndValueRdfData = resourcesWithValues,
@@ -193,7 +191,6 @@ final case class ExportService(
       case IntervalValueContentV2(_, start, end, _) =>
         s"$start - $end"
 
-      // TODO: is this fine?
       case HierarchicalListValueContentV2(_, nodeIri, labelOption, _) =>
         labelOption.getOrElse(nodeIri)
 
@@ -225,7 +222,6 @@ final case class ExportService(
         fileValue.fileValue.originalFilename.getOrElse(fileValue.fileValue.internalFilename)
     }
 
-  // TODO: add knora-base ontology as lookup possibility
   private def propertyLabelsTranslated(
     propertyIris: List[PropertyIri],
     userLang: String,
