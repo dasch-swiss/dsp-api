@@ -11,6 +11,7 @@ import zio.json.JsonCodec
 final case class ExportRequest(
   resourceClass: String,
   selectedProperties: List[String],
+  language: String = "en",
 )
 
 object ExportRequest {

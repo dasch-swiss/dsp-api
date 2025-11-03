@@ -5,17 +5,19 @@
 
 package org.knora.webapi.slice.export_.api
 
-import org.knora.webapi.slice.infrastructure.ColumnDef
+import scala.collection.immutable.SortedMap
+
 import org.knora.webapi.slice.infrastructure.CsvRowBuilder
 
 final case class ExportedResource(
   resourceIri: String,
-  properties: Map[String, String],
+  properties: SortedMap[String, String],
 )
 
 object ExportedResource {
-  given CsvRowBuilder[ExportedResource] = CsvRowBuilder.fromColumnDefs[ExportedResource](
-    ColumnDef("Resource IRI", _.resourceIri),
-    ColumnDef("props", _.properties),
-  )
+  def rowBuilder(headers: List[String]): CsvRowBuilder[ExportedResource] =
+    new CsvRowBuilder[ExportedResource] {
+      def header: Seq[String]                     = headers
+      def values(row: ExportedResource): Seq[Any] = List(row.resourceIri) ++ row.properties.values
+    }
 }

@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.export_.api
 
+import sttp.model.HeaderNames
+import sttp.model.MediaType
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
@@ -12,8 +14,6 @@ import zio.ZLayer
 
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
-import sttp.model.HeaderNames
-import sttp.model.MediaType
 
 final case class ExportEndpoints(
   baseEndpoints: V3BaseEndpoint,
