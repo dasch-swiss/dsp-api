@@ -12,8 +12,9 @@ import zio.ZLayer
 
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
+import sttp.model.HeaderNames
+import sttp.model.MediaType
 
-// TODO: this file is not done
 final case class ExportEndpoints(
   baseEndpoints: V3BaseEndpoint,
 ) {
@@ -30,7 +31,8 @@ final case class ExportEndpoints(
       ),
     )
     .out(stringBody)
-  // TODO: out(header[ContentType/ContentDisposition]) like in MetadataEndpoints.scala
+    .out(header[MediaType](HeaderNames.ContentType))
+    .out(header[String]("Content-Disposition"))
 }
 
 object ExportEndpoints {

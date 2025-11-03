@@ -6,11 +6,10 @@
 package org.knora.webapi.slice.export_.api
 
 import zio.*
-
+import sttp.model.MediaType
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.api.v3.NotFound
 import org.knora.webapi.slice.api.v3.BadRequest
 import org.knora.webapi.slice.export_.model.ExportService
 import org.knora.webapi.slice.infrastructure.CsvService
@@ -27,31 +26,20 @@ final case class ExportRestService(
     user: User,
   )(
     request: ExportRequest,
-  ): ZIO[Any, V3ErrorInfo, String] =
+  ): ZIO[Any, V3ErrorInfo, (String, MediaType, String)] =
     (for {
       resourceClassIri <- iriConverter.asResourceClassIri(request.resourceClass)
       shortcode        <- ZIO.fromEither(resourceClassIri.smartIri.getProjectShortcode)
       project          <- authService.ensureProject(shortcode)
       properties       <- ZIO.foreach(request.selectedProperties)(iriConverter.asPropertyIri)
-      data             <- exportService.exportResources(project, resourceClassIri, properties).orDie
+      data             <- exportService.exportResources(project, resourceClassIri, properties, user).orDie
       csv              <- ZIO.scoped(csvService.writeToString(data)).orDie
-    } yield csv).mapError(t => BadRequest(t.toString))
-
-  // /Users/raitisveinbahs/work/dsp-api/webapi/src/main/scala/org/knora/webapi/slice/resources/api/MetadataEndpoints.scala
-  // ): IO[RequestRejectedException, (MediaType, String, String)] = for {
-  //   result <- format match {
-  //               case JSON => ZIO.succeed(data.toJson)
-  //               case CSV  => ZIO.scoped(csvService.writeToString(data).orDie)
-  //               case TSV =>
-  //                 given CSVFormat = new TSVFormat {}
-  //                 ZIO.scoped(csvService.writeToString(data).orDie)
-  //             }
-  //   now <- Clock.instant.map(formatForFilename)
-  // } yield (
-  //   format.mediaType,
-  //   s"attachment; filename=project_${shortcode.value}_metadata_resources_${now}.${format.ext}",
-  //   result,
-  // )
+      now              <- Clock.instant
+    } yield (
+      csv,
+      MediaType.TextCsv,
+      s"attachment; filename=project_${shortcode.value}_resources_${resourceClassIri.name}_${now}.csv",
+    )).mapError(t => BadRequest(t.toString))
 }
 
 object ExportRestService {

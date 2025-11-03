@@ -16,12 +16,14 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
 
 object ExportApiModule { self =>
   type Dependencies =
     // format: off
     Authenticator &
     AuthorizationRestService &
+    ConstructResponseUtilV2 &
     CsvService &
     IriConverter &
     KnoraProjectService &

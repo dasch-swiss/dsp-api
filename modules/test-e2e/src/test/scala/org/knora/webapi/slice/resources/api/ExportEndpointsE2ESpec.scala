@@ -15,7 +15,6 @@ import org.knora.webapi.testservices.TestExportApiClient
 import org.knora.webapi.slice.export_.api.ExportRequest
 import org.knora.webapi.GoldenTest
 
-// TODO: this file is not done
 object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
   override def rdfDataObjects: List[RdfDataObject] = incunabulaRdfOntologyAndData
   override val rewriteAll: Boolean                 = true
