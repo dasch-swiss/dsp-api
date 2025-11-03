@@ -160,7 +160,7 @@ final case class ExportService(
       }),
     )
 
-  // TODO: move to ValueContentV2 itself
+  // NOTE: good candidate to move to the ValueContentV2 trait itself, also would enable better testing
   private def valueContentString(valueContent: ValueContentV2): String =
     valueContent match {
       case TextValueContentV2(_, maybeString, _, _, _, _, _, _, _) =>
@@ -175,10 +175,8 @@ final case class ExportService(
       case BooleanValueContentV2(_, valueHasBoolean, _) =>
         valueHasBoolean.toString
 
-      case DateValueContentV2(_, startJDN, endJDN, _, _, _, _) =>
-        val startYear = ((startJDN - 1721426) / 365.25).toInt
-        val endYear   = ((endJDN - 1721426) / 365.25).toInt
-        if (startYear == endYear) startYear.toString else s"$startYear - $endYear"
+      case d: DateValueContentV2 =>
+        d.toString
 
       case UriValueContentV2(_, valueHasUri, _) =>
         valueHasUri
@@ -195,6 +193,7 @@ final case class ExportService(
       case IntervalValueContentV2(_, start, end, _) =>
         s"$start - $end"
 
+      // TODO: is this fine?
       case HierarchicalListValueContentV2(_, nodeIri, labelOption, _) =>
         labelOption.getOrElse(nodeIri)
 
@@ -210,7 +209,6 @@ final case class ExportService(
       case DeletedValueContentV2(ontologySchema, comment) => "deleted value"
     }
 
-  // TODO: clean this up
   private def extractFileInfo(fileValue: FileValueContentV2): String =
     fileValue match {
       case StillImageFileValueContentV2(_, file, dimX, dimY, _) =>
@@ -222,8 +220,7 @@ final case class ExportService(
           case (Some(x), Some(y)) => s" (${x}×${y})"
           case _                  => ""
         }
-        val pages = pageCount.map(p => s", $p pages").getOrElse("")
-        s"$filename$dimensions$pages"
+        s"$filename$dimensions"
       case _ =>
         fileValue.fileValue.originalFilename.getOrElse(fileValue.fileValue.internalFilename)
     }
