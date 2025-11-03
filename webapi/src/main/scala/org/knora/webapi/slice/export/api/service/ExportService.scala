@@ -14,7 +14,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 import zio.ZLayer
 
-import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.{InconsistentRepositoryDataException => InconsistentDataException}
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -48,20 +48,98 @@ final case class ExportService(
     selectedProperties: List[PropertyIri],
   ): Task[List[ExportedResource]] =
     for {
-      rows              <- findResources(project, classIri, selectedProperties)
-      exportedResources <- ZIO.foreach(rows)(formatRow(_))
-    } yield exportedResources.toList
+      rows <- findResources(project, classIri, selectedProperties)
+
+      // val resourceRequestSparql =
+      //   Construct(
+      //     sparql.v2.txt
+      //       .getResourcePropertiesAndValues(
+      //         resourceIris = mainResourceIris,
+      //         preview = false,
+      //         withDeleted = false,
+      //         queryAllNonStandoff = true,
+      //         queryStandoff = queryStandoff,
+      //         maybePropertyIri = None,
+      //         maybeVersionDate = None,
+      //       ),
+      //   )
+      // for {
+      //   resourceRequestResponse <- triplestore.query(resourceRequestSparql).flatMap(_.asExtended)
+      //   mainResourcesAndValueRdfData = constructResponseUtilV2.splitMainResourcesAndValueRdfData(
+      //                                    resourceRequestResponse,
+      //                                    requestingUser,
+      //                                  )
+
+    } yield List()
+
+    // if (mainResourceIris.nonEmpty) {
+    //   // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
+    //   // at most one page of standoff per text value.
+    //   val resourceRequestSparql =
+    //     Construct(
+    //       sparql.v2.txt
+    //         .getResourcePropertiesAndValues(
+    //           resourceIris = mainResourceIris,
+    //           preview = false,
+    //           queryAllNonStandoff = true,
+    //           withDeleted = false,
+    //           queryStandoff = queryStandoff,
+    //           maybePropertyIri = None,
+    //           maybeVersionDate = None,
+    //         ),
+    //     )
+
+    //   for {
+    //     resourceRequestResponse <- triplestore.query(resourceRequestSparql).flatMap(_.asExtended)
+
+    //     // separate resources and values
+    //     mainResourcesAndValueRdfData = constructResponseUtilV2.splitMainResourcesAndValueRdfData(
+    //                                      resourceRequestResponse,
+    //                                      requestingUser,
+    //                                    )
+
+    //     // If we're querying standoff, get XML-to standoff mappings.
+    //     mappings <-
+    //       if (queryStandoff) {
+    //         constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
+    //           mainResourcesAndValueRdfData.resources,
+    //           requestingUser,
+    //         )
+    //       } else {
+    //         ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
+    //       }
+
+    //     // Construct a ReadResourceV2 for each resource that the user has permission to see.
+    //     readResourcesSequence <- constructResponseUtilV2.createApiResponse(
+    //                                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+    //                                orderByResourceIri = mainResourceIris,
+    //                                pageSizeBeforeFiltering = mainResourceIris.size,
+    //                                mappings = mappings,
+    //                                queryStandoff = queryStandoff,
+    //                                versionDate = None,
+    //                                calculateMayHaveMoreResults = true,
+    //                                targetSchema = schemaAndOptions.schema,
+    //                                requestingUser = requestingUser,
+    //                              )
+    //   } yield readResourcesSequence
+    // } else {
 
   private def findResources(
     project: KnoraProject,
     classIri: ResourceClassIri,
     selectedProperties: List[PropertyIri],
-  ): Task[Seq[VariableResultsRow]] =
+  ): Task[Seq[SmartIri]] =
     for {
       query           <- ZIO.succeed(resourceQuery(project, classIri, selectedProperties))
       dr              <- triplestore.selectWithTimeout(query, SparqlTimeout.Gravsearch).map(_.results.bindings).timed
       (duration, rows) = dr
       _               <- ZIO.logInfo(s"ExportService: ${rows.size} rows in ${duration.toMillis} ms: ${query.getQueryString}")
+      rows <- ZIO.foreach(rows) { row =>
+                for {
+                  value    <- ZIO.attempt(row.rowMap.getOrElse(resourceIriVar, throw new InconsistentDataException("")))
+                  smartIri <- iriConverter.asSmartIri(value)
+                } yield smartIri
+              }
     } yield rows
 
   private def resourceQuery(
@@ -69,14 +147,8 @@ final case class ExportService(
     classIri: ResourceClassIri,
     selectedProperties: List[PropertyIri],
   ): SelectQuery = {
-    val (propConstraints, propVariables) = selectedProperties.zipWithIndex.map { case (property, index) =>
-      val v = variable(s"p${index}")
-      ((Rdf.iri(property.toInternalSchema.toString), v), v)
-    }.unzip
-
     val selectPattern = SparqlBuilder
       .select(variable(resourceIriVar))
-      // .select(propVariables: _*)
       .distinct()
 
     val projectGraph = projectService.getDataGraphForProject(project)
@@ -96,20 +168,6 @@ final case class ExportService(
       .where(resourceWhere, classConstraint, classSubclassOfResource)
       .prefix(prefix(KB.NS), prefix(RDFS.NS))
   }
-
-  // TODO: just do for comprehension on plain Eithers with propertyIri in the Left channel, then collect at last step
-  private def getSmartIriOrThrow(map: Map[String, String], field: String): Task[SmartIri] = {
-    val m = s"ExportService query for project {project.shortcode} returned inconsistent data for $field"
-    for {
-      value    <- ZIO.attempt(map.getOrElse(field, throw new InconsistentRepositoryDataException(m)))
-      smartIri <- iriConverter.asSmartIri(value)
-    } yield smartIri
-  }
-
-  private def formatRow(row: VariableResultsRow): Task[ExportedResource] =
-    for {
-      resourceIri <- getSmartIriOrThrow(row.rowMap, resourceIriVar)
-    } yield ExportedResource("", resourceIri.toString)
 }
 
 object ExportService {

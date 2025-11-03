@@ -10,9 +10,7 @@ import zio.test.*
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.admin.domain.model.LegalInfo
 import org.knora.webapi.testservices.ResponseOps.*
-import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestExportApiClient
 import org.knora.webapi.slice.export_.api.ExportRequest
 import org.knora.webapi.GoldenTest
