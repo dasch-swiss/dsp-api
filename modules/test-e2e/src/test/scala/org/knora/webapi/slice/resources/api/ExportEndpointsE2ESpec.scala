@@ -17,7 +17,7 @@ import org.knora.webapi.GoldenTest
 
 object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
   override def rdfDataObjects: List[RdfDataObject] = incunabulaRdfOntologyAndData
-  override val rewriteAll: Boolean                 = true
+  // override val rewriteAll: Boolean                 = true
 
   val e2eSpec = suite("ExportEndpointsE2ESpec")(
     test("postExportResources should export CSV resources") {
