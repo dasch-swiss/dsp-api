@@ -37,7 +37,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
-import scala.collection.immutable.SortedMap
+import scala.collection.immutable.ListMap
 
 // TODO: verify that knora-base:hasPermissions is also allowed to be exproted (it is to anonymous users)
 final case class ExportService(
@@ -141,20 +141,23 @@ final case class ExportService(
     selectedProperties: List[PropertyIri],
     language: String,
   ): Task[List[String]] =
-    propertyLabelsTranslated(selectedProperties, language).map("Resource IRI" +: _)
+    propertyLabelsTranslated(selectedProperties, language).map(
+      "Label" +: "Resource IRI" +: _
+    )
 
   private def convertToExportRow(
     resource: ReadResourceV2,
     selectedProperties: List[PropertyIri],
   ): ExportedResource =
     ExportedResource(
+      resource.label,
       resource.resourceIri.toString,
-      selectedProperties.foldMap { property =>
-        SortedMap(property.smartIri.toString -> {
+      ListMap.from(selectedProperties.map { property =>
+        property.smartIri.toString -> {
           val values: List[ReadValueV2] = resource.values.get(property.smartIri).map(_.toList).combineAll
           values.map(v => valueContentString(v.valueContent)).mkString(" :: ")
-        })
-      },
+        }
+      }),
     )
 
   // TODO: move to ValueContentV2 itself

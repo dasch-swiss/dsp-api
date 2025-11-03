@@ -28,7 +28,6 @@ object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
             "http://www.knora.org/ontology/0803/incunabula#title",
             "http://www.knora.org/ontology/0803/incunabula#publisher",
             "http://www.knora.org/ontology/0803/incunabula#partOf",
-            "http://www.w3.org/2000/01/rdf-schema#label",
           ),
         )
 
