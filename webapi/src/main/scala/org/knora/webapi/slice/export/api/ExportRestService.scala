@@ -5,15 +5,16 @@
 
 package org.knora.webapi.slice.export_.api
 
-import zio.*
 import sttp.model.MediaType
+import zio.*
+
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.api.v3.V3ErrorInfo
-import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.api.v3.BadRequest
+import org.knora.webapi.slice.api.v3.V3ErrorInfo
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.export_.model.ExportService
 import org.knora.webapi.slice.infrastructure.CsvService
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 
 final case class ExportRestService(
   private val iriConverter: IriConverter,

@@ -16,6 +16,8 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 import zio.ZLayer
 
+import scala.collection.immutable.ListMap
+
 import dsp.errors.InconsistentRepositoryDataException as InconsistentDataException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants
@@ -36,8 +38,6 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
-
-import scala.collection.immutable.ListMap
 
 final case class ExportService(
   private val projectService: KnoraProjectService,
@@ -140,7 +140,7 @@ final case class ExportService(
     language: String,
   ): Task[List[String]] =
     propertyLabelsTranslated(selectedProperties, language).map(
-      "Label" +: "Resource IRI" +: _
+      "Label" +: "Resource IRI" +: _,
     )
 
   private def convertToExportRow(

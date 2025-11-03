@@ -31,7 +31,7 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
   val faker: Faker                 = new Faker()
 
-  private val testLogger: ULayer[Unit] =  consoleLogger(
+  private val testLogger: ULayer[Unit] = Runtime.removeDefaultLoggers >>> consoleLogger(
     config = {
       val default = ConsoleLoggerConfig.default
       default.copy(filter = default.filter.withRootLevel(LogLevel.Error))
