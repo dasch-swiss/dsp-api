@@ -37,7 +37,7 @@ object Dependencies {
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
 
-  val ZioJsonVersion        = "0.7.44"
+  val ZioJsonVersion        = "0.7.45"
   val zioJson               = "dev.zio" %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio" %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
@@ -61,7 +61,7 @@ object Dependencies {
     "dev.zio"      %% "zio-test-junit"         % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-magnolia"      % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-sbt"           % ZioVersion     % Test,
-    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.3.1"        % Test,
+    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.0"        % Test,
   )
 
   val SttpClientVersion = "4.0.12"
@@ -124,7 +124,7 @@ object Dependencies {
   val saxonHE        = "net.sf.saxon"          % "Saxon-HE"         % "12.9"
   val scalaGraph     = "org.scala-graph"      %% "graph-core"       % "2.0.2"
   val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.7.0"
-  val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.10.4"
+  val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.11.0"
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
@@ -155,9 +155,9 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"                 %% "zio-opentelemetry"              % "3.1.10",
-    "io.sentry"                % "sentry-opentelemetry-agentless" % "8.23.0",
-    "io.opentelemetry"         % "opentelemetry-sdk"              % "1.51.0",
-    "io.opentelemetry.semconv" % "opentelemetry-semconv"          % "1.34.0",
+    "io.sentry"                % "sentry-opentelemetry-agentless" % "8.25.0",
+    "io.opentelemetry"         % "opentelemetry-sdk"              % "1.55.0",
+    "io.opentelemetry.semconv" % "opentelemetry-semconv"          % "1.37.0",
   )
 
   val integrationTestDependencies = Seq(
@@ -203,7 +203,7 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion         = "11.13.3"
+  val flywayVersion         = "11.15.0"
   val otelAgentVersion      = "v2.18.1"
   val otelPyroscopeVersion  = "v1.0.4"
   val hikariVersion         = "7.0.2"
