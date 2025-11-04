@@ -51,10 +51,10 @@
 - Required information: email (unique), given name, family name,
   password, status, systemAdmin
 - Username restrictions:
-  - 3 - 50 characters long
-  - Only contains alphanumeric characters (a-z, A-Z, 0-9), underscore (_), hyphen (-), and dot (.)
-  - Cannot start or end with underscore, hyphen, or dot
-  - Underscore, hyphen, or dot cannot be used multiple times in a row
+    - 3 - 50 characters long
+    - Only contains alphanumeric characters (a-z, A-Z, 0-9), underscore (_), hyphen (-), and dot (.)
+    - Cannot start or end with underscore, hyphen, or dot
+    - Underscore, hyphen, or dot cannot be used multiple times in a row
 - Returns information about the newly created user
 - POST: `/admin/users`
 - BODY:
@@ -131,7 +131,8 @@ specified by the `id` in the request body as below:
 
 ```json
 {
-    "status": false // true or false
+  "status": false
+  // true or false
 }
 ```
 
