@@ -8,7 +8,7 @@ RFC: [RFC-020](https://www.notion.so/dasch-swiss/review-RFC-020-Api-V3-basics-28
 Accepted
 
 ## Context
-We want to build a [V3 API (ADR-0009)](../ADR-0009-api-v3.md). 
+We want to build a [V3 API (ADR-0009)](./ADR-0009-api-v3.md). 
 In this ADR the foundational basics on which we can agree on before modelling specific endpoints in detail are laid out.
 This will describe content types, error types and authentication as well as a general approach on how to model the API in the long run.
 
