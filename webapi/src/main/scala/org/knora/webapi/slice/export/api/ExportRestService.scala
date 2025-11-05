@@ -26,7 +26,7 @@ final case class ExportRestService(
     user: User,
   )(
     request: ExportRequest,
-  ): ZIO[Any, V3ErrorInfo, (String, MediaType, String)] =
+  ): IO[V3ErrorInfo, (String, MediaType, String)] =
     (for {
       resourceClassIri <- iriConverter.asResourceClassIri(request.resourceClass)
       shortcode        <- ZIO.fromEither(resourceClassIri.smartIri.getProjectShortcode)
