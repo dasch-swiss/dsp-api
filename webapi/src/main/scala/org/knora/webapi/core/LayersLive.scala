@@ -37,8 +37,8 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.CommonModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.slice.export_.api.ExportApiModule
-import org.knora.webapi.slice.export_.api.ExportServerEndpoints
+import org.knora.webapi.slice.api.v3.export_.ExportApiModule
+import org.knora.webapi.slice.api.v3.export_.ExportServerEndpoints
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OpenTelemetry
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.export_.api
+package org.knora.webapi.slice.api.v3.export_
 
 import zio.URLayer
 import zio.ZLayer
@@ -12,7 +12,7 @@ import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.export_.model.ExportService
+import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.security.Authenticator

@@ -9,7 +9,7 @@ import sttp.client4.*
 import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.export_.api.ExportRequest
+import org.knora.webapi.slice.api.v3.export_.ExportRequest
 
 final case class TestExportApiClient(private val apiClient: TestApiClient) {
   def postExportResources(

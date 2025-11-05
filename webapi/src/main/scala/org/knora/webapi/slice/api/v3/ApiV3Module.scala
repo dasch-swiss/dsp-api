@@ -7,7 +7,7 @@ package org.knora.webapi.slice.api.v3
 
 import zio.*
 
-import org.knora.webapi.slice.export_.api.ExportServerEndpoints
+import org.knora.webapi.slice.api.v3.export_.ExportServerEndpoints
 import org.knora.webapi.slice.security.Authenticator
 
 object ApiV3Module {

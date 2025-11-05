@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.export_.api
+package org.knora.webapi.slice.api.v3.export_
 
 import sttp.model.HeaderNames
 import sttp.model.MediaType

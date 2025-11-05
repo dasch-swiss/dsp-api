@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.export_.model
+package org.knora.webapi.slice.api.v3.export_
 
 import cats.implicits.*
 import org.eclipse.rdf4j.model.vocabulary.RDFS
@@ -33,7 +33,7 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.export_.api.ExportedResource
+import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
