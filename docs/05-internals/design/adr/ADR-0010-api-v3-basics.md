@@ -1,6 +1,7 @@
 # ADR-0010: API `v3` basics 
 
 Date: 2025-11- 05 
+
 RFC: [RFC-020](https://www.notion.so/dasch-swiss/review-RFC-020-Api-V3-basics-28b8946b7d40807aa189f3d28beee0b8)
 
 ## Status
