@@ -4,10 +4,6 @@ Date: 2025-11- 05
 
 RFC: [RFC-020](https://www.notion.so/dasch-swiss/review-RFC-020-Api-V3-basics-28b8946b7d40807aa189f3d28beee0b8)
 
-## Status
-
-Accepted
-
 ## Context
 We want to build a [V3 API (ADR-0009)](./ADR-0009-api-v3.md). 
 In this ADR the foundational basics on which we can agree on before modelling specific endpoints in detail are laid out.
