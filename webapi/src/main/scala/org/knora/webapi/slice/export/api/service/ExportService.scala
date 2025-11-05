@@ -25,7 +25,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -152,75 +151,15 @@ final case class ExportService(
       resource.resourceIri.toString,
       ListMap.from(selectedProperties.map { property =>
         property.smartIri.toString -> {
-          val values: List[ReadValueV2] = resource.values.get(property.smartIri).map(_.toList).combineAll
-          values.map(v => valueContentString(v.valueContent)).mkString(" :: ")
+          resource.values
+            .get(property.smartIri)
+            .map(_.toList)
+            .combineAll
+            .map(_.valueContent.valueHasString)
+            .mkString(" :: ")
         }
       }),
     )
-
-  // NOTE: good candidate to move to the ValueContentV2 trait itself, also would enable better testing
-  private def valueContentString(valueContent: ValueContentV2): String =
-    valueContent match {
-      case TextValueContentV2(_, maybeString, _, _, _, _, _, _, _) =>
-        maybeString.getOrElse("")
-
-      case IntegerValueContentV2(_, valueHasInteger, _) =>
-        valueHasInteger.toString
-
-      case DecimalValueContentV2(_, valueHasDecimal, _) =>
-        valueHasDecimal.toString
-
-      case BooleanValueContentV2(_, valueHasBoolean, _) =>
-        valueHasBoolean.toString
-
-      case d: DateValueContentV2 =>
-        d.toString
-
-      case UriValueContentV2(_, valueHasUri, _) =>
-        valueHasUri
-
-      case ColorValueContentV2(_, valueHasColor, _) =>
-        valueHasColor
-
-      case GeomValueContentV2(_, valueHasGeometry, _) =>
-        valueHasGeometry
-
-      case TimeValueContentV2(_, timestamp, _) =>
-        timestamp.toString
-
-      case IntervalValueContentV2(_, start, end, _) =>
-        s"$start - $end"
-
-      case HierarchicalListValueContentV2(_, nodeIri, labelOption, _) =>
-        labelOption.getOrElse(nodeIri)
-
-      case GeonameValueContentV2(_, code, _) =>
-        code
-
-      case fileValue: FileValueContentV2 =>
-        extractFileInfo(fileValue)
-
-      case LinkValueContentV2(_, referredResourceIri, _, _, _, _) =>
-        referredResourceIri
-
-      case DeletedValueContentV2(ontologySchema, comment) => "deleted value"
-    }
-
-  private def extractFileInfo(fileValue: FileValueContentV2): String =
-    fileValue match {
-      case StillImageFileValueContentV2(_, file, dimX, dimY, _) =>
-        val filename = file.originalFilename.getOrElse(file.internalFilename)
-        s"$filename (${dimX}×${dimY})"
-      case DocumentFileValueContentV2(_, file, pageCount, dimX, dimY, _) =>
-        val filename = file.originalFilename.getOrElse(file.internalFilename)
-        val dimensions = (dimX, dimY) match {
-          case (Some(x), Some(y)) => s" (${x}×${y})"
-          case _                  => ""
-        }
-        s"$filename$dimensions"
-      case _ =>
-        fileValue.fileValue.originalFilename.getOrElse(fileValue.fileValue.internalFilename)
-    }
 
   private def propertyLabelsTranslated(
     propertyIris: List[PropertyIri],
