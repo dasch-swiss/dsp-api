@@ -8,19 +8,22 @@ package org.knora.webapi.slice.export_.api
 import sttp.model.MediaType
 import zio.*
 
+import dsp.errors.{NotFoundException => NotFound}
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.BadRequest
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.export_.model.ExportService
 import org.knora.webapi.slice.infrastructure.CsvService
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 final case class ExportRestService(
   private val iriConverter: IriConverter,
   private val exportService: ExportService,
   private val csvService: CsvService,
-  private val authService: AuthorizationRestService,
+  private val projectService: KnoraProjectService,
+  private val ontologyService: OntologyRepo,
 ) {
   def exportResources(
     user: User,
@@ -30,12 +33,16 @@ final case class ExportRestService(
     (for {
       resourceClassIri <- iriConverter.asResourceClassIri(request.resourceClass)
       shortcode        <- ZIO.fromEither(resourceClassIri.smartIri.getProjectShortcode)
-      project          <- authService.ensureProject(shortcode)
       properties       <- ZIO.foreach(request.selectedProperties)(iriConverter.asPropertyIri)
-      data             <- exportService.exportResources(project, resourceClassIri, properties, user, request.language).orDie
-      (headers, rows)   = data
-      csv              <- ZIO.scoped(csvService.writeToString(rows)(using ExportedResource.rowBuilder(headers))).orDie
-      now              <- Clock.instant
+
+      ontologyIri = resourceClassIri.ontologyIri
+      project    <- projectService.findByShortcode(shortcode).orDie.someOrFail(NotFound.from(shortcode))
+      _          <- ontologyService.findById(ontologyIri).someOrFail(NotFound.notfound(ontologyIri))
+
+      data           <- exportService.exportResources(project, resourceClassIri, properties, user, request.language).orDie
+      (headers, rows) = data
+      csv            <- ZIO.scoped(csvService.writeToString(rows)(using ExportedResource.rowBuilder(headers))).orDie
+      now            <- Clock.instant
     } yield (
       csv,
       MediaType.TextCsv,

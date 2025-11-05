@@ -11,7 +11,6 @@ import zio.ZLayer
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.export_.model.ExportService
 import org.knora.webapi.slice.infrastructure.CsvService
@@ -23,7 +22,6 @@ object ExportApiModule { self =>
   type Dependencies =
     // format: off
     Authenticator &
-    AuthorizationRestService &
     ConstructResponseUtilV2 &
     CsvService &
     IriConverter &
