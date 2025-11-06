@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 
-import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import zio.Chunk
 import zio.Task
 import zio.ZIO
@@ -14,6 +13,7 @@ import zio.prelude.ForEachOps
 
 import scala.annotation.tailrec
 
+import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2

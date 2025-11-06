@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.api.v3
 
+import zio.*
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.resources.ResourcesEndpoints
@@ -12,7 +14,6 @@ import org.knora.webapi.slice.api.v3.resources.ResourcesRestServiceV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpoints
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
-import zio.*
 import org.knora.webapi.slice.security.Authenticator
 
 object ApiV3Module {

@@ -5,11 +5,12 @@
 
 package org.knora.webapi.slice.api.v3
 
+import zio.Chunk
+import zio.json.*
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import zio.Chunk
-import zio.json.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 
 sealed trait V3ErrorInfo {

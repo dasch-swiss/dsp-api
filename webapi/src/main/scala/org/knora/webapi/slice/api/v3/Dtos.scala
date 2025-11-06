@@ -5,12 +5,13 @@
 
 package org.knora.webapi.slice.api.v3
 
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.slice.common.KnoraIris.OntologyIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import sttp.tapir.Schema
 import zio.*
 import zio.json.*
+
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 
 final case class LanguageStringDto(value: String, language: LanguageCode)

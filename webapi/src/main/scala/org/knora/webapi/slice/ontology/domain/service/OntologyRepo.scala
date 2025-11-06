@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.ontology.domain.service
 
 import zio.*
+
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2

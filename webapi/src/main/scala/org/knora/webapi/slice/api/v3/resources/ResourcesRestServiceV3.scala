@@ -4,6 +4,8 @@
  */
 
 package org.knora.webapi.slice.api.v3.resources
+import zio.*
+
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.StringFormatter
@@ -26,7 +28,6 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
-import zio.*
 
 class ResourcesRestServiceV3(
   private val projectService: KnoraProjectService,

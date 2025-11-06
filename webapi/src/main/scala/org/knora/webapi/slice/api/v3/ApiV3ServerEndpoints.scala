@@ -5,9 +5,10 @@
 
 package org.knora.webapi.slice.api.v3
 
-import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpoints
 import sttp.tapir.ztapir.*
 import zio.*
+
+import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpoints
 
 final case class ApiV3ServerEndpoints(resourcesServerEndpoints: ResourcesServerEndpoints) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = (resourcesServerEndpoints.endpoints)

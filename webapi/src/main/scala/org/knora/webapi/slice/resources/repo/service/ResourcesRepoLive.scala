@@ -10,10 +10,14 @@ import org.eclipse.rdf4j.model.Namespace
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
+import org.eclipse.rdf4j.sparqlbuilder.core.From
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfType
@@ -26,11 +30,8 @@ import zio.*
 import java.time.Instant
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.util.Try
+
 import dsp.valueobjects.UuidUtil
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.core.From
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
