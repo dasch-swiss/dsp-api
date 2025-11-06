@@ -59,10 +59,11 @@ class ResourcesRestServiceV3(
 
   private def asResourceClassDto(resourceClassIri: ResourceClassIri): IO[NotFound, ResourceClassDto] =
     for {
-      clazz  <- ontologyRepo.findClassBy(resourceClassIri).orDie.someOrFail(NotFound(resourceClassIri))
-      label   = languageString(clazz, Rdfs.Label)
-      comment = languageString(clazz, Rdfs.Comment)
-    } yield ResourceClassDto(resourceClassIri.toString, label, comment)
+      clazz     <- ontologyRepo.findClassBy(resourceClassIri).orDie.someOrFail(NotFound(resourceClassIri))
+      baseClass <- ontologyRepo.findKnoraApiBaseClass(resourceClassIri).orDie
+      label      = languageString(clazz, Rdfs.Label)
+      comment    = languageString(clazz, Rdfs.Comment)
+    } yield ResourceClassDto(resourceClassIri.toComplexSchema.toIri, baseClass.toComplexSchema.toIri, label, comment)
 
   private def languageString(clazz: ReadClassInfoV2, predicateIri: String): List[LanguageStringDto] =
     clazz.entityInfoContent.predicates.get(predicateIri.toSmartIri).flatMap(asLanguageStrings).toList

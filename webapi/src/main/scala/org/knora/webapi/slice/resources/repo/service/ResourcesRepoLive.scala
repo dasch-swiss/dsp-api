@@ -79,7 +79,6 @@ trait ResourcesRepo {
   final def findDeletedById(id: ResourceIri): Task[Option[DeletedResource]] =
     findById(id).map(_.collect { case r: DeletedResource => r })
 
-//  def findByResourceClass(resourceClassIri: ResourceClassIri): Task[Seq[ResourceModel]]
   def countByResourceClass(resourceClassIri: ResourceClassIri, project: KnoraProject): Task[Int]
 }
 
