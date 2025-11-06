@@ -1,4 +1,5 @@
 package org.knora.webapi.slice.api.v3.resources
+import sttp.tapir.ztapir.ZServerEndpoint
 import zio.*
 
 final case class ResourcesServerEndpoints(
@@ -6,10 +7,9 @@ final case class ResourcesServerEndpoints(
   private val resourcesRestService: ResourcesRestServiceV3,
 ) {
 
-  val endpoints = List(
+  val endpoints: List[ZServerEndpoint[Any, Any]] = List(
     resourcesEndpoints.getResourcesResourcesPerOntology.serverLogic(resourcesRestService.resourcesPerOntology),
   )
-
 }
 
 object ResourcesServerEndpoints {

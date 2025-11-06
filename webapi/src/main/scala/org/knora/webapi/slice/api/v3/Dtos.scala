@@ -44,10 +44,18 @@ object OntologyDto {
 
 final case class OntologyAndResourceClasses(
   ontology: OntologyDto,
-  resourceClasses: List[ResourceClassDto],
-  itemCount: Int,
+  classesAndCount: List[ResourceClassAndCountDto],
 )
 object OntologyAndResourceClasses {
   given JsonCodec[OntologyAndResourceClasses] = DeriveJsonCodec.gen[OntologyAndResourceClasses]
   given Schema[OntologyAndResourceClasses]    = Schema.derived[OntologyAndResourceClasses]
+}
+
+final case class ResourceClassAndCountDto(
+  resourceClass: ResourceClassDto,
+  itemCount: Int,
+)
+object ResourceClassAndCountDto {
+  given JsonCodec[ResourceClassAndCountDto] = DeriveJsonCodec.gen[ResourceClassAndCountDto]
+  given Schema[ResourceClassAndCountDto]    = Schema.derived[ResourceClassAndCountDto]
 }

@@ -5,17 +5,29 @@
 
 package org.knora.webapi.slice.api.v3
 
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.api.v3.resources.ResourcesEndpoints
+import org.knora.webapi.slice.api.v3.resources.ResourcesRestServiceV3
+import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpoints
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import zio.*
-
 import org.knora.webapi.slice.security.Authenticator
 
 object ApiV3Module {
 
-  type Dependencies = Authenticator
+  type Dependencies = Authenticator & KnoraProjectService & OntologyRepo & ResourcesRepo & StringFormatter
   type Provided     = ApiV3ServerEndpoints
 
   val layer: URLayer[Dependencies, ApiV3ServerEndpoints] =
-    V3BaseEndpoint.layer >>> ApiV3ServerEndpoints.layer
+    ZLayer.makeSome[Dependencies, ApiV3ServerEndpoints](
+      ApiV3ServerEndpoints.layer,
+      ResourcesEndpoints.layer,
+      ResourcesRestServiceV3.layer,
+      ResourcesServerEndpoints.layer,
+      V3BaseEndpoint.layer,
+    )
 }
 
 object ApiV3 {
