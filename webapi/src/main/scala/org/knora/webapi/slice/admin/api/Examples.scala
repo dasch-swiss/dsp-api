@@ -13,7 +13,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.Examples.GroupExample.groupName
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
-import org.knora.webapi.slice.admin.api.model.*
+import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
@@ -34,15 +34,17 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.api.PageAndSize
+import org.knora.webapi.slice.api.PagedResponse as ApiPagedResponse
 
 object Examples {
 
   object PagedResponse {
-    def fromSlice[A](data: Seq[A]): model.PagedResponse[A] =
-      model.PagedResponse.from(data, data.size * 5, PageAndSize(1, data.size))
+    def fromSlice[A](data: Seq[A]): ApiPagedResponse[A] =
+      ApiPagedResponse.from(data, data.size * 5, PageAndSize(1, data.size))
 
-    def fromTotal[A](data: Seq[A]): model.PagedResponse[A] =
-      model.PagedResponse.from(data, data.size, PageAndSize(1, data.size))
+    def fromTotal[A](data: Seq[A]): ApiPagedResponse[A] =
+      ApiPagedResponse.from(data, data.size, PageAndSize(1, data.size))
   }
 
   object ProjectExample {

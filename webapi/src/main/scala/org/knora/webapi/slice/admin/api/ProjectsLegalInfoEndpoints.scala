@@ -15,9 +15,9 @@ import zio.json.JsonCodec
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.api.model.FilterAndOrder
-import org.knora.webapi.slice.admin.api.model.PageAndSize
-import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.api.PageAndSize
+import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class ProjectLicenseDto(id: String, uri: String, labelEn: String, isRecommended: Boolean, isEnabled: Boolean)
