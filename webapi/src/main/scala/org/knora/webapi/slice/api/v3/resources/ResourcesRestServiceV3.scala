@@ -46,20 +46,14 @@ class ResourcesRestServiceV3(
     for {
       onto <- ontologyRepo.findById(iri).orDie.someOrFail(NotFound(iri))
       meta  = onto.ontologyMetadata
-      label <- ZIO
-                 .fromOption(meta.label)
-                 .orDieWith(_ => IllegalStateException("Ontology $iri does not have a label"))
-      comment <- ZIO
-                   .fromOption(meta.label)
-                   .orDieWith(_ => IllegalStateException("Ontology $iri does not have a comment"))
-    } yield OntologyDto(iri.toString, label, comment)
+    } yield OntologyDto(iri, meta.label.getOrElse(""), meta.comment.map(_.toString).getOrElse(""))
 
   private def asResourceClassDto(resourceClassIri: ResourceClassIri): IO[NotFound, ResourceClassDto] =
     for {
       clazz  <- ontologyRepo.findClassBy(resourceClassIri).orDie.someOrFail(NotFound(resourceClassIri))
       label   = languageString(clazz, Rdfs.Label)
       comment = languageString(clazz, Rdfs.Comment)
-    } yield ResourceClassDto(resourceClassIri.toString, label, comment)
+    } yield ResourceClassDto(resourceClassIri, label, comment)
 
   private def languageString(clazz: ReadClassInfoV2, predicateIri: String): List[LanguageStringDto] =
     clazz.entityInfoContent.predicates.get(predicateIri.toSmartIri).flatMap(asLanguageStrings).toList

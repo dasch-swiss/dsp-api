@@ -5,10 +5,12 @@
 
 package org.knora.webapi.slice.api.v3
 
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import sttp.tapir.Schema
 import zio.*
 import zio.json.*
-
 import org.knora.webapi.slice.common.domain.LanguageCode
 
 final case class LanguageStringDto(value: String, language: LanguageCode)
@@ -23,12 +25,19 @@ final case class ResourceClassDto(
   comment: List[LanguageStringDto],
 )
 object ResourceClassDto {
+  def apply(iri: ResourceClassIri, label: List[LanguageStringDto], comment: List[LanguageStringDto]): ResourceClassDto =
+    apply(iri.smartIri, label, comment)
+  def apply(iri: SmartIri, label: List[LanguageStringDto], comment: List[LanguageStringDto]): ResourceClassDto =
+    ResourceClassDto(iri.toComplexSchema.toString, label, comment)
   given JsonCodec[ResourceClassDto] = DeriveJsonCodec.gen[ResourceClassDto]
   given Schema[ResourceClassDto]    = Schema.derived[ResourceClassDto]
 }
 
 final case class OntologyDto(iri: String, label: String, comment: String)
 object OntologyDto {
+  def apply(iri: OntologyIri, label: String, comment: String): OntologyDto = apply(iri.smartIri, label, comment)
+  def apply(iri: SmartIri, label: String, comment: String): OntologyDto =
+    OntologyDto(iri.toComplexSchema.toString, label, comment)
   given JsonCodec[OntologyDto] = DeriveJsonCodec.gen[OntologyDto]
   given Schema[OntologyDto]    = Schema.derived[OntologyDto]
 }
