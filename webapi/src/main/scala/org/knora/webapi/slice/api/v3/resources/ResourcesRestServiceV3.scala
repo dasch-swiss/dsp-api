@@ -47,7 +47,7 @@ class ResourcesRestServiceV3(
                   .foreach(ontologies.map(o => o.ontologyIri -> o.resourceClassIris).toList)((ontoIri, classes) =>
                     for {
                       onto <- asOntologyDto(ontoIri)
-                      rcls <- ZIO.foreach(classes)(asResourceClassAndCount(prj))
+                      rcls <- ZIO.foreachPar(classes)(asResourceClassAndCount(prj)).withParallelism(5)
                     } yield OntologyAndResourceClasses(onto, rcls),
                   )
     } yield result
