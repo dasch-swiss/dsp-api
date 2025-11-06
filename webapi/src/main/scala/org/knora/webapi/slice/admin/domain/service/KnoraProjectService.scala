@@ -179,4 +179,5 @@ final case class KnoraProjectService(
 
 object KnoraProjectService {
   val layer = ZLayer.derive[KnoraProjectService]
+
 }

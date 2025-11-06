@@ -22,7 +22,6 @@ import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError.*
 
 final case class V3BaseEndpoint(private val authenticator: Authenticator) {
-
   private val defaultErrorOut: EndpointOutput.OneOf[V3ErrorInfo, V3ErrorInfo] =
     oneOf[V3ErrorInfo](
       // default
@@ -66,4 +65,6 @@ final case class V3BaseEndpoint(private val authenticator: Authenticator) {
 
 object V3BaseEndpoint {
   val layer = ZLayer.derive[V3BaseEndpoint]
+
+  type EndpointT = ZServerEndpoint[Any, Any]
 }
