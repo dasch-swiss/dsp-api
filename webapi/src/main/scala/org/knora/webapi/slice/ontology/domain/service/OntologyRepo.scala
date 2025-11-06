@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.ontology.domain.service
 
-import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import zio.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
@@ -37,9 +36,8 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   def findDirectSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
-  final def findAllSuperClassesBy(classIri: ResourceClassIri): Task[List[ReadClassInfoV2]] = findAllSubclassesBy(
-    classIri.toInternalIri,
-  )
+  final def findAllSuperClassesBy(classIri: ResourceClassIri): Task[List[ReadClassInfoV2]] =
+    findAllSubclassesBy(classIri.toInternalIri)
   def findAllSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
   def findAllSuperClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]]
@@ -57,24 +55,7 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   def findAllSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
-  final def findKnoraApiBaseClass(classIri: ResourceClassIri): Task[ResourceClassIri] = {
-    val baseClasses = Seq(
-      KB.Resource,
-      KB.StillImageRepresentation,
-      KB.MovingImageRepresentation,
-      KB.AudioRepresentation,
-      KB.ArchiveRepresentation,
-      KB.DocumentRepresentation,
-      KB.TextRepresentation,
-    )
-
-    for {
-      superClassIris <- findAllSuperClassesBy(classIri).map(_.map(_.entityInfoContent.classIri))
-      baseClassOpt = superClassIris
-                       .find(iri => baseClasses.contains(iri.toInternalSchema.toIri))
-                       .flatMap(iri => ResourceClassIri.from(iri).toOption)
-    } yield baseClassOpt.get
-  }
+  def findKnoraApiBaseClass(classIri: ResourceClassIri): Task[ResourceClassIri]
 
   def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]]
 }

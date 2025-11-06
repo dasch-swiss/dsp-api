@@ -360,9 +360,10 @@ case class ReadOntologyV2(
     with KnoraReadV2[ReadOntologyV2] {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  def projectIri: Option[ProjectIri]            = ontologyMetadata.projectIri
-  def ontologyIri: OntologyIri                  = OntologyIri.unsafeFrom(ontologyMetadata.ontologyIri)
-  def resourceClassIris: List[ResourceClassIri] = classes.keys.map(ResourceClassIri.unsafeFrom).toList
+  def projectIri: Option[ProjectIri] = ontologyMetadata.projectIri
+  def ontologyIri: OntologyIri       = OntologyIri.unsafeFrom(ontologyMetadata.ontologyIri)
+  def resourceClassIris: List[ResourceClassIri] =
+    classes.filter((_, it) => it.isResourceClass).keys.map(ResourceClassIri.unsafeFrom).toList
 
   /**
    * Converts this [[ReadOntologyV2]] to the specified Knora API v2 schema.

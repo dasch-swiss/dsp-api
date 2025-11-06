@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 
+import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import zio.Chunk
 import zio.Task
 import zio.ZIO
@@ -23,6 +24,7 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
+
 final case class OntologyRepoLive(private val converter: IriConverter, private val ontologyCache: OntologyCache)
     extends OntologyRepo {
 
@@ -137,6 +139,28 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
       case Nil     => acc
       case classes => findAllSuperClassesBy(toClassIris(classes), acc ::: classes, cache, upToClassIri)
     }
+  }
+
+  def findKnoraApiBaseClass(classIri: ResourceClassIri): Task[ResourceClassIri] = {
+    val baseClasses = Seq(
+      KB.StillImageRepresentation,
+      KB.MovingImageRepresentation,
+      KB.AudioRepresentation,
+      KB.ArchiveRepresentation,
+      KB.DocumentRepresentation,
+      KB.TextRepresentation,
+    )
+
+    for {
+      superClassIris <- findDirectSuperClassesBy(classIri.toInternalIri).map(_.map(_.entityInfoContent.classIri))
+      baseClassOpt = superClassIris
+                       .find(iri => baseClasses.contains(iri.toInternalSchema.toIri))
+                       .flatMap(iri => ResourceClassIri.from(iri).toOption)
+      baseClass <- baseClassOpt match {
+                     case Some(iri) => ZIO.succeed(iri)
+                     case None      => converter.asResourceClassIri(KB.Resource).mapError(IllegalStateException(_))
+                   }
+    } yield baseClass
   }
 
   override def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]] =
