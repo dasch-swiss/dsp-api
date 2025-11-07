@@ -49,7 +49,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithRepresentation",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
                         label = List(
                           LanguageStringDto(
                             value = "Thing with representation",
@@ -68,7 +68,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithRegion",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
                         label = List(
                           LanguageStringDto(
                             value = "Thing with region",
@@ -87,7 +87,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingArchive",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#ArchiveRepresentation",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#ArchiveRepresentation",
                         label = List(
                           LanguageStringDto(
                             value = "Archive",
@@ -106,7 +106,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
                         label = List(
                           LanguageStringDto(
                             value = "Blaues Ding",
@@ -137,7 +137,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation",
                         label = List(
                           LanguageStringDto(
                             value = "Dingbild",
@@ -168,7 +168,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#AudioThing",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation",
                         label = List(
                           LanguageStringDto(
                             value = "Audio Thing",
@@ -187,7 +187,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#DocumentRepresentation",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#DocumentRepresentation",
                         label = List(
                           LanguageStringDto(
                             value = "Document",
@@ -206,7 +206,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithSeqnum",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
                         label = List(
                           LanguageStringDto(
                             value = "Ding mit Sequenznummer",
@@ -237,7 +237,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithRequiredInt",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
                         label = List(
                           LanguageStringDto(
                             value = "Ding",
@@ -268,7 +268,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#VideoThing",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation",
                         label = List(
                           LanguageStringDto(
                             value = "Video Thing",
@@ -287,7 +287,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
                         label = List(
                           LanguageStringDto(
                             value = "Ding",
@@ -319,7 +319,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TrivialThing",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
                         label = List(
                           LanguageStringDto(
                             value = "Unbedeutendes Ding",
@@ -350,7 +350,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingText",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#TextRepresentation",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#TextRepresentation",
                         label = List(
                           LanguageStringDto(
                             value = "Text",
@@ -378,7 +378,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
                         iri = "http://0.0.0.0:3333/ontology/0001/something/v2#Something",
-                        baseClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
+                        representationClassIri = "http://api.knora.org/ontology/knora-api/v2#Resource",
                         label = List(
                           LanguageStringDto(
                             value = "Etwas",

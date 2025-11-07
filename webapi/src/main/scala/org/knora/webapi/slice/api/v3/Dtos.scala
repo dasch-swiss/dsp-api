@@ -30,25 +30,18 @@ object LanguageStringDto {
 
 final case class ResourceClassDto(
   iri: String,
-  baseClassIri: String,
+  representationClassIri: String,
   label: List[LanguageStringDto],
   comment: List[LanguageStringDto],
 )
 object ResourceClassDto {
   def apply(
     iri: ResourceClassIri,
-    baseClass: ResourceClassIri,
+    representationClassIri: ResourceClassIri,
     label: List[LanguageStringDto],
     comment: List[LanguageStringDto],
   ): ResourceClassDto =
-    apply(iri.smartIri, baseClass.smartIri, label, comment)
-  def apply(
-    iri: SmartIri,
-    baseClass: SmartIri,
-    label: List[LanguageStringDto],
-    comment: List[LanguageStringDto],
-  ): ResourceClassDto =
-    ResourceClassDto(iri.toComplexSchema.toString, baseClass.toComplexSchema.toIri, label, comment)
+    apply(iri.toComplexSchema.toIri, representationClassIri.toComplexSchema.toIri, label, comment)
   given JsonCodec[ResourceClassDto] = DeriveJsonCodec.gen[ResourceClassDto]
   given Schema[ResourceClassDto]    = Schema.derived[ResourceClassDto]
 }

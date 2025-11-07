@@ -56,7 +56,7 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   def findAllSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
-  def findKnoraApiBaseClass(classIri: ResourceClassIri): Task[ResourceClassIri]
+  def knoraApiRepresentationClassIriFor(classIri: ResourceClassIri): Task[ResourceClassIri]
 
   def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]]
 }

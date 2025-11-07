@@ -4,7 +4,7 @@
  */
 
 package org.knora.webapi.slice.ontology.repo.service
-
+import zio.*
 import zio.Chunk
 import zio.Task
 import zio.ZIO
@@ -141,8 +141,8 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
     }
   }
 
-  def findKnoraApiBaseClass(classIri: ResourceClassIri): Task[ResourceClassIri] = {
-    val baseClasses = Seq(
+  def knoraApiRepresentationClassIriFor(classIri: ResourceClassIri): Task[ResourceClassIri] = {
+    val representations = Seq(
       KB.StillImageRepresentation,
       KB.MovingImageRepresentation,
       KB.AudioRepresentation,
@@ -153,14 +153,12 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
     for {
       superClassIris <- findDirectSuperClassesBy(classIri.toInternalIri).map(_.map(_.entityInfoContent.classIri))
-      baseClassOpt = superClassIris
-                       .find(iri => baseClasses.contains(iri.toInternalSchema.toIri))
-                       .flatMap(iri => ResourceClassIri.from(iri).toOption)
-      baseClass <- baseClassOpt match {
-                     case Some(iri) => ZIO.succeed(iri)
-                     case None      => converter.asResourceClassIri(KB.Resource).mapError(IllegalStateException(_))
-                   }
-    } yield baseClass
+      iriOpt          = superClassIris.find(iri => representations.contains(iri.toInternalSchema.toIri))
+      representationClassIri <- (iriOpt match {
+                                  case Some(iri) => converter.asResourceClassIri(iri)
+                                  case None      => converter.asResourceClassIri(KB.Resource)
+                                }).mapError(new IllegalStateException(_))
+    } yield representationClassIri
   }
 
   override def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]] =
