@@ -8,8 +8,9 @@ package org.knora.webapi.slice.api.v3
 import sttp.tapir.Schema
 import zio.*
 import zio.json.*
-
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.LanguageCode
@@ -18,6 +19,12 @@ final case class LanguageStringDto(value: String, language: LanguageCode)
 object LanguageStringDto {
   given JsonCodec[LanguageStringDto] = DeriveJsonCodec.gen[LanguageStringDto]
   given Schema[LanguageStringDto]    = Schema.derived[LanguageStringDto]
+
+  def apply(literal: StringLiteralV2): LanguageStringDto =
+    LanguageStringDto(literal.value, literal.languageCode.getOrElse(LanguageCode.Default))
+
+  def from(info: PredicateInfoV2): List[LanguageStringDto] =
+    info.objects.collect { case str: StringLiteralV2 => str }.map(LanguageStringDto.apply).toList
 }
 
 final case class ResourceClassDto(

@@ -9,7 +9,6 @@ import zio.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -25,7 +24,6 @@ import org.knora.webapi.slice.api.v3.ResourceClassDto
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 
@@ -72,13 +70,7 @@ class ResourcesRestServiceV3(
     } yield ResourceClassDto(resourceClassIri.toComplexSchema.toIri, baseClass.toComplexSchema.toIri, label, comment)
 
   private def languageString(clazz: ReadClassInfoV2, predicateIri: String): List[LanguageStringDto] =
-    clazz.entityInfoContent.predicates.get(predicateIri.toSmartIri).flatMap(asLanguageStrings).toList
-
-  private def asLanguageStrings = (info: PredicateInfoV2) =>
-    info.objects.collect { case str: StringLiteralV2 => str }.map(asLanguageString).toList
-
-  private def asLanguageString = (str: StringLiteralV2) =>
-    LanguageStringDto(str.value, str.languageCode.getOrElse(LanguageCode.Default))
+    clazz.entityInfoContent.predicates.get(predicateIri.toSmartIri).flatMap(LanguageStringDto.from).toList
 
 }
 
