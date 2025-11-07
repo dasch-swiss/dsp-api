@@ -15,7 +15,7 @@ import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 
 class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) {
 
-  val getResourcesResourcesPerOntology = baseEndpoint.withUserEndpoint.get
+  val getResourcesResourcesPerOntology = baseEndpoint.publicEndpoint.get
     .in(ApiV3.V3ProjectsProjectIri / "resourcesPerOntology")
     .out(jsonBody[List[OntologyAndResourceClasses]])
 
