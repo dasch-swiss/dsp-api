@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.v3.ontology
 import zio.*
+
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.SmartIri
