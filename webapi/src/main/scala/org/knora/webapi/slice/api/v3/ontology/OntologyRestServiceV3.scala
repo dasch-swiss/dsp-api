@@ -30,7 +30,6 @@ class OntologyRestServiceV3(ontologyRepo: OntologyRepo)(implicit val sf: StringF
 
   private def languageString(clazz: ReadClassInfoV2, predicateIri: String): List[LanguageStringDto] =
     clazz.entityInfoContent.predicates.get(predicateIri.toSmartIri).flatMap(LanguageStringDto.from).toList
-
 }
 
 object OntologyRestServiceV3 {
