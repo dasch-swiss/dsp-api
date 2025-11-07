@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
+import monocle.syntax.all._
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
@@ -32,7 +33,6 @@ import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.*
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -65,14 +65,12 @@ import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.slice.resources.service.GetResources_
 
 trait GetResources {
-  // def getResources
   def getResourcesWithDeletedResource(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
@@ -85,7 +83,6 @@ trait GetResources {
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2]
 
-  // getResourcePreview (sparql)
   def getResourcePreviewWithDeletedResource(
     resourceIris: Seq[IRI],
     withDeleted: Boolean = true,
@@ -480,13 +477,17 @@ final case class ResourcesResponderV2(
     val eraseTask: Task[SuccessResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
-        resourcesSeq <- getResourcePreview(
-                          resourceIris = Seq(eraseResourceV2.resourceIri),
-                          targetSchema = ApiV2Complex,
-                          requestingUser = eraseResourceV2.requestingUser,
-                        )
-
-        resource: ReadResourceV2 = resourcesSeq.toResource(eraseResourceV2.resourceIri)
+        resource <-
+          getResources
+            .readResourcesSequence(
+              resourceIris = Seq(eraseResourceV2.resourceIri),
+              versionDate = None,
+              withDeleted = true,
+              targetSchema = ApiV2Complex,
+              requestingUser = eraseResourceV2.requestingUser,
+              preview = true,
+            )
+            .map(_.toResource(eraseResourceV2.resourceIri))
 
         // Ensure that the requesting user is a system admin, or an admin of this project.
         _ <- ZIO.when(
@@ -532,52 +533,10 @@ final case class ResourcesResponderV2(
   }
 
   /**
-   * Gets the requested resources from the triplestore.
-   *
-   * @param resourceIris         the Iris of the requested resources.
-   * @param preview              `true` if a preview of the resource is requested.
-   * @param withDeleted          if defined, indicates if the deleted resources and values should be returned or not.
-   * @param propertyIri          if defined, requests only the values of the specified explicit property.
-   * @param valueUuid            if defined, requests only the value with the specified UUID.
-   * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
-   *                             Cannot be used in conjunction with `preview`.
-   * @param queryStandoff        `true` if standoff should be queried.
-   *
-   * @return a map of resource IRIs to RDF data.
-   */
-  private def getResourcesFromTriplestore(
-    resourceIris: Seq[IRI],
-    preview: Boolean,
-    withDeleted: Boolean,
-    propertyIri: Option[SmartIri] = None,
-    valueUuid: Option[UUID] = None,
-    versionDate: Option[Instant] = None,
-    queryStandoff: Boolean,
-    requestingUser: User,
-  ): Task[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
-    val query =
-      Construct(
-        sparql.v2.txt
-          .getResourcePropertiesAndValues(
-            resourceIris = resourceIris.distinct,
-            preview = preview,
-            withDeleted = withDeleted,
-            maybePropertyIri = propertyIri,
-            maybeValueUuid = valueUuid,
-            maybeVersionDate = versionDate,
-            queryAllNonStandoff = true,
-            queryStandoff = queryStandoff,
-          ),
-      )
-
-    triplestore
-      .query(query)
-      .flatMap(_.asExtended)
-      .map(constructResponseUtilV2.splitMainResourcesAndValueRdfData(_, requestingUser))
-  }
-
-  /**
    * Get one or several resources and return them as a sequence with deleted resources replaced.
+   *
+   * These share quite a lot of code:
+   * getResourcesWithDeletedResource / getResources / getResourcePreviewWithDeletedResource
    *
    * @param resourceIris         the IRIs of the resources to be queried.
    * @param propertyIri          if defined, requests only the values of the specified explicit property.
@@ -612,15 +571,7 @@ final case class ResourcesResponderV2(
       schemaOptions,
       requestingUser,
     ).map { apiResponse =>
-      // BR: Deleted resources are to be replaced with DeletedResource.
-      apiResponse.copy(resources = apiResponse.resources.map { resource =>
-        resource.deletionInfo match {
-          case Some(_) => resource.asDeletedResource()
-          case None =>
-            if (showDeletedValues) resource
-            else resource.withDeletedValues(versionDate)
-        }
-      })
+      apiResponse.copy(resources = apiResponse.resources.map(_.asDeletedOrWithDeletedValues(versionDate)))
     }
 
   /**
@@ -655,7 +606,6 @@ final case class ResourcesResponderV2(
           versionDate = versionDate,
           withDeleted = withDeleted,
           targetSchema = targetSchema,
-          schemaOptions = schemaOptions, // TODO: to be removed?
           requestingUser = requestingUser,
           // Passed down to ConstructResponseUtilV2.makeTextValueContentV2.
           queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions),
@@ -687,60 +637,22 @@ final case class ResourcesResponderV2(
     targetSchema: ApiV2Schema,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
-    getResourcePreview(resourceIris, withDeleted, targetSchema, requestingUser).map { apiResponse =>
-      // BR: Deleted resources are to be replaced with DeletedResource.
-      apiResponse.copy(resources = apiResponse.resources.map { resource =>
-        resource.deletionInfo match {
-          case Some(_) => resource.asDeletedResource()
-          case None    => resource.withDeletedValues()
-        }
-      })
-    }
-
-  /**
-   * Get the preview of a resource as it is in the triplestore.
-   *
-   * @param resourceIris   the resource to query for.
-   * @param withDeleted    indicates if the deleted resource should be returned or not.
-   *
-   * @param requestingUser the user making the request.
-   * @return a [[ReadResourcesSequenceV2]].
-   */
-  private def getResourcePreview(
-    resourceIris: Seq[IRI],
-    withDeleted: Boolean = true,
-    targetSchema: ApiV2Schema,
-    requestingUser: User,
-  ): Task[ReadResourcesSequenceV2] = {
-
-    val resourceIrisWithoutDuplicates: Seq[IRI] = resourceIris.distinct
-
-    for {
-      mainResourcesAndValueRdfData <- getResourcesFromTriplestore(
-                                        resourceIris = resourceIris,
-                                        preview = true,
-                                        withDeleted = withDeleted,
-                                        queryStandoff =
-                                          false, // This has no effect, because we are not querying values.
-                                        requestingUser = requestingUser,
-                                      )
-
-      apiResponse <- constructResponseUtilV2.createApiResponse(
-                       mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                       orderByResourceIri = resourceIrisWithoutDuplicates,
-                       pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
-                       mappings = Map.empty[IRI, MappingAndXSLTransformation],
-                       queryStandoff = false,
-                       versionDate = None,
-                       calculateMayHaveMoreResults = false,
-                       targetSchema = targetSchema,
-                       requestingUser = requestingUser,
-                     )
-
-      _ <- apiResponse.checkResourceIris(resourceIris.toSet, apiResponse)
-
-    } yield apiResponse
-  }
+    getResources
+      .readResourcesSequence(
+        resourceIris = resourceIris,
+        versionDate = None,
+        targetSchema = targetSchema,
+        requestingUser = requestingUser,
+        preview = true,
+      )
+      .map(
+        _.focus(_.resources)
+          .modify(
+            _.map { resource =>
+              resource.deletionInfo.map(_ => resource.asDeletedResource()).getOrElse(resource.withDeletedValues())
+            },
+          ),
+      )
 
   /**
    * Obtains a Gravsearch template from Sipi.

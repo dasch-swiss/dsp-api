@@ -25,27 +25,6 @@ final case class GetResources_(
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val triplestore: TriplestoreService,
 )(implicit val stringFormatter: StringFormatter) {
-  // def getResources
-  // def getResourcesWithDeletedResource(
-  //   resourceIris: Seq[IRI],
-  //   propertyIri: Option[SmartIri] = None,
-  //   valueUuid: Option[UUID] = None,
-  //   versionDate: Option[VersionDate] = None,
-  //   withDeleted: Boolean = true,
-  //   showDeletedValues: Boolean = false,
-  //   targetSchema: ApiV2Schema,
-  //   schemaOptions: Set[Rendering],
-  //   requestingUser: User,
-  // ): Task[ReadResourcesSequenceV2]
-
-//   // getResourcePreview (sparql)
-//   def getResourcePreviewWithDeletedResource(
-//     resourceIris: Seq[IRI],
-//     withDeleted: Boolean = true,
-//     targetSchema: ApiV2Schema,
-//     requestingUser: User,
-//   ): Task[ReadResourcesSequenceV2]
-
   def readResourcesSequence(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
@@ -53,13 +32,12 @@ final case class GetResources_(
     versionDate: Option[VersionDate] = None,
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
-    schemaOptions: Set[Rendering],
     requestingUser: User,
-    queryStandoff: Boolean,
+    queryStandoff: Boolean = false,
     preview: Boolean,
   ): Task[ReadResourcesSequenceV2] =
     for {
-      response <-
+      resourcesWithValues <-
         triplestore
           .query(
             Construct(
@@ -81,12 +59,12 @@ final case class GetResources_(
 
       mappings <-
         ZIO.when(queryStandoff) {
-          constructResponseUtilV2.mappingsFromQueryResults(resourcesWithRdf.resources, requestingUser)
+          constructResponseUtilV2.mappingsFromQueryResults(resourcesWithValues.resources, requestingUser)
         }
 
       readSequence <-
         constructResponseUtilV2.createApiResponse(
-          mainResourcesAndValueRdfData = resourcesWithRdf,
+          mainResourcesAndValueRdfData = resourcesWithValues,
           orderByResourceIri = resourceIris.distinct,
           pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
           mappings = mappings.getOrElse(Map.empty),
