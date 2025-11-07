@@ -9,10 +9,10 @@ import sttp.tapir.ztapir.*
 import zio.*
 
 import org.knora.webapi.slice.api.v3.export_.ExportServerEndpoints
-import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpoints
+import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpointsV3
 
 class ApiV3ServerEndpoints(
-  private val resourcesServerEndpoints: ResourcesServerEndpoints,
+  private val resourcesServerEndpoints: ResourcesServerEndpointsV3,
   private val exportServerEndpoints: ExportServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =

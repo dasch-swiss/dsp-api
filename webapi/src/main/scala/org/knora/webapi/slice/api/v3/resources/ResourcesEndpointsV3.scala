@@ -9,19 +9,18 @@ import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
 
-import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.OntologyAndResourceClasses
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 
-final case class ResourcesEndpoints(baseEndpoint: V3BaseEndpoint) {
+final case class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) {
 
   val getResourcesResourcesPerOntology = baseEndpoint.withUserEndpoint.get
-    .in(ApiV3.basePath / "projects" / projectIri / "resourcesPerOntology")
+    .in(ApiV3.V3ProjectsProjectIri / "resourcesPerOntology")
     .out(jsonBody[List[OntologyAndResourceClasses]])
 
 }
 
-object ResourcesEndpoints {
-  val layer = ZLayer.derive[ResourcesEndpoints]
+object ResourcesEndpointsV3 {
+  val layer = ZLayer.derive[ResourcesEndpointsV3]
 }

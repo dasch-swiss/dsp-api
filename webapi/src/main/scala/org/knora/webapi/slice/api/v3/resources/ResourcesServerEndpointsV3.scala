@@ -7,8 +7,8 @@ package org.knora.webapi.slice.api.v3.resources
 import sttp.tapir.ztapir.ZServerEndpoint
 import zio.*
 
-final case class ResourcesServerEndpoints(
-  private val resourcesEndpoints: ResourcesEndpoints,
+final case class ResourcesServerEndpointsV3(
+  private val resourcesEndpoints: ResourcesEndpointsV3,
   private val resourcesRestService: ResourcesRestServiceV3,
 ) {
 
@@ -17,6 +17,6 @@ final case class ResourcesServerEndpoints(
   )
 }
 
-object ResourcesServerEndpoints {
-  val layer = ZLayer.derive[ResourcesServerEndpoints]
+object ResourcesServerEndpointsV3 {
+  val layer = ZLayer.derive[ResourcesServerEndpointsV3]
 }
