@@ -1234,6 +1234,7 @@ final case class ConstructResponseUtilV2(
     )
   }
 
+  // TODO: maybe a better name, also double-check references, reāli divi jūzidži tikai pa lielam
   /**
    * Creates an API response.
    *
@@ -1301,7 +1302,7 @@ final case class ConstructResponseUtilV2(
    * @param requestingUser        the user making the request.
    * @return the referred mappings.
    */
-  def getMappingsFromQueryResultsSeparated(
+  def mappingsFromQueryResults(
     queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
     requestingUser: User,
   ): Task[Map[IRI, MappingAndXSLTransformation]] = {

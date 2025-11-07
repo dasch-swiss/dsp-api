@@ -69,8 +69,10 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.slice.resources.service.GetResources_
 
 trait GetResources {
+  // def getResources
   def getResourcesWithDeletedResource(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
@@ -83,6 +85,7 @@ trait GetResources {
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2]
 
+  // getResourcePreview (sparql)
   def getResourcePreviewWithDeletedResource(
     resourceIris: Seq[IRI],
     withDeleted: Boolean = true,
@@ -108,6 +111,7 @@ final case class ResourcesResponderV2(
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val triplestore: TriplestoreService,
   private val valueValidator: ValueContentValidator,
+  private val getResources: GetResources_,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with GetResources {
@@ -641,67 +645,32 @@ final case class ResourcesResponderV2(
     targetSchema: ApiV2Schema,
     schemaOptions: Set[Rendering],
     requestingUser: User,
-  ): Task[ReadResourcesSequenceV2] = {
-
-    val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
-
-    // Find out whether to query standoff along with text values. This boolean value will be passed to
-    // ConstructResponseUtilV2.makeTextValueContentV2.
-    val queryStandoff: Boolean =
-      SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
-
+  ): Task[ReadResourcesSequenceV2] =
     for {
-
-      mainResourcesAndValueRdfData <-
-        getResourcesFromTriplestore(
+      apiResponse <-
+        getResources.readResourcesSequence(
           resourceIris = resourceIris,
-          preview = false,
-          withDeleted = withDeleted,
           propertyIri = propertyIri,
           valueUuid = valueUuid,
-          versionDate = versionDate.map(_.value),
-          queryStandoff = queryStandoff,
-          requestingUser = requestingUser,
-        )
-      mappingsAsMap <-
-        if (queryStandoff) {
-          constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
-            mainResourcesAndValueRdfData.resources,
-            requestingUser,
-          )
-        } else {
-          ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
-        }
-
-      apiResponse <-
-        constructResponseUtilV2.createApiResponse(
-          mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-          orderByResourceIri = resourceIrisDistinct,
-          pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
-          mappings = mappingsAsMap,
-          queryStandoff = queryStandoff,
-          versionDate = versionDate.map(_.value),
-          calculateMayHaveMoreResults = false,
+          versionDate = versionDate,
+          withDeleted = withDeleted,
           targetSchema = targetSchema,
+          schemaOptions = schemaOptions, // TODO: to be removed?
           requestingUser = requestingUser,
+          // Passed down to ConstructResponseUtilV2.makeTextValueContentV2.
+          queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions),
+          preview = false,
         )
 
-      _ <- apiResponse.checkResourceIris(resourceIris.toSet, apiResponse)
-
-      _ <- valueUuid match {
-             case Some(definedValueUuid) =>
-               ZIO.unless(
-                 apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid))),
-               ) {
-                 val msg =
-                   s"Value with UUID ${UuidUtil.base64Encode(definedValueUuid)} not found (maybe you do not have permission to see it)"
-                 ZIO.fail(NotFoundException(msg))
-               }
-             case None => ZIO.unit
-           }
-
+      _ <-
+        ZIO.foreach(valueUuid) { valueUuid =>
+          val msg      = (u: String) => s"Value with UUID ${u} not found (maybe you do not have permission to see it)"
+          val matching = apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == valueUuid)))
+          ZIO.unless(matching) {
+            ZIO.fail(NotFoundException(msg(UuidUtil.base64Encode(valueUuid))))
+          }
+        }
     } yield apiResponse
-  }
 
   /**
    * Get the preview of a resource with deleted resources replaced.
@@ -2071,6 +2040,7 @@ object ResourcesResponderV2 {
       stringFormatter         <- ZIO.service[StringFormatter]
       triplestoreService      <- ZIO.service[TriplestoreService]
       valueContentValidator   <- ZIO.service[ValueContentValidator]
+      getResources             = GetResources_(constructResponseUtilV2, standoffTagUtilV2, triplestoreService)(stringFormatter)
       responder = new ResourcesResponderV2(
                     appConfig,
                     constructResponseUtilV2,
@@ -2088,6 +2058,7 @@ object ResourcesResponderV2 {
                     standoffTagUtilV2,
                     triplestoreService,
                     valueContentValidator,
+                    getResources,
                   )(stringFormatter)
       _ <- messageRelay.subscribe(responder)
     } yield responder
