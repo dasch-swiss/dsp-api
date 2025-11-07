@@ -152,6 +152,18 @@ final case class TestApiClient(
     sendRequest(request)
   }
 
+  def postJsonReceiveString[B: JsonEncoder](
+    relativeUri: Uri,
+    body: B,
+    user: User,
+  ): Task[Response[Either[String, String]]] = {
+    val request = basicRequest
+      .post(relativeUri)
+      .body(body.toJson)
+      .contentType(MediaType.ApplicationJson)
+    sendRequest(request, Some(user))
+  }
+
   def postJsonLd(
     relativeUri: Uri,
     jsonLdBody: String,

@@ -33,6 +33,8 @@ import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
 import org.knora.webapi.slice.api.v3.ApiV3Module
 import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
+import org.knora.webapi.slice.api.v3.export_.ExportApiModule
+import org.knora.webapi.slice.api.v3.export_.ExportServerEndpoints
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.CommonModule
 import org.knora.webapi.slice.common.api.*
@@ -136,6 +138,7 @@ object LayersLive { self =>
       ConstructResponseUtilV2.layer,
       DspIngestClient.layer,
       Endpoints.layer,
+      ExportApiModule.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
       IriService.layer,

@@ -9,6 +9,7 @@ import zio.*
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.api.v3.export_.ExportServerEndpoints
 import org.knora.webapi.slice.api.v3.resources.ResourcesEndpoints
 import org.knora.webapi.slice.api.v3.resources.ResourcesRestServiceV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpoints
@@ -18,8 +19,17 @@ import org.knora.webapi.slice.security.Authenticator
 
 object ApiV3Module {
 
-  type Dependencies = Authenticator & KnoraProjectService & OntologyRepo & ResourcesRepo & StringFormatter
-  type Provided     = ApiV3ServerEndpoints
+  type Dependencies =
+    // format: off
+    Authenticator &
+    ExportServerEndpoints &
+    KnoraProjectService &
+    OntologyRepo &
+    ResourcesRepo &
+    StringFormatter
+    // format: on
+
+  type Provided = ApiV3ServerEndpoints
 
   val layer: URLayer[Dependencies, ApiV3ServerEndpoints] =
     ZLayer.makeSome[Dependencies, ApiV3ServerEndpoints](
