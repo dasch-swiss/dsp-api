@@ -7,9 +7,9 @@ package org.knora.webapi.slice.api.v3.resources
 import sttp.tapir.ztapir.ZServerEndpoint
 import zio.*
 
-final case class ResourcesServerEndpointsV3(
-  private val resourcesEndpoints: ResourcesEndpointsV3,
-  private val resourcesRestService: ResourcesRestServiceV3,
+class ResourcesServerEndpointsV3(
+  resourcesEndpoints: ResourcesEndpointsV3,
+  resourcesRestService: ResourcesRestServiceV3,
 ) {
 
   val endpoints: List[ZServerEndpoint[Any, Any]] = List(

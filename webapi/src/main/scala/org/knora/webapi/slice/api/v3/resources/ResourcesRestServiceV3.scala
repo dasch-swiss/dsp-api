@@ -30,9 +30,9 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 
 class ResourcesRestServiceV3(
-  private val projectService: KnoraProjectService,
-  private val ontologyRepo: OntologyRepo,
-  private val resourcesRepo: ResourcesRepo,
+  projectService: KnoraProjectService,
+  ontologyRepo: OntologyRepo,
+  resourcesRepo: ResourcesRepo,
 )(implicit val sf: StringFormatter) {
 
   def resourcesPerOntology(
