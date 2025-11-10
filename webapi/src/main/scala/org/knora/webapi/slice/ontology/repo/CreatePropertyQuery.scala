@@ -20,6 +20,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import zio.*
 
 import java.time.Instant
+
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
