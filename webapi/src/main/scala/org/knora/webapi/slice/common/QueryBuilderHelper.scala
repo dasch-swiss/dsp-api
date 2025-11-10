@@ -5,7 +5,9 @@
 
 package org.knora.webapi.slice.common
 
+import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral
@@ -18,7 +20,9 @@ import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 
 trait QueryBuilderHelper {
 
@@ -39,6 +43,19 @@ trait QueryBuilderHelper {
 
   def toRdfLiteral(instant: Instant): RdfLiteral.StringLiteral = Rdf.literalOfType(instant.toString, XSD.DATETIME)
 
+  def toRdfLiteral(int: Int): RdfLiteral.StringLiteral = Rdf.literalOfType(int.toString, XSD.INT)
+  def toRdfLiteralNonNegative(int: Int): RdfLiteral.StringLiteral =
+    Rdf.literalOfType(int.toString, XSD.NON_NEGATIVE_INTEGER)
+
   def toRdfIri(iri: KnoraIri): Iri = toRdfIri(iri.smartIri)
   def toRdfIri(iri: SmartIri): Iri = Rdf.iri(iri.toInternalSchema.toIri)
+
+  def ontologyAndNamespace(ontologyIri: OntologyIri): (Iri, SimpleNamespace) = {
+    val ontology: Iri = toRdfIri(ontologyIri)
+    val ontologyNS    = ontologyIri.ontologyName.value
+    (ontology, SimpleNamespace(ontologyNS, ontologyIri.toInternalSchema.toString + "#"))
+  }
+
+  def toPropertyPatterns(iri: Iri, values: Iterable[PredicateInfoV2]): List[TriplePattern] =
+    values.flatMap(pred => pred.objects.map(obj => iri.has(toRdfIri(pred.predicateIri), toRdfValue(obj)))).toList
 }
