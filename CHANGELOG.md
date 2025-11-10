@@ -1,5 +1,26 @@
 # Changelog
 
+## [32.7.0](https://github.com/dasch-swiss/dsp-api/compare/v32.6.0...v32.7.0) (2025-11-06)
+
+
+### Maintenances
+
+* Dependency updates ([#3837](https://github.com/dasch-swiss/dsp-api/issues/3837)) ([d89cf2a](https://github.com/dasch-swiss/dsp-api/commit/d89cf2abd4fc0bc9d2f48b09ca06f4349b522179))
+* Minor dependency updates ([#3836](https://github.com/dasch-swiss/dsp-api/issues/3836)) ([647d956](https://github.com/dasch-swiss/dsp-api/commit/647d95696a8eb5a2028cbea89ecefc1cf7d0f66e))
+* Move Pagination to org.knora.slice.api package ([#3842](https://github.com/dasch-swiss/dsp-api/issues/3842)) ([f0e713f](https://github.com/dasch-swiss/dsp-api/commit/f0e713f3b22c6bec13730f09243f4622d61f6176))
+* Update sbt-scalafmt to 2.5.6 ([#3840](https://github.com/dasch-swiss/dsp-api/issues/3840)) ([ad0cf5c](https://github.com/dasch-swiss/dsp-api/commit/ad0cf5cd0350ba99c8588e70c2005d05ba2f9883))
+
+
+### Documentation
+
+* Align username specification with code  ([#3838](https://github.com/dasch-swiss/dsp-api/issues/3838)) ([8e0bac0](https://github.com/dasch-swiss/dsp-api/commit/8e0bac070432fbc530c231b6a6c422913d64b158))
+* **dsp-api:** Add V3 basic ADR ([#3841](https://github.com/dasch-swiss/dsp-api/issues/3841)) ([c2d6e61](https://github.com/dasch-swiss/dsp-api/commit/c2d6e61c9bf37770b086d456ff55690782d09903))
+
+
+### Enhancements
+
+* /v3/export/resources with CSV output (DEV-5467) ([#3834](https://github.com/dasch-swiss/dsp-api/issues/3834)) ([c68cb83](https://github.com/dasch-swiss/dsp-api/commit/c68cb836a234e19d952782711efd76dcec0ce1a7))
+
 ## [32.6.0](https://github.com/dasch-swiss/dsp-api/compare/v32.5.0...v32.6.0) (2025-10-28)
 
 
