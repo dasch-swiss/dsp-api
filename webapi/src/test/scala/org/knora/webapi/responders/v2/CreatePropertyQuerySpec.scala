@@ -92,18 +92,38 @@ object CreatePropertyQuerySpec extends ZIOSpecDefault {
                                |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:comment "A test property"@en .
                                |<http://www.knora.org/ontology/0001/anything#hasTestProperty> knora-base:objectType knora-base:TextValue .
                                |<http://www.knora.org/ontology/0001/anything#hasTestProperty> knora-base:subjectType knora-base:Resource .
-                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:subPropertyOf knora-base:hasValue . } }
+                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:subPropertyOf knora-base:hasValue .
+                               |<http://www.knora.org/ontology/0001/anything#hasTestPropertyValue> rdfs:label "Test Property Value"@en .
+                               |<http://www.knora.org/ontology/0001/anything#hasTestPropertyValue> rdfs:subPropertyOf knora-base:hasLinkToValue . } }
                                |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
                                |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . }
-                               |FILTER NOT EXISTS { <http://www.knora.org/ontology/0001/anything#hasTestProperty> rdf:type ?existingPropertyType . } }
-                               |""".stripMargin,
+                               |FILTER NOT EXISTS { <http://www.knora.org/ontology/0001/anything#hasTestProperty> rdf:type ?existingPropertyType . }
+                               |FILTER NOT EXISTS { <http://www.knora.org/ontology/0001/anything#hasTestPropertyValue> a ?existingLinkValuePropertyType . } }""".stripMargin,
           ),
         )
     },
     test("should produce correct query without link value property") {
       CreatePropertyQuery
         .build(testPropertyDef, None, testLastModificationDate)
-        .map((actual: Update) => assertTrue(actual.sparql == ""))
+        .map((actual: Update) =>
+          assertTrue(
+            actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                               |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
+                               |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
+                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:label "Test Property"@en .
+                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:comment "A test property"@en .
+                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> knora-base:objectType knora-base:TextValue .
+                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> knora-base:subjectType knora-base:Resource .
+                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:subPropertyOf knora-base:hasValue . } }
+                               |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
+                               |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . }
+                               |FILTER NOT EXISTS { <http://www.knora.org/ontology/0001/anything#hasTestProperty> rdf:type ?existingPropertyType . } }""".stripMargin,
+          ),
+        )
     },
   )
 }
