@@ -33,8 +33,8 @@ class OntologyRestServiceV3(ontologyRepo: OntologyRepo)(implicit val sf: StringF
     comment         = languageString(readClassInfo, Rdfs.Comment.toSmartIri)
   } yield ResourceClassDto(classIri.toComplexSchema.toIri, representation.toComplexSchema.toIri, label, comment)
 
-  private def languageString(clazz: ReadClassInfoV2, predicateIri: SmartIri): List[LanguageStringDto] =
-    clazz.entityInfoContent.predicates.get(predicateIri).flatMap(LanguageStringDto.from).toList
+  private def languageString(classInfo: ReadClassInfoV2, predicateIri: SmartIri): List[LanguageStringDto] =
+    classInfo.entityInfoContent.predicates.get(predicateIri).flatMap(LanguageStringDto.from).toList
 }
 
 object OntologyRestServiceV3 {
