@@ -152,7 +152,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
     )
 
     for {
-      superClassIris <- findDirectSuperClassesBy(classIri.toInternalIri).map(_.map(_.entityInfoContent.classIri))
+      superClassIris <- findAllSuperClassesBy(classIri.toInternalIri).map(_.map(_.entityInfoContent.classIri))
       iriOpt          = superClassIris.find(iri => representations.contains(iri.toInternalSchema.toIri))
       representationClassIri <- (iriOpt match {
                                   case Some(iri) => converter.asResourceClassIri(iri)
