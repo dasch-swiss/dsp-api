@@ -8,7 +8,6 @@ import zio.*
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.api.v3.export_.ExportRequest
