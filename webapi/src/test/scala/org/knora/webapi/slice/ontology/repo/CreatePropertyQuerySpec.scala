@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.responders.v2
+package org.knora.webapi.slice.ontology.repo
 
 import zio.*
 import zio.test.*
@@ -38,12 +38,12 @@ object CreatePropertyQuerySpec extends ZIOSpecDefault {
       "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri ->
         PredicateInfoV2(
           predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-          objects = Seq(StringLiteralV2.from("Test Property", Some("en"))),
+          objects = Seq(StringLiteralV2.from("""Test "Property"""", Some("en"))),
         ),
       "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri ->
         PredicateInfoV2(
           predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-          objects = Seq(StringLiteralV2.from("A test property", Some("en"))),
+          objects = Seq(StringLiteralV2.from("""A test "property"""", Some("en"))),
         ),
       "http://www.knora.org/ontology/knora-base#objectType".toSmartIri ->
         PredicateInfoV2(
@@ -88,8 +88,8 @@ object CreatePropertyQuerySpec extends ZIOSpecDefault {
                                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
                                |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
                                |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
-                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:label "Test Property"@en .
-                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:comment "A test property"@en .
+                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:label "Test \"Property\""@en .
+                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:comment "A test \"property\""@en .
                                |<http://www.knora.org/ontology/0001/anything#hasTestProperty> knora-base:objectType knora-base:TextValue .
                                |<http://www.knora.org/ontology/0001/anything#hasTestProperty> knora-base:subjectType knora-base:Resource .
                                |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:subPropertyOf knora-base:hasValue .
@@ -114,8 +114,8 @@ object CreatePropertyQuerySpec extends ZIOSpecDefault {
                                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
                                |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
                                |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
-                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:label "Test Property"@en .
-                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:comment "A test property"@en .
+                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:label "Test \"Property\""@en .
+                               |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:comment "A test \"property\""@en .
                                |<http://www.knora.org/ontology/0001/anything#hasTestProperty> knora-base:objectType knora-base:TextValue .
                                |<http://www.knora.org/ontology/0001/anything#hasTestProperty> knora-base:subjectType knora-base:Resource .
                                |<http://www.knora.org/ontology/0001/anything#hasTestProperty> rdfs:subPropertyOf knora-base:hasValue . } }
