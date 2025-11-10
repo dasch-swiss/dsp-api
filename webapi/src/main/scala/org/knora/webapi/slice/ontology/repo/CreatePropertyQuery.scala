@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
@@ -19,7 +20,6 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import zio.*
 
 import java.time.Instant
-
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
@@ -34,6 +34,7 @@ object CreatePropertyQuery extends QueryBuilderHelper {
     lastModificationDate: Instant,
   ): UIO[Update] = Clock.instant.map(now =>
     val ontologyIri = PropertyIri.unsafeFrom(propertyDef.propertyIri).ontologyIri
+    val ontologyNS  = SimpleNamespace(ontologyIri.ontologyName.value, ontologyIri.toInternalSchema.toString + "#")
 
     val ontology: Iri = toRdfIri(ontologyIri)
 
@@ -45,7 +46,7 @@ object CreatePropertyQuery extends QueryBuilderHelper {
 
     val query: ModifyQuery = Queries
       .MODIFY()
-      .prefix(KB.NS, RDF.NS, RDFS.NS, XSD.NS, OWL.NS)
+      .prefix(KB.NS, RDF.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS)
       .from(ontology)
       .delete(deletePattern)
       .into(ontology)
