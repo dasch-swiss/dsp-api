@@ -50,6 +50,7 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
+import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -1649,16 +1650,8 @@ final case class OntologyResponderV2(
              )
 
         // Add the property (and the link value property if needed) to the triplestore.
-        currentTime <- Clock.instant
-        updateSparql = sparql.v2.txt.createProperty(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         propertyDef = internalPropertyDef,
-                         maybeLinkValuePropertyDef = maybeLinkValuePropertyDef,
-                         lastModificationDate = lastModificationDate,
-                         currentTime = currentTime,
-                       )
-        _ <- save(Update(updateSparql))
+        query <- CreatePropertyQuery.build(internalPropertyDef, maybeLinkValuePropertyDef, lastModificationDate)
+        _     <- save(query)
 
         // Read the data back from the cache.
         response <- getPropertyDefinitionsFromOntologyV2(
