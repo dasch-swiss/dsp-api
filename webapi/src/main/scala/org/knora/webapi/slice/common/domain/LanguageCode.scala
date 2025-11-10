@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.common.domain
 
+import sttp.tapir.Schema
 import zio.json.JsonCodec
 
 import org.knora.webapi.slice.common.StringValueCompanion
@@ -21,6 +22,9 @@ enum LanguageCode(val value: String) extends StringValue {
 object LanguageCode extends StringValueCompanion[LanguageCode] {
 
   given JsonCodec[LanguageCode] = JsonCodec[String].transformOrFail(LanguageCode.from, _.value)
+  given Schema[LanguageCode]    = Schema.string
+
+  val Default: LanguageCode = LanguageCode.EN
 
   def from(str: String): Either[String, LanguageCode] = values
     .find(_.value == str)

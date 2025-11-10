@@ -249,6 +249,8 @@ case class StringLiteralV2 private (value: String, language: Option[String])
   override def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
   override def toString: String                    = value
 
+  def languageCode: Option[LanguageCode] = language.map(LanguageCode.from).flatMap(_.toOption)
+
   def toRdfLiteral: StringLiteral =
     language.map(Rdf.literalOfLanguage(value, _)).getOrElse(Rdf.literalOf(value))
 }

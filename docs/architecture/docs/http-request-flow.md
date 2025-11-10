@@ -16,16 +16,3 @@ sequenceDiagram
     application actor   ->> route: forward result
     route               ->> client: send http response
 ```
-
-V3:
-
-```mermaid
-sequenceDiagram
-    autonumber
-    client              ->> route: send http request
-    route               ->> authenticator: authenticate user
-    authenticator       ->> route: user authenticated
-    route               ->> handler: call handler method
-    handler             ->> route: return result
-    route               ->> client: send result as http response
-```

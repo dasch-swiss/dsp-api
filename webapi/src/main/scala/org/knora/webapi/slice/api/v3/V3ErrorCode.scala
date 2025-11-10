@@ -8,6 +8,9 @@ import zio.json.JsonCodec
 
 enum V3ErrorCode:
   case resource_not_found
+  case project_not_found
+  case ontology_not_found
+  case resourceClass_not_found
 
 object V3ErrorCode:
   given JsonCodec[V3ErrorCode] = JsonCodec.string

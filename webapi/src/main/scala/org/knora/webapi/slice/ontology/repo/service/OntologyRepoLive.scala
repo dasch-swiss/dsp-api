@@ -4,7 +4,7 @@
  */
 
 package org.knora.webapi.slice.ontology.repo.service
-
+import zio.*
 import zio.Chunk
 import zio.Task
 import zio.ZIO
@@ -13,6 +13,7 @@ import zio.prelude.ForEachOps
 
 import scala.annotation.tailrec
 
+import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
@@ -23,6 +24,7 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
+
 final case class OntologyRepoLive(private val converter: IriConverter, private val ontologyCache: OntologyCache)
     extends OntologyRepo {
 
@@ -137,6 +139,26 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
       case Nil     => acc
       case classes => findAllSuperClassesBy(toClassIris(classes), acc ::: classes, cache, upToClassIri)
     }
+  }
+
+  def knoraApiRepresentationClassIriFor(classIri: ResourceClassIri): Task[ResourceClassIri] = {
+    val representations = Seq(
+      KB.StillImageRepresentation,
+      KB.MovingImageRepresentation,
+      KB.AudioRepresentation,
+      KB.ArchiveRepresentation,
+      KB.DocumentRepresentation,
+      KB.TextRepresentation,
+    )
+
+    for {
+      superClassIris <- findAllSuperClassesBy(classIri.toInternalIri).map(_.map(_.entityInfoContent.classIri))
+      iriOpt          = superClassIris.find(iri => representations.contains(iri.toInternalSchema.toIri))
+      representationClassIri <- (iriOpt match {
+                                  case Some(iri) => converter.asResourceClassIri(iri)
+                                  case None      => converter.asResourceClassIri(KB.Resource)
+                                }).mapError(new IllegalStateException(_))
+    } yield representationClassIri
   }
 
   override def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]] =

@@ -8,6 +8,9 @@ package org.knora.webapi.slice.api.v3
 import zio.Chunk
 import zio.json.*
 
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 
 sealed trait V3ErrorInfo {
@@ -17,6 +20,17 @@ sealed trait V3ErrorInfo {
 
 case class NotFound(message: String = "Not Found", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
 object NotFound {
+
+  def apply(resourceClassIri: ResourceClassIri): NotFound =
+    singleError(
+      V3ErrorCode.resourceClass_not_found,
+      s"The resource class with IRI $resourceClassIri was not found.",
+      Map.empty,
+    )
+  def apply(ontologyIri: OntologyIri): NotFound =
+    singleError(V3ErrorCode.ontology_not_found, s"The ontology with IRI $ontologyIri was not found.", Map.empty)
+  def apply(projectIri: ProjectIri): NotFound =
+    singleError(V3ErrorCode.project_not_found, s"The project with IRI $projectIri was not found.", Map.empty)
 
   private def singleError(code: V3ErrorCode, message: String, details: Map[String, String]): NotFound =
     NotFound(message, Chunk(ErrorDetail(code, message, details)))
