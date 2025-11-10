@@ -1649,16 +1649,8 @@ final case class OntologyResponderV2(
              )
 
         // Add the property (and the link value property if needed) to the triplestore.
-        currentTime <- Clock.instant
-        updateSparql = sparql.v2.txt.createProperty(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         propertyDef = internalPropertyDef,
-                         maybeLinkValuePropertyDef = maybeLinkValuePropertyDef,
-                         lastModificationDate = lastModificationDate,
-                         currentTime = currentTime,
-                       )
-        _ <- save(Update(updateSparql))
+        query <- CreatePropertyQuery.build(internalPropertyDef, maybeLinkValuePropertyDef, lastModificationDate)
+        _     <- save(query)
 
         // Read the data back from the cache.
         response <- getPropertyDefinitionsFromOntologyV2(
