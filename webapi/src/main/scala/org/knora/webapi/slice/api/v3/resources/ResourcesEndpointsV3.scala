@@ -59,7 +59,7 @@ class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) {
     )
     .description(
       "This endpoint returns all ontologies in a project along with their resource classes and the count of resource instances for each class. " +
-        "Note that the `itemCount` includes only non-deleted resources even if the current user may not be permitted to see some of them, for performance reasons.",
+        "Note that the `itemCount` includes only non-deleted resources and it includes resources even if the current user may not be permitted to see some of them, for performance reasons.",
     )
 
 }
