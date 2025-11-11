@@ -26,7 +26,7 @@ object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
           List(
             "http://www.knora.org/ontology/0803/incunabula#title",
             "http://www.knora.org/ontology/0803/incunabula#publisher",
-            "http://www.knora.org/ontology/0803/incunabula#partOf",
+            "http://www.knora.org/ontology/0803/incunabula#hasAuthor",
           ),
         )
 
