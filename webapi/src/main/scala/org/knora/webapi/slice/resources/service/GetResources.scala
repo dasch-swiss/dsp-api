@@ -14,11 +14,11 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 
 final case class GetResources_(
   private val constructResponseUtilV2: ConstructResponseUtilV2,
