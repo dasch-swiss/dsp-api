@@ -8,6 +8,7 @@ package dsp.errors
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.UserServiceError
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -130,6 +131,8 @@ object NotFoundException {
     NotFoundException(s"The requested ontology ${iri.toComplexSchema.toIri} was not found")
   def from(shortcode: Shortcode): NotFoundException =
     NotFoundException(s"Project with shortcode ${shortcode.value} was not found")
+  def from(projectIri: ProjectIri): NotFoundException =
+    NotFoundException(s"Project with IRI ${projectIri} was not found")
 
   implicit val codec: JsonCodec[NotFoundException] = DeriveJsonCodec.gen[NotFoundException]
 }
