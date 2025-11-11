@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
@@ -34,10 +33,8 @@ object CreatePropertyQuery extends QueryBuilderHelper {
     linkValuePropertyDef: Option[PropertyInfoContentV2],
     lastModificationDate: Instant,
   ): UIO[Update] = Clock.instant.map(now =>
-    val ontologyIri = PropertyIri.unsafeFrom(propertyDef.propertyIri).ontologyIri
-    val ontologyNS  = SimpleNamespace(ontologyIri.ontologyName.value, ontologyIri.toInternalSchema.toString + "#")
-
-    val ontology: Iri = toRdfIri(ontologyIri)
+    val ontologyIri            = PropertyIri.unsafeFrom(propertyDef.propertyIri).ontologyIri
+    val (ontology, ontologyNS) = ontologyAndNamespace(ontologyIri)
 
     val deletePattern = ontology.has(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
 
@@ -76,9 +73,7 @@ object CreatePropertyQuery extends QueryBuilderHelper {
     val property = toRdfIri(propertyDef.propertyIri)
 
     // Build predicate-object patterns
-    val predicateObjectPatterns = propertyDef.predicates.values.flatMap { pred =>
-      pred.objects.map(obj => property.has(toRdfIri(pred.predicateIri), toRdfValue(obj)))
-    }.toList
+    val predicateObjectPatterns = toPropertyPatterns(property, propertyDef.predicates.values).toList
 
     // Build sub-property patterns
     val subPropertyPatterns = propertyDef.subPropertyOf
