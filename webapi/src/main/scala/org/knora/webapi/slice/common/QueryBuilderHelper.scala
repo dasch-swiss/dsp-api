@@ -23,6 +23,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.domain.InternalIri
 
 trait QueryBuilderHelper {
 
@@ -47,8 +48,9 @@ trait QueryBuilderHelper {
   def toRdfLiteralNonNegative(int: Int): RdfLiteral.StringLiteral =
     Rdf.literalOfType(int.toString, XSD.NON_NEGATIVE_INTEGER)
 
-  def toRdfIri(iri: KnoraIri): Iri = toRdfIri(iri.smartIri)
-  def toRdfIri(iri: SmartIri): Iri = Rdf.iri(iri.toInternalSchema.toIri)
+  def toRdfIri(iri: KnoraIri): Iri    = toRdfIri(iri.smartIri)
+  def toRdfIri(iri: SmartIri): Iri    = Rdf.iri(iri.toInternalSchema.toIri)
+  def toRdfIri(iri: InternalIri): Iri = Rdf.iri(iri.value)
 
   def ontologyAndNamespace(ontologyIri: OntologyIri): (Iri, SimpleNamespace) = {
     val ontology: Iri = toRdfIri(ontologyIri)
