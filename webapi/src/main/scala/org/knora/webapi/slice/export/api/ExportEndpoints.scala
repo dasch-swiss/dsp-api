@@ -7,10 +7,13 @@ package org.knora.webapi.slice.api.v3.export_
 
 import sttp.model.HeaderNames
 import sttp.model.MediaType
+import sttp.model.MediaTypes
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
+
+import java.nio.charset.StandardCharsets
 
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
@@ -30,11 +33,15 @@ final case class ExportEndpoints(
         ),
       ),
     )
-    .out(stringBody)
+    .out(stringBodyAnyFormat(Codec.string.format(ExportEndpoints.Csv()), StandardCharsets.UTF_8))
     .out(header[MediaType](HeaderNames.ContentType))
     .out(header[String]("Content-Disposition"))
 }
 
 object ExportEndpoints {
   val layer = ZLayer.derive[ExportEndpoints]
+
+  private case class Csv() extends CodecFormat {
+    override val mediaType: MediaType = new MediaTypes {}.TextCsv
+  }
 }
