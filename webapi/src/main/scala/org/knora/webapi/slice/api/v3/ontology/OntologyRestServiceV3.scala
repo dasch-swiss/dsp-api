@@ -28,10 +28,10 @@ class OntologyRestServiceV3(ontologyRepo: OntologyRepo)(implicit val sf: StringF
 
   def asResourceClassDto(classIri: ResourceClassIri): IO[NotFound, ResourceClassDto] = for {
     readClassInfo  <- ontologyRepo.findClassBy(classIri).orDie.someOrFail(NotFound(classIri))
-    representation <- ontologyRepo.knoraApiRepresentationClassIriFor(classIri).orDie
+    representation <- ontologyRepo.findRepresentationClass(classIri).orDie
     label           = languageString(readClassInfo, Rdfs.Label.toSmartIri)
     comment         = languageString(readClassInfo, Rdfs.Comment.toSmartIri)
-  } yield ResourceClassDto(classIri.toComplexSchema.toIri, representation.toComplexSchema.toIri, label, comment)
+  } yield ResourceClassDto(classIri.toComplexSchema.toIri, representation, label, comment)
 
   private def languageString(classInfo: ReadClassInfoV2, predicateIri: SmartIri): List[LanguageStringDto] =
     classInfo.entityInfoContent.predicates.get(predicateIri).flatMap(LanguageStringDto.from).toList

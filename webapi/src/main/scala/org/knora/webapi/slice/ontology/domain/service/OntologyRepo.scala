@@ -18,6 +18,7 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.service.Repository
+import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
 
 trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
@@ -56,7 +57,7 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   def findAllSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
-  def knoraApiRepresentationClassIriFor(classIri: ResourceClassIri): Task[ResourceClassIri]
+  def findRepresentationClass(classIri: ResourceClassIri): Task[RepresentationClass]
 
   def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]]
 }
