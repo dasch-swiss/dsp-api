@@ -20,7 +20,7 @@ import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-final case class GetResources_(
+final case class ReadResources(
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val triplestore: TriplestoreService,
@@ -79,6 +79,6 @@ final case class GetResources_(
     } yield readSequence
 }
 
-object GetResources_ {
-  val layer = ZLayer.derive[GetResources_]
+object ReadResources {
+  val layer = ZLayer.derive[ReadResources]
 }

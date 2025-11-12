@@ -64,7 +64,7 @@ import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
-import org.knora.webapi.slice.resources.service.GetResources_
+import org.knora.webapi.slice.resources.service.ReadResources
 import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -110,7 +110,7 @@ final case class ResourcesResponderV2(
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val triplestore: TriplestoreService,
   private val valueValidator: ValueContentValidator,
-  private val getResources: GetResources_,
+  private val readResources: ReadResources,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with GetResources {
@@ -468,7 +468,7 @@ final case class ResourcesResponderV2(
       for {
         // Get the metadata of the resource to be updated.
         resource <-
-          getResources
+          readResources
             .readResourcesSequence(
               resourceIris = Seq(eraseResourceV2.resourceIri),
               versionDate = None,
@@ -589,7 +589,7 @@ final case class ResourcesResponderV2(
   ): Task[ReadResourcesSequenceV2] =
     for {
       apiResponse <-
-        getResources.readResourcesSequence(
+        readResources.readResourcesSequence(
           resourceIris = resourceIris,
           propertyIri = propertyIri,
           valueUuid = valueUuid,
@@ -627,7 +627,7 @@ final case class ResourcesResponderV2(
     targetSchema: ApiV2Schema,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
-    getResources
+    readResources
       .readResourcesSequence(
         resourceIris = resourceIris,
         versionDate = None,
@@ -1942,7 +1942,7 @@ object ResourcesResponderV2 {
       stringFormatter         <- ZIO.service[StringFormatter]
       triplestoreService      <- ZIO.service[TriplestoreService]
       valueContentValidator   <- ZIO.service[ValueContentValidator]
-      getResources             = GetResources_(constructResponseUtilV2, standoffTagUtilV2, triplestoreService)(stringFormatter)
+      readResources           <- ZIO.service[ReadResources]
       responder = new ResourcesResponderV2(
                     appConfig,
                     constructResponseUtilV2,
@@ -1960,7 +1960,7 @@ object ResourcesResponderV2 {
                     standoffTagUtilV2,
                     triplestoreService,
                     valueContentValidator,
-                    getResources,
+                    readResources,
                   )(stringFormatter)
       _ <- messageRelay.subscribe(responder)
     } yield responder
