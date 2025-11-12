@@ -24,6 +24,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.domain.InternalIri
 
 trait QueryBuilderHelper {
 
@@ -51,6 +52,7 @@ trait QueryBuilderHelper {
   def toRdfIri(iri: KnoraIri): Iri   = toRdfIri(iri.smartIri)
   def toRdfIri(iri: SmartIri): Iri   = Rdf.iri(iri.toInternalSchema.toIri)
   def toRdfIri(iri: ProjectIri): Iri = Rdf.iri(iri.value)
+  def toRdfIri(iri: InternalIri): Iri = Rdf.iri(iri.value)
 
   def ontologyAndNamespace(ontologyIri: OntologyIri): (Iri, SimpleNamespace) = {
     val ontology: Iri = toRdfIri(ontologyIri)

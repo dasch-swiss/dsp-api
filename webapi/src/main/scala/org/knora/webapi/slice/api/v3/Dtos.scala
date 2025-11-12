@@ -15,6 +15,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.LanguageCode
+import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
 
 final case class LanguageStringDto(value: String, language: LanguageCode)
 object LanguageStringDto {
@@ -30,18 +31,18 @@ object LanguageStringDto {
 
 final case class ResourceClassDto(
   iri: String,
-  representationClassIri: String,
+  representationClass: RepresentationClass,
   label: List[LanguageStringDto],
   comment: List[LanguageStringDto],
 )
 object ResourceClassDto {
   def apply(
     iri: ResourceClassIri,
-    representationClassIri: ResourceClassIri,
+    representationClass: RepresentationClass,
     label: List[LanguageStringDto],
     comment: List[LanguageStringDto],
   ): ResourceClassDto =
-    apply(iri.toComplexSchema.toIri, representationClassIri.toComplexSchema.toIri, label, comment)
+    apply(iri.toComplexSchema.toIri, representationClass, label, comment)
   given JsonCodec[ResourceClassDto] = DeriveJsonCodec.gen[ResourceClassDto]
   given Schema[ResourceClassDto]    = Schema.derived[ResourceClassDto]
 }
