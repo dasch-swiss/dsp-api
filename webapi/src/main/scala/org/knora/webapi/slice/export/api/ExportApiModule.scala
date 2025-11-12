@@ -17,6 +17,7 @@ import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.slice.resources.service.ReadResources
 
 object ExportApiModule { self =>
   type Dependencies =
@@ -27,6 +28,7 @@ object ExportApiModule { self =>
     IriConverter &
     KnoraProjectService &
     OntologyRepo &
+    ReadResources &
     TriplestoreService
     // format: on
 
