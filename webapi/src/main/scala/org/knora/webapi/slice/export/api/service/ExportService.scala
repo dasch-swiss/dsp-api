@@ -31,6 +31,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -55,7 +56,7 @@ final case class ExportService(
     classIri: ResourceClassIri,
     selectedProperties: List[PropertyIri],
     requestingUser: User,
-    language: String,
+    language: LanguageCode,
   ): Task[(List[String], List[ExportedResource])] =
     for {
       resourceIris <- findResources(project, classIri).map(_.map(_.toString))
@@ -136,7 +137,7 @@ final case class ExportService(
 
   private def rowHeaders(
     selectedProperties: List[PropertyIri],
-    language: String,
+    language: LanguageCode,
   ): Task[List[String]] =
     propertyLabelsTranslated(selectedProperties, language).map(
       "Label" +: "Resource IRI" +: _,
@@ -163,7 +164,7 @@ final case class ExportService(
 
   private def propertyLabelsTranslated(
     propertyIris: List[PropertyIri],
-    userLang: String,
+    language: LanguageCode,
   ): Task[List[String]] =
     ZIO.foreach(propertyIris) { propertyIri =>
       ontologyRepo.findProperty(propertyIri).flatMap { propertyInfo =>
@@ -174,8 +175,8 @@ final case class ExportService(
               .map(info.entityInfoContent.getPredicateObjectsWithLangs(_))
               .map(labelsMap =>
                 labelsMap
-                  .get(userLang)
-                  .orElse(labelsMap.get("en"))
+                  .get(language.value)
+                  .orElse(labelsMap.get(LanguageCode.EN.value))
                   .orElse(labelsMap.values.headOption)
                   .getOrElse(propertyIri.toString),
               )

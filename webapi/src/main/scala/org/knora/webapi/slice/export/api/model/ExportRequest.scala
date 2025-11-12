@@ -7,11 +7,12 @@ package org.knora.webapi.slice.api.v3.export_
 
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
+import org.knora.webapi.slice.common.domain.LanguageCode
 
 final case class ExportRequest(
   resourceClass: String,
   selectedProperties: List[String],
-  language: String = "en",
+  language: LanguageCode = LanguageCode.EN,
 )
 
 object ExportRequest {
