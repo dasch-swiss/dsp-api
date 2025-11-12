@@ -73,6 +73,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
 
 trait GetResources {
+  // NOTE: the following methods could likely be unified
+  // getResourcesWithDeletedResource, getResourcePreviewWithDeletedResource, getResources
   def getResourcesWithDeletedResource(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
@@ -635,14 +637,7 @@ final case class ResourcesResponderV2(
         requestingUser = requestingUser,
         preview = true,
       )
-      .map(
-        _.focus(_.resources)
-          .modify(
-            _.map { resource =>
-              resource.deletionInfo.map(_ => resource.asDeletedResource()).getOrElse(resource.withDeletedValues())
-            },
-          ),
-      )
+      .map(_.focus(_.resources).modify(_.map(_.asDeletedOrWithDeletedValues())))
 
   /**
    * Obtains a Gravsearch template from Sipi.
