@@ -34,9 +34,9 @@ import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.service.ReadResources
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
-import org.knora.webapi.slice.resources.service.ReadResources
 
 final case class ExportService(
   private val projectService: KnoraProjectService,
