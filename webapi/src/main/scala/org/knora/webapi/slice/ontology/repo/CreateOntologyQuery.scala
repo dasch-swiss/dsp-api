@@ -4,12 +4,15 @@ import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import zio.*
 
 import java.time.Instant
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
@@ -36,6 +39,7 @@ object CreateOntologyQuery extends QueryBuilderHelper {
         .prefix(KB.NS, RDF.NS, RDFS.NS, OWL.NS, XSD.NS)
         .insert(insertPatterns: _*)
         .into(ontology)
+        .where(GraphPatterns.filterNotExists(ontology.isA(variable("existingOntologyType"))))
 
       (Update(query), now)
     }

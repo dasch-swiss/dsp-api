@@ -64,7 +64,7 @@ object CreateOntologyQuerySpec extends ZIOSpecDefault {
                                |    rdfs:label "\"Test\" Ontology" ;
                                |    knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
                                |<http://www.knora.org/ontology/0001/test-onto> rdfs:comment "A test \"ontology\"" . } }
-                               |WHERE {}""".stripMargin,
+                               |WHERE { FILTER NOT EXIST { <http://www.knora.org/ontology/0001/test-onto> a ?existingOntologyType . } }""".stripMargin,
           )
         }
     },
@@ -89,7 +89,7 @@ object CreateOntologyQuerySpec extends ZIOSpecDefault {
                                |    knora-base:isShared true ;
                                |    rdfs:label "Test Ontology" ;
                                |    knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime . } }
-                               |WHERE {}""".stripMargin,
+                               |WHERE { FILTER NOT EXIST { <http://www.knora.org/ontology/0001/test-onto> a ?existingOntologyType . } }""".stripMargin,
           )
         }
     },
