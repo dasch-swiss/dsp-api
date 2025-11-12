@@ -25,6 +25,7 @@ final case class ExportRestService(
   private val projectService: KnoraProjectService,
   private val ontologyService: OntologyRepo,
 ) {
+  // TODO: more precision with the V3ErrorInfos, see if you can avoid blanket mapError(t=>BadRequest(t.toString))
   def exportResources(
     user: User,
   )(
