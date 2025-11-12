@@ -15,9 +15,9 @@ import org.eclipse.rdf4j.sparqlbuilder.core.From
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfType
@@ -45,6 +45,7 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.FileValueTypeSpecificInfo
@@ -130,7 +131,8 @@ object ResourceModel {
 }
 
 final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val sf: StringFormatter)
-    extends ResourcesRepo {
+    extends ResourcesRepo
+    with QueryBuilderHelper {
   import org.knora.webapi.messages.IriConversions.ConvertibleIri
 
   def createNewResource(
@@ -286,9 +288,9 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
   def countByResourceClass(iri: ResourceClassIri, project: KnoraProject): Task[Int] = {
     val s      = variable("s")
     val select = SparqlBuilder.select(Expressions.count(s).as(variable("count")))
-    val from   = SparqlBuilder.from(Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value))
-    val where  = s.isA(Rdf.iri(iri.toInternalSchema.toString))
-    val query  = Queries.SELECT(select).from(from).where(where)
+    val from   = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(project)))
+    val where  = List(s.isA(toRdfIri(iri)), GraphPatterns.filterNotExists(toRdfIri(iri).has(KB.isDeleted, true)))
+    val query  = Queries.SELECT(select).from(from).where(where: _*)
     triplestore.select(query).map(_.getFirst("count").map(_.toInt).getOrElse(0))
   }
 }

@@ -13,7 +13,6 @@ import zio.prelude.ForEachOps
 
 import scala.annotation.tailrec
 
-import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
@@ -22,6 +21,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
@@ -141,25 +141,14 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
     }
   }
 
-  def knoraApiRepresentationClassIriFor(classIri: ResourceClassIri): Task[ResourceClassIri] = {
-    val representations = Seq(
-      KB.StillImageRepresentation,
-      KB.MovingImageRepresentation,
-      KB.AudioRepresentation,
-      KB.ArchiveRepresentation,
-      KB.DocumentRepresentation,
-      KB.TextRepresentation,
+  def findRepresentationClass(classIri: ResourceClassIri): Task[RepresentationClass] =
+    findAllSuperClassesBy(classIri.toInternalIri).map(iris =>
+      iris
+        .map(_.entityInfoContent.classIri)
+        .flatMap(RepresentationClass.from)
+        .headOption
+        .getOrElse(RepresentationClass.WithoutRepresentation),
     )
-
-    for {
-      superClassIris <- findAllSuperClassesBy(classIri.toInternalIri).map(_.map(_.entityInfoContent.classIri))
-      iriOpt          = superClassIris.find(iri => representations.contains(iri.toInternalSchema.toIri))
-      representationClassIri <- (iriOpt match {
-                                  case Some(iri) => converter.asResourceClassIri(iri)
-                                  case None      => converter.asResourceClassIri(KB.Resource)
-                                }).mapError(new IllegalStateException(_))
-    } yield representationClassIri
-  }
 
   override def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]] =
     getCache.map { c =>
