@@ -25,6 +25,7 @@ object LastModificationDate {
   given TapirCodec.StringCodec[LastModificationDate] =
     TapirCodec.stringCodec(LastModificationDate.from, _.value.toString)
 
+  def from(value: Instant): LastModificationDate = LastModificationDate(value)
   def from(value: String): Either[String, LastModificationDate] =
     ValuesValidator.parseXsdDateTimeStamp(value).map(LastModificationDate.apply)
 }
