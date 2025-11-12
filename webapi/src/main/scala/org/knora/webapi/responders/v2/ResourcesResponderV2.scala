@@ -522,7 +522,7 @@ final case class ResourcesResponderV2(
                 s"Resource <${eraseResourceV2.resourceIri}> was not erased. Please report this as a possible bug.",
               ),
             )
-            .whenZIO(iriService.checkIriExists(resourceIri.toString))
+            .whenZIO(iriService.checkIriExists(resourceIri))
       } yield SuccessResponseV2("Resource erased")
     IriLocker.runWithIriLock(eraseResourceV2.apiRequestID, eraseResourceV2.resourceIri)(eraseTask)
   }
