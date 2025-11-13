@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.models.filemodels.*
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -47,7 +48,6 @@ import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.*
 
@@ -1989,10 +1989,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
             (standoffTagIrisToErase.toSet + resourceIriToErase.get + firstValueIriToErase.get + secondValueIriToErase.get)
               .map(_.toSmartIri)
           _ <- ZIO.foreachDiscard(erasedIrisToCheck) { erasedIriToCheck =>
-                 val query = sparql.admin.txt.checkIriExists(erasedIriToCheck.toString)
                  ZIO
-                   .serviceWithZIO[TriplestoreService](_.query(Ask(query)))
-                   .filterOrFail(_ == false)(new AssertionException(s"IRI $erasedIriToCheck was not erased"))
+                   .fail(new AssertionException(s"IRI $erasedIriToCheck was not erased"))
+                   .whenZIO(ZIO.serviceWithZIO[IriService](_.checkIriExists(erasedIriToCheck)))
                }
         } yield assertCompletes
       },
@@ -2046,10 +2045,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                          )
           eraseResponse <- resourceResponder(_.eraseResourceV2(eraseRequest))
           // Verify the resource is completely erased.
-          resourceExists <- {
-            val query = sparql.admin.txt.checkIriExists(createdResourceIri)
-            ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query)))
-          }
+          resourceExists <- ZIO.serviceWithZIO[IriService](_.checkIriExists(createdResourceIri))
         } yield assertTrue(
           eraseResponse.message == "Resource erased",
           deletedResource.deletionInfo.nonEmpty,
