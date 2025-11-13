@@ -55,13 +55,14 @@ trait GoldenTest {
 object GoldenTest {
   inline def goldenPath(suffix: String): (String, String) = ${ goldenPathImpl('suffix) }
 
+  // NOTE: the suffixExpr.valueOrAbort was failing in the IDE, so ALL `.get`s were eliminated in the macro code
+
   private def goldenPathImpl(suffixExpr: Expr[String])(using q: Quotes) =
     import q.reflect.*
 
-    // NOTE: the option seems to be empty in an IDE setting, so you can't use `.get`
     val absPath: Option[Path] = Position.ofMacroExpansion.sourceFile.getJPath
 
-    val suffix          = suffixExpr.valueOrAbort
+    val suffix          = suffixExpr.value.getOrElse("")
     val suffixDefaulted = if (suffix == "") "" else s"__$suffix"
 
     val baseName = absPath.map(_.getFileName.toString).getOrElse("").stripSuffix(".scala") // Demo
