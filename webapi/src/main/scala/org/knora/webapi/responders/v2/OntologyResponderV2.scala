@@ -52,6 +52,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.repo.ChangeClassLabelsOrCommentsQuery
+import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
 import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -1774,66 +1775,58 @@ final case class OntologyResponderV2(
    * @param changeReq the request to change the property's labels or comments.
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
-  def changePropertyLabelsOrComments(changeReq: ChangePropertyLabelsOrCommentsRequestV2): Task[ReadOntologyV2] = {
-    val ontologyIri = changeReq.propertyIri.ontologyIri
-    val task = for {
-      ontology <- getOntologyOrFailNotFound(ontologyIri)
-      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
-             ontologyIri.toComplexSchema,
-             changeReq.propertyIri.toComplexSchema,
-             changeReq.requestingUser,
-           )
+  def changePropertyLabelsOrComments(changeReq: ChangePropertyLabelsOrCommentsRequestV2): Task[ReadOntologyV2] =
+    IriLocker.runWithIriLock(changeReq.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI) {
+      val ontologyIri = changeReq.propertyIri.ontologyIri
+      for {
+        ontology <- getOntologyOrFailNotFound(ontologyIri)
+        _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
+               ontologyIri.toComplexSchema,
+               changeReq.propertyIri.toComplexSchema,
+               changeReq.requestingUser,
+             )
 
-      currentReadPropertyInfo <-
-        ZIO
-          .fromOption(ontology.properties.get(changeReq.propertyIri.toInternalSchema))
-          .orElseFail(NotFoundException(s"Property ${changeReq.propertyIri} not found"))
-
-      // Check that the ontology exists and has not been updated by another user since the client last read it.
-      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-             changeReq.propertyIri.ontologyIri,
-             changeReq.lastModificationDate,
-           )
-
-      // If this is a link property, also change the labels/comments of the corresponding link value property.
-      maybeCurrentLinkValueReadPropertyInfo <-
-        if (currentReadPropertyInfo.isLinkProp) {
-          val linkValuePropertyIri = changeReq.propertyIri.toInternalSchema.fromLinkPropToLinkValueProp
+        currentReadPropertyInfo <-
           ZIO
-            .fromOption(ontology.properties.get(linkValuePropertyIri))
-            .mapBoth(
-              _ => InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found"),
-              Some(_),
-            )
-        } else {
-          ZIO.none
-        }
+            .fromOption(ontology.properties.get(changeReq.propertyIri.toInternalSchema))
+            .orElseFail(NotFoundException(s"Property ${changeReq.propertyIri} not found"))
 
-      // Do the update.
-      currentTime <- Clock.instant
-      updateSparql = sparql.v2.txt.changePropertyLabelsOrComments(
-                       ontologyNamedGraphIri = ontologyIri.toInternalSchema,
-                       ontologyIri = ontologyIri.toInternalSchema,
-                       propertyIri = changeReq.propertyIri.toInternalSchema,
-                       maybeLinkValuePropertyIri =
-                         maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
-                       predicateToUpdate = changeReq.predicateToUpdate,
-                       newObjects = changeReq.newObjects,
-                       lastModificationDate = changeReq.lastModificationDate,
-                       currentTime = currentTime,
-                     )
-      _ <- save(Update(updateSparql))
+        // Check that the ontology exists and has not been updated by another user since the client last read it.
+        lmd = LastModificationDate.from(changeReq.lastModificationDate)
+        _  <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(changeReq.propertyIri.ontologyIri, lmd)
 
-      // Read the data back from the cache.
-      response <- getPropertyDefinitionsFromOntologyV2(
-                    propertyIris = Set(changeReq.propertyIri.toInternalSchema),
-                    allLanguages = true,
-                    requestingUser = changeReq.requestingUser,
+        // If this is a link property, also change the labels/comments of the corresponding link value property.
+        maybeCurrentLinkValueReadPropertyInfo <-
+          if (currentReadPropertyInfo.isLinkProp) {
+            val linkValuePropertyIri = changeReq.propertyIri.toInternalSchema.fromLinkPropToLinkValueProp
+            ZIO
+              .fromOption(ontology.properties.get(linkValuePropertyIri))
+              .mapBoth(
+                _ => InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found"),
+                Some(_),
+              )
+          } else {
+            ZIO.none
+          }
+
+        // Do the update.
+        update <- ChangePropertyLabelsOrCommentsQuery.build(
+                    changeReq.propertyIri,
+                    changeReq.predicateToUpdate,
+                    changeReq.newObjects,
+                    maybeCurrentLinkValueReadPropertyInfo.map(_.propertyIri),
+                    lmd,
                   )
-    } yield response
+        _ <- save(update)
 
-    IriLocker.runWithIriLock(changeReq.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(task)
-  }
+        // Read the data back from the cache.
+        response <- getPropertyDefinitionsFromOntologyV2(
+                      propertyIris = Set(changeReq.propertyIri.toInternalSchema),
+                      allLanguages = true,
+                      requestingUser = changeReq.requestingUser,
+                    )
+      } yield response
+    }
 
   /**
    * Changes the values of `rdfs:label` or `rdfs:comment` in a class definition.

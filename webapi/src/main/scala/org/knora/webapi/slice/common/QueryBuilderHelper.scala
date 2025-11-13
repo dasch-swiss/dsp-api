@@ -24,6 +24,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.api.LastModificationDate
@@ -58,6 +59,8 @@ trait QueryBuilderHelper {
 
   def toRdfIri(labelOrComment: LabelOrComment): Iri = Rdf.iri(labelOrComment.toString)
 
+  def ontologyAndNamespace(propertyIri: PropertyIri): (Iri, SimpleNamespace) =
+    ontologyAndNamespace(propertyIri.ontologyIri)
   def ontologyAndNamespace(resourceClassIri: ResourceClassIri): (Iri, SimpleNamespace) =
     ontologyAndNamespace(resourceClassIri.ontologyIri)
   def ontologyAndNamespace(ontologyIri: OntologyIri): (Iri, SimpleNamespace) = {

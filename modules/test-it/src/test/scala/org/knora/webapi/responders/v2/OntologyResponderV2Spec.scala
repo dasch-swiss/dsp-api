@@ -40,6 +40,9 @@ import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.domain.LanguageCode.DE
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
+import org.knora.webapi.slice.common.domain.LanguageCode.FR
 import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.ontology.api.ChangeGuiOrderRequestV2
 import org.knora.webapi.slice.ontology.api.ChangePropertyLabelsOrCommentsRequestV2
@@ -1636,17 +1639,10 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("change the comments of a property") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
       val newObjects = Seq(
-        StringLiteralV2.from("The name of a Thing", Some("en")),
-        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
-        StringLiteralV2.from(
-          "Le nom d\\'une chose",
-          Some("fr"),
-        ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
+        StringLiteralV2.from("The name of a Thing", EN),
+        StringLiteralV2.from("Der Name eines Dinges", DE),
+        StringLiteralV2.from("Le nom d'une chose", FR),
       )
-      // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
-      val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
-      }
 
       for {
         msg <- ontologyResponder(
@@ -1667,24 +1663,17 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(
         externalOntology.properties.size == 1,
         externalOntology.properties.size == 1,
-        readPropertyInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects == newObjectsUnescaped,
+        readPropertyInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects == newObjects,
         newAnythingLastModDate.isAfter(oldAnythingLastModDate),
       )
     },
     test("change the comments of a property, submitting the same comments again") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
       val newObjects = Seq(
-        StringLiteralV2.from("The name of a Thing", Some("en")),
-        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
-        StringLiteralV2.from(
-          "Le nom d\\'une chose",
-          Some("fr"),
-        ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
+        StringLiteralV2.from("The name of a Thing", EN),
+        StringLiteralV2.from("Der Name eines Dinges", DE),
+        StringLiteralV2.from("Le nom d'une chose", FR),
       )
-      // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
-      val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
-      }
 
       val changeReq = ChangePropertyLabelsOrCommentsRequestV2(
         propertyIri,
@@ -1701,7 +1690,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
       } yield assertTrue(
         externalOntology.properties.size == 1,
-        readPropertyInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects == newObjectsUnescaped,
+        readPropertyInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects == newObjects,
         newAnythingLastModDate.isAfter(oldAnythingLastModDate),
       )
     },
