@@ -21,7 +21,6 @@ import java.util.UUID
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.config.AppConfig
@@ -589,30 +588,19 @@ final case class ResourcesResponderV2(
     schemaOptions: Set[Rendering],
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
-    for {
-      apiResponse <-
-        readResources.readResourcesSequence(
-          resourceIris = resourceIris,
-          propertyIri = propertyIri,
-          valueUuid = valueUuid,
-          versionDate = versionDate,
-          withDeleted = withDeleted,
-          targetSchema = targetSchema,
-          requestingUser = requestingUser,
-          // Passed down to ConstructResponseUtilV2.makeTextValueContentV2.
-          queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions),
-          preview = false,
-        )
-
-      _ <-
-        ZIO.foreach(valueUuid) { valueUuid =>
-          val msg      = (u: String) => s"Value with UUID ${u} not found (maybe you do not have permission to see it)"
-          val matching = apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == valueUuid)))
-          ZIO.unless(matching) {
-            ZIO.fail(NotFoundException(msg(UuidUtil.base64Encode(valueUuid))))
-          }
-        }
-    } yield apiResponse
+    readResources.readResourcesSequence(
+      resourceIris = resourceIris,
+      propertyIri = propertyIri,
+      valueUuid = valueUuid,
+      versionDate = versionDate,
+      withDeleted = withDeleted,
+      targetSchema = targetSchema,
+      requestingUser = requestingUser,
+      // Passed down to ConstructResponseUtilV2.makeTextValueContentV2.
+      queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions),
+      preview = false,
+      failOnMissingValueUuid = true,
+    )
 
   /**
    * Get the preview of a resource with deleted resources replaced.

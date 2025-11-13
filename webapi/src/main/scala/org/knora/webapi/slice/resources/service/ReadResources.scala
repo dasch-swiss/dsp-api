@@ -19,6 +19,8 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import dsp.errors.NotFoundException
+import dsp.valueobjects.UuidUtil
 
 final case class ReadResources(
   private val constructResponseUtilV2: ConstructResponseUtilV2,
@@ -35,6 +37,7 @@ final case class ReadResources(
     requestingUser: User,
     queryStandoff: Boolean = false,
     preview: Boolean,
+    failOnMissingValueUuid: Boolean = false,
   ): Task[ReadResourcesSequenceV2] =
     for {
       resourcesWithValues <-
@@ -76,6 +79,17 @@ final case class ReadResources(
         )
 
       _ <- readSequence.checkResourceIris(resourceIris.toSet, readSequence)
+
+      _ <-
+        ZIO.when(failOnMissingValueUuid) {
+          ZIO.foreach(valueUuid) { valueUuid =>
+            val msg      = (u: String) => s"Value with UUID ${u} not found (maybe you do not have permission to see it)"
+            val matching = readSequence.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == valueUuid)))
+            ZIO.unless(matching) {
+              ZIO.fail(NotFoundException(msg(UuidUtil.base64Encode(valueUuid))))
+            }
+          }
+        }
     } yield readSequence
 }
 
