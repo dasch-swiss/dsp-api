@@ -48,6 +48,8 @@ case class BadRequest(message: String = "Bad Request", errors: Chunk[ErrorDetail
 final case class Unauthorized(message: String = "Unauthorized", errors: Chunk[ErrorDetail] = Chunk.empty)
     extends V3ErrorInfo
 final case class Forbidden(message: String = "Forbidden", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
+final case class ServerError(message: String = "Server Error", errors: Chunk[ErrorDetail] = Chunk.empty)
+    extends V3ErrorInfo
 
 final case class ErrorDetail(
   code: V3ErrorCode,
@@ -63,4 +65,5 @@ object V3ErrorInfo {
   given badRequestEncoder: JsonCodec[BadRequest]     = DeriveJsonCodec.gen[BadRequest]
   given unauthorizedEncoder: JsonCodec[Unauthorized] = DeriveJsonCodec.gen[Unauthorized]
   given forbiddenEncoder: JsonCodec[Forbidden]       = DeriveJsonCodec.gen[Forbidden]
+  given serverErrorEncoder: JsonCodec[ServerError]   = DeriveJsonCodec.gen[ServerError]
 }

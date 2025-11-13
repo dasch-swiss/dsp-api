@@ -8,15 +8,15 @@ package org.knora.webapi.slice.api.v3.export_
 import sttp.model.MediaType
 import zio.*
 
-import dsp.errors.NotFoundException as NotFound
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.api.v3.BadRequest
-import org.knora.webapi.slice.api.v3.V3ErrorInfo
+import org.knora.webapi.slice.api.v3.*
 import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import ExportRestService.errorOrNotFound
+import org.knora.webapi.slice.api.v3.NotFound
 
 final case class ExportRestService(
   private val iriConverter: IriConverter,
@@ -25,20 +25,19 @@ final case class ExportRestService(
   private val projectService: KnoraProjectService,
   private val ontologyService: OntologyRepo,
 ) {
-  // TODO: more precision with the V3ErrorInfos, see if you can avoid blanket mapError(t=>BadRequest(t.toString))
   def exportResources(
     user: User,
   )(
     request: ExportRequest,
-  ): IO[V3ErrorInfo, (String, MediaType, String)] =
-    (for {
-      resourceClassIri <- iriConverter.asResourceClassIri(request.resourceClass)
-      shortcode        <- ZIO.fromEither(resourceClassIri.smartIri.getProjectShortcode)
-      properties       <- ZIO.foreach(request.selectedProperties)(iriConverter.asPropertyIri)
+  ): IO[V3ErrorInfo, (String, MediaType, String)] = {
+    val x = (for {
+      resourceClassIri <- iriConverter.asResourceClassIri(request.resourceClass).mapError(BadRequest(_))
+      shortcode        <- ZIO.fromEither(resourceClassIri.smartIri.getProjectShortcode).mapError(BadRequest(_))
+      properties       <- ZIO.foreach(request.selectedProperties)(iriConverter.asPropertyIri).mapError(BadRequest(_))
 
+      project    <- projectService.findByShortcode(shortcode).errorOrNotFound(NotFound(resourceClassIri))
       ontologyIri = resourceClassIri.ontologyIri
-      project    <- projectService.findByShortcode(shortcode).orDie.someOrFail(NotFound.from(shortcode))
-      _          <- ontologyService.findById(ontologyIri).someOrFail(NotFound.notfound(ontologyIri))
+      _          <- ontologyService.findById(ontologyIri).someOrFail(NotFound(ontologyIri))
 
       data <-
         exportService
@@ -51,9 +50,21 @@ final case class ExportRestService(
       csv,
       MediaType.TextCsv,
       s"attachment; filename=project_${shortcode.value}_resources_${resourceClassIri.name}_${now}.csv",
-    )).mapError(t => BadRequest(t.toString))
+    )); x
+  }.flatMapError {
+    case errorInfo: V3ErrorInfo =>
+      ZIO.succeed(errorInfo)
+    case t: Throwable =>
+      ZIO.logErrorCause(Cause.fail(t)).as(ServerError())
+  }
 }
 
 object ExportRestService {
   val layer = ZLayer.derive[ExportRestService]
+
+  extension [Env, A](zio: ZIO[Env, Throwable, Option[A]])
+    def errorOrNotFound(notFound: V3ErrorInfo): ZIO[Env, V3ErrorInfo, A] =
+      zio.flatMapError { e =>
+        ZIO.logErrorCause(Cause.fail(e)).as(ServerError())
+      }.someOrFail(notFound)
 }
