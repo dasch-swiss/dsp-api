@@ -40,7 +40,10 @@ final case class ExportRestService(
       project    <- projectService.findByShortcode(shortcode).orDie.someOrFail(NotFound.from(shortcode))
       _          <- ontologyService.findById(ontologyIri).someOrFail(NotFound.notfound(ontologyIri))
 
-      data           <- exportService.exportResources(project, resourceClassIri, properties, user, request.language).orDie
+      data <-
+        exportService
+          .exportResources(project, resourceClassIri, properties, user, request.language, request.includeResourceIri)
+          .orDie
       (headers, rows) = data
       csv            <- ZIO.scoped(csvService.writeToString(rows)(using ExportedResource.rowBuilder(headers))).orDie
       now            <- Clock.instant

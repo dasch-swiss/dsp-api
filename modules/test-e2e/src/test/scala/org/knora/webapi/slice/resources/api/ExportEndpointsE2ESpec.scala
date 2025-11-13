@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.resources.api
+
 import zio.*
 import zio.test.*
 
@@ -18,22 +19,30 @@ object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
   override def rdfDataObjects: List[RdfDataObject] = incunabulaRdfOntologyAndData
   // override val rewriteAll: Boolean                 = true
 
-  val e2eSpec = suite("ExportEndpointsE2ESpec")(
-    test("postExportResources should export CSV resources") {
-      val exportResource =
-        ExportRequest(
-          "http://www.knora.org/ontology/0803/incunabula#book",
-          List(
-            "http://www.knora.org/ontology/0803/incunabula#title",
-            "http://www.knora.org/ontology/0803/incunabula#publisher",
-            "http://www.knora.org/ontology/0803/incunabula#hasAuthor",
-          ),
-        )
+  val request =
+    ExportRequest(
+      "http://www.knora.org/ontology/0803/incunabula#book",
+      List(
+        "http://www.knora.org/ontology/0803/incunabula#title",
+        "http://www.knora.org/ontology/0803/incunabula#publisher",
+        "http://www.knora.org/ontology/0803/incunabula#hasAuthor",
+      ),
+    )
 
-      TestExportApiClient
-        .postExportResources(exportResource, anythingAdminUser)
-        .flatMap(_.assert200)
-        .map(assertGolden(_, ""))
-    },
+  val e2eSpec = suite("ExportEndpointsE2ESpec")(
+    suite("postExportResources should export CSV resources")(
+      test("simply") {
+        TestExportApiClient
+          .postExportResources(request, anythingAdminUser)
+          .flatMap(_.assert200)
+          .map(assertGolden(_, ""))
+      },
+      test("with resource IRI included") {
+        TestExportApiClient
+          .postExportResources(request.copy(includeResourceIri = true), anythingAdminUser)
+          .flatMap(_.assert200)
+          .map(assertGolden(_, "withResourceIri"))
+      },
+    ),
   )
 }
