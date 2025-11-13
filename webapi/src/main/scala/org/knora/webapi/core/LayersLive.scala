@@ -83,6 +83,7 @@ object LayersLive { self =>
     ConstructResponseUtilV2 &
     DefaultObjectAccessPermissionService &
     Endpoints &
+    IriService &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     ListsApiModule.Provided &
