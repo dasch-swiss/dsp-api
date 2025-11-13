@@ -273,6 +273,16 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo
     } yield response
   }
 
+  def checkOntologyAndEntityIrisForUpdate(
+    resourceClassIri: ResourceClassIri,
+    requestingUser: User,
+  ): Task[Unit] =
+    checkOntologyAndEntityIrisForUpdate(
+      resourceClassIri.ontologyIri.toComplexSchema,
+      resourceClassIri.toComplexSchema,
+      requestingUser,
+    )
+
   /**
    * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,
    * are valid, and checks that the user has permission to update the ontology.

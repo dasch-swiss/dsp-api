@@ -20,10 +20,13 @@ import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.ontology.api.LastModificationDate
 
 trait QueryBuilderHelper {
 
@@ -42,7 +45,8 @@ trait QueryBuilderHelper {
   def toRdfLiteral(booleanV2: BooleanLiteralV2): RdfLiteral.StringLiteral =
     Rdf.literalOfType(booleanV2.value.toString, XSD.BOOLEAN)
 
-  def toRdfLiteral(instant: Instant): RdfLiteral.StringLiteral = Rdf.literalOfType(instant.toString, XSD.DATETIME)
+  def toRdfLiteral(lmd: LastModificationDate): RdfLiteral.StringLiteral = toRdfLiteral(lmd.value)
+  def toRdfLiteral(instant: Instant): RdfLiteral.StringLiteral          = Rdf.literalOfType(instant.toString, XSD.DATETIME)
 
   def toRdfLiteral(int: Int): RdfLiteral.StringLiteral = Rdf.literalOfType(int.toString, XSD.INT)
   def toRdfLiteralNonNegative(int: Int): RdfLiteral.StringLiteral =
@@ -52,6 +56,10 @@ trait QueryBuilderHelper {
   def toRdfIri(iri: SmartIri): Iri    = Rdf.iri(iri.toInternalSchema.toIri)
   def toRdfIri(iri: InternalIri): Iri = Rdf.iri(iri.value)
 
+  def toRdfIri(labelOrComment: LabelOrComment): Iri = Rdf.iri(labelOrComment.toString)
+
+  def ontologyAndNamespace(resourceClassIri: ResourceClassIri): (Iri, SimpleNamespace) =
+    ontologyAndNamespace(resourceClassIri.ontologyIri)
   def ontologyAndNamespace(ontologyIri: OntologyIri): (Iri, SimpleNamespace) = {
     val ontology: Iri = toRdfIri(ontologyIri)
     val ontologyNS    = ontologyIri.ontologyName.value

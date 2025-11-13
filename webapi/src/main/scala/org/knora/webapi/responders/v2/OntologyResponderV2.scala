@@ -42,6 +42,7 @@ import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.ontology.api.ChangeGuiOrderRequestV2
 import org.knora.webapi.slice.ontology.api.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
+import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.slice.ontology.api.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
@@ -50,6 +51,7 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
+import org.knora.webapi.slice.ontology.repo.ChangeClassLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
 import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -1839,60 +1841,25 @@ final case class OntologyResponderV2(
    * @param req the request to change the class's labels or comments.
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
-  def changeClassLabelsOrComments(req: ChangeClassLabelsOrCommentsRequestV2): Task[ReadOntologyV2] = {
-    val internalClassIri    = req.classIri.toInternalSchema
-    val internalOntologyIri = req.classIri.ontologyIri.toInternalSchema
-    val externalClassIri    = req.classIri.toComplexSchema
-    val externalOntologyIri = req.classIri.ontologyIri.toComplexSchema
-
-    val changeTask: Task[ReadOntologyV2] =
+  def changeClassLabelsOrComments(req: ChangeClassLabelsOrCommentsRequestV2): Task[ReadOntologyV2] =
+    IriLocker.runWithIriLock(req.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI) {
+      val lmd = LastModificationDate.from(req.lastModificationDate)
       for {
-        cacheData <- ontologyCache.getCacheData
-
-        ontology = cacheData.ontologies(internalOntologyIri)
-        _ <- ZIO
-               .fromOption(ontology.classes.get(internalClassIri))
-               .orElseFail(NotFoundException(s"Class ${req.classIri} not found"))
-
-        // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-               internalOntologyIri,
-               req.lastModificationDate,
-             )
+        _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(req.classIri, req.requestingUser)
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(req.classIri.ontologyIri, lmd)
 
         // Do the update.
-
-        currentTime <- Clock.instant
-
-        updateSparql = sparql.v2.txt.changeClassLabelsOrComments(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         classIri = internalClassIri,
-                         predicateToUpdate = req.predicateToUpdate,
-                         newObjects = req.newObjects,
-                         lastModificationDate = req.lastModificationDate,
-                         currentTime = currentTime,
-                       )
-        _ <- save(Update(updateSparql))
+        update <- ChangeClassLabelsOrCommentsQuery.build(req.classIri, req.predicateToUpdate, req.newObjects, lmd)
+        _      <- save(update)
 
         // Read the data back from the cache.
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
-                      classIris = Set(internalClassIri),
+                      classIris = Set(req.classIri.toInternalSchema),
                       allLanguages = true,
                       requestingUser = req.requestingUser,
                     )
       } yield response
-
-    for {
-      requestingUser <- ZIO.succeed(req.requestingUser)
-
-      _ <-
-        ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
-
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(req.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(changeTask)
-    } yield taskResult
-  }
+    }
 
   def deletePropertyComment(
     propertyIri: PropertyIri,
