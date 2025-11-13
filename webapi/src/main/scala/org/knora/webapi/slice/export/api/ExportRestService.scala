@@ -30,7 +30,7 @@ final case class ExportRestService(
   )(
     request: ExportRequest,
   ): IO[V3ErrorInfo, (String, MediaType, String)] = {
-    val x = (for {
+    (for {
       resourceClassIri <- iriConverter.asResourceClassIri(request.resourceClass).mapError(BadRequest(_))
       shortcode        <- ZIO.fromEither(resourceClassIri.smartIri.getProjectShortcode).mapError(BadRequest(_))
       properties       <- ZIO.foreach(request.selectedProperties)(iriConverter.asPropertyIri).mapError(BadRequest(_))
@@ -50,7 +50,7 @@ final case class ExportRestService(
       csv,
       MediaType.TextCsv,
       s"attachment; filename=project_${shortcode.value}_resources_${resourceClassIri.name}_${now}.csv",
-    )); x
+    ))
   }.flatMapError {
     case errorInfo: V3ErrorInfo =>
       ZIO.succeed(errorInfo)

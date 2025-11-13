@@ -156,10 +156,10 @@ final case class ExportService(
         ListMap.from(selectedProperties.map { property =>
           property.smartIri.toString -> {
             resource.values
-              .get(property.smartIri)
+              .get(property.smartIri.toInternalSchema)
               .map(_.toList)
               .combineAll
-              .map(_.valueContent.valueHasString)
+              .map(_.valueContent.valueHasString.replaceAll("\n", "\\n"))
               .mkString(" :: ")
           }
         }),
