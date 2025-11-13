@@ -19,6 +19,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 object CreatePropertyQuerySpec extends ZIOSpecDefault {
@@ -38,12 +39,12 @@ object CreatePropertyQuerySpec extends ZIOSpecDefault {
       "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri ->
         PredicateInfoV2(
           predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-          objects = Seq(StringLiteralV2.from("""Test "Property"""", Some("en"))),
+          objects = Seq(StringLiteralV2.from("""Test "Property"""", EN)),
         ),
       "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri ->
         PredicateInfoV2(
           predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-          objects = Seq(StringLiteralV2.from("""A test "property"""", Some("en"))),
+          objects = Seq(StringLiteralV2.from("""A test "property"""", EN)),
         ),
       "http://www.knora.org/ontology/knora-base#objectType".toSmartIri ->
         PredicateInfoV2(
@@ -67,7 +68,7 @@ object CreatePropertyQuerySpec extends ZIOSpecDefault {
         "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri ->
           PredicateInfoV2(
             predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-            objects = Seq(StringLiteralV2.from("Test Property Value", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Test Property Value", EN)),
           ),
       ),
       subPropertyOf = Set("http://www.knora.org/ontology/knora-base#hasLinkToValue".toSmartIri),

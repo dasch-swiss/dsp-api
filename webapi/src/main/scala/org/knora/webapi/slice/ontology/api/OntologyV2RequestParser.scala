@@ -26,7 +26,9 @@ import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
@@ -46,6 +48,7 @@ import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.DatasetOps.*
 import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_String_Property
@@ -181,7 +184,11 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       case res: Resource => iriConverter.asSmartIri(res.getURI).mapBoth(_.getMessage, SmartIriLiteralV2.apply)
       case literal: Literal =>
         literal.getValue match
-          case str: String          => ZIO.succeed(StringLiteralV2.from(str, Option(literal.getLanguage).filter(_.nonEmpty)))
+          case str: String =>
+            Option(literal.getLanguage).filter(_.nonEmpty) match {
+              case Some(lang) => ZIO.fromEither(LanguageCode.from(lang)).map(StringLiteralV2.from(str, _))
+              case None       => ZIO.succeed(StringLiteralV2.from(str))
+            }
           case b: java.lang.Boolean => ZIO.succeed(BooleanLiteralV2(b))
           case _                    => ZIO.fail(s"Unsupported literal type: ${literal.getValue.getClass}")
 
@@ -259,10 +266,11 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
                             .fromOption(LabelOrComment.fromString(preds.keys.head.toString))
                             .orElseFail(s"Invalid predicate: ${preds.keys.head}")
         newObjects = preds.head._2.objects.collect { case sl: StringLiteralV2 => sl }
+        newValues <- ensureOnlyLanguageTaggedStringLiterals(newObjects).toZIO
       } yield ChangeClassLabelsOrCommentsRequestV2(
         classIri,
         labelOrComment,
-        newObjects,
+        newValues,
         meta.lastModificationDate,
         apiRequestId,
         requestingUser,
@@ -424,13 +432,15 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
   private def ensureOnlyStringLiteralsWithLanguage(
     literals: Seq[OntologyLiteralV2],
     prop: String,
-  ): Validation[String, Seq[StringLiteralV2]] =
-    ensureOnlyStringLiterals(literals, prop)
-      .flatMap(strLit =>
-        strLit.filter(_.language.isEmpty) match
-          case Nil         => Validation.succeed(strLit)
-          case withoutLang => Validation.fail(s"$prop: String literals without language: ${withoutLang.mkString(", ")}"),
-      )
+  ): Validation[String, Seq[LanguageTaggedStringLiteralV2]] =
+    ensureOnlyStringLiterals(literals, prop).flatMap(ensureOnlyLanguageTaggedStringLiterals)
+
+  private def ensureOnlyLanguageTaggedStringLiterals(
+    strLit: Seq[StringLiteralV2],
+  ): Validation[String, Seq[LanguageTaggedStringLiteralV2]] =
+    strLit.collect { case s: PlainStringLiteralV2 => s } match
+      case Nil         => Validation.succeed(strLit.collect { case s: LanguageTaggedStringLiteralV2 => s })
+      case withoutLang => Validation.fail(s"String literals without language: ${withoutLang.mkString(", ")}")
 
   private def ensureOnlyStringLiterals(
     literals: Seq[OntologyLiteralV2],
@@ -457,7 +467,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     val guiAttributes   = predicates.get(guiAttribute).map(_.objects).getOrElse(Seq.empty)
     val guiAttributeVal = ensureOnlyStringLiterals(guiAttributes, "salsah-gui:guiAttribute")
 
-    val guiAttrStr = guiAttributes.collect { case StringLiteralV2(value, _) => value }.toSet
+    val guiAttrStr = guiAttributes.collect { case sl: StringLiteralV2 => sl.value }.toSet
     val guiElementStr =
       guiElement.flatMap(_.objects.headOption).collect { case SmartIriLiteralV2(value) => value.toInternalSchema.toIri }
     val validGui = GuiObject.makeFromStrings(guiAttrStr, guiElementStr).mapError(_.getMessage)
@@ -496,10 +506,11 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       rdfsComment                 <- iriConverter.asSmartIri(RDFS.comment.toString).orDie
       what                        <- labelOrComment(propertyInfo.predicates, rdfsLabel, rdfsComment).toZIO
       (labelOrComment, newObjects) = what
+      newValues                   <- ensureOnlyLanguageTaggedStringLiterals(newObjects).toZIO
     } yield ChangePropertyLabelsOrCommentsRequestV2(
       propertyIri,
       labelOrComment,
-      newObjects,
+      newValues,
       meta.lastModificationDate,
       apiRequestId,
       user,

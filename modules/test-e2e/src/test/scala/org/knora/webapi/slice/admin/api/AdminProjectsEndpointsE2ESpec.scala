@@ -117,7 +117,7 @@ object AdminProjectsEndpointsE2ESpec extends E2EZSpec {
               result.shortname.value == "newprojectWithIri",
               result.longname.map(_.value).contains("new project with a custom IRI"),
               result.keywords == Seq("projectIRI"),
-              result.description == Seq(StringLiteralV2.from("a project created with a custom IRI", Some("en"))),
+              result.description == Seq(StringLiteralV2.from("a project created with a custom IRI", EN)),
               result.enabledLicenses == Set(LicenseIri.unsafeFrom("http://rdfh.ch/licenses/cc-by-4.0")),
               result.allowedCopyrightHolders.map(_.value) == Set(
                 "AI-Generated Content - Not Protected by Copyright",
@@ -177,7 +177,7 @@ object AdminProjectsEndpointsE2ESpec extends E2EZSpec {
               result.shortname.value == "newproject",
               result.shortcode.value == "1111",
               result.longname.map(_.value) == Some("project longname"),
-              result.description == Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
+              result.description == Seq(StringLiteralV2.from("project description", EN)),
               result.keywords == Seq("keywords"),
               result.logo.map(_.value) == Some("/fu/bar/baz.jpg"),
               result.status == Status.Active,
@@ -227,7 +227,7 @@ object AdminProjectsEndpointsE2ESpec extends E2EZSpec {
             assertTrue(
               result.longname.map(_.value) == Some("updated project longname"),
               result.description == Seq(
-                StringLiteralV2.from(value = "updated project description", language = Some("en")),
+                StringLiteralV2.from(value = "updated project description", EN),
               ),
               result.keywords.sorted == Seq("updated", "keywords").sorted,
               result.logo.map(_.value) == Some("/fu/bar/baz-updated.jpg"),
@@ -256,8 +256,8 @@ object AdminProjectsEndpointsE2ESpec extends E2EZSpec {
           .map(result =>
             assertTrue(
               result.description.size == 2,
-              result.description.contains(StringLiteralV2.from(value = "Test Project", language = Some("en"))),
-              result.description.contains(StringLiteralV2.from(value = "Test Projekt", language = Some("de"))),
+              result.description.contains(StringLiteralV2.from("Test Project", EN)),
+              result.description.contains(StringLiteralV2.from("Test Projekt", DE)),
             ),
           )
       },

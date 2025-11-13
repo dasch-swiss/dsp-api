@@ -101,7 +101,7 @@ object AdminGroupsEndpointsSpec extends E2EZSpec {
           .map(response =>
             assertTrue(
               response.group.name == "NewGroup",
-              response.group.descriptions == Seq(StringLiteralV2.from("NewGroupDescription", Some("en"))),
+              response.group.descriptions == Seq(StringLiteralV2.from("NewGroupDescription", EN)),
               response.group.project.contains(imagesProjectExternal),
               response.group.status,
               !response.group.selfjoin,
@@ -123,7 +123,7 @@ object AdminGroupsEndpointsSpec extends E2EZSpec {
           .map(response =>
             assertTrue(
               response.group.name == "UpdatedGroupName",
-              response.group.descriptions == Seq(StringLiteralV2.from("UpdatedGroupDescription", Some("en"))),
+              response.group.descriptions == Seq(StringLiteralV2.from("UpdatedGroupDescription", EN)),
               response.group.project.contains(imagesProjectExternal),
               response.group.status,
               !response.group.selfjoin,
@@ -137,7 +137,7 @@ object AdminGroupsEndpointsSpec extends E2EZSpec {
           .map(response =>
             assertTrue(
               response.group.name == "UpdatedGroupName",
-              response.group.descriptions == Seq(StringLiteralV2.from("UpdatedGroupDescription", Some("en"))),
+              response.group.descriptions == Seq(StringLiteralV2.from("UpdatedGroupDescription", EN)),
               response.group.project.contains(imagesProjectExternal),
               !response.group.status,
               !response.group.selfjoin,
@@ -156,7 +156,7 @@ object AdminGroupsEndpointsSpec extends E2EZSpec {
           .map(response =>
             assertTrue(
               response.group.name == "UpdatedGroupName",
-              response.group.descriptions == Seq(StringLiteralV2.from("UpdatedGroupDescription", Some("en"))),
+              response.group.descriptions == Seq(StringLiteralV2.from("UpdatedGroupDescription", EN)),
               response.group.project.contains(imagesProjectExternal),
               response.group.status,
               !response.group.selfjoin,

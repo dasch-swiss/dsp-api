@@ -5,8 +5,6 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
 import sttp.tapir.Schema
 import zio.*
 import zio.json.DeriveJsonCodec
@@ -110,8 +108,7 @@ object SparqlExtendedConstructResponse {
                       ),
                     )
 
-                  case OntologyConstants.Xsd.String =>
-                    StringLiteralV2.from(value = datatypeLiteral.value, language = None)
+                  case OntologyConstants.Xsd.String => StringLiteralV2.from(datatypeLiteral.value)
 
                   case OntologyConstants.Xsd.Decimal =>
                     DecimalLiteralV2(
@@ -126,7 +123,7 @@ object SparqlExtendedConstructResponse {
                 }
 
               case stringWithLanguage: StringWithLanguage =>
-                StringLiteralV2.from(value = stringWithLanguage.value, language = Some(stringWithLanguage.language))
+                StringLiteralV2.unsafeFrom(stringWithLanguage.value, Some(stringWithLanguage.language))
             }
         }
 
@@ -235,39 +232,44 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
   override def toString: String = value
 }
 
-/**
- * Represents a string with language iso. Allows sorting inside collections by the value.
- *
- * @param value    the string value.
- * @param language the language iso.
- */
-case class StringLiteralV2 private (value: String, language: Option[String])
-    extends LiteralV2
-    with OntologyLiteralV2
-    with Ordered[StringLiteralV2] {
-
+sealed trait StringLiteralV2 extends LiteralV2 with OntologyLiteralV2 with Ordered[StringLiteralV2] {
+  def value: String
   override def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
   override def toString: String                    = value
-
-  def languageCode: Option[LanguageCode] = language.map(LanguageCode.from).flatMap(_.toOption)
-
-  def toRdfLiteral: StringLiteral =
-    language.map(Rdf.literalOfLanguage(value, _)).getOrElse(Rdf.literalOf(value))
+  def languageOption: Option[LanguageCode] = this match {
+    case LanguageTaggedStringLiteralV2(_, language) => Some(language)
+    case PlainStringLiteralV2(_)                    => None
+  }
 }
+
+case class LanguageTaggedStringLiteralV2(value: String, language: LanguageCode) extends StringLiteralV2
+case class PlainStringLiteralV2(value: String)                                  extends StringLiteralV2
 
 object StringLiteralV2 {
   implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
   implicit val schema: Schema[StringLiteralV2]   = Schema.derived[StringLiteralV2]
 
-  def from(value: String, lang: LanguageCode): StringLiteralV2 =
-    from(value, Some(lang.value))
-
-  def from(value: String, language: Option[String]): StringLiteralV2 = language match {
-    case Some(_) if value.isEmpty => throw BadRequestException("String value is missing.")
-    case _                        => StringLiteralV2(value, language)
+  val orderByValue: Ordering[StringLiteralV2] = Ordering.by(_.value)
+  val orderByLanguage: Ordering[StringLiteralV2] = Ordering.by {
+    case LanguageTaggedStringLiteralV2(_, language) => language.value
+    case PlainStringLiteralV2(_)                    => ""
   }
 
-  def unsafeFrom(value: String, language: Option[String]): StringLiteralV2 = StringLiteralV2(value, language)
+  def from(value: String): StringLiteralV2 = PlainStringLiteralV2(value)
+  def from(value: String, language: LanguageCode): LanguageTaggedStringLiteralV2 =
+    LanguageTaggedStringLiteralV2(value, language)
+  def from(value: String, language: Option[String]): Either[String, StringLiteralV2] =
+    language.map(LanguageCode.from) match {
+      case Some(Right(langCode)) => Right(LanguageTaggedStringLiteralV2(value, langCode))
+      case Some(Left(err))       => Left(err)
+      case None                  => Right(PlainStringLiteralV2(value))
+    }
+
+  def unsafeFrom(value: String, language: Option[String]): StringLiteralV2 =
+    from(value, language) match {
+      case Right(strLit) => strLit
+      case Left(err)     => throw IllegalArgumentException(err)
+    }
 }
 
 /**
@@ -282,7 +284,10 @@ case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
    *
    * @return a [[StringLiteralSequenceV2]] sorted by language value.
    */
-  def sortByLanguage: StringLiteralSequenceV2 = StringLiteralSequenceV2(stringLiterals.sortBy(_.language))
+  def sortByLanguage: StringLiteralSequenceV2 = StringLiteralSequenceV2(stringLiterals.sortBy {
+    case LanguageTaggedStringLiteralV2(value, language) => language.value
+    case PlainStringLiteralV2(value)                    => ""
+  })
 
   /**
    * Gets the string value of the [[StringLiteralV2]] corresponding to the preferred language.
@@ -293,8 +298,9 @@ case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
    */
   def getPreferredLanguage(preferredLang: String, fallbackLang: String): Option[String] = {
 
-    val stringLiteralMap: Map[Option[String], String] = stringLiterals.map { case StringLiteralV2(str, lang) =>
-      lang -> str
+    val stringLiteralMap: Map[Option[String], String] = stringLiterals.map {
+      case LanguageTaggedStringLiteralV2(str, lang) => Some(lang.value) -> str
+      case PlainStringLiteralV2(str)                => None             -> str
     }.toMap
 
     stringLiteralMap.get(Some(preferredLang)) match {

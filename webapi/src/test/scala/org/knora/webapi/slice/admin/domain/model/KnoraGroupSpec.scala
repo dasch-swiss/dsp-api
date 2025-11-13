@@ -9,13 +9,14 @@ import zio.test.*
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 
 /**
  * This spec is used to test the [[Group]] value objects creation.
  */
 object KnoraGroupSpec extends ZIOSpecDefault {
-  private val validDescription   = Seq(StringLiteralV2.from(value = "Valid group description", language = Some("en")))
-  private val invalidDescription = Seq(StringLiteralV2.unsafeFrom(value = "", language = Some("en")))
+  private val validDescription   = Seq(StringLiteralV2.from("Valid group description", EN))
+  private val invalidDescription = Seq(StringLiteralV2.from("", EN))
 
   def spec: Spec[Any, Any] = groupNameTest + groupDescriptionsTest + groupStatusTest + groupSelfJoinTest
 

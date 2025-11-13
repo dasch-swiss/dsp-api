@@ -16,6 +16,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.common.repo.service.CrudRepository
 
 trait KnoraGroupRepo extends CrudRepository[KnoraGroup, GroupIri] {
@@ -32,7 +33,7 @@ object KnoraGroupRepo {
     private def makeBuiltIn(name: String) = KnoraGroup(
       GroupIri.unsafeFrom(s"http://www.knora.org/ontology/knora-admin#$name"),
       GroupName.unsafeFrom(name),
-      groupDescriptions = GroupDescriptions.unsafeFrom(Seq(StringLiteralV2.unsafeFrom(name, Some("en")))),
+      groupDescriptions = GroupDescriptions.unsafeFrom(Seq(StringLiteralV2.from(name, EN))),
       status = GroupStatus.active,
       belongsToProject = None,
       hasSelfJoinEnabled = GroupSelfJoin.disabled,

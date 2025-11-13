@@ -24,6 +24,8 @@ import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.domain.LanguageCode.DE
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 
 final case class ListsEndpointsV2(private val base: BaseEndpoints) {
   val listIri =
@@ -66,19 +68,17 @@ private object Examples {
         name = Some("Tree list root"),
         labels = StringLiteralSequenceV2(
           Vector(
-            StringLiteralV2.from(value = "Tree list root", language = Some("en")),
-            StringLiteralV2.from(value = "Listenwurzel", language = Some("de")),
+            StringLiteralV2.from("Tree list root", language = EN),
+            StringLiteralV2.from("Listenwurzel", language = DE),
           ),
         ),
-        comments =
-          StringLiteralSequenceV2(Vector(StringLiteralV2.from(value = "Anything Tree List", language = Some("en")))),
+        comments = StringLiteralSequenceV2(Vector(StringLiteralV2.from("Anything Tree List", EN))),
       ).sorted,
       children = Seq(
         ListChildNodeADM(
           id = "http://rdfh.ch/lists/0001/treeList01",
           name = Some("Tree list node 01"),
-          labels =
-            StringLiteralSequenceV2(Vector(StringLiteralV2.from(value = "Tree list node 01", language = Some("en")))),
+          labels = StringLiteralSequenceV2(Vector(StringLiteralV2.from("Tree list node 01", EN))),
           comments = StringLiteralSequenceV2.empty,
           children = Seq.empty[ListChildNodeADM],
           position = 0,
@@ -89,8 +89,8 @@ private object Examples {
           name = Some("Tree list node 02"),
           labels = StringLiteralSequenceV2(
             Vector(
-              StringLiteralV2.from(value = "Baumlistenknoten 02", language = Some("de")),
-              StringLiteralV2.from(value = "Tree list node 02", language = Some("en")),
+              StringLiteralV2.from("Baumlistenknoten 02", DE),
+              StringLiteralV2.from("Tree list node 02", EN),
             ),
           ),
           comments = StringLiteralSequenceV2.empty,
@@ -101,16 +101,13 @@ private object Examples {
         ListChildNodeADM(
           id = "http://rdfh.ch/lists/0001/treeList03",
           name = Some("Tree list node 03"),
-          labels =
-            StringLiteralSequenceV2(Vector(StringLiteralV2.from(value = "Tree list node 03", language = Some("en")))),
+          labels = StringLiteralSequenceV2(Vector(StringLiteralV2.from("Tree list node 03", EN))),
           comments = StringLiteralSequenceV2.empty,
           children = Seq(
             ListChildNodeADM(
               id = "http://rdfh.ch/lists/0001/treeList10",
               name = Some("Tree list node 10"),
-              labels = StringLiteralSequenceV2(
-                Vector(StringLiteralV2.from(value = "Tree list node 10", language = Some("en"))),
-              ),
+              labels = StringLiteralSequenceV2(Vector(StringLiteralV2.from("Tree list node 10", EN))),
               comments = StringLiteralSequenceV2.empty,
               children = Seq.empty[ListChildNodeADM],
               position = 0,
@@ -119,9 +116,7 @@ private object Examples {
             ListChildNodeADM(
               id = "http://rdfh.ch/lists/0001/treeList11",
               name = Some("Tree list node 11"),
-              labels = StringLiteralSequenceV2(
-                Vector(StringLiteralV2.from(value = "Tree list node 11", language = Some("en"))),
-              ),
+              labels = StringLiteralSequenceV2(Vector(StringLiteralV2.from("Tree list node 11", EN))),
               comments = StringLiteralSequenceV2.empty,
               children = Seq.empty[ListChildNodeADM],
               position = 1,
@@ -145,7 +140,7 @@ private object Examples {
         stringLiterals = Vector(
           StringLiteralV2.from(
             value = "Tree list node 11",
-            language = Some("en"),
+            EN,
           ),
         ),
       ),

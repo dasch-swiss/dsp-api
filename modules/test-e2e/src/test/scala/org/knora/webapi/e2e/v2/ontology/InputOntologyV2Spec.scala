@@ -24,6 +24,8 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
+import org.knora.webapi.slice.common.domain.LanguageCode.DE
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 
 object InputOntologyV2Spec extends E2EZSpec {
@@ -53,15 +55,15 @@ object InputOntologyV2Spec extends E2EZSpec {
           "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
             predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("has name", Some("en")),
-              StringLiteralV2.from("hat Namen", Some("de")),
+              StringLiteralV2.from("has name", EN),
+              StringLiteralV2.from("hat Namen", DE),
             ),
           ),
           "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
             predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("The name of a 'Thing'", Some("en")),
-              StringLiteralV2.from("Der Name eines Dinges", Some("de")),
+              StringLiteralV2.from("The name of a 'Thing'", EN),
+              StringLiteralV2.from("Der Name eines Dinges", DE),
             ),
           ),
         ),
@@ -84,11 +86,11 @@ object InputOntologyV2Spec extends E2EZSpec {
           ),
           "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
             predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-            objects = Seq(StringLiteralV2.from("wild thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("wild thing", EN)),
           ),
           "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
             predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-            objects = Seq(StringLiteralV2.from("A thing that is wild", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that is wild", EN)),
           ),
         ),
         classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
