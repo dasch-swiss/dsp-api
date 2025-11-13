@@ -55,6 +55,8 @@ import org.knora.webapi.slice.ontology.repo.ChangeClassLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
 import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
+import org.knora.webapi.slice.ontology.repo.DeleteOntologyCommentQuery
+import org.knora.webapi.slice.ontology.repo.UpdateOntologyMetadataQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -491,40 +493,31 @@ final case class OntologyResponderV2(
     lastModificationDate: Instant,
     apiRequestID: UUID,
     requestingUser: User,
-  ): Task[ReadOntologyMetadataV2] = {
-    val changeTask: Task[ReadOntologyMetadataV2] = for {
-      _                 <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
-      ontology          <- getOntologyOrFailNotFound(ontologyIri)
-      projectIri        <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
-      _                 <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
-      oldMetadata        = ontology.ontologyMetadata
-      ontologyHasComment = oldMetadata.comment.nonEmpty
-      currentTime       <- Clock.instant
-      updateSparql = sparql.v2.txt.changeOntologyMetadata(
-                       ontologyNamedGraphIri = ontologyIri.toInternalSchema,
-                       ontologyIri = ontologyIri.toInternalSchema,
+  ): Task[ReadOntologyMetadataV2] = IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
+    for {
+      _          <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
+      ontology   <- getOntologyOrFailNotFound(ontologyIri)
+      projectIri <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
+      _          <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
+      updateQuery <- UpdateOntologyMetadataQuery.build(
+                       ontologyIri = ontologyIri,
                        newLabel = label,
-                       hasOldComment = ontologyHasComment,
-                       deleteOldComment = ontologyHasComment && comment.nonEmpty,
                        newComment = comment,
-                       lastModificationDate = lastModificationDate,
-                       currentTime = currentTime,
+                       lastModificationDate = LastModificationDate.from(lastModificationDate),
                      )
-      _ <- save(Update(updateSparql))
+      updated <- save(updateQuery)
     } yield ReadOntologyMetadataV2(
       Set(
         OntologyMetadataV2(
           ontologyIri = ontologyIri.toInternalSchema,
           projectIri = Some(projectIri),
-          label = label.orElse(oldMetadata.label),
-          comment = comment.orElse(oldMetadata.comment),
-          lastModificationDate = Some(currentTime),
+          label = label.orElse(ontology.ontologyMetadata.label),
+          comment = comment.orElse(ontology.ontologyMetadata.comment),
+          lastModificationDate = updated.ontologyLastModificationDate(ontologyIri).map(_.value),
         ).unescape,
       ),
-    )
-
-    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(changeTask)
-  }
+    ),
+  )
 
   private def getOntologyOrFailNotFound(iri: OntologyIri) =
     ontologyRepo.findById(iri).someOrFail(NotFoundException(s"Ontology not found: ${iri.toComplexSchema}"))
@@ -534,42 +527,27 @@ final case class OntologyResponderV2(
     lastModificationDate: Instant,
     apiRequestID: UUID,
     requestingUser: User,
-  ): Task[ReadOntologyMetadataV2] = {
-    val deleteComment = for {
-      _          <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
-      projectIri <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
-      _          <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
-      ontology   <- getOntologyOrFailNotFound(ontologyIri)
-
-      oldMetadata        = ontology.ontologyMetadata
-      ontologyHasComment = oldMetadata.comment.nonEmpty
-
-      currentTime <- Clock.instant
-      updateSparql = sparql.v2.txt.changeOntologyMetadata(
-                       ontologyNamedGraphIri = ontologyIri.toInternalSchema,
-                       ontologyIri = ontologyIri.toInternalSchema,
-                       newLabel = None,
-                       hasOldComment = ontologyHasComment,
-                       deleteOldComment = true,
-                       newComment = None,
-                       lastModificationDate = lastModificationDate,
-                       currentTime = currentTime,
-                     )
-      _ <- save(Update(updateSparql))
+  ): Task[ReadOntologyMetadataV2] = IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
+    for {
+      _           <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
+      projectIri  <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
+      lmd          = LastModificationDate.from(lastModificationDate)
+      _           <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lmd)
+      ontology    <- getOntologyOrFailNotFound(ontologyIri)
+      deleteQuery <- DeleteOntologyCommentQuery.build(ontologyIri, lmd)
+      updated     <- save(deleteQuery)
     } yield ReadOntologyMetadataV2(
       Set(
         OntologyMetadataV2(
           ontologyIri = ontologyIri.toInternalSchema,
           projectIri = Some(projectIri),
-          label = oldMetadata.label,
+          label = ontology.ontologyMetadata.label,
           comment = None,
-          lastModificationDate = Some(currentTime),
+          lastModificationDate = updated.ontologyLastModificationDate(ontologyIri).map(_.value),
         ).unescape,
       ),
-    )
-
-    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteComment)
-  }
+    ),
+  )
 
   /**
    * Creates a class in an existing ontology.

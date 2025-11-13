@@ -7,6 +7,8 @@ package org.knora.webapi.slice.ontology.repo.model
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.ontology.api.LastModificationDate
 
 /**
  * The in-memory cache of ontologies.
@@ -37,6 +39,11 @@ case class OntologyCacheData(
       propertyIri -> readPropertyInfo.entityInfoContent
     })
     .toMap
+  def ontologyLastModificationDate(ontologyIri: OntologyIri): Option[LastModificationDate] =
+    ontologies
+      .get(ontologyIri.toInternalSchema)
+      .flatMap(_.ontologyMetadata.lastModificationDate)
+      .map(LastModificationDate.from)
 }
 object OntologyCacheData {
   val Empty = OntologyCacheData(
