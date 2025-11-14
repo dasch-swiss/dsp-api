@@ -177,6 +177,7 @@ final case class ConstructResponseUtilV2(
       case (_: IRI, resource: ResourceWithValueRdfData) => resource.userPermission.nonEmpty
     }
 
+    // TODO: rewrite to partitions
     val mainResourceIrisVisible: Set[IRI] = visibleResources.collect {
       case (resourceIri: IRI, resource: ResourceWithValueRdfData) if resource.isMainResource => resourceIri
     }.toSet
