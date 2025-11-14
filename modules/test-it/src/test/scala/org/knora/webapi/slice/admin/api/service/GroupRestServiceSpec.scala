@@ -23,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.service.GroupService
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.util.MutableTestIri
 
 object GroupRestServiceSpec extends E2EZSpec {
@@ -63,12 +64,7 @@ object GroupRestServiceSpec extends E2EZSpec {
           name = GroupName.unsafeFrom("NewGroup"),
           descriptions = GroupDescriptions
             .unsafeFrom(
-              Seq(
-                StringLiteralV2.from(
-                  value = """NewGroupDescription with "quotes" and <html tag>""",
-                  language = Some("en"),
-                ),
-              ),
+              Seq(StringLiteralV2.from("""NewGroupDescription with "quotes" and <html tag>""", EN)),
             ),
           project = imagesProjectIri,
           status = GroupStatus.active,
@@ -83,7 +79,7 @@ object GroupRestServiceSpec extends E2EZSpec {
               group.id == newGroupIri.get,
               group.name == "NewGroup",
               group.descriptions == Seq(
-                StringLiteralV2.from("""NewGroupDescription with "quotes" and <html tag>""", Some("en")),
+                StringLiteralV2.from("""NewGroupDescription with "quotes" and <html tag>""", EN),
               ),
               group.project.contains(imagesProjectExternal),
               group.status,
@@ -97,7 +93,7 @@ object GroupRestServiceSpec extends E2EZSpec {
           id = Some(imagesReviewerGroup.groupIri),
           name = groupName,
           descriptions = GroupDescriptions
-            .unsafeFrom(Seq(StringLiteralV2.from(value = "NewGroupDescription", language = Some("en")))),
+            .unsafeFrom(Seq(StringLiteralV2.from(value = "NewGroupDescription", EN))),
           project = imagesProjectIri,
           status = GroupStatus.active,
           selfjoin = GroupSelfJoin.disabled,
@@ -115,7 +111,7 @@ object GroupRestServiceSpec extends E2EZSpec {
           name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
           descriptions = Some(
             GroupDescriptions.unsafeFrom(
-              Seq(StringLiteralV2.from("""UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
+              Seq(StringLiteralV2.from("""UpdatedDescription with "quotes" and <html tag>""", EN)),
             ),
           ),
           status = Some(GroupStatus.active),
@@ -128,7 +124,7 @@ object GroupRestServiceSpec extends E2EZSpec {
               group.id == newGroupIri.get,
               group.name == "UpdatedGroupName",
               group.descriptions == Seq(
-                StringLiteralV2.from("""UpdatedDescription with "quotes" and <html tag>""", Some("en")),
+                StringLiteralV2.from("""UpdatedDescription with "quotes" and <html tag>""", EN),
               ),
               group.project.contains(imagesProjectExternal),
               group.status,
@@ -152,7 +148,7 @@ object GroupRestServiceSpec extends E2EZSpec {
           name = Some(groupName),
           descriptions = Some(
             GroupDescriptions
-              .unsafeFrom(Seq(StringLiteralV2.from(value = "UpdatedDescription", language = Some("en")))),
+              .unsafeFrom(Seq(StringLiteralV2.from(value = "UpdatedDescription", EN))),
           ),
           status = Some(GroupStatus.active),
           selfjoin = Some(GroupSelfJoin.disabled),
@@ -171,7 +167,7 @@ object GroupRestServiceSpec extends E2EZSpec {
           name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
           descriptions = Some(
             GroupDescriptions
-              .unsafeFrom(Seq(StringLiteralV2.from(value = "UpdatedDescription", language = Some("en")))),
+              .unsafeFrom(Seq(StringLiteralV2.from(value = "UpdatedDescription", EN))),
           ),
           status = Some(GroupStatus.active),
           selfjoin = Some(GroupSelfJoin.disabled),
@@ -190,7 +186,7 @@ object GroupRestServiceSpec extends E2EZSpec {
           name = Some(groupName),
           descriptions = Some(
             GroupDescriptions
-              .unsafeFrom(Seq(StringLiteralV2.from(value = "UpdatedDescription", language = Some("en")))),
+              .unsafeFrom(Seq(StringLiteralV2.from(value = "UpdatedDescription", EN))),
           ),
           status = Some(GroupStatus.active),
           selfjoin = Some(GroupSelfJoin.disabled),

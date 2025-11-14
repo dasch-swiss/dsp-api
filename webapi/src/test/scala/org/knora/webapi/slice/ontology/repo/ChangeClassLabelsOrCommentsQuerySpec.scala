@@ -15,6 +15,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -32,8 +33,8 @@ object ChangeClassLabelsOrCommentsQuerySpec extends ZIOSpecDefault {
     suite("build")(
       test("should produce the correct query when changing labels") {
         val newLabels = Seq(
-          StringLiteralV2.from("Updated Label", Some("en")),
-          StringLiteralV2.from("Étiquette mise à jour", Some("fr")),
+          StringLiteralV2.from("Updated Label", EN),
+          StringLiteralV2.from("Étiquette mise à jour", FR),
         )
 
         ChangeClassLabelsOrCommentsQuery
@@ -59,8 +60,8 @@ object ChangeClassLabelsOrCommentsQuerySpec extends ZIOSpecDefault {
       },
       test("should produce the correct query when changing comments") {
         val newComments = Seq(
-          StringLiteralV2.from("Updated Comment", Some("en")),
-          StringLiteralV2.from("Commentaire mis à jour", Some("fr")),
+          StringLiteralV2.from("Updated Comment", EN),
+          StringLiteralV2.from("Commentaire mis à jour", FR),
         )
 
         ChangeClassLabelsOrCommentsQuery
@@ -85,7 +86,7 @@ object ChangeClassLabelsOrCommentsQuerySpec extends ZIOSpecDefault {
           }
       },
       test("should produce correct query with single label") {
-        val newLabels = Seq(StringLiteralV2.from("Single Label", Some("en")))
+        val newLabels = Seq(StringLiteralV2.from("Single Label", EN))
 
         ChangeClassLabelsOrCommentsQuery
           .build(testClassIri, LabelOrComment.Label, newLabels, testLastModificationDate)
@@ -109,8 +110,8 @@ object ChangeClassLabelsOrCommentsQuerySpec extends ZIOSpecDefault {
       },
       test("should handle labels with special characters") {
         val newLabels = Seq(
-          StringLiteralV2.from("Label with \"quotes\"", Some("en")),
-          StringLiteralV2.from("Label with 'apostrophes'", Some("en")),
+          StringLiteralV2.from("Label with \"quotes\"", EN),
+          StringLiteralV2.from("Label with 'apostrophes'", EN),
         )
 
         ChangeClassLabelsOrCommentsQuery
@@ -136,10 +137,10 @@ object ChangeClassLabelsOrCommentsQuerySpec extends ZIOSpecDefault {
       },
       test("should handle multiple language variants") {
         val multilingualLabels = Seq(
-          StringLiteralV2.from("English Label", Some("en")),
-          StringLiteralV2.from("Deutsche Beschriftung", Some("de")),
-          StringLiteralV2.from("Étiquette française", Some("fr")),
-          StringLiteralV2.from("Etichetta italiana", Some("it")),
+          StringLiteralV2.from("English Label", EN),
+          StringLiteralV2.from("Deutsche Beschriftung", DE),
+          StringLiteralV2.from("Étiquette française", FR),
+          StringLiteralV2.from("Etichetta italiana", IT),
         )
 
         ChangeClassLabelsOrCommentsQuery
@@ -164,27 +165,6 @@ object ChangeClassLabelsOrCommentsQuerySpec extends ZIOSpecDefault {
                                  |OPTIONAL { anything:TestClass rdfs:label ?oldValues . } }""".stripMargin,
             )
           }
-      },
-      test("should die when StringLiterals are missing language codes") {
-        val invalidLabels = Seq(
-          StringLiteralV2.from("Label without language", None),
-        )
-
-        ChangeClassLabelsOrCommentsQuery
-          .build(testClassIri, LabelOrComment.Label, invalidLabels, testLastModificationDate)
-          .exit
-          .map(result => assertTrue(result.isFailure))
-      },
-      test("should die when any StringLiteral is missing a language code") {
-        val mixedLabels = Seq(
-          StringLiteralV2.from("Valid Label", Some("en")),
-          StringLiteralV2.from("Invalid Label", None),
-        )
-
-        ChangeClassLabelsOrCommentsQuery
-          .build(testClassIri, LabelOrComment.Label, mixedLabels, testLastModificationDate)
-          .exit
-          .map(result => assertTrue(result.isFailure))
       },
     ),
   )

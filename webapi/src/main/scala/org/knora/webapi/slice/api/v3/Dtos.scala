@@ -23,7 +23,7 @@ object LanguageStringDto {
   given Schema[LanguageStringDto]    = Schema.derived[LanguageStringDto]
 
   def apply(literal: StringLiteralV2): LanguageStringDto =
-    LanguageStringDto(literal.value, literal.languageCode.getOrElse(LanguageCode.Default))
+    LanguageStringDto(literal.value, literal.languageOption.getOrElse(LanguageCode.Default))
 
   def from(info: PredicateInfoV2): List[LanguageStringDto] =
     info.objects.collect { case str: StringLiteralV2 => str }.map(LanguageStringDto.apply).toList

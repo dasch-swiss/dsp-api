@@ -21,6 +21,7 @@ import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
@@ -81,7 +82,7 @@ final case class KnoraProjectRepoLive(
       super.delete(project)
 }
 
-object KnoraProjectRepoLive {
+object KnoraProjectRepoLive extends QueryBuilderHelper {
 
   private val mapper = new RdfEntityMapper[KnoraProject] {
 
@@ -134,7 +135,7 @@ object KnoraProjectRepoLive {
         .andHas(Vocabulary.KnoraAdmin.hasSelfJoinEnabled, project.selfjoin.value)
       project.longname.foreach(longname => pattern.andHas(Vocabulary.KnoraAdmin.projectLongname, longname.value))
       project.description.foreach(description =>
-        pattern.andHas(Vocabulary.KnoraAdmin.projectDescription, description.value.toRdfLiteral),
+        pattern.andHas(Vocabulary.KnoraAdmin.projectDescription, toRdfLiteral(description.value)),
       )
       project.keywords.foreach(keyword => pattern.andHas(Vocabulary.KnoraAdmin.projectKeyword, keyword.value))
       project.logo.foreach(logo => pattern.andHas(Vocabulary.KnoraAdmin.projectLogo, logo.value))

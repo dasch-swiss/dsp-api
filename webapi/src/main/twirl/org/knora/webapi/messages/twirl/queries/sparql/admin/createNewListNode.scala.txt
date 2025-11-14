@@ -63,8 +63,8 @@ INSERT {
 
         @if(maybeLabels.nonEmpty) {
             @for(label <- maybeLabels) {
-                @if(label.language.nonEmpty) {
-                    ?nodeIri rdfs:label """@label.value"""@@@{label.language.get} .
+                @if(label.languageOption.nonEmpty) {
+                    ?nodeIri rdfs:label """@label.value"""@@@{label.languageOption.get} .
                 } else {
                     ?nodeIri rdfs:label """@label.value"""^^xsd:string .
                 }
@@ -74,8 +74,8 @@ INSERT {
         @if(maybeComments.nonEmpty) {
             @if(maybeComments.get.nonEmpty) {
                 @for(comment <- maybeComments.get) {
-                    @if(comment.language.nonEmpty) {
-                        ?nodeIri rdfs:comment """@comment.value"""@@@{comment.language.get} .
+                    @if(comment.languageOption.nonEmpty) {
+                        ?nodeIri rdfs:comment """@comment.value"""@@@{comment.languageOption.get} .
                     } else {
                         ?nodeIri rdfs:comment """@comment.value"""^^xsd:string .
                     }

@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
@@ -34,7 +35,7 @@ object GroupServiceSpec extends ZIOSpecDefault {
   private val exampleGroup = new Group(
     id = "http://rdfh.ch/groups/0007/james-bond-group",
     name = "James Bond Group",
-    descriptions = Seq(StringLiteralV2.from("James Bond Group Description", Some("en"))),
+    descriptions = Seq(StringLiteralV2.from("James Bond Group Description", EN)),
     project = None,
     status = true,
     selfjoin = false,
@@ -43,8 +44,7 @@ object GroupServiceSpec extends ZIOSpecDefault {
   private val exampleKnoraGroup = new KnoraGroup(
     id = GroupIri.unsafeFrom("http://rdfh.ch/groups/0007/james-bond-group"),
     groupName = GroupName.unsafeFrom("James Bond Group"),
-    groupDescriptions =
-      GroupDescriptions.unsafeFrom(Seq(StringLiteralV2.from("James Bond Group Description", Some("en")))),
+    groupDescriptions = GroupDescriptions.unsafeFrom(Seq(StringLiteralV2.from("James Bond Group Description", EN))),
     status = GroupStatus.active,
     belongsToProject = None,
     hasSelfJoinEnabled = GroupSelfJoin.disabled,

@@ -168,7 +168,7 @@ case class ChangePropertyGuiElementRequest(
 case class ChangeClassLabelsOrCommentsRequestV2(
   classIri: ResourceClassIri,
   predicateToUpdate: LabelOrComment,
-  newObjects: Seq[StringLiteralV2],
+  newObjects: Seq[LanguageTaggedStringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -706,8 +706,9 @@ case class PredicateInfoV2(predicateIri: SmartIri, objects: Seq[OntologyLiteralV
   def unescape: PredicateInfoV2 =
     copy(
       objects = objects.map {
-        case StringLiteralV2(str, lang) => StringLiteralV2.from(Iri.fromSparqlEncodedString(str), lang)
-        case other                      => other
+        case LanguageTaggedStringLiteralV2(str, lang) => StringLiteralV2.from(Iri.fromSparqlEncodedString(str), lang)
+        case PlainStringLiteralV2(str)                => PlainStringLiteralV2(Iri.fromSparqlEncodedString(str))
+        case other                                    => other
       },
     )
 
@@ -762,8 +763,8 @@ object PredicateInfoV2 {
     predicateInfo.objects match {
       case Nil => Validation.fail(s"At least one value must be provided for $propertyIri")
       case literals if !literals.forall {
-            case StringLiteralV2(_, Some(_)) => true
-            case _                           => false
+            case _: LanguageTaggedStringLiteralV2 => true
+            case _                                => false
           } =>
         Validation.fail(s"All values of $propertyIri must be string literals with a language code")
       case literals => Validation.succeed(literals.collect { case l: StringLiteralV2 => l })
@@ -780,9 +781,9 @@ final case class PredicateInfoV2Builder private (
   def withObjects(objs: Seq[OntologyLiteralV2]): PredicateInfoV2Builder =
     copy(objects = self.objects ++ objs)
   def withStringLiteral(lang: LanguageCode, value: String): PredicateInfoV2Builder =
-    withObject(StringLiteralV2.from(value, Some(lang.value)))
+    withObject(StringLiteralV2.from(value, lang))
   def withStringLiteral(value: String): PredicateInfoV2Builder =
-    withObject(StringLiteralV2.from(value, None))
+    withObject(StringLiteralV2.from(value))
   def withStringLiterals(literals: Map[LanguageCode, String]): PredicateInfoV2Builder =
     withObjects(literals.map { case (lang, value) => StringLiteralV2.from(value, lang) }.toSeq)
   def build(): PredicateInfoV2 = PredicateInfoV2(self.predicateIri, self.objects)
@@ -1011,8 +1012,8 @@ sealed trait EntityInfoContentV2 {
           case None =>
             // Preferred languages were not specified. Take the first object.
             predicateInfo.objects.headOption match {
-              case Some(StringLiteralV2(str, _)) => Some(str)
-              case _                             => None
+              case Some(lit: StringLiteralV2) => Some(lit.value)
+              case _                          => None
             }
 
         }
@@ -1029,9 +1030,7 @@ sealed trait EntityInfoContentV2 {
   def getPredicateStringLiteralObjectsWithoutLang(predicateIri: SmartIri): Seq[String] =
     predicates.get(predicateIri) match {
       case Some(predicateInfo) =>
-        predicateInfo.objects.collect { case StringLiteralV2(str, None) =>
-          str
-        }
+        predicateInfo.objects.collect { case PlainStringLiteralV2(str) => str }
 
       case None => Seq.empty[String]
     }
@@ -1069,8 +1068,8 @@ sealed trait EntityInfoContentV2 {
   def getPredicateObjectsWithLangs(predicateIri: SmartIri): Map[String, String] =
     predicates.get(predicateIri) match {
       case Some(predicateInfo) =>
-        predicateInfo.objects.collect { case StringLiteralV2(str, Some(lang)) =>
-          lang -> str
+        predicateInfo.objects.collect { case LanguageTaggedStringLiteralV2(str, lang) =>
+          lang.value -> str
         }.toMap
 
       case None => Map.empty[String, String]
@@ -1084,7 +1083,7 @@ object EntityInfoContentV2 {
   private def stringToLiteral(str: String): StringLiteralV2 = {
     val value =
       Iri.toSparqlEncodedString(str).getOrElse(throw BadRequestException(s"Invalid predicate object: $str"))
-    StringLiteralV2.from(value, None)
+    StringLiteralV2.from(value)
   }
 
   /**
@@ -1887,7 +1886,7 @@ case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2)
       case (acc, (predicateIri, predicateInfo)) =>
         if (predicateInfo.objects.nonEmpty) {
           val nonLanguageSpecificObjectsAsJson: Seq[JsonLDValue] = predicateInfo.objects.collect {
-            case StringLiteralV2(str, None) => (JsonLDString(str), str)
+            case PlainStringLiteralV2(str) => (JsonLDString(str), str)
             case SmartIriLiteralV2(iri) =>
               val iriStr = iri.toString
               (JsonLDUtil.iriToJsonLDObject(iri.toString), iriStr)
