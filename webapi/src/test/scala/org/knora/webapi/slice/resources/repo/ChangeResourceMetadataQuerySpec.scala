@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.repo
+package org.knora.webapi.slice.resources.repo
 
 import zio.*
 import zio.NonEmptyChunk
@@ -60,9 +60,10 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybeLabel = Some("Updated Resource Label"),
             maybePermissions = None,
           )
-          .map { (actual: Update) =>
+          .map { case (lmd, update) =>
             assertTrue(
-              actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+              lmd == testNewModificationDate,
+              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                                  |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -87,9 +88,10 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybeLabel = None,
             maybePermissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser"),
           )
-          .map { (actual: Update) =>
+          .map { case (lmd, update) =>
             assertTrue(
-              actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+              lmd == testNewModificationDate,
+              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                                  |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -114,9 +116,10 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybeLabel = Some("New Label"),
             maybePermissions = Some("CR knora-admin:Creator"),
           )
-          .map { (actual: Update) =>
+          .map { case (lmd, update) =>
             assertTrue(
-              actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+              lmd == testNewModificationDate,
+              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                                  |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -144,9 +147,10 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybeLabel = Some("First Label"),
             maybePermissions = None,
           )
-          .map { (actual: Update) =>
+          .map { case (lmd, update) =>
             assertTrue(
-              actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+              lmd == testNewModificationDate,
+              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                                  |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -170,9 +174,10 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybeLabel = Some("Label with \"quotes\" and 'apostrophes'"),
             maybePermissions = None,
           )
-          .map { (actual: Update) =>
+          .map { case (lmd, update) =>
             assertTrue(
-              actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+              lmd == testNewModificationDate,
+              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                                  |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -197,9 +202,10 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybeLabel = None,
             maybePermissions = Some("CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser"),
           )
-          .map { (actual: Update) =>
+          .map { case (lmd, update) =>
             assertTrue(
-              actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+              lmd == testNewModificationDate,
+              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                                  |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

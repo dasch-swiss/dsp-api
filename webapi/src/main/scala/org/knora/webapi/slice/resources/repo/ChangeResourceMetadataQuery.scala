@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.repo
+package org.knora.webapi.slice.resources.repo
 
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
@@ -36,7 +36,7 @@ object ChangeResourceMetadataQuery extends QueryBuilderHelper {
     maybeNewModificationDate: Option[LastModificationDate],
     maybeLabel: Option[String],
     maybePermissions: Option[String],
-  ): IO[BadRequestException, Update] = {
+  ): IO[BadRequestException, (LastModificationDate, Update)] = {
 
     // Determine the new modification date: use submitted value if provided and valid, otherwise use current time
     val newModificationDateEffect: IO[BadRequestException, LastModificationDate] =
@@ -103,7 +103,7 @@ object ChangeResourceMetadataQuery extends QueryBuilderHelper {
         .insert(insertPatterns: _*)
         .where(wherePatterns: _*)
 
-      Update(query)
+      (newModificationDate, Update(query))
     }
   }
 }

@@ -5,9 +5,9 @@
 
 package dsp.errors
 
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.UserServiceError
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -125,9 +125,11 @@ object ForbiddenException {
  */
 case class NotFoundException(message: String) extends RequestRejectedException(message)
 object NotFoundException {
-  val notFound: NotFoundException = NotFoundException("The requested data was not found")
-  def notfound(iri: OntologyIri): NotFoundException =
-    NotFoundException(s"The requested ontology ${iri.toComplexSchema.toIri} was not found")
+  val notFound: NotFoundException                  = NotFoundException("The requested data was not found")
+  def notFound(iri: ProjectIri): NotFoundException = NotFoundException(s"The project $iri was not found")
+  def notfound(iri: OntologyIri): NotFoundException = NotFoundException(
+    s"The requested ontology ${iri.toComplexSchema.toIri} was not found",
+  )
   def from(shortcode: Shortcode): NotFoundException =
     NotFoundException(s"Project with shortcode ${shortcode.value} was not found")
 
