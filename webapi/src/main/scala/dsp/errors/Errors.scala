@@ -5,9 +5,10 @@
 
 package dsp.errors
 
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
+
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.UserServiceError
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
