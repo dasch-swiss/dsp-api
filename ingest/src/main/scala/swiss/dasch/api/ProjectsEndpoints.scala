@@ -163,13 +163,19 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .in(projects / shortcodePathVar)
     .out(jsonBody[ProjectResponse])
     .tag(projects)
-    .description("Authorization: read:project:1234 scope required (SystemAdmins + ProjectAdmins + users with read/write permissions).")
+    .description(
+      "Authorization: read:project:1234 scope required " +
+        "(SystemAdmins + ProjectAdmins + users with read/write permissions).",
+    )
 
   val getProjectsChecksumReport = base.secureEndpoint.get
     .in(projects / shortcodePathVar / "checksumreport")
     .out(jsonBody[AssetCheckResultResponse])
     .tag(projects)
-    .description("Authorization: read:project:1234 scope required (SystemAdmins + ProjectAdmins + users with read/write permissions).")
+    .description(
+      "Authorization: read:project:1234 scope required " +
+        "(SystemAdmins + ProjectAdmins + users with read/write permissions).",
+    )
 
   val deleteProjectsErase = base.secureEndpoint.delete
     .in(projects / shortcodePathVar / "erase")
@@ -185,7 +191,10 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .in(projects / shortcodePathVar / "assets" / assetIdPathVar)
     .out(jsonBody[AssetInfoResponse])
     .tag("assets")
-    .description("Authorization: read:project:1234 scope required (SystemAdmins + ProjectAdmins + users with read/write permissions).")
+    .description(
+      "Authorization: read:project:1234 scope required " +
+        "(SystemAdmins + ProjectAdmins + users with read/write permissions).",
+    )
 
   val getProjectsAssetsOriginal = base.withUserEndpoint.get
     .in(projects / shortcodePathVar / "assets" / assetIdPathVar / "original")
@@ -214,7 +223,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       "Triggers an ingest on the project with the given shortcode. " +
         "The files are expected to be in the `tmp/<project_shortcode>` directory. " +
         "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
-        "Authorization: write:project:1234 scope required (SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
+        "Authorization: write:project:1234 scope required " +
+        "(SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
     )
     .tag("bulk-ingest")
 
@@ -226,7 +236,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
         "This will remove the files from the `tmp/<project_shortcode>` directory and the directory itself. " +
         "This will remove also the mapping.csv file. " +
         "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
-        "Authorization: write:project:1234 scope required (SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
+        "Authorization: write:project:1234 scope required " +
+        "(SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
     )
     .tag("bulk-ingest")
 
@@ -236,7 +247,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       "Get the current result of the bulk ingest. " +
         "The result is a csv with the following structure: `original,derivative`. " +
         "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
-        "Authorization: write:project:1234 scope required (SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
+        "Authorization: write:project:1234 scope required " +
+        "(SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
     )
     .out(stringBody)
     .out(header(HeaderNames.ContentType, "text/csv"))
@@ -250,7 +262,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .description(
       "Uploads a file for consumption with the bulk-ingest route. " +
         "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
-        "Authorization: write:project:1234 scope required (SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
+        "Authorization: write:project:1234 scope required " +
+        "(SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
     )
     .tag("bulk-ingest")
 
