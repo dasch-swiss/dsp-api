@@ -10,6 +10,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.common.domain.LanguageCode.*
 
 /**
  * Tests [[StringLiteralSequenceV2]].
@@ -18,18 +19,9 @@ class StringLiteralSequenceV2Spec extends AnyWordSpec with Matchers {
 
   private val literalSeq: StringLiteralSequenceV2 = StringLiteralSequenceV2(
     Vector(
-      StringLiteralV2.from(
-        value = "Film und Foto",
-        language = Some("de"),
-      ),
-      StringLiteralV2.from(
-        value = "Film and Photo",
-        language = Some("en"),
-      ),
-      StringLiteralV2.from(
-        value = "Film e Fotografia",
-        language = Some("it"),
-      ),
+      StringLiteralV2.from("Film und Foto", DE),
+      StringLiteralV2.from("Film and Photo", EN),
+      StringLiteralV2.from("Film e Fotografia", IT),
     ),
   )
 

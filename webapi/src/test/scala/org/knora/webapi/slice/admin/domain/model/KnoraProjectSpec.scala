@@ -12,6 +12,7 @@ import scala.util.Random
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 
 /**
  * This spec is used to test the [[org.knora.webapi.slice.admin.domain.model.KnoraProject]] value objects creation.
@@ -126,22 +127,22 @@ object KnoraProjectSpec extends ZIOSpecDefault {
   private val descriptionTest = suite("Description")(
     test("pass an object containing too short Description and expect an error to be returned") {
       assertTrue(
-        Description.from(StringLiteralV2.from("Ab", Some("en"))) ==
+        Description.from(StringLiteralV2.from("Ab", EN)) ==
           Left("Description must be 3 to 40960 characters long."),
       )
     },
     test("pass an object containing too long Description and expect an error to be returned") {
       assertTrue(
-        Description.from(StringLiteralV2.from(new Random().nextString(40961), Some("en"))) ==
+        Description.from(StringLiteralV2.from(new Random().nextString(40961), EN)) ==
           Left("Description must be 3 to 40960 characters long."),
       )
     },
     test("pass a valid object and successfully create value object") {
       assertTrue(
         Description
-          .from(StringLiteralV2.from(value = "Valid project description", language = Some("en")))
+          .from(StringLiteralV2.from(value = "Valid project description", language = EN))
           .map(_.value) ==
-          Right(StringLiteralV2.from(value = "Valid project description", language = Some("en"))),
+          Right(StringLiteralV2.from(value = "Valid project description", language = EN)),
       )
     },
   )

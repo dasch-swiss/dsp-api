@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
 import zio.Chunk
@@ -128,9 +127,7 @@ object GroupName extends StringValueCompanion[GroupName] {
     Right(GroupName(value)).filterOrElse(_.value.nonEmpty, GroupErrorMessages.GroupNameMissing)
 }
 
-final case class GroupDescriptions private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]] {
-  def toRdfLiterals: Seq[StringLiteral] = value.map(_.toRdfLiteral)
-}
+final case class GroupDescriptions private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]]
 
 object GroupDescriptions extends WithFrom[Seq[StringLiteralV2], GroupDescriptions] {
   def from(value: Seq[StringLiteralV2]): Either[String, GroupDescriptions] =
@@ -168,7 +165,7 @@ object KnoraGroup {
     implicit val groupIriConverter: String => Either[String, GroupIri]   = GroupIri.from
     implicit val groupNameConverter: String => Either[String, GroupName] = GroupName.from
     implicit val groupDescriptionsConverter: LangString => Either[String, StringLiteralV2] = langString =>
-      GroupDescriptions.fromOne(StringLiteralV2.from(langString.value, langString.lang))
+      GroupDescriptions.fromOne(StringLiteralV2.unsafeFrom(langString.value, langString.lang))
     implicit val groupStatusConverter: Boolean => Either[String, GroupStatus] = value => Right(GroupStatus.from(value))
     implicit val groupHasSelfJoinEnabledConverter: Boolean => Either[String, GroupSelfJoin] = value =>
       Right(GroupSelfJoin.from(value))

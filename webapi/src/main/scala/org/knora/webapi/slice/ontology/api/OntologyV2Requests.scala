@@ -11,7 +11,7 @@ import java.util.UUID
 import scala.collection.immutable.Seq
 import scala.language.implicitConversions
 
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.slice.admin.domain.model.User
@@ -80,7 +80,7 @@ case class AddCardinalitiesToClassRequestV2(
 case class ChangePropertyLabelsOrCommentsRequestV2(
   propertyIri: PropertyIri,
   predicateToUpdate: LabelOrComment,
-  newObjects: Seq[StringLiteralV2],
+  newObjects: Seq[LanguageTaggedStringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,

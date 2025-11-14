@@ -42,6 +42,7 @@ import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.ontology.api.ChangeGuiOrderRequestV2
 import org.knora.webapi.slice.ontology.api.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
+import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.slice.ontology.api.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
@@ -50,9 +51,13 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
+import org.knora.webapi.slice.ontology.repo.ChangeClassLabelsOrCommentsQuery
+import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
 import org.knora.webapi.slice.ontology.repo.CreateOntologyQuery
 import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
+import org.knora.webapi.slice.ontology.repo.DeleteOntologyCommentQuery
+import org.knora.webapi.slice.ontology.repo.UpdateOntologyMetadataQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -481,40 +486,31 @@ final case class OntologyResponderV2(
     lastModificationDate: Instant,
     apiRequestID: UUID,
     requestingUser: User,
-  ): Task[ReadOntologyMetadataV2] = {
-    val changeTask: Task[ReadOntologyMetadataV2] = for {
-      _                 <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
-      ontology          <- getOntologyOrFailNotFound(ontologyIri)
-      projectIri        <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
-      _                 <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
-      oldMetadata        = ontology.ontologyMetadata
-      ontologyHasComment = oldMetadata.comment.nonEmpty
-      currentTime       <- Clock.instant
-      updateSparql = sparql.v2.txt.changeOntologyMetadata(
-                       ontologyNamedGraphIri = ontologyIri.toInternalSchema,
-                       ontologyIri = ontologyIri.toInternalSchema,
+  ): Task[ReadOntologyMetadataV2] = IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
+    for {
+      _          <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
+      ontology   <- getOntologyOrFailNotFound(ontologyIri)
+      projectIri <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
+      _          <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
+      updateQuery <- UpdateOntologyMetadataQuery.build(
+                       ontologyIri = ontologyIri,
                        newLabel = label,
-                       hasOldComment = ontologyHasComment,
-                       deleteOldComment = ontologyHasComment && comment.nonEmpty,
                        newComment = comment,
-                       lastModificationDate = lastModificationDate,
-                       currentTime = currentTime,
+                       lastModificationDate = LastModificationDate.from(lastModificationDate),
                      )
-      _ <- save(Update(updateSparql))
+      updated <- save(updateQuery)
     } yield ReadOntologyMetadataV2(
       Set(
         OntologyMetadataV2(
           ontologyIri = ontologyIri.toInternalSchema,
           projectIri = Some(projectIri),
-          label = label.orElse(oldMetadata.label),
-          comment = comment.orElse(oldMetadata.comment),
-          lastModificationDate = Some(currentTime),
+          label = label.orElse(ontology.ontologyMetadata.label),
+          comment = comment.orElse(ontology.ontologyMetadata.comment),
+          lastModificationDate = updated.ontologyLastModificationDate(ontologyIri).map(_.value),
         ).unescape,
       ),
-    )
-
-    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(changeTask)
-  }
+    ),
+  )
 
   private def getOntologyOrFailNotFound(iri: OntologyIri) =
     ontologyRepo.findById(iri).someOrFail(NotFoundException(s"Ontology not found: ${iri.toComplexSchema}"))
@@ -524,42 +520,27 @@ final case class OntologyResponderV2(
     lastModificationDate: Instant,
     apiRequestID: UUID,
     requestingUser: User,
-  ): Task[ReadOntologyMetadataV2] = {
-    val deleteComment = for {
-      _          <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
-      projectIri <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
-      _          <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
-      ontology   <- getOntologyOrFailNotFound(ontologyIri)
-
-      oldMetadata        = ontology.ontologyMetadata
-      ontologyHasComment = oldMetadata.comment.nonEmpty
-
-      currentTime <- Clock.instant
-      updateSparql = sparql.v2.txt.changeOntologyMetadata(
-                       ontologyNamedGraphIri = ontologyIri.toInternalSchema,
-                       ontologyIri = ontologyIri.toInternalSchema,
-                       newLabel = None,
-                       hasOldComment = ontologyHasComment,
-                       deleteOldComment = true,
-                       newComment = None,
-                       lastModificationDate = lastModificationDate,
-                       currentTime = currentTime,
-                     )
-      _ <- save(Update(updateSparql))
+  ): Task[ReadOntologyMetadataV2] = IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
+    for {
+      _           <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
+      projectIri  <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
+      lmd          = LastModificationDate.from(lastModificationDate)
+      _           <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lmd)
+      ontology    <- getOntologyOrFailNotFound(ontologyIri)
+      deleteQuery <- DeleteOntologyCommentQuery.build(ontologyIri, lmd)
+      updated     <- save(deleteQuery)
     } yield ReadOntologyMetadataV2(
       Set(
         OntologyMetadataV2(
           ontologyIri = ontologyIri.toInternalSchema,
           projectIri = Some(projectIri),
-          label = oldMetadata.label,
+          label = ontology.ontologyMetadata.label,
           comment = None,
-          lastModificationDate = Some(currentTime),
+          lastModificationDate = updated.ontologyLastModificationDate(ontologyIri).map(_.value),
         ).unescape,
       ),
-    )
-
-    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteComment)
-  }
+    ),
+  )
 
   /**
    * Creates a class in an existing ontology.
@@ -1765,66 +1746,58 @@ final case class OntologyResponderV2(
    * @param changeReq the request to change the property's labels or comments.
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
-  def changePropertyLabelsOrComments(changeReq: ChangePropertyLabelsOrCommentsRequestV2): Task[ReadOntologyV2] = {
-    val ontologyIri = changeReq.propertyIri.ontologyIri
-    val task = for {
-      ontology <- getOntologyOrFailNotFound(ontologyIri)
-      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
-             ontologyIri.toComplexSchema,
-             changeReq.propertyIri.toComplexSchema,
-             changeReq.requestingUser,
-           )
+  def changePropertyLabelsOrComments(changeReq: ChangePropertyLabelsOrCommentsRequestV2): Task[ReadOntologyV2] =
+    IriLocker.runWithIriLock(changeReq.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI) {
+      val ontologyIri = changeReq.propertyIri.ontologyIri
+      for {
+        ontology <- getOntologyOrFailNotFound(ontologyIri)
+        _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
+               ontologyIri.toComplexSchema,
+               changeReq.propertyIri.toComplexSchema,
+               changeReq.requestingUser,
+             )
 
-      currentReadPropertyInfo <-
-        ZIO
-          .fromOption(ontology.properties.get(changeReq.propertyIri.toInternalSchema))
-          .orElseFail(NotFoundException(s"Property ${changeReq.propertyIri} not found"))
-
-      // Check that the ontology exists and has not been updated by another user since the client last read it.
-      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-             changeReq.propertyIri.ontologyIri,
-             changeReq.lastModificationDate,
-           )
-
-      // If this is a link property, also change the labels/comments of the corresponding link value property.
-      maybeCurrentLinkValueReadPropertyInfo <-
-        if (currentReadPropertyInfo.isLinkProp) {
-          val linkValuePropertyIri = changeReq.propertyIri.toInternalSchema.fromLinkPropToLinkValueProp
+        currentReadPropertyInfo <-
           ZIO
-            .fromOption(ontology.properties.get(linkValuePropertyIri))
-            .mapBoth(
-              _ => InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found"),
-              Some(_),
-            )
-        } else {
-          ZIO.none
-        }
+            .fromOption(ontology.properties.get(changeReq.propertyIri.toInternalSchema))
+            .orElseFail(NotFoundException(s"Property ${changeReq.propertyIri} not found"))
 
-      // Do the update.
-      currentTime <- Clock.instant
-      updateSparql = sparql.v2.txt.changePropertyLabelsOrComments(
-                       ontologyNamedGraphIri = ontologyIri.toInternalSchema,
-                       ontologyIri = ontologyIri.toInternalSchema,
-                       propertyIri = changeReq.propertyIri.toInternalSchema,
-                       maybeLinkValuePropertyIri =
-                         maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
-                       predicateToUpdate = changeReq.predicateToUpdate,
-                       newObjects = changeReq.newObjects,
-                       lastModificationDate = changeReq.lastModificationDate,
-                       currentTime = currentTime,
-                     )
-      _ <- save(Update(updateSparql))
+        // Check that the ontology exists and has not been updated by another user since the client last read it.
+        lmd = LastModificationDate.from(changeReq.lastModificationDate)
+        _  <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(changeReq.propertyIri.ontologyIri, lmd)
 
-      // Read the data back from the cache.
-      response <- getPropertyDefinitionsFromOntologyV2(
-                    propertyIris = Set(changeReq.propertyIri.toInternalSchema),
-                    allLanguages = true,
-                    requestingUser = changeReq.requestingUser,
+        // If this is a link property, also change the labels/comments of the corresponding link value property.
+        maybeCurrentLinkValueReadPropertyInfo <-
+          if (currentReadPropertyInfo.isLinkProp) {
+            val linkValuePropertyIri = changeReq.propertyIri.toInternalSchema.fromLinkPropToLinkValueProp
+            ZIO
+              .fromOption(ontology.properties.get(linkValuePropertyIri))
+              .mapBoth(
+                _ => InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found"),
+                Some(_),
+              )
+          } else {
+            ZIO.none
+          }
+
+        // Do the update.
+        update <- ChangePropertyLabelsOrCommentsQuery.build(
+                    changeReq.propertyIri,
+                    changeReq.predicateToUpdate,
+                    changeReq.newObjects,
+                    maybeCurrentLinkValueReadPropertyInfo.map(_.propertyIri),
+                    lmd,
                   )
-    } yield response
+        _ <- save(update)
 
-    IriLocker.runWithIriLock(changeReq.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(task)
-  }
+        // Read the data back from the cache.
+        response <- getPropertyDefinitionsFromOntologyV2(
+                      propertyIris = Set(changeReq.propertyIri.toInternalSchema),
+                      allLanguages = true,
+                      requestingUser = changeReq.requestingUser,
+                    )
+      } yield response
+    }
 
   /**
    * Changes the values of `rdfs:label` or `rdfs:comment` in a class definition.
@@ -1832,60 +1805,25 @@ final case class OntologyResponderV2(
    * @param req the request to change the class's labels or comments.
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
-  def changeClassLabelsOrComments(req: ChangeClassLabelsOrCommentsRequestV2): Task[ReadOntologyV2] = {
-    val internalClassIri    = req.classIri.toInternalSchema
-    val internalOntologyIri = req.classIri.ontologyIri.toInternalSchema
-    val externalClassIri    = req.classIri.toComplexSchema
-    val externalOntologyIri = req.classIri.ontologyIri.toComplexSchema
-
-    val changeTask: Task[ReadOntologyV2] =
+  def changeClassLabelsOrComments(req: ChangeClassLabelsOrCommentsRequestV2): Task[ReadOntologyV2] =
+    IriLocker.runWithIriLock(req.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI) {
+      val lmd = LastModificationDate.from(req.lastModificationDate)
       for {
-        cacheData <- ontologyCache.getCacheData
-
-        ontology = cacheData.ontologies(internalOntologyIri)
-        _ <- ZIO
-               .fromOption(ontology.classes.get(internalClassIri))
-               .orElseFail(NotFoundException(s"Class ${req.classIri} not found"))
-
-        // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-               internalOntologyIri,
-               req.lastModificationDate,
-             )
+        _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(req.classIri, req.requestingUser)
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(req.classIri.ontologyIri, lmd)
 
         // Do the update.
-
-        currentTime <- Clock.instant
-
-        updateSparql = sparql.v2.txt.changeClassLabelsOrComments(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         classIri = internalClassIri,
-                         predicateToUpdate = req.predicateToUpdate,
-                         newObjects = req.newObjects,
-                         lastModificationDate = req.lastModificationDate,
-                         currentTime = currentTime,
-                       )
-        _ <- save(Update(updateSparql))
+        update <- ChangeClassLabelsOrCommentsQuery.build(req.classIri, req.predicateToUpdate, req.newObjects, lmd)
+        _      <- save(update)
 
         // Read the data back from the cache.
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
-                      classIris = Set(internalClassIri),
+                      classIris = Set(req.classIri.toInternalSchema),
                       allLanguages = true,
                       requestingUser = req.requestingUser,
                     )
       } yield response
-
-    for {
-      requestingUser <- ZIO.succeed(req.requestingUser)
-
-      _ <-
-        ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
-
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(req.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(changeTask)
-    } yield taskResult
-  }
+    }
 
   def deletePropertyComment(
     propertyIri: PropertyIri,

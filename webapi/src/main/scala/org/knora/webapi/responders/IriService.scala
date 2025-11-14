@@ -17,7 +17,9 @@ import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.ontology.repo.CheckIriExistsQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -96,7 +98,7 @@ final case class IriService(
         for {
           _ <- ZIO
                  .fail(DuplicateValueException(s"IRI: '$entityIriAsString' already exists, try another one."))
-                 .whenZIO(checkIriExists(entityIriAsString))
+                 .whenZIO(checkIriExists(customEntityIri))
 
           // Check that given entityIRI ends with a UUID
           ending: String = UuidUtil.fromIri(entityIriAsString)
@@ -127,7 +129,9 @@ final case class IriService(
     makeUnusedIriRec(attempts = MAX_IRI_ATTEMPTS)
   }
 
-  def checkIriExists(iri: IRI): Task[Boolean] = triplestore.query(Ask(sparql.admin.txt.checkIriExists(iri)))
+  def checkIriExists(iri: IRI): Task[Boolean]      = triplestore.query(CheckIriExistsQuery.build(iri))
+  def checkIriExists(iri: KnoraIri): Task[Boolean] = checkIriExists(iri.smartIri)
+  def checkIriExists(iri: SmartIri): Task[Boolean] = triplestore.query(CheckIriExistsQuery.build(iri))
 }
 
 object IriService {

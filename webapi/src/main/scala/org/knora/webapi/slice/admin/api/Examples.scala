@@ -36,6 +36,8 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse as ApiPagedResponse
+import org.knora.webapi.slice.common.domain.LanguageCode.DE
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 
 object Examples {
 
@@ -58,8 +60,8 @@ object Examples {
 
     val groupDescriptions: GroupDescriptions = GroupDescriptions.unsafeFrom(
       Seq(
-        StringLiteralV2.from(s"${groupName.value} description in English", Some("en")),
-        StringLiteralV2.from(s"${groupName.value} Beschreibung auf Deutsch", Some("de")),
+        StringLiteralV2.from(s"${groupName.value} description in English", EN),
+        StringLiteralV2.from(s"${groupName.value} Beschreibung auf Deutsch", DE),
       ),
     )
   }
@@ -89,8 +91,8 @@ object Examples {
       descriptions = Option(
         GroupDescriptions.unsafeFrom(
           Seq(
-            StringLiteralV2.from(s"${newGroupName.value} description in English", Some("en")),
-            StringLiteralV2.from(s"${newGroupName.value} Beschreibung auf Deutsch", Some("de")),
+            StringLiteralV2.from(s"${newGroupName.value} description in English", EN),
+            StringLiteralV2.from(s"${newGroupName.value} Beschreibung auf Deutsch", DE),
           ),
         ),
       ),
@@ -103,7 +105,7 @@ object Examples {
       shortname = Shortname.unsafeFrom("example"),
       shortcode = Shortcode.unsafeFrom("0001"),
       longname = Some(Longname.unsafeFrom("Example Project")),
-      description = Seq(StringLiteralV2.from("An example project", Some("en"))),
+      description = Seq(StringLiteralV2.from("An example project", EN)),
       keywords = Seq("example", "project"),
       logo = None,
       status = Active,
@@ -117,8 +119,8 @@ object Examples {
       id = GroupExample.groupIri.value,
       name = groupName.value,
       descriptions = Seq(
-        StringLiteralV2.from(s"${groupName.value} description in English", Some("en")),
-        StringLiteralV2.from(s"${groupName.value} Beschreibung auf Deutsch", Some("de")),
+        StringLiteralV2.from(s"${groupName.value} description in English", EN),
+        StringLiteralV2.from(s"${groupName.value} Beschreibung auf Deutsch", DE),
       ),
       project = Some(project),
       status = GroupStatus.active.value,
