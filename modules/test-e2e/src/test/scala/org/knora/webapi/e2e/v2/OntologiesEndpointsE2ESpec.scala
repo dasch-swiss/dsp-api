@@ -131,7 +131,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
         .as(assertCompletes)
     },
     test("create an empty ontology called 'foo' with a project code") {
-      val label = "The foo ontology"
+      val label  = "The foo ontology"
       val params =
         s"""{
            |    "knora-api:ontologyName": "foo",
@@ -159,7 +159,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
     test("create an empty ontology called 'bar' with a comment") {
       val label   = "The bar ontology"
       val comment = "some comment"
-      val params =
+      val params  =
         s"""{
            |    "knora-api:ontologyName": "bar",
            |    "knora-api:attachedToProject": {
@@ -187,7 +187,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
     test("create an empty ontology called 'test' with a comment that has a special character") {
       val label   = "The test ontology"
       val comment = "some \\\"test\\\" comment"
-      val params =
+      val params  =
         s"""{
            |    "knora-api:ontologyName": "test",
            |    "knora-api:attachedToProject": {
@@ -212,7 +212,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
     test("change the metadata of 'foo'") {
       val newLabel   = "The modified foo ontology"
       val newComment = "new comment"
-      val params =
+      val params     =
         s"""{
            |  "@id": "${fooIri.get}",
            |  "rdfs:label": "$newLabel",
@@ -243,7 +243,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
     },
     test("change the metadata of 'bar' ontology giving a comment containing a special character") {
       val newComment = "a \\\"new\\\" comment"
-      val params =
+      val params     =
         s"""{
            |  "@id": "${barIri.get}",
            |  "rdfs:comment": "$newComment",
@@ -517,7 +517,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
             )
             .flatMap(_.assert200)
         (oldFreetestLastModDate, newFreetestLastModDate) = self.freetestLastModDate.updateFrom(jsonLd)
-        expectedResponse =
+        expectedResponse                                 =
           s"""{
              |   "knora-api:lastModificationDate": {
              |       "@value": "$freetestLastModDate",
@@ -581,7 +581,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
                     )
                     .flatMap(_.assert200)
         (oldFreetestLastModDate, newFreetestLastModDate) = self.freetestLastModDate.updateFrom(jsonLd)
-        expectedResponse =
+        expectedResponse                                 =
           s"""{
              |   "knora-api:lastModificationDate": {
              |       "@value": "$freetestLastModDate",
@@ -1059,7 +1059,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
       )
     },
     test("add all IRIs to newly created link value property again") {
-      val iri = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost
+      val iri          = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost
       val expectedIris = Set(
         Rdfs.Comment,
         Rdfs.Label,
@@ -1073,8 +1073,8 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
         "@type",
       )
       for {
-        jsonLd <- TestApiClient.getJsonLdDocument(uri"/v2/ontologies/allentities/$iri").flatMap(_.assert200)
-        graph   = jsonLd.body.getRequiredArray("@graph").fold(e => throw BadRequestException(e), identity).value
+        jsonLd              <- TestApiClient.getJsonLdDocument(uri"/v2/ontologies/allentities/$iri").flatMap(_.assert200)
+        graph                = jsonLd.body.getRequiredArray("@graph").fold(e => throw BadRequestException(e), identity).value
         hasOtherNothingValue = graph
                                  .filter(
                                    _.asInstanceOf[JsonLDObject]
@@ -1093,7 +1093,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
     test("update the property label and check if the property is still correctly marked as `isEditable: true`") {
       // update label and comment of a property
       val newLabel = "updated label"
-      val params =
+      val params   =
         s"""
            |{
            |  "@id" : "$anythingOntoLocalhostIri",
@@ -1129,7 +1129,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
         graph               = jsonLd.body.getRequiredArray("@graph").fold(e => throw BadRequestException(e), identity).value
         property            = graph.head.asInstanceOf[JsonLDObject]
         returnedPropertyIri = property.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
-        returnedLabel = property
+        returnedLabel       = property
                           .getRequiredObject(Rdfs.Label)
                           .flatMap(_.getRequiredString("@value"))
                           .fold(msg => throw BadRequestException(msg), identity)
@@ -1138,7 +1138,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
         // load back the ontology to verify that the updated property still is editable
         ontologyIri = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost
         jsonLd     <- TestApiClient.getJsonLdDocument(uri"/v2/ontologies/allentities/$ontologyIri").flatMap(_.assert200)
-        graph = jsonLd.body
+        graph       = jsonLd.body
                   .getRequiredArray("@graph")
                   .fold(e => throw BadRequestException(e), identity)
                   .value
@@ -1161,7 +1161,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
     test("update the property comment and check if the property is still correctly marked as `isEditable: true`") {
       // update label and comment of a property
       val newComment = "updated comment"
-      val params =
+      val params     =
         s"""
            |{
            |  "@id" : "$anythingOntoLocalhostIri",
@@ -1197,7 +1197,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
         graph               = jsonLd.body.getRequiredArray("@graph").fold(e => throw BadRequestException(e), identity).value
         property            = graph.head.asInstanceOf[JsonLDObject]
         returnedPropertyIri = property.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
-        returnedComment = property
+        returnedComment     = property
                             .getRequiredObject(Rdfs.Comment)
                             .flatMap(_.getRequiredString("@value"))
                             .fold(msg => throw BadRequestException(msg), identity)
@@ -1206,7 +1206,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
         // load back the ontology to verify that the updated property still is editable
         ontologyIri = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost
         jsonLd     <- TestApiClient.getJsonLdDocument(uri"/v2/ontologies/allentities/$ontologyIri").flatMap(_.assert200)
-        graph = jsonLd.body
+        graph       = jsonLd.body
                   .getRequiredArray("@graph")
                   .fold(e => throw BadRequestException(e), identity)
                   .value
@@ -1244,7 +1244,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
         // load back the ontology to verify that the updated property still is editable
         ontologyIri = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost
         jsonLd     <- TestApiClient.getJsonLdDocument(uri"/v2/ontologies/allentities/$ontologyIri").flatMap(_.assert200)
-        graph = jsonLd.body
+        graph       = jsonLd.body
                   .getRequiredArray("@graph")
                   .fold(e => throw BadRequestException(e), identity)
                   .value
@@ -1306,7 +1306,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
         // load back the ontology to verify that the updated property still is editable
         ontologyIri = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost
         jsonLd     <- TestApiClient.getJsonLdDocument(uri"/v2/ontologies/allentities/$ontologyIri").flatMap(_.assert200)
-        graph = jsonLd.body
+        graph       = jsonLd.body
                   .getRequiredArray("@graph")
                   .fold(e => throw BadRequestException(e), identity)
                   .value
@@ -1730,7 +1730,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
       )
     },
     test("create a shared ontology and put a property in it") {
-      val label = "The useless ontology"
+      val label                      = "The useless ontology"
       val createOntologyJson: String =
         s"""
            |{
@@ -1793,7 +1793,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
              |  }
              |}""".stripMargin
         paramsAsInput = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(createPropertyJson)).unescape
-        jsonLd <- TestApiClient
+        jsonLd       <- TestApiClient
                     .postJsonLdDocument(uri"/v2/ontologies/properties", createPropertyJson, superUser)
                     .flatMap(_.assert200)
         responseAsInput                                           = InputOntologyV2.fromJsonLD(jsonLd, parsingMode = TestResponseParsingModeV2).unescape
@@ -2080,7 +2080,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
       "create a class with two cardinalities, use one in data, and allow only removal of the cardinality for the property not used in data",
     ) {
       // Create a class with no cardinalities.
-      val label = LangString.make(EN, "A Blue Free Test class").fold(e => throw e.head, v => v)
+      val label   = LangString.make(EN, "A Blue Free Test class").fold(e => throw e.head, v => v)
       val comment = Some(
         LangString
           .make(EN, "A Blue Free Test class used for testing cardinalities")
@@ -2102,8 +2102,8 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
                .tap(jsonLd => ZIO.attempt(self.freetestLastModDate.updateFrom(jsonLd)))
 
         // Create a text property.
-        label1   = LangString.make(EN, "blue test text property").fold(e => throw e.head, v => v)
-        comment1 = Some(LangString.make(EN, "A blue test text property").fold(e => throw e.head, v => v))
+        label1                        = LangString.make(EN, "blue test text property").fold(e => throw e.head, v => v)
+        comment1                      = Some(LangString.make(EN, "A blue test text property").fold(e => throw e.head, v => v))
         createTestTextPropRequestJson =
           CreatePropertyRequest
             .make(
@@ -2122,8 +2122,8 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
                .tap(jsonLd => ZIO.attempt(self.freetestLastModDate.updateFrom(jsonLd)))
 
         // Create an integer property.
-        label2   = LangString.make(EN, "blue test integer property").fold(e => throw e.head, v => v)
-        comment2 = LangString.make(EN, "A blue test integer property").fold(e => throw e.head, v => v)
+        label2                           = LangString.make(EN, "blue test integer property").fold(e => throw e.head, v => v)
+        comment2                         = LangString.make(EN, "A blue test integer property").fold(e => throw e.head, v => v)
         createTestIntegerPropRequestJson = CreatePropertyRequest
                                              .make(
                                                ontologyName = "freetest",
@@ -2272,7 +2272,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
       "create two classes with the same property, use one in data, and allow removal of the cardinality for the property not used in data",
     ) {
       // Create TestClassOne with no cardinalities.
-      val label = LangString.make(EN, "Test class number one").fold(e => throw e.head, v => v)
+      val label   = LangString.make(EN, "Test class number one").fold(e => throw e.head, v => v)
       val comment = Some(
         LangString
           .make(EN, "A test class used for testing cardinalities")
@@ -2294,7 +2294,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
                     .flatMap(_.assert200)
         _ = self.freetestLastModDate.updateFrom(jsonLd)
         // Create TestClassTwo with no cardinalities
-        label1 = LangString.make(EN, "Test class number two").fold(e => throw e.head, v => v)
+        label1   = LangString.make(EN, "Test class number two").fold(e => throw e.head, v => v)
         comment1 = Some(
                      LangString
                        .make(EN, "A test class used for testing cardinalities")
@@ -2316,8 +2316,8 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
                .tap(jsonLd => ZIO.attempt(self.freetestLastModDate.updateFrom(jsonLd)))
 
         // Create a text property hasTestTextProp.
-        label2   = LangString.make(EN, "Test int property").fold(e => throw e.head, v => v)
-        comment2 = Some(LangString.make(EN, "A test int property").fold(e => throw e.head, v => v))
+        label2                = LangString.make(EN, "Test int property").fold(e => throw e.head, v => v)
+        comment2              = Some(LangString.make(EN, "A test int property").fold(e => throw e.head, v => v))
         createPropRequestJson = CreatePropertyRequest
                                   .make(
                                     ontologyName = "freetest",
@@ -2478,7 +2478,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
         .map(jsonLd => assertTrue(!jsonLd.body.value(KA.CanDo).asInstanceOf[JsonLDBoolean].value))
     },
     test("create a class w/o comment") {
-      val label = LangString.make(EN, "Test label").fold(e => throw e.head, v => v)
+      val label   = LangString.make(EN, "Test label").fold(e => throw e.head, v => v)
       val request = CreateClassRequest
         .make(
           ontologyName = "freetest",
@@ -2495,7 +2495,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
         .as(assertCompletes)
     },
     test("create a property w/o comment") {
-      val label = LangString.unsafeMake(EN, "Test label")
+      val label   = LangString.unsafeMake(EN, "Test label")
       val request = CreatePropertyRequest
         .make(
           ontologyName = "freetest",

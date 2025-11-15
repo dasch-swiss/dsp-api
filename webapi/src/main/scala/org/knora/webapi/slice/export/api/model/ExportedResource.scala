@@ -18,7 +18,7 @@ final case class ExportedResource(
 object ExportedResource {
   def rowBuilder(headers: List[String]): CsvRowBuilder[ExportedResource] =
     new CsvRowBuilder[ExportedResource] {
-      def header: Seq[String] = headers
+      def header: Seq[String]                     = headers
       def values(row: ExportedResource): Seq[Any] =
         row.label +: row.resourceIri +: row.properties.values.toList
     }

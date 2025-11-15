@@ -88,7 +88,7 @@ object GroupRestServiceSpec extends E2EZSpec {
           }
       },
       test("return a 'DuplicateValueException' if the supplied group name is not unique") {
-        val groupName = GroupName.unsafeFrom("NewGroup")
+        val groupName     = GroupName.unsafeFrom("NewGroup")
         val createRequest = GroupCreateRequest(
           id = Some(imagesReviewerGroup.groupIri),
           name = groupName,
@@ -162,7 +162,7 @@ object GroupRestServiceSpec extends E2EZSpec {
         )
       },
       test("return 'ForbiddenException' if a not-existing group IRI is submitted during update") {
-        val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0000/notexisting")
+        val groupIri  = GroupIri.unsafeFrom("http://rdfh.ch/groups/0000/notexisting")
         val updateReq = GroupUpdateRequest(
           name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
           descriptions = Some(
@@ -222,7 +222,7 @@ object GroupRestServiceSpec extends E2EZSpec {
         val groupIri = imagesReviewerGroup.groupIri
         for {
           activeGroupBefore <- groupRestService(_.getGroupMembers(rootUser)(groupIri))
-          statusChanged <-
+          statusChanged     <-
             groupRestService(_.putGroupStatus(rootUser)(groupIri, GroupStatusUpdateRequest(GroupStatus.inactive)))
           deactivatedGroup <- groupRestService(_.getGroupMembers(rootUser)(groupIri))
         } yield assertTrue(

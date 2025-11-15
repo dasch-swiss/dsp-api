@@ -144,7 +144,7 @@ object KnoraIris {
   }
 
   final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri { self =>
-    def makeEntityIri(name: String): SmartIri = smartIri.makeEntityIri(name)
+    def makeEntityIri(name: String): SmartIri     = smartIri.makeEntityIri(name)
     def makeClass(name: String): ResourceClassIri =
       ResourceClassIri.unsafeFrom(self.makeEntityIri(name))
     def makeProperty(name: String): PropertyIri =

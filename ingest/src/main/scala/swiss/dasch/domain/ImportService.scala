@@ -58,7 +58,7 @@ final case class ImportServiceLive(
   override def importZipFile(shortcode: ProjectShortcode, zipFile: Path): IO[ImportFailed, Unit] = ZIO.scoped {
     for {
       unzippedFolder <- validateZipFile(shortcode, zipFile)
-      _ <- importProject(shortcode, unzippedFolder)
+      _              <- importProject(shortcode, unzippedFolder)
              .logError(s"Error while importing project $shortcode")
              .mapError(IoError.apply)
     } yield ()
@@ -79,7 +79,7 @@ final case class ImportServiceLive(
     for {
       tempDir <- storageService.createTempDirectoryScoped(s"${shortcode}_import").mapError(IoError.apply)
       _       <- ZipUtility.unzipFile(zipFile, tempDir).mapError(IoError.apply)
-      checks <- assetInfos
+      checks  <- assetInfos
                   .findAllInPath(tempDir, shortcode)
                   .mapZIOPar(StorageService.maxParallelism())(assetService.verifyChecksum)
                   .runCollect

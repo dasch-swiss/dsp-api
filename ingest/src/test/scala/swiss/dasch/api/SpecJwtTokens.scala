@@ -31,7 +31,7 @@ object SpecJwtTokens {
     for {
       now       <- Clock.instant
       jwtConfig <- ZIO.service[JwtConfig]
-      claim = JwtClaim(
+      claim      = JwtClaim(
                 content = JwtContents(scope).toJson,
                 issuer = issuer.orElse(Some(jwtConfig.issuer)),
                 subject = subject,

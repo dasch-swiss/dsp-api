@@ -61,7 +61,7 @@ object GoldenTest {
 
     val baseName = absPath.getFileName.toString.stripSuffix(".scala") // Demo
     val name     = s"${baseName}${suffixDefaulted}"
-    val outPath =
+    val outPath  =
       s"${absPath.getParent}/$name.txt"
         .pipe(_.replace("/src/test/scala/", "/src/test/resources/"))
 

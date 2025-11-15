@@ -52,7 +52,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
                })
           _            <- deleteTmpDirectories()
           updatePlugins = selectPluginsForNeededUpdates(versionMaybe)
-          _ <-
+          _            <-
             ZIO.logInfo(
               s"Updating repository with transformations: ${updatePlugins.map(_.versionNumber).mkString(", ")}",
             )
@@ -148,7 +148,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
 
       // Drop the graphs that need to be updated.
       _ <- graphs match {
-             case MigrateAllGraphs => triplestoreService.dropDataGraphByGraph()
+             case MigrateAllGraphs                 => triplestoreService.dropDataGraphByGraph()
              case MigrateSpecificGraphs(graphIris) =>
                ZIO.foreach(graphIris)(iri => triplestoreService.dropGraph(iri.value))
            }

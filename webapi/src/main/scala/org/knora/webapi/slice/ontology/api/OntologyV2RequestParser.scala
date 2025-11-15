@@ -131,7 +131,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         ds        <- DatasetOps.fromJsonLd(jsonLd)
         meta      <- extractOntologyMetadata(ds.defaultModel)
         classInfo <- extractClassInfo(ds, meta)
-        _ <-
+        _         <-
           ZIO
             .fail(
               s"Ontology for class '${classInfo.classIri.toString}' does not match ontology ${meta.ontologyIri.toString}",
@@ -181,7 +181,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private def asOntologyLiteralV2(stmt: Statement): ZIO[Scope, String, OntologyLiteralV2] =
     stmt.getObject match
-      case res: Resource => iriConverter.asSmartIri(res.getURI).mapBoth(_.getMessage, SmartIriLiteralV2.apply)
+      case res: Resource    => iriConverter.asSmartIri(res.getURI).mapBoth(_.getMessage, SmartIriLiteralV2.apply)
       case literal: Literal =>
         literal.getValue match
           case str: String =>
@@ -257,11 +257,11 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         meta      <- extractOntologyMetadata(ds.defaultModel)
         classInfo <- extractClassInfo(ds, meta)
         classIri  <- ZIO.fromEither(ResourceClassIri.fromApiV2Complex(classInfo.classIri))
-        preds = classInfo.predicates.filter { case (iri, _) =>
+        preds      = classInfo.predicates.filter { case (iri, _) =>
                   iri.toIri == RDFS.label.toString || iri.toIri == RDFS.comment.toString
                 }
-        _ <- ZIO.fail(s"Class '${classIri.toString}' does not have any updates").unless(preds.nonEmpty)
-        _ <- ZIO.fail(s"Class '$classIri may only label or comment to update").unless(preds.size == 1)
+        _              <- ZIO.fail(s"Class '${classIri.toString}' does not have any updates").unless(preds.nonEmpty)
+        _              <- ZIO.fail(s"Class '$classIri may only label or comment to update").unless(preds.size == 1)
         labelOrComment <- ZIO
                             .fromOption(LabelOrComment.fromString(preds.keys.head.toString))
                             .orElseFail(s"Invalid predicate: ${preds.keys.head}")
@@ -379,7 +379,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     guiElementProp         <- iriConverter.asSmartIri(SalsahGui.External.GuiElementProp).orDie
     guiAttribute           <- iriConverter.asSmartIri(SalsahGui.External.GuiAttribute).orDie
 
-    isPropertyIri = Validation.fromEither(PropertyIri.from(propertyInfo.propertyIri))
+    isPropertyIri    = Validation.fromEither(PropertyIri.from(propertyInfo.propertyIri))
     validSubjectType =
       propertyInfo.getIriObject(subjectType) match
         case None    => Validation.succeed(None)
@@ -456,9 +456,9 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     guiElementProp: SmartIri,
     guiAttribute: SmartIri,
   ): Validation[String, GuiObject] = {
-    val guiElement = predicates.get(guiElementProp)
+    val guiElement    = predicates.get(guiElementProp)
     val guiElementVal = guiElement match
-      case None => Validation.succeed(())
+      case None       => Validation.succeed(())
       case Some(info) =>
         info.objects.head match
           case _: SmartIriLiteralV2 => Validation.succeed(())
@@ -467,7 +467,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     val guiAttributes   = predicates.get(guiAttribute).map(_.objects).getOrElse(Seq.empty)
     val guiAttributeVal = ensureOnlyStringLiterals(guiAttributes, "salsah-gui:guiAttribute")
 
-    val guiAttrStr = guiAttributes.collect { case sl: StringLiteralV2 => sl.value }.toSet
+    val guiAttrStr    = guiAttributes.collect { case sl: StringLiteralV2 => sl.value }.toSet
     val guiElementStr =
       guiElement.flatMap(_.objects.headOption).collect { case SmartIriLiteralV2(value) => value.toInternalSchema.toIri }
     val validGui = GuiObject.makeFromStrings(guiAttrStr, guiElementStr).mapError(_.getMessage)

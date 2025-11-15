@@ -1084,7 +1084,7 @@ class StringFormatter private (
       // Construct the string representation of this IRI in the target schema.
       val ontologyName = getOntologyName.asInternal
       val entityName   = getEntityName
-      val ontologyIri =
+      val ontologyIri  =
         OntologyIri.makeNew(ontologyName, iriInfo.sharedOntology, iriInfo.projectCode.map(Shortcode.unsafeFrom), self)
 
       val convertedIriStr = new StringBuilder(ontologyIri.toString).append("#").append(entityName).toString

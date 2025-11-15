@@ -91,7 +91,7 @@ object CreateClassQuery extends QueryBuilderHelper {
           bNode.has(SalsahGui.guiOrder, toRdfLiteralNonNegative(guiOrder))
         }.toList
 
-        val owlCardinality = Cardinality.toOwl(cardinalityInfo.cardinality)
+        val owlCardinality     = Cardinality.toOwl(cardinalityInfo.cardinality)
         val cardinalityPattern = bNode.has(
           Rdf.iri(owlCardinality.owlCardinalityIri),
           toRdfLiteralNonNegative(owlCardinality.owlCardinalityValue),

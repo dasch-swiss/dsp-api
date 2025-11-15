@@ -162,11 +162,11 @@ object GroupSelfJoin {
 
 object KnoraGroup {
   object Conversions {
-    implicit val groupIriConverter: String => Either[String, GroupIri]   = GroupIri.from
-    implicit val groupNameConverter: String => Either[String, GroupName] = GroupName.from
+    implicit val groupIriConverter: String => Either[String, GroupIri]                     = GroupIri.from
+    implicit val groupNameConverter: String => Either[String, GroupName]                   = GroupName.from
     implicit val groupDescriptionsConverter: LangString => Either[String, StringLiteralV2] = langString =>
       GroupDescriptions.fromOne(StringLiteralV2.unsafeFrom(langString.value, langString.lang))
-    implicit val groupStatusConverter: Boolean => Either[String, GroupStatus] = value => Right(GroupStatus.from(value))
+    implicit val groupStatusConverter: Boolean => Either[String, GroupStatus]               = value => Right(GroupStatus.from(value))
     implicit val groupHasSelfJoinEnabledConverter: Boolean => Either[String, GroupSelfJoin] = value =>
       Right(GroupSelfJoin.from(value))
   }

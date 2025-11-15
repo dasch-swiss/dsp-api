@@ -57,7 +57,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
       suite("DROP")(
         test("dropDataGraphByGraph") {
           for {
-            _ <- ZIO.serviceWithZIO[TriplestoreService](_.dropDataGraphByGraph())
+            _    <- ZIO.serviceWithZIO[TriplestoreService](_.dropDataGraphByGraph())
             query = s"""
                        |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                        |                          

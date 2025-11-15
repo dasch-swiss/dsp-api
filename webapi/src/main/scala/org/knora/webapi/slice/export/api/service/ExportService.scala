@@ -58,7 +58,7 @@ final case class ExportService(
     language: String,
   ): Task[(List[String], List[ExportedResource])] =
     for {
-      resourceIris <- findResources(project, classIri).map(_.map(_.toString))
+      resourceIris        <- findResources(project, classIri).map(_.map(_.toString))
       resourcesWithValues <-
         triplestore
           .query(
@@ -101,7 +101,7 @@ final case class ExportService(
     for {
       query <- ZIO.succeed(resourceQuery(project, classIri))
       rows  <- triplestore.selectWithTimeout(query, SparqlTimeout.Gravsearch).map(_.results.bindings)
-      rows <- ZIO.foreach(rows) { row =>
+      rows  <- ZIO.foreach(rows) { row =>
                 for {
                   value    <- ZIO.attempt(row.rowMap.getOrElse(resourceIriVar, throw new InconsistentDataException("")))
                   smartIri <- iriConverter.asSmartIri(value)
@@ -117,7 +117,7 @@ final case class ExportService(
       .select(variable(resourceIriVar))
       .distinct()
 
-    val projectGraph = projectService.getDataGraphForProject(project)
+    val projectGraph  = projectService.getDataGraphForProject(project)
     val resourceWhere =
       variable(resourceIriVar)
         .isA(variable(classIriVar))

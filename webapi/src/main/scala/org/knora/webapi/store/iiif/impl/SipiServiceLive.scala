@@ -39,9 +39,9 @@ final case class SipiServiceLive(
 ) extends SipiService {
 
   private object SipiRoutes {
-    def file(asset: Asset): UIO[URI]           = makeUri(s"${assetBase(asset)}/file")
-    def knoraJson(asset: Asset): UIO[URI]      = makeUri(s"${assetBase(asset)}/knora.json")
-    private def makeUri(uri: String): UIO[URI] = ZIO.attempt(URI.create(uri)).logError.orDie
+    def file(asset: Asset): UIO[URI]            = makeUri(s"${assetBase(asset)}/file")
+    def knoraJson(asset: Asset): UIO[URI]       = makeUri(s"${assetBase(asset)}/knora.json")
+    private def makeUri(uri: String): UIO[URI]  = ZIO.attempt(URI.create(uri)).logError.orDie
     private def assetBase(asset: Asset): String =
       s"${sipiConfig.internalBaseUrl}/${asset.belongsToProject.value}/${asset.internalFilename}"
   }

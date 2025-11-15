@@ -250,7 +250,7 @@ object Password extends StringValueCompanion[Password] {
 }
 
 final case class PasswordHash private (value: String) extends StringValue
-object PasswordHash extends StringValueCompanion[PasswordHash] {
+object PasswordHash                                   extends StringValueCompanion[PasswordHash] {
 
   def from(hashedValue: String): Either[String, PasswordHash] =
     if (hashedValue.isEmpty) { Left(UserErrorMessages.PasswordMissing) }

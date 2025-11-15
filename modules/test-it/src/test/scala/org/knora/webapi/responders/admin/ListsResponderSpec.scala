@@ -142,7 +142,7 @@ object ListsResponderSpec extends E2EZSpec {
         val labelWithSpecialCharacter   = "Neue \\\"Liste\\\""
         val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
         val nameWithSpecialCharacter    = "a new \\\"name\\\""
-        val createReq = ListCreateRootNodeRequest(
+        val createReq                   = ListCreateRootNodeRequest(
           None,
           Comments.unsafeFrom(Seq(StringLiteralV2.from(commentWithSpecialCharacter, DE))),
           Labels.unsafeFrom(Seq(StringLiteralV2.from(labelWithSpecialCharacter, DE))),
@@ -233,7 +233,7 @@ object ListsResponderSpec extends E2EZSpec {
       test("add second child to list in first position - to the root node") {
         val commentValues = Seq(StringLiteralV2.from("New Second Child List Node Comment", EN))
         val labelValues   = Seq(StringLiteralV2.from("New Second Child List Node Value", EN))
-        val createReq = ListCreateChildNodeRequest(
+        val createReq     = ListCreateChildNodeRequest(
           None,
           Some(Comments.unsafeFrom(commentValues)),
           Labels.unsafeFrom(labelValues),
@@ -257,7 +257,7 @@ object ListsResponderSpec extends E2EZSpec {
       test("add child to second child node") {
         val commentValues = Seq(StringLiteralV2.from("New Third Child List Node Comment", EN))
         val labelValues   = Seq(StringLiteralV2.from("New Third Child List Node Value", EN))
-        val createReq = ListCreateChildNodeRequest(
+        val createReq     = ListCreateChildNodeRequest(
           None,
           Some(Comments.unsafeFrom(commentValues)),
           Labels.unsafeFrom(labelValues),
@@ -415,7 +415,7 @@ object ListsResponderSpec extends E2EZSpec {
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
         val newPosition  = Position.unsafeFrom(2)
         val oldParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
-        val parentNode = listsResponder(
+        val parentNode   = listsResponder(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),

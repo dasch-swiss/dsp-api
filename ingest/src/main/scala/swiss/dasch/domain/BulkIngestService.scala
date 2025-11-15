@@ -69,7 +69,7 @@ final case class BulkIngestService(
   def startBulkIngest(
     shortcode: ProjectShortcode,
   ): IO[ImportFolderDoesNotExist.type | BulkIngestInProgress.type, Fiber.Runtime[IoError, IngestResult]] = for {
-    _ <- ensureImportFolderExists(shortcode)
+    _     <- ensureImportFolderExists(shortcode)
     fiber <- withSemaphoreDaemon(shortcode)(doBulkIngest(shortcode).mapError {
                case _: IOException  => IoError("Unable to access file system")
                case _: SQLException => IoError("Unable to access database")
@@ -92,7 +92,7 @@ final case class BulkIngestService(
       total       <- StorageService.findInPath(importDir, FileFilters.isNonHiddenRegularFile).runCount
       _           <- ZIO.logInfo(s"Found $total ingest candidates.")
       _           <- projectService.findOrCreateProject(project)
-      sum <-
+      sum         <-
         StorageService
           .findInPath(importDir, FileFilters.isSupported)
           .mapZIOPar(config.bulkMaxParallel)(file => ingestFileAndUpdateMapping(project, importDir, mappingFile, file))
@@ -167,7 +167,7 @@ final case class BulkIngestService(
       for {
         importDir <- storage.getImportFolder(shortcode)
         mappingCsv = getMappingCsvFile(importDir, shortcode)
-        mapping <- ZIO.whenZIO(Files.exists(mappingCsv)) {
+        mapping   <- ZIO.whenZIO(Files.exists(mappingCsv)) {
                      Files.readAllLines(mappingCsv).map(_.mkString("\n"))
                    }
       } yield mapping

@@ -38,15 +38,15 @@ import org.knora.webapi.util.MutableTestIri
 
 object StandoffEndpointsE2ESpec extends E2EZSpec {
 
-  private val pathToXMLWithStandardMapping = "test_data/test_route/texts/StandardHTML.xml"
-  private val pathToLetterMapping          = "test_data/test_route/texts/mappingForLetter.xml"
-  private val pathToFreetestCustomMapping  = "test_data/test_route/texts/freetestCustomMapping.xml"
+  private val pathToXMLWithStandardMapping                  = "test_data/test_route/texts/StandardHTML.xml"
+  private val pathToLetterMapping                           = "test_data/test_route/texts/mappingForLetter.xml"
+  private val pathToFreetestCustomMapping                   = "test_data/test_route/texts/freetestCustomMapping.xml"
   private val pathToFreetestCustomMappingWithTransformation =
     "test_data/test_route/texts/freetestCustomMappingWithTransformation.xml"
-  private val pathToFreetestXMLTextValue = "test_data/test_route/texts/freetestXMLTextValue.xml"
-  private val freetestXSLTFile           = "freetestCustomMappingTransformation.xsl"
-  private val pathToFreetestXSLTFile     = s"test_data/test_route/texts/$freetestXSLTFile"
-  private val freetestCustomMappingIRI   = s"$anythingProjectIri/mappings/FreetestCustomMapping"
+  private val pathToFreetestXMLTextValue                 = "test_data/test_route/texts/freetestXMLTextValue.xml"
+  private val freetestXSLTFile                           = "freetestCustomMappingTransformation.xsl"
+  private val pathToFreetestXSLTFile                     = s"test_data/test_route/texts/$freetestXSLTFile"
+  private val freetestCustomMappingIRI                   = s"$anythingProjectIri/mappings/FreetestCustomMapping"
   private val freetestCustomMappingWithTransformationIRI =
     s"$anythingProjectIri/mappings/FreetestCustomMappingWithTransformation"
   private val freetestOntologyIRI = "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
@@ -148,7 +148,7 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
         responseDocument <- getTextValueAsDocument(freetestTextValueIRI.asResourceIri)
         value            <- ZIO.fromEither(responseDocument.body.getRequiredObject(s"${freetestOntologyIRI}hasText"))
         valueType        <- ZIO.fromEither(value.getRequiredString(JsonLDKeywords.TYPE))
-        mapping <- ZIO.fromEither(
+        mapping          <- ZIO.fromEither(
                      value.getRequiredObject(KA.TextValueHasMapping).flatMap(_.getRequiredString(JsonLDKeywords.ID)),
                    )
         actualXml     <- ZIO.fromEither(value.getRequiredString(KA.TextValueAsXml))
@@ -187,7 +187,7 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
         document   <- getTextValueAsDocument(freetestTextValueIRI.asResourceIri)
         value      <- ZIO.fromEither(document.body.getRequiredObject(s"${freetestOntologyIRI}hasText"))
         valueType  <- ZIO.fromEither(value.getRequiredString(JsonLDKeywords.TYPE))
-        mapping <- ZIO.fromEither(
+        mapping    <- ZIO.fromEither(
                      value.getRequiredObject(KA.TextValueHasMapping).flatMap(_.getRequiredString(JsonLDKeywords.ID)),
                    )
         textValueAsXml  <- ZIO.fromEither(value.getRequiredString(KA.TextValueAsXml))
@@ -204,7 +204,7 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
     },
     test("create a custom mapping with an XSL transformation") {
       for {
-        uploadedFile <- TestDspIngestClient.uploadFile(Paths.get(pathToFreetestXSLTFile), anythingShortcode)
+        uploadedFile  <- TestDspIngestClient.uploadFile(Paths.get(pathToFreetestXSLTFile), anythingShortcode)
         uploadFileJson = UploadFileRequest
                            .make(
                              fileType = FileType.TextFile,
@@ -215,7 +215,7 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
         response <- TestApiClient.postJsonLd(uri"/v2/resources", uploadFileJson, anythingUser1)
         jsonLd   <- response.assert200.mapAttempt(JsonLDUtil.parseJsonLD).orDie
         id       <- ZIO.fromEither(jsonLd.body.getRequiredString(JsonLDKeywords.ID))
-        mapping <- createMapping(
+        mapping  <- createMapping(
                      "FreetestCustomMappingWithTransformation",
                      "label",
                      Paths.get(pathToFreetestCustomMappingWithTransformation),
@@ -227,7 +227,7 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
       for {
         xmlContent               <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue)))
         resourceResponseDocument <- createResourceWithTextValue(xmlContent, freetestCustomMappingWithTransformationIRI)
-        _ = freetestTextValueIRI.set(
+        _                         = freetestTextValueIRI.set(
               resourceResponseDocument.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun),
             )
       } yield assertCompletes
@@ -239,7 +239,7 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
         document    <- getTextValueAsDocument(freetestTextValueIRI.asResourceIri)
         value       <- ZIO.fromEither(document.body.getRequiredObject(s"${freetestOntologyIRI}hasText"))
         valueType   <- ZIO.fromEither(value.getRequiredString(JsonLDKeywords.TYPE))
-        mapping <- ZIO.fromEither(
+        mapping     <- ZIO.fromEither(
                      value.getRequiredObject(KA.TextValueHasMapping).flatMap(_.getRequiredString(JsonLDKeywords.ID)),
                    )
         textValueAsXml  <- ZIO.fromEither(value.getRequiredString(KA.TextValueAsXml))

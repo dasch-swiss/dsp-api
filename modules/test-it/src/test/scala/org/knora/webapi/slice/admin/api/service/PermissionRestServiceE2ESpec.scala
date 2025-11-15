@@ -213,7 +213,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
       test(
         "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission with invalid code",
       ) {
-        val invalidCode = 10
+        val invalidCode    = 10
         val hasPermissions = Set(
           PermissionADM(
             name = Permission.ObjectAccess.ChangeRights.token,
@@ -441,7 +441,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         val projectIri                = imagesProjectIri
         val allowedResourceClassIri01 = s"$IMAGES_ONTOLOGY_IRI#bild"
         val allowedResourceClassIri02 = s"$IMAGES_ONTOLOGY_IRI#bildformat"
-        val result1 = SharedTestDataADM.imagesReviewerUser.permissions
+        val result1                   = SharedTestDataADM.imagesReviewerUser.permissions
           .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri)
         val result2 = SharedTestDataADM.imagesReviewerUser.permissions
           .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri02), projectIri)

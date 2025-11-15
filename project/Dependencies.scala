@@ -65,7 +65,7 @@ object Dependencies {
   )
 
   val SttpClientVersion = "4.0.13"
-  val zioSttpClient = Seq(
+  val zioSttpClient     = Seq(
     "com.softwaremill.sttp.client4" %% "zio"      % SttpClientVersion,
     "com.softwaremill.sttp.client4" %% "zio-json" % SttpClientVersion,
   )
@@ -106,7 +106,7 @@ object Dependencies {
     "commons-validator" % "commons-validator" % "1.10.0" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtZioJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.3"
+  val jwtZioJson         = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.3"
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "6.5.5" exclude (
       "commons-logging",

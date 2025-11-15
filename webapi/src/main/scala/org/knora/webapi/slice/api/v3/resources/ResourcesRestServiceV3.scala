@@ -30,7 +30,7 @@ class ResourcesRestServiceV3(
     for {
       prj        <- projectService.findById(projectIri).orDie.someOrFail(NotFound(projectIri))
       ontologies <- ontologyRepo.findByProject(projectIri).orDie
-      result <- ZIO
+      result     <- ZIO
                   .foreach(ontologies.map(o => o.ontologyIri -> o.resourceClassIris).toList)((ontoIri, classes) =>
                     for {
                       onto <- ontologyRestService.asOntologyDto(ontoIri)

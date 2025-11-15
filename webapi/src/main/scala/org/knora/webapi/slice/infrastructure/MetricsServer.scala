@@ -44,7 +44,7 @@ object MetricsServer {
       port            = config.port
       interval        = config.interval
       metricsConfig   = MetricsConfig(interval)
-      _ <-
+      _              <-
         ZIO.logInfo(
           s"Docs and metrics available at " +
             s"${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:$port/docs & " +
@@ -70,7 +70,7 @@ object DocsServer {
     for {
       config       <- ZIO.service[KnoraApi]
       allEndpoints <- ZIO.serviceWith[Endpoints](_.serverEndpoints)
-      info = Info(
+      info          = Info(
                title = "DSP-API",
                version = BuildInfo.version,
                summary = Some(

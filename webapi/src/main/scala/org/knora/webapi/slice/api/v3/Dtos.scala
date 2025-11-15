@@ -50,7 +50,7 @@ object ResourceClassDto {
 final case class OntologyDto(iri: String, label: String, comment: String)
 object OntologyDto {
   def apply(iri: OntologyIri, label: String, comment: String): OntologyDto = apply(iri.smartIri, label, comment)
-  def apply(iri: SmartIri, label: String, comment: String): OntologyDto =
+  def apply(iri: SmartIri, label: String, comment: String): OntologyDto    =
     OntologyDto(iri.toComplexSchema.toString, label, comment)
   given JsonCodec[OntologyDto] = DeriveJsonCodec.gen[OntologyDto]
   given Schema[OntologyDto]    = Schema.derived[OntologyDto]

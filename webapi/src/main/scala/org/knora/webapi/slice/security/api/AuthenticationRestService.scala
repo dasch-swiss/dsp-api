@@ -32,7 +32,7 @@ final case class AuthenticationRestService(
 
   def loginForm(@unused ignored: Unit): UIO[String] =
     val apiUrl = appConfig.knoraApi.externalKnoraApiBaseUrl
-    val form =
+    val form   =
       s"""
          |<html lang="en">
          |  <body>

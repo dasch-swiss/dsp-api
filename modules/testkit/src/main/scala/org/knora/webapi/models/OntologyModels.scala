@@ -224,30 +224,30 @@ object AddCardinalitiesRequest {
   ): AddCardinalitiesRequest = {
     val ontologyId                 = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
     val restrictionsString: String = stringifyRestrictions(restrictions)
-    val value = s"""
-                   |{
-                   |  "@id" : "$ontologyId",
-                   |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : {
-                   |    "@type" : "xsd:dateTimeStamp",
-                   |    "@value" : "$lastModificationDate"
-                   |  },
-                   |  "@graph" : [ {
-                   |    "@id" : "$ontologyName:$className",
-                   |    "@type" : "owl:Class",
-                   |    "rdfs:subClassOf" : [
-                   |      $restrictionsString
-                   |    ]
-                   |  } ],
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "$ontologyName" : "$ontologyId#"
-                   |  }
-                   |}
+    val value                      = s"""
+                                        |{
+                                        |  "@id" : "$ontologyId",
+                                        |  "@type" : "owl:Ontology",
+                                        |  "knora-api:lastModificationDate" : {
+                                        |    "@type" : "xsd:dateTimeStamp",
+                                        |    "@value" : "$lastModificationDate"
+                                        |  },
+                                        |  "@graph" : [ {
+                                        |    "@id" : "$ontologyName:$className",
+                                        |    "@type" : "owl:Class",
+                                        |    "rdfs:subClassOf" : [
+                                        |      $restrictionsString
+                                        |    ]
+                                        |  } ],
+                                        |  "@context" : {
+                                        |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                                        |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                                        |    "owl" : "http://www.w3.org/2002/07/owl#",
+                                        |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                                        |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                                        |    "$ontologyName" : "$ontologyId#"
+                                        |  }
+                                        |}
             """.stripMargin
     new AddCardinalitiesRequest(value) {}
   }

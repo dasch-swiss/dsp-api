@@ -16,7 +16,7 @@ import org.knora.webapi.slice.admin.domain.model.LicenseIri
 
 object LicenseRepositorySpec extends ZIOSpecDefault {
   private val repo = ZIO.serviceWithZIO[LicenseRepo]
-  val spec = suite("LicenseRepository")(
+  val spec         = suite("LicenseRepository")(
     test("findAll returns nine supported licenses") {
       repo(_.findAll()).map(actual => assertTrue(actual.size == 14))
     },

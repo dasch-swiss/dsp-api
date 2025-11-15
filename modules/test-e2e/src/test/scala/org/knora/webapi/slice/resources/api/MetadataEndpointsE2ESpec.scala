@@ -21,7 +21,7 @@ object MetadataEndpointsE2ESpec extends E2EZSpec {
   override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfOntology)
 
   private val createThingPicture = for {
-    file <- TestDspIngestClient.createImageAsset(anythingShortcode)
+    file     <- TestDspIngestClient.createImageAsset(anythingShortcode)
     response <- TestResourcesApiClient.createStillImageRepresentation(
                   anythingShortcode,
                   anythingOntologyIri,

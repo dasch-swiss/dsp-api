@@ -44,7 +44,7 @@ object ChangeClassLabelsOrCommentsQuery extends QueryBuilderHelper {
 
     for {
       insertPatterns <- buildInsertPatterns(ontologyIri, classIri, predicate, newValues)
-      wherePatterns = List(
+      wherePatterns   = List(
                         ontologyIri
                           .isA(OWL.ONTOLOGY)
                           .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate)),

@@ -49,7 +49,7 @@ object DeleteOntologyCommentQuery extends QueryBuilderHelper {
 
     for {
       insertPatterns <- buildInsertPatterns(ontology)
-      query = Queries
+      query           = Queries
                 .MODIFY()
                 .prefix(KB.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS)
                 .from(ontology)

@@ -285,7 +285,7 @@ case class PermissionsDataADM(
 
   /* Is the user a member of the ProjectAdmin group */
   def isProjectAdmin(projectIri: ProjectIri): Boolean = isProjectAdmin(projectIri.value)
-  def isProjectAdmin(projectIri: IRI): Boolean =
+  def isProjectAdmin(projectIri: IRI): Boolean        =
     groupsPerProject.getOrElse(projectIri, List.empty).contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
 
   /* Does the user have the 'ProjectAdminAllPermission' permission for the project */
@@ -381,7 +381,7 @@ case class AdministrativePermissionADM(iri: IRI, forProject: IRI, forGroup: IRI,
     extends PermissionItemADM
 
 object AdministrativePermissionADM {
-  implicit val codec: JsonCodec[AdministrativePermissionADM] = DeriveJsonCodec.gen[AdministrativePermissionADM]
+  implicit val codec: JsonCodec[AdministrativePermissionADM]                  = DeriveJsonCodec.gen[AdministrativePermissionADM]
   def from(permission: AdministrativePermission): AdministrativePermissionADM =
     AdministrativePermissionADM(
       iri = permission.id.value,
@@ -439,7 +439,7 @@ object PermissionADM {
 
   def from(part: AdministrativePermissionPart): Chunk[PermissionADM] =
     part match {
-      case AdministrativePermissionPart.Simple(permission) => Chunk(PermissionADM.from(permission))
+      case AdministrativePermissionPart.Simple(permission)                          => Chunk(PermissionADM.from(permission))
       case AdministrativePermissionPart.ResourceCreateRestricted(resourceClassIris) =>
         resourceClassIris.map(_.value).map(PermissionADM.from(part.permission, _))
       case AdministrativePermissionPart.ProjectAdminGroupRestricted(groupIris) =>

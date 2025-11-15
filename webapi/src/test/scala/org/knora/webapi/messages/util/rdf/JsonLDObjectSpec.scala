@@ -75,7 +75,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   )
 
   private def iriValueWhenGivenCorrectValues = {
-    val jsonLdObject = JsonLDObject(Map(JsonLDKeywords.ID -> JsonLDString(someResourceIri)))
+    val jsonLdObject                = JsonLDObject(Map(JsonLDKeywords.ID -> JsonLDString(someResourceIri)))
     val jsonLdObjectWithIriInObject = JsonLDObject(
       Map(someKey -> JsonLDObject(Map(JsonLDKeywords.ID -> JsonLDString(someResourceIri)))),
     )
@@ -249,8 +249,8 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   )
 
   private def arrayValueSuiteWhenGivenValidArray = {
-    val stringValue = JsonLDString(someResourceIri)
-    val jsonLdArray = JsonLDArray(List(stringValue))
+    val stringValue    = JsonLDString(someResourceIri)
+    val jsonLdArray    = JsonLDArray(List(stringValue))
     val suiteWithArray = {
       val jsonLdObjectWithArray = JsonLDObject(Map(someKey -> jsonLdArray))
       suite("when given a jsonLdObject with an array")(

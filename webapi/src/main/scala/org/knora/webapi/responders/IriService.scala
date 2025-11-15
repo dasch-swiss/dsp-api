@@ -69,7 +69,7 @@ final case class IriService(
       // check the custom IRI; if not given, create an unused IRI
       customUserIri <- ZIO.foreach(entityIri.map(_.value))(iriConverter.asSmartIri)
       userIriStr    <- checkOrCreateEntityIri(customUserIri, UserIri.makeNew.value)
-      userIri <- ZIO
+      userIri       <- ZIO
                    .fromEither(UserIri.from(userIriStr))
                    .orElseFail(BadRequestException(s"Invalid User IRI: $userIriStr"))
     } yield userIri
@@ -78,7 +78,7 @@ final case class IriService(
     for {
       iriToSmartIri            <- ZIO.foreach(entityIri.map(_.value))(iriConverter.asSmartIri)
       checkedCustomIriOrNewIri <- checkOrCreateEntityIri(iriToSmartIri, GroupIri.makeNew(shortcode).value)
-      iri <- ZIO
+      iri                      <- ZIO
                .fromEither(GroupIri.from(checkedCustomIriOrNewIri))
                .orElseFail(BadRequestException(s"Invalid Group IRI: $checkedCustomIriOrNewIri"))
     } yield iri
@@ -102,7 +102,7 @@ final case class IriService(
 
           // Check that given entityIRI ends with a UUID
           ending: String = UuidUtil.fromIri(entityIriAsString)
-          _ <- ZIO
+          _             <- ZIO
                  .fromTry(UuidUtil.base64Decode(ending))
                  .orElseFail(BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID."))
         } yield entityIriAsString
@@ -115,7 +115,7 @@ final case class IriService(
       val newIri = iriFun
       for {
         iriExists <- checkIriExists(newIri)
-        result <- if (!iriExists) {
+        result    <- if (!iriExists) {
                     ZIO.succeed(newIri)
                   } else if (attempts == 0) {
                     ZIO.fail(
