@@ -154,7 +154,7 @@ object Dependencies {
   )
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"                 %% "zio-opentelemetry"              % "3.1.10",
+    "dev.zio"                 %% "zio-opentelemetry"              % "3.1.11",
     "io.sentry"                % "sentry-opentelemetry-agentless" % "8.25.0",
     "io.opentelemetry"         % "opentelemetry-sdk"              % "1.55.0",
     "io.opentelemetry.semconv" % "opentelemetry-semconv"          % "1.37.0",
