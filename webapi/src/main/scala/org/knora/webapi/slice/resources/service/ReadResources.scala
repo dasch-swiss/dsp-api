@@ -9,6 +9,7 @@ import zio.*
 
 import java.util.UUID
 
+import monocle.syntax.all.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.twirl.queries.sparql
@@ -38,6 +39,8 @@ final case class ReadResources(
     queryStandoff: Boolean = false,
     preview: Boolean,
     failOnMissingValueUuid: Boolean = false,
+    markDeletions: Boolean = false,
+    showDeletedValues: Boolean = false,
   ): Task[ReadResourcesSequenceV2] =
     for {
       resourcesWithValues <-
@@ -91,6 +94,9 @@ final case class ReadResources(
           }
         }
     } yield readSequence
+      .focus(_.resources)
+      .modify(_.map(r => if (markDeletions) r.markDeleted(versionDate, showDeletedValues) else r))
+
 }
 
 object ReadResources {

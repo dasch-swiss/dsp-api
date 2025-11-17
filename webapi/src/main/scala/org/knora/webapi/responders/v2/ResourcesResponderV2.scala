@@ -562,7 +562,7 @@ final case class ResourcesResponderV2(
       schemaOptions,
       requestingUser,
     ).map { apiResponse =>
-      apiResponse.copy(resources = apiResponse.resources.map(_.asDeletedOrWithDeletedValues(versionDate)))
+      apiResponse.copy(resources = apiResponse.resources.map(_.markDeleted(versionDate, showDeletedValues)))
     }
 
   /**
@@ -625,7 +625,7 @@ final case class ResourcesResponderV2(
         requestingUser = requestingUser,
         preview = true,
       )
-      .map(_.focus(_.resources).modify(_.map(_.asDeletedOrWithDeletedValues())))
+      .map(_.focus(_.resources).modify(_.map(_.markDeleted())))
 
   /**
    * Obtains a Gravsearch template from Sipi.

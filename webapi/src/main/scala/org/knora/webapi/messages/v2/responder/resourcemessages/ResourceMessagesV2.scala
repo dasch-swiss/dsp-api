@@ -509,10 +509,13 @@ case class ReadResourceV2(
     )
   }
 
-  def asDeletedOrWithDeletedValues(
+  def markDeleted(
     versionDate: Option[VersionDate] = None,
+    showDeletedValues: Boolean = false,
   )(implicit sf: StringFormatter): ReadResourceV2 =
-    deletionInfo.map(_ => asDeletedResource(versionDate)).getOrElse(withDeletedValues(versionDate))
+    deletionInfo
+      .map(_ => asDeletedResource(versionDate))
+      .getOrElse(if (showDeletedValues) this else withDeletedValues(versionDate))
 }
 
 /**
