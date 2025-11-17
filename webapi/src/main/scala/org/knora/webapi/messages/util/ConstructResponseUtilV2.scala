@@ -183,22 +183,18 @@ final case class ConstructResponseUtilV2(
     val (mainResourceIrisNotVisible: Set[IRI], dependentResourceIrisNotVisible: Set[IRI]) =
       hiddenResources.toSet.partitionMap { case (iri, resource) => Either.cond(resource.isMainResource, iri, iri) }
 
-    val mainResourcesNested: Map[IRI, ResourceWithValueRdfData] = mainResourceIrisVisible.map { resourceIri =>
-      val transformedResource = nestResources(
-        depth = 0,
-        resourceIri = resourceIri,
-        flatResourcesWithValues = flatResourcesWithValues,
-        visibleResources = visibleResources,
-        dependentResourceIrisVisible = dependentResourceIrisVisible,
-        dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
-        incomingLinksForResource = getIncomingLink(visibleResources, flatResourcesWithValues),
-      )
-
-      resourceIri -> transformedResource
-    }.toMap
-
     MainResourcesAndValueRdfData(
-      resources = mainResourcesNested,
+      resources = mainResourceIrisVisible.map { resourceIri =>
+        resourceIri -> nestResources(
+          depth = 0,
+          resourceIri = resourceIri,
+          flatResourcesWithValues = flatResourcesWithValues,
+          visibleResources = visibleResources,
+          dependentResourceIrisVisible = dependentResourceIrisVisible,
+          dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
+          incomingLinksForResource = getIncomingLink(visibleResources, flatResourcesWithValues),
+        )
+      }.toMap,
       hiddenResourceIris = mainResourceIrisNotVisible ++ dependentResourceIrisNotVisible,
     )
   }
