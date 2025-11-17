@@ -177,24 +177,42 @@ final case class ConstructResponseUtilV2(
       case (_: IRI, resource: ResourceWithValueRdfData) => resource.userPermission.nonEmpty
     }
 
-    val (mainResourceIrisVisible: Set[IRI], dependentResourceIrisVisible: Set[IRI]) =
-      visibleResources.toSet.partitionMap { case (iri, resource) => Either.cond(resource.isMainResource, iri, iri) }
+    // TODO: rewrite to partitions
+    val mainResourceIrisVisible: Set[IRI] = visibleResources.collect {
+      case (resourceIri: IRI, resource: ResourceWithValueRdfData) if resource.isMainResource => resourceIri
+    }.toSet
 
-    val (mainResourceIrisNotVisible: Set[IRI], dependentResourceIrisNotVisible: Set[IRI]) =
-      hiddenResources.toSet.partitionMap { case (iri, resource) => Either.cond(resource.isMainResource, iri, iri) }
+    val mainResourceIrisNotVisible: Set[IRI] = hiddenResources.collect {
+      case (resourceIri: IRI, resource: ResourceWithValueRdfData) if resource.isMainResource => resourceIri
+    }.toSet
+
+    val dependentResourceIrisVisible: Set[IRI] = visibleResources.collect {
+      case (resourceIri: IRI, resource: ResourceWithValueRdfData) if !resource.isMainResource => resourceIri
+    }.toSet
+
+    val dependentResourceIrisNotVisible: Set[IRI] = hiddenResources.collect {
+      case (resourceIri: IRI, resource: ResourceWithValueRdfData) if !resource.isMainResource => resourceIri
+    }.toSet
+
+    // get incoming links for each resource: a map of resource IRIs to resources that link to it
+    val incomingLinksForResource: Map[IRI, RdfResources] = getIncomingLink(visibleResources, flatResourcesWithValues)
+
+    val mainResourcesNested: Map[IRI, ResourceWithValueRdfData] = mainResourceIrisVisible.map { resourceIri =>
+      val transformedResource = nestResources(
+        depth = 0,
+        resourceIri = resourceIri,
+        flatResourcesWithValues = flatResourcesWithValues,
+        visibleResources = visibleResources,
+        dependentResourceIrisVisible = dependentResourceIrisVisible,
+        dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
+        incomingLinksForResource = incomingLinksForResource,
+      )
+
+      resourceIri -> transformedResource
+    }.toMap
 
     MainResourcesAndValueRdfData(
-      resources = mainResourceIrisVisible.map { resourceIri =>
-        resourceIri -> nestResources(
-          depth = 0,
-          resourceIri = resourceIri,
-          flatResourcesWithValues = flatResourcesWithValues,
-          visibleResources = visibleResources,
-          dependentResourceIrisVisible = dependentResourceIrisVisible,
-          dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
-          incomingLinksForResource = getIncomingLink(visibleResources, flatResourcesWithValues),
-        )
-      }.toMap,
+      resources = mainResourcesNested,
       hiddenResourceIris = mainResourceIrisNotVisible ++ dependentResourceIrisNotVisible,
     )
   }
@@ -1347,7 +1365,6 @@ final case class ConstructResponseUtilV2(
     } yield mappings.toMap
   }
 }
-
 object ConstructResponseUtilV2 {
 
   val layer = ZLayer.derive[ConstructResponseUtilV2]
