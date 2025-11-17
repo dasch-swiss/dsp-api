@@ -17,8 +17,6 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
-import ExportRestService.errorOrNotFound
-
 final case class ExportRestService(
   private val iriConverter: IriConverter,
   private val exportService: ExportService,
@@ -30,15 +28,15 @@ final case class ExportRestService(
     user: User,
   )(
     request: ExportRequest,
-  ): IO[V3ErrorInfo, (String, MediaType, String)] = {
+  ): IO[V3ErrorInfo, (String, MediaType, String)] =
     (for {
       resourceClassIri <- iriConverter.asResourceClassIri(request.resourceClass).mapError(BadRequest(_))
       shortcode        <- ZIO.fromEither(resourceClassIri.smartIri.getProjectShortcode).mapError(BadRequest(_))
       properties       <- ZIO.foreach(request.selectedProperties)(iriConverter.asPropertyIri).mapError(BadRequest(_))
 
-      project    <- projectService.findByShortcode(shortcode).errorOrNotFound(NotFound(resourceClassIri))
+      project    <- projectService.findByShortcode(shortcode).orDie.someOrFail(NotFound(resourceClassIri))
       ontologyIri = resourceClassIri.ontologyIri
-      _          <- ontologyService.findById(ontologyIri).someOrFail(NotFound(ontologyIri))
+      _          <- ontologyService.findById(ontologyIri).orDie.someOrFail(NotFound(ontologyIri))
 
       data <-
         exportService
@@ -52,20 +50,8 @@ final case class ExportRestService(
       MediaType.TextCsv,
       s"attachment; filename=project_${shortcode.value}_resources_${resourceClassIri.name}_${now}.csv",
     ))
-  }.flatMapError {
-    case errorInfo: V3ErrorInfo =>
-      ZIO.succeed(errorInfo)
-    case t: Throwable =>
-      ZIO.logErrorCause(Cause.fail(t)).as(ServerError())
-  }
 }
 
 object ExportRestService {
   val layer = ZLayer.derive[ExportRestService]
-
-  extension [Env, A](zio: ZIO[Env, Throwable, Option[A]])
-    def errorOrNotFound(notFound: V3ErrorInfo): ZIO[Env, V3ErrorInfo, A] =
-      zio.flatMapError { e =>
-        ZIO.logErrorCause(Cause.fail(e)).as(ServerError())
-      }.someOrFail(notFound)
 }
