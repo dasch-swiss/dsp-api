@@ -5,18 +5,11 @@
 
 package org.knora.webapi.slice.resources.api
 
-import sttp.model.HeaderNames
-import sttp.model.MediaType
 import sttp.tapir.*
-import sttp.tapir.server.PartialServerEndpoint
 import zio.ZLayer
 
-import scala.concurrent.Future
-
-import dsp.errors.RequestRejectedException
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.resources.api.model.GraphDirection
@@ -57,41 +50,41 @@ final case class ResourcesEndpoints(
   val getResourcesPreview = baseEndpoints.withUserEndpoint.get
     .in("v2" / "resourcespreview" / paths)
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getResourcesIiifManifest = baseEndpoints.withUserEndpoint.get
     .in(base / "iiifmanifest" / path[IriDto].name("resourceIri"))
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getResourcesProjectHistoryEvents = baseEndpoints.withUserEndpoint.get
     .in(base / "projectHistoryEvents" / path[ProjectIri].name("projectIri"))
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getResourcesHistoryEvents = baseEndpoints.withUserEndpoint.get
     .in(base / "resourceHistoryEvents" / path[IriDto].name("resourceIri"))
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getResourcesHistory = baseEndpoints.withUserEndpoint.get
     .in(base / "history" / path[IriDto].name("resourceIri"))
     .in(ApiV2.Inputs.formatOptions)
     .in(startDateQuery)
     .in(endDateQuery)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getResources = baseEndpoints.withUserEndpoint.get
     .in(base / paths)
     .in(ApiV2.Inputs.formatOptions)
     .in(versionQuery)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getResourcesParams = baseEndpoints.withUserEndpoint.get
     .in(base)
@@ -100,8 +93,8 @@ final case class ResourcesEndpoints(
     .in(query[Int]("page").validate(Validator.min(0)))
     .in(header[ProjectIri](ApiV2.Headers.xKnoraAcceptProject))
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getResourcesGraph = baseEndpoints.withUserEndpoint.get
     .in("v2" / "graph" / path[IriDto].name("resourceIri"))
@@ -114,8 +107,8 @@ final case class ResourcesEndpoints(
     )
     .in(query[GraphDirection]("direction").default(GraphDirection.default))
     .in(query[Option[IriDto]]("excludeProperty"))
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getResourcesTei = baseEndpoints.withUserEndpoint.get
     .in("v2" / "tei" / path[IriDto].name("resourceIri"))
@@ -123,43 +116,43 @@ final case class ResourcesEndpoints(
     .in(query[IriDto]("textProperty"))
     .in(query[Option[IriDto]]("gravsearchTemplateIri"))
     .in(query[Option[IriDto]]("headerXSLTIri"))
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val postResourcesErase = baseEndpoints.withUserEndpoint.post
     .in(base / "erase")
     .in(ApiV2.Inputs.formatOptions)
     .in(stringJsonBody)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val getResourcesCanDelete = baseEndpoints.withUserEndpoint.get
     .in(base / "candelete")
     .in(ApiV2.Inputs.formatOptions)
     .in(query[String]("jsonLd"))
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val postResourcesDelete = baseEndpoints.withUserEndpoint.post
     .in(base / "delete")
     .in(ApiV2.Inputs.formatOptions)
     .in(stringJsonBody)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val postResources = baseEndpoints.withUserEndpoint.post
     .in(base)
     .in(ApiV2.Inputs.formatOptions)
     .in(stringJsonBody)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val putResources = baseEndpoints.withUserEndpoint.put
     .in(base)
     .in(ApiV2.Inputs.formatOptions)
     .in(stringJsonBody)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
 
   val endpoints: Seq[AnyEndpoint] = Seq(
     getResourcesIiifManifest,

@@ -8,23 +8,20 @@ package org.knora.webapi.slice.admin.api
 import sttp.client4.UriContext
 import sttp.model.StatusCode
 import zio.ZIO
+import zio.json.ast.Json
 import zio.test.*
 
 import org.knora.webapi.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.*
-import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.service.UserRestService.UserResponse
+import org.knora.webapi.slice.admin.api.service.UserRestService.UsersResponse
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
-import org.knora.webapi.testservices.ResponseOps
 import org.knora.webapi.testservices.ResponseOps.assert200
-import org.knora.webapi.testservices.TestAdminApiClient
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.MutableTestIri
 
@@ -34,7 +31,6 @@ import org.knora.webapi.util.MutableTestIri
 object AdminUsersEndpointsE2ESpec extends E2EZSpec {
 
   private val projectAdminUser = imagesUser01
-  private val multiUserIri     = UserIri.unsafeFrom(SharedTestDataADM2.multiuserUser.userData.user_id.get)
 
   private val customUserIri      = UserIri.unsafeFrom("http://rdfh.ch/users/14pxW-LAQIaGcCRiNCPJcQ")
   private val otherCustomUserIri = UserIri.unsafeFrom("http://rdfh.ch/users/v8_12VcJRlGNFCjYzqJ5cA")
@@ -44,40 +40,40 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
   val e2eSpec = suite("The Users Route ('admin/users')")(
     suite("used to query user information [FUNCTIONALITY]")(
       test("return all users") {
-        TestAdminApiClient
-          .getAllUsers(rootUser)
+        TestApiClient
+          .getJson[UsersResponse](uri"/admin/users", rootUser)
           .map(response => assertTrue(response.code == StatusCode.Ok))
       },
       test("return a single user profile identified by iri") {
-        TestAdminApiClient
-          .getUser(rootUser.userIri, rootUser)
+        TestApiClient
+          .getJson[UserResponse](uri"/admin/users/iri/${rootUser.id}", rootUser)
           .map(response => assertTrue(response.code == StatusCode.Ok))
       },
       test("return a single user profile identified by email") {
-        TestAdminApiClient
-          .getUserByEmail(rootUser.getEmail, rootUser)
+        TestApiClient
+          .getJson[UserResponse](uri"/admin/users/email/${rootUser.email}", rootUser)
           .map(response => assertTrue(response.code == StatusCode.Ok))
       },
       test("return a single user profile identified by username") {
-        TestAdminApiClient
-          .getUserByUsername(rootUser.getUsername, rootUser)
+        TestApiClient
+          .getJson[UserResponse](uri"/admin/users/username/${rootUser.username}", rootUser)
           .map(response => assertTrue(response.code == StatusCode.Ok))
       },
     ),
     suite("used to query user information [PERMISSIONS]")(
       test("return single user for SystemAdmin") {
-        TestAdminApiClient
-          .getUser(normalUser.userIri, rootUser)
+        TestApiClient
+          .getJson[UserResponse](uri"/admin/users/iri/${normalUser.userIri}", rootUser)
           .map(response => assertTrue(response.code == StatusCode.Ok))
       },
       test("return single user for itself") {
-        TestAdminApiClient
-          .getUser(normalUser.userIri, normalUser)
+        TestApiClient
+          .getJson[UserResponse](uri"/admin/users/iri/${normalUser.userIri}", normalUser)
           .map(response => assertTrue(response.code == StatusCode.Ok))
       },
       test("return only public information for single user for non SystemAdmin and self") {
-        TestAdminApiClient
-          .getUser(normalUser.userIri, projectAdminUser)
+        TestApiClient
+          .getJson[UserResponse](uri"/admin/users/iri/${normalUser.userIri}", projectAdminUser)
           .flatMap(_.assert200)
           .map(_.user)
           .flatMap(user =>
@@ -91,8 +87,8 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           )
       },
       test("return only public information for single user with anonymous access") {
-        TestAdminApiClient
-          .getUser(normalUser.userIri)
+        TestApiClient
+          .getJson[UserResponse](uri"/admin/users/iri/${normalUser.userIri}")
           .flatMap(_.assert200)
           .map(_.user)
           .map(user =>
@@ -106,18 +102,18 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           )
       },
       test("return all users for SystemAdmin") {
-        TestAdminApiClient
-          .getAllUsers(rootUser)
+        TestApiClient
+          .getJson[UsersResponse](uri"/admin/users/", rootUser)
           .map(response => assertTrue(response.code == StatusCode.Ok))
       },
       test("return all users for ProjectAdmin") {
-        TestAdminApiClient
-          .getAllUsers(projectAdminUser)
+        TestApiClient
+          .getJson[UsersResponse](uri"/admin/users/", projectAdminUser)
           .map(response => assertTrue(response.code == StatusCode.Ok))
       },
       test("return 'Forbidden' for all users for normal user") {
-        TestAdminApiClient
-          .getAllUsers(normalUser)
+        TestApiClient
+          .getJson[UsersResponse](uri"/admin/users/", normalUser)
           .map(response => assertTrue(response.code == StatusCode.Forbidden))
       },
     ),
@@ -150,8 +146,8 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
-        TestAdminApiClient
-          .createUser(createUserRequest, rootUser)
+        TestApiClient
+          .postJson[UserResponse, UserCreateRequest](uri"/admin/users", createUserRequest, rootUser)
           .flatMap(_.assert200)
           .map(result => assertTrue(result.user.id == customUserIri.value))
       },
@@ -167,8 +163,8 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
-        TestAdminApiClient
-          .createUser(createUserRequest, rootUser)
+        TestApiClient
+          .postJson[UserResponse, UserCreateRequest](uri"/admin/users", createUserRequest, rootUser)
           .map(response => assertTrue(response.code == StatusCode.BadRequest))
       },
     ),
@@ -185,8 +181,8 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
-        TestAdminApiClient
-          .createUser(createUserRequest, rootUser)
+        TestApiClient
+          .postJson[UserResponse, UserCreateRequest](uri"/admin/users", createUserRequest, rootUser)
           .flatMap(_.assert200)
           .flatMap(result =>
             assertTrue(
@@ -201,8 +197,12 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           givenName = Some(GivenName.unsafeFrom("Updated\tGivenName")),
           familyName = Some(FamilyName.unsafeFrom("Updated\"FamilyName")),
         )
-        TestAdminApiClient
-          .updateUserBasicInfo(otherCustomUserIri, updateUserRequest, rootUser)
+        TestApiClient
+          .putJson[UserResponse, BasicUserInformationChangeRequest](
+            uri"/admin/users/iri/$otherCustomUserIri/BasicUserInformation",
+            updateUserRequest,
+            rootUser,
+          )
           .flatMap(_.assert200)
           .map(result =>
             assertTrue(
@@ -214,8 +214,8 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
       test(
         "return the special characters correctly when getting a user with special characters in givenName and familyName",
       ) {
-        TestAdminApiClient
-          .getUser(otherCustomUserIri, rootUser)
+        TestApiClient
+          .getJson[UserResponse](uri"/admin/users/iri/$otherCustomUserIri", rootUser)
           .flatMap(_.assert200)
           .map(result =>
             assertTrue(
@@ -237,8 +237,8 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsSystemAdmin,
         )
-        TestAdminApiClient
-          .createUser(createUserRequest, projectAdminUser)
+        TestApiClient
+          .postJson[UserResponse, UserCreateRequest](uri"/admin/users", createUserRequest, projectAdminUser)
           .map(response => assertTrue(response.code == StatusCode.Forbidden))
       },
       test("create the user if the supplied email and username are unique") {
@@ -252,8 +252,8 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
-        TestAdminApiClient
-          .createUser(createUserRequest, rootUser)
+        TestApiClient
+          .postJson[UserResponse, UserCreateRequest](uri"/admin/users", createUserRequest, rootUser)
           .flatMap(_.assert200)
           .tap(result => ZIO.succeed(donaldIri.set(result.user.id)))
           .map(result =>
@@ -278,8 +278,8 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
-        TestAdminApiClient
-          .createUser(createUserRequest, rootUser)
+        TestApiClient
+          .postJson[UserResponse, UserCreateRequest](uri"/admin/users", createUserRequest, rootUser)
           .map(response => assertTrue(response.code == StatusCode.BadRequest))
       },
       test("return a 'BadRequest' if the supplied email is not unique") {
@@ -293,16 +293,13 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           lang = LanguageCode.EN,
           systemAdmin = SystemAdmin.IsNotSystemAdmin,
         )
-        TestAdminApiClient
-          .createUser(createUserRequest, rootUser)
+        TestApiClient
+          .postJson[UserResponse, UserCreateRequest](uri"/admin/users", createUserRequest, rootUser)
           .map(response => assertTrue(response.code == StatusCode.BadRequest))
       },
       test("authenticate the newly created user using HttpBasicAuth") {
         TestApiClient
-          .getJson[zio.json.ast.Json](
-            uri"/v2/authentication",
-            _.auth.basic("donald.duck@example.org", "test"),
-          )
+          .getJson[Json](uri"/v2/authentication", _.auth.basic("donald.duck@example.org", "test"))
           .map(response => assertTrue(response.code == StatusCode.Ok))
       },
       test("authenticate the newly created user during login") {
@@ -323,8 +320,12 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           familyName = Some(FamilyName.unsafeFrom("Duckmann")),
           lang = Some(LanguageCode.DE),
         )
-        TestAdminApiClient
-          .updateUserBasicInfo(donaldIri.asUserIri, updateUserRequest, rootUser)
+        TestApiClient
+          .putJson[UserResponse, BasicUserInformationChangeRequest](
+            uri"/admin/users/iri/$donaldIri/BasicUserInformation",
+            updateUserRequest,
+            rootUser,
+          )
           .flatMap(_.assert200)
           .map(result =>
             assertTrue(
@@ -341,8 +342,12 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           requesterPassword = Password.unsafeFrom("test"),
           newPassword = Password.unsafeFrom("will-be-ignored"),
         )
-        TestAdminApiClient
-          .updateUserPassword(customUserIri, changeUserPasswordRequest, normalUser)
+        TestApiClient
+          .putJson[UserResponse, PasswordChangeRequest](
+            uri"/admin/users/iri/$customUserIri/Password",
+            changeUserPasswordRequest,
+            normalUser,
+          )
           .map(response => assertTrue(response.code == StatusCode.Forbidden))
       },
       test("update the user's password (by himself)") {
@@ -351,11 +356,15 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           newPassword = Password.unsafeFrom("test123456"),
         )
         for {
-          _ <- TestAdminApiClient
-                 .updateUserPassword(normalUser.userIri, changeUserPasswordRequest, normalUser)
+          _ <- TestApiClient
+                 .putJson[UserResponse, PasswordChangeRequest](
+                   uri"/admin/users/iri/${normalUser.id}/Password",
+                   changeUserPasswordRequest,
+                   normalUser,
+                 )
                  .flatMap(_.assert200)
           // check if the password was changed, i.e. if the new one is accepted
-          response <- TestApiClient.getJson[zio.json.ast.Json](
+          response <- TestApiClient.getJson[Json](
                         uri"/v2/authentication",
                         _.auth.basic(normalUser.email, "test123456"),
                       )
@@ -367,11 +376,15 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           newPassword = Password.unsafeFrom("test654321"),
         )
         for {
-          _ <- TestAdminApiClient
-                 .updateUserPassword(normalUser.userIri, changeUserPasswordRequest, rootUser)
+          _ <- TestApiClient
+                 .putJson[UserResponse, PasswordChangeRequest](
+                   uri"/admin/users/iri/${normalUser.id}/Password",
+                   changeUserPasswordRequest,
+                   rootUser,
+                 )
                  .flatMap(_.assert200)
           // check if the password was changed, i.e. if the new one is accepted
-          response <- TestApiClient.getJson[zio.json.ast.Json](
+          response <- TestApiClient.getJson[Json](
                         uri"/v2/authentication",
                         _.auth.basic(normalUser.email, "test654321"),
                       )
@@ -383,13 +396,13 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
              |    "requesterPassword": "test"
              |}""".stripMargin
         for {
-          response1 <- TestApiClient.putJson[zio.json.ast.Json, String](
-                         uri"/admin/users/iri/${normalUser.userIri}/Password",
+          response1 <- TestApiClient.putJson[Json, String](
+                         uri"/admin/users/iri/${normalUser.id}/Password",
                          changeUserPasswordRequest,
                          normalUser,
                        )
           // check that the password was not changed, i.e. the old one is still accepted
-          response2 <- TestApiClient.getJson[zio.json.ast.Json](
+          response2 <- TestApiClient.getJson[Json](
                          uri"/v2/authentication",
                          _.auth.basic(normalUser.email, "test654321"),
                        )
@@ -399,19 +412,28 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
         )
       },
       test("change user's status") {
-        TestAdminApiClient
-          .updateUserStatus(donaldIri.asUserIri, StatusChangeRequest(UserStatus.Inactive), rootUser)
+        TestApiClient
+          .putJson[UserResponse, StatusChangeRequest](
+            uri"/admin/users/iri/$donaldIri/Status",
+            StatusChangeRequest(UserStatus.Inactive),
+            rootUser,
+          )
           .flatMap(_.assert200)
           .map(result => assertTrue(!result.user.status))
       },
       test("update the user's system admin membership status") {
         val changeReq = SystemAdminChangeRequest(SystemAdmin.IsSystemAdmin)
         for {
-          response <- TestAdminApiClient.updateUserSystemAdmin(donaldIri.asUserIri, changeReq, rootUser)
-          result   <- response.assert200
+          result <- TestApiClient
+                      .putJson[UserResponse, SystemAdminChangeRequest](
+                        uri"/admin/users/iri/$donaldIri/SystemAdmin",
+                        changeReq,
+                        rootUser,
+                      )
+                      .flatMap(_.assert200)
           // Throw BadRequest exception if user is built-in user
-          badResponse <- TestAdminApiClient.updateUserSystemAdmin(
-                           KnoraSystemInstances.Users.SystemUser.userIri,
+          badResponse <- TestApiClient.putJson[UserResponse, SystemAdminChangeRequest](
+                           uri"/admin/users/iri/${KnoraSystemInstances.Users.SystemUser.userIri}/SystemAdmin",
                            changeReq,
                            rootUser,
                          )
@@ -423,254 +445,46 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
         )
       },
       test("not allow updating the system user's system admin membership status") {
-        TestAdminApiClient
-          .updateUserSystemAdmin(
-            KnoraSystemInstances.Users.SystemUser.userIri,
+        TestApiClient
+          .putJson[UserResponse, SystemAdminChangeRequest](
+            uri"/admin/users/iri/${KnoraSystemInstances.Users.SystemUser.id}/SystemAdmin",
             SystemAdminChangeRequest(SystemAdmin.IsSystemAdmin),
             rootUser,
           )
           .map(response => assertTrue(response.code == StatusCode.BadRequest))
       },
       test("not allow changing the system user's status") {
-        TestAdminApiClient
-          .updateUserStatus(
-            KnoraSystemInstances.Users.SystemUser.userIri,
+        TestApiClient
+          .putJson[UserResponse, StatusChangeRequest](
+            uri"/admin/users/iri/${KnoraSystemInstances.Users.SystemUser.id}/Status",
             StatusChangeRequest(UserStatus.Inactive),
             rootUser,
           )
           .map(response => assertTrue(response.code == StatusCode.BadRequest))
       },
       test("not allow changing the anonymous user's status") {
-        TestAdminApiClient
-          .updateUserStatus(
-            UserIri.unsafeFrom(KnoraSystemInstances.Users.AnonymousUser.id),
+        TestApiClient
+          .putJson[UserResponse, StatusChangeRequest](
+            uri"/admin/users/iri/${KnoraSystemInstances.Users.AnonymousUser.id}/Status",
             StatusChangeRequest(UserStatus.Inactive),
             rootUser,
           )
           .map(response => assertTrue(response.code == StatusCode.BadRequest))
       },
       test("delete a user") {
-        TestAdminApiClient
-          .deleteUser(customUserIri, rootUser)
+        TestApiClient
+          .deleteJson[UserResponse](uri"/admin/users/iri/$customUserIri", rootUser)
           .map(response => assertTrue(response.code == StatusCode.Ok))
       },
       test("not allow deleting the system user") {
-        TestAdminApiClient
-          .deleteUser(KnoraSystemInstances.Users.SystemUser.userIri, rootUser)
+        TestApiClient
+          .deleteJson[UserResponse](uri"/admin/users/iri/${KnoraSystemInstances.Users.SystemUser.id}", rootUser)
           .map(response => assertTrue(response.code == StatusCode.BadRequest))
       },
       test("not allow deleting the anonymous user") {
-        TestAdminApiClient
-          .deleteUser(UserIri.unsafeFrom(KnoraSystemInstances.Users.AnonymousUser.id), rootUser)
+        TestApiClient
+          .deleteJson[UserResponse](uri"/admin/users/iri/${KnoraSystemInstances.Users.AnonymousUser.id}", rootUser)
           .map(response => assertTrue(response.code == StatusCode.BadRequest))
-      },
-    ),
-    suite("used to query project memberships")(
-      test("return all projects the user is a member of") {
-        TestAdminApiClient
-          .getUserProjectMemberships(multiUserIri, rootUser)
-          .flatMap(_.assert200)
-          .map(result =>
-            assertTrue(
-              result.projects.contains(imagesProjectExternal),
-              result.projects.contains(incunabulaProjectExternal),
-              result.projects.contains(anythingProjectExternal),
-            ),
-          )
-      },
-    ),
-    suite("used to modify project membership")(
-      test("NOT add a user to project if the requesting user is not a SystemAdmin or ProjectAdmin") {
-        TestAdminApiClient
-          .addUserToProject(normalUser.userIri, imagesProjectIri, normalUser)
-          .map(response => assertTrue(response.code == StatusCode.Forbidden))
-      },
-      test("add user to project") {
-        for {
-          beforeResponse <- TestAdminApiClient.getUserProjectMemberships(UserIri.unsafeFrom(normalUser.id), rootUser)
-          beforeResult   <- beforeResponse.assert200
-          _              <- TestAdminApiClient.addUserToProject(normalUser.userIri, imagesProjectIri, rootUser).flatMap(_.assert200)
-          afterResponse  <- TestAdminApiClient.getUserProjectMemberships(normalUser.userIri, rootUser)
-          afterResult    <- afterResponse.assert200
-        } yield assertTrue(
-          beforeResult.projects == Seq.empty,
-          afterResult.projects == Seq(SharedTestDataADM.imagesProjectExternal),
-        )
-      },
-      test("don't add user to project if user is already a member") {
-        for {
-          beforeResponse <- TestAdminApiClient.getUserProjectMemberships(UserIri.unsafeFrom(normalUser.id), rootUser)
-          beforeResult   <- beforeResponse.assert200
-          response       <- TestAdminApiClient.addUserToProject(normalUser.userIri, imagesProjectIri, rootUser)
-          afterResponse  <- TestAdminApiClient.getUserProjectMemberships(normalUser.userIri, rootUser)
-          afterResult    <- afterResponse.assert200
-        } yield assertTrue(
-          response.code == StatusCode.BadRequest,
-          afterResult.projects == beforeResult.projects,
-        )
-      },
-      test("remove user from project") {
-        for {
-          beforeResponse <- TestAdminApiClient.getUserProjectMemberships(UserIri.unsafeFrom(normalUser.id), rootUser)
-          beforeResult   <- beforeResponse.assert200
-          response       <- TestAdminApiClient.removeUserFromProject(normalUser.userIri, imagesProjectIri, rootUser)
-          afterResponse  <- TestAdminApiClient.getUserProjectMemberships(normalUser.userIri, rootUser)
-          afterResult    <- afterResponse.assert200
-        } yield assertTrue(
-          beforeResult.projects == Seq(SharedTestDataADM.imagesProjectExternal),
-          response.code == StatusCode.Ok,
-          afterResult.projects == Seq.empty[Project],
-        )
-      },
-    ),
-    suite("used to query project admin group memberships")(
-      test("return all projects the user is a member of the project admin group") {
-        TestAdminApiClient
-          .getUserProjectAdminMemberships(multiUserIri, rootUser)
-          .flatMap(_.assert200)
-          .map(result =>
-            assertTrue(
-              result.projects.contains(imagesProjectExternal) &&
-                result.projects.contains(incunabulaProjectExternal) &&
-                result.projects.contains(anythingProjectExternal),
-            ),
-          )
-      },
-    ),
-    suite("used to modify project admin group membership")(
-      test("add user to project admin group only if he is already member of that project") {
-        for {
-          // add user as project admin to images project - returns a BadRequest because user is not member of the project
-          responseWithoutBeingMember <- TestAdminApiClient.addUserToProjectAdmin(
-                                          normalUser.userIri,
-                                          imagesProjectIri,
-                                          rootUser,
-                                        )
-          // add user as member to images project
-          responseAddUserToProject <- TestAdminApiClient.addUserToProject(
-                                        normalUser.userIri,
-                                        imagesProjectIri,
-                                        rootUser,
-                                      )
-          // verify that user is not yet project admin in images project
-          membershipsBeforeResponse <-
-            TestAdminApiClient.getUserProjectAdminMemberships(UserIri.unsafeFrom(normalUser.id), rootUser)
-          membershipsBeforeResult <- membershipsBeforeResponse.assert200
-          // add user as project admin to images project
-          response <- TestAdminApiClient.addUserToProjectAdmin(
-                        normalUser.userIri,
-                        imagesProjectIri,
-                        rootUser,
-                      )
-          // verify that user has been added as project admin to images project
-          membershipsAfterResponse <-
-            TestAdminApiClient.getUserProjectAdminMemberships(UserIri.unsafeFrom(normalUser.id), rootUser)
-          membershipsAfterResult <- membershipsAfterResponse.assert200
-        } yield assertTrue(
-          responseWithoutBeingMember.code == StatusCode.BadRequest,
-          responseAddUserToProject.code == StatusCode.Ok,
-          membershipsBeforeResult.projects == Seq(),
-          response.code == StatusCode.Ok,
-          membershipsAfterResult.projects == Seq(SharedTestDataADM.imagesProjectExternal),
-        )
-      },
-      test("remove user from project admin group") {
-        for {
-          membershipsBeforeResponse <-
-            TestAdminApiClient.getUserProjectAdminMemberships(UserIri.unsafeFrom(normalUser.id), rootUser)
-          membershipsBeforeResult <- membershipsBeforeResponse.assert200
-          response <- TestAdminApiClient.removeUserFromProjectAdmin(
-                        normalUser.userIri,
-                        imagesProjectIri,
-                        rootUser,
-                      )
-          membershipsAfterResponse <-
-            TestAdminApiClient.getUserProjectAdminMemberships(UserIri.unsafeFrom(normalUser.id), rootUser)
-          membershipsAfterResult <- membershipsAfterResponse.assert200
-        } yield assertTrue(
-          membershipsBeforeResult.projects == Seq(SharedTestDataADM.imagesProjectExternal),
-          response.code == StatusCode.Ok,
-          membershipsAfterResult.projects == Seq.empty[Project],
-        )
-      },
-      test("remove user from project which also removes him from project admin group") {
-        for {
-          // add user as project admin to images project
-          responseAddUserAsProjectAdmin <- TestAdminApiClient.addUserToProjectAdmin(
-                                             normalUser.userIri,
-                                             imagesProjectIri,
-                                             rootUser,
-                                           )
-          // verify that user has been added as project admin to images project
-          membershipsBeforeResponse <-
-            TestAdminApiClient.getUserProjectAdminMemberships(UserIri.unsafeFrom(normalUser.id), rootUser)
-          membershipsBeforeResult <- membershipsBeforeResponse.assert200
-          // remove user as project member from images project
-          response <- TestAdminApiClient.removeUserFromProject(
-                        normalUser.userIri,
-                        imagesProjectIri,
-                        rootUser,
-                      )
-          // verify that user has also been removed as project admin from images project
-          projectAdminMembershipsAfterResponse <-
-            TestAdminApiClient.getUserProjectAdminMemberships(UserIri.unsafeFrom(normalUser.id), rootUser)
-          projectAdminMembershipsAfterResult <- projectAdminMembershipsAfterResponse.assert200
-        } yield assertTrue(
-          responseAddUserAsProjectAdmin.code == StatusCode.Ok,
-          membershipsBeforeResult.projects == Seq(SharedTestDataADM.imagesProjectExternal),
-          response.code == StatusCode.Ok,
-          projectAdminMembershipsAfterResult.projects == Seq(),
-        )
-      },
-    ),
-    suite("used to query group memberships")(
-      test("return all groups the user is a member of") {
-        TestAdminApiClient
-          .getUserGroupMemberships(multiUserIri, rootUser)
-          .flatMap(_.assert200)
-          .map(result =>
-            assertTrue(
-              result.groups.contains(SharedTestDataADM.imagesReviewerGroupExternal),
-            ),
-          )
-      },
-    ),
-    suite("used to modify group membership")(
-      test("add user to group") {
-        for {
-          membershipsBeforeResponse <-
-            TestAdminApiClient.getUserGroupMemberships(UserIri.unsafeFrom(normalUser.id), rootUser)
-          membershipsBeforeResult <- membershipsBeforeResponse.assert200
-          response <- TestAdminApiClient.addUserToGroup(
-                        normalUser.userIri,
-                        imagesReviewerGroup.groupIri,
-                        rootUser,
-                      )
-          membershipsAfterResponse <- TestAdminApiClient.getUserGroupMemberships(normalUser.userIri, rootUser)
-          membershipsAfterResult   <- membershipsAfterResponse.assert200
-        } yield assertTrue(
-          membershipsBeforeResult.groups == Seq.empty[Group],
-          response.code == StatusCode.Ok,
-          membershipsAfterResult.groups == Seq(SharedTestDataADM.imagesReviewerGroupExternal),
-        )
-      },
-      test("remove user from group") {
-        for {
-          membershipsBeforeResponse <-
-            TestAdminApiClient.getUserGroupMemberships(UserIri.unsafeFrom(normalUser.id), rootUser)
-          membershipsBeforeResult <- membershipsBeforeResponse.assert200
-          response <- TestAdminApiClient.removeUserFromGroup(
-                        normalUser.userIri,
-                        imagesReviewerGroup.groupIri,
-                        rootUser,
-                      )
-          membershipsAfterResponse <- TestAdminApiClient.getUserGroupMemberships(normalUser.userIri, rootUser)
-          membershipsAfterResult   <- membershipsAfterResponse.assert200
-        } yield assertTrue(
-          membershipsBeforeResult.groups == Seq(SharedTestDataADM.imagesReviewerGroupExternal),
-          response.code == StatusCode.Ok,
-          membershipsAfterResult.groups == Seq.empty[Group],
-        )
       },
     ),
   )

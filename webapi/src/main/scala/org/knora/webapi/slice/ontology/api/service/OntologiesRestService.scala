@@ -8,6 +8,8 @@ package org.knora.webapi.slice.ontology.api.service
 import sttp.model.MediaType
 import zio.*
 
+import scala.annotation.unused
+
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.ApiV2Schema
@@ -43,7 +45,7 @@ final case class OntologiesRestService(
 ) {
 
   def dereferenceOntologyIri(user: User)(
-    ignored: List[String],
+    @unused ignored: List[String],
     allLanguages: Boolean,
     formatOptions: FormatOptions,
     serverUri: sttp.model.Uri,
@@ -94,10 +96,8 @@ final case class OntologiesRestService(
     projectIris: List[String],
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = ZIO
-    .foreach(projectIris.toSet)(iri =>
-      ZIO.fromEither(ProjectIri.from(iri)).orElseFail(BadRequestException(s"Invalid project IRI $iri")),
-    )
-    .flatMap(getOntologyMetadataBy(_, formatOptions))
+    .foreach(projectIris.toSet)(iri => ZIO.fromEither(ProjectIri.from(iri)).mapError(BadRequestException.apply))
+    .flatMap(projectIris => getOntologyMetadataBy(projectIris, formatOptions))
 
   private def getOntologyMetadataBy(projectIris: Set[ProjectIri], formatOptions: FormatOptions) = for {
     result   <- ontologyResponder.getOntologyMetadataForProjects(projectIris)
@@ -214,26 +214,16 @@ final case class OntologiesRestService(
       response  <- renderer.render(result, formatOptions)
     } yield response
 
-  def getClasses(user: User)(
-    classIris: List[String],
+  def findClassByIri(user: User)(
+    classIriDto: IriDto,
     allLanguages: Boolean,
     formatOptions: FormatOptions,
   ) = for {
-    classIris             <- ZIO.foreach(classIris)(iriConverter.asResourceClassIri(_).mapError(BadRequestException.apply))
-    classIrisWithoutSchema = classIris.filter(_.smartIri.getOntologySchema.isEmpty)
-    _ <- ZIO.fail {
-           BadRequestException(s"Class IRIs found without ontology schema: ${classIrisWithoutSchema.mkString(", ")}")
-         }.unless(classIrisWithoutSchema.isEmpty)
-    ontologyIris = classIris.map(_.ontologyIri).toSet
-    _ <- ontologyIris.size match
-           case 1 =>
-             ZIO.fail(BadRequestException("Only external ontologies may be queried")).when(ontologyIris.head.isInternal)
-           case _ => ZIO.fail(BadRequestException("Only one ontology may be queried at once"))
-    schemas = ontologyIris.flatMap(_.smartIri.getOntologySchema).collect { case schema: ApiV2Schema => schema }
-    schema <- schemas.size match
-                case 1 => ZIO.succeed(schemas.head)
-                case _ => ZIO.fail(BadRequestException("Only one ontology schema may be queried at once"))
-    result   <- ontologyCacheHelpers.getClasses(classIris, allLanguages, user)
+    classIri <- iriConverter.asResourceClassIri(classIriDto.value).mapError(BadRequestException.apply)
+    schema <- ZIO
+                .fromOption(classIri.ontologySchema.collect { case s: ApiV2Schema => s })
+                .orElseFail(BadRequestException(s"Class IRI must have an API V2 schema: $classIriDto"))
+    result   <- ontologyCacheHelpers.getClassAsReadOntologyV2(classIri, allLanguages, user)
     response <- renderer.render(result, formatOptions.copy(schema = schema))
   } yield response
 
@@ -317,22 +307,17 @@ final case class OntologiesRestService(
     response  <- renderer.render(result, formatOptions)
   } yield response
 
-  def getProperties(user: User)(
-    propertyIris: List[String],
+  def findPropertyByIri(user: User)(
+    propertyIri: IriDto,
     allLanguages: Boolean,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
-    propertyIris <- ZIO.foreach(propertyIris.toSet)(iriConverter.asPropertyIri).mapError(BadRequestException.apply)
-    _ <- ZIO
-           .fail(BadRequestException(s"Only one ontology may be queried at once"))
-           .when(propertyIris.map(_.ontologyIri).size != 1)
-    schemasFromProperties = propertyIris.flatMap(_.smartIri.getOntologySchema)
-    formatOptions <- ZIO
-                       .fail(BadRequestException(s"Only one ontology schema may be queried at once"))
-                       .when(schemasFromProperties.size != 1)
-                       .as(formatOptions.copy(schema = schemasFromProperties.head.asInstanceOf[ApiV2Schema]))
-    result   <- ontologyResponder.getPropertiesFromOntologyV2(propertyIris, allLanguages, user)
-    response <- renderer.render(result, formatOptions)
+    propertyIri <- iriConverter.asPropertyIri(propertyIri.value).mapError(BadRequestException.apply)
+    schema <- ZIO
+                .fromOption(propertyIri.ontologySchema.collect { case s: ApiV2Schema => s })
+                .orElseFail(BadRequestException(s"Property IRI must have an API V2 schema: $propertyIri"))
+    result   <- ontologyResponder.getPropertyFromOntologyV2(propertyIri, allLanguages, user)
+    response <- renderer.render(result, formatOptions.copy(schema = schema))
   } yield response
 
   def canDeleteProperty(

@@ -4,7 +4,7 @@
  */
 
 package org.knora.webapi.slice.ontology.repo.service
-
+import zio.*
 import zio.Chunk
 import zio.Task
 import zio.ZIO
@@ -18,12 +18,13 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
+
 final case class OntologyRepoLive(private val converter: IriConverter, private val ontologyCache: OntologyCache)
     extends OntologyRepo {
 
@@ -139,6 +140,15 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
       case classes => findAllSuperClassesBy(toClassIris(classes), acc ::: classes, cache, upToClassIri)
     }
   }
+
+  def findRepresentationClass(classIri: ResourceClassIri): Task[RepresentationClass] =
+    findAllSuperClassesBy(classIri.toInternalIri).map(iris =>
+      iris
+        .map(_.entityInfoContent.classIri)
+        .flatMap(RepresentationClass.from)
+        .headOption
+        .getOrElse(RepresentationClass.WithoutRepresentation),
+    )
 
   override def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]] =
     getCache.map { c =>

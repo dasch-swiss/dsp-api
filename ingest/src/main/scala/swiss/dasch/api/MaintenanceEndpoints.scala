@@ -67,21 +67,21 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
     .out(stringBody)
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
-    .description("Authorization: admin scope required.")
+    .description("Authorization: admin scope required (SystemAdmins only).")
 
   val needsTopLeftCorrectionEndpoint = base.secureEndpoint.get
     .in(maintenance / "needs-top-left-correction")
     .out(stringBody)
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
-    .description("Authorization: admin scope required.")
+    .description("Authorization: admin scope required (SystemAdmins only).")
 
   val wasTopLeftCorrectionAppliedEndpoint = base.secureEndpoint.get
     .in(maintenance / "was-top-left-correction-applied")
     .out(stringBody)
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
-    .description("Authorization: admin scope required.")
+    .description("Authorization: admin scope required (SystemAdmins only).")
 
   val endpoints = List(
     postMaintenanceActionEndpoint,

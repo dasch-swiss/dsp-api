@@ -154,4 +154,11 @@ object Vocabulary {
     val dataAdmin: Iri       = Rdf.iri(adminDataNamedGraph.value)
     val dataPermissions: Iri = Rdf.iri(permissionsDataNamedGraph.value)
   }
+
+  object SalsahGui {
+    val salsahGuiPrefixExpansion = "http://www.knora.org/ontology/salsah-gui#"
+    val NS: Namespace            = new SimpleNamespace("salsah-gui", salsahGuiPrefixExpansion)
+
+    val guiOrder: Iri = Rdf.iri(salsahGuiPrefixExpansion, "guiOrder")
+  }
 }

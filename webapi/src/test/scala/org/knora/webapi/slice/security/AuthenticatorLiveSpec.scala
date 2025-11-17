@@ -11,12 +11,10 @@ import zio.test.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.Password

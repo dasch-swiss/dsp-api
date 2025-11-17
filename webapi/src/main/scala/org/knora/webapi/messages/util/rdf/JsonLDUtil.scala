@@ -610,7 +610,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         case typ if typ == OntologyConstants.Xsd.Uri || typ == "xsd:anyURI" =>
           obj.getRequiredString(JsonLDKeywords.VALUE).flatMap { str =>
             Try(URI.create(str)).toEither.left.map {
-              case e: IllegalArgumentException => s"Invalid URI: '$str'"
+              case _: IllegalArgumentException => s"Invalid URI: '$str'"
               case e: Throwable                => e.getMessage
             }
           }
@@ -939,7 +939,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
         }
 
         val text = obj.requireStringWithValidation(JsonLDKeywords.VALUE, validationFun)
-        StringLiteralV2.from(text, Some(lang))
+        StringLiteralV2.unsafeFrom(text, Some(lang))
 
       case other => throw BadRequestException(s"Expected JSON-LD object: $other")
     }

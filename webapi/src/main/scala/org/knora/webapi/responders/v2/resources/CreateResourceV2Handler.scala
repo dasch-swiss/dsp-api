@@ -182,7 +182,6 @@ final case class CreateResourceV2Handler(
           .ask[EntityInfoGetResponseV2](
             EntityInfoGetRequestV2(
               classIris = linkTargetClasses.values.toSet + internalCreateResource.resourceClassIri,
-              requestingUser = createResourceRequestV2.requestingUser,
             ),
           )
 
@@ -195,7 +194,6 @@ final case class CreateResourceV2Handler(
           .ask[EntityInfoGetResponseV2](
             EntityInfoGetRequestV2(
               propertyIris = resourceClassInfo.knoraResourceProperties,
-              requestingUser = createResourceRequestV2.requestingUser,
             ),
           )
 

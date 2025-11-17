@@ -10,7 +10,6 @@ import com.apicatalog.jsonld.JsonLd
 import com.apicatalog.jsonld.document.JsonDocument
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property
-import org.apache.jena.rdf.model.Resource
 import org.apache.jena.vocabulary.RDF
 import sttp.client4.*
 import sttp.model.*
@@ -26,15 +25,14 @@ import scala.language.implicitConversions
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.it.v2.LegalInfoE2ESpec.suite
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.admin.api.model.PageAndSize
-import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.api.PageAndSize
+import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
@@ -307,9 +305,9 @@ object LegalInfoE2ESpec extends E2EZSpec {
     uploadedFile: UploadedFile,
     resourceIri: ResourceIri,
     valueIdOld: ValueIri,
-    copyrightHolder: CopyrightHolder = aCopyrightHolder,
-    authorship: List[Authorship] = someAuthorship,
-    licenseIri: LicenseIri = enabledLicenseIri,
+    copyrightHolder: CopyrightHolder,
+    authorship: List[Authorship],
+    licenseIri: LicenseIri,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] = {
     val request = UpdateStillImageFileValueRequest(
       resourceIri,

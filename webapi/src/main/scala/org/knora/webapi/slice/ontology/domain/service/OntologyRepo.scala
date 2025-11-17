@@ -5,8 +5,7 @@
 
 package org.knora.webapi.slice.ontology.domain.service
 
-import zio.Chunk
-import zio.Task
+import zio.*
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
@@ -19,6 +18,7 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.service.Repository
+import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
 
 trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
@@ -38,6 +38,8 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   def findDirectSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
+  final def findAllSuperClassesBy(classIri: ResourceClassIri): Task[List[ReadClassInfoV2]] =
+    findAllSubclassesBy(classIri.toInternalIri)
   def findAllSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
   def findAllSuperClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]]
@@ -54,6 +56,8 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
   def findDirectSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
   def findAllSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
+
+  def findRepresentationClass(classIri: ResourceClassIri): Task[RepresentationClass]
 
   def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]]
 }

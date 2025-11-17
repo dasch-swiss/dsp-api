@@ -24,6 +24,8 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter.*
 import org.knora.webapi.messages.XmlPatterns.nCNamePattern
 import org.knora.webapi.messages.XmlPatterns.nCNameRegex
+import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
@@ -475,6 +477,7 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] { 
    */
   def toComplexSchema: SmartIri  = toOntologySchema(ApiV2Complex)
   def toInternalSchema: SmartIri = toOntologySchema(InternalSchema)
+  def toSimpleSchema(): SmartIri = toOntologySchema(ApiV2Simple)
 
   /**
    * Constructs a short prefix label for the ontology that the IRI belongs to.
@@ -1553,7 +1556,11 @@ class StringFormatter private (
   def unescapeStringLiteralSeq(stringLiteralSeq: StringLiteralSequenceV2): StringLiteralSequenceV2 =
     StringLiteralSequenceV2(
       stringLiterals = stringLiteralSeq.stringLiterals.map(stringLiteral =>
-        StringLiteralV2.from(Iri.fromSparqlEncodedString(stringLiteral.value), stringLiteral.language),
+        val newValue = Iri.fromSparqlEncodedString(stringLiteral.value)
+        stringLiteral match {
+          case LanguageTaggedStringLiteralV2(_, language) => StringLiteralV2.from(newValue, language)
+          case PlainStringLiteralV2(_)                    => StringLiteralV2.from(newValue)
+        },
       ),
     )
 }

@@ -15,7 +15,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.ProjectMember
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestAdminApiClient

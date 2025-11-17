@@ -5,6 +5,7 @@
 
 package org.knora.webapi.testservices
 import sttp.client4.Request
+import sttp.model.HeaderNames
 import sttp.model.MediaType
 
 object RequestsUpdates {
@@ -28,9 +29,9 @@ object RequestsUpdates {
   def addAcceptHeader[A](accept: MediaType): RequestUpdate[A] =
     addAcceptHeader(accept.toString)
   def addAcceptHeaderTurtle[A]: RequestUpdate[A] =
-    _.header("Accept", "text/turtle")
+    _.header(HeaderNames.Accept, "text/turtle")
   def addAcceptHeaderRdfXml[A]: RequestUpdate[A] =
-    _.header("Accept", "application/rdf+xml")
+    _.header(HeaderNames.Accept, "application/rdf+xml")
   def addAcceptHeader[A](accept: String): RequestUpdate[A] =
-    _.header("Accept", accept)
+    _.header(HeaderNames.Accept, accept)
 }

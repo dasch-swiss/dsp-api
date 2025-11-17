@@ -5,16 +5,12 @@
 
 package org.knora.webapi.slice.infrastructure
 
-import io.opentelemetry.sdk.OpenTelemetrySdk
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk
 import io.sentry.Sentry
 import io.sentry.SentryOptions
 import zio.*
 import zio.telemetry.opentelemetry.OpenTelemetry as ZOpenTelemetry
 import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.telemetry.opentelemetry.tracing.Tracing
-
-import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.config.OpenTelemetryConfig
@@ -26,24 +22,9 @@ object OpenTelemetry {
   // configuring OpenTelemetry to work with Sentry.
   // This is triggered by creating a `AutoConfiguredOpenTelemetrySdk` and must happen before `Sentry.init`.
   // https://docs.sentry.io/platforms/java/opentelemetry/setup/agentless/#usage
+
   private val otelSdkSentry = ZLayer.scoped {
     for {
-      _ <- ZIO.logInfo("Initializing OpenTelemetry.")
-      otel <- ZIO.fromAutoCloseable(
-                ZIO.succeed(
-                  AutoConfiguredOpenTelemetrySdk
-                    .builder()
-                    .addPropertiesSupplier(() =>
-                      Map(
-                        "otel.logs.exporter"    -> "none",
-                        "otel.metrics.exporter" -> "none",
-                        "otel.traces.exporter"  -> "none",
-                      ).asJava,
-                    )
-                    .build()
-                    .getOpenTelemetrySdk,
-                ),
-              )
       config    <- ZIO.service[OpenTelemetryConfig]
       apiConfig <- ZIO.service[KnoraApi]
       _ <- ZIO
@@ -60,10 +41,9 @@ object OpenTelemetry {
                }
              }
              .orElse(ZIO.unit)
-    } yield otel
+    } yield ()
   }
 
   val layer: URLayer[OpenTelemetryConfig & KnoraApi, Tracing] =
-    // Integrate the OpenTelemetry SDK into ZIO and expose as `Tracing`: https://zio.dev/zio-telemetry/opentelemetry/
-    otelSdkSentry >+> ZOpenTelemetry.contextZIO >>> ZOpenTelemetry.tracing("global")
+    otelSdkSentry >+> ZOpenTelemetry.global.orDie >+> ZOpenTelemetry.contextJVM >>> ZOpenTelemetry.tracing("global")
 }

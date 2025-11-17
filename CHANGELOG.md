@@ -1,5 +1,99 @@
 # Changelog
 
+## [32.7.0](https://github.com/dasch-swiss/dsp-api/compare/v32.6.0...v32.7.0) (2025-11-06)
+
+
+### Maintenances
+
+* Dependency updates ([#3837](https://github.com/dasch-swiss/dsp-api/issues/3837)) ([d89cf2a](https://github.com/dasch-swiss/dsp-api/commit/d89cf2abd4fc0bc9d2f48b09ca06f4349b522179))
+* Minor dependency updates ([#3836](https://github.com/dasch-swiss/dsp-api/issues/3836)) ([647d956](https://github.com/dasch-swiss/dsp-api/commit/647d95696a8eb5a2028cbea89ecefc1cf7d0f66e))
+* Move Pagination to org.knora.slice.api package ([#3842](https://github.com/dasch-swiss/dsp-api/issues/3842)) ([f0e713f](https://github.com/dasch-swiss/dsp-api/commit/f0e713f3b22c6bec13730f09243f4622d61f6176))
+* Update sbt-scalafmt to 2.5.6 ([#3840](https://github.com/dasch-swiss/dsp-api/issues/3840)) ([ad0cf5c](https://github.com/dasch-swiss/dsp-api/commit/ad0cf5cd0350ba99c8588e70c2005d05ba2f9883))
+
+
+### Documentation
+
+* Align username specification with code  ([#3838](https://github.com/dasch-swiss/dsp-api/issues/3838)) ([8e0bac0](https://github.com/dasch-swiss/dsp-api/commit/8e0bac070432fbc530c231b6a6c422913d64b158))
+* **dsp-api:** Add V3 basic ADR ([#3841](https://github.com/dasch-swiss/dsp-api/issues/3841)) ([c2d6e61](https://github.com/dasch-swiss/dsp-api/commit/c2d6e61c9bf37770b086d456ff55690782d09903))
+
+
+### Enhancements
+
+* /v3/export/resources with CSV output (DEV-5467) ([#3834](https://github.com/dasch-swiss/dsp-api/issues/3834)) ([c68cb83](https://github.com/dasch-swiss/dsp-api/commit/c68cb836a234e19d952782711efd76dcec0ce1a7))
+
+## [32.6.0](https://github.com/dasch-swiss/dsp-api/compare/v32.5.0...v32.6.0) (2025-10-28)
+
+
+### Enhancements
+
+* Add additional license statement (DEV-5544) ([#3832](https://github.com/dasch-swiss/dsp-api/issues/3832)) ([c1cac07](https://github.com/dasch-swiss/dsp-api/commit/c1cac079b28a110269ecce31423b577c3881577b))
+
+## [32.5.0](https://github.com/dasch-swiss/dsp-api/compare/v32.4.1...v32.5.0) (2025-10-27)
+
+
+### Maintenances
+
+* Add otel java agent and grafana pyroscope otel extension to the webapi docker image ([#3827](https://github.com/dasch-swiss/dsp-api/issues/3827)) ([e90a62d](https://github.com/dasch-swiss/dsp-api/commit/e90a62dac1ced3b74df6e87a0eb245299004b278))
+* Improve error message when cardinality creation fails ([#3829](https://github.com/dasch-swiss/dsp-api/issues/3829)) ([6e4047d](https://github.com/dasch-swiss/dsp-api/commit/6e4047d0eabd6a64134d9b3047187a6f0aff5c80))
+
+
+### Enhancements
+
+* Middleware traceId annotation, dump gravsearch queries into a span ([#3831](https://github.com/dasch-swiss/dsp-api/issues/3831)) ([62b3445](https://github.com/dasch-swiss/dsp-api/commit/62b3445e1bc8ac0a519499adb011027a93fdd603))
+
+## [32.4.1](https://github.com/dasch-swiss/dsp-api/compare/v32.4.0...v32.4.1) (2025-10-16)
+
+
+### Maintenances
+
+* Dependency updates ([#3822](https://github.com/dasch-swiss/dsp-api/issues/3822)) ([03ed8cf](https://github.com/dasch-swiss/dsp-api/commit/03ed8cf8021794cce324c73956aab3d8b2752629))
+* Dump all gravsearch queries ([#3818](https://github.com/dasch-swiss/dsp-api/issues/3818)) ([e80eb58](https://github.com/dasch-swiss/dsp-api/commit/e80eb581a51e943c0b375f8883323326d5ac6689))
+* Major dependency updates ([#3821](https://github.com/dasch-swiss/dsp-api/issues/3821)) ([8600723](https://github.com/dasch-swiss/dsp-api/commit/8600723b29e331087164c47297a3f434c5d285e2))
+* Minor dependency updates ([#3820](https://github.com/dasch-swiss/dsp-api/issues/3820)) ([a04dc49](https://github.com/dasch-swiss/dsp-api/commit/a04dc49eb59e74286f2bdf9d43e158e3e472bfbc))
+* Patch dependency updates ([#3819](https://github.com/dasch-swiss/dsp-api/issues/3819)) ([1eb663e](https://github.com/dasch-swiss/dsp-api/commit/1eb663e787709b099099f9ef16e9adf2c340adb3))
+* Slightly improve Gravsearch query traversal logic ([#3815](https://github.com/dasch-swiss/dsp-api/issues/3815)) ([4886a5e](https://github.com/dasch-swiss/dsp-api/commit/4886a5e36c66caecbf84fb8b286b06ec2400547d))
+* Use server endpoints for swagger UI and OpenAPI yaml ([#3812](https://github.com/dasch-swiss/dsp-api/issues/3812)) ([322c125](https://github.com/dasch-swiss/dsp-api/commit/322c125fbc79f5ccffcadb179785cd34db12bf85))
+
+
+### Documentation
+
+* Fix typo in OpenAPI specification ([#3826](https://github.com/dasch-swiss/dsp-api/issues/3826)) ([326431c](https://github.com/dasch-swiss/dsp-api/commit/326431c9c5a1db73256d4fe39440ac904bab2d32))
+
+
+### Bug Fixes
+
+* Use correct version for OpenAPI yaml and Swagger UI ([#3825](https://github.com/dasch-swiss/dsp-api/issues/3825)) ([0217ee4](https://github.com/dasch-swiss/dsp-api/commit/0217ee4f8a4a439d43b1cfc66b9dcdce3e28d8e2))
+
+
+### Tests
+
+* Possibly fix issues with hanging tests ([#3824](https://github.com/dasch-swiss/dsp-api/issues/3824)) ([c7f8c92](https://github.com/dasch-swiss/dsp-api/commit/c7f8c9209691ac20c7558e62e91d654dcf7a4a8a))
+
+## [32.4.0](https://github.com/dasch-swiss/dsp-api/compare/v32.3.3...v32.4.0) (2025-10-14)
+
+
+### Maintenances
+
+* **dsp-api:** Replace Pekko HTTP server with zio-http (DEV-4870) ([#3798](https://github.com/dasch-swiss/dsp-api/issues/3798)) ([63bc41a](https://github.com/dasch-swiss/dsp-api/commit/63bc41af5a3891613343a20ddc3e5b502b44ffea))
+
+
+### Enhancements
+
+* Prepare v3 api base definitions in own package ([#3813](https://github.com/dasch-swiss/dsp-api/issues/3813)) ([57ba713](https://github.com/dasch-swiss/dsp-api/commit/57ba713fec993a08f62b7d9eb81634915bc6cb1b))
+
+## [32.3.3](https://github.com/dasch-swiss/dsp-api/compare/v32.3.2...v32.3.3) (2025-10-13)
+
+
+### Maintenances
+
+* Remove docs generators for ingest and api ([#3807](https://github.com/dasch-swiss/dsp-api/issues/3807)) ([6fc5d05](https://github.com/dasch-swiss/dsp-api/commit/6fc5d051852ca0b2e79146830747ec50b23dcb52))
+
+
+### Bug Fixes
+
+* Gravsearch limiting to project wrongly excludes knora-api entities ([#3797](https://github.com/dasch-swiss/dsp-api/issues/3797)) ([92c565b](https://github.com/dasch-swiss/dsp-api/commit/92c565b3ce13c1e49699d669f23d93b9f34e0ddb))
+* OpenAPI treat Email as string (DEV-5457) ([#3808](https://github.com/dasch-swiss/dsp-api/issues/3808)) ([f7a573d](https://github.com/dasch-swiss/dsp-api/commit/f7a573d917cf9d0693920ed6eba8f065d6b88b7a))
+
 ## [32.3.2](https://github.com/dasch-swiss/dsp-api/compare/v32.3.1...v32.3.2) (2025-10-06)
 
 

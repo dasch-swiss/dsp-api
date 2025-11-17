@@ -22,10 +22,10 @@ sealed abstract case class UploadFileRequest private (
   fileType: FileType,
   internalFilename: String,
   label: String,
-  resourceIRI: Option[String] = None,
-  copyrightHolder: Option[CopyrightHolder] = None,
-  authorship: Option[List[Authorship]] = None,
-  licenseIri: Option[LicenseIri] = None,
+  resourceIRI: Option[String],
+  copyrightHolder: Option[CopyrightHolder],
+  authorship: Option[List[Authorship]],
+  licenseIri: Option[LicenseIri],
 ) { self =>
 
   /**

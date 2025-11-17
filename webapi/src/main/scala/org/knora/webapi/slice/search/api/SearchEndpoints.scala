@@ -8,21 +8,16 @@ package org.knora.webapi.slice.search.api
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Greater
-import sttp.model.HeaderNames
-import sttp.model.MediaType
 import sttp.tapir.*
 import sttp.tapir.codec.refined.*
 import zio.ZIO
 import zio.ZLayer
 
 import dsp.valueobjects.Iri
-import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.*
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 
 object SearchEndpointsInputs {
@@ -71,16 +66,16 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(stringBody.description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Search for resources using a Gravsearch query.")
 
   val getGravsearch = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchextended" / path[String].description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Search for resources using a Gravsearch query.")
 
   val postGravsearchCount = baseEndpoints.withUserEndpoint.post
@@ -88,16 +83,16 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(stringBody.description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Count resources using a Gravsearch query.")
 
   val getGravsearchCount = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchextended" / "count" / path[String].description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Count resources using a Gravsearch query.")
 
   val getSearchIncomingLinks = baseEndpoints.withUserEndpoint.get
@@ -105,8 +100,8 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.offset)
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Search for incoming links using a Gravsearch query with an offset.")
 
   val getSearchStillImageRepresentations = baseEndpoints.withUserEndpoint.get
@@ -118,8 +113,8 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.offset)
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Search for StillImageRepresentations using a Gravsearch query with an offset.")
 
   val getSearchStillImageRepresentationsCount = baseEndpoints.withUserEndpoint.get
@@ -130,8 +125,8 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     )
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Count SearchStillImageRepresentations using a Gravsearch query.")
 
   val getSearchIncomingRegions = baseEndpoints.withUserEndpoint.get
@@ -142,8 +137,8 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.offset)
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Search for incoming regions using a Gravsearch query with an offset.")
 
   val getSearchByLabel = baseEndpoints.withUserEndpoint.get
@@ -152,8 +147,8 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.offset)
     .in(SearchEndpointsInputs.limitToProject)
     .in(SearchEndpointsInputs.limitToResourceClass)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Search for resources by label.")
 
   val getSearchByLabelCount = baseEndpoints.withUserEndpoint.get
@@ -161,8 +156,8 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
     .in(SearchEndpointsInputs.limitToResourceClass)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Search for resources by label.")
 
   val getFullTextSearch = baseEndpoints.withUserEndpoint.get
@@ -173,8 +168,8 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToResourceClass)
     .in(SearchEndpointsInputs.limitToStandoffClass)
     .in(SearchEndpointsInputs.returnFiles)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Search for resources by label.")
 
   val getFullTextSearchCount = baseEndpoints.withUserEndpoint.get
@@ -183,25 +178,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToProject)
     .in(SearchEndpointsInputs.limitToResourceClass)
     .in(SearchEndpointsInputs.limitToStandoffClass)
-    .out(stringBody)
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
     .description("Search for resources by label.")
-
-  val endpoints: Seq[AnyEndpoint] =
-    Seq(
-      postGravsearch,
-      getGravsearch,
-      postGravsearchCount,
-      getGravsearchCount,
-      getSearchIncomingLinks,
-      getSearchStillImageRepresentations,
-      getSearchStillImageRepresentationsCount,
-      getSearchIncomingRegions,
-      getSearchByLabel,
-      getSearchByLabelCount,
-      getFullTextSearch,
-      getFullTextSearchCount,
-    ).map(_.endpoint.tag("V2 Search"))
 }
 
 object SearchEndpoints {

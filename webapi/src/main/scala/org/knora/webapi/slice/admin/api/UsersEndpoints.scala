@@ -163,33 +163,6 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .out(jsonBody[UserResponse])
       .description("Remove a user form an group membership identified by IRI.")
   }
-
-  private val public =
-    Seq(
-      get.usersByIriProjectMemberShips,
-      get.usersByIriProjectAdminMemberShips,
-      get.usersByIriGroupMemberships,
-    )
-  private val secured =
-    Seq(
-      get.users,
-      get.userByIri,
-      get.userByEmail,
-      get.userByUsername,
-      post.users,
-      post.usersByIriProjectMemberShips,
-      post.usersByIriProjectAdminMemberShips,
-      post.usersByIriGroupMemberShips,
-      put.usersIriBasicInformation,
-      put.usersIriPassword,
-      put.usersIriStatus,
-      put.usersIriSystemAdmin,
-      delete.deleteUser,
-      delete.usersByIriProjectMemberShips,
-      delete.usersByIriProjectAdminMemberShips,
-      delete.usersByIriGroupMemberShips,
-    ).map(_.endpoint)
-  val endpoints: Seq[AnyEndpoint] = (public ++ secured).map(_.tag("Admin Users"))
 }
 
 object UsersEndpoints {

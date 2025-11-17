@@ -9,7 +9,6 @@ import sttp.client4.UriContext
 import zio.*
 import zio.json.*
 import zio.test.*
-import zio.test.Assertion.*
 
 import java.time.Instant
 import scala.language.implicitConversions
@@ -2166,9 +2165,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
           TestApiClient
             .postJsonLdDocument(uri"/v2/ontologies/cardinalities", addCardinalitiesRequestJson, anythingAdminUser)
             .flatMap(_.assert200)
-        responseAsInput = InputOntologyV2.fromJsonLD(jsonLd, parsingMode = TestResponseParsingModeV2).unescape
-        (lastModDateBeforeAddCardinalities, lastModDateAfterAddCardinalities) =
-          self.freetestLastModDate.updateFrom(jsonLd)
+        _ = self.freetestLastModDate.updateFrom(jsonLd)
 
         // Create a resource of #BlueTestClass using only #hasBlueTestIntProp
         resourceLabel = {
@@ -2295,8 +2292,7 @@ object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
         jsonLd <- TestApiClient
                     .postJsonLdDocument(uri"/v2/ontologies/classes", createClassRequestJsonOne, anythingAdminUser)
                     .flatMap(_.assert200)
-        responseAsInput                                             = InputOntologyV2.fromJsonLD(jsonLd, parsingMode = TestResponseParsingModeV2).unescape
-        (lastModDateBeforeCreateClass, lastModDateAfterCreateClass) = self.freetestLastModDate.updateFrom(jsonLd)
+        _ = self.freetestLastModDate.updateFrom(jsonLd)
         // Create TestClassTwo with no cardinalities
         label1 = LangString.make(EN, "Test class number two").fold(e => throw e.head, v => v)
         comment1 = Some(

@@ -8,19 +8,13 @@ package org.knora.webapi.slice.resources.api
 import sttp.model.MediaType
 import sttp.tapir.*
 import sttp.tapir.Codec.PlainCodec
-import sttp.tapir.server.PartialServerEndpoint
 import zio.ZLayer
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import java.time.Instant
-import scala.concurrent.Future
 
-import dsp.errors.RequestRejectedException
-import org.knora.webapi.slice.admin.api.AdminPathVariables
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.infrastructure.ColumnDef
 import org.knora.webapi.slice.infrastructure.CsvRowBuilder
@@ -105,11 +99,8 @@ final case class MetadataEndpoints(private val baseEndpoints: BaseEndpoints) {
         "The metadata is returned with complex schema IRIs in the payload. " +
         "This endpoint is only available for system and project admins.",
     )
-
-  val endpoints: Seq[AnyEndpoint] = (Seq(
-    getResourcesMetadata,
-  ).map(_.endpoint)).map(_.tag("V2 Metadata"))
 }
+
 object MetadataEndpoints {
   val layer = ZLayer.derive[MetadataEndpoints]
 }

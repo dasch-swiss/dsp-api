@@ -245,6 +245,17 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
         |CMD bash /opt/docker/scripts/healthcheck.sh || exit 1""".stripMargin,
     ),
+    // Add Opentelemetry java agent and Grafana Pyroscope extension
+    dockerCommands += Cmd(
+      "ADD",
+      s"https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/${Dependencies.otelAgentVersion}/opentelemetry-javaagent.jar",
+      "/usr/local/lib/opentelemetry-javaagent.jar",
+    ),
+    dockerCommands += Cmd(
+      "ADD",
+      s"https://github.com/grafana/otel-profiling-java/releases/download/${Dependencies.otelPyroscopeVersion}/pyroscope-otel.jar",
+      "/usr/local/lib/pyroscope-otel.jar",
+    ),
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
       // Remove USER command
@@ -285,6 +296,7 @@ lazy val testkit: Project = Project(id = "testkit", base = file("modules/testkit
       Dependencies.zioTest,
       Dependencies.testcontainers,
       Dependencies.wiremock,
+      Dependencies.dataFaker,
     ),
     publish / skip := true,
     name           := "testkit",
@@ -310,7 +322,6 @@ lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
     Test / fork               := true,
     Test / testForkedParallel := false,
     Test / parallelExecution  := false,
-    Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "pekko"),
     Test / testOptions += Tests.Argument("-oDF"), // full stack traces and durations
     Test / baseDirectory := (ThisBuild / baseDirectory).value,
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,
@@ -342,7 +353,6 @@ lazy val e2e: Project = Project(id = "test-e2e", base = file("modules/test-e2e")
     Test / fork               := true,
     Test / testForkedParallel := false,
     Test / parallelExecution  := false,
-    Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "pekko"),
     Test / testOptions += Tests.Argument("-oDF"),
     Test / baseDirectory := (ThisBuild / baseDirectory).value,
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,

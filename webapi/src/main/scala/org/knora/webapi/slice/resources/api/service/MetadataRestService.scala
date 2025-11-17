@@ -19,7 +19,6 @@ import java.time.format.DateTimeFormatter
 
 import dsp.errors.BadRequestException
 import dsp.errors.RequestRejectedException
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService

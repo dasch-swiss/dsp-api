@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.capabilities.pekko.PekkoStreams
+import sttp.capabilities.zio.ZioStreams
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
@@ -210,40 +210,9 @@ final case class ProjectsEndpoints(
       .in(projectsByIri / "AllData")
       .out(header[String]("Content-Disposition"))
       .out(header[String]("Content-Type"))
-      .out(streamBinaryBody(PekkoStreams)(CodecFormat.OctetStream()))
+      .out(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
       .description("Returns all ontologies, data, and configuration belonging to a project identified by the IRI.")
   }
-
-  val endpoints: Seq[AnyEndpoint] =
-    (Seq(
-      Public.getAdminProjects,
-      Public.getAdminProjectsByProjectIri,
-      Public.getAdminProjectsByProjectIriRestrictedViewSettings,
-      Public.getAdminProjectsByProjectShortcode,
-      Public.getAdminProjectsByProjectShortcodeRestrictedViewSettings,
-      Public.getAdminProjectsByProjectShortname,
-      Public.getAdminProjectsByProjectShortnameRestrictedViewSettings,
-      Public.getAdminProjectsKeywords,
-      Public.getAdminProjectsKeywordsByProjectIri,
-    ) ++ Seq(
-      Secured.deleteAdminProjectsByIri,
-      Secured.deleteAdminProjectsByProjectShortcodeErase,
-      Secured.getAdminProjectsByIriAllData,
-      Secured.getAdminProjectsByProjectIriAdminMembers,
-      Secured.getAdminProjectsByProjectIriMembers,
-      Secured.getAdminProjectsByProjectShortcodeAdminMembers,
-      Secured.getAdminProjectsByProjectShortcodeMembers,
-      Secured.getAdminProjectsByProjectShortnameAdminMembers,
-      Secured.getAdminProjectsByProjectShortnameMembers,
-      Secured.getAdminProjectsExports,
-      Secured.postAdminProjects,
-      Secured.postAdminProjectsByShortcodeExport,
-      Secured.postAdminProjectsByShortcodeExportAwaiting,
-      Secured.postAdminProjectsByShortcodeImport,
-      Secured.putAdminProjectsByIri,
-      Secured.postAdminProjectsByProjectIriRestrictedViewSettings,
-      Secured.postAdminProjectsByProjectShortcodeRestrictedViewSettings,
-    ).map(_.endpoint)).map(_.tag("Admin Projects"))
 }
 
 object ProjectsEndpoints {

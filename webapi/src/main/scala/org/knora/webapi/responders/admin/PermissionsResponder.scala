@@ -34,7 +34,6 @@ import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.F
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClass
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClassAndProperty
 import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
@@ -1060,15 +1059,13 @@ final case class PermissionsResponder(
       _ <- triplestore.query(
              Update(sparql.admin.txt.deletePermission(AdminConstants.permissionsDataNamedGraph.value, permissionIri)),
            )
-      _ <- triplestore
-             .query(Ask(sparql.admin.txt.checkIriExists(permissionIri)))
-      permissionStillExists <- triplestore.query(Ask(sparql.admin.txt.checkIriExists(permissionIri)))
-
-      _ = if (permissionStillExists) {
-            throw UpdateNotPerformedException(
-              s"Permission <$permissionIri> was not erased. Please report this as a possible bug.",
-            )
-          }
+      _ <- ZIO
+             .die(
+               UpdateNotPerformedException(
+                 s"Permission <$permissionIri> was not erased. Please report this as a possible bug.",
+               ),
+             )
+             .whenZIO(iriService.checkIriExists(permissionIri))
     } yield ()
 
   def createPermissionsForAdminsAndMembersOfNewProject(projectIri: ProjectIri): Task[Unit] =

@@ -56,11 +56,11 @@ final case class TestDspIngestClient(
 
   private def createImageFile(filename: String) =
     for {
-      dir  <- zio.nio.file.Files.createTempDirectory(None, Seq.empty)
-      path  = dir / filename
-      file <- zio.nio.file.Files.createFile(path)
-      img   = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
-      _    <- ZIO.attemptBlocking(ImageIO.write(img, "jpeg", path.toFile))
+      dir <- zio.nio.file.Files.createTempDirectory(None, Seq.empty)
+      path = dir / filename
+      _   <- zio.nio.file.Files.createFile(path)
+      img  = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
+      _   <- ZIO.attemptBlocking(ImageIO.write(img, "jpeg", path.toFile))
     } yield path
 
 }

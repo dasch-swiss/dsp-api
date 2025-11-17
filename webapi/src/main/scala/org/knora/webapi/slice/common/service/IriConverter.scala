@@ -38,7 +38,9 @@ final case class IriConverter(sf: StringFormatter) {
   def asResourceClassIriApiV2Complex(iri: String): IO[String, ResourceClassIri] =
     asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(ResourceClassIri.fromApiV2Complex(sIri)))
   def asResourceClassIri(iri: String): IO[String, ResourceClassIri] =
-    asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(ResourceClassIri.from(sIri)))
+    asSmartIri(iri).mapError(_.getMessage).flatMap(asResourceClassIri)
+
+  def asResourceClassIri(sIri: SmartIri): IO[String, ResourceClassIri] = ZIO.fromEither(ResourceClassIri.from(sIri))
 
   def asPropertyIriApiV2Complex(iri: String): IO[String, PropertyIri] =
     asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(PropertyIri.fromApiV2Complex(sIri)))

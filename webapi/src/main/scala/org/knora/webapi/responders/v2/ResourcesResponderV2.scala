@@ -49,7 +49,6 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -57,12 +56,13 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.VersionDate
+import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.store.iiif.errors.SipiException
@@ -208,8 +208,11 @@ final case class ResourcesResponderV2(
    */
   def updateResourceMetadataV2(
     updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2,
-  ): Task[UpdateResourceMetadataResponseV2] = {
-    def makeTaskFuture: Task[UpdateResourceMetadataResponseV2] =
+  ): Task[UpdateResourceMetadataResponseV2] =
+    IriLocker.runWithIriLock(
+      updateResourceMetadataRequestV2.apiRequestID,
+      updateResourceMetadataRequestV2.resourceIri,
+    )(
       for {
         // Get the metadata of the resource to be updated.
         resourcesSeq <- getResourcePreviewWithDeletedResource(
@@ -237,34 +240,27 @@ final case class ResourcesResponderV2(
                updateResourceMetadataRequestV2.requestingUser,
              )
 
-        // Get the IRI of the named graph in which the resource is stored.
-        dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
-
-        newModificationDate <-
-          updateResourceMetadataRequestV2.maybeNewModificationDate match {
-            case Some(submittedNewModificationDate) =>
-              if (resource.lastModificationDate.exists(_.isAfter(submittedNewModificationDate))) {
-                val msg =
-                  s"Submitted knora-api:newModificationDate is before the resource's current knora-api:lastModificationDate"
-                ZIO.fail(BadRequestException(msg))
-              } else {
-                ZIO.succeed(submittedNewModificationDate)
-              }
-            case None => ZIO.succeed(Instant.now)
-          }
-
-        // Generate SPARQL for updating the resource.
-        sparqlUpdate = sparql.v2.txt.changeResourceMetadata(
-                         dataNamedGraph = dataNamedGraph,
-                         resourceIri = updateResourceMetadataRequestV2.resourceIri,
-                         resourceClassIri = internalResourceClassIri,
-                         maybeLastModificationDate = updateResourceMetadataRequestV2.maybeLastModificationDate,
-                         newModificationDate = newModificationDate,
-                         maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
-                         maybePermissions = updateResourceMetadataRequestV2.maybePermissions,
-                       )
         // Do the update.
-        _ <- triplestore.query(Update(sparqlUpdate))
+        project <- projectService
+                     .findById(resource.projectADM.id)
+                     .someOrFail(NotFoundException.notFound(resource.projectADM.id))
+        resourceIri <- iriConverter
+                         .asResourceIri(updateResourceMetadataRequestV2.resourceIri)
+                         .mapError(BadRequestException.apply)
+        resourceClassIri <- iriConverter
+                              .asResourceClassIri(internalResourceClassIri)
+                              .mapError(BadRequestException.apply)
+        lmdAndUpdate <- ChangeResourceMetadataQuery.build(
+                          project,
+                          resourceIri,
+                          resourceClassIri,
+                          updateResourceMetadataRequestV2.maybeLastModificationDate.map(LastModificationDate.from),
+                          updateResourceMetadataRequestV2.maybeNewModificationDate.map(LastModificationDate.from),
+                          updateResourceMetadataRequestV2.maybeLabel,
+                          updateResourceMetadataRequestV2.maybePermissions,
+                        )
+        (newLmd, updateQuery) = lmdAndUpdate
+        _                    <- triplestore.query(updateQuery)
 
         // Verify that the resource was updated correctly.
 
@@ -281,9 +277,9 @@ final case class ResourcesResponderV2(
 
         updatedResource: ReadResourceV2 = updatedResourcesSeq.resources.head
 
-        _ <- ZIO.when(!updatedResource.lastModificationDate.contains(newModificationDate)) {
+        _ <- ZIO.when(!updatedResource.lastModificationDate.contains(newLmd.value)) {
                val msg =
-                 s"Updated resource has last modification date ${updatedResource.lastModificationDate}, expected $newModificationDate"
+                 s"Updated resource has last modification date ${updatedResource.lastModificationDate}, expected $newLmd"
                ZIO.fail(UpdateNotPerformedException(msg))
              }
 
@@ -306,17 +302,9 @@ final case class ResourcesResponderV2(
         resourceClassIri = updateResourceMetadataRequestV2.resourceClassIri,
         maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
         maybePermissions = updateResourceMetadataRequestV2.maybePermissions,
-        lastModificationDate = newModificationDate,
-      )
-
-    for {
-      // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-      taskResult <- IriLocker.runWithIriLock(
-                      updateResourceMetadataRequestV2.apiRequestID,
-                      updateResourceMetadataRequestV2.resourceIri,
-                    )(makeTaskFuture)
-    } yield taskResult
-  }
+        lastModificationDate = newLmd.value,
+      ),
+    )
 
   /**
    * Marks a resource as deleted.
@@ -524,7 +512,7 @@ final case class ResourcesResponderV2(
                 s"Resource <${eraseResourceV2.resourceIri}> was not erased. Please report this as a possible bug.",
               ),
             )
-            .whenZIO(iriService.checkIriExists(resourceIri.toString))
+            .whenZIO(iriService.checkIriExists(resourceIri))
       } yield SuccessResponseV2("Resource erased")
     IriLocker.runWithIriLock(eraseResourceV2.apiRequestID, eraseResourceV2.resourceIri)(eraseTask)
   }
@@ -606,7 +594,6 @@ final case class ResourcesResponderV2(
       valueUuid,
       versionDate,
       withDeleted,
-      showDeletedValues,
       targetSchema,
       schemaOptions,
       requestingUser,
@@ -625,15 +612,14 @@ final case class ResourcesResponderV2(
   /**
    * Get one or several resources and return them as a sequence.
    *
-   * @param resourceIris      the IRIs of the resources to be queried.
-   * @param propertyIri       if defined, requests only the values of the specified explicit property.
-   * @param valueUuid         if defined, requests only the value with the specified UUID.
-   * @param versionDate       if defined, requests the state of the resources at the specified time in the past.
-   * @param withDeleted       if defined, indicates if the deleted resource and values should be returned or not.
-   * @param showDeletedValues if false, deleted values will be shown as DeletedValue
-   * @param targetSchema      the target API schema.
-   * @param schemaOptions     the schema options submitted with the request.
-   * @param requestingUser    the user making the request.
+   * @param resourceIris    the IRIs of the resources to be queried.
+   * @param propertyIri     if defined, requests only the values of the specified explicit property.
+   * @param valueUuid       if defined, requests only the value with the specified UUID.
+   * @param versionDate     if defined, requests the state of the resources at the specified time in the past.
+   * @param withDeleted     if defined, indicates if the deleted resource and values should be returned or not.
+   * @param targetSchema    the target API schema.
+   * @param schemaOptions   the schema options submitted with the request.
+   * @param requestingUser  the user making the request.
    * @return a [[ReadResourcesSequenceV2]].
    */
   def getResources(
@@ -642,7 +628,6 @@ final case class ResourcesResponderV2(
     valueUuid: Option[UUID] = None,
     versionDate: Option[VersionDate] = None,
     withDeleted: Boolean = true,
-    showDeletedValues: Boolean = false,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[Rendering],
     requestingUser: User,

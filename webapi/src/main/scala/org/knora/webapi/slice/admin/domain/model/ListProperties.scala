@@ -9,6 +9,8 @@ import zio.prelude.Validation
 
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
@@ -83,7 +85,12 @@ object ListProperties {
           Validation
             .fromOption(Iri.toSparqlEncodedString(l.value))
             .mapError(_ => "Invalid label.")
-            .map(StringLiteralV2.from(_, l.language)),
+            .map(newValue =>
+              l match {
+                case PlainStringLiteralV2(_)                    => StringLiteralV2.from(newValue)
+                case LanguageTaggedStringLiteralV2(_, language) => StringLiteralV2.from(newValue, language)
+              },
+            ),
         )
         Validation.validateAll(validatedLabels).map(Labels.apply).toEitherWith(_.head)
       }
@@ -99,7 +106,12 @@ object ListProperties {
           Validation
             .fromOption(Iri.toSparqlEncodedString(c.value))
             .mapError(_ => "Invalid comment.")
-            .map(s => StringLiteralV2.from(s, c.language)),
+            .map(s =>
+              c match {
+                case PlainStringLiteralV2(_)                    => StringLiteralV2.from(s)
+                case LanguageTaggedStringLiteralV2(_, language) => StringLiteralV2.from(s, language)
+              },
+            ),
         )
         Validation.validateAll(validatedComments).map(Comments.apply).toEitherWith(_.head)
       }

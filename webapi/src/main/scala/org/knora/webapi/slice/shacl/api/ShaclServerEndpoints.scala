@@ -1,0 +1,23 @@
+/*
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.knora.webapi.slice.shacl.api
+
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
+import zio.*
+
+case class ShaclServerEndpoints(
+  private val shaclEndpoints: ShaclEndpoints,
+  private val shaclApiService: ShaclApiService,
+) {
+  val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(
+    shaclEndpoints.validate.zServerLogic(shaclApiService.validate),
+  ).map(_.tag("Shacl API"))
+}
+
+object ShaclServerEndpoints {
+  val layer = ZLayer.derive[ShaclServerEndpoints]
+}

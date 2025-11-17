@@ -686,7 +686,7 @@ final case class SearchResponderV2Live(
           .when(query.offset != 0)
 
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(query.whereClause, user)
+      typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(query.whereClause)
 
       whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(query.whereClause)
 
@@ -754,7 +754,7 @@ final case class SearchResponderV2Live(
 
     for {
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult          <- gravsearchTypeInspectionRunner.inspectTypes(query.whereClause, user)
+      typeInspectionResult          <- gravsearchTypeInspectionRunner.inspectTypes(query.whereClause)
       whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(query.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
@@ -975,7 +975,6 @@ final case class SearchResponderV2Live(
                               EntityInfoGetRequestV2(
                                 classIris = Set(internalClassIri),
                                 propertyIris = maybeInternalOrderByPropertyIri.toSet,
-                                requestingUser = requestingUser,
                               ),
                             )
 

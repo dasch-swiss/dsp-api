@@ -9,11 +9,7 @@ import org.ehcache.config.CacheConfiguration
 import org.ehcache.config.builders.CacheConfigurationBuilder
 import org.ehcache.config.builders.CacheManagerBuilder
 import org.ehcache.config.builders.ResourcePoolsBuilder
-import zio.Ref
-import zio.UIO
-import zio.ULayer
-import zio.ZIO
-import zio.ZLayer
+import zio.*
 
 import scala.reflect.ClassTag
 
@@ -52,8 +48,12 @@ object CacheManager {
   private def getClassOf[A: ClassTag]: Class[A] = implicitly[ClassTag[A]].runtimeClass.asInstanceOf[Class[A]]
 
   val layer: ULayer[CacheManager] = ZLayer.scoped {
-    val acquire = ZIO.succeed(CacheManagerBuilder.newCacheManagerBuilder().build(true))
-    val release = (cm: org.ehcache.CacheManager) => ZIO.succeed(cm.close())
+    val acquire = ZIO
+      .succeed(CacheManagerBuilder.newCacheManagerBuilder().build(true))
+      <* ZIO.logInfo("CacheManager created and initialized")
+
+    val release = (mgr: org.ehcache.CacheManager) => ZIO.succeed(mgr.close()) *> ZIO.logInfo("CacheManager closed")
+
     ZIO
       .acquireRelease(acquire)(release)
       .flatMap(mgr => Ref.make(Set.empty[EhCache[_, _]]).map(CacheManager(mgr, _)))

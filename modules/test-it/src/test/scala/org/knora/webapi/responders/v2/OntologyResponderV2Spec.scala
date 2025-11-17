@@ -31,7 +31,6 @@ import org.knora.webapi.messages.OntologyConstants.Xsd
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
@@ -41,6 +40,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.ontology.api.ChangeGuiOrderRequestV2
 import org.knora.webapi.slice.ontology.api.ChangePropertyLabelsOrCommentsRequestV2
@@ -51,6 +51,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.OntologyTestHelper
 
 object OntologyResponderV2Spec extends E2EZSpec { self =>
 
@@ -141,15 +142,15 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       Rdfs.Label.toSmartIri -> PredicateInfoV2(
         predicateIri = Rdfs.Label.toSmartIri,
         objects = Seq(
-          StringLiteralV2.from("has nothingness", Some("en")),
-          StringLiteralV2.from("hat Nichtsein", Some("de")),
+          StringLiteralV2.from("has nothingness", EN),
+          StringLiteralV2.from("hat Nichtsein", DE),
         ),
       ),
       Rdfs.Comment.toSmartIri -> PredicateInfoV2(
         predicateIri = Rdfs.Comment.toSmartIri,
         objects = Seq(
-          StringLiteralV2.from("Indicates whether a Nothing has nothingness", Some("en")),
-          StringLiteralV2.from("Anzeigt, ob ein Nichts Nichtsein hat", Some("de")),
+          StringLiteralV2.from("Indicates whether a Nothing has nothingness", EN),
+          StringLiteralV2.from("Anzeigt, ob ein Nichts Nichtsein hat", DE),
         ),
       ),
       SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
@@ -171,23 +172,16 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         ),
         Rdfs.Label.toSmartIri -> PredicateInfoV2(
           predicateIri = Rdfs.Label.toSmartIri,
-          objects = Seq(StringLiteralV2.from("void", Some("en"))),
+          objects = Seq(StringLiteralV2.from("void", EN)),
         ),
         Rdfs.Comment.toSmartIri -> PredicateInfoV2(
           predicateIri = Rdfs.Comment.toSmartIri,
-          objects = Seq(StringLiteralV2.from("Represents a void", Some("en"))),
+          objects = Seq(StringLiteralV2.from("Represents a void", EN)),
         ),
       ),
       subClassOf = Set(anythingOntologyIri.makeEntityIri("Nothing")),
       ontologySchema = ApiV2Complex,
     )
-
-  private def getLastModificationDate(r: ReadOntologyMetadataV2, ontologyIri: OntologyIri): Instant =
-    r.toOntologySchema(ApiV2Complex)
-      .ontologies
-      .find(_.ontologyIri == ontologyIri.toComplexSchema)
-      .flatMap(_.lastModificationDate)
-      .getOrElse(throw AssertionException(s"$ontologyIri has no last modification date"))
 
   override val e2eSpec = suite("The ontology responder v2")(
     test("create an empty ontology called 'foo' with a project code") {
@@ -403,7 +397,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("not delete the 'anything' ontology, because it is used in data and in the 'something' ontology") {
       for {
         metadataResponse   <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
-        anythingLastModDate = getLastModificationDate(metadataResponse, anythingOntologyIri)
+        anythingLastModDate = OntologyTestHelper.lastModificationDate(metadataResponse, anythingOntologyIri)
         exit               <- ontologyResponder(_.deleteOntology(anythingOntologyIri, anythingLastModDate, randomUUID)).exit
       } yield assertTrue(metadataResponse.ontologies.size == 3) &&
         assert(exit)(
@@ -520,15 +514,15 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("has name", Some("en")),
-              StringLiteralV2.from("hat Namen", Some("de")),
+              StringLiteralV2.from("has name", EN),
+              StringLiteralV2.from("hat Namen", DE),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("The name of a Thing", Some("en")),
-              StringLiteralV2.from("Der Name eines Dinges", Some("de")),
+              StringLiteralV2.from("The name of a Thing", EN),
+              StringLiteralV2.from("Der Name eines Dinges", DE),
             ),
           ),
         ),
@@ -566,15 +560,15 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                   Rdfs.Label.toSmartIri -> PredicateInfoV2(
                                     predicateIri = Rdfs.Label.toSmartIri,
                                     objects = Seq(
-                                      StringLiteralV2.from("has name", Some("en")),
-                                      StringLiteralV2.from("hat Namen", Some("de")),
+                                      StringLiteralV2.from("has name", EN),
+                                      StringLiteralV2.from("hat Namen", DE),
                                     ),
                                   ),
                                   Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                                     predicateIri = Rdfs.Comment.toSmartIri,
                                     objects = Seq(
-                                      StringLiteralV2.from("The name of a Thing", Some("en")),
-                                      StringLiteralV2.from("Der Name eines Dinges", Some("de")),
+                                      StringLiteralV2.from("The name of a Thing", EN),
+                                      StringLiteralV2.from("Der Name eines Dinges", DE),
                                     ),
                                   ),
                                 ),
@@ -608,7 +602,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     ) {
       for {
         metadataResponse   <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
-        anythingLastModDate = getLastModificationDate(metadataResponse, anythingOntologyIri)
+        anythingLastModDate = OntologyTestHelper.lastModificationDate(metadataResponse, anythingOntologyIri)
         propertyIri         = anythingOntologyIri.makeEntityIri("hasInterestingThing")
         propertyInfoContent = PropertyInfoContentV2(
                                 propertyIri = propertyIri,
@@ -628,13 +622,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                   Rdfs.Label.toSmartIri -> PredicateInfoV2(
                                     predicateIri = Rdfs.Label.toSmartIri,
                                     objects = Seq(
-                                      StringLiteralV2.from("has interesting thing", Some("en")),
+                                      StringLiteralV2.from("has interesting thing", EN),
                                     ),
                                   ),
                                   Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                                     predicateIri = Rdfs.Comment.toSmartIri,
                                     objects = Seq(
-                                      StringLiteralV2.from("an interesting Thing", Some("en")),
+                                      StringLiteralV2.from("an interesting Thing", EN),
                                     ),
                                   ),
                                 ),
@@ -705,8 +699,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       "create a subproperty of an existing custom link property and add it to a resource class, check if the correct link and link value properties were added to the class",
     ) {
       for {
-        metadataResponse           <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
-        (_, newFreetestLastModDate) = self.freetestLastModDate.updateFrom(metadataResponse)
+        metadataResponse <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
+        _                 = self.freetestLastModDate.updateFrom(metadataResponse)
         // Create class freetest:ComicBook which is a subclass of freetest:Book
         comicBookClassIri = freeTestOntologyIri.makeEntityIri("ComicBook")
         comicBookClassInfoContent = ClassInfoContentV2(
@@ -718,11 +712,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                         ),
                                         Rdfs.Label.toSmartIri -> PredicateInfoV2(
                                           predicateIri = Rdfs.Label.toSmartIri,
-                                          objects = Seq(StringLiteralV2.from("Comic Book", Some("en"))),
+                                          objects = Seq(StringLiteralV2.from("Comic Book", EN)),
                                         ),
                                         Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                                           predicateIri = Rdfs.Comment.toSmartIri,
-                                          objects = Seq(StringLiteralV2.from("A comic book", Some("en"))),
+                                          objects = Seq(StringLiteralV2.from("A comic book", EN)),
                                         ),
                                       ),
                                       directCardinalities = Map(),
@@ -744,11 +738,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                           ),
                                           Rdfs.Label.toSmartIri -> PredicateInfoV2(
                                             predicateIri = Rdfs.Label.toSmartIri,
-                                            objects = Seq(StringLiteralV2.from("Comic Author", Some("en"))),
+                                            objects = Seq(StringLiteralV2.from("Comic Author", EN)),
                                           ),
                                           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                                             predicateIri = Rdfs.Comment.toSmartIri,
-                                            objects = Seq(StringLiteralV2.from("A comic author", Some("en"))),
+                                            objects = Seq(StringLiteralV2.from("A comic author", EN)),
                                           ),
                                         ),
                                         directCardinalities = Map(),
@@ -783,13 +777,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                              Rdfs.Label.toSmartIri -> PredicateInfoV2(
                                                predicateIri = Rdfs.Label.toSmartIri,
                                                objects = Seq(
-                                                 StringLiteralV2.from("Comic author", Some("en")),
+                                                 StringLiteralV2.from("Comic author", EN),
                                                ),
                                              ),
                                              Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                                                predicateIri = Rdfs.Comment.toSmartIri,
                                                objects = Seq(
-                                                 StringLiteralV2.from("A comic author of a comic book", Some("en")),
+                                                 StringLiteralV2.from("A comic author of a comic book", EN),
                                                ),
                                              ),
                                            ),
@@ -900,13 +894,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -936,13 +930,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -972,13 +966,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1008,13 +1002,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1044,13 +1038,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1080,13 +1074,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1119,13 +1113,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1159,13 +1153,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1195,13 +1189,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1231,13 +1225,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1267,13 +1261,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1303,13 +1297,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1339,13 +1333,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1375,13 +1369,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1413,13 +1407,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1449,13 +1443,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1485,13 +1479,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1521,13 +1515,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -1542,9 +1536,9 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     ) {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
       val newObjects = Seq(
-        StringLiteralV2.from("has name", Some("en")),
-        StringLiteralV2.from("a nom", Some("fr")),
-        StringLiteralV2.from("hat Namen", Some("de")),
+        StringLiteralV2.from("has name", EN),
+        StringLiteralV2.from("a nom", FR),
+        StringLiteralV2.from("hat Namen", DE),
       )
       val changeReq = ChangePropertyLabelsOrCommentsRequestV2(
         propertyIri,
@@ -1563,9 +1557,9 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("change the labels of a property") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
       val newObjects = Seq(
-        StringLiteralV2.from("has name", Some("en")),
-        StringLiteralV2.from("hat Namen", Some("de")),
-        StringLiteralV2.from("a nom", Some("fr")),
+        StringLiteralV2.from("has name", EN),
+        StringLiteralV2.from("hat Namen", DE),
+        StringLiteralV2.from("a nom", FR),
       )
 
       val changeReq =
@@ -1591,9 +1585,9 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("change the labels of a property, submitting the same labels again") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
       val newObjects = Seq(
-        StringLiteralV2.from("has name", Some("en")),
-        StringLiteralV2.from("hat Namen", Some("de")),
-        StringLiteralV2.from("a nom", Some("fr")),
+        StringLiteralV2.from("has name", EN),
+        StringLiteralV2.from("hat Namen", DE),
+        StringLiteralV2.from("a nom", FR),
       )
       val changeReq = ChangePropertyLabelsOrCommentsRequestV2(
         propertyIri,
@@ -1620,12 +1614,12 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     ) {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
       val newObjects = Seq(
-        StringLiteralV2.from("The name of a Thing", Some("en")),
+        StringLiteralV2.from("The name of a Thing", EN),
         StringLiteralV2.from(
           "Le nom d\\'une chose",
-          Some("fr"),
+          FR,
         ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
-        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
+        StringLiteralV2.from("Der Name eines Dinges", DE),
       )
 
       val changeReq = ChangePropertyLabelsOrCommentsRequestV2(
@@ -1643,17 +1637,10 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("change the comments of a property") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
       val newObjects = Seq(
-        StringLiteralV2.from("The name of a Thing", Some("en")),
-        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
-        StringLiteralV2.from(
-          "Le nom d\\'une chose",
-          Some("fr"),
-        ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
+        StringLiteralV2.from("The name of a Thing", EN),
+        StringLiteralV2.from("Der Name eines Dinges", DE),
+        StringLiteralV2.from("Le nom d'une chose", FR),
       )
-      // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
-      val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
-      }
 
       for {
         msg <- ontologyResponder(
@@ -1674,24 +1661,17 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(
         externalOntology.properties.size == 1,
         externalOntology.properties.size == 1,
-        readPropertyInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects == newObjectsUnescaped,
+        readPropertyInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects == newObjects,
         newAnythingLastModDate.isAfter(oldAnythingLastModDate),
       )
     },
     test("change the comments of a property, submitting the same comments again") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
       val newObjects = Seq(
-        StringLiteralV2.from("The name of a Thing", Some("en")),
-        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
-        StringLiteralV2.from(
-          "Le nom d\\'une chose",
-          Some("fr"),
-        ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
+        StringLiteralV2.from("The name of a Thing", EN),
+        StringLiteralV2.from("Der Name eines Dinges", DE),
+        StringLiteralV2.from("Le nom d'une chose", FR),
       )
-      // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
-      val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
-      }
 
       val changeReq = ChangePropertyLabelsOrCommentsRequestV2(
         propertyIri,
@@ -1708,7 +1688,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
       } yield assertTrue(
         externalOntology.properties.size == 1,
-        readPropertyInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects == newObjectsUnescaped,
+        readPropertyInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects == newObjects,
         newAnythingLastModDate.isAfter(oldAnythingLastModDate),
       )
     },
@@ -1808,11 +1788,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("wild thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("wild thing", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("A thing that is wild", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that is wild", EN)),
           ),
         ),
         directCardinalities = Map(
@@ -1841,11 +1821,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("invalid thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("invalid thing", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("A thing that is invalid", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that is invalid", EN)),
           ),
         ),
         directCardinalities = Map(
@@ -1873,11 +1853,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("wild thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("wild thing", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("A thing that is wild", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that is wild", EN)),
           ),
         ),
         directCardinalities = Map(
@@ -1952,11 +1932,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("thing with cardinalities", Some("en"))),
+            objects = Seq(StringLiteralV2.from("thing with cardinalities", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("A thing that has cardinalities", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that has cardinalities", EN)),
           ),
         ),
         directCardinalities = Map(
@@ -1994,11 +1974,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Thing as part", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Thing as part", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Thing that is part of something else", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Thing that is part of something else", EN)),
           ),
         ),
         subClassOf = Set(KA.Resource.toSmartIri),
@@ -2020,12 +2000,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                          ),
                                          Rdfs.Label.toSmartIri -> PredicateInfoV2(
                                            predicateIri = Rdfs.Label.toSmartIri,
-                                           objects = Seq(StringLiteralV2.from("Thing as a whole", Some("en"))),
+                                           objects = Seq(StringLiteralV2.from("Thing as a whole", EN)),
                                          ),
                                          Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                                            predicateIri = Rdfs.Comment.toSmartIri,
-                                           objects =
-                                             Seq(StringLiteralV2.from("A thing that has multiple parts", Some("en"))),
+                                           objects = Seq(StringLiteralV2.from("A thing that has multiple parts", EN)),
                                          ),
                                        ),
                                        subClassOf = Set(KA.Resource.toSmartIri),
@@ -2058,15 +2037,15 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                         Rdfs.Label.toSmartIri -> PredicateInfoV2(
                                           predicateIri = Rdfs.Label.toSmartIri,
                                           objects = Seq(
-                                            StringLiteralV2.from("is part of", Some("en")),
-                                            StringLiteralV2.from("ist Teil von", Some("de")),
+                                            StringLiteralV2.from("is part of", EN),
+                                            StringLiteralV2.from("ist Teil von", DE),
                                           ),
                                         ),
                                         Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                                           predicateIri = Rdfs.Comment.toSmartIri,
                                           objects = Seq(
-                                            StringLiteralV2.from("Represents a part of a whole relation", Some("en")),
-                                            StringLiteralV2.from("Repräsentiert eine Teil-Ganzes-Beziehung", Some("de")),
+                                            StringLiteralV2.from("Represents a part of a whole relation", EN),
+                                            StringLiteralV2.from("Repräsentiert eine Teil-Ganzes-Beziehung", DE),
                                           ),
                                         ),
                                         SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
@@ -2156,11 +2135,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("wild thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("wild thing", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("A thing that is wild", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that is wild", EN)),
           ),
         ),
         directCardinalities = Map(
@@ -2232,11 +2211,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("sub thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("sub thing", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("A subclass thing of thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A subclass thing of thing", EN)),
           ),
         ),
         directCardinalities = Map(
@@ -2293,11 +2272,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
               ),
               Rdfs.Label.toSmartIri -> PredicateInfoV2(
                 predicateIri = Rdfs.Label.toSmartIri,
-                objects = Seq(StringLiteralV2.from("sub thing", Some("en"))),
+                objects = Seq(StringLiteralV2.from("sub thing", EN)),
               ),
               Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                 predicateIri = Rdfs.Comment.toSmartIri,
-                objects = Seq(StringLiteralV2.from("A subclass thing of thing", Some("en"))),
+                objects = Seq(StringLiteralV2.from("A subclass thing of thing", EN)),
               ),
             ),
             directCardinalities = Map(
@@ -2336,11 +2315,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("other sub thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("other sub thing", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Another subclass thing of thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Another subclass thing of thing", EN)),
           ),
         ),
         directCardinalities = Map(
@@ -2398,11 +2377,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
               ),
               Rdfs.Label.toSmartIri -> PredicateInfoV2(
                 predicateIri = Rdfs.Label.toSmartIri,
-                objects = Seq(StringLiteralV2.from("other sub thing", Some("en"))),
+                objects = Seq(StringLiteralV2.from("other sub thing", EN)),
               ),
               Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                 predicateIri = Rdfs.Comment.toSmartIri,
-                objects = Seq(StringLiteralV2.from("Another subclass thing of thing", Some("en"))),
+                objects = Seq(StringLiteralV2.from("Another subclass thing of thing", EN)),
               ),
             ),
             directCardinalities = Map(
@@ -2443,15 +2422,15 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("nothing", Some("en")),
-              StringLiteralV2.from("Nichts", Some("de")),
+              StringLiteralV2.from("nothing", EN),
+              StringLiteralV2.from("Nichts", DE),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("Represents nothing", Some("en")),
-              StringLiteralV2.from("Stellt nichts dar", Some("de")),
+              StringLiteralV2.from("Represents nothing", EN),
+              StringLiteralV2.from("Stellt nichts dar", DE),
             ),
           ),
         ),
@@ -2481,8 +2460,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     ) {
       val classIri = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
-        StringLiteralV2.from("nothing", Some("en")),
-        StringLiteralV2.from("rien", Some("fr")),
+        StringLiteralV2.from("nothing", EN),
+        StringLiteralV2.from("rien", FR),
       )
       val changeReq = ChangeClassLabelsOrCommentsRequestV2(
         classIri = classIri,
@@ -2499,8 +2478,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("change the labels of a class") {
       val classIri = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
-        StringLiteralV2.from("nothing", Some("en")),
-        StringLiteralV2.from("rien", Some("fr")),
+        StringLiteralV2.from("nothing", EN),
+        StringLiteralV2.from("rien", FR),
       )
 
       val changeReq = ChangeClassLabelsOrCommentsRequestV2(
@@ -2525,8 +2504,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("change the labels of a class, submitting the same labels again") {
       val classIri = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
-        StringLiteralV2.from("nothing", Some("en")),
-        StringLiteralV2.from("rien", Some("fr")),
+        StringLiteralV2.from("nothing", EN),
+        StringLiteralV2.from("rien", FR),
       )
       val changeReq = ChangeClassLabelsOrCommentsRequestV2(
         classIri = classIri,
@@ -2553,8 +2532,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     ) {
       val classIri = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
-        StringLiteralV2.from("Represents nothing", Some("en")),
-        StringLiteralV2.from("ne représente rien", Some("fr")),
+        StringLiteralV2.from("Represents nothing", EN),
+        StringLiteralV2.from("ne représente rien", FR),
       )
       val changeReq = ChangeClassLabelsOrCommentsRequestV2(
         classIri = classIri,
@@ -2571,12 +2550,12 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("change the comments of a class") {
       val classIri = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
-        StringLiteralV2.from("Represents nothing", Some("en")),
-        StringLiteralV2.from("ne représente rien", Some("fr")),
+        StringLiteralV2.from("Represents nothing", EN),
+        StringLiteralV2.from("ne représente rien", FR),
       )
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
-      val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
+      val newObjectsUnescaped = newObjects.map { lit =>
+        StringLiteralV2.from(Iri.fromSparqlEncodedString(lit.value), lit.language)
       }
       val changeReq = ChangeClassLabelsOrCommentsRequestV2(
         classIri = classIri,
@@ -2601,12 +2580,12 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test("change the comments of a class, submitting the same comments again") {
       val classIri = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
-        StringLiteralV2.from("Represents nothing", Some("en")),
-        StringLiteralV2.from("ne représente rien", Some("fr")),
+        StringLiteralV2.from("Represents nothing", EN),
+        StringLiteralV2.from("ne représente rien", FR),
       )
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
-      val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
+      val newObjectsUnescaped = newObjects.map { lit =>
+        StringLiteralV2.from(Iri.fromSparqlEncodedString(lit.value), lit.language)
       }
       val changeReq = ChangeClassLabelsOrCommentsRequestV2(
         classIri = classIri,
@@ -2640,13 +2619,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", EN),
             ),
           ),
         ),
@@ -2670,13 +2649,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", EN),
             ),
           ),
         ),
@@ -2700,13 +2679,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", EN),
             ),
           ),
         ),
@@ -2730,13 +2709,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", EN),
             ),
           ),
         ),
@@ -2760,13 +2739,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", EN),
             ),
           ),
         ),
@@ -2792,13 +2771,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", EN),
             ),
           ),
         ),
@@ -2823,13 +2802,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("restrictive thing", Some("en")),
+              StringLiteralV2.from("restrictive thing", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("A more restrictive Thing", Some("en")),
+              StringLiteralV2.from("A more restrictive Thing", EN),
             ),
           ),
         ),
@@ -2863,13 +2842,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", EN),
             ),
           ),
         ),
@@ -2969,15 +2948,15 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("has nothingness", Some("en")),
-              StringLiteralV2.from("hat Nichtsein", Some("de")),
+              StringLiteralV2.from("has nothingness", EN),
+              StringLiteralV2.from("hat Nichtsein", DE),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("Indicates whether a Nothing has nothingness", Some("en")),
-              StringLiteralV2.from("Anzeigt, ob ein Nichts Nichtsein hat", Some("de")),
+              StringLiteralV2.from("Indicates whether a Nothing has nothingness", EN),
+              StringLiteralV2.from("Anzeigt, ob ein Nichts Nichtsein hat", DE),
             ),
           ),
           SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
@@ -3036,7 +3015,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         guiAttributeComplex = property.entityInfoContent.predicates(SalsahGui.External.GuiAttribute.toSmartIri)
         guiAttributeComplexExpected = PredicateInfoV2(
                                         predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
-                                        objects = Seq(StringLiteralV2.from("size=80", None)),
+                                        objects = Seq(StringLiteralV2.from("size=80")),
                                       )
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
       } yield assertTrue(
@@ -3098,13 +3077,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -3127,13 +3106,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", EN),
             ),
           ),
         ),
@@ -3156,11 +3135,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("void", Some("en"))),
+            objects = Seq(StringLiteralV2.from("void", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Represents a void", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents a void", EN)),
           ),
         ),
         subClassOf = Set(anythingOntologyIri.makeEntityIri("Nothing")),
@@ -3279,13 +3258,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("has other nothing", Some("en")),
+              StringLiteralV2.from("has other nothing", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("Indicates whether a Nothing has another Nothing", Some("en")),
+              StringLiteralV2.from("Indicates whether a Nothing has another Nothing", EN),
             ),
           ),
         ),
@@ -3296,7 +3275,6 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       for {
         msg <-
           ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
-        externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
         classInfoContent = ClassInfoContentV2(
                              classIri = classIri,
@@ -3511,15 +3489,15 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("has emptiness", Some("en")),
-              StringLiteralV2.from("hat Leerheit", Some("de")),
+              StringLiteralV2.from("has emptiness", EN),
+              StringLiteralV2.from("hat Leerheit", DE),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("Indicates whether a Nothing has emptiness", Some("en")),
-              StringLiteralV2.from("Anzeigt, ob ein Nichts Leerheit hat", Some("de")),
+              StringLiteralV2.from("Indicates whether a Nothing has emptiness", EN),
+              StringLiteralV2.from("Anzeigt, ob ein Nichts Leerheit hat", DE),
             ),
           ),
         ),
@@ -3853,11 +3831,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("invalid class", Some("en"))),
+            objects = Seq(StringLiteralV2.from("invalid class", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Represents an invalid class", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents an invalid class", EN)),
           ),
         ),
         subClassOf = Set(IncunabulaOntologyIri.makeEntityIri("book")),
@@ -3878,11 +3856,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("invalid class", Some("en"))),
+            objects = Seq(StringLiteralV2.from("invalid class", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Represents an invalid class", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents an invalid class", EN)),
           ),
         ),
         subClassOf = Set(KA.Resource.toSmartIri),
@@ -3910,13 +3888,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("invalid property", Some("en")),
+              StringLiteralV2.from("invalid property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -3947,13 +3925,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("invalid property", Some("en")),
+              StringLiteralV2.from("invalid property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -3980,13 +3958,13 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("invalid property", Some("en")),
+              StringLiteralV2.from("invalid property", EN),
             ),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2.from("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", EN),
             ),
           ),
         ),
@@ -4008,11 +3986,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("any box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("any box", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Represents any box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents any box", EN)),
           ),
         ),
         subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
@@ -4049,11 +4027,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("any box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("any box", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Represents any box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents any box", EN)),
           ),
         ),
         subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
@@ -4094,11 +4072,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("has any shared name", Some("en"))),
+            objects = Seq(StringLiteralV2.from("has any shared name", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Represents a shared name", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents a shared name", EN)),
           ),
         ),
         subPropertyOf = Set(ExampleSharedOntologyIri.makeEntityIri("hasName")),
@@ -4143,11 +4121,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("has boolean", Some("en"))),
+            objects = Seq(StringLiteralV2.from("has boolean", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Represents a boolean", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents a boolean", EN)),
           ),
         ),
         subPropertyOf = Set(KA.HasValue.toSmartIri),
@@ -4187,11 +4165,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("has box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("has box", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Has a box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Has a box", EN)),
           ),
         ),
         subPropertyOf = Set(KA.HasLinkTo.toSmartIri),
@@ -4226,7 +4204,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
               objects = Vector(
                 StringLiteralV2.from(
                   value = "test class",
-                  language = Some("en"),
+                  language = EN,
                 ),
               ),
             ),
@@ -4235,7 +4213,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
               objects = Vector(
                 StringLiteralV2.from(
                   value = "A test class",
-                  language = Some("en"),
+                  language = EN,
                 ),
               ),
             ),
@@ -4269,7 +4247,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                     objects = Vector(
                       StringLiteralV2.from(
                         value = "test text property",
-                        language = Some("en"),
+                        language = EN,
                       ),
                     ),
                   ),
@@ -4282,7 +4260,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                     objects = Vector(
                       StringLiteralV2.from(
                         value = "A test text property",
-                        language = Some("en"),
+                        language = EN,
                       ),
                     ),
                   ),
@@ -4321,7 +4299,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                     objects = Vector(
                       StringLiteralV2.from(
                         value = "test int property",
-                        language = Some("en"),
+                        language = EN,
                       ),
                     ),
                   ),
@@ -4334,7 +4312,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                     objects = Vector(
                       StringLiteralV2.from(
                         value = "A test int property",
-                        language = Some("en"),
+                        language = EN,
                       ),
                     ),
                   ),
@@ -4373,7 +4351,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                     objects = Vector(
                       StringLiteralV2.from(
                         value = "test link property",
-                        language = Some("en"),
+                        language = EN,
                       ),
                     ),
                   ),
@@ -4386,7 +4364,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                     objects = Vector(
                       StringLiteralV2.from(
                         value = "A test link property",
-                        language = Some("en"),
+                        language = EN,
                       ),
                     ),
                   ),
@@ -4523,7 +4501,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                       objects = Vector(
                         StringLiteralV2.from(
                           value = "A Blue Free Test class",
-                          language = Some("en"),
+                          language = EN,
                         ),
                       ),
                     ),
@@ -4532,7 +4510,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                       objects = Vector(
                         StringLiteralV2.from(
                           value = "A Blue Free Test class used for testing cardinalities",
-                          language = Some("en"),
+                          language = EN,
                         ),
                       ),
                     ),
@@ -4566,7 +4544,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                     objects = Vector(
                       StringLiteralV2.from(
                         value = "blue test text property",
-                        language = Some("en"),
+                        language = EN,
                       ),
                     ),
                   ),
@@ -4583,7 +4561,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                     objects = Vector(
                       StringLiteralV2.from(
                         value = "A blue test text property",
-                        language = Some("en"),
+                        language = EN,
                       ),
                     ),
                   ),
@@ -4622,7 +4600,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                     objects = Vector(
                       StringLiteralV2.from(
                         value = "blue test integer property",
-                        language = Some("en"),
+                        language = EN,
                       ),
                     ),
                   ),
@@ -4639,7 +4617,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                     objects = Vector(
                       StringLiteralV2.from(
                         value = "A blue test integer property",
-                        language = Some("en"),
+                        language = EN,
                       ),
                     ),
                   ),
@@ -4827,11 +4805,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("FOAF person", Some("en"))),
+            objects = Seq(StringLiteralV2.from("FOAF person", EN)),
           ),
           Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2.from("FOAF person with reference to foaf:Person", Some("en"))),
+            objects = Seq(StringLiteralV2.from("FOAF person with reference to foaf:Person", EN)),
           ),
         ),
         subClassOf = Set(
@@ -4860,7 +4838,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
 
       for {
         metadataResponse   <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
-        anythingLastModDate = getLastModificationDate(metadataResponse, anythingOntologyIri)
+        anythingLastModDate = OntologyTestHelper.lastModificationDate(metadataResponse, anythingOntologyIri)
 
         // create the property anything:hasFoafName
         propertyIri: SmartIri = anythingOntologyIri.makeEntityIri("hasFoafName")
@@ -4883,18 +4861,18 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                                          Rdfs.Label.toSmartIri -> PredicateInfoV2(
                                                            predicateIri = Rdfs.Label.toSmartIri,
                                                            objects = Seq(
-                                                             StringLiteralV2.from("has foaf name", Some("en")),
-                                                             StringLiteralV2.from("hat foaf Namen", Some("de")),
+                                                             StringLiteralV2.from("has foaf name", EN),
+                                                             StringLiteralV2.from("hat foaf Namen", DE),
                                                            ),
                                                          ),
                                                          Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                                                            predicateIri = Rdfs.Comment.toSmartIri,
                                                            objects = Seq(
                                                              StringLiteralV2
-                                                               .from("The foaf name of something", Some("en")),
+                                                               .from("The foaf name of something", EN),
                                                              StringLiteralV2.from(
                                                                "Der foaf Name eines Dinges",
-                                                               Some("de"),
+                                                               DE,
                                                              ),
                                                            ),
                                                          ),
@@ -4910,7 +4888,6 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
         ontologyFromCreateProperty = createPropertyResponse.toOntologySchema(ApiV2Complex)
         property                   = ontologyFromCreateProperty.properties(propertyIri)
-        metadataFromCreateProperty = ontologyFromCreateProperty.ontologyMetadata
         (lastModDateBeforeCreateProperty, lastModDateAfterCreateProperty) =
           self.anythingLastModDate.updateFrom(createPropertyResponse)
       } yield assertTrue(
@@ -5098,7 +5075,7 @@ case class LastModRef(private var value: Instant) {
     updateFrom(r, Some(ontologyIri))
   def updateFrom(r: ReadOntologyMetadataV2): (Instant, Instant) =
     updateFrom(r, None)
-  private def updateFrom(r: ReadOntologyMetadataV2, ontologyIri: Option[OntologyIri] = None): (Instant, Instant) = {
+  private def updateFrom(r: ReadOntologyMetadataV2, ontologyIri: Option[OntologyIri]): (Instant, Instant) = {
     val oldValue = value
     // Find the specified ontology in the response. If no ontology is specified, use the first one of the response.
     val onto = ontologyIri.map(_.smartIri).getOrElse(r.ontologies.head.ontologyIri).toComplexSchema

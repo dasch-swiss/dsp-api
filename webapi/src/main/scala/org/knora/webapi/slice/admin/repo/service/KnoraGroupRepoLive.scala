@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraGroup.Conversions.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.projectIriConverter
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
@@ -63,7 +64,7 @@ final case class KnoraGroupRepoLive(
     findAllByPattern(_.has(belongsToProject, Rdf.iri(projectIri.value)))
 }
 
-object KnoraGroupRepoLive {
+object KnoraGroupRepoLive extends QueryBuilderHelper {
 
   private val mapper = new RdfEntityMapper[KnoraGroup] {
     override def toEntity(resource: RdfResource): IO[RdfError, KnoraGroup] =
@@ -89,7 +90,7 @@ object KnoraGroupRepoLive {
         .iri(group.id.value)
         .has(RDF.TYPE, Rdf.iri(KnoraAdmin.UserGroup))
         .andHas(groupName, Rdf.literalOf(group.groupName.value))
-        .andHas(groupDescriptions, group.groupDescriptions.toRdfLiterals: _*)
+        .andHas(groupDescriptions, group.groupDescriptions.value.map(toRdfLiteral): _*)
         .andHas(status, Rdf.literalOf(group.status.value))
         .andHas(belongsToProject, group.belongsToProject.map(p => Rdf.iri(p.value)).toList: _*)
         .andHas(hasSelfJoinEnabled, Rdf.literalOf(group.hasSelfJoinEnabled.value))

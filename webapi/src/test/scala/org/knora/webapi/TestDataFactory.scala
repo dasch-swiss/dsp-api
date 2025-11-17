@@ -100,7 +100,7 @@ object TestDataFactory {
     val testUserGroup: KnoraGroup = KnoraGroup(
       GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234"),
       GroupName.unsafeFrom("User Group"),
-      GroupDescriptions.unsafeFrom(List(StringLiteralV2.from("one user group to rule them all", None))),
+      GroupDescriptions.unsafeFrom(List(StringLiteralV2.from("one user group to rule them all"))),
       GroupStatus.from(true),
       Some(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")),
       GroupSelfJoin.from(false),
@@ -112,7 +112,7 @@ object TestDataFactory {
     Shortname.unsafeFrom("shortname"),
     Shortcode.unsafeFrom("0001"),
     None,
-    NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Some description", None))),
+    NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Some description"))),
     List.empty,
     None,
     Status.Active,

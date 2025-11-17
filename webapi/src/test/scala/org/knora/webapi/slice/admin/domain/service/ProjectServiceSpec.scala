@@ -29,7 +29,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           shortname = shortname,
           shortcode = shortcode,
           longname = None,
-          description = List(StringLiteralV2.from("description not used in test", None)),
+          description = List(StringLiteralV2.from("description not used in test")),
           keywords = List.empty,
           logo = None,
           ontologies = List.empty,
@@ -50,8 +50,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           shortname = Shortname.unsafeFrom(shortname),
           shortcode = Shortcode.unsafeFrom(shortcode),
           longname = None,
-          description =
-            NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("description not used in test", None))),
+          description = NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("description not used in test"))),
           keywords = List.empty,
           logo = None,
           status = Status.Active,

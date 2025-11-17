@@ -8,17 +8,16 @@ package org.knora.webapi.slice.ontology.domain.service
 import zio.*
 
 import java.time.Instant
-import scala.collection.immutable
 
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.Features
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
@@ -28,6 +27,12 @@ final case class OntologyTriplestoreHelpers(
   triplestore: TriplestoreService,
   stringFormatter: StringFormatter,
 ) {
+
+  def checkOntologyLastModificationDate(
+    ontologyIri: OntologyIri,
+    expectedLastModificationDate: LastModificationDate,
+  ): Task[Unit] =
+    checkOntologyLastModificationDate(ontologyIri.toInternalSchema, expectedLastModificationDate.value)
 
   def checkOntologyLastModificationDate(ontologyIri: OntologyIri, expectedLastModificationDate: Instant): Task[Unit] =
     checkOntologyLastModificationDate(ontologyIri.toInternalSchema, expectedLastModificationDate)

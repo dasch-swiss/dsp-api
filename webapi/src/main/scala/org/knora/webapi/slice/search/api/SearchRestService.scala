@@ -12,6 +12,8 @@ import sttp.model.MediaType
 import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
 
+import scala.annotation.unused
+
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
@@ -42,7 +44,7 @@ final case class SearchRestService(
     response <- renderer.render(searchResult, opts)
   } yield response
 
-  def searchResourcesByLabelCountV2(ignored: User)(
+  def searchResourcesByLabelCountV2(@unused ignored: User)(
     query: String,
     opts: FormatOptions,
     project: Option[ProjectIri],
@@ -58,10 +60,20 @@ final case class SearchRestService(
     query: String,
     opts: FormatOptions,
     limitToProject: Option[ProjectIri],
-  ): Task[(RenderedResponse, MediaType)] = for {
-    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, limitToProject)
-    response     <- renderer.render(searchResult, opts)
-  } yield response
+  ): Task[(RenderedResponse, MediaType)] =
+    (for {
+      searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, limitToProject)
+      response     <- renderer.render(searchResult, opts)
+    } yield response) @@ tracing.aspects.root(
+      spanName = "gravsearch",
+      attributes = Attributes
+        .builder()
+        .put("user", user.id)
+        .put("query", query)
+        .put("opts", opts.toString)
+        .put("limitToProject", limitToProject.toString)
+        .build,
+    )
 
   def gravsearchCount(user: User)(
     query: String,
@@ -189,7 +201,7 @@ final case class SearchRestService(
     response <- renderer.render(searchResult, opts)
   } yield response
 
-  def fullTextSearchCount(ignored: User)(
+  def fullTextSearchCount(@unused ignored: User)(
     query: RenderedResponse,
     opts: FormatOptions,
     project: Option[ProjectIri],

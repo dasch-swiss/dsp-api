@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.api
 
-import zio.json.JsonCodec
-
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -15,7 +13,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.Examples.GroupExample.groupName
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
-import org.knora.webapi.slice.admin.api.model.*
+import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
@@ -36,15 +34,19 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.api.PageAndSize
+import org.knora.webapi.slice.api.PagedResponse as ApiPagedResponse
+import org.knora.webapi.slice.common.domain.LanguageCode.DE
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 
 object Examples {
 
   object PagedResponse {
-    def fromSlice[A: JsonCodec](data: Seq[A]): model.PagedResponse[A] =
-      model.PagedResponse.from(data, data.size * 5, PageAndSize(1, data.size))
+    def fromSlice[A](data: Seq[A]): ApiPagedResponse[A] =
+      ApiPagedResponse.from(data, data.size * 5, PageAndSize(1, data.size))
 
-    def fromTotal[A: JsonCodec](data: Seq[A]): model.PagedResponse[A] =
-      model.PagedResponse.from(data, data.size, PageAndSize(1, data.size))
+    def fromTotal[A](data: Seq[A]): ApiPagedResponse[A] =
+      ApiPagedResponse.from(data, data.size, PageAndSize(1, data.size))
   }
 
   object ProjectExample {
@@ -58,8 +60,8 @@ object Examples {
 
     val groupDescriptions: GroupDescriptions = GroupDescriptions.unsafeFrom(
       Seq(
-        StringLiteralV2.from(s"${groupName.value} description in English", Some("en")),
-        StringLiteralV2.from(s"${groupName.value} Beschreibung auf Deutsch", Some("de")),
+        StringLiteralV2.from(s"${groupName.value} description in English", EN),
+        StringLiteralV2.from(s"${groupName.value} Beschreibung auf Deutsch", DE),
       ),
     )
   }
@@ -89,8 +91,8 @@ object Examples {
       descriptions = Option(
         GroupDescriptions.unsafeFrom(
           Seq(
-            StringLiteralV2.from(s"${newGroupName.value} description in English", Some("en")),
-            StringLiteralV2.from(s"${newGroupName.value} Beschreibung auf Deutsch", Some("de")),
+            StringLiteralV2.from(s"${newGroupName.value} description in English", EN),
+            StringLiteralV2.from(s"${newGroupName.value} Beschreibung auf Deutsch", DE),
           ),
         ),
       ),
@@ -103,7 +105,7 @@ object Examples {
       shortname = Shortname.unsafeFrom("example"),
       shortcode = Shortcode.unsafeFrom("0001"),
       longname = Some(Longname.unsafeFrom("Example Project")),
-      description = Seq(StringLiteralV2.from("An example project", Some("en"))),
+      description = Seq(StringLiteralV2.from("An example project", EN)),
       keywords = Seq("example", "project"),
       logo = None,
       status = Active,
@@ -117,8 +119,8 @@ object Examples {
       id = GroupExample.groupIri.value,
       name = groupName.value,
       descriptions = Seq(
-        StringLiteralV2.from(s"${groupName.value} description in English", Some("en")),
-        StringLiteralV2.from(s"${groupName.value} Beschreibung auf Deutsch", Some("de")),
+        StringLiteralV2.from(s"${groupName.value} description in English", EN),
+        StringLiteralV2.from(s"${groupName.value} Beschreibung auf Deutsch", DE),
       ),
       project = Some(project),
       status = GroupStatus.active.value,

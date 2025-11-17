@@ -34,7 +34,6 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.testservices.RequestsUpdates
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
@@ -1586,7 +1585,6 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
         responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
         valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
-        valueType       <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.TYPE))
 
         savedValue <- getValue(
                         resourceIri = resourceIri,

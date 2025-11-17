@@ -100,7 +100,7 @@ object ListsResponderSpec extends E2EZSpec {
           .map(actual => assertTrue(actual.nodeinfo.sorted == summerNodeInfo.sorted))
       },
       test("return a full list response") {
-        listsResponder(_.listGetRequestADM("http://rdfh.ch/lists/0001/treeList"))
+        listsResponder(_.listGetRequestADM(ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")))
           .flatMap(expectType[ListGetResponseADM])
           .map(actual =>
             assertTrue(
@@ -114,8 +114,8 @@ object ListsResponderSpec extends E2EZSpec {
       test("create a list") {
         val createRequest = ListCreateRootNodeRequest(
           id = None,
-          Comments.unsafeFrom(Seq(StringLiteralV2.from("Neuer Kommentar", language = Some("de")))),
-          Labels.unsafeFrom(Seq(StringLiteralV2.from("Neue Liste", language = Some("de")))),
+          Comments.unsafeFrom(Seq(StringLiteralV2.from("Neuer Kommentar", DE))),
+          Labels.unsafeFrom(Seq(StringLiteralV2.from("Neue Liste", DE))),
           Some(ListName.unsafeFrom("neuelistename")),
           imagesProjectIri,
         )
@@ -133,7 +133,7 @@ object ListsResponderSpec extends E2EZSpec {
               list.listinfo.name == Some("neuelistename"),
               list.listinfo.labels.stringLiterals.size == 1,
               list.listinfo.labels.stringLiterals.head == StringLiteralV2
-                .from(value = "Neue Liste", language = Some("de")),
+                .from(value = "Neue Liste", DE),
               !list.listinfo.comments.stringLiterals.isEmpty,
             )
           }
@@ -144,8 +144,8 @@ object ListsResponderSpec extends E2EZSpec {
         val nameWithSpecialCharacter    = "a new \\\"name\\\""
         val createReq = ListCreateRootNodeRequest(
           None,
-          Comments.unsafeFrom(Seq(StringLiteralV2.from(commentWithSpecialCharacter, language = Some("de")))),
-          Labels.unsafeFrom(Seq(StringLiteralV2.from(labelWithSpecialCharacter, language = Some("de")))),
+          Comments.unsafeFrom(Seq(StringLiteralV2.from(commentWithSpecialCharacter, DE))),
+          Labels.unsafeFrom(Seq(StringLiteralV2.from(labelWithSpecialCharacter, DE))),
           Some(ListName.unsafeFrom(nameWithSpecialCharacter)),
           imagesProjectIri,
         )
@@ -156,8 +156,8 @@ object ListsResponderSpec extends E2EZSpec {
             actual.list.listinfo.labels.stringLiterals.size == 1,
             actual.list.listinfo.labels.stringLiterals.head.value ==
               Iri.fromSparqlEncodedString(labelWithSpecialCharacter),
-            actual.list.listinfo.labels.stringLiterals.head.language == Some("de"),
-            actual.list.listinfo.comments.stringLiterals.head.language == Some("de"),
+            actual.list.listinfo.labels.stringLiterals.head.languageOption.contains(DE),
+            actual.list.listinfo.comments.stringLiterals.head.languageOption.contains(DE),
             actual.list.listinfo.comments.stringLiterals.head.value ==
               Iri.fromSparqlEncodedString(commentWithSpecialCharacter),
             actual.list.children.size == 0,
@@ -166,11 +166,11 @@ object ListsResponderSpec extends E2EZSpec {
       },
       test("update basic list information") {
         val newLabelValues = Seq(
-          StringLiteralV2.from("Neue geänderte Liste", language = Some("de")),
+          StringLiteralV2.from("Neue geänderte Liste", DE),
           StringLiteralV2.from("Changed List", EN),
         )
         val newCommentValues = Seq(
-          StringLiteralV2.from("Neuer Kommentar", language = Some("de")),
+          StringLiteralV2.from("Neuer Kommentar", DE),
           StringLiteralV2.from("New Comment", EN),
         )
         val changeReq = ListChangeRequest(
@@ -423,7 +423,7 @@ object ListsResponderSpec extends E2EZSpec {
             UUID.randomUUID,
           ),
         ).map(_.node)
-        val actual = listsResponder(_.listGetRequestADM(oldParentIri.value)).flatMap(expectType[ListNodeGetResponseADM])
+        val actual = listsResponder(_.listGetRequestADM(oldParentIri)).flatMap(expectType[ListNodeGetResponseADM])
 
         (parentNode <*> actual).map { (parentNode: ListNodeADM, actual: ListNodeGetResponseADM) =>
 
@@ -471,7 +471,7 @@ object ListsResponderSpec extends E2EZSpec {
           ),
         ).map(_.node)
 
-        val actual = listsResponder(_.listGetRequestADM(oldParentIri.value))
+        val actual = listsResponder(_.listGetRequestADM(oldParentIri))
           .flatMap(expectType[ListNodeGetResponseADM])
 
         (parentNode <*> actual).map { (parentNode: ListNodeADM, actual: ListNodeGetResponseADM) =>

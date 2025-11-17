@@ -7,8 +7,6 @@ package org.knora.webapi.slice.ontology.domain.service
 
 import zio.*
 
-import scala.collection.immutable
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.SmartIri
@@ -20,17 +18,16 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo: OntologyRepo) {
 
-  def getClasses(
-    classIris: Seq[ResourceClassIri],
+  def getClassAsReadOntologyV2(
+    classIri: ResourceClassIri,
     allLanguages: Boolean,
     requestingUser: User,
   ): Task[ReadOntologyV2] =
-    getClassDefinitionsFromOntologyV2(classIris.map(_.smartIri).toSet, allLanguages, requestingUser)
+    getClassDefinitionsFromOntologyV2(Set(classIri.smartIri), allLanguages, requestingUser)
 
   /**
    * Requests information about OWL classes in a single ontology.
@@ -53,7 +50,7 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo
             throw BadRequestException(s"Only one ontology may be queried per request")
           }
 
-      classInfoResponse  <- getEntityInfoResponseV2(classIris = classIris, requestingUser = requestingUser)
+      classInfoResponse  <- getEntityInfoResponseV2(classIris = classIris)
       internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
 
       // Are we returning data in the user's preferred language, or in all available languages?
@@ -82,7 +79,6 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo
   def getEntityInfoResponseV2(
     classIris: Set[SmartIri] = Set.empty[SmartIri],
     propertyIris: Set[SmartIri] = Set.empty[SmartIri],
-    requestingUser: User,
   ): Task[EntityInfoGetResponseV2] = {
     for {
       cacheData <- ontologyCache.getCacheData
@@ -276,6 +272,16 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo
                  )
     } yield response
   }
+
+  def checkOntologyAndEntityIrisForUpdate(
+    resourceClassIri: ResourceClassIri,
+    requestingUser: User,
+  ): Task[Unit] =
+    checkOntologyAndEntityIrisForUpdate(
+      resourceClassIri.ontologyIri.toComplexSchema,
+      resourceClassIri.toComplexSchema,
+      requestingUser,
+    )
 
   /**
    * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,

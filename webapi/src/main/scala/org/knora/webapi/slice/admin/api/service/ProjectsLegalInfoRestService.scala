@@ -5,28 +5,25 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import cats.syntax.traverse.*
 import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.json.JsonCodec
 
 import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.api.CopyrightHolderAddRequest
 import org.knora.webapi.slice.admin.api.CopyrightHolderReplaceRequest
 import org.knora.webapi.slice.admin.api.ProjectLicenseDto
 import org.knora.webapi.slice.admin.api.model.FilterAndOrder
-import org.knora.webapi.slice.admin.api.model.PageAndSize
-import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
+import org.knora.webapi.slice.api.PageAndSize
+import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 
 final case class ProjectsLegalInfoRestService(
@@ -64,7 +61,7 @@ final case class ProjectsLegalInfoRestService(
                  .someOrFail(NotFoundException(s"License $licenseIri not found in project $shortcode"))
   } yield ProjectLicenseDto.from(license, prj)
 
-  private def slice[A: JsonCodec](
+  private def slice[A](
     all: Seq[A],
     pageAndSize: PageAndSize,
     filterAndOrder: FilterAndOrder,

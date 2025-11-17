@@ -10,18 +10,15 @@ import sbt._
 object Dependencies {
   // should be the same version as in docker-compose.yml,
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
-  val fusekiImage = "daschswiss/apache-jena-fuseki:5.5.0-1"
+  val fusekiImage = "daschswiss/apache-jena-fuseki:5.5.0-2"
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.16.3"
 
-  val ScalaVersion = "3.3.6"
-
-  val PekkoActorVersion = "1.2.1"
-  val PekkoHttpVersion  = "1.2.0"
+  val ScalaVersion = "3.3.7"
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion         = "5.1.6"
+  val Rdf4jVersion         = "5.2.0"
   val TopbraidShaclVersion = "1.4.4"
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
@@ -29,7 +26,7 @@ object Dependencies {
   val ZioLoggingVersion           = "2.5.1"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.5.0"
-  val ZioPreludeVersion           = "1.0.0-RC41"
+  val ZioPreludeVersion           = "1.0.0-RC42"
   val ZioSchemaVersion            = "1.7.5"
   val ZioMockVersion              = "1.0.0-RC12"
   val ZioVersion                  = "2.1.21"
@@ -40,7 +37,7 @@ object Dependencies {
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
 
-  val ZioJsonVersion        = "0.7.44"
+  val ZioJsonVersion        = "0.7.45"
   val zioJson               = "dev.zio" %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio" %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
@@ -64,7 +61,7 @@ object Dependencies {
     "dev.zio"      %% "zio-test-junit"         % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-magnolia"      % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-sbt"           % ZioVersion     % Test,
-    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.3.1"        % Test,
+    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.0"        % Test,
   )
 
   val SttpClientVersion = "4.0.12"
@@ -89,12 +86,6 @@ object Dependencies {
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
-
-  // pekko
-  val pekkoHttp     = "org.apache.pekko" %% "pekko-http"      % PekkoHttpVersion
-  val pekkoHttpCors = "org.apache.pekko" %% "pekko-http-cors" % PekkoHttpVersion
-  val pekkoSlf4j    = "org.apache.pekko" %% "pekko-slf4j"     % PekkoActorVersion
-  val pekkoStream   = "org.apache.pekko" %% "pekko-stream"    % PekkoActorVersion
 
   // rdf and graph libraries
   val jenaCore      = "org.apache.jena"   % "jena-core"           % JenaVersion
@@ -128,28 +119,29 @@ object Dependencies {
 
   // other
   val gwtServlet     = "com.google.gwt"        % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"           % "icu4j"            % "77.1"
+  val icu4j          = "com.ibm.icu"           % "icu4j"            % "78.1"
   val jakartaJSON    = "org.glassfish"         % "jakarta.json"     % "2.0.1"
   val saxonHE        = "net.sf.saxon"          % "Saxon-HE"         % "12.9"
   val scalaGraph     = "org.scala-graph"      %% "graph-core"       % "2.0.2"
-  val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.6.0"
-  val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.10.4"
+  val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.7.0"
+  val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.11.0"
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
+  val dataFaker = "net.datafaker" % "datafaker" % "2.5.2"
+
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.21.3"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.0"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.13.1"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.19.0"
 
-  val tapirVersion = "1.11.46"
+  val tapirVersion = "1.11.49"
 
   val tapir = Seq(
-    "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
@@ -162,8 +154,10 @@ object Dependencies {
   )
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"  %% "zio-opentelemetry"              % "3.1.10",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.22.0",
+    "dev.zio"                 %% "zio-opentelemetry"              % "3.1.10",
+    "io.sentry"                % "sentry-opentelemetry-agentless" % "8.25.0",
+    "io.opentelemetry"         % "opentelemetry-sdk"              % "1.55.0",
+    "io.opentelemetry.semconv" % "opentelemetry-semconv"          % "1.37.0",
   )
 
   val integrationTestDependencies = Seq(
@@ -179,10 +173,6 @@ object Dependencies {
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
   val webapiDependencies = monocle ++ refined ++ Seq(
-    pekkoHttp,
-    pekkoHttpCors,
-    pekkoSlf4j,
-    pekkoStream,
     bouncyCastle,
     commonsLang3,
     commonsValidator,
@@ -210,14 +200,15 @@ object Dependencies {
     zioLoggingSlf4jBridge,
     zioNio,
     zioPrelude,
+    zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion         = "11.13.2"
+  val flywayVersion         = "11.15.0"
   val otelAgentVersion      = "v2.18.1"
   val otelPyroscopeVersion  = "v1.0.4"
   val hikariVersion         = "7.0.2"
   val quillVersion          = "4.8.6"
-  val sqliteVersion         = "3.50.3.0"
+  val sqliteVersion         = "3.51.0.0"
   val testContainersVersion = "1.20.4"
 
   val db = Seq(

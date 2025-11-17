@@ -63,7 +63,7 @@ object ModelOpsSpec extends ZIOSpecDefault {
       for {
         model <- ModelOps.fromTurtle("")
       } yield assertTrue(
-        model.singleRootResource == Left("No root resource found in model"),
+        model.singleRootResource == Left("Expected a single root resource. No root resource found in model"),
       )
     },
     test("should fail with more than a single root resource, uri resources") {
@@ -76,7 +76,7 @@ object ModelOpsSpec extends ZIOSpecDefault {
                                  |""".stripMargin)
       } yield assertTrue(
         model.singleRootResource == Left(
-          "Multiple root resources found in model: http://example.org/root1, http://example.org/root2",
+          "Expected a single root resource. Multiple root resources found in model: http://example.org/root1, http://example.org/root2",
         ),
       )
     },
@@ -91,7 +91,7 @@ object ModelOpsSpec extends ZIOSpecDefault {
                                  |ex:root2  ex:hasChild ex:child2 .
                                  |""".stripMargin)
       } yield assertTrue(
-        model.singleRootResource.left.map(_.startsWith("Multiple root resources found in model:")) == Left(true),
+        model.singleRootResource.left.map(_.contains("Multiple root resources found in model:")) == Left(true),
       )
     },
     test("should return blank node if that is the single root resource") {

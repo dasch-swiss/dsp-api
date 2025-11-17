@@ -19,10 +19,8 @@ import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.models.filemodels.*
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingOntologyIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingShortcode
@@ -39,7 +37,6 @@ import org.knora.webapi.util.MutableTestIri
  * Tests interaction between Knora and Sipi using Knora API v2.
  */
 object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val stillImageResourceIri  = new MutableTestIri
   private val stillImageFileValueIri = new MutableTestIri

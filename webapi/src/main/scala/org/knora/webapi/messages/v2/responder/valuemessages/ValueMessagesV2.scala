@@ -25,7 +25,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -53,7 +52,6 @@ import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given
-import org.knora.webapi.slice.common.jena.ResourceOps
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
