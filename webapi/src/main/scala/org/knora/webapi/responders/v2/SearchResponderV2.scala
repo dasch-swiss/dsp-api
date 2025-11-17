@@ -650,7 +650,7 @@ final case class SearchResponderV2Live(
       // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap <-
         if (queryStandoff) {
-          constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
+          constructResponseUtilV2.mappingsFromQueryResults(
             mainResourcesAndValueRdfData.resources,
             requestingUser,
           )
@@ -926,7 +926,7 @@ final case class SearchResponderV2Live(
       // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap <-
         if (queryStandoff) {
-          constructResponseUtilV2.getMappingsFromQueryResultsSeparated(mainQueryResults.resources, user)
+          constructResponseUtilV2.mappingsFromQueryResults(mainQueryResults.resources, user)
         } else {
           ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
         }
@@ -1099,7 +1099,7 @@ final case class SearchResponderV2Live(
             // If we're querying standoff, get XML-to standoff mappings.
             mappings <-
               if (queryStandoff) {
-                constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
+                constructResponseUtilV2.mappingsFromQueryResults(
                   mainResourcesAndValueRdfData.resources,
                   requestingUser,
                 )

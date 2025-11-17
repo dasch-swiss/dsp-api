@@ -81,7 +81,10 @@ object KnoraIrisSpec extends ZIOSpecDefault {
           for {
             sIri  <- converter(_.asSmartIri(iri))
             actual = ResourceClassIri.from(sIri)
-          } yield assertTrue(actual.map(_.smartIri) == Right(sIri))
+          } yield assertTrue(
+            actual.map(_.ontologyIri).isRight,
+            actual.map(_.smartIri) == Right(sIri),
+          )
         }
       },
     ),

@@ -517,6 +517,11 @@ case class ReadResourceV2(
       values = valuesWithDeletedValues,
     )
   }
+
+  def asDeletedOrWithDeletedValues(
+    versionDate: Option[VersionDate] = None,
+  )(implicit sf: StringFormatter): ReadResourceV2 =
+    deletionInfo.map(_ => asDeletedResource(versionDate)).getOrElse(withDeletedValues(versionDate))
 }
 
 /**
