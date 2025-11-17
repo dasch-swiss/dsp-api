@@ -26,6 +26,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
@@ -65,7 +66,6 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.util.Logger
-import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 
 object LayersLive { self =>
 

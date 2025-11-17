@@ -54,9 +54,9 @@ import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
+import org.knora.webapi.slice.resources.service.ReadResources
 import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.util.ZioHelper
-import org.knora.webapi.slice.resources.service.ReadResources
 
 final case class CreateResourceV2Handler(
   private val iriService: IriService,

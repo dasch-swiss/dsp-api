@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.resources.service
 
+import monocle.syntax.all.*
 import zio.*
 
 import java.util.UUID
 
-import monocle.syntax.all.*
+import dsp.errors.NotFoundException
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.twirl.queries.sparql
@@ -20,8 +22,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import dsp.errors.NotFoundException
-import dsp.valueobjects.UuidUtil
 
 final case class ReadResources(
   private val constructResponseUtilV2: ConstructResponseUtilV2,
