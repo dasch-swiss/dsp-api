@@ -7,8 +7,8 @@ package org.knora.webapi.messages.store.triplestoremessages
 
 import sttp.tapir.Schema
 import zio.*
-import zio.json.DeriveJsonCodec
-import zio.json.JsonCodec
+import zio.json.*
+import zio.json.ast.Json
 
 import java.time.Instant
 import scala.collection.mutable
@@ -243,11 +243,35 @@ sealed trait StringLiteralV2 extends LiteralV2 with OntologyLiteralV2 with Order
 }
 
 case class LanguageTaggedStringLiteralV2(value: String, language: LanguageCode) extends StringLiteralV2
-case class PlainStringLiteralV2(value: String)                                  extends StringLiteralV2
+object LanguageTaggedStringLiteralV2 {
+  implicit val codec: JsonCodec[LanguageTaggedStringLiteralV2] = DeriveJsonCodec.gen[LanguageTaggedStringLiteralV2]
+  implicit val schema: Schema[LanguageTaggedStringLiteralV2]   = Schema.derived[LanguageTaggedStringLiteralV2]
+}
+case class PlainStringLiteralV2(value: String) extends StringLiteralV2
+object PlainStringLiteralV2 {
+  implicit val codec: JsonCodec[PlainStringLiteralV2] = DeriveJsonCodec.gen[PlainStringLiteralV2]
+  implicit val schema: Schema[PlainStringLiteralV2]   = Schema.derived[PlainStringLiteralV2]
+}
 
 object StringLiteralV2 {
-  implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
-  implicit val schema: Schema[StringLiteralV2]   = Schema.derived[StringLiteralV2]
+  given JsonCodec[StringLiteralV2] = JsonCodec(
+    JsonEncoder[StringLiteralV2] { (a, indent, out) =>
+      a match {
+        case p: PlainStringLiteralV2          => JsonEncoder[PlainStringLiteralV2].unsafeEncode(p, indent, out)
+        case l: LanguageTaggedStringLiteralV2 => JsonEncoder[LanguageTaggedStringLiteralV2].unsafeEncode(l, indent, out)
+      }
+    },
+    JsonDecoder[Json].mapOrFail { json =>
+      json.asObject match {
+        case Some(obj) if obj.get("language").isDefined =>
+          JsonDecoder[LanguageTaggedStringLiteralV2].decodeJson(json.toJson)
+        case _ =>
+          JsonDecoder[PlainStringLiteralV2].decodeJson(json.toJson)
+      }
+    },
+  )
+
+  implicit val schema: Schema[StringLiteralV2] = Schema.derived[StringLiteralV2]
 
   val orderByValue: Ordering[StringLiteralV2] = Ordering.by(_.value)
   val orderByLanguage: Ordering[StringLiteralV2] = Ordering.by {
