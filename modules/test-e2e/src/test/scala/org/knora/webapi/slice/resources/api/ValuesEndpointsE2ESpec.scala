@@ -400,7 +400,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
        |  "anything:hasText" : {
        |    "@id" : "$valueIri",
        |    "@type" : "knora-api:TextValue",
-       |    "knora-api:valueAsString" : "$valueAsString",
+       |    "knora-api:valueAsString" : ${Json.Str(valueAsString).toJson},
        |    "knora-api:valueHasComment" : "$valueHasComment"
        |  },
        |  "@context" : {
@@ -2611,8 +2611,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       } yield assertTrue(savedTextValueAsXml.contains(expectedText))
     },
     test("update a text value with a comment") {
-      val resourceIri: IRI        = AThing.iri
-      val valueAsString: String   = "this is a text value that has a 'thoroughly' updated comment"
+      val resourceIri: IRI = AThing.iri
+      val valueAsString: String =
+        """this is a text value that has a 'thoroughly' updated comment ' '' ''' '''' ''' \" "" ""\" ""\"" """
       val valueHasComment: String = "this is an updated comment"
       val propertyIri: SmartIri   = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
 
