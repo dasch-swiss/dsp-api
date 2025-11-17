@@ -73,3 +73,8 @@ object ResourceClassAndCountDto {
   given JsonCodec[ResourceClassAndCountDto] = DeriveJsonCodec.gen[ResourceClassAndCountDto]
   given Schema[ResourceClassAndCountDto]    = Schema.derived[ResourceClassAndCountDto]
 }
+
+final case class ResourcesResponseDto(iri: String)
+object ResourcesResponseDto {
+  given JsonCodec[ResourcesResponseDto] = DeriveJsonCodec.gen[ResourcesResponseDto]
+}

@@ -7,11 +7,12 @@ package org.knora.webapi.slice.api.v3
 
 import zio.Chunk
 import zio.json.*
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v3.V3ErrorCode.invalid_resourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.resources.api.model.IriDto
 
 sealed trait V3ErrorInfo {
   def message: String
@@ -44,6 +45,12 @@ object NotFound {
 }
 
 case class BadRequest(message: String = "Bad Request", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
+object BadRequest {
+  def invalidResourceClassIri(iri: IriDto): BadRequest = {
+    val msg = s"$iri is not a valid resource class IRI"
+    BadRequest(msg, Chunk(ErrorDetail(invalid_resourceClassIri, msg)))
+  }
+}
 
 final case class Unauthorized(message: String = "Unauthorized", errors: Chunk[ErrorDetail] = Chunk.empty)
     extends V3ErrorInfo

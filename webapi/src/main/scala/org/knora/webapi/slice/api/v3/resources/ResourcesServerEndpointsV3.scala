@@ -15,6 +15,7 @@ class ResourcesServerEndpointsV3(
 
   val endpoints: List[ZServerEndpoint[Any, Any]] = List(
     resourcesEndpoints.getResourcesResourcesPerOntology.zServerLogic(resourcesRestService.resourcesPerOntology),
+    resourcesEndpoints.getResources.serverLogic(resourcesRestService.getResources),
   )
 }
 

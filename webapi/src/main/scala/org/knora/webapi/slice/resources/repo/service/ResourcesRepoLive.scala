@@ -30,7 +30,6 @@ import zio.*
 import java.time.Instant
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.util.Try
-
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.PermissionUtilADM
@@ -38,8 +37,11 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.api.PageAndSize
+import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -82,6 +84,13 @@ trait ResourcesRepo {
     findById(id).map(_.collect { case r: DeletedResource => r })
 
   def countByResourceClass(resourceClassIri: ResourceClassIri, project: KnoraProject): Task[Int]
+
+  def findResourcesByResourceClassIri(
+    resourceClassIri: ResourceClassIri,
+    project: KnoraProject,
+    user: User,
+    pageAndSize: PageAndSize,
+  ): Task[PagedResponse[ResourceIri]]
 }
 
 sealed trait ResourceModel {
@@ -293,6 +302,12 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val query  = Queries.SELECT(select).from(from).where(where: _*)
     triplestore.select(query).map(_.getFirst("count").map(_.toInt).getOrElse(0))
   }
+  override def findResourcesByResourceClassIri(
+    resourceClassIri: ResourceClassIri,
+    project: KnoraProject,
+    user: User,
+    pageAndSize: PageAndSize,
+  ): Task[PagedResponse[ResourceIri]] = ZIO.succeed(PagedResponse.from(Seq.empty, 0, pageAndSize))
 }
 
 object ResourcesRepoLive {
