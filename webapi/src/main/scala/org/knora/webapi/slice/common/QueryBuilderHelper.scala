@@ -17,7 +17,9 @@ import java.time.Instant
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
@@ -38,9 +40,9 @@ trait QueryBuilderHelper {
       case l: BooleanLiteralV2  => toRdfLiteral(l)
     }
 
-  def toRdfLiteral(literalV2: StringLiteralV2): RdfLiteral.StringLiteral = literalV2.language match {
-    case Some(lang) => Rdf.literalOfLanguage(literalV2.value, lang)
-    case None       => Rdf.literalOf(literalV2.value)
+  def toRdfLiteral(literalV2: StringLiteralV2): RdfLiteral.StringLiteral = literalV2 match {
+    case LanguageTaggedStringLiteralV2(value, lang) => Rdf.literalOfLanguage(value, lang.value)
+    case PlainStringLiteralV2(value)                => Rdf.literalOf(value)
   }
 
   def toRdfLiteral(booleanV2: BooleanLiteralV2): RdfLiteral.StringLiteral =

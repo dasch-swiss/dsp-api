@@ -203,7 +203,7 @@ object ProjectRestServiceSpec extends E2EZSpec {
             project.shortname.value == "newproject",
             project.shortcode.value == shortcode.toUpperCase,
             project.longname.map(_.value).contains("project longname"),
-            project.description == Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
+            project.description == Seq(StringLiteralV2.from(value = "project description", EN)),
             hasAPForProjectAdmin.size == 1,
             hasAPForProjectMember.size == 1,
             hasDOAPForProjectAdmin.size == 1,
@@ -245,7 +245,7 @@ object ProjectRestServiceSpec extends E2EZSpec {
           Some(Longname.unsafeFrom(longnameWithSpecialCharacter)),
           List(
             Description.unsafeFrom(
-              StringLiteralV2.from(value = descriptionWithSpecialCharacter, language = Some("en")),
+              StringLiteralV2.from(value = descriptionWithSpecialCharacter, EN),
             ),
           ),
           List(keywordWithSpecialCharacter).map(Keyword.unsafeFrom),
@@ -262,8 +262,8 @@ object ProjectRestServiceSpec extends E2EZSpec {
               received.project.description ==
                 Seq(
                   StringLiteralV2.from(
-                    value = Iri.fromSparqlEncodedString(descriptionWithSpecialCharacter),
-                    language = Some("en"),
+                    Iri.fromSparqlEncodedString(descriptionWithSpecialCharacter),
+                    EN,
                   ),
                 ),
               received.project.keywords.contains(Iri.fromSparqlEncodedString(keywordWithSpecialCharacter)),
@@ -276,7 +276,7 @@ object ProjectRestServiceSpec extends E2EZSpec {
           Shortname.unsafeFrom("newproject"),
           Shortcode.unsafeFrom("111D"),
           Some(Longname.unsafeFrom("project longname")),
-          List(Description.unsafeFrom(StringLiteralV2.from(value = "description", language = Some("en")))),
+          List(Description.unsafeFrom(StringLiteralV2.from(value = "description", EN))),
           List("keywords").map(Keyword.unsafeFrom),
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
           Status.Active,
@@ -298,7 +298,7 @@ object ProjectRestServiceSpec extends E2EZSpec {
           Shortname.unsafeFrom("newproject3"),
           Shortcode.unsafeFrom("111C"),
           Some(Longname.unsafeFrom("project longname")),
-          List(Description.unsafeFrom(StringLiteralV2.from(value = "description", language = Some("en")))),
+          List(Description.unsafeFrom(StringLiteralV2.from(value = "description", EN))),
           List("keywords").map(Keyword.unsafeFrom),
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
           Status.Active,
@@ -318,7 +318,7 @@ object ProjectRestServiceSpec extends E2EZSpec {
           Some(
             List(
               Description.unsafeFrom(
-                StringLiteralV2.from("""updated project description with "quotes" and <html tags>""", Some("en")),
+                StringLiteralV2.from("""updated project description with "quotes" and <html tags>""", EN),
               ),
             ),
           ),
@@ -336,7 +336,7 @@ object ProjectRestServiceSpec extends E2EZSpec {
               Seq(
                 StringLiteralV2.from(
                   value = """updated project description with "quotes" and <html tags>""",
-                  language = Some("en"),
+                  EN,
                 ),
               ),
             received.project.keywords.sorted == Seq("updated", "keywords").sorted,

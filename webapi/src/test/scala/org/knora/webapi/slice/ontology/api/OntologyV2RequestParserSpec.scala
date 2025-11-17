@@ -30,6 +30,8 @@ import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.LanguageCode
+import org.knora.webapi.slice.common.domain.LanguageCode.DE
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 
@@ -542,15 +544,15 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
               objects = Seq(
-                StringLiteralV2.from("has name", Some("en")),
-                StringLiteralV2.from("hat Namen", Some("de")),
+                StringLiteralV2.from("has name", EN),
+                StringLiteralV2.from("hat Namen", DE),
               ),
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Seq(
-                StringLiteralV2.from("The name of a 'Thing'", Some("en")),
-                StringLiteralV2.from("Der Name eines Dinges", Some("de")),
+                StringLiteralV2.from("The name of a 'Thing'", EN),
+                StringLiteralV2.from("Der Name eines Dinges", DE),
               ),
             ),
           ),

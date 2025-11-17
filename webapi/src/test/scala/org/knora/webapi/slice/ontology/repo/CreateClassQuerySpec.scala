@@ -19,6 +19,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -39,12 +40,12 @@ object CreateClassQuerySpec extends ZIOSpecDefault {
       "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri ->
         PredicateInfoV2(
           predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-          objects = Seq(StringLiteralV2.from("""Test "Class"""", Some("en"))),
+          objects = Seq(StringLiteralV2.from("""Test "Class"""", EN)),
         ),
       "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri ->
         PredicateInfoV2(
           predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-          objects = Seq(StringLiteralV2.from("""A test "class"""", Some("en"))),
+          objects = Seq(StringLiteralV2.from("""A test "class"""", EN)),
         ),
     ),
     subClassOf = Set("http://www.knora.org/ontology/knora-base#Resource".toSmartIri),
@@ -63,7 +64,7 @@ object CreateClassQuerySpec extends ZIOSpecDefault {
       "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri ->
         PredicateInfoV2(
           predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-          objects = Seq(StringLiteralV2.from("Simple Test Class", Some("en"))),
+          objects = Seq(StringLiteralV2.from("Simple Test Class", EN)),
         ),
     ),
     subClassOf = Set("http://www.knora.org/ontology/knora-base#Resource".toSmartIri),
