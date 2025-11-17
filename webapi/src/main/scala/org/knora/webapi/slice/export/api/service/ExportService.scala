@@ -31,6 +31,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -55,7 +56,8 @@ final case class ExportService(
     classIri: ResourceClassIri,
     selectedProperties: List[PropertyIri],
     requestingUser: User,
-    language: String,
+    language: LanguageCode,
+    includeResourceIri: Boolean,
   ): Task[(List[String], List[ExportedResource])] =
     for {
       resourceIris <- findResources(project, classIri).map(_.map(_.toString))
@@ -90,8 +92,8 @@ final case class ExportService(
           targetSchema = ApiV2Complex,
           requestingUser = requestingUser,
         )
-      headers <- rowHeaders(selectedProperties, language)
-      rows     = readResources.resources.toList.map(convertToExportRow(_, selectedProperties))
+      headers <- rowHeaders(selectedProperties, language, includeResourceIri)
+      rows     = readResources.resources.toList.map(convertToExportRow(_, selectedProperties, includeResourceIri))
     } yield (headers, rows)
 
   private def findResources(
@@ -136,34 +138,36 @@ final case class ExportService(
 
   private def rowHeaders(
     selectedProperties: List[PropertyIri],
-    language: String,
+    language: LanguageCode,
+    includeResourceIri: Boolean,
   ): Task[List[String]] =
-    propertyLabelsTranslated(selectedProperties, language).map(
-      "Label" +: "Resource IRI" +: _,
+    propertyLabelsTranslated(selectedProperties, language).map(labels =>
+      Option.when(includeResourceIri)("Resource IRI").toList ++ ("Label" +: labels),
     )
 
   private def convertToExportRow(
     resource: ReadResourceV2,
     selectedProperties: List[PropertyIri],
+    includeResourceIri: Boolean,
   ): ExportedResource =
     ExportedResource(
-      resource.label,
-      resource.resourceIri.toString,
-      ListMap.from(selectedProperties.map { property =>
-        property.smartIri.toString -> {
-          resource.values
-            .get(property.smartIri)
-            .map(_.toList)
-            .combineAll
-            .map(_.valueContent.valueHasString)
-            .mkString(" :: ")
-        }
-      }),
+      ListMap.from(Option.when(includeResourceIri)("Resource IRI" -> resource.resourceIri.toString)) ++
+        ListMap("Label" -> resource.label) ++
+        ListMap.from(selectedProperties.map { property =>
+          property.smartIri.toString -> {
+            resource.values
+              .get(property.smartIri.toInternalSchema)
+              .map(_.toList)
+              .combineAll
+              .map(_.valueContent.valueHasString.replaceAll("\n", "\\n"))
+              .mkString(" :: ")
+          }
+        }),
     )
 
   private def propertyLabelsTranslated(
     propertyIris: List[PropertyIri],
-    userLang: String,
+    language: LanguageCode,
   ): Task[List[String]] =
     ZIO.foreach(propertyIris) { propertyIri =>
       ontologyRepo.findProperty(propertyIri).flatMap { propertyInfo =>
@@ -174,8 +178,8 @@ final case class ExportService(
               .map(info.entityInfoContent.getPredicateObjectsWithLangs(_))
               .map(labelsMap =>
                 labelsMap
-                  .get(userLang)
-                  .orElse(labelsMap.get("en"))
+                  .get(language.value)
+                  .orElse(labelsMap.get(LanguageCode.EN.value))
                   .orElse(labelsMap.values.headOption)
                   .getOrElse(propertyIri.toString),
               )
