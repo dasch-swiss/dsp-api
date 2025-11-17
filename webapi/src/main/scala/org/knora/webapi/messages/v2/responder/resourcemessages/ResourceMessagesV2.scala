@@ -494,27 +494,18 @@ case class ReadResourceV2(
    */
   def withDeletedValues(versionDate: Option[VersionDate] = None): ReadResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val delIri: SmartIri                          = KnoraBase.DeletedValue.toSmartIri
-    val valuesWithDeletedValues: Map[SmartIri, Seq[ReadValueV2]] =
-      this.values.toList
-        .foldLeft(Seq.empty[(SmartIri, ReadValueV2)])((aggregator, valueMap) =>
-          valueMap match {
-            case (iri: SmartIri, valueSequence: Seq[ReadValueV2]) =>
-              val withDeletedSeq = valueSequence
-                .map(value =>
-                  value.deletionInfo match {
-                    case Some(DeletionInfo(deletedDate, _))
-                        if deletedDate.isBefore(versionDate.map(_.value).getOrElse(Instant.now)) =>
-                      (delIri, value.asDeletedValue())
-                    case _ => (iri, value)
-                  },
-                )
-              aggregator ++ withDeletedSeq
+
+    this.copy(
+      values = this.values.toList.flatMap { case (iri: SmartIri, valueSequence: Seq[ReadValueV2]) =>
+        valueSequence.map(value =>
+          value.deletionInfo match {
+            case Some(DeletionInfo(deletedDate, _))
+                if deletedDate.isBefore(versionDate.map(_.value).getOrElse(Instant.now)) =>
+              (KnoraBase.DeletedValue.toSmartIri, value.asDeletedValue())
+            case _ => (iri, value)
           },
         )
-        .groupMap(_._1)(_._2)
-    this.copy(
-      values = valuesWithDeletedValues,
+      }.groupMap(_._1)(_._2),
     )
   }
 
