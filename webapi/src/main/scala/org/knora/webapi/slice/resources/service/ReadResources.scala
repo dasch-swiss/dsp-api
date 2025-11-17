@@ -97,6 +97,47 @@ final case class ReadResources(
       .focus(_.resources)
       .modify(_.map(r => if (markDeletions) r.markDeleted(versionDate, showDeletedValues) else r))
 
+  def getResourcesWithDeletedResource(
+    resourceIris: Seq[IRI],
+    propertyIri: Option[SmartIri] = None,
+    valueUuid: Option[UUID] = None,
+    versionDate: Option[VersionDate] = None,
+    withDeleted: Boolean = true,
+    showDeletedValues: Boolean = false,
+    targetSchema: ApiV2Schema,
+    schemaOptions: Set[Rendering],
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2] =
+    readResourcesSequence(
+      resourceIris = resourceIris,
+      propertyIri = propertyIri,
+      valueUuid = valueUuid,
+      versionDate = versionDate,
+      withDeleted = withDeleted,
+      targetSchema = targetSchema,
+      requestingUser = requestingUser,
+      queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions),
+      preview = false,
+      failOnMissingValueUuid = true,
+      markDeletions = true,
+      showDeletedValues = showDeletedValues,
+    )
+
+  def getResourcePreviewWithDeletedResource(
+    resourceIris: Seq[IRI],
+    withDeleted: Boolean = true,
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2] =
+    readResourcesSequence(
+      resourceIris = resourceIris,
+      versionDate = None,
+      withDeleted = withDeleted,
+      targetSchema = targetSchema,
+      requestingUser = requestingUser,
+      preview = true,
+      markDeletions = true,
+    )
 }
 
 object ReadResources {

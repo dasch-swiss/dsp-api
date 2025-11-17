@@ -65,6 +65,7 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.util.Logger
+import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 
 object LayersLive { self =>
 
@@ -82,6 +83,7 @@ object LayersLive { self =>
     CardinalityHandler &
     CommonModule.Provided &
     ConstructResponseUtilV2 &
+    CreateResourceV2Handler &
     DefaultObjectAccessPermissionService &
     Endpoints &
     IriService &
@@ -136,6 +138,7 @@ object LayersLive { self =>
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CardinalityHandler.layer,
+      CreateResourceV2Handler.layer,
       CommonModule.layer,
       ConstructResponseUtilV2.layer,
       DspIngestClient.layer,

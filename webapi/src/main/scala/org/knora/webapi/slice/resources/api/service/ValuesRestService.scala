@@ -12,7 +12,6 @@ import zio.ZLayer
 
 import dsp.errors.*
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
-import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -23,11 +22,12 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.resources.api.model.ValueUuid
 import org.knora.webapi.slice.resources.api.model.VersionDate
+import org.knora.webapi.slice.resources.service.ReadResources
 
 final class ValuesRestService(
   private val auth: AuthorizationRestService,
   private val valuesService: ValuesResponderV2,
-  private val resourcesService: ResourcesResponderV2,
+  private val readResources: ReadResources,
   private val requestParser: ApiComplexV2JsonLdRequestParser,
   private val renderer: KnoraResponseRenderer,
   private val knoraProjectService: KnoraProjectService,
@@ -40,7 +40,7 @@ final class ValuesRestService(
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] =
     render(
-      resourcesService.getResourcesWithDeletedResource(
+      readResources.getResourcesWithDeletedResource(
         Seq(resourceIri),
         None,
         Some(valueUuid.value),
