@@ -21,11 +21,11 @@ object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
 
   val request =
     ExportRequest(
-      "http://www.knora.org/ontology/0803/incunabula#book",
+      "http://api.knora.org/ontology/0803/incunabula#book", // this IRI should be converted to an internal schema
       List(
-        "http://www.knora.org/ontology/0803/incunabula#title",
-        "http://www.knora.org/ontology/0803/incunabula#publisher",
-        "http://www.knora.org/ontology/0803/incunabula#hasAuthor",
+        "http://api.knora.org/ontology/0803/incunabula#title",
+        "http://api.knora.org/ontology/0803/incunabula#publisher",
+        "http://www.knora.org/ontology/0803/incunabula#hasAuthor", // this IRI schema shouldn't pose a problem to the handler
       ),
     )
 
