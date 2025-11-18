@@ -7,6 +7,7 @@ package org.knora.webapi.slice.api.v3
 
 import sttp.tapir.*
 import zio.*
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject

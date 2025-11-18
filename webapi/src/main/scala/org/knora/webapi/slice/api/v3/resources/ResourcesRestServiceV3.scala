@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.v3.resources
 import zio.*
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -16,7 +17,7 @@ import org.knora.webapi.slice.api.v3.BadRequest
 import org.knora.webapi.slice.api.v3.NotFound
 import org.knora.webapi.slice.api.v3.OntologyAndResourceClasses
 import org.knora.webapi.slice.api.v3.ResourceClassAndCountDto
-import org.knora.webapi.slice.api.v3.ResourcesResponseDto
+import org.knora.webapi.slice.api.v3.ResourceResponseDto
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
 import org.knora.webapi.slice.api.v3.ontology.OntologyRestServiceV3
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -58,13 +59,13 @@ class ResourcesRestServiceV3(
     projectIri: ProjectIri,
     resourceClassIri: IriDto,
     pageAndSize: PageAndSize,
-  ): IO[V3ErrorInfo, PagedResponse[ResourcesResponseDto]] = for {
+  ): IO[V3ErrorInfo, PagedResponse[ResourceResponseDto]] = for {
     prj <- findProject(projectIri)
     resourceClassIri <- iriConverter
-                          .asResourceClassIri(resourceClassIri.value)
-                          .orElseFail(BadRequest.invalidResourceClassIri(resourceClassIri))
+                          .asResourceClassIriApiV2Complex(resourceClassIri.value)
+                          .mapError(BadRequest.invalidResourceClassIri(resourceClassIri, _))
     page <- resourcesRepo.findResourcesByResourceClassIri(resourceClassIri, prj, user, pageAndSize).orDie
-  } yield page.mapData(iri => ResourcesResponseDto(iri.toComplexSchema.toIri))
+  } yield page.mapData(item => ResourceResponseDto.from(item.iri, item.label))
 }
 
 object ResourcesRestServiceV3 {

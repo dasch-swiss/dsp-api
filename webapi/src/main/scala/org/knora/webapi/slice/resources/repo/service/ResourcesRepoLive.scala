@@ -13,7 +13,6 @@ import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.core.From
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
@@ -66,6 +65,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
+final case class ResourceIriAndLabel(iri: ResourceIri, label: String)
+
 trait ResourcesRepo {
   def createNewResource(
     dataGraphIri: InternalIri,
@@ -90,7 +91,7 @@ trait ResourcesRepo {
     project: KnoraProject,
     user: User,
     pageAndSize: PageAndSize,
-  ): Task[PagedResponse[ResourceIri]]
+  ): Task[PagedResponse[ResourceIriAndLabel]]
 }
 
 sealed trait ResourceModel {
@@ -307,7 +308,42 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     project: KnoraProject,
     user: User,
     pageAndSize: PageAndSize,
-  ): Task[PagedResponse[ResourceIri]] = ZIO.succeed(PagedResponse.from(Seq.empty, 0, pageAndSize))
+  ): Task[PagedResponse[ResourceIriAndLabel]] = {
+
+    val resVar    = variable("resourceIri")
+    val resLabel  = variable("resourceLabel")
+    val graphName = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(project)))
+
+    val wherePatterns = List(
+      resVar.isA(toRdfIri(resourceClassIri)),
+      GraphPatterns.filterNotExists(resVar.has(KB.isDeleted, true)),
+    )
+
+    val countQuery = Queries
+      .SELECT(Expressions.count(resVar).as(variable("totalCount")))
+      .from(graphName)
+      .where(wherePatterns: _*)
+
+    val selectQuery = Queries
+      .SELECT(resVar, resLabel)
+      .from(graphName)
+      .where((wherePatterns ::: List(resVar.has(RDFS.LABEL, resLabel))): _*)
+      .orderBy(resVar.asc())
+      .limit(pageAndSize.size)
+      .offset((pageAndSize.page - 1) * pageAndSize.size)
+
+    for {
+      totalCountResult <- triplestore.select(countQuery)
+      totalCount        = totalCountResult.getFirst("totalCount").map(_.toInt).getOrElse(0)
+      resourcesResult  <- triplestore.select(selectQuery)
+      result = resourcesResult.map(row =>
+                 ResourceIriAndLabel(
+                   iri = ResourceIri.unsafeFrom(row.getRequired("resourceIri").toSmartIri),
+                   label = row.getRequired("resourceLabel"),
+                 ),
+               )
+    } yield PagedResponse.from(result, totalCount, pageAndSize)
+  }
 }
 
 object ResourcesRepoLive {

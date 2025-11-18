@@ -8,12 +8,12 @@ package org.knora.webapi.slice.api.v3
 import sttp.tapir.Schema
 import zio.*
 import zio.json.*
-
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
 
@@ -74,7 +74,10 @@ object ResourceClassAndCountDto {
   given Schema[ResourceClassAndCountDto]    = Schema.derived[ResourceClassAndCountDto]
 }
 
-final case class ResourcesResponseDto(iri: String)
-object ResourcesResponseDto {
-  given JsonCodec[ResourcesResponseDto] = DeriveJsonCodec.gen[ResourcesResponseDto]
+final case class ResourceResponseDto(iri: String, label: String)
+object ResourceResponseDto {
+  given JsonCodec[ResourceResponseDto] = DeriveJsonCodec.gen[ResourceResponseDto]
+
+  def from(iri: ResourceIri, label: String): ResourceResponseDto =
+    ResourceResponseDto(iri.toComplexSchema.toIri, label)
 }
