@@ -155,8 +155,8 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"                 %% "zio-opentelemetry"              % "3.1.10",
-    "io.sentry"                % "sentry-opentelemetry-agentless" % "8.25.0",
-    "io.opentelemetry"         % "opentelemetry-sdk"              % "1.55.0",
+    "io.sentry"                % "sentry-opentelemetry-agentless" % "8.26.0",
+    "io.opentelemetry"         % "opentelemetry-sdk"              % "1.56.0",
     "io.opentelemetry.semconv" % "opentelemetry-semconv"          % "1.37.0",
   )
 
@@ -203,7 +203,7 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion         = "11.15.0"
+  val flywayVersion         = "11.17.0"
   val otelAgentVersion      = "v2.18.1"
   val otelPyroscopeVersion  = "v1.0.4"
   val hikariVersion         = "7.0.2"
