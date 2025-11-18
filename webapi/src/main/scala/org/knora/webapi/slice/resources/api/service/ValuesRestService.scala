@@ -22,12 +22,12 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.resources.api.model.ValueUuid
 import org.knora.webapi.slice.resources.api.model.VersionDate
-import org.knora.webapi.slice.resources.service.ReadResources
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final class ValuesRestService(
   private val auth: AuthorizationRestService,
   private val valuesService: ValuesResponderV2,
-  private val readResources: ReadResources,
+  private val readResources: ReadResourcesService,
   private val requestParser: ApiComplexV2JsonLdRequestParser,
   private val renderer: KnoraResponseRenderer,
   private val knoraProjectService: KnoraProjectService,
