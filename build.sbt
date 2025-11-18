@@ -391,7 +391,7 @@ lazy val ingest = {
       headerLicense := projectLicense,
       libraryDependencies ++= db ++ tapir ++ metrics ++ zioSeq ++ Seq(
         "com.github.jwt-scala"          %% "jwt-zio-json"                      % "11.0.3",
-        "commons-io"                     % "commons-io"                        % "2.20.0",
+        "commons-io"                     % "commons-io"                        % "2.21.0",
         "dev.zio"                       %% "zio-config"                        % ZioConfigVersion,
         "dev.zio"                       %% "zio-config-magnolia"               % ZioConfigVersion,
         "dev.zio"                       %% "zio-config-typesafe"               % ZioConfigVersion,
