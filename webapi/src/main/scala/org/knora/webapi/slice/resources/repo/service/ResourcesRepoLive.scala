@@ -296,7 +296,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
       )
   }
 
-  def countByResourceClass(iri: ResourceClassIri, project: KnoraProject): Task[Int] = {
+  override def countByResourceClass(iri: ResourceClassIri, project: KnoraProject): Task[Int] = {
     val s      = variable("s")
     val select = SparqlBuilder.select(Expressions.count(s).as(variable("count")))
     val from   = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(project)))
@@ -304,6 +304,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val query  = Queries.SELECT(select).from(from).where(where: _*)
     triplestore.select(query).map(_.getFirst("count").map(_.toInt).getOrElse(0))
   }
+
   override def findResourcesByResourceClassIri(
     resourceClassIri: ResourceClassIri,
     project: KnoraProject,
@@ -334,13 +335,13 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
       .offset((pageAndSize.page - 1) * pageAndSize.size)
 
     for {
-      totalCountResult <- triplestore.select(countQuery)
-      totalCount        = totalCountResult.getFirst("totalCount").map(_.toInt).getOrElse(0)
-      resourcesResult  <- triplestore.select(selectQuery)
+      totalCountFork  <- triplestore.select(countQuery).fork
+      resourcesResult <- triplestore.select(selectQuery)
+      totalCount      <- totalCountFork.join.map(_.getFirstInt("totalCount").getOrElse(0))
       result = resourcesResult.map(row =>
                  ResourceIriAndLabel(
-                   iri = ResourceIri.unsafeFrom(row.getRequired("resourceIri").toSmartIri),
-                   label = row.getRequired("resourceLabel"),
+                   ResourceIri.unsafeFrom(row.getRequired("resourceIri").toSmartIri),
+                   row.getRequired("resourceLabel"),
                  ),
                )
     } yield PagedResponse.from(result, totalCount, pageAndSize)
