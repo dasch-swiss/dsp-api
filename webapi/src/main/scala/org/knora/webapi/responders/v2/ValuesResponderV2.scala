@@ -53,11 +53,11 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final case class ValuesResponderV2(
   private val appConfig: AppConfig,
