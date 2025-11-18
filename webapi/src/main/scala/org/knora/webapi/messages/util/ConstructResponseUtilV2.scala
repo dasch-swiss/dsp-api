@@ -188,7 +188,7 @@ final case class ConstructResponseUtilV2(
 
     MainResourcesAndValueRdfData(
       resources = mainResourceIrisVisible.map { resourceIri =>
-        val transformedResource = nestResources(
+        resourceIri -> nestResources(
           depth = 0,
           resourceIri = resourceIri,
           flatResourcesWithValues = flatResourcesWithValues,
@@ -197,8 +197,6 @@ final case class ConstructResponseUtilV2(
           dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
           incomingLinksForResource = incomingLinksForResource,
         )
-
-        resourceIri -> transformedResource
       }.toMap,
       hiddenResourceIris = mainResourceIrisNotVisible ++ dependentResourceIrisNotVisible,
     )
