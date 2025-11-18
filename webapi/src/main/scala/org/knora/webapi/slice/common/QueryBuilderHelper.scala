@@ -5,9 +5,9 @@
 
 package org.knora.webapi.slice.common
 
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as builderVar
 import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as builderVar
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
@@ -16,6 +16,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfValue
 
 import java.time.Instant
+
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2

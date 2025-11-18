@@ -8,6 +8,7 @@ package org.knora.webapi.slice.api.v3
 import sttp.tapir.Schema
 import zio.*
 import zio.json.*
+
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
