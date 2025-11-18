@@ -438,13 +438,10 @@ final case class ResourcesResponderV2(
         // Get the metadata of the resource to be updated.
         resource <-
           readResources
-            .readResourcesSequence(
+            .getResourcePreviewWithDeletedResource(
               resourceIris = Seq(eraseResourceV2.resourceIri),
-              versionDate = None,
-              withDeleted = true,
               targetSchema = ApiV2Complex,
               requestingUser = eraseResourceV2.requestingUser,
-              preview = true,
             )
             .map(_.toResource(eraseResourceV2.resourceIri))
 
@@ -525,43 +522,6 @@ final case class ResourcesResponderV2(
       withDeleted,
       targetSchema,
       requestingUser,
-    )
-
-  /**
-   * Get one or several resources and return them as a sequence.
-   *
-   * @param resourceIris    the IRIs of the resources to be queried.
-   * @param propertyIri     if defined, requests only the values of the specified explicit property.
-   * @param valueUuid       if defined, requests only the value with the specified UUID.
-   * @param versionDate     if defined, requests the state of the resources at the specified time in the past.
-   * @param withDeleted     if defined, indicates if the deleted resource and values should be returned or not.
-   * @param targetSchema    the target API schema.
-   * @param schemaOptions   the schema options submitted with the request.
-   * @param requestingUser  the user making the request.
-   * @return a [[ReadResourcesSequenceV2]].
-   */
-  def getResources(
-    resourceIris: Seq[IRI],
-    propertyIri: Option[SmartIri] = None,
-    valueUuid: Option[UUID] = None,
-    versionDate: Option[VersionDate] = None,
-    withDeleted: Boolean = true,
-    targetSchema: ApiV2Schema,
-    schemaOptions: Set[Rendering],
-    requestingUser: User,
-  ): Task[ReadResourcesSequenceV2] =
-    readResources.readResourcesSequence(
-      resourceIris = resourceIris,
-      propertyIri = propertyIri,
-      valueUuid = valueUuid,
-      versionDate = versionDate,
-      withDeleted = withDeleted,
-      targetSchema = targetSchema,
-      requestingUser = requestingUser,
-      // Passed down to ConstructResponseUtilV2.makeTextValueContentV2.
-      queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions),
-      preview = false,
-      failOnMissingValueUuid = true,
     )
 
   /**

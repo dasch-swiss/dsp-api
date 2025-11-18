@@ -28,16 +28,16 @@ final case class ReadResourcesService(
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val triplestore: TriplestoreService,
 )(implicit val stringFormatter: StringFormatter) {
-  def readResourcesSequence(
+  private def readResourcesSequence_(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
-    versionDate: Option[VersionDate] = None,
-    withDeleted: Boolean = true,
+    preview: Boolean = false,
     targetSchema: ApiV2Schema,
     requestingUser: User,
+    versionDate: Option[VersionDate] = None,
+    withDeleted: Boolean = true,
     queryStandoff: Boolean = false,
-    preview: Boolean,
     failOnMissingValueUuid: Boolean = false,
     markDeletions: Boolean = false,
     showDeletedValues: Boolean = false,
@@ -97,6 +97,40 @@ final case class ReadResourcesService(
       .focus(_.resources)
       .modify(_.map(r => if (markDeletions) r.markDeleted(versionDate, showDeletedValues) else r))
 
+  def readResourcesSequence(
+    resourceIris: Seq[IRI],
+    propertyIri: Option[SmartIri] = None,
+    valueUuid: Option[UUID] = None,
+    preview: Boolean = false,
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2] =
+    readResourcesSequence_(
+      resourceIris,
+      propertyIri,
+      valueUuid,
+      preview,
+      targetSchema,
+      requestingUser,
+    )
+
+  def getResources(
+    resourceIris: Seq[IRI],
+    propertyIri: Option[SmartIri] = None,
+    targetSchema: ApiV2Schema,
+    schemaOptions: Set[Rendering],
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2] =
+    readResourcesSequence_(
+      resourceIris = resourceIris,
+      propertyIri = propertyIri,
+      targetSchema = targetSchema,
+      requestingUser = requestingUser,
+      // Passed down to ConstructResponseUtilV2.makeTextValueContentV2.
+      queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions),
+      failOnMissingValueUuid = true,
+    )
+
   def getResourcesWithDeletedResource(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
@@ -108,7 +142,7 @@ final case class ReadResourcesService(
     schemaOptions: Set[Rendering],
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
-    readResourcesSequence(
+    readResourcesSequence_(
       resourceIris = resourceIris,
       propertyIri = propertyIri,
       valueUuid = valueUuid,
@@ -117,7 +151,6 @@ final case class ReadResourcesService(
       targetSchema = targetSchema,
       requestingUser = requestingUser,
       queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions),
-      preview = false,
       failOnMissingValueUuid = true,
       markDeletions = true,
       showDeletedValues = showDeletedValues,
@@ -129,7 +162,7 @@ final case class ReadResourcesService(
     targetSchema: ApiV2Schema,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
-    readResourcesSequence(
+    readResourcesSequence_(
       resourceIris = resourceIris,
       versionDate = None,
       withDeleted = withDeleted,
