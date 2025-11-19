@@ -53,6 +53,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -74,6 +75,7 @@ final case class ValuesResponderV2(
   private val triplestoreService: TriplestoreService,
   private val valueRepo: ValueRepo,
   private val valueValidator: ValueContentValidator,
+  private val readResources: ReadResourcesService,
 )(implicit private val stringFormatter: StringFormatter) {
 
   /**
@@ -1157,7 +1159,7 @@ final case class ValuesResponderV2(
 
     // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
     // so we can see objects that the user doesn't have permission to see.
-    resourceInfo <- resourcesResponder
+    resourceInfo <- readResources
                       .getResources(
                         resourceIris = Seq(deleteValue.resourceIri.toString),
                         targetSchema = ApiV2Complex,

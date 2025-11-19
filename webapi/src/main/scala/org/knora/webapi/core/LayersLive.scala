@@ -26,6 +26,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
@@ -52,6 +53,7 @@ import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
@@ -81,6 +83,7 @@ object LayersLive { self =>
     CardinalityHandler &
     CommonModule.Provided &
     ConstructResponseUtilV2 &
+    CreateResourceV2Handler &
     DefaultObjectAccessPermissionService &
     Endpoints &
     IriService &
@@ -135,6 +138,7 @@ object LayersLive { self =>
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CardinalityHandler.layer,
+      CreateResourceV2Handler.layer,
       CommonModule.layer,
       ConstructResponseUtilV2.layer,
       DspIngestClient.layer,
@@ -161,6 +165,7 @@ object LayersLive { self =>
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,
       RepositoryUpdater.layer,
+      ReadResourcesService.layer,
       ResourceUtilV2.layer,
       ResourcesApiModule.layer,
       ResourcesModule.layer,
