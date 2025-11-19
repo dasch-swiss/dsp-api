@@ -438,7 +438,7 @@ final case class ResourcesResponderV2(
         // Get the metadata of the resource to be updated.
         resource <-
           readResources
-            .getResourcePreviewWithDeletedResource(
+            .getResourcePreview(
               resourceIris = Seq(eraseResourceV2.resourceIri),
               targetSchema = ApiV2Complex,
               requestingUser = eraseResourceV2.requestingUser,

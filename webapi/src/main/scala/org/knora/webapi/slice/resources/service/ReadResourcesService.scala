@@ -171,6 +171,21 @@ final case class ReadResourcesService(
       preview = true,
       markDeletions = true,
     )
+
+  def getResourcePreview(
+    resourceIris: Seq[IRI],
+    withDeleted: Boolean = true,
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2] =
+    readResourcesSequence_(
+      resourceIris = resourceIris,
+      versionDate = None,
+      withDeleted = withDeleted,
+      targetSchema = targetSchema,
+      requestingUser = requestingUser,
+      preview = true,
+    )
 }
 
 object ReadResourcesService {
