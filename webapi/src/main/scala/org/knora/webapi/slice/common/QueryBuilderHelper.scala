@@ -7,12 +7,17 @@ package org.knora.webapi.slice.common
 
 import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.core.From
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as builderVar
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatternNotTriples
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfSubject
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfValue
 
 import java.time.Instant
@@ -26,11 +31,14 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.slice.ontology.api.LastModificationDate
 
 trait QueryBuilderHelper {
@@ -77,4 +85,9 @@ trait QueryBuilderHelper {
     values.flatMap(pred => pred.objects.map(obj => iri.has(toRdfIri(pred.predicateIri), toRdfValue(obj)))).toList
 
   def variable(name: String): Variable = builderVar(name)
+
+  def fromDataGraph(prj: KnoraProject): From = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(prj)))
+
+  def filterNotExistsIsDeleted(sub: RdfSubject): GraphPatternNotTriples =
+    GraphPatterns.filterNotExists(sub.has(KnoraBase.isDeleted, true))
 }

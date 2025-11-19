@@ -51,7 +51,6 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.KnownUser
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.ProjectMember
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.UnknownUser
-import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -313,7 +312,6 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val s                = variable("s")
     val permVar          = variable("permissions")
     val select           = SparqlBuilder.select(Expressions.count(s).as(variable("count")))
-    val from             = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(project)))
     val resourceClassIri = toRdfIri(iri)
     val resourcePattern  = s.isA(resourceClassIri).andHas(KB.hasPermissions, permVar)
     val where = buildPermissionPattern(user, permVar, project)
@@ -321,8 +319,8 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
       .getOrElse(resourcePattern)
     val query = Queries
       .SELECT(select)
-      .from(from)
-      .where(where, GraphPatterns.filterNotExists(resourceClassIri.has(KB.isDeleted, true)))
+      .from(fromDataGraph(project))
+      .where(where, filterNotExistsIsDeleted(resourceClassIri))
     triplestore.select(query).map(_.getFirst("count").map(_.toInt).getOrElse(0))
   }
 
@@ -333,12 +331,9 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     pageAndSize: PageAndSize,
   ): Task[PagedResponse[ResourceIriAndLabel]] = {
 
-    val resVar    = variable("resourceIri")
-    val resLabel  = variable("resourceLabel")
-    val permVar   = variable("permissions")
-    val graphName = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(project)))
-
-    val filterDeleted = GraphPatterns.filterNotExists(resVar.has(KB.isDeleted, true))
+    val resVar   = variable("resourceIri")
+    val resLabel = variable("resourceLabel")
+    val permVar  = variable("permissions")
 
     val resourcePatternCount = resVar
       .isA(toRdfIri(resourceClassIri))
@@ -348,8 +343,8 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val countQuery = Queries
       .SELECT(Expressions.count(resVar).as(variable("totalCount")))
       .prefix(RDFS.NS, KB.NS)
-      .from(graphName)
-      .where(wherePatternCount, filterDeleted)
+      .from(fromDataGraph(project))
+      .where(wherePatternCount, filterNotExistsIsDeleted(resVar))
 
     val resourcePatternSelect = resVar
       .isA(toRdfIri(resourceClassIri))
@@ -363,8 +358,8 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val selectQuery = Queries
       .SELECT(resVar, resLabel)
       .prefix(RDFS.NS, KB.NS)
-      .from(graphName)
-      .where(wherePatternSelect, filterDeleted)
+      .from(fromDataGraph(project))
+      .where(wherePatternSelect, filterNotExistsIsDeleted(resVar))
       .orderBy(resLabel.asc())
       .limit(pageAndSize.size)
       .offset((pageAndSize.page - 1) * pageAndSize.size)
