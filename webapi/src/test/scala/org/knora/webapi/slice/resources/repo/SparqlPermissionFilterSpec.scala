@@ -9,6 +9,7 @@ import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import zio.test.*
 
 import scala.util.matching.Regex
+
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
