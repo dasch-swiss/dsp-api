@@ -34,7 +34,7 @@ class ResourcesRestServiceV3(
   resourcesRepo: ResourcesRepo,
 )(implicit val sf: StringFormatter) {
 
-  def resourcesPerOntology(projectIri: ProjectIri): IO[V3ErrorInfo, List[OntologyAndResourceClasses]] =
+  def resourcesPerOntology(user: User)(projectIri: ProjectIri): IO[V3ErrorInfo, List[OntologyAndResourceClasses]] =
     for {
       prj        <- findProject(projectIri)
       ontologies <- ontologyRepo.findByProject(projectIri).orDie
@@ -42,14 +42,14 @@ class ResourcesRestServiceV3(
                   .foreach(ontologies.map(o => o.ontologyIri -> o.resourceClassIris).toList)((ontoIri, classes) =>
                     for {
                       onto <- ontologyRestService.asOntologyDto(ontoIri)
-                      rcls <- ZIO.foreachPar(classes)(asResourceClassAndCount(prj)).withParallelism(5)
+                      rcls <- ZIO.foreachPar(classes)(asResourceClassAndCount(prj, user)).withParallelism(5)
                     } yield OntologyAndResourceClasses(onto, rcls),
                   )
     } yield result
 
-  private def asResourceClassAndCount(prj: KnoraProject)(iri: ResourceClassIri) = for {
+  private def asResourceClassAndCount(prj: KnoraProject, user: User)(iri: ResourceClassIri) = for {
     resourceClass <- ontologyRestService.asResourceClassDto(iri)
-    count         <- resourcesRepo.countByResourceClass(iri, prj).orDie
+    count         <- resourcesRepo.countByResourceClass(iri, prj, user).orDie
   } yield ResourceClassAndCountDto(resourceClass, count)
 
   private def findProject(iri: ProjectIri): IO[V3ErrorInfo, KnoraProject] =

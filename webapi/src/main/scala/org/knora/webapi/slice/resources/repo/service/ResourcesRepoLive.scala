@@ -98,7 +98,7 @@ trait ResourcesRepo {
   final def findDeletedById(id: ResourceIri): Task[Option[DeletedResource]] =
     findById(id).map(_.collect { case r: DeletedResource => r })
 
-  def countByResourceClass(resourceClassIri: ResourceClassIri, project: KnoraProject): Task[Int]
+  def countByResourceClass(resourceClassIri: ResourceClassIri, project: KnoraProject, user: User): Task[Int]
 
   def findResourcesByResourceClassIri(
     resourceClassIri: ResourceClassIri,
@@ -309,12 +309,20 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
       )
   }
 
-  override def countByResourceClass(iri: ResourceClassIri, project: KnoraProject): Task[Int] = {
-    val s      = variable("s")
-    val select = SparqlBuilder.select(Expressions.count(s).as(variable("count")))
-    val from   = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(project)))
-    val where  = List(s.isA(toRdfIri(iri)), GraphPatterns.filterNotExists(toRdfIri(iri).has(KB.isDeleted, true)))
-    val query  = Queries.SELECT(select).from(from).where(where: _*)
+  override def countByResourceClass(iri: ResourceClassIri, project: KnoraProject, user: User): Task[Int] = {
+    val s                = variable("s")
+    val permVar          = variable("permissions")
+    val select           = SparqlBuilder.select(Expressions.count(s).as(variable("count")))
+    val from             = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(project)))
+    val resourceClassIri = toRdfIri(iri)
+    val resourcePattern  = s.isA(resourceClassIri).andHas(KB.hasPermissions, permVar)
+    val where = buildPermissionPattern(user, permVar, project)
+      .map(_.and(resourcePattern))
+      .getOrElse(resourcePattern)
+    val query = Queries
+      .SELECT(select)
+      .from(from)
+      .where(where, GraphPatterns.filterNotExists(resourceClassIri.has(KB.isDeleted, true)))
     triplestore.select(query).map(_.getFirst("count").map(_.toInt).getOrElse(0))
   }
 

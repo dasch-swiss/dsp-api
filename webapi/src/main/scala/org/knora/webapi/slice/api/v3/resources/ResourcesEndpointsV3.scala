@@ -26,7 +26,7 @@ import org.knora.webapi.slice.resources.api.model.IriDto
 
 class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) {
 
-  val getResourcesResourcesPerOntology = baseEndpoint.publicEndpoint.get
+  val getResourcesResourcesPerOntology = baseEndpoint.withUserEndpoint.get
     .in(ApiV3.V3ProjectsProjectIri / "resourcesPerOntology")
     .out(
       jsonBody[List[OntologyAndResourceClasses]].example(
