@@ -48,7 +48,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.ProjectAdmin
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.KnownUser
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.ProjectMember
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.UnknownUser
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.PageAndSize
@@ -380,12 +381,12 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     variable: Variable,
     prj: KnoraProject,
   ): Option[GraphPattern] =
-    if user.isSystemUser || user.isSystemAdmin then None
+    if user.isSystemUser || user.isSystemAdmin || user.isProjectAdmin(prj.id) then None
     else
       val builtInGroups: Set[KnoraGroup] =
         if user.isAnonymousUser then Set(UnknownUser)
-        else if user.isProjectAdmin(prj.id) then Set(ProjectAdmin)
-        else Set.empty
+        else if user.isProjectMember(prj.id) then Set(ProjectMember, KnownUser)
+        else Set(KnownUser)
 
       val groupsForPermissions: Set[KnoraGroup] = builtInGroups ++ user.groups.map(toKnoraGroup)
 
