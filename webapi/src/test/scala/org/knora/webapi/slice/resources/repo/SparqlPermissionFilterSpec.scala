@@ -11,6 +11,13 @@ import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import zio.ZIO
+import zio.ZLayer
+import zio.test.*
+
+import scala.util.matching.Regex
+
+import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -18,17 +25,13 @@ import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
+import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess.*
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.*
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.SparqlPermissionFilter
-import org.knora.webapi.config.Triplestore
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
-import zio.ZIO
-import zio.ZLayer
-import zio.test.*
-
-import scala.util.matching.Regex
 
 object SparqlPermissionFilterSpec extends ZIOSpecDefault {
 
@@ -116,27 +119,13 @@ object SparqlPermissionFilterSpec extends ZIOSpecDefault {
     ),
     test("Should work with the database") {
       for {
-        tripleStore <- ZIO.service[TriplestoreService]
-        perms        = SparqlBuilder.`var`("perms")
-        filter1      = SparqlPermissionFilter.buildSparqlRegex(perms, View, KnownUser)
-        filter2      = SparqlPermissionFilter.buildSparqlRegex(perms, View, ProjectMember)
-        combined     = List(filter1, filter2).reduce(Expressions.or(_, _))
-        filter       = GraphPatterns.and().filter(combined)
-        sub          = SparqlBuilder.`var`("sub")
-        label        = SparqlBuilder.`var`("label")
-        query = Queries
-                  .SELECT(sub, label)
-                  .where(
-                    filter.and(
-                      sub
-                        .isA(Rdf.iri("http://www.knora.org/ontology/0001/anything#Thing"))
-                        .andHas(RDFS.LABEL, label)
-                        .andHas(Rdf.iri("http://www.knora.org/ontology/knora-base#hasPermissions"), perms),
-                    ),
-                  )
-        _       = Console.println(s"Generated query:\n${query.getQueryString}")
-        result <- tripleStore.select(query).mapError(e => new Exception(e.getMessage))
-      } yield assertTrue(result.size == 9)
+        tripleStore       <- ZIO.service[TriplestoreService]
+        query              = buildQuery
+        _                  = Console.println(s"Generated query:\n${query.getQueryString}")
+        durResult         <- tripleStore.select(query).timed.mapError(e => new Exception(e.getMessage))
+        (duration, result) = durResult
+        _                  = Console.println(s"Query took: ${duration.toMillis} ms")
+      } yield assertTrue(result.size == 42)
     }.provide(
       ZLayer.succeed(
         Triplestore(
@@ -157,4 +146,35 @@ object SparqlPermissionFilterSpec extends ZIOSpecDefault {
       TriplestoreServiceLive.layer,
     ),
   )
+
+  private def buildQuery = {
+
+    val perms = SparqlBuilder.`var`("perms")
+    val sub   = SparqlBuilder.`var`("sub")
+    val label = SparqlBuilder.`var`("label")
+
+    val dataGraphIri = Rdf.iri("http://www.knora.org/data/0001/anything")
+
+//    val groups = Seq(KnownUser, ProjectMember, Creator)
+    val groups = Seq(UnknownUser)
+
+    val expressions = ObjectAccess.all
+      .flatMap(oa => groups.map(SparqlPermissionFilter.buildSparqlRegex(perms, oa, _)))
+    val combined = expressions.reduce(Expressions.or(_, _))
+    val filter   = GraphPatterns.and().filter(combined)
+
+    Queries
+      .SELECT(sub, label)
+      .from(SparqlBuilder.from(dataGraphIri))
+      .where(
+        filter.and(
+          sub
+            .isA(Rdf.iri("http://www.knora.org/ontology/0001/anything#Thing"))
+            .andHas(RDFS.LABEL, label)
+            .andHas(Rdf.iri("http://www.knora.org/ontology/knora-base#hasPermissions"), perms),
+        ),
+        GraphPatterns.filterNotExists(sub.has(KB.isDeleted, true)),
+      )
+      .orderBy(label.asc())
+  }
 }

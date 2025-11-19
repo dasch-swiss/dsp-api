@@ -13,7 +13,9 @@ import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.core.From
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
+import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
@@ -34,11 +36,20 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupName
+import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.ProjectAdmin
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.UnknownUser
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
@@ -50,6 +61,7 @@ import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.resources.repo.SparqlPermissionFilter
 import org.knora.webapi.slice.resources.repo.model.FileValueTypeSpecificInfo
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
@@ -314,27 +326,43 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
 
     val resVar    = variable("resourceIri")
     val resLabel  = variable("resourceLabel")
+    val permVar   = variable("permissions")
     val graphName = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(project)))
 
-    val wherePatterns = List(
-      resVar.isA(toRdfIri(resourceClassIri)),
-      GraphPatterns.filterNotExists(resVar.has(KB.isDeleted, true)),
-    )
+    val filterDeleted = GraphPatterns.filterNotExists(resVar.has(KB.isDeleted, true))
 
+    val resourcePatternCount = resVar
+      .isA(toRdfIri(resourceClassIri))
+      .andHas(KB.hasPermissions, permVar)
+    val wherePatternCount =
+      buildPermissionPattern(user, permVar, project).map(_.and(resourcePatternCount)).getOrElse(resourcePatternCount)
     val countQuery = Queries
       .SELECT(Expressions.count(resVar).as(variable("totalCount")))
+      .prefix(RDFS.NS, KB.NS)
       .from(graphName)
-      .where(wherePatterns: _*)
+      .where(wherePatternCount, filterDeleted)
+
+    val resourcePatternSelect = resVar
+      .isA(toRdfIri(resourceClassIri))
+      .andHas(RDFS.LABEL, resLabel)
+      .andHas(KB.hasPermissions, permVar)
+    val wherePatternSelect =
+      buildPermissionPattern(user, permVar, project)
+        .map(_.and(resourcePatternSelect))
+        .getOrElse(resourcePatternSelect)
 
     val selectQuery = Queries
       .SELECT(resVar, resLabel)
+      .prefix(RDFS.NS, KB.NS)
       .from(graphName)
-      .where((wherePatterns ::: List(resVar.has(RDFS.LABEL, resLabel))): _*)
-      .orderBy(resVar.asc())
+      .where(wherePatternSelect, filterDeleted)
+      .orderBy(resLabel.asc())
       .limit(pageAndSize.size)
       .offset((pageAndSize.page - 1) * pageAndSize.size)
 
     for {
+      _               <- ZIO.logError("COUNT:\n" + countQuery.getQueryString)
+      _               <- ZIO.logError("SELECT:\n" + selectQuery.getQueryString)
       totalCountFork  <- triplestore.select(countQuery).fork
       resourcesResult <- triplestore.select(selectQuery)
       totalCount      <- totalCountFork.join.map(_.getFirstInt("totalCount").getOrElse(0))
@@ -346,6 +374,36 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
                )
     } yield PagedResponse.from(result, totalCount, pageAndSize)
   }
+
+  private def buildPermissionPattern(
+    user: User,
+    variable: Variable,
+    prj: KnoraProject,
+  ): Option[GraphPattern] =
+    if user.isSystemUser || user.isSystemAdmin then None
+    else
+      val builtInGroups: Set[KnoraGroup] =
+        if user.isAnonymousUser then Set(UnknownUser)
+        else if user.isProjectAdmin(prj.id) then Set(ProjectAdmin)
+        else Set.empty
+
+      val groupsForPermissions: Set[KnoraGroup] = builtInGroups ++ user.groups.map(toKnoraGroup)
+
+      val expressions = ObjectAccess.all.flatMap(oa =>
+        groupsForPermissions.map(SparqlPermissionFilter.buildSparqlRegex(variable, oa, _)),
+      )
+      val pattern = expressions.reduce(Expressions.or(_, _))
+
+      Some(GraphPatterns.and().filter(pattern))
+
+  private def toKnoraGroup(group: Group): KnoraGroup = KnoraGroup(
+    GroupIri.unsafeFrom(group.id),
+    GroupName.unsafeFrom(group.name),
+    GroupDescriptions.unsafeFrom(group.descriptions),
+    GroupStatus.from(group.status),
+    group.project.map(_.id),
+    GroupSelfJoin.from(group.selfjoin),
+  )
 }
 
 object ResourcesRepoLive {

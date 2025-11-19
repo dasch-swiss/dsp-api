@@ -9,6 +9,7 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 
 import scala.util.matching.Regex
+
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
 
