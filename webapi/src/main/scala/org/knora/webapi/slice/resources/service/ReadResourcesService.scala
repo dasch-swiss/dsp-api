@@ -23,6 +23,7 @@ import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
+// Raitis TODO: add scaladoc
 final case class ReadResourcesService(
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val standoffTagUtilV2: StandoffTagUtilV2,

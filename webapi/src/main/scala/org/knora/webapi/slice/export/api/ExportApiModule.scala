@@ -40,9 +40,10 @@ object ExportApiModule { self =>
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       ExportEndpoints.layer,
-      ExportService.layer,
       ExportRestService.layer,
       ExportServerEndpoints.layer,
+      ExportService.layer,
+      FindAllResourcesService.layer,
       V3BaseEndpoint.layer,
     )
 }
