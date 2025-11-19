@@ -24,7 +24,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.resources.service.ReadResourcesService
+import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
@@ -34,7 +34,7 @@ final case class FindAllResourcesService(
   private val iriConverter: IriConverter,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val ontologyRepo: OntologyRepo,
-  private val readResources: ReadResourcesService,
+  private val readResources: ReadResourcesServiceLive,
 ) {
   def apply(
     project: KnoraProject,

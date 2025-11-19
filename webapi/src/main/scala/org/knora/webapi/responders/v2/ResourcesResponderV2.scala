@@ -62,7 +62,7 @@ import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
-import org.knora.webapi.slice.resources.service.ReadResourcesService
+import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -87,7 +87,7 @@ final case class ResourcesResponderV2(
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val triplestore: TriplestoreService,
   private val valueValidator: ValueContentValidator,
-  private val readResources: ReadResourcesService,
+  private val readResources: ReadResourcesServiceLive,
   private val createHandler: CreateResourceV2Handler,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler {
@@ -1823,7 +1823,7 @@ object ResourcesResponderV2 {
       stringFormatter         <- ZIO.service[StringFormatter]
       triplestoreService      <- ZIO.service[TriplestoreService]
       valueContentValidator   <- ZIO.service[ValueContentValidator]
-      readResources           <- ZIO.service[ReadResourcesService]
+      readResources           <- ZIO.service[ReadResourcesServiceLive]
       createResourceV2Handler <- ZIO.service[CreateResourceV2Handler]
       responder = new ResourcesResponderV2(
                     appConfig,

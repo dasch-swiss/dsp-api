@@ -54,7 +54,7 @@ import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
-import org.knora.webapi.slice.resources.service.ReadResourcesService
+import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.util.ZioHelper
 
@@ -67,7 +67,7 @@ final case class CreateResourceV2Handler(
   private val ontologyRepo: OntologyRepo,
   private val permissionsResponder: PermissionsResponder,
   private val valueValidator: ValueContentValidator,
-  private val readResources: ReadResourcesService,
+  private val readResources: ReadResourcesServiceLive,
 )(implicit val stringFormatter: StringFormatter) {
 
   /**
