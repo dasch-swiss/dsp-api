@@ -44,27 +44,24 @@ final case class BaseEndpoints(authenticator: Authenticator) {
 
   val publicEndpoint: PublicEndpoint[Unit, Throwable, Unit, Any] = endpoint.errorOut(errorOutputs)
 
-  private type SecurityIn = (Option[String], Option[String], Option[UsernamePassword])
-  private val endpointWithBearerCookieBasicAuthOptional = endpoint
+  private type SecurityIn = (Option[String], Option[UsernamePassword])
+  private val endpointWithBearerBasicAuthOptional = endpoint
     .errorOut(errorOutputs)
     .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
-    .securityIn(cookie[Option[String]](authenticator.calculateCookieName()))
     .securityIn(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
 
   val securedEndpoint: ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any] =
-    endpointWithBearerCookieBasicAuthOptional.zServerSecurityLogic {
-      case (Some(jwtToken), _, _) => authenticateJwt(jwtToken)
-      case (_, Some(cookie), _)   => authenticateJwt(cookie)
-      case (_, _, Some(basic))    => authenticateBasic(basic)
-      case _                      => ZIO.fail(BadCredentialsException("No credentials provided."))
+    endpointWithBearerBasicAuthOptional.zServerSecurityLogic {
+      case (Some(jwtToken), _) => authenticateJwt(jwtToken)
+      case (_, Some(basic))    => authenticateBasic(basic)
+      case _                   => ZIO.fail(BadCredentialsException("No credentials provided."))
     }
 
   val withUserEndpoint: ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any] =
-    endpointWithBearerCookieBasicAuthOptional.zServerSecurityLogic {
-      case (Some(bearer), _, _) => authenticateJwt(bearer)
-      case (_, Some(cookie), _) => authenticateJwt(cookie)
-      case (_, _, Some(basic))  => authenticateBasic(basic)
-      case _                    => ZIO.succeed(AnonymousUser)
+    endpointWithBearerBasicAuthOptional.zServerSecurityLogic {
+      case (Some(bearer), _) => authenticateJwt(bearer)
+      case (_, Some(basic))  => authenticateBasic(basic)
+      case _                 => ZIO.succeed(AnonymousUser)
     }
 
   private def authenticateJwt(token: String): IO[BadCredentialsException, User] =

@@ -14,7 +14,6 @@ import zio.test.*
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.*
-import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
@@ -63,26 +62,6 @@ object AuthenticationEndpointsV2E2ESpec extends E2EZSpec {
         } yield assertTrue(
           response.code == StatusCode.Ok,
           response.body == Right(CheckResponse("credentials are OK")),
-        )
-      },
-      test("valid token in cookie should return credentials are OK") {
-        for {
-          cookieName <- ZIO.serviceWith[Authenticator](_.calculateCookieName())
-          jwt        <- TestApiClient.getRootToken
-          response   <- TestApiClient.getJson[CheckResponse](uri"/v2/authentication", _.cookie((cookieName, jwt)))
-        } yield assertTrue(
-          response.code == StatusCode.Ok,
-          response.body == Right(CheckResponse("credentials are OK")),
-        )
-      },
-      test("invalid token in cookie should return Unauthorized") {
-        for {
-          cookieName <- ZIO.serviceWith[Authenticator](_.calculateCookieName())
-          response <-
-            TestApiClient.getJson[CheckResponse](uri"/v2/authentication", _.cookie((cookieName, "not_a_valid_token")))
-        } yield assertTrue(
-          response.code == StatusCode.Unauthorized,
-          response.body == Right(CheckResponse("Invalid credentials.")),
         )
       },
       test("invalid token in Authorization Bearer header should return Unauthorized") {

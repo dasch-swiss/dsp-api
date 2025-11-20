@@ -11,7 +11,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
-import org.apache.commons.codec.binary.Base32
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtZIOJson
@@ -39,11 +38,6 @@ object SipiIT extends ZIOSpecDefault {
   private val imageTestfile = "FGiLaT4zzuV-CqwbEDFAFeS.jp2"
   private val prefix        = "0001"
 
-  private val cookieName = {
-    val base32 = new Base32('9'.toByte)
-    "KnoraAuthentication" + base32.encodeAsString(s"0.0.0.0:$dspApiPort".getBytes)
-  }
-
   private def requestGet(path: Path, headers: Header*) =
     SipiTestContainer.resolveUrl(path).map(url => Request.get(url).addHeaders(Headers(headers))).flatMap(Client.batched)
 
@@ -66,50 +60,23 @@ object SipiIT extends ZIOSpecDefault {
     JwtAlgorithm.HS256,
   )
 
-  private val cookiesSuite =
-    suite("Given a request is authorized using cookies")(
+  private val authSuite =
+    suite("Given a request is authorized")(
       test(
-        "And Given the request contains multiple cookies " +
-          "When getting an existing file, " +
-          "then Sipi should extract the correct cookie, send it to dsp-api " +
-          "and responds with Ok",
-      ) {
-        for {
-          _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
-          jwt <- createJwt(AuthScope.admin)
-          response <- requestGet(
-                        Path.root / prefix / imageTestfile / "file",
-                        Header.Cookie(
-                          NonEmptyChunk(
-                            Cookie.Request(
-                              s"${cookieName}SecondCookie",
-                              "anotherValueShouldBeIgnored",
-                            ),
-                            Cookie.Request(cookieName, jwt),
-                          ),
-                        ),
-                      )
-          requestToDspApiContainsJwt <- MockDspApiServer.verifyAuthBearerTokenReceived(jwt)
-        } yield assertTrue(response.status == Status.Ok, requestToDspApiContainsJwt)
-      },
-      test(
-        "And Given the request contains an admin cookie " +
+        "And Given the request contains an admin authentication " +
           "When getting an existing file, " +
           "then Sipi should send it to dsp-api " +
           "and responds with Ok",
       ) {
         for {
-          _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
-          jwt <- createJwt(AuthScope.admin)
-          response <- requestGet(
-                        Path.root / prefix / imageTestfile / "file",
-                        Header.Cookie(NonEmptyChunk(Cookie.Request(cookieName, jwt))),
-                      )
+          _                          <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
+          jwt                        <- createJwt(AuthScope.admin)
+          response                   <- requestGet(Path.root / prefix / imageTestfile / "file", Header.Authorization.Bearer(jwt))
           requestToDspApiContainsJwt <- MockDspApiServer.verifyAuthBearerTokenReceived(jwt)
         } yield assertTrue(response.status == Status.Ok, requestToDspApiContainsJwt)
       },
       test(
-        "And Given the request contains a project admin cookie " +
+        "And Given the request contains a project admin authentication " +
           "When getting an existing image, " +
           "then Sipi should resolve the permission only from the token and respond with Ok",
       ) {
@@ -118,7 +85,7 @@ object SipiIT extends ZIOSpecDefault {
           jwt <- createJwt(AuthScope.write(Shortcode.unsafeFrom(prefix)))
           response <- requestGet(
                         Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jpg",
-                        Header.Cookie(NonEmptyChunk(Cookie.Request(cookieName, jwt))),
+                        Header.Authorization.Bearer(jwt),
                       )
           noInteraction <- MockDspApiServer.verifyNoInteraction
         } yield assertTrue(response.status == Status.Ok, noInteraction)
@@ -295,7 +262,7 @@ object SipiIT extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("Sipi integration tests with mocked dsp-api")(
-      cookiesSuite,
+      authSuite,
       knoraJsonEndpointSuite,
       fileEndpointSuite,
       iiifEndpoint,

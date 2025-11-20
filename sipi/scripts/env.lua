@@ -31,8 +31,3 @@ function env_dsp_api_host_port()
     return env_dsp_api_hostname() .. ':' .. env_dps_api_port()
 end
 
--- Returns the name of the cookie used for authentication.
-function env_knora_authentication_cookie_name()
-    local host_port_base32 = basexx.to_base32Custom(env_dsp_api_host_port())
-    return string.lower("KnoraAuthentication" .. host_port_base32)
-end

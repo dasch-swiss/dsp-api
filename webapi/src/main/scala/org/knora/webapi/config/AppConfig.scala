@@ -22,7 +22,6 @@ final case class AppConfig(
   dumpMessages: Boolean,
   showInternalErrors: Boolean,
   bcryptPasswordStrength: Int,
-  cookieDomain: String,
   allowReloadOverHttp: Boolean,
   fallbackLanguage: String,
   knoraApi: KnoraApi,

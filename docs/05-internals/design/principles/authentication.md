@@ -10,11 +10,8 @@ in [Authorisation](../../../02-dsp-ontologies/knora-base.md#authorisation)).
 
 ## Implementation
 
-The authentication in Knora is based on Basic Auth [HTTP basic
-authentication](https://en.wikipedia.org/wiki/Basic_access_authentication),
-URL parameters, [JSON Web Token](https://jwt.io), and cookies. This means
-that on every request (to any of the routes), credentials need to be
-sent either via authorization header, URL parameters or cookie header.
+The authentication in Knora is based on Basic Auth [HTTP basic authentication](https://en.wikipedia.org/wiki/Basic_access_authentication), URL parameters or [JSON Web Token](https://jwt.io). 
+This means that on every request (to any of the routes), credentials need to be sent either via authorization header.
 
 All routes are always accessible and if there are no credentials
 provided, a default user is assumed. If credentials are sent and they
