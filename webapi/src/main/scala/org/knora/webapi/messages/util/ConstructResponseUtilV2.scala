@@ -177,40 +177,27 @@ final case class ConstructResponseUtilV2(
       case (_: IRI, resource: ResourceWithValueRdfData) => resource.userPermission.nonEmpty
     }
 
-    val mainResourceIrisVisible: Set[IRI] = visibleResources.collect {
-      case (resourceIri: IRI, resource: ResourceWithValueRdfData) if resource.isMainResource => resourceIri
-    }.toSet
+    val (mainResourceIrisVisible: Set[IRI], dependentResourceIrisVisible: Set[IRI]) =
+      visibleResources.toSet.partitionMap { case (iri, resource) => Either.cond(!resource.isMainResource, iri, iri) }
 
-    val mainResourceIrisNotVisible: Set[IRI] = hiddenResources.collect {
-      case (resourceIri: IRI, resource: ResourceWithValueRdfData) if resource.isMainResource => resourceIri
-    }.toSet
-
-    val dependentResourceIrisVisible: Set[IRI] = visibleResources.collect {
-      case (resourceIri: IRI, resource: ResourceWithValueRdfData) if !resource.isMainResource => resourceIri
-    }.toSet
-
-    val dependentResourceIrisNotVisible: Set[IRI] = hiddenResources.collect {
-      case (resourceIri: IRI, resource: ResourceWithValueRdfData) if !resource.isMainResource => resourceIri
-    }.toSet
+    val (mainResourceIrisNotVisible: Set[IRI], dependentResourceIrisNotVisible: Set[IRI]) =
+      hiddenResources.toSet.partitionMap { case (iri, resource) => Either.cond(!resource.isMainResource, iri, iri) }
 
     // get incoming links for each resource: a map of resource IRIs to resources that link to it
     val incomingLinksForResource: Map[IRI, RdfResources] = getIncomingLink(visibleResources, flatResourcesWithValues)
 
-    val mainResourcesNested: Map[IRI, ResourceWithValueRdfData] = mainResourceIrisVisible.map { resourceIri =>
-      val transformedResource = nestResources(
-        resourceIri = resourceIri,
-        flatResourcesWithValues = flatResourcesWithValues,
-        visibleResources = visibleResources,
-        dependentResourceIrisVisible = dependentResourceIrisVisible,
-        dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
-        incomingLinksForResource = incomingLinksForResource,
-      )
-
-      resourceIri -> transformedResource
-    }.toMap
-
     MainResourcesAndValueRdfData(
-      resources = mainResourcesNested,
+      resources = mainResourceIrisVisible.map { resourceIri =>
+        resourceIri -> nestResources(
+          depth = 0,
+          resourceIri = resourceIri,
+          flatResourcesWithValues = flatResourcesWithValues,
+          visibleResources = visibleResources,
+          dependentResourceIrisVisible = dependentResourceIrisVisible,
+          dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
+          incomingLinksForResource = incomingLinksForResource,
+        )
+      }.toMap,
       hiddenResourceIris = mainResourceIrisNotVisible ++ dependentResourceIrisNotVisible,
     )
   }
@@ -441,6 +428,7 @@ final case class ConstructResponseUtilV2(
    * @return the same resource, with any nested resources attached to it.
    */
   private def nestResources(
+    depth: Int,
     resourceIri: IRI,
     flatResourcesWithValues: RdfResources,
     visibleResources: RdfResources,
@@ -451,89 +439,95 @@ final case class ConstructResponseUtilV2(
   )(implicit stringFormatter: StringFormatter): ResourceWithValueRdfData = {
     val resource = visibleResources(resourceIri)
 
-    val transformedValuePropertyAssertions: RdfPropertyValues = resource.valuePropertyAssertions.map {
-      case (propIri: SmartIri, values: Seq[ValueRdfData]) =>
-        val transformedValues: Seq[ValueRdfData] = transformValuesByNestingResources(
-          values = values,
-          flatResourcesWithValues = flatResourcesWithValues,
-          visibleResources = visibleResources,
-          dependentResourceIrisVisible = dependentResourceIrisVisible,
-          dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
-          incomingLinksForResource = incomingLinksForResource,
-          alreadyTraversed = alreadyTraversed + resourceIri,
-        )
-
-        propIri -> transformedValues
-    }.filter { case (_: SmartIri, values: Seq[ValueRdfData]) =>
-      // If we filtered out all the values for the property, filter out the property, too.
-      values.nonEmpty
-    }
-
-    // incomingLinksForResource contains incoming link values for each resource
-    // flatResourcesWithValues contains the complete information
-
-    // filter out those resources that already have been processed
-    // and the main resources (they are already present on the top level of the response)
-    //
-    // the main resources point to dependent resources and would be treated as incoming links of dependent resources
-    // this would create circular dependencies
-
-    // resources that point to this resource
-    val referringResources: RdfResources = incomingLinksForResource(resourceIri).filterNot {
-      case (incomingResIri: IRI, _: ResourceWithValueRdfData) =>
-        alreadyTraversed(incomingResIri) || flatResourcesWithValues(incomingResIri).isMainResource
-    }
-
-    // link value assertions that point to this resource
-    val incomingLinkAssertions: RdfPropertyValues = referringResources.values.foldLeft(emptyRdfPropertyValues) {
-      case (acc: RdfPropertyValues, assertions: ResourceWithValueRdfData) =>
-        val values: RdfPropertyValues = assertions.valuePropertyAssertions.flatMap {
-          case (propIri: SmartIri, values: Seq[ValueRdfData]) =>
-            // check if the property Iri already exists (there could be several instances of the same property)
-            if (acc.contains(propIri)) {
-              // add values to property Iri (keeping the already existing values)
-              acc + (propIri -> (acc(propIri) ++ values).sortBy(_.subjectIri))
-            } else {
-              // prop Iri does not exists yet, add it
-              acc + (propIri -> values.sortBy(_.subjectIri))
-            }
-        }
-
-        values
-    }
-
-    if (incomingLinkAssertions.nonEmpty) {
-      // create a virtual property representing an incoming link
-      val incomingProps: (SmartIri, Seq[ValueRdfData]) =
-        OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri -> incomingLinkAssertions.values.toSeq.flatten.map {
-          (linkValue: ValueRdfData) =>
-            // get the source of the link value (it points to the resource that is currently processed)
-            val sourceIri: IRI = linkValue.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
-            val source = Some(
-              nestResources(
-                resourceIri = sourceIri,
-                flatResourcesWithValues = flatResourcesWithValues,
-                visibleResources = visibleResources,
-                dependentResourceIrisVisible = dependentResourceIrisVisible,
-                dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
-                incomingLinksForResource = incomingLinksForResource,
-                alreadyTraversed = alreadyTraversed + resourceIri,
-              ),
-            )
-
-            linkValue.copy(
-              nestedResource = source,
-              isIncomingLink = true,
-            )
-        }
-
-      resource.copy(
-        valuePropertyAssertions = transformedValuePropertyAssertions + incomingProps,
-      )
+    if (depth > 15) {
+      resource
     } else {
-      resource.copy(
-        valuePropertyAssertions = transformedValuePropertyAssertions,
-      )
+      val transformedValuePropertyAssertions: RdfPropertyValues = resource.valuePropertyAssertions.map {
+        case (propIri: SmartIri, values: Seq[ValueRdfData]) =>
+          val transformedValues: Seq[ValueRdfData] = transformValuesByNestingResources(
+            depth = depth + 1,
+            values = values,
+            flatResourcesWithValues = flatResourcesWithValues,
+            visibleResources = visibleResources,
+            dependentResourceIrisVisible = dependentResourceIrisVisible,
+            dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
+            incomingLinksForResource = incomingLinksForResource,
+            alreadyTraversed = alreadyTraversed + resourceIri,
+          )
+
+          propIri -> transformedValues
+      }.filter { case (_: SmartIri, values: Seq[ValueRdfData]) =>
+        // If we filtered out all the values for the property, filter out the property, too.
+        values.nonEmpty
+      }
+
+      // incomingLinksForResource contains incoming link values for each resource
+      // flatResourcesWithValues contains the complete information
+
+      // filter out those resources that already have been processed
+      // and the main resources (they are already present on the top level of the response)
+      //
+      // the main resources point to dependent resources and would be treated as incoming links of dependent resources
+      // this would create circular dependencies
+
+      // resources that point to this resource
+      val referringResources: RdfResources = incomingLinksForResource(resourceIri).filterNot {
+        case (incomingResIri: IRI, _: ResourceWithValueRdfData) =>
+          alreadyTraversed(incomingResIri) || flatResourcesWithValues(incomingResIri).isMainResource
+      }
+
+      // link value assertions that point to this resource
+      val incomingLinkAssertions: RdfPropertyValues = referringResources.values.foldLeft(emptyRdfPropertyValues) {
+        case (acc: RdfPropertyValues, assertions: ResourceWithValueRdfData) =>
+          val values: RdfPropertyValues = assertions.valuePropertyAssertions.flatMap {
+            case (propIri: SmartIri, values: Seq[ValueRdfData]) =>
+              // check if the property Iri already exists (there could be several instances of the same property)
+              if (acc.contains(propIri)) {
+                // add values to property Iri (keeping the already existing values)
+                acc + (propIri -> (acc(propIri) ++ values).sortBy(_.subjectIri))
+              } else {
+                // prop Iri does not exists yet, add it
+                acc + (propIri -> values.sortBy(_.subjectIri))
+              }
+          }
+
+          values
+      }
+
+      if (incomingLinkAssertions.nonEmpty) {
+        // create a virtual property representing an incoming link
+        val incomingProps: (SmartIri, Seq[ValueRdfData]) =
+          OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri -> incomingLinkAssertions.values.toSeq.flatten.map {
+            (linkValue: ValueRdfData) =>
+              // get the source of the link value (it points to the resource that is currently processed)
+              val sourceIri: IRI = linkValue.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
+              val source = Some(
+                nestResources(
+                  depth = depth + 1,
+                  resourceIri = sourceIri,
+                  flatResourcesWithValues = flatResourcesWithValues,
+                  visibleResources = visibleResources,
+                  dependentResourceIrisVisible = dependentResourceIrisVisible,
+                  dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
+                  incomingLinksForResource = incomingLinksForResource,
+                  alreadyTraversed = alreadyTraversed + resourceIri,
+                ),
+              )
+
+              linkValue.copy(
+                nestedResource = source,
+                isIncomingLink = true,
+              )
+          }
+
+        resource.copy(
+          valuePropertyAssertions = transformedValuePropertyAssertions + incomingProps,
+        )
+      } else {
+        resource.copy(
+          valuePropertyAssertions = transformedValuePropertyAssertions,
+        )
+      }
     }
   }
 
@@ -551,6 +545,7 @@ final case class ConstructResponseUtilV2(
    * @return the transformed values.
    */
   private def transformValuesByNestingResources(
+    depth: Int,
     values: Seq[ValueRdfData],
     flatResourcesWithValues: RdfResources,
     visibleResources: RdfResources,
@@ -570,13 +565,14 @@ final case class ConstructResponseUtilV2(
           if (dependentResourceIrisVisible.contains(dependentResourceIri)) {
             // Yes. Nest it in the link value.
             val dependentResource: ResourceWithValueRdfData = nestResources(
-              dependentResourceIri,
+              depth = depth + 1,
+              resourceIri = dependentResourceIri,
               flatResourcesWithValues = flatResourcesWithValues,
               visibleResources = visibleResources,
               dependentResourceIrisVisible = dependentResourceIrisVisible,
               dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
               incomingLinksForResource = incomingLinksForResource,
-              alreadyTraversed = alreadyTraversed,
+              alreadyTraversed = alreadyTraversed + dependentResourceIri,
             )
 
             acc :+ value.copy(
@@ -1301,7 +1297,7 @@ final case class ConstructResponseUtilV2(
    * @param requestingUser        the user making the request.
    * @return the referred mappings.
    */
-  def getMappingsFromQueryResultsSeparated(
+  def mappingsFromQueryResults(
     queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
     requestingUser: User,
   ): Task[Map[IRI, MappingAndXSLTransformation]] = {

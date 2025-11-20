@@ -22,7 +22,6 @@ import dsp.errors.InconsistentRepositoryDataException as InconsistentDataExcepti
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -31,11 +30,12 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 final case class ExportService(
@@ -44,6 +44,7 @@ final case class ExportService(
   private val iriConverter: IriConverter,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val ontologyRepo: OntologyRepo,
+  private val readResources: ReadResourcesService,
 ) {
   val (
     classIriVar,
@@ -55,43 +56,19 @@ final case class ExportService(
     classIri: ResourceClassIri,
     selectedProperties: List[PropertyIri],
     requestingUser: User,
-    language: String,
+    language: LanguageCode,
+    includeResourceIri: Boolean,
   ): Task[(List[String], List[ExportedResource])] =
     for {
       resourceIris <- findResources(project, classIri).map(_.map(_.toString))
-      resourcesWithValues <-
-        triplestore
-          .query(
-            Construct(
-              sparql.v2.txt
-                .getResourcePropertiesAndValues(
-                  resourceIris = resourceIris,
-                  preview = false,
-                  queryAllNonStandoff = true,
-                  withDeleted = false,
-                  queryStandoff = false,
-                  maybePropertyIri = None,
-                  maybeVersionDate = None,
-                ),
-            ),
-          )
-          .flatMap(_.asExtended(iriConverter.sf))
-          .map(constructResponseUtilV2.splitMainResourcesAndValueRdfData(_, requestingUser))
-
-      readResources <-
-        constructResponseUtilV2.createApiResponse(
-          mainResourcesAndValueRdfData = resourcesWithValues,
-          orderByResourceIri = resourceIris,
-          pageSizeBeforeFiltering = resourceIris.size,
-          mappings = Map.empty,
-          queryStandoff = false,
-          versionDate = None,
-          calculateMayHaveMoreResults = true,
-          targetSchema = ApiV2Complex,
-          requestingUser = requestingUser,
-        )
-      headers <- rowHeaders(selectedProperties, language)
-      rows     = readResources.resources.toList.map(convertToExportRow(_, selectedProperties))
+      readResources <- readResources.readResourcesSequence(
+                         resourceIris = resourceIris,
+                         targetSchema = ApiV2Complex,
+                         requestingUser = requestingUser,
+                         preview = false,
+                       )
+      headers <- rowHeaders(selectedProperties, language, includeResourceIri)
+      rows     = readResources.resources.toList.map(convertToExportRow(_, selectedProperties, includeResourceIri))
     } yield (headers, rows)
 
   private def findResources(
@@ -136,34 +113,36 @@ final case class ExportService(
 
   private def rowHeaders(
     selectedProperties: List[PropertyIri],
-    language: String,
+    language: LanguageCode,
+    includeResourceIri: Boolean,
   ): Task[List[String]] =
-    propertyLabelsTranslated(selectedProperties, language).map(
-      "Label" +: "Resource IRI" +: _,
+    propertyLabelsTranslated(selectedProperties, language).map(labels =>
+      Option.when(includeResourceIri)("Resource IRI").toList ++ ("Label" +: labels),
     )
 
   private def convertToExportRow(
     resource: ReadResourceV2,
     selectedProperties: List[PropertyIri],
+    includeResourceIri: Boolean,
   ): ExportedResource =
     ExportedResource(
-      resource.label,
-      resource.resourceIri.toString,
-      ListMap.from(selectedProperties.map { property =>
-        property.smartIri.toString -> {
-          resource.values
-            .get(property.smartIri)
-            .map(_.toList)
-            .combineAll
-            .map(_.valueContent.valueHasString)
-            .mkString(" :: ")
-        }
-      }),
+      ListMap.from(Option.when(includeResourceIri)("Resource IRI" -> resource.resourceIri.toString)) ++
+        ListMap("Label" -> resource.label) ++
+        ListMap.from(selectedProperties.map { property =>
+          property.smartIri.toString -> {
+            resource.values
+              .get(property.smartIri.toInternalSchema)
+              .map(_.toList)
+              .combineAll
+              .map(_.valueContent.valueHasString.replaceAll("\n", "\\n"))
+              .mkString(" :: ")
+          }
+        }),
     )
 
   private def propertyLabelsTranslated(
     propertyIris: List[PropertyIri],
-    userLang: String,
+    language: LanguageCode,
   ): Task[List[String]] =
     ZIO.foreach(propertyIris) { propertyIri =>
       ontologyRepo.findProperty(propertyIri).flatMap { propertyInfo =>
@@ -174,8 +153,8 @@ final case class ExportService(
               .map(info.entityInfoContent.getPredicateObjectsWithLangs(_))
               .map(labelsMap =>
                 labelsMap
-                  .get(userLang)
-                  .orElse(labelsMap.get("en"))
+                  .get(language.value)
+                  .orElse(labelsMap.get(LanguageCode.EN.value))
                   .orElse(labelsMap.values.headOption)
                   .getOrElse(propertyIri.toString),
               )

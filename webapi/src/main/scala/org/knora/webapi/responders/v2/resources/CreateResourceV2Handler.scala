@@ -54,6 +54,7 @@ import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.util.ZioHelper
 
@@ -63,10 +64,10 @@ final case class CreateResourceV2Handler(
   private val resourcesRepo: ResourcesRepo,
   private val resourceUtilV2: ResourceUtilV2,
   private val permissionUtilADM: PermissionUtilADM,
-  private val getResources: GetResources,
   private val ontologyRepo: OntologyRepo,
   private val permissionsResponder: PermissionsResponder,
   private val valueValidator: ValueContentValidator,
+  private val readResources: ReadResourcesService,
 )(implicit val stringFormatter: StringFormatter) {
 
   /**
@@ -619,7 +620,7 @@ final case class CreateResourceV2Handler(
 
     for {
       // Get information about the existing resources that are targets of links.
-      existingTargets <- getResources.getResourcePreviewWithDeletedResource(
+      existingTargets <- readResources.getResourcePreviewWithDeletedResource(
                            resourceIris = existingTargetIris.toSeq,
                            targetSchema = ApiV2Complex,
                            requestingUser = requestingUser,
@@ -655,7 +656,7 @@ final case class CreateResourceV2Handler(
         }
     }
 
-    getResources
+    readResources
       .getResourcePreviewWithDeletedResource(
         resourceIris = standoffLinkTargetsThatShouldExist.toSeq,
         targetSchema = ApiV2Complex,
@@ -796,7 +797,7 @@ final case class CreateResourceV2Handler(
     resourceIri: IRI,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
-    getResources
+    readResources
       .getResourcesWithDeletedResource(
         resourceIris = Seq(resourceIri),
         requestingUser = requestingUser,
@@ -889,4 +890,8 @@ final case class CreateResourceV2Handler(
     PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)
   }
 
+}
+
+object CreateResourceV2Handler {
+  val layer = ZLayer.derive[CreateResourceV2Handler]
 }
