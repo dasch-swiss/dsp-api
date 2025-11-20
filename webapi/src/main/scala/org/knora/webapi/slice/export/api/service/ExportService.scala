@@ -23,12 +23,14 @@ import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
+import org.knora.webapi.slice.infrastructure.CsvService
 
 final case class ExportService(
   private val iriConverter: IriConverter,
   private val ontologyRepo: OntologyRepo,
   private val readResources: ReadResourcesService,
   private val findAllResources: FindAllResourcesService,
+  private val csvService: CsvService,
 ) {
   def exportResources(
     project: KnoraProject,
@@ -37,7 +39,7 @@ final case class ExportService(
     requestingUser: User,
     language: LanguageCode,
     includeResourceIri: Boolean,
-  ): Task[(List[String], List[ExportedResource])] =
+  ): Task[ExportedCsv] =
     for {
       resourceIris <- findAllResources(project, classIri).map(_.map(_.toString))
       readResources <- readResources.readResourcesSequence(
@@ -48,7 +50,10 @@ final case class ExportService(
                        )
       headers <- rowHeaders(selectedProperties, language, includeResourceIri)
       rows     = readResources.resources.toList.map(convertToExportRow(_, selectedProperties, includeResourceIri))
-    } yield (headers, rows)
+    } yield ExportedCsv(headers, rows)
+
+  def toCsv(csv: ExportedCsv): Task[String] =
+    ZIO.scoped(csvService.writeToString(csv.rows)(using csv.rowBuilder))
 
   private def rowHeaders(
     selectedProperties: List[PropertyIri],
