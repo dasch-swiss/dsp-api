@@ -53,6 +53,7 @@ import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.SecurityModule
@@ -101,14 +102,15 @@ object LayersLive { self =>
     ProjectExportService &
     ProjectExportStorageService &
     ProjectImportService &
+    ReadResourcesService &
+    ReadResourcesServiceLive &
     RepositoryUpdater &
-    ResourceUtilV2 &
     ResourcesApiServerEndpoints &
     ResourcesRepo &
     ResourcesResponderV2 &
+    ResourceUtilV2 &
     SearchResponderV2Module.Provided &
     SearchServerEndpoints &
-    SecurityModule.Provided &
     SecurityModule.Provided &
     ShaclApiModule.Provided &
     ShaclEndpoints &

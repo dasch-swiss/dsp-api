@@ -22,12 +22,12 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final case class ExportService(
   private val iriConverter: IriConverter,
   private val ontologyRepo: OntologyRepo,
-  private val readResources: ReadResourcesServiceLive,
+  private val readResources: ReadResourcesService,
   private val findAllResources: FindAllResourcesService,
 ) {
   def exportResources(

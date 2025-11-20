@@ -27,7 +27,7 @@ import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
 import org.knora.webapi.slice.resources.repo.ResourceInfoRepoLive
 import org.knora.webapi.slice.resources.service.MetadataService
-import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 object ResourcesApiModule { self =>
   type Dependencies =
@@ -41,7 +41,7 @@ object ResourcesApiModule { self =>
     KnoraProjectService &
     KnoraResponseRenderer &
     MetadataService &
-    ReadResourcesServiceLive &
+    ReadResourcesService &
     ResourceInfoRepoLive &
     ResourcesResponderV2 &
     SearchResponderV2 &

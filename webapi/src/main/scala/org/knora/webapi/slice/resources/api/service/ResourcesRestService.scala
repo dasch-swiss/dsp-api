@@ -20,7 +20,7 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.api.model.VersionDate
-import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final case class ResourcesRestService(
   private val resourcesService: ResourcesResponderV2,
@@ -28,7 +28,7 @@ final case class ResourcesRestService(
   private val iriConverter: IriConverter,
   private val requestParser: ApiComplexV2JsonLdRequestParser,
   private val renderer: KnoraResponseRenderer,
-  private val readResources: ReadResourcesServiceLive,
+  private val readResources: ReadResourcesService,
 ) {
   def getResourcesIiifManifest(user: User)(
     resourceIri: IriDto,
