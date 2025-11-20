@@ -27,13 +27,20 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
-final case class FindAllResourcesService(
+trait FindAllResourcesService {
+  def apply(
+    project: KnoraProject,
+    classIri: ResourceClassIri,
+  ): Task[Seq[SmartIri]]
+}
+
+final case class FindAllResourcesServiceLive(
   private val projectService: KnoraProjectService,
   private val triplestore: TriplestoreService,
   private val iriConverter: IriConverter,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val ontologyRepo: OntologyRepo,
-) {
+) extends FindAllResourcesService {
   def apply(
     project: KnoraProject,
     classIri: ResourceClassIri,
@@ -78,5 +85,5 @@ final case class FindAllResourcesService(
 }
 
 object FindAllResourcesService {
-  val layer = ZLayer.derive[FindAllResourcesService]
+  val layer = ZLayer.derive[FindAllResourcesServiceLive]
 }
