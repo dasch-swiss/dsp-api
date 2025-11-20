@@ -11,11 +11,12 @@ import java.util.UUID
 
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resources.api.model.VersionDate
 
-final case class ReadResourcesServiceFake() extends ReadResourcesService {
+final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) extends ReadResourcesService {
   def readResourcesSequence(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
@@ -24,7 +25,7 @@ final case class ReadResourcesServiceFake() extends ReadResourcesService {
     targetSchema: ApiV2Schema,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
-    ZIO.succeed(ReadResourcesSequenceV2(Seq.empty, Set.empty, false))
+    ZIO.succeed(ReadResourcesSequenceV2(readResources, Set.empty, false))
 
   def getResources(
     resourceIris: Seq[IRI],
@@ -59,8 +60,4 @@ final case class ReadResourcesServiceFake() extends ReadResourcesService {
     targetSchema: ApiV2Schema,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = null
-}
-
-object ReadResourcesServiceFake {
-  val layer = ZLayer.derive[ReadResourcesServiceFake]
 }

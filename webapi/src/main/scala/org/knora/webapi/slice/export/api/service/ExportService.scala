@@ -21,9 +21,9 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
-import org.knora.webapi.slice.infrastructure.CsvService
 
 final case class ExportService(
   private val iriConverter: IriConverter,

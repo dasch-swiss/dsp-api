@@ -121,4 +121,19 @@ object TestDataFactory {
     Set.empty,
     Set.empty,
   )
+
+  val someProjectADM = org.knora.webapi.slice.admin.api.model.Project(
+    ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
+    Shortname.unsafeFrom("shortname"),
+    Shortcode.unsafeFrom("0001"),
+    None,
+    Seq(StringLiteralV2.from("Some description")),
+    List.empty,
+    None,
+    Seq.empty,
+    Status.Active,
+    SelfJoin.CannotJoin,
+    Set.empty,
+    Set.empty,
+  )
 }

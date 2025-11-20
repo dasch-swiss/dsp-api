@@ -1,1 +1,2 @@
 Resource IRI,Label
+http://a/b,resource1
