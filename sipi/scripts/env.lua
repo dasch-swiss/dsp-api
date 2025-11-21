@@ -1,7 +1,5 @@
 -- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
-basexx = require("basexx")
-
 local DSP_API_HOST_NAME_KEY = "KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST"
 local DSP_API_PORT_KEY = "KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT"
 
