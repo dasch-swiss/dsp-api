@@ -1,5 +1,1 @@
-Resource IRI,Label,http://www.knora.org/ontology/knora-base#TextValue
-http://rdfh.ch/0001/r1,r1,
-http://rdfh.ch/0001/r2,r2,seven\nthree\nseven
-http://rdfh.ch/0001/r3,r3,
-http://rdfh.ch/0001/r4,r4,
+Resource IRI,Label
