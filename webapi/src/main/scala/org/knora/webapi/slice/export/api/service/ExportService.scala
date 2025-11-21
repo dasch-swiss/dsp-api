@@ -32,6 +32,8 @@ final case class ExportService(
   private val findAllResources: FindAllResourcesService,
   private val csvService: CsvService,
 ) {
+  type Resources = List[ReadResourceV2]
+
   def exportResources(
     project: KnoraProject,
     classIri: ResourceClassIri,
@@ -49,11 +51,16 @@ final case class ExportService(
                          preview = false,
                        )
       headers <- rowHeaders(selectedProperties, language, includeResourceIri)
-      rows     = readResources.resources.toList.map(convertToExportRow(_, selectedProperties, includeResourceIri))
-    } yield ExportedCsv(headers, rows)
+    } yield ExportedCsv(
+      headers,
+      sort(readResources.resources.toList).map(convertToExportRow(_, selectedProperties, includeResourceIri)),
+    )
 
   def toCsv(csv: ExportedCsv): Task[String] =
     ZIO.scoped(csvService.writeToString(csv.rows)(using csv.rowBuilder))
+
+  private def sort(resources: Resources): Resources =
+    resources.sortBy(_.label)
 
   private def rowHeaders(
     selectedProperties: List[PropertyIri],

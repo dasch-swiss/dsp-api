@@ -26,6 +26,8 @@ import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceFake
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 
 object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   override val rewriteAll: Boolean = true
@@ -41,20 +43,33 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   val project    = TestDataFactory.someProject
   val projectADM = TestDataFactory.someProjectADM
 
-  val readResource =
+  def makeResource(
+    label: String,
+    values: Map[SmartIri, Seq[ReadValueV2]] = Map.empty,
+  ): ReadResourceV2 = {
+    "[ ]".r.findFirstIn(label).map(_ => throw new Exception("simple labels only"))
     ReadResourceV2(
-      "http://a/b",
-      "resource1",
+      s"http://rdfh.ch/0001/$label",
+      label,
       resourceClassIri.smartIri,
       user.id,
       projectADM,
       "",
       ObjectAccess.maxPermission,
-      Map.empty, // values
+      values, // values
       Instant.now,
       Some(Instant.now),
       None,
       None,
+    )
+  }
+
+  val readResources =
+    Seq(
+      makeResource("r2"),
+      makeResource("r1"),
+      makeResource("r3"),
+      makeResource("r4"),
     )
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
@@ -81,12 +96,10 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       OntologyCacheFake.emptyCache,
       OntologyRepoLive.layer,
       CsvService.layer,
-      ZLayer.succeed(ReadResourcesServiceFake(Seq(readResource))),
+      ZLayer.succeed(ReadResourcesServiceFake(readResources)),
       ExportService.layer,
     )
 
   private val findAllResourcesServiceEmptyLayer: ZLayer[Any, Nothing, FindAllResourcesService] =
-    ZLayer.succeed[FindAllResourcesService]((_: KnoraProject, _: ResourceClassIri) =>
-      ZIO.succeed(Seq.empty),
-    )
+    ZLayer.succeed[FindAllResourcesService]((_: KnoraProject, _: ResourceClassIri) => ZIO.succeed(Seq.empty))
 }

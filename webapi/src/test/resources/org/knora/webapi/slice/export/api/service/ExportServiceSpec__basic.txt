@@ -1,2 +1,5 @@
 Resource IRI,Label
-http://a/b,resource1
+http://rdfh.ch/0001/r1,r1
+http://rdfh.ch/0001/r2,r2
+http://rdfh.ch/0001/r3,r3
+http://rdfh.ch/0001/r4,r4
