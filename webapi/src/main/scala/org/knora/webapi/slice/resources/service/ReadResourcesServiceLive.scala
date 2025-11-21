@@ -31,6 +31,7 @@ trait ReadResourcesService {
     preview: Boolean = false,
     targetSchema: ApiV2Schema,
     requestingUser: User,
+    withDeleted: Boolean = true,
   ): Task[ReadResourcesSequenceV2]
 
   def getResources(
@@ -151,14 +152,16 @@ final case class ReadResourcesServiceLive(
     preview: Boolean = false,
     targetSchema: ApiV2Schema,
     requestingUser: User,
+    withDeleted: Boolean = true,
   ): Task[ReadResourcesSequenceV2] =
     readResourcesSequence_(
       resourceIris,
       propertyIri,
-      valueUuid,
-      preview,
+      valueUuid = valueUuid,
+      preview = preview,
       targetSchema,
       requestingUser,
+      withDeleted = withDeleted,
     )
 
   def getResources(

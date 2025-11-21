@@ -24,6 +24,7 @@ final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) ex
     preview: Boolean = false,
     targetSchema: ApiV2Schema,
     requestingUser: User,
+    withDeleted: Boolean = true,
   ): Task[ReadResourcesSequenceV2] =
     ZIO.succeed(ReadResourcesSequenceV2(readResources, Set.empty, false))
 

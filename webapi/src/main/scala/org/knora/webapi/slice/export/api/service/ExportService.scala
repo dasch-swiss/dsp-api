@@ -49,6 +49,7 @@ final case class ExportService(
                          targetSchema = ApiV2Complex,
                          requestingUser = requestingUser,
                          preview = false,
+                         withDeleted = false,
                        )
       headers <- rowHeaders(selectedProperties, language, includeResourceIri)
     } yield ExportedCsv(
