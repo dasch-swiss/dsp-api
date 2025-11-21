@@ -48,7 +48,7 @@ object CreateNewListNodeQuery extends QueryBuilderHelper {
     comments.value.map(toRdfLiteral).map(nodeIri.has(RDFS.COMMENT, _)).toList
 
   private def buildQuery(project: KnoraProject, insertPattern: List[TriplePattern]) =
-    Queries.MODIFY().prefix(RDFS.NS, RDF.NS).from(graphIri(project)).insert(insertPattern: _*)
+    Queries.MODIFY().prefix(RDFS.NS, RDF.NS, KnoraBase.NS).from(graphIri(project)).insert(insertPattern: _*)
 
   def forSubNode(
     project: KnoraProject,
