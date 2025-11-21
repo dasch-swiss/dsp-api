@@ -24,10 +24,13 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.api.LastModificationDate
 
@@ -58,6 +61,7 @@ trait QueryBuilderHelper {
   def toRdfIri(iri: KnoraIri): Iri    = toRdfIri(iri.smartIri)
   def toRdfIri(iri: SmartIri): Iri    = Rdf.iri(iri.toInternalSchema.toIri)
   def toRdfIri(iri: InternalIri): Iri = Rdf.iri(iri.value)
+  def toRdfIri(iri: StringValue): Iri = Rdf.iri(iri.value)
 
   def toRdfIri(labelOrComment: LabelOrComment): Iri = Rdf.iri(labelOrComment.toString)
 
@@ -73,4 +77,6 @@ trait QueryBuilderHelper {
 
   def toPropertyPatterns(iri: Iri, values: Iterable[PredicateInfoV2]): List[TriplePattern] =
     values.flatMap(pred => pred.objects.map(obj => iri.has(toRdfIri(pred.predicateIri), toRdfValue(obj)))).toList
+
+  def graphIri(prj: KnoraProject): Iri = toRdfIri(ProjectService.projectDataNamedGraphV2(prj))
 }

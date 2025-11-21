@@ -93,6 +93,13 @@ object Vocabulary {
     val deletedBy: Iri              = iri(kb + "deletedBy")
     val deleteComment: Iri          = iri(kb + "deleteComment")
 
+    val ListNode: Iri         = iri(kb + "ListNode")
+    val hasSubListNode: Iri   = iri(kb + "hasSublistNode")
+    val hasRootNode: Iri      = iri(kb + "hasRootNode")
+    val listNodePosition: Iri = iri(kb + "listNodePosition")
+    val listNodeName: Iri     = iri(kb + "listNodeName")
+    val isRootNode: Iri       = iri(kb + "isRootNode")
+
     val valueHasString: Iri    = iri(kb + "valueHasString")
     val valueHasUUID: Iri      = iri(kb + "valueHasUUID")
     val valueHasComment: Iri   = iri(kb + "valueHasComment")

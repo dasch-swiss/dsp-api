@@ -37,6 +37,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
+import org.knora.webapi.slice.resources.repo.CreateNewListNodeQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -100,7 +101,8 @@ final case class ListsResponder(
    * @param rootNodeIri          the Iri if the root node of the list to be queried.
    * @return a optional [[ListADM]].
    */
-  private def listGetADM(rootNodeIri: IRI) =
+  private def listGetADM(nodeIri: ListIri) = {
+    val rootNodeIri: IRI = nodeIri.value
     for {
       // this query will give us only the information about the root node.
       exists <- rootNodeByIriExists(rootNodeIri)
@@ -134,6 +136,7 @@ final case class ListsResponder(
         }
 
     } yield maybeList
+  }
 
   /**
    * Retrieves a complete node (root or child) with all children from the triplestore and returns it as a [[ListItemGetResponseADM]].
@@ -155,7 +158,7 @@ final case class ListsResponder(
       } yield ListNodeGetResponseADM(NodeADM(nodeInfo, childNode.children))
 
     ZIO.ifZIO(rootNodeByIriExists(nodeIri.value))(
-      listGetADM(nodeIri.value)
+      listGetADM(nodeIri)
         .someOrFail(NotFoundException(s"List '$nodeIri' not found"))
         .map(ListGetResponseADM.apply),
       for {
@@ -525,14 +528,7 @@ final case class ListsResponder(
    * @param createNodeRequest    the new node's information.
    * @return a [newListNodeIri]
    */
-  private def createNode(
-    createNodeRequest: ListCreateRequest,
-  ): Task[IRI] = {
-    val parentNode: Option[ListIri] = createNodeRequest match {
-      case _: ListCreateRootNodeRequest      => None
-      case child: ListCreateChildNodeRequest => Some(child.parentNodeIri)
-    }
-
+  private def createNode(createNodeRequest: ListCreateRequest): Task[ListIri] = {
     val (id, projectIri, name, position) = createNodeRequest match {
       case root: ListCreateRootNodeRequest   => (root.id, root.projectIri, root.name, None)
       case child: ListCreateChildNodeRequest => (child.id, child.projectIri, child.name, child.position)
@@ -547,7 +543,7 @@ final case class ListsResponder(
     def getRootNodeAndPositionOfNewChild(
       parentNodeIri: IRI,
       dataNamedGraph: IRI,
-    ): Task[(Some[Int], Some[IRI])] =
+    ): Task[(Int, ListIri)] =
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
         parentListNode <- listNodeGetADM(parentNodeIri, shallow = true)
@@ -563,7 +559,7 @@ final case class ListsResponder(
           }
         }
         _ <- shiftNodes(position, size - 1, children, dataNamedGraph, ShiftRight).when(position != size)
-      } yield (Some(position), Some(getRootNodeIri(parentListNode)))
+      } yield (position, ListIri.unsafeFrom(getRootNodeIri(parentListNode)))
 
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
@@ -582,56 +578,33 @@ final case class ListsResponder(
       // calculate the data named graph
       dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(project).value
 
-      // if parent node is known, find the root node of the list and the position of the new child node
-      positionAndNode <-
-        if (parentNode.nonEmpty) {
-          getRootNodeAndPositionOfNewChild(
-            parentNodeIri = parentNode.get.value,
-            dataNamedGraph = dataNamedGraph,
-          )
-        } else {
-          ZIO.attempt((None, None))
-        }
-      newPosition: Option[Int] = positionAndNode._1
-      rootNodeIri: Option[IRI] = positionAndNode._2
-
       // check the custom IRI; if not given, create an unused IRI
-      customListIri   = id.map(_.value).map(_.toSmartIri)
-      newListNodeIri <- iriService.checkOrCreateEntityIri(customListIri, ListIri.makeNew(project).value)
+      customListIri = id.map(_.value).map(_.toSmartIri)
+      newListNodeIri <- iriService
+                          .checkOrCreateEntityIri(customListIri, ListIri.makeNew(project).value)
+                          .map(ListIri.unsafeFrom)
 
-      // Create the new list node depending on type
-      createNewListSparqlString = createNodeRequest match {
-                                    case r: ListCreateRootNodeRequest =>
-                                      sparql.admin.txt
-                                        .createNewListNode(
-                                          dataNamedGraph = dataNamedGraph,
-                                          listClassIri = KnoraBase.ListNode,
-                                          projectIri = r.projectIri.value,
-                                          nodeIri = newListNodeIri,
-                                          parentNodeIri = None,
-                                          rootNodeIri = rootNodeIri,
-                                          position = None,
-                                          maybeName = r.name.map(_.value),
-                                          maybeLabels = r.labels.value,
-                                          maybeComments = Some(r.comments.value),
-                                        )
-                                    case c: ListCreateChildNodeRequest =>
-                                      sparql.admin.txt
-                                        .createNewListNode(
-                                          dataNamedGraph = dataNamedGraph,
-                                          listClassIri = KnoraBase.ListNode,
-                                          projectIri = c.projectIri.value,
-                                          nodeIri = newListNodeIri,
-                                          parentNodeIri = Some(c.parentNodeIri.value),
-                                          rootNodeIri = rootNodeIri,
-                                          position = newPosition,
-                                          maybeName = c.name.map(_.value),
-                                          maybeLabels = c.labels.value,
-                                          maybeComments = c.comments.map(_.value),
-                                        )
-                                  }
-
-      _ <- triplestore.query(Update(createNewListSparqlString))
+      query <- createNodeRequest match {
+                 case r: ListCreateRootNodeRequest =>
+                   ZIO.succeed(
+                     CreateNewListNodeQuery.forRootNode(project, newListNodeIri, r.name, r.labels, r.comments),
+                   )
+                 case r: ListCreateChildNodeRequest =>
+                   for {
+                     posAndRoot             <- getRootNodeAndPositionOfNewChild(r.parentNodeIri.value, dataNamedGraph)
+                     (position, rootNodeIri) = posAndRoot
+                   } yield CreateNewListNodeQuery.forSubNode(
+                     project,
+                     newListNodeIri,
+                     r.name,
+                     r.labels,
+                     r.comments,
+                     r.parentNodeIri,
+                     rootNodeIri,
+                     position,
+                   )
+               }
+      _ <- triplestore.query(Update(query))
     } yield newListNodeIri
   }
 
@@ -707,7 +680,7 @@ final case class ListsResponder(
       for {
         newListNodeIri <- createNode(createChildNodeRequest)
         // Verify that the list node was created.
-        maybeNewListNode <- listNodeInfoGetADM(nodeIri = newListNodeIri)
+        maybeNewListNode <- listNodeInfoGetADM(newListNodeIri.value)
         newListNode <- maybeNewListNode match {
                          case Some(childNode: ListChildNodeInfoADM) => ZIO.succeed(childNode)
                          case Some(_: ListRootNodeInfoADM) =>
