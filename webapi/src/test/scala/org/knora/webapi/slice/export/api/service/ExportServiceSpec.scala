@@ -28,20 +28,51 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceFake
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
+import org.knora.webapi.slice.admin.domain.model.Permission
+import java.util.UUID
+import org.knora.webapi.messages.v2.responder.valuemessages.ReadTextValueV2
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 
 object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   override val rewriteAll: Boolean = true
 
   UnsafeZioRun.runOrThrow(ZIO.service[StringFormatter].provide(StringFormatter.test))(zio.Runtime.default)
+  given sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def resourceClassIri: ResourceClassIri =
-    ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing")(using
-      StringFormatter.getGeneralInstance,
-    )
+    ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing")(using sf)
 
   val user       = TestDataFactory.User.rootUser
   val project    = TestDataFactory.someProject
   val projectADM = TestDataFactory.someProjectADM
+
+  val TextValueSmartIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri.toInternalSchema
+
+  // NOTE: at this point I think it might be easier to use 
+  // TriplestoreServiceInMemory and a wall of triples from incunabula-data.ttl
+  def readTextValue(content: String): ReadValueV2 =
+    ReadTextValueV2(
+      valueIri = "",
+      attachedToUser = "",
+      permissions = "",
+      userPermission = Permission.ObjectAccess.maxPermission,
+      valueCreationDate = Instant.now,
+      valueHasUUID = UUID.randomUUID(),
+      valueContent = TextValueContentV2(
+        ontologySchema = ApiV2Complex,
+        maybeValueHasString = Some(content),
+        textValueType = TextValueType.UnformattedText,
+        valueHasLanguage = Some("en"),
+      ),
+      valueHasMaxStandoffStartIndex = None,
+      previousValueIri = None,
+      deletionInfo = None,
+    )
 
   def makeResource(
     label: String,
@@ -66,7 +97,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
 
   val readResources =
     Seq(
-      makeResource("r2"),
+      makeResource("r2", values = Map(TextValueSmartIri -> Seq(readTextValue("seven\nthree\nseven")))),
       makeResource("r1"),
       makeResource("r3"),
       makeResource("r4"),
@@ -81,7 +112,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
             exportService.exportResources(
               project,
               resourceClassIri,
-              List(),
+              List(PropertyIri.from(TextValueSmartIri).toOption.get),
               user,
               LanguageCode.EN,
               includeResourceIri = true,
