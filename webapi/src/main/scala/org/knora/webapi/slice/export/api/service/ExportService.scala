@@ -54,7 +54,7 @@ final case class ExportService(
       headers <- rowHeaders(selectedProperties, language, includeResourceIri)
     } yield ExportedCsv(
       headers,
-      sort(readResources.resources.toList).map(convertToExportRow(_, selectedProperties, includeResourceIri)),
+      sort(readResources.resources.toList).map(exportSingleRow(_, selectedProperties, includeResourceIri)),
     )
 
   def toCsv(csv: ExportedCsv): Task[String] =
@@ -72,7 +72,7 @@ final case class ExportService(
       Option.when(includeResourceIri)("Resource IRI").toList ++ ("Label" +: labels),
     )
 
-  private def convertToExportRow(
+  private def exportSingleRow(
     resource: ReadResourceV2,
     selectedProperties: List[PropertyIri],
     includeResourceIri: Boolean,
