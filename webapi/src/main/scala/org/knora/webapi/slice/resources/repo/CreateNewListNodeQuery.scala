@@ -13,7 +13,6 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
-import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 
@@ -48,7 +47,7 @@ object CreateNewListNodeQuery extends QueryBuilderHelper {
   private def commentPattern(comments: Comments, nodeIri: Iri) =
     comments.value.map(toRdfLiteral).map(nodeIri.has(RDFS.COMMENT, _)).toList
 
-  private def buildQuery(project: KnoraProject, insertPattern: Any) =
+  private def buildQuery(project: KnoraProject, insertPattern: List[TriplePattern]) =
     Queries.MODIFY().prefix(RDFS.NS, RDF.NS).from(graphIri(project)).insert(insertPattern: _*)
 
   def forSubNode(
