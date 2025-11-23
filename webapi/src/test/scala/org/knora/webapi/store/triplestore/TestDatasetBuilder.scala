@@ -16,9 +16,11 @@ import zio.*
 import java.io.StringReader
 
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import java.nio.file.Paths
+import java.nio.file.Files
 
 object TestDatasetBuilder {
-
   private def readToModel(turtle: String)(model: Model): Model = model.read(new StringReader(turtle), null, "TTL")
 
   private def transactionalWrite(change: Model => Model, graph: String)(ds: Dataset): Task[Dataset] = ZIO.attempt {
@@ -46,6 +48,17 @@ object TestDatasetBuilder {
   private def asLayer(ds: Task[Dataset]): TaskLayer[Ref[Dataset]] = ZLayer.fromZIO(ds.flatMap(Ref.make[Dataset](_)))
 
   def datasetLayerFromTurtle(turtle: String): TaskLayer[Ref[Dataset]] = asLayer(datasetFromTurtle(turtle))
+
+  def datasetLayerFromDataObjects(objs: List[RdfDataObject]): TaskLayer[Ref[Dataset]] =
+    asLayer(
+      for {
+        ds <- createEmptyDataset
+        _ <-
+          ZIO.foreachDiscard(objs) { obj =>
+            transactionalWrite(readToModel(Files.readString(Paths.get(obj.path))), obj.name)(ds)
+          }
+      } yield ds,
+    )
 
   val emptyDataset: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 }

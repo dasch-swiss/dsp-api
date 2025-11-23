@@ -40,8 +40,10 @@ import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromDataObjects
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   override val rewriteAll: Boolean = true
@@ -50,28 +52,31 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   given sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def resourceClassIri: ResourceClassIri =
-    ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing")(using sf)
+    ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0803/incunabula#page")(using sf)
 
   val user       = TestDataFactory.User.rootUser
   val project    = TestDataFactory.someProject
   val projectADM = TestDataFactory.someProjectADM
 
-  private val testDataSet =
-    s"""
-       |@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-       |@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
-       |@prefix owl:        <http://www.w3.org/2002/07/owl#> .
-       |
-       |<http://rdfh.ch/123>     rdf:type          owl:Class .
-       |""".stripMargin
-
-  // val readResources =
-  //   Seq(
-  //     makeResource("r2", values = Map(TextValueSmartIri -> Seq(readTextValue("seven\nthree\nseven")))),
-  //     makeResource("r1"),
-  //     makeResource("r3"),
-  //     makeResource("r4"),
-  //   )
+  val dataSets = List(
+    // TODO: rename to relative paths
+    RdfDataObject(
+      path = "/Users/raitisveinbahs/work/dsp-api/test_data/project_ontologies/incunabula-onto.ttl",
+      name = "http://www.knora.org/ontology/0803/incunabula",
+    ),
+    RdfDataObject(
+      path = "/Users/raitisveinbahs/work/dsp-api/test_data/project_data/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula",
+    ),
+    RdfDataObject(
+      path = "/Users/raitisveinbahs/work/dsp-api/webapi/src/main/resources/knora-ontologies/knora-base.ttl",
+      name = "http://www.knora.org/ontology/knora-admin",
+    ),
+    RdfDataObject(
+      path = "/Users/raitisveinbahs/work/dsp-api/test_data/project_data/admin-data.ttl",
+      name = "http://www.knora.org/data/admin",
+    ),
+  )
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("ExportServiceSpec")(
@@ -96,7 +101,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       AppConfig.layer,
       CacheManager.layer,
       CsvService.layer,
-      datasetLayerFromTurtle(testDataSet),
+      datasetLayerFromDataObjects(dataSets),
       ExportService.layer,
       findAllResourcesServiceEmptyLayer,
       IriConverter.layer,
@@ -123,5 +128,9 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
     )
 
   private val findAllResourcesServiceEmptyLayer: ZLayer[Any, Nothing, FindAllResourcesService] =
-    ZLayer.succeed[FindAllResourcesService]((_: KnoraProject, _: ResourceClassIri) => ZIO.succeed(Seq.empty))
+    ZLayer.succeed[FindAllResourcesService]((_: KnoraProject, _: ResourceClassIri) =>
+      ZIO.succeed(
+        Seq("http://rdfh.ch/0803/00014b43f902".toSmartIri),
+      ),
+    )
 }
