@@ -40,10 +40,11 @@ import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromDataObjects
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 
 object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   override val rewriteAll: Boolean = true
@@ -61,20 +62,24 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   val dataSets = List(
     // TODO: rename to relative paths
     RdfDataObject(
-      path = "/Users/raitisveinbahs/work/dsp-api/test_data/project_ontologies/incunabula-onto.ttl",
+      path = "test_data/project_ontologies/incunabula-onto.ttl",
       name = "http://www.knora.org/ontology/0803/incunabula",
     ),
     RdfDataObject(
-      path = "/Users/raitisveinbahs/work/dsp-api/test_data/project_data/incunabula-data.ttl",
+      path = "test_data/project_data/incunabula-data.ttl",
       name = "http://www.knora.org/data/0803/incunabula",
     ),
     RdfDataObject(
-      path = "/Users/raitisveinbahs/work/dsp-api/webapi/src/main/resources/knora-ontologies/knora-base.ttl",
+      path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
       name = "http://www.knora.org/ontology/knora-admin",
     ),
     RdfDataObject(
-      path = "/Users/raitisveinbahs/work/dsp-api/test_data/project_data/admin-data.ttl",
+      path = "test_data/project_data/admin-data.ttl",
       name = "http://www.knora.org/data/admin",
+    ),
+    RdfDataObject( // for a good measure
+      path = "test_data/project_data/permissions-data.ttl",
+      name = "http://www.knora.org/data/permissions",
     ),
   )
 
@@ -82,6 +87,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
     suite("ExportServiceSpec")(
       test("basic") {
         for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets, false))
           exportService <- ZIO.service[ExportService]
           exportedCsv <-
             exportService.exportResources(
@@ -101,7 +107,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       AppConfig.layer,
       CacheManager.layer,
       CsvService.layer,
-      datasetLayerFromDataObjects(dataSets),
+      emptyDataset,
       ExportService.layer,
       findAllResourcesServiceEmptyLayer,
       IriConverter.layer,
