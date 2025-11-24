@@ -12,6 +12,7 @@ import zio.ZLayer
 import scala.collection.immutable.ListMap
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -57,7 +58,9 @@ final case class ExportService(
       headers <- rowHeaders(selectedProperties, language, includeResourceIri)
     } yield ExportedCsv(
       headers,
-      sort(readResources.resources.toList).map(exportSingleRow(_, selectedProperties, includeResourceIri)),
+      sort(readResources.resources.toList).map(
+        exportSingleRow(_, selectedProperties, includeResourceIri, readResources.resourcesMap),
+      ),
     )
 
   def toCsv(csv: ExportedCsv): Task[String] =
@@ -104,6 +107,7 @@ final case class ExportService(
     resource: ReadResourceV2,
     selectedProperties: List[PropertyIri],
     includeResourceIri: Boolean,
+    resources: Map[IRI, ReadResourceV2],
   ): ExportedResource =
     ExportedResource(
       ListMap.from(Option.when(includeResourceIri)("Resource IRI" -> resource.resourceIri.toString)) ++
@@ -111,12 +115,18 @@ final case class ExportService(
         ListMap.from(
           selectedProperties.flatMap { property =>
             val readValues = resource.values.get(property.smartIri.toInternalSchema).foldK
-            valueColumns(property, readValues.map(_.valueContent)).map { case (k, vs) => (k, vs.mkString(" :: ")) }
+            valueColumns(property, readValues.map(_.valueContent), resources).map { case (k, vs) =>
+              (k, vs.mkString(" :: "))
+            }
           },
         ),
     )
 
-  private def valueColumns(property: PropertyIri, vcs: Seq[ValueContentV2]): ListMap[String, List[String]] =
+  private def valueColumns(
+    property: PropertyIri,
+    vcs: Seq[ValueContentV2],
+    resources: Map[IRI, ReadResourceV2],
+  ): ListMap[String, List[String]] =
     Some(vcs)
       .filter(_.nonEmpty)
       .map { vcs =>
@@ -125,8 +135,9 @@ final case class ExportService(
             case gvc: GeonameValueContentV2 =>
               ListMap(property.smartIri.toString -> List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
             case lvc: LinkValueContentV2 =>
+              val resource = lvc.nestedResource.orElse(resources.get(lvc.referredResourceIri))
               ListMap(
-                property.smartIri.toString           -> List(lvc.nestedResource.map(_.label).getOrElse("")),
+                property.smartIri.toString           -> List(resource.map(_.label).getOrElse("")),
                 s"${property.smartIri.toString}_IRI" -> List(stringFormat(vc.valueHasString)),
               )
             case vc =>
