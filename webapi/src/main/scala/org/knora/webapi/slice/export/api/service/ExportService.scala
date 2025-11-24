@@ -26,6 +26,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 
 final case class ExportService(
   private val iriConverter: IriConverter,
@@ -65,6 +66,7 @@ final case class ExportService(
   private def sort(resources: Resources): Resources =
     resources.sortBy(_.label)
 
+  // TODO: use the property/column information OntologyRepo to make additional columns for link values
   private def rowHeaders(
     selectedProperties: List[PropertyIri],
     language: LanguageCode,
@@ -106,22 +108,27 @@ final case class ExportService(
     ExportedResource(
       ListMap.from(Option.when(includeResourceIri)("Resource IRI" -> resource.resourceIri.toString)) ++
         ListMap("Label" -> resource.label) ++
-        ListMap.from(selectedProperties.map { property =>
-          property.smartIri.toString -> {
-            resource.values
-              .get(property.smartIri.toInternalSchema)
-              .map(_.toList)
-              .combineAll
-              .map(r => valueContentString(r.valueContent))
-              .mkString(" :: ")
-          }
-        }),
+        ListMap.from(
+          selectedProperties.flatMap { property =>
+            val readValues = resource.values.get(property.smartIri.toInternalSchema).foldK
+            valueColumns(property, readValues.map(_.valueContent)).view.mapValues(vs => vs.mkString(" :: ")).toList
+          },
+        ),
     )
 
-  private def valueContentString(vc: ValueContentV2): String =
-    vc match
-      case gvc: GeonameValueContentV2 => "https://www.geonames.org/" ++ gvc.valueHasGeonameCode
-      case vc                         => vc.valueHasString.replaceAll("\n", "\\\\n")
+  private def valueColumns(property: PropertyIri, vcs: Seq[ValueContentV2]): Map[String, List[String]] =
+    vcs.foldMap { vc =>
+      vc match
+        case gvc: GeonameValueContentV2 =>
+          Map(property.smartIri.toString -> List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
+        case lvc: LinkValueContentV2 =>
+          Map(
+            property.smartIri.toString           -> List("label to be"),
+            s"${property.smartIri.toString}_IRI" -> List(vc.valueHasString.replaceAll("\n", "\\\\n")),
+          )
+        case vc =>
+          Map(property.smartIri.toString -> List(vc.valueHasString.replaceAll("\n", "\\\\n")))
+    }
 }
 
 object ExportService {

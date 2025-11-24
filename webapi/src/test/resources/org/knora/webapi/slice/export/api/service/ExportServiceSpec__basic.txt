@@ -1,5 +1,5 @@
 Resource IRI,Label,http://www.knora.org/ontology/1612/Data#TextParagraph,http://www.knora.org/ontology/1612/Data#LinkPropertyValue,http://www.knora.org/ontology/1612/Data#Place
-http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw,Resource0,,,
-http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA,Resource1,Lazy\nFox\nJumped,http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w,https://www.geonames.org/2661604
-http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ,Resource11,,,
-http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w,Resource2,Text text,http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA,https://www.geonames.org/2768042
+http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw,Resource0
+http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA,Resource1,Lazy\nFox\nJumped,label to be,http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w,https://www.geonames.org/2661604
+http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ,Resource11
+http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w,Resource2,Text text,label to be,http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA,https://www.geonames.org/2768042
