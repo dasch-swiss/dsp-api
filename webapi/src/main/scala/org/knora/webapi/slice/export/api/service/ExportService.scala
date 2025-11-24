@@ -124,11 +124,14 @@ final case class ExportService(
         case lvc: LinkValueContentV2 =>
           Map(
             property.smartIri.toString           -> List("label to be"),
-            s"${property.smartIri.toString}_IRI" -> List(vc.valueHasString.replaceAll("\n", "\\\\n")),
+            s"${property.smartIri.toString}_IRI" -> List(stringFormat(vc.valueHasString)),
           )
         case vc =>
-          Map(property.smartIri.toString -> List(vc.valueHasString.replaceAll("\n", "\\\\n")))
+          Map(property.smartIri.toString -> List(stringFormat(vc.valueHasString)))
     }
+
+  private def stringFormat(s: String): String =
+    s.replaceAll("\n", "\\\\n").replaceAll("\u001e", " ")
 }
 
 object ExportService {
