@@ -665,9 +665,9 @@ final case class ListsResponder(
     val nodeIri = changeNodeRequest.listIri.value
     val nodeInfoChangeTask =
       for {
-        changeNodeInfoSparql <- getUpdateNodeInfoSparqlStatement(changeNodeRequest)
-        _                    <- triplestore.query(Update(changeNodeInfoSparql))
-        maybeNodeADM         <- listNodeInfoGetADM(changeNodeRequest.listIri.value)
+        update       <- getUpdateNodeInfoSparqlStatement(changeNodeRequest)
+        _            <- triplestore.query(update)
+        maybeNodeADM <- listNodeInfoGetADM(changeNodeRequest.listIri.value)
         updated <-
           maybeNodeADM match {
             case Some(rootNode: ListRootNodeInfoADM)   => ZIO.succeed(RootNodeInfoGetResponseADM(rootNode))
@@ -749,25 +749,15 @@ final case class ListsResponder(
     changeNameReq: ListChangeNameRequest,
     requestingUser: User,
     apiRequestID: UUID,
-  ): Task[NodeInfoGetResponseADM] = {
-    val updateTask =
-      for {
-        project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
-
-        updateQuery <-
-          getUpdateNodeInfoSparqlStatement(
-            ListChangeRequest(
-              listIri = listIri,
-              projectIri = project.id,
-              name = Some(changeNameReq.name),
-            ),
-          )
-        _       <- triplestore.query(Update(updateQuery))
-        updated <- loadUpdatedListFromTriplestore(listIri)
-      } yield updated
-
-    IriLocker.runWithIriLock(apiRequestID, listIri.value)(updateTask)
-  }
+  ): Task[NodeInfoGetResponseADM] =
+    IriLocker.runWithIriLock(apiRequestID, listIri.value)(for {
+      project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
+      update <- getUpdateNodeInfoSparqlStatement(
+                  ListChangeRequest(listIri, project.id, name = Some(changeNameReq.name)),
+                )
+      _       <- triplestore.query(update)
+      updated <- loadUpdatedListFromTriplestore(listIri)
+    } yield updated)
 
   private def loadUpdatedListFromTriplestore(listIri: ListIri) =
     listNodeInfoGetADM(listIri.value).flatMap {
@@ -798,24 +788,15 @@ final case class ListsResponder(
     changeNodeLabelsRequest: ListChangeLabelsRequest,
     requestingUser: User,
     apiRequestID: UUID,
-  ): Task[NodeInfoGetResponseADM] = {
-    val updateTask =
-      for {
-        project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
-
-        updateQuery <- getUpdateNodeInfoSparqlStatement(
-                         ListChangeRequest(
-                           listIri = listIri,
-                           projectIri = project.id,
-                           labels = Some(changeNodeLabelsRequest.labels),
-                         ),
-                       )
-        _ <- triplestore.query(Update(updateQuery))
-
-        updated <- loadUpdatedListFromTriplestore(listIri)
-      } yield updated
-    IriLocker.runWithIriLock(apiRequestID, listIri.value)(updateTask)
-  }
+  ): Task[NodeInfoGetResponseADM] =
+    IriLocker.runWithIriLock(apiRequestID, listIri)(for {
+      project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
+      update <- getUpdateNodeInfoSparqlStatement(
+                  ListChangeRequest(listIri, project.id, labels = Some(changeNodeLabelsRequest.labels)),
+                )
+      _       <- triplestore.query(update)
+      updated <- loadUpdatedListFromTriplestore(listIri)
+    } yield updated)
 
   /**
    * Changes comments of the node (root or child)
@@ -833,25 +814,15 @@ final case class ListsResponder(
     changeNodeCommentsRequest: ListChangeCommentsRequest,
     requestingUser: User,
     apiRequestID: UUID,
-  ): Task[NodeInfoGetResponseADM] = {
-    val updateTask =
-      for {
-        project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
-
-        changeNodeCommentsSparql <- getUpdateNodeInfoSparqlStatement(
-                                      ListChangeRequest(
-                                        listIri = listIri,
-                                        projectIri = project.id,
-                                        comments = Some(changeNodeCommentsRequest.comments),
-                                      ),
-                                    )
-        _ <- triplestore.query(Update(changeNodeCommentsSparql))
-
-        updated <- loadUpdatedListFromTriplestore(listIri)
-      } yield updated
-
-    IriLocker.runWithIriLock(apiRequestID, listIri.value)(updateTask)
-  }
+  ): Task[NodeInfoGetResponseADM] =
+    IriLocker.runWithIriLock(apiRequestID, listIri)(for {
+      project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
+      update <- getUpdateNodeInfoSparqlStatement(
+                  ListChangeRequest(listIri, project.id, comments = Some(changeNodeCommentsRequest.comments)),
+                )
+      _       <- triplestore.query(update)
+      updated <- loadUpdatedListFromTriplestore(listIri)
+    } yield updated)
 
   /**
    * Changes position of the node
@@ -1334,7 +1305,7 @@ final case class ListsResponder(
    * @param request the node information to change.
    * @return a [[String]].
    */
-  private def getUpdateNodeInfoSparqlStatement(request: ListChangeRequest): Task[String] =
+  private def getUpdateNodeInfoSparqlStatement(request: ListChangeRequest): Task[Update] =
     for {
       /* verify that the list name is unique for the project */
       _ <- ZIO.fail {
@@ -1353,18 +1324,8 @@ final case class ListsResponder(
                    .someOrFail(NotFoundException.notFound(request.projectIri))
 
       // Update the list
-      modify = UpdateListInfoQuery
-                 .build(
-                   project,
-                   request.listIri,
-                   node.isInstanceOf[ListRootNodeADM],
-                   request.name,
-                   request.labels,
-                   request.comments,
-                 )
-                 .getQueryString
-      _ = Console.println(modify)
-    } yield modify
+      modify = UpdateListInfoQuery.build(project, request.listIri, request.name, request.labels, request.comments)
+    } yield Update(modify)
 
   /**
    * Helper method to get projectIri of a node.

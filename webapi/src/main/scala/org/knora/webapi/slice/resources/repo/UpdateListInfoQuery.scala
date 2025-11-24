@@ -21,7 +21,6 @@ object UpdateListInfoQuery extends QueryBuilderHelper {
   def build(
     project: KnoraProject,
     nodeIri: ListIri,
-    isRootNode: Boolean,
     name: Option[ListName],
     labels: Option[Labels],
     comments: Option[Comments],
@@ -55,10 +54,6 @@ object UpdateListInfoQuery extends QueryBuilderHelper {
     }
 
     val wherePatterns = {
-      val rootNodePatterns =
-        if isRootNode then Seq(node.has(KnoraBase.attachedToProject, toRdfIri(project.id)))
-        else Seq.empty
-
       val labelsPattern =
         if labels.isDefined then Seq(node.has(RDFS.LABEL, currentLabelsVar).optional)
         else Seq.empty
@@ -71,7 +66,7 @@ object UpdateListInfoQuery extends QueryBuilderHelper {
         if comments.isDefined then Seq(node.has(RDFS.COMMENT, currentCommentsVar).optional)
         else Seq.empty
 
-      Seq(node.isA(KnoraBase.ListNode)) ++ rootNodePatterns ++ labelsPattern ++ namePattern ++ commentsPattern
+      Seq(node.isA(KnoraBase.ListNode)) ++ labelsPattern ++ namePattern ++ commentsPattern
     }
 
     Queries

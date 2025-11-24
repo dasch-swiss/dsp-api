@@ -197,7 +197,7 @@ object ListsResponderSpec extends E2EZSpec {
         listsResponder(_.nodeInfoChangeRequest(changeReq, UUID.randomUUID())).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[DuplicateValueException](
-              s"The name ${Some(ListName.unsafeFrom("sommer")).value} is already used by a list inside the project ${imagesProjectIri}.",
+              s"The name ${Some(ListName.unsafeFrom("sommer")).value} is already used by a list inside the project $imagesProjectIri.",
             ),
           ),
         )
