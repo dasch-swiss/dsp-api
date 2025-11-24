@@ -12,7 +12,6 @@ import zio.ZLayer
 import java.util.UUID
 
 import dsp.errors.*
-import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
@@ -567,13 +566,7 @@ final case class ListsResponder(
                    .findById(projectIri)
                    .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
 
-      /* verify that the list node name is unique for the project */
-      _ <- ZIO.fail {
-             val unescapedName = Iri.fromSparqlEncodedString(name.map(_.value).getOrElse(""))
-             BadRequestException(
-               s"The node name $unescapedName is already used by a list inside the project ${projectIri.value}.",
-             )
-           }.whenZIO(listNodeNameIsProjectUnique(projectIri.value, name).negate)
+      _ <- name.map(ensureListNameIsUniqueInProject(_, projectIri)).getOrElse(ZIO.unit)
 
       // calculate the data named graph
       dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(project).value
@@ -1295,16 +1288,14 @@ final case class ListsResponder(
    * name is NOT used inside any list of this project.
    *
    * @param projectIri   the IRI of the project.
-   * @param listNodeName the list node name.
+   * @param name         the list node name.
    * @return a [[Boolean]].
    */
-  private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[ListName]): Task[Boolean] =
-    listNodeName match {
-      case Some(name) =>
-        triplestore.query(Ask(sparql.admin.txt.checkListNodeNameIsProjectUnique(projectIri, name.value))).negate
-
-      case None => ZIO.succeed(true)
-    }
+  private def ensureListNameIsUniqueInProject(name: ListName, projectIri: ProjectIri): Task[Unit] = ZIO
+    .whenZIO(triplestore.query(Ask(sparql.admin.txt.checkListNodeNameIsProjectUnique(projectIri.value, name.value))))(
+      ZIO.fail(BadRequestException(s"The name $name is already used by a list in project $projectIri.")),
+    )
+    .unit
 
   /**
    * Helper method to generate a sparql statement for updating node information.
@@ -1320,13 +1311,9 @@ final case class ListsResponder(
       dataNamedGraph <- getDataNamedGraph(changeNodeInfoRequest.projectIri)
 
       /* verify that the list name is unique for the project */
-      _ <- ZIO.fail {
-             val msg =
-               s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri.value}."
-             DuplicateValueException(msg)
-           }.whenZIO(
-             listNodeNameIsProjectUnique(changeNodeInfoRequest.projectIri.value, changeNodeInfoRequest.name).negate,
-           )
+      _ <- changeNodeInfoRequest.name
+             .map(ensureListNameIsUniqueInProject(_, changeNodeInfoRequest.projectIri))
+             .getOrElse(ZIO.unit)
 
       /* Verify that the node with Iri exists. */
       node <- listNodeGetADM(changeNodeInfoRequest.listIri.value, shallow = true)
