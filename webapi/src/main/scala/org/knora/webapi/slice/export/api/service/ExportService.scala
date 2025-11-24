@@ -24,6 +24,8 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 
 final case class ExportService(
   private val iriConverter: IriConverter,
@@ -72,26 +74,6 @@ final case class ExportService(
       Option.when(includeResourceIri)("Resource IRI").toList ++ ("Label" +: labels),
     )
 
-  private def exportSingleRow(
-    resource: ReadResourceV2,
-    selectedProperties: List[PropertyIri],
-    includeResourceIri: Boolean,
-  ): ExportedResource =
-    ExportedResource(
-      ListMap.from(Option.when(includeResourceIri)("Resource IRI" -> resource.resourceIri.toString)) ++
-        ListMap("Label" -> resource.label) ++
-        ListMap.from(selectedProperties.map { property =>
-          property.smartIri.toString -> {
-            resource.values
-              .get(property.smartIri.toInternalSchema)
-              .map(_.toList)
-              .combineAll
-              .map(_.valueContent.valueHasString.replaceAll("\n", "\\\\n"))
-              .mkString(" :: ")
-          }
-        }),
-    )
-
   private def propertyLabelsTranslated(
     propertyIris: List[PropertyIri],
     language: LanguageCode,
@@ -115,6 +97,31 @@ final case class ExportService(
         }
       }
     }
+
+  private def exportSingleRow(
+    resource: ReadResourceV2,
+    selectedProperties: List[PropertyIri],
+    includeResourceIri: Boolean,
+  ): ExportedResource =
+    ExportedResource(
+      ListMap.from(Option.when(includeResourceIri)("Resource IRI" -> resource.resourceIri.toString)) ++
+        ListMap("Label" -> resource.label) ++
+        ListMap.from(selectedProperties.map { property =>
+          property.smartIri.toString -> {
+            resource.values
+              .get(property.smartIri.toInternalSchema)
+              .map(_.toList)
+              .combineAll
+              .map(r => valueContentString(r.valueContent))
+              .mkString(" :: ")
+          }
+        }),
+    )
+
+  private def valueContentString(vc: ValueContentV2): String =
+    vc match
+      case gvc: GeonameValueContentV2 => "https://www.geonames.org/" ++ gvc.valueHasGeonameCode
+      case vc                         => vc.valueHasString.replaceAll("\n", "\\\\n")
 }
 
 object ExportService {
