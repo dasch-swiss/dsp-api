@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+
 import dsp.errors.ApplicationLockException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
