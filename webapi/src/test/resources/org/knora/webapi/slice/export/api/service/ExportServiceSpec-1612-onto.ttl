@@ -1,0 +1,156 @@
+PREFIX dcterms:     <http://purl.org/dc/terms/>
+PREFIX foaf:        <http://xmlns.com/foaf/0.1/>
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+PREFIX knora-base:  <http://www.knora.org/ontology/knora-base#>
+PREFIX ns1:         <http://www.knora.org/ontology/0801/biblio#>
+PREFIX ns2:         <http://www.knora.org/ontology/0801/beol#>
+PREFIX ns3:         <http://www.knora.org/ontology/0801/newton#>
+PREFIX ns4:         <http://www.knora.org/ontology/0801/leibniz#>
+PREFIX owl:         <http://www.w3.org/2002/07/owl#>
+PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:        <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX salsah-gui:  <http://www.knora.org/ontology/salsah-gui#>
+PREFIX standoff:    <http://www.knora.org/ontology/standoff#>
+PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
+
+<http://www.knora.org/ontology/1612/Data#LinkPropertyValue>
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "Self-referential property"@en;
+        rdfs:label             "Link Property Label"@en;
+        rdfs:subPropertyOf     knora-base:isPartOfValue;
+        knora-base:objectClassConstraint
+                knora-base:LinkValue;
+        salsah-gui:guiElement  salsah-gui:Searchbox .
+
+<http://www.knora.org/ontology/1612/Data#LinkProperty>
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "Self-referential property"@en;
+        rdfs:label             "Link Property Label"@en;
+        rdfs:subPropertyOf     knora-base:isPartOf;
+        knora-base:objectClassConstraint
+                <http://www.knora.org/ontology/1612/Data#Class1>;
+        salsah-gui:guiElement  salsah-gui:Searchbox .
+
+<http://www.knora.org/ontology/1612/Data#LinkToClassValue>
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "Self-referential property"@en;
+        rdfs:label             "Link To Class Label"@en;
+        rdfs:subPropertyOf     knora-base:hasLinkToValue;
+        knora-base:objectClassConstraint
+                knora-base:LinkValue;
+        salsah-gui:guiElement  salsah-gui:Searchbox .
+
+<http://www.knora.org/ontology/1612/Data#LinkToClass>
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "Self-referential property"@en;
+        rdfs:label             "Link To Class Label"@en;
+        rdfs:subPropertyOf     knora-base:hasLinkTo;
+        knora-base:objectClassConstraint
+                <http://www.knora.org/ontology/1612/Data#Class1>;
+        salsah-gui:guiElement  salsah-gui:Searchbox .
+
+<http://www.knora.org/ontology/1612/Data#FunkList>
+        rdf:type                 owl:ObjectProperty;
+        rdfs:comment             "Commentary"@en;
+        rdfs:label               "Funk List Label"@en;
+        rdfs:subPropertyOf       knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:ListValue;
+        salsah-gui:guiAttribute  "hlist=<http://rdfh.ch/lists/1612/PCkZVGmXQ9uMnkpyEU-4-Q>";
+        salsah-gui:guiElement    salsah-gui:Pulldown .
+
+<http://www.knora.org/ontology/1612/Data#Place>
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "Comment"@en;
+        rdfs:label             "Place Label"@en;
+        rdfs:subPropertyOf     knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:GeonameValue;
+        salsah-gui:guiElement  salsah-gui:Geonames .
+
+<http://www.knora.org/ontology/1612/Data#TextRich>
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "Comment"@en;
+        rdfs:label             "Text Rich Text Label"@en;
+        rdfs:subPropertyOf     knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:TextValue;
+        salsah-gui:guiElement  salsah-gui:Richtext .
+
+<http://www.knora.org/ontology/1612/Data#TextParagraph>
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "Text Paragraph Comment"@en;
+        rdfs:label             "Text Paragraph Label"@en;
+        rdfs:subPropertyOf     knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:TextValue;
+        salsah-gui:guiElement  salsah-gui:Textarea .
+
+<http://www.knora.org/ontology/1612/Data#TextShort>
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "Text Short Comment"@en;
+        rdfs:label             "Text Short Label"@en;
+        rdfs:subPropertyOf     knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:TextValue;
+        salsah-gui:guiElement  salsah-gui:SimpleText .
+
+<http://www.knora.org/ontology/1612/Data#Class1>
+        rdf:type         owl:Class;
+        rdfs:comment     "Comment1"@en , "Komment1"@de , "L'Comment"@fr;
+        rdfs:label       "Label1"@en;
+        rdfs:subClassOf  knora-base:Resource;
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "7"^^xsd:nonNegativeInteger;
+                           owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       <http://www.knora.org/ontology/1612/Data#LinkPropertyValue>
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "7"^^xsd:nonNegativeInteger;
+                           owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       <http://www.knora.org/ontology/1612/Data#LinkProperty>
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "6"^^xsd:nonNegativeInteger;
+                           owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       <http://www.knora.org/ontology/1612/Data#LinkToClassValue>
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "6"^^xsd:nonNegativeInteger;
+                           owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       <http://www.knora.org/ontology/1612/Data#LinkToClass>
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "5"^^xsd:nonNegativeInteger;
+                           owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       <http://www.knora.org/ontology/1612/Data#FunkList>
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "4"^^xsd:nonNegativeInteger;
+                           owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       <http://www.knora.org/ontology/1612/Data#Place>
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "3"^^xsd:nonNegativeInteger;
+                           owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       <http://www.knora.org/ontology/1612/Data#TextRich>
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "2"^^xsd:nonNegativeInteger;
+                           owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       <http://www.knora.org/ontology/1612/Data#TextParagraph>
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "1"^^xsd:nonNegativeInteger;
+                           owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       <http://www.knora.org/ontology/1612/Data#TextShort>
+                         ] .
+
+<http://www.knora.org/ontology/1612/Data>
+        rdf:type                      owl:Ontology;
+        rdfs:comment                  "Comment";
+        rdfs:label                    "Data";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:isShared           false;
+        knora-base:lastModificationDate
+                "2025-11-24T09:27:03.736409Z"^^xsd:dateTime .

@@ -16,11 +16,12 @@ import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelayLive
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
@@ -30,6 +31,7 @@ import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.domain.LanguageCode
@@ -40,11 +42,9 @@ import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
-import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
-import org.knora.webapi.messages.IriConversions.ConvertibleIri
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   override val rewriteAll: Boolean = true
@@ -53,29 +53,28 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   given sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def resourceClassIri: ResourceClassIri =
-    ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0803/incunabula#page")(using sf)
+    ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/1612/Data#Class1")(using sf)
 
   val user       = TestDataFactory.User.rootUser
-  val project    = TestDataFactory.someProject
-  val projectADM = TestDataFactory.someProjectADM
+  val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw")
 
   val dataSets = List(
-    // TODO: rename to relative paths
     RdfDataObject(
-      path = "test_data/project_ontologies/incunabula-onto.ttl",
-      name = "http://www.knora.org/ontology/0803/incunabula",
+      path = "webapi/src/test/resources/org/knora/webapi/slice/export/api/service/ExportServiceSpec-1612-onto.ttl",
+      name = "http://www.knora.org/ontology/1612/Data",
     ),
     RdfDataObject(
-      path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula",
+      path = "webapi/src/test/resources/org/knora/webapi/slice/export/api/service/ExportServiceSpec-1612-data.ttl",
+      name = "http://www.knora.org/data/1612/funk",
+    ),
+    // based on test_data/project_data/admin-data-minimal.ttl
+    RdfDataObject(
+      path = "webapi/src/test/resources/org/knora/webapi/slice/export/api/service/ExportServiceSpec-1612-admin.ttl",
+      name = "http://www.knora.org/data/admin",
     ),
     RdfDataObject(
       path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
       name = "http://www.knora.org/ontology/knora-admin",
-    ),
-    RdfDataObject(
-      path = "test_data/project_data/admin-data.ttl",
-      name = "http://www.knora.org/data/admin",
     ),
     RdfDataObject( // for a good measure
       path = "test_data/project_data/permissions-data.ttl",
@@ -88,12 +87,17 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       test("basic") {
         for {
           _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets, false))
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
           exportedCsv <-
             exportService.exportResources(
               project,
               resourceClassIri,
-              List(), // List(PropertyIri.from(TextValueSmartIri).toOption.get),
+              List(
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextParagraph")),
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#Place")),
+              ),
               user,
               LanguageCode.EN,
               includeResourceIri = true,
@@ -109,7 +113,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       CsvService.layer,
       emptyDataset,
       ExportService.layer,
-      findAllResourcesServiceEmptyLayer,
+      FindAllResourcesService.layer,
       IriConverter.layer,
       KnoraProjectRepoLive.layer,
       KnoraProjectService.layer,
@@ -131,12 +135,5 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       KnoraUserRepoLive.layer,
       PasswordService.layer,
       KnoraUserService.layer,
-    )
-
-  private val findAllResourcesServiceEmptyLayer: ZLayer[Any, Nothing, FindAllResourcesService] =
-    ZLayer.succeed[FindAllResourcesService]((_: KnoraProject, _: ResourceClassIri) =>
-      ZIO.succeed(
-        Seq("http://rdfh.ch/0803/00014b43f902".toSmartIri),
-      ),
     )
 }

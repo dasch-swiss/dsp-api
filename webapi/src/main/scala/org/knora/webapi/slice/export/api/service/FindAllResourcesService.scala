@@ -86,4 +86,6 @@ final case class FindAllResourcesServiceLive(
 
 object FindAllResourcesService {
   val layer = ZLayer.derive[FindAllResourcesServiceLive]
+
+  val Empty = ZLayer.succeed[FindAllResourcesService]((_: KnoraProject, _: ResourceClassIri) => ZIO.succeed(Seq()))
 }

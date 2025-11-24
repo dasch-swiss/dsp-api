@@ -81,7 +81,6 @@ final case class ExportService(
       ListMap.from(Option.when(includeResourceIri)("Resource IRI" -> resource.resourceIri.toString)) ++
         ListMap("Label" -> resource.label) ++
         ListMap.from(selectedProperties.map { property =>
-          println(s"${property.smartIri} x ${resource.values}")
           property.smartIri.toString -> {
             resource.values
               .get(property.smartIri.toInternalSchema)
