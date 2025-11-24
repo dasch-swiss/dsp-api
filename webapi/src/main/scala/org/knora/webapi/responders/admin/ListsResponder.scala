@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
+import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -12,7 +13,6 @@ import zio.ZLayer
 import java.util.UUID
 
 import dsp.errors.*
-import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
@@ -576,12 +576,7 @@ final case class ListsResponder(
                    .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
 
       /* verify that the list node name is unique for the project */
-      _ <- ZIO.fail {
-             val unescapedName = Iri.fromSparqlEncodedString(name.map(_.value).getOrElse(""))
-             BadRequestException(
-               s"The node name $unescapedName is already used by a list inside the project ${projectIri.value}.",
-             )
-           }.whenZIO(listNodeNameIsProjectUnique(projectIri, name).negate)
+      _ <- name.map(ensureListNameInProjectDoesNotExist(_, project)).getOrElse(ZIO.unit)
 
       // calculate the data named graph
       dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(project).value
@@ -1289,15 +1284,21 @@ final case class ListsResponder(
    * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
    * name is NOT used inside any list of this project.
    *
-   * @param projectIri   the IRI of the project.
-   * @param listNodeName the list node name.
-   * @return a [[Boolean]].
+   * @param project      the project.
+   * @param name         the list node name.
+   * @return [[Unit]] or fails with a [[DuplicateValueException]] if name is already in use.
    */
-  private def listNodeNameIsProjectUnique(projectIri: ProjectIri, listNodeName: Option[ListName]): Task[Boolean] =
-    listNodeName match {
-      case Some(name) => triplestore.query(AskListNameInProjectExistsQuery.build(name, projectIri)).negate
-      case None       => ZIO.succeed(true)
-    }
+  private def ensureListNameInProjectDoesNotExist(
+    name: ListName,
+    project: KnoraProject,
+  ): IO[DuplicateValueException, Unit] =
+    triplestore
+      .query(AskListNameInProjectExistsQuery.build(name, project.id))
+      .orDie
+      .filterOrFail(exists => !exists)(
+        DuplicateValueException(s"The name '$name' is already used by a list in project ${project.id}."),
+      )
+      .unit
 
   /**
    * Helper method to generate a sparql statement for updating node information.
@@ -1307,21 +1308,14 @@ final case class ListsResponder(
    */
   private def getUpdateNodeInfoSparqlStatement(request: ListChangeRequest): Task[Update] =
     for {
-      /* verify that the list name is unique for the project */
-      _ <- ZIO.fail {
-             val msg =
-               s"The name ${request.name.get} is already used by a list inside the project ${request.projectIri.value}."
-             DuplicateValueException(msg)
-           }.whenZIO(
-             listNodeNameIsProjectUnique(request.projectIri, request.name).negate,
-           )
 
       /* Verify that the node with Iri exists. */
-      node <- listNodeGetADM(request.listIri.value, shallow = true)
-                .someOrFail(BadRequestException(s"List item with '${request.listIri}' not found."))
+      _ <- listNodeGetADM(request.listIri.value, shallow = true)
+             .someOrFail(BadRequestException(s"List item with '${request.listIri}' not found."))
       project <- knoraProjectService
                    .findById(request.projectIri)
                    .someOrFail(NotFoundException.notFound(request.projectIri))
+      _ <- request.name.map(ensureListNameInProjectDoesNotExist(_, project)).getOrElse(ZIO.unit)
 
       // Update the list
       modify = UpdateListInfoQuery.build(project, request.listIri, request.name, request.labels, request.comments)
