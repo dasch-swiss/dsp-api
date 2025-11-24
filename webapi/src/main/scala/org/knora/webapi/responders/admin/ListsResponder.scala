@@ -10,7 +10,6 @@ import zio.ZIO
 import zio.ZLayer
 
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
@@ -32,11 +31,15 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
+import org.knora.webapi.slice.resources.repo.AskListNameInProjectExistsQuery
+import org.knora.webapi.slice.resources.repo.CreateListNodeQuery
+import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -90,7 +93,7 @@ final case class ListsResponder(
             comments <-
               mapper.getList[StringLiteralV2](Rdfs.Comment, objs).map(_.toVector).map(StringLiteralSequenceV2.apply)
             projectIri <- mapper.getSingleOrFail[IriLiteralV2](KnoraBase.AttachedToProject, objs).map(_.value)
-          } yield ListRootNodeInfoADM(listIri.toString, projectIri, name, labels, comments).unescape
+          } yield ListRootNodeInfoADM(listIri.toString, projectIri, name, labels, comments)
         }
     } yield ListsGetResponseADM(lists)
 
@@ -255,7 +258,7 @@ final case class ListsResponder(
                     .map(_.head.asInstanceOf[StringLiteralV2].value),
                   labels = StringLiteralSequenceV2(labels.toVector.sorted),
                   comments = StringLiteralSequenceV2(comments.toVector.sorted),
-                ).unescape
+                )
               } else {
                 ListChildNodeInfoADM(
                   id = nodeIri.toString,
@@ -274,7 +277,7 @@ final case class ListsResponder(
                       s"Required hasRootNode property missing for list node $nodeIri.",
                     ),
                   ),
-                ).unescape
+                )
               }
           }
           Some(nodeInfo)
@@ -494,7 +497,7 @@ final case class ListsResponder(
         children = children.map(_.sorted),
         position = position,
         hasRootNode = hasRootNode,
-      ).unescape
+      )
     }
 
     for {
@@ -577,7 +580,7 @@ final case class ListsResponder(
              BadRequestException(
                s"The node name $unescapedName is already used by a list inside the project ${projectIri.value}.",
              )
-           }.whenZIO(listNodeNameIsProjectUnique(projectIri.value, name).negate)
+           }.whenZIO(listNodeNameIsProjectUnique(projectIri, name).negate)
 
       // calculate the data named graph
       dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(project).value
@@ -600,38 +603,31 @@ final case class ListsResponder(
       newListNodeIri <- iriService.checkOrCreateEntityIri(customListIri, ListIri.makeNew(project).value)
 
       // Create the new list node depending on type
-      createNewListSparqlString = createNodeRequest match {
-                                    case r: ListCreateRootNodeRequest =>
-                                      sparql.admin.txt
-                                        .createNewListNode(
-                                          dataNamedGraph = dataNamedGraph,
-                                          listClassIri = KnoraBase.ListNode,
-                                          projectIri = r.projectIri.value,
-                                          nodeIri = newListNodeIri,
-                                          parentNodeIri = None,
-                                          rootNodeIri = rootNodeIri,
-                                          position = None,
-                                          maybeName = r.name.map(_.value),
-                                          maybeLabels = r.labels.value,
-                                          maybeComments = Some(r.comments.value),
-                                        )
-                                    case c: ListCreateChildNodeRequest =>
-                                      sparql.admin.txt
-                                        .createNewListNode(
-                                          dataNamedGraph = dataNamedGraph,
-                                          listClassIri = KnoraBase.ListNode,
-                                          projectIri = c.projectIri.value,
-                                          nodeIri = newListNodeIri,
-                                          parentNodeIri = Some(c.parentNodeIri.value),
-                                          rootNodeIri = rootNodeIri,
-                                          position = newPosition,
-                                          maybeName = c.name.map(_.value),
-                                          maybeLabels = c.labels.value,
-                                          maybeComments = c.comments.map(_.value),
-                                        )
-                                  }
-
-      _ <- triplestore.query(Update(createNewListSparqlString))
+      query = createNodeRequest match {
+                case r: ListCreateRootNodeRequest =>
+                  CreateListNodeQuery.build(
+                    project,
+                    ListIri.unsafeFrom(newListNodeIri),
+                    None,
+                    r.name,
+                    r.labels,
+                    r.comments,
+                  )
+                case c: ListCreateChildNodeRequest =>
+                  CreateListNodeQuery.build(
+                    project,
+                    ListIri.unsafeFrom(newListNodeIri),
+                    Some(
+                      c.parentNodeIri,
+                      ListIri.unsafeFrom(rootNodeIri.get),
+                      Position.unsafeFrom(newPosition.get),
+                    ),
+                    c.name,
+                    c.labels,
+                    c.comments.get,
+                  )
+              }
+      _ <- triplestore.query(Update(query))
     } yield newListNodeIri
   }
 
@@ -759,7 +755,7 @@ final case class ListsResponder(
 
         updateQuery <-
           getUpdateNodeInfoSparqlStatement(
-            changeNodeInfoRequest = ListChangeRequest(
+            ListChangeRequest(
               listIri = listIri,
               projectIri = project.id,
               name = Some(changeNameReq.name),
@@ -807,7 +803,7 @@ final case class ListsResponder(
         project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
 
         updateQuery <- getUpdateNodeInfoSparqlStatement(
-                         changeNodeInfoRequest = ListChangeRequest(
+                         ListChangeRequest(
                            listIri = listIri,
                            projectIri = project.id,
                            labels = Some(changeNodeLabelsRequest.labels),
@@ -1325,55 +1321,49 @@ final case class ListsResponder(
    * @param listNodeName the list node name.
    * @return a [[Boolean]].
    */
-  private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[ListName]): Task[Boolean] =
+  private def listNodeNameIsProjectUnique(projectIri: ProjectIri, listNodeName: Option[ListName]): Task[Boolean] =
     listNodeName match {
-      case Some(name) =>
-        triplestore.query(Ask(sparql.admin.txt.checkListNodeNameIsProjectUnique(projectIri, name.value))).negate
-
-      case None => ZIO.succeed(true)
+      case Some(name) => triplestore.query(AskListNameInProjectExistsQuery.build(name, projectIri)).negate
+      case None       => ZIO.succeed(true)
     }
 
   /**
    * Helper method to generate a sparql statement for updating node information.
    *
-   * @param changeNodeInfoRequest the node information to change.
+   * @param request the node information to change.
    * @return a [[String]].
    */
-  private def getUpdateNodeInfoSparqlStatement(
-    changeNodeInfoRequest: ListChangeRequest,
-  ): Task[String] =
+  private def getUpdateNodeInfoSparqlStatement(request: ListChangeRequest): Task[String] =
     for {
-      // get the data graph of the project.
-      dataNamedGraph <- getDataNamedGraph(changeNodeInfoRequest.projectIri)
-
       /* verify that the list name is unique for the project */
       _ <- ZIO.fail {
              val msg =
-               s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri.value}."
+               s"The name ${request.name.get} is already used by a list inside the project ${request.projectIri.value}."
              DuplicateValueException(msg)
            }.whenZIO(
-             listNodeNameIsProjectUnique(changeNodeInfoRequest.projectIri.value, changeNodeInfoRequest.name).negate,
+             listNodeNameIsProjectUnique(request.projectIri, request.name).negate,
            )
 
       /* Verify that the node with Iri exists. */
-      node <- listNodeGetADM(changeNodeInfoRequest.listIri.value, shallow = true)
-                .someOrFail(BadRequestException(s"List item with '${changeNodeInfoRequest.listIri}' not found."))
+      node <- listNodeGetADM(request.listIri.value, shallow = true)
+                .someOrFail(BadRequestException(s"List item with '${request.listIri}' not found."))
+      project <- knoraProjectService
+                   .findById(request.projectIri)
+                   .someOrFail(NotFoundException.notFound(request.projectIri))
 
       // Update the list
-      changeNodeInfoSparqlString: String = sparql.admin.txt
-                                             .updateListInfo(
-                                               dataNamedGraph = dataNamedGraph,
-                                               nodeIri = changeNodeInfoRequest.listIri.value,
-                                               hasOldName = node.name.nonEmpty,
-                                               isRootNode = node.isInstanceOf[ListRootNodeADM],
-                                               maybeName = changeNodeInfoRequest.name.map(_.value),
-                                               projectIri = changeNodeInfoRequest.projectIri.value,
-                                               listClassIri = KnoraBase.ListNode,
-                                               maybeLabels = changeNodeInfoRequest.labels.map(_.value),
-                                               maybeComments = changeNodeInfoRequest.comments.map(_.value),
-                                             )
-                                             .toString
-    } yield changeNodeInfoSparqlString
+      modify = UpdateListInfoQuery
+                 .build(
+                   project,
+                   request.listIri,
+                   node.isInstanceOf[ListRootNodeADM],
+                   request.name,
+                   request.labels,
+                   request.comments,
+                 )
+                 .getQueryString
+      _ = Console.println(modify)
+    } yield modify
 
   /**
    * Helper method to get projectIri of a node.

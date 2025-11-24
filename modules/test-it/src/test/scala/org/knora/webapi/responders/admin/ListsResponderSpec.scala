@@ -16,7 +16,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.errors.UpdateNotPerformedException
-import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -128,20 +127,18 @@ object ListsResponderSpec extends E2EZSpec {
             assertTrue(
               list.children.isEmpty,
               list.listinfo.id == newListIri.get,
-              list.listinfo.name == Some("neuelistename"),
               list.listinfo.projectIri == imagesProjectIri.value,
-              list.listinfo.name == Some("neuelistename"),
+              list.listinfo.name.contains("neuelistename"),
               list.listinfo.labels.stringLiterals.size == 1,
-              list.listinfo.labels.stringLiterals.head == StringLiteralV2
-                .from(value = "Neue Liste", DE),
-              !list.listinfo.comments.stringLiterals.isEmpty,
+              list.listinfo.labels.stringLiterals.head == StringLiteralV2.from(value = "Neue Liste", DE),
+              list.listinfo.comments.stringLiterals.nonEmpty,
             )
           }
       },
       test("create a list with special characters in its labels") {
-        val labelWithSpecialCharacter   = "Neue \\\"Liste\\\""
-        val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
-        val nameWithSpecialCharacter    = "a new \\\"name\\\""
+        val labelWithSpecialCharacter   = """Neue "Liste""""
+        val commentWithSpecialCharacter = """Neue "Kommentar""""
+        val nameWithSpecialCharacter    = """a new "name""""
         val createReq = ListCreateRootNodeRequest(
           None,
           Comments.unsafeFrom(Seq(StringLiteralV2.from(commentWithSpecialCharacter, DE))),
@@ -152,31 +149,30 @@ object ListsResponderSpec extends E2EZSpec {
         listsResponder(_.listCreateRootNode(createReq, UUID.randomUUID)).map { actual =>
           assertTrue(
             actual.list.listinfo.projectIri == imagesProjectIri.value,
-            actual.list.listinfo.name == Some(Iri.fromSparqlEncodedString(nameWithSpecialCharacter)),
+            actual.list.listinfo.name.contains(nameWithSpecialCharacter),
             actual.list.listinfo.labels.stringLiterals.size == 1,
-            actual.list.listinfo.labels.stringLiterals.head.value ==
-              Iri.fromSparqlEncodedString(labelWithSpecialCharacter),
+            actual.list.listinfo.labels.stringLiterals.head.value == labelWithSpecialCharacter,
             actual.list.listinfo.labels.stringLiterals.head.languageOption.contains(DE),
             actual.list.listinfo.comments.stringLiterals.head.languageOption.contains(DE),
-            actual.list.listinfo.comments.stringLiterals.head.value ==
-              Iri.fromSparqlEncodedString(commentWithSpecialCharacter),
-            actual.list.children.size == 0,
+            actual.list.listinfo.comments.stringLiterals.head.value == commentWithSpecialCharacter,
+            actual.list.children.isEmpty,
           )
         }
       },
       test("update basic list information") {
+        val newName = """updated "name""""
         val newLabelValues = Seq(
-          StringLiteralV2.from("Neue geänderte Liste", DE),
+          StringLiteralV2.from("""Neue geänderte "Liste"""", DE),
           StringLiteralV2.from("Changed List", EN),
         )
         val newCommentValues = Seq(
-          StringLiteralV2.from("Neuer Kommentar", DE),
+          StringLiteralV2.from("""Neuer "Kommentar"""", DE),
           StringLiteralV2.from("New Comment", EN),
         )
         val changeReq = ListChangeRequest(
           newListIri.asListIri,
           imagesProjectIri,
-          name = Some(ListName.unsafeFrom("updated name")),
+          name = Some(ListName.unsafeFrom(newName)),
           labels = Some(Labels.unsafeFrom(newLabelValues)),
           comments = Some(Comments.unsafeFrom(newCommentValues)),
         )
@@ -186,7 +182,7 @@ object ListsResponderSpec extends E2EZSpec {
           .map(listInfo =>
             assertTrue(
               listInfo.projectIri == imagesProjectIri.value,
-              listInfo.name == Some("updated name"),
+              listInfo.name.contains(newName),
               listInfo.labels.stringLiterals.sorted == newLabelValues.sorted,
               listInfo.comments.stringLiterals.sorted == newCommentValues.sorted,
             ),
