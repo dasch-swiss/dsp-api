@@ -5,10 +5,8 @@
 
 package org.knora.webapi.slice.security
 
-import org.apache.commons.codec.binary.Base32
 import zio.*
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
@@ -33,17 +31,6 @@ enum AuthenticatorError extends Exception {
  */
 trait Authenticator {
 
-  /**
-   * Calculates the cookie name, where the external host and port are encoded as a base32 string
-   * to make the name of the cookie unique between environments.
-   *
-   * The default padding needs to be changed from '=' to '9' because '=' is not allowed inside the cookie!!!
-   * This also needs to be changed in all the places that base32 is used to calculate the cookie name, e.g., sipi.
-   *
-   * @return the calculated cookie name as [[String]]
-   */
-  def calculateCookieName(): String
-
   def invalidateToken(jwt: String): IO[AuthenticatorError, Unit]
   def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)]
   def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)]
@@ -56,7 +43,6 @@ object Authenticator {
 }
 
 final case class AuthenticatorLive(
-  private val appConfig: AppConfig,
   private val userService: UserService,
   private val jwtService: JwtService,
   private val scopeResolver: ScopeResolver,
@@ -107,20 +93,6 @@ final case class AuthenticatorLive(
     _ <- ZIO.fail(UserNotActive).when(!user.isActive)
     _ <- ZIO.fail(UserNotFound).when(KnoraUserRepo.builtIn.findOneBy(_.id.value == user.id).isDefined)
   } yield ()
-
-  /**
-   * Calculates the cookie name, where the external host and port are encoded as a base32 string
-   * to make the name of the cookie unique between environments.
-   *
-   * The default padding needs to be changed from '=' to '9' because '=' is not allowed inside the cookie!!!
-   * This also needs to be changed in all the places that base32 is used to calculate the cookie name, e.g., sipi.
-   *
-   * @return the calculated cookie name as [[String]]
-   */
-  override def calculateCookieName(): String = {
-    val base32 = new Base32('9'.toByte)
-    "KnoraAuthentication" + base32.encodeAsString(appConfig.knoraApi.externalKnoraApiHostPort.getBytes())
-  }
 
   override def invalidateToken(jwt: String): IO[AuthenticatorError, Unit] =
     authenticate(jwt).as(invalidTokens.put(jwt))

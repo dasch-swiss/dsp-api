@@ -1,5 +1,48 @@
 # Changelog
 
+## [33.0.0](https://github.com/dasch-swiss/dsp-api/compare/v32.7.0...v33.0.0) (2025-11-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **dsp-api:** Remove support for cookie authentication (DEV-5601) ([#3869](https://github.com/dasch-swiss/dsp-api/issues/3869))
+
+### Maintenances
+
+* Dependency updates ([#3863](https://github.com/dasch-swiss/dsp-api/issues/3863)) ([6d4f0a7](https://github.com/dasch-swiss/dsp-api/commit/6d4f0a72ca84f0a4fe66f186e8909d994c5a4e00))
+* **dsp-api:** Migrate change resource metadata query to rdf4j ([#3860](https://github.com/dasch-swiss/dsp-api/issues/3860)) ([4a89cf6](https://github.com/dasch-swiss/dsp-api/commit/4a89cf6c22cc1faea165b0af630ae6114aa355fb))
+* **dsp-api:** Migrate changeClassLabelsOrComments.scala.txt to rdf4j (DEV-5613) ([#3853](https://github.com/dasch-swiss/dsp-api/issues/3853)) ([4b2d00c](https://github.com/dasch-swiss/dsp-api/commit/4b2d00c24f4a38b48057e1df8d35242d43ef16d9))
+* **dsp-api:** Migrate changeOntologyMetadata.scala.txt to rdf4j ([#3855](https://github.com/dasch-swiss/dsp-api/issues/3855)) ([d1099f9](https://github.com/dasch-swiss/dsp-api/commit/d1099f91362b70fde8b01a9d6fed8b3065d71566))
+* **dsp-api:** Migrate changePropertyLabelsOrComments.scala.txt to rdf4j (DEV-5614) ([#3854](https://github.com/dasch-swiss/dsp-api/issues/3854)) ([1c2dd24](https://github.com/dasch-swiss/dsp-api/commit/1c2dd24b475c7e0f759becd5a005a1b741c82034))
+* **dsp-api:** Migrate checkIriExists.scala.txt to rdf4j (DEV-5612) ([#3852](https://github.com/dasch-swiss/dsp-api/issues/3852)) ([0205539](https://github.com/dasch-swiss/dsp-api/commit/02055396046565c8205a16ffe423c1907205adda))
+* **dsp-api:** Split StringLiteralV2 into sealed trait with/without language ([#3856](https://github.com/dasch-swiss/dsp-api/issues/3856)) ([2ac6efc](https://github.com/dasch-swiss/dsp-api/commit/2ac6efc3476b087656ad65cfc0d9256267448ef6))
+* Extract ReadResources (DEV-5467) ([#3845](https://github.com/dasch-swiss/dsp-api/issues/3845)) ([d9d5e94](https://github.com/dasch-swiss/dsp-api/commit/d9d5e94b2c0705780dbb82847c4d74bb975596c1))
+* Minor dependency updates ([#3862](https://github.com/dasch-swiss/dsp-api/issues/3862)) ([a027898](https://github.com/dasch-swiss/dsp-api/commit/a0278983b8c3e2e0e848dc28af2021e39c6536e0))
+
+
+### Documentation
+
+* make authorization descriptions more user-friendly ([#3859](https://github.com/dasch-swiss/dsp-api/issues/3859)) ([803d5b3](https://github.com/dasch-swiss/dsp-api/commit/803d5b3d2ee58f33675f94a8731bf0c4a70dae85))
+
+
+### Enhancements
+
+* **dsp-api:** Add GET /v3/:projectIri/resourcesPerOntology endpoint (DEV-5581) ([#3844](https://github.com/dasch-swiss/dsp-api/issues/3844)) ([2726f23](https://github.com/dasch-swiss/dsp-api/commit/2726f23ca3dcd9bf5a181f00bb3ad613788543d2))
+* **dsp-api:** Remove support for cookie authentication (DEV-5601) ([#3869](https://github.com/dasch-swiss/dsp-api/issues/3869)) ([f8914fc](https://github.com/dasch-swiss/dsp-api/commit/f8914fcdb2330c70327ffd382f2d574b4cfb5adf))
+* Replace representationClassIri with an enum and count only non deleted resources (DEV-5581) ([#3850](https://github.com/dasch-swiss/dsp-api/issues/3850)) ([e0abdce](https://github.com/dasch-swiss/dsp-api/commit/e0abdce390efd415fa3b28a300ebbfeb2c663a08))
+
+
+### Bug Fixes
+
+* ConstructResponseUtilV2: nestResources recursion limit + guarding detail (DEV-5619) ([#3864](https://github.com/dasch-swiss/dsp-api/issues/3864)) ([4593ada](https://github.com/dasch-swiss/dsp-api/commit/4593ada68d2c5c5dd058b251c22ad0947701cf11))
+* Do correct escaping in SPARQL query when creating a class to allow for hyphens in string literals (DEV-5579) ([#3849](https://github.com/dasch-swiss/dsp-api/issues/3849)) ([1090597](https://github.com/dasch-swiss/dsp-api/commit/1090597320d2f621bf1d186b044189a4d70ad69a))
+* Do correct escaping in SPARQL query when creating a property to allow for hyphens in string literals (DEV-5579) ([#3846](https://github.com/dasch-swiss/dsp-api/issues/3846)) ([feb0ccd](https://github.com/dasch-swiss/dsp-api/commit/feb0ccde76eee80da672c91fbfdf2ba668e17276))
+* Ensure the StringLiteralV2 JsonCodec de- and encodes without discriminator (DEV-5620) ([#3866](https://github.com/dasch-swiss/dsp-api/issues/3866)) ([3d7a58a](https://github.com/dasch-swiss/dsp-api/commit/3d7a58a2982d15fdff555d64ad1d4caf3ef7526c))
+* Export resources, many changes (DEV-5467) ([#3857](https://github.com/dasch-swiss/dsp-api/issues/3857)) ([3f74313](https://github.com/dasch-swiss/dsp-api/commit/3f7431370ed34c34ca564d6a1569d745ff4ce2f8))
+* Remove more quoting for ValueAsString and TextValueHasLanguage ([#3809](https://github.com/dasch-swiss/dsp-api/issues/3809)) ([2136faa](https://github.com/dasch-swiss/dsp-api/commit/2136faa2baf86c31e64e577c818a8b67928b0922))
+* Temporarily fix compilation in IntelliJ by duplicating GoldenTest ([#3847](https://github.com/dasch-swiss/dsp-api/issues/3847)) ([a54d23e](https://github.com/dasch-swiss/dsp-api/commit/a54d23e86b5e9df3e7d96de5a0ad9c974f45b62a))
+* Updated CODEOWNERS ([#3865](https://github.com/dasch-swiss/dsp-api/issues/3865)) ([42f8caf](https://github.com/dasch-swiss/dsp-api/commit/42f8caf647b1cb45ce061c85fd735b76f2ba77e2))
+
 ## [32.7.0](https://github.com/dasch-swiss/dsp-api/compare/v32.6.0...v32.7.0) (2025-11-06)
 
 

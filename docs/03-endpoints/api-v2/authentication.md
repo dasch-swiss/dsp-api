@@ -12,8 +12,7 @@ A client can obtain an *access token* by sending a POST request (e.g., `{"identi
 "password":"password_value"}`) to the **/v2/authentication** route with
 *identifier* and *password* in the body. The `identifier_type` can be `iri`, `email`, or `username`.
 If the credentials are valid, a [JSON WEB Token](https://jwt.io) (JWT) will be sent back in the
-response (e.g., `{"token": "eyJ0eXAiOiJ..."}`). Additionally, for web browser clients a session cookie
-containing the JWT token is also created, containing `KnoraAuthentication=eyJ0eXAiOiJ...`.
+response (e.g., `{"token": "eyJ0eXAiOiJ..."}`). 
 
 To **logout**, the client sends a DELETE request to the same route **/v2/authentication** 
 along with the *access token*. This will invalidate the access token,

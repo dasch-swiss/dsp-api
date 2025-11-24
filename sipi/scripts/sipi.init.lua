@@ -77,7 +77,7 @@ end
 -- Parameters:
 --    prefix: This is the prefix that is given in the IIIF URL
 --    identifier: The identifier for the image
---    cookie: The cookie that may be present
+--    cookie: The cookie that may be present, ignored for now
 --
 -- Returns:
 --    permission:
@@ -175,7 +175,7 @@ end
 --
 -- Parameters:
 --    identifier: The identifier for the image
---    cookie: The cookie that may be present
+--    cookie: The cookie that may be present // ignored for now
 --
 -- Returns:
 --    permission:
