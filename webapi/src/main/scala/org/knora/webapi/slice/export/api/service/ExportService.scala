@@ -111,24 +111,29 @@ final case class ExportService(
         ListMap.from(
           selectedProperties.flatMap { property =>
             val readValues = resource.values.get(property.smartIri.toInternalSchema).foldK
-            valueColumns(property, readValues.map(_.valueContent)).view.mapValues(vs => vs.mkString(" :: ")).toList
+            valueColumns(property, readValues.map(_.valueContent)).map { case (k, vs) => (k, vs.mkString(" :: ")) }
           },
         ),
     )
 
-  private def valueColumns(property: PropertyIri, vcs: Seq[ValueContentV2]): Map[String, List[String]] =
-    vcs.foldMap { vc =>
-      vc match
-        case gvc: GeonameValueContentV2 =>
-          Map(property.smartIri.toString -> List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
-        case lvc: LinkValueContentV2 =>
-          Map(
-            property.smartIri.toString           -> List("label to be"),
-            s"${property.smartIri.toString}_IRI" -> List(stringFormat(vc.valueHasString)),
-          )
-        case vc =>
-          Map(property.smartIri.toString -> List(stringFormat(vc.valueHasString)))
-    }
+  private def valueColumns(property: PropertyIri, vcs: Seq[ValueContentV2]): ListMap[String, List[String]] =
+    Some(vcs)
+      .filter(_.nonEmpty)
+      .map { vcs =>
+        vcs.map { vc =>
+          vc match
+            case gvc: GeonameValueContentV2 =>
+              ListMap(property.smartIri.toString -> List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
+            case lvc: LinkValueContentV2 =>
+              ListMap(
+                property.smartIri.toString           -> List(lvc.nestedResource.map(_.label).getOrElse("")),
+                s"${property.smartIri.toString}_IRI" -> List(stringFormat(vc.valueHasString)),
+              )
+            case vc =>
+              ListMap(property.smartIri.toString -> List(stringFormat(vc.valueHasString)))
+        }.fold(ListMap.empty)(_ ++ _)
+      }
+      .getOrElse(ListMap(property.smartIri.toString -> List()))
 
   private def stringFormat(s: String): String =
     s.replaceAll("\n", "\\\\n").replaceAll("\u001e", " ")
