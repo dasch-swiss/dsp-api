@@ -121,13 +121,3 @@ each transaction can modify only one resource
 DSP-API would then be unable to ensure that concurrent transactions do not
 interfere with each other.
 
-## General
-
-### Why should I use `0.0.0.0` instead of `localhost` when running the DSP stack locally?
-
-When running locally with the default configuration, if you want authorization cookies
-to be shared between `webapi` and `sipi`, then both `webapi` and `sipi` must be accessed
-over `0.0.0.0`, or otherwise, the cookie will not be sent to `sipi`.
-
-If no authorization cookie sharing is necessary, then both `0.0.0.0` and `localhost`will
-work.

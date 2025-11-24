@@ -162,10 +162,5 @@ routes = {
         method = 'GET',
         route = '/test_file_info',
         script = 'test_file_info.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_knora_session_cookie',
-        script = 'test_knora_session_cookie.lua'
     }
 }

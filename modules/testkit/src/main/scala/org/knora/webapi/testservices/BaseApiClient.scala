@@ -19,11 +19,9 @@ import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.ScopeResolver
 
 abstract class BaseApiClient(
-  private val authenticator: Authenticator,
   private val be: StreamBackend[Task, ZioStreams],
   private val jwtService: JwtService,
   private val scopeResolver: ScopeResolver,
@@ -31,7 +29,6 @@ abstract class BaseApiClient(
   protected def baseUrl: Uri
 
   protected lazy val backend: StreamBackend[Task, ZioStreams] = ResolveRelativeUrisBackend(be, baseUrl)
-  protected lazy val authCookieName: String                   = authenticator.calculateCookieName()
 
   protected lazy val asJsonLdDocument: ResponseAs[Either[String, JsonLDDocument]] = asString.map {
     case Right(value) => Try(JsonLDUtil.parseJsonLD(value)).toEither.left.map(_.getMessage)

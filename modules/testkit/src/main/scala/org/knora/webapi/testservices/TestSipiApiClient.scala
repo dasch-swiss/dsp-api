@@ -14,22 +14,20 @@ import org.knora.webapi.config.Sipi
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.ScopeResolver
 
 case class TestSipiApiClient(
-  private val authenticator: Authenticator,
   private val be: StreamBackend[Task, ZioStreams],
   private val jwtService: JwtService,
   private val scopeResolver: ScopeResolver,
   private val sipiConfig: Sipi,
-) extends BaseApiClient(authenticator, be, jwtService, scopeResolver) {
+) extends BaseApiClient(be, jwtService, scopeResolver) {
 
   protected override def baseUrl: Uri = uri"${sipiConfig.internalBaseUrl}"
 
   def getImage(shortcode: Shortcode, filename: String, user: User): Task[Response[Either[String, String]]] =
     jwtFor(user).flatMap { jwt =>
-      basicRequest.get(uri"/$shortcode/$filename/full/max/0/default.jpg").cookie(authCookieName, jwt).send(backend)
+      basicRequest.get(uri"/$shortcode/$filename/full/max/0/default.jpg").auth.bearer(jwt).send(backend)
     }
 
   def getFile(uri: String): Task[Response[Either[String, Array[Byte]]]] = {
