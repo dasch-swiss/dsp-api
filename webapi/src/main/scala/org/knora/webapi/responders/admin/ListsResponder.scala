@@ -654,29 +654,35 @@ final case class ListsResponder(
    * fails with a UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
    */
   def nodeInfoChangeRequest(
-    changeNodeRequest: ListChangeRequest,
+    request: ListChangeRequest,
     apiRequestID: UUID,
-  ): Task[NodeInfoGetResponseADM] = {
-    val nodeIri = changeNodeRequest.listIri.value
-    val nodeInfoChangeTask =
-      for {
-        update       <- getUpdateNodeInfoSparqlStatement(changeNodeRequest)
-        _            <- triplestore.query(update)
-        maybeNodeADM <- listNodeInfoGetADM(changeNodeRequest.listIri.value)
-        updated <-
-          maybeNodeADM match {
-            case Some(rootNode: ListRootNodeInfoADM)   => ZIO.succeed(RootNodeInfoGetResponseADM(rootNode))
-            case Some(childNode: ListChildNodeInfoADM) => ZIO.succeed(ChildNodeInfoGetResponseADM(childNode))
-            case _ =>
-              ZIO.fail(
-                UpdateNotPerformedException(
-                  s"Node $nodeIri was not updated. Please report this as a possible bug.",
-                ),
-              )
-          }
-      } yield updated
-    IriLocker.runWithIriLock(apiRequestID, nodeIri)(nodeInfoChangeTask)
-  }
+  ): Task[NodeInfoGetResponseADM] = IriLocker.runWithIriLock(apiRequestID, request.listIri)(for {
+    /* Verify that the node with Iri exists. */
+    _ <- listNodeGetADM(request.listIri.value, shallow = true)
+           .someOrFail(BadRequestException(s"List item with '${request.listIri}' not found."))
+    project <- knoraProjectService
+                 .findById(request.projectIri)
+                 .someOrFail(NotFoundException.notFound(request.projectIri))
+    _ <- request.name.map(ensureListNameInProjectDoesNotExist(_, project)).getOrElse(ZIO.unit)
+
+    // Update the list
+    update = Update(
+               UpdateListInfoQuery.build(project, request.listIri, request.name, request.labels, request.comments),
+             )
+    _            <- triplestore.query(update)
+    maybeNodeADM <- listNodeInfoGetADM(request.listIri.value)
+    updated <-
+      maybeNodeADM match {
+        case Some(rootNode: ListRootNodeInfoADM)   => ZIO.succeed(RootNodeInfoGetResponseADM(rootNode))
+        case Some(childNode: ListChildNodeInfoADM) => ZIO.succeed(ChildNodeInfoGetResponseADM(childNode))
+        case _ =>
+          ZIO.fail(
+            UpdateNotPerformedException(
+              s"Node ${request.listIri} was not updated. Please report this as a possible bug.",
+            ),
+          )
+      }
+  } yield updated)
 
   /**
    * Creates a new child node and appends it to an existing list node.
@@ -747,25 +753,11 @@ final case class ListsResponder(
   ): Task[NodeInfoGetResponseADM] =
     IriLocker.runWithIriLock(apiRequestID, listIri.value)(for {
       project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
-      update <- getUpdateNodeInfoSparqlStatement(
-                  ListChangeRequest(listIri, project.id, name = Some(changeNameReq.name)),
-                )
-      _       <- triplestore.query(update)
-      updated <- loadUpdatedListFromTriplestore(listIri)
+      updated <- nodeInfoChangeRequest(
+                   ListChangeRequest(listIri, project.id, name = Some(changeNameReq.name)),
+                   apiRequestID,
+                 )
     } yield updated)
-
-  private def loadUpdatedListFromTriplestore(listIri: ListIri) =
-    listNodeInfoGetADM(listIri.value).flatMap {
-      case Some(rootNode: ListRootNodeInfoADM) =>
-        ZIO.succeed(RootNodeInfoGetResponseADM(rootNode))
-      case Some(childNode: ListChildNodeInfoADM) =>
-        ZIO.succeed(ChildNodeInfoGetResponseADM(childNode))
-      case _ =>
-        ZIO.fail {
-          val msg = s"Node ${listIri.value} was not updated. Please report this as a possible bug."
-          UpdateNotPerformedException(msg)
-        }
-    }
 
   /**
    * Changes labels of the node (root or child)
@@ -786,11 +778,10 @@ final case class ListsResponder(
   ): Task[NodeInfoGetResponseADM] =
     IriLocker.runWithIriLock(apiRequestID, listIri)(for {
       project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
-      update <- getUpdateNodeInfoSparqlStatement(
-                  ListChangeRequest(listIri, project.id, labels = Some(changeNodeLabelsRequest.labels)),
-                )
-      _       <- triplestore.query(update)
-      updated <- loadUpdatedListFromTriplestore(listIri)
+      updated <- nodeInfoChangeRequest(
+                   ListChangeRequest(listIri, project.id, labels = Some(changeNodeLabelsRequest.labels)),
+                   apiRequestID,
+                 )
     } yield updated)
 
   /**
@@ -812,11 +803,10 @@ final case class ListsResponder(
   ): Task[NodeInfoGetResponseADM] =
     IriLocker.runWithIriLock(apiRequestID, listIri)(for {
       project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
-      update <- getUpdateNodeInfoSparqlStatement(
-                  ListChangeRequest(listIri, project.id, comments = Some(changeNodeCommentsRequest.comments)),
-                )
-      _       <- triplestore.query(update)
-      updated <- loadUpdatedListFromTriplestore(listIri)
+      updated <- nodeInfoChangeRequest(
+                   ListChangeRequest(listIri, project.id, comments = Some(changeNodeCommentsRequest.comments)),
+                   apiRequestID,
+                 )
     } yield updated)
 
   /**
@@ -1299,27 +1289,6 @@ final case class ListsResponder(
         DuplicateValueException(s"The name '$name' is already used by a list in project ${project.id}."),
       )
       .unit
-
-  /**
-   * Helper method to generate a sparql statement for updating node information.
-   *
-   * @param request the node information to change.
-   * @return a [[String]].
-   */
-  private def getUpdateNodeInfoSparqlStatement(request: ListChangeRequest): Task[Update] =
-    for {
-
-      /* Verify that the node with Iri exists. */
-      _ <- listNodeGetADM(request.listIri.value, shallow = true)
-             .someOrFail(BadRequestException(s"List item with '${request.listIri}' not found."))
-      project <- knoraProjectService
-                   .findById(request.projectIri)
-                   .someOrFail(NotFoundException.notFound(request.projectIri))
-      _ <- request.name.map(ensureListNameInProjectDoesNotExist(_, project)).getOrElse(ZIO.unit)
-
-      // Update the list
-      modify = UpdateListInfoQuery.build(project, request.listIri, request.name, request.labels, request.comments)
-    } yield Update(modify)
 
   /**
    * Helper method to get projectIri of a node.
