@@ -1,7 +1,13 @@
+/*
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.resources.repo
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
@@ -20,7 +26,6 @@ object UpdateListInfoQuery extends QueryBuilderHelper {
     labels: Option[Labels],
     comments: Option[Comments],
   ) = {
-    val graph              = graphIri(project)
     val node               = toRdfIri(nodeIri)
     val currentLabelsVar   = variable("currentLabels")
     val currentNameVar     = variable("currentName")
@@ -72,7 +77,7 @@ object UpdateListInfoQuery extends QueryBuilderHelper {
     Queries
       .MODIFY()
       .prefix(RDF.NS, RDFS.NS, KnoraBase.NS)
-      .`with`(graph)
+      .`with`(graphIri(project))
       .delete(deletePatterns: _*)
       .insert(insertPatterns: _*)
       .where(wherePatterns: _*)

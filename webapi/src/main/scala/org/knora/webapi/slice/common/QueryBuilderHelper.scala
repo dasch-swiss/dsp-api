@@ -16,6 +16,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfValue
 
 import java.time.Instant
+
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
