@@ -36,8 +36,6 @@ final case class ExportService(
   private val findAllResources: FindAllResourcesService,
   private val csvService: CsvService,
 ) {
-  type Resources = List[ReadResourceV2]
-
   def exportResources(
     project: KnoraProject,
     classIri: ResourceClassIri,
@@ -66,7 +64,7 @@ final case class ExportService(
   def toCsv(csv: ExportedCsv): Task[String] =
     ZIO.scoped(csvService.writeToString(csv.rows)(using csv.rowBuilder))
 
-  private def sort(resources: Resources): Resources =
+  private def sort(resources: List[ReadResourceV2]): List[ReadResourceV2] =
     resources.sortBy(_.label)
 
   // TODO: use the property/column information OntologyRepo to make additional columns for link values
