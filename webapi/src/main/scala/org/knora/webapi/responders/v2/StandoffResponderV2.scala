@@ -111,7 +111,7 @@ final case class StandoffResponderV2(
             ),
           )
 
-      resource = textRepresentationResponseV2.toResource(xslTransformationIri)
+      resource <- textRepresentationResponseV2.toResource(xslTransformationIri)
 
       _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.XSLTransformation) {
             throw BadRequestException(

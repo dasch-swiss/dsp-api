@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
+import zio.IO
 import zio.Task
 import zio.ZIO
 
@@ -826,29 +827,22 @@ case class ReadResourcesSequenceV2(
    * @throws ForbiddenException  if the user does not have permission to see the requested resource.
    * @throws BadRequestException if more than one resource was returned.
    */
-  @throws[NotFoundException]("if the resource is not found.")
-  @throws[ForbiddenException]("if the user does not have permission to see the requested resource.")
-  def toResource(requestedResourceIri: IRI): ReadResourceV2 = {
+  def toResource(requestedResourceIri: IRI): IO[RequestRejectedException, ReadResourceV2] =
     if (hiddenResourceIris.contains(requestedResourceIri)) {
-      throw ForbiddenException(s"You do not have permission to see resource <$requestedResourceIri>")
-    }
-
-    if (resources.isEmpty) {
-      throw NotFoundException(s"Expected <$requestedResourceIri>, but no resources were returned")
-    }
-
-    if (resources.size > 1) {
-      throw BadRequestException(s"Expected one resource, <$requestedResourceIri>, but more than one was returned")
-    }
-
-    if (resources.head.resourceIri != requestedResourceIri) {
-      throw NotFoundException(
-        s"Expected resource <$requestedResourceIri>, but <${resources.head.resourceIri}> was returned",
+      ZIO.fail(ForbiddenException(s"You do not have permission to see resource <$requestedResourceIri>"))
+    } else if (resources.isEmpty) {
+      ZIO.fail(NotFoundException(s"Expected <$requestedResourceIri>, but no resources were returned"))
+    } else if (resources.size > 1) {
+      ZIO.fail(BadRequestException(s"Expected one resource, <$requestedResourceIri>, but more than one was returned"))
+    } else if (resources.head.resourceIri != requestedResourceIri) {
+      ZIO.fail(
+        NotFoundException(
+          s"Expected resource <$requestedResourceIri>, but <${resources.head.resourceIri}> was returned",
+        ),
       )
+    } else {
+      ZIO.succeed(resources.head)
     }
-
-    resources.head
-  }
 
   /**
    * Checks that requested resources were found and that the user has permission to see them. If not:
