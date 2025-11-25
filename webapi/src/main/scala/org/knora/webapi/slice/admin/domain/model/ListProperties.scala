@@ -56,9 +56,11 @@ object ListProperties {
   object ListName extends StringValueCompanion[ListName] {
     def from(value: String): Either[String, ListName] =
       if value.isEmpty then Left("List name cannot be empty.")
-      else if value.contains('\r') || value.contains('\n') then Left("List name is invalid.")
+      else if hasLineBreaks(value) then Left("List name is invalid.")
       else Right(ListName(value))
   }
+
+  private def hasLineBreaks: String => Boolean = str => str.contains('\r') || str.contains('\n')
 
   final case class Position private (value: Int) extends IntValue {
     def >(other: Int): Boolean = value > other
@@ -75,18 +77,18 @@ object ListProperties {
   final case class Labels private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]]
 
   object Labels extends WithFrom[Seq[StringLiteralV2], Labels] {
-    def from(value: Seq[StringLiteralV2]): Either[String, Labels] =
-      if value.isEmpty then Left("At least one label needs to be supplied.")
-      else if value.exists(ll => ll.value.contains('\r') || ll.value.contains('\n')) then Left("Invalid label.")
-      else Right(Labels(value))
+    def from(values: Seq[StringLiteralV2]): Either[String, Labels] =
+      if values.isEmpty then Left("At least one label needs to be supplied.")
+      else if values.exists(lit => hasLineBreaks(lit.value)) then Left("Invalid label.")
+      else Right(Labels(values))
   }
 
   final case class Comments private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]]
 
   object Comments extends WithFrom[Seq[StringLiteralV2], Comments] {
-    def from(value: Seq[StringLiteralV2]): Either[String, Comments] =
-      if value.isEmpty then Left("At least one comment needs to be supplied.")
-      else if value.exists(cl => cl.value.contains('\r') || cl.value.contains('\n')) then Left("Invalid comment.")
-      else Right(Comments(value))
+    def from(values: Seq[StringLiteralV2]): Either[String, Comments] =
+      if values.isEmpty then Left("At least one comment needs to be supplied.")
+      else if values.exists(lit => hasLineBreaks(lit.value)) then Left("Invalid comment.")
+      else Right(Comments(values))
   }
 }
