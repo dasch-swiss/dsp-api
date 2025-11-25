@@ -126,7 +126,6 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
         } yield assertGolden(csv, "includeIrisFalse")
       },
     ).provide(
-      // almost all of these are for ReadResourcesService, which I would call a "little much", if I'm being prefectly honest
       ConstructResponseUtilV2.layer,
       AppConfig.layer,
       CacheManager.layer,
