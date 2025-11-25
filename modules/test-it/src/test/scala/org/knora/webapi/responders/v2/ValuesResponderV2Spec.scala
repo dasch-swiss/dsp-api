@@ -1713,7 +1713,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         valueContent = IntegerValueContentV2(ApiV2Complex, intValue),
       )
       valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID)).exit
-        .map(actual => assert(actual)(diesWithA[NotFoundException]))
+        .map(actual => assert(actual)(failsWithA[NotFoundException]))
     },
     test("not add a new value to a deleted resource") {
       val resourceIri    = "http://rdfh.ch/0803/9935159f67"
@@ -1731,7 +1731,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         ),
       )
       valuesResponder(_.createValueV2(createParams, incunabulaMemberUser, randomUUID)).exit
-        .map(actual => assert(actual)(diesWithA[NotFoundException]))
+        .map(actual => assert(actual)(failsWithA[NotFoundException]))
     },
     test("not add a new value if the resource's rdf:type is not correctly given") {
       val resourceIri = aThingIri
