@@ -103,7 +103,6 @@ object LayersLive { self =>
     ProjectExportStorageService &
     ProjectImportService &
     ReadResourcesService &
-    ReadResourcesServiceLive &
     RepositoryUpdater &
     ResourcesApiServerEndpoints &
     ResourcesRepo &
