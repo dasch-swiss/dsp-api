@@ -8,7 +8,7 @@ package org.knora.webapi.slice.api.v3.export_
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.{`var` as variable, *}
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
@@ -80,7 +80,7 @@ final case class FindAllResourcesServiceLive(
     Queries
       .SELECT(selectPattern)
       .where(resourceWhere, classConstraint, classSubclassOfResource)
-      .prefix(prefix(KB.NS), prefix(RDFS.NS))
+      .prefix(KB.NS, RDFS.NS)
   }
 }
 
