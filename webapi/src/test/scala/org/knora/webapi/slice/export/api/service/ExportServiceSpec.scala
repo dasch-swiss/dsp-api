@@ -20,7 +20,6 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.admin.ListsResponder
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -51,8 +50,7 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.builtInNa
 object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   // override val rewriteAll: Boolean = true
 
-  UnsafeZioRun.runOrThrow(ZIO.service[StringFormatter].provide(StringFormatter.test))(zio.Runtime.default)
-  given sf: StringFormatter = StringFormatter.getGeneralInstance
+  given sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   def resourceClassIri: ResourceClassIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/1612/Data#Class1")(using sf)
