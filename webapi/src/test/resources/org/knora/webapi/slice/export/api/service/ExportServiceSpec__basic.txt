@@ -1,4 +1,4 @@
-Resource IRI,Label,http://www.knora.org/ontology/1612/Data#Place,http://www.knora.org/ontology/1612/Data#LinkPropertyValue,http://www.knora.org/ontology/1612/Data#TextParagraph,http://www.knora.org/ontology/1612/Data#TextRich,http://www.knora.org/ontology/1612/Data#FunkList
+Resource IRI,Label,Place Label,Link Property Label,Link Property Label IRI,Text Paragraph Label,Text Rich Text Label,Funk List Label
 http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw,Resource0,,,,,
 http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA,Resource1,https://www.geonames.org/2661604,Resource2,http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w,Lazy\nFox\nJumped,The richest text…   … you can imagine. ,http://rdfh.ch/lists/1612/afx99e0aS0uGbsMaPhweoA
 http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ,Resource11,,,,,

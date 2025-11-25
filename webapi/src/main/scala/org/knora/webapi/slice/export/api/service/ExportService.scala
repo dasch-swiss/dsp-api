@@ -42,7 +42,7 @@ final case class ExportService(
     selectedProperties: List[PropertyIri],
     requestingUser: User,
     language: LanguageCode,
-    includeResourceIri: Boolean,
+    includeIris: Boolean,
   ): Task[ExportedCsv] =
     for {
       resourceIris <- findAllResources(project, classIri).map(_.map(_.toString))
@@ -53,11 +53,11 @@ final case class ExportService(
                          preview = false,
                          withDeleted = false,
                        )
-      headers <- rowHeaders(selectedProperties, language, includeResourceIri)
+      headers <- rowHeaders(selectedProperties, language, includeIris)
     } yield ExportedCsv(
       headers,
       sort(readResources.resources.toList).map(
-        exportSingleRow(_, selectedProperties, includeResourceIri, readResources.resourcesMap),
+        exportSingleRow(_, selectedProperties, includeIris, readResources.resourcesMap),
       ),
     )
 
@@ -67,53 +67,62 @@ final case class ExportService(
   private def sort(resources: List[ReadResourceV2]): List[ReadResourceV2] =
     resources.sortBy(_.label)
 
-  // TODO: use the property/column information OntologyRepo to make additional columns for link values
+  // NOTE: hidden invariant: if `includeIris`, then both rowHeaders and exportSingleRow must duplicate the IRI rows
   private def rowHeaders(
     selectedProperties: List[PropertyIri],
     language: LanguageCode,
-    includeResourceIri: Boolean,
+    includeIris: Boolean,
   ): Task[List[String]] =
-    propertyLabelsTranslated(selectedProperties, language).map(labels =>
-      Option.when(includeResourceIri)("Resource IRI").toList ++ ("Label" +: labels),
+    propertyLabelsTranslated(selectedProperties, language, includeIris).map(labels =>
+      "Resource IRI" +: "Label" +: labels,
     )
 
   private def propertyLabelsTranslated(
     propertyIris: List[PropertyIri],
     language: LanguageCode,
+    includeIris: Boolean,
   ): Task[List[String]] =
-    ZIO.foreach(propertyIris) { propertyIri =>
-      ontologyRepo.findProperty(propertyIri).flatMap { propertyInfo =>
-        propertyInfo match {
-          case Some(info) =>
-            iriConverter
-              .asSmartIri(OntologyConstants.Rdfs.Label)
-              .map(info.entityInfoContent.getPredicateObjectsWithLangs(_))
-              .map(labelsMap =>
-                labelsMap
-                  .get(language.value)
-                  .orElse(labelsMap.get(LanguageCode.EN.value))
-                  .orElse(labelsMap.values.headOption)
-                  .getOrElse(propertyIri.toString),
-              )
-          case None =>
-            ZIO.succeed(propertyIri.toString)
-        }
+    ZIO
+      .foreach(propertyIris) { propertyIri =>
+        ontologyRepo
+          .findProperty(propertyIri)
+          .flatMap { propertyInfo =>
+            propertyInfo match {
+              case Some(info) =>
+                iriConverter
+                  .asSmartIri(OntologyConstants.Rdfs.Label)
+                  .map(info.entityInfoContent.getPredicateObjectsWithLangs(_))
+                  .map(labelsMap =>
+                    labelsMap
+                      .get(language.value)
+                      .orElse(labelsMap.get(LanguageCode.EN.value))
+                      .orElse(labelsMap.values.headOption)
+                      .getOrElse(propertyIri.toString),
+                  )
+                  .map(name =>
+                    if (info.isLinkValueProp) List(name) ++ List(s"${name} IRI").filter(_ => includeIris)
+                    else List(name),
+                  )
+              case None =>
+                ZIO.succeed(List(propertyIri.toString))
+            }
+          }
       }
-    }
+      .map(_.flatten)
 
   private def exportSingleRow(
     resource: ReadResourceV2,
     selectedProperties: List[PropertyIri],
-    includeResourceIri: Boolean,
+    includeIris: Boolean,
     resources: Map[IRI, ReadResourceV2],
   ): ExportedResource =
     ExportedResource(
-      ListMap.from(Option.when(includeResourceIri)("Resource IRI" -> resource.resourceIri.toString)) ++
+      ListMap("Resource IRI" -> resource.resourceIri.toString) ++
         ListMap("Label" -> resource.label) ++
         ListMap.from(
           selectedProperties.flatMap { property =>
             val readValues = resource.values.get(property.smartIri.toInternalSchema).foldK
-            valueColumns(property, readValues.map(_.valueContent), resources).map { case (k, vs) =>
+            valueColumns(property, readValues.map(_.valueContent), includeIris, resources).map { case (k, vs) =>
               (k, vs.mkString(" :: "))
             }
           },
@@ -123,6 +132,7 @@ final case class ExportService(
   private def valueColumns(
     property: PropertyIri,
     vcs: Seq[ValueContentV2],
+    includeIris: Boolean,
     resources: Map[IRI, ReadResourceV2],
   ): ListMap[String, List[String]] =
     Some(vcs)
@@ -133,11 +143,12 @@ final case class ExportService(
             case gvc: GeonameValueContentV2 =>
               ListMap(property.smartIri.toString -> List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
             case lvc: LinkValueContentV2 =>
-              val resource = lvc.nestedResource.orElse(resources.get(lvc.referredResourceIri))
-              ListMap(
-                property.smartIri.toString           -> List(resource.map(_.label).getOrElse("")),
-                s"${property.smartIri.toString}_IRI" -> List(stringFormat(vc.valueHasString)),
-              )
+              val resource    = lvc.nestedResource.orElse(resources.get(lvc.referredResourceIri))
+              val propertyIri = property.smartIri.toString
+              List[ListMap[String, List[String]]](
+                ListMap(propertyIri -> List(resource.map(_.label).getOrElse(""))),
+                ListMap(s"${propertyIri}_IRI" -> List(stringFormat(vc.valueHasString))).filter(_ => includeIris),
+              ).fold(ListMap.empty)(_ ++ _)
             case vc =>
               ListMap(property.smartIri.toString -> List(stringFormat(vc.valueHasString)))
         }.fold(ListMap.empty)(_ ++ _)

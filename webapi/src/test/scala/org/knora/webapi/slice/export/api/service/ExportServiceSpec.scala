@@ -39,12 +39,14 @@ import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.CsvService
-import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
+import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.builtInNamedGraphs
 
 object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   override val rewriteAll: Boolean = true
@@ -58,7 +60,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   val user       = TestDataFactory.User.rootUser
   val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw")
 
-  val dataSets = List(
+  val dataSets: Set[RdfDataObject] = builtInNamedGraphs ++ List(
     RdfDataObject(
       path = "webapi/src/test/resources/org/knora/webapi/slice/export/api/service/ExportServiceSpec-1612-onto.ttl",
       name = "http://www.knora.org/ontology/1612/Data",
@@ -67,26 +69,18 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       path = "webapi/src/test/resources/org/knora/webapi/slice/export/api/service/ExportServiceSpec-1612-data.ttl",
       name = "http://www.knora.org/data/1612/funk",
     ),
-    // based on test_data/project_data/admin-data-minimal.ttl
     RdfDataObject(
       path = "webapi/src/test/resources/org/knora/webapi/slice/export/api/service/ExportServiceSpec-1612-admin.ttl",
       name = "http://www.knora.org/data/admin",
     ),
-    RdfDataObject(
-      path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
-      name = "http://www.knora.org/ontology/knora-admin",
-    ),
-    RdfDataObject( // for a good measure
-      path = "test_data/project_data/permissions-data.ttl",
-      name = "http://www.knora.org/data/permissions",
-    ),
-  )
+  ).toSet
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("ExportServiceSpec")(
       test("basic") {
         for {
-          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets, false))
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
           exportedCsv <-
@@ -102,10 +96,34 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               ),
               user,
               LanguageCode.EN,
-              includeResourceIri = true,
+              includeIris = true,
             )
           csv <- exportService.toCsv(exportedCsv)
         } yield assertGolden(csv, "basic")
+      },
+      test("with includeIris = false") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          exportedCsv <-
+            exportService.exportResources(
+              project,
+              resourceClassIri,
+              List(
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#Place")),
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextParagraph")),
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextRich")),
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#FunkList")),
+              ),
+              user,
+              LanguageCode.DE,
+              includeIris = false,
+            )
+          csv <- exportService.toCsv(exportedCsv)
+        } yield assertGolden(csv, "includeIrisFalse")
       },
     ).provide(
       // almost all of these are for ReadResourcesService, which I would call a "little much", if I'm being prefectly honest
@@ -121,7 +139,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       KnoraProjectService.layer,
       LicenseRepo.layer,
       MessageRelayLive.layer,
-      OntologyCacheFake.emptyCache,
+      OntologyCacheLive.layer,
       OntologyRepoLive.layer,
       ProjectService.layer,
       ReadResourcesServiceLive.layer,

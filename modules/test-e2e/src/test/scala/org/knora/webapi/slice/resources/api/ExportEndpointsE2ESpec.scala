@@ -39,7 +39,7 @@ object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
       },
       test("with resource IRI included") {
         TestExportApiClient
-          .postExportResources(request.copy(includeResourceIri = true), anythingAdminUser)
+          .postExportResources(request.copy(includeIris = true), anythingAdminUser)
           .flatMap(_.assert200)
           .map(assertGolden(_, "withResourceIri"))
       },
