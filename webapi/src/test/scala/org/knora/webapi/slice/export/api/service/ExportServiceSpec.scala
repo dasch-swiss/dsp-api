@@ -49,7 +49,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.builtInNamedGraphs
 
 object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
-  override val rewriteAll: Boolean = true
+  // override val rewriteAll: Boolean = true
 
   UnsafeZioRun.runOrThrow(ZIO.service[StringFormatter].provide(StringFormatter.test))(zio.Runtime.default)
   given sf: StringFormatter = StringFormatter.getGeneralInstance
