@@ -23,6 +23,6 @@ object AskListNameInProjectExistsQuery extends QueryBuilderHelper {
       .andHas(KnoraBase.attachedToProject, toRdfIri(projectIri))
       .andHas(PropertyPathBuilder.of(KnoraBase.hasSubListNode).zeroOrMore().build(), nodeVar)
       .and(nodeVar.has(KnoraBase.listNodeName, name.value))
-    Ask(s"ASK{ ${askPattern.getQueryString} }")
+    Ask(s"ASK ${askPattern.getQueryString} ")
   }
 }
