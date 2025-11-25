@@ -822,10 +822,10 @@ case class ReadResourcesSequenceV2(
    * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource.
    *
    * @param requestedResourceIri the IRI of the expected resource.
-   * @return the resource.
-   * @throws NotFoundException   if the resource is not found.
-   * @throws ForbiddenException  if the user does not have permission to see the requested resource.
-   * @throws BadRequestException if more than one resource was returned.
+   * @return the resource or fails with an exception:
+   *   NotFoundException   -> if the resource is not found.
+   *   ForbiddenException  -> if the user does not have permission to see the requested resource.
+   *   BadRequestException -> if more than one resource was returned.
    */
   def toResource(requestedResourceIri: IRI): IO[RequestRejectedException, ReadResourceV2] =
     if (hiddenResourceIris.contains(requestedResourceIri)) {
