@@ -15,6 +15,9 @@ import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
+import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
@@ -25,9 +28,6 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
-import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 
 final case class ExportService(
   private val iriConverter: IriConverter,
