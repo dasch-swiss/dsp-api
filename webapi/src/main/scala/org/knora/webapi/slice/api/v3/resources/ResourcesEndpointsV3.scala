@@ -6,22 +6,27 @@
 package org.knora.webapi.slice.api.v3.resources
 
 import sttp.tapir.*
+import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
 
+import org.knora.webapi.slice.api.PageAndSize
+import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.LanguageStringDto
 import org.knora.webapi.slice.api.v3.OntologyAndResourceClasses
 import org.knora.webapi.slice.api.v3.OntologyDto
 import org.knora.webapi.slice.api.v3.ResourceClassAndCountDto
 import org.knora.webapi.slice.api.v3.ResourceClassDto
+import org.knora.webapi.slice.api.v3.ResourceResponseDto
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
+import org.knora.webapi.slice.resources.api.model.IriDto
 
 class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) {
 
-  val getResourcesResourcesPerOntology = baseEndpoint.publicEndpoint.get
+  val getResourcesResourcesPerOntology = baseEndpoint.withUserEndpoint.get
     .in(ApiV3.V3ProjectsProjectIri / "resourcesPerOntology")
     .out(
       jsonBody[List[OntologyAndResourceClasses]].example(
@@ -62,6 +67,11 @@ class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) {
         "Note that the `itemCount` includes only non-deleted resources and it includes resources even if the current user may not be permitted to see some of them, for performance reasons.",
     )
 
+  val getResources = baseEndpoint.withUserEndpoint.get
+    .in(ApiV3.V3ProjectsProjectIri / "resources")
+    .in(query[IriDto]("resourceClassIri").description("The IRI of the resource class to filter by"))
+    .in(PageAndSize.queryParams())
+    .out(jsonBody[PagedResponse[ResourceResponseDto]])
 }
 
 object ResourcesEndpointsV3 {

@@ -13,8 +13,9 @@ import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.core.From
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
@@ -35,11 +36,23 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupName
+import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.KnownUser
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.ProjectMember
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.UnknownUser
+import org.knora.webapi.slice.api.PageAndSize
+import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -48,6 +61,7 @@ import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.resources.repo.SparqlPermissionFilter
 import org.knora.webapi.slice.resources.repo.model.FileValueTypeSpecificInfo
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
@@ -63,6 +77,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+
+final case class ResourceIriAndLabel(iri: ResourceIri, label: String)
 
 trait ResourcesRepo {
   def createNewResource(
@@ -81,7 +97,14 @@ trait ResourcesRepo {
   final def findDeletedById(id: ResourceIri): Task[Option[DeletedResource]] =
     findById(id).map(_.collect { case r: DeletedResource => r })
 
-  def countByResourceClass(resourceClassIri: ResourceClassIri, project: KnoraProject): Task[Int]
+  def countByResourceClass(resourceClassIri: ResourceClassIri, project: KnoraProject, user: User): Task[Int]
+
+  def findResourcesByResourceClassIri(
+    resourceClassIri: ResourceClassIri,
+    project: KnoraProject,
+    user: User,
+    pageAndSize: PageAndSize,
+  ): Task[PagedResponse[ResourceIriAndLabel]]
 }
 
 sealed trait ResourceModel {
@@ -285,14 +308,106 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
       )
   }
 
-  def countByResourceClass(iri: ResourceClassIri, project: KnoraProject): Task[Int] = {
-    val s      = variable("s")
-    val select = SparqlBuilder.select(Expressions.count(s).as(variable("count")))
-    val from   = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(project)))
-    val where  = List(s.isA(toRdfIri(iri)), GraphPatterns.filterNotExists(toRdfIri(iri).has(KB.isDeleted, true)))
-    val query  = Queries.SELECT(select).from(from).where(where: _*)
+  override def countByResourceClass(iri: ResourceClassIri, project: KnoraProject, user: User): Task[Int] = {
+    val s                = variable("s")
+    val permVar          = variable("permissions")
+    val select           = SparqlBuilder.select(Expressions.count(s).as(variable("count")))
+    val resourceClassIri = toRdfIri(iri)
+    val resourcePattern  = s.isA(resourceClassIri).andHas(KB.hasPermissions, permVar)
+    val where = buildPermissionPattern(user, permVar, project)
+      .map(_.and(resourcePattern))
+      .getOrElse(resourcePattern)
+    val query = Queries
+      .SELECT(select)
+      .from(fromDataGraph(project))
+      .where(where, filterNotExistsIsDeleted(resourceClassIri))
     triplestore.select(query).map(_.getFirst("count").map(_.toInt).getOrElse(0))
   }
+
+  override def findResourcesByResourceClassIri(
+    resourceClassIri: ResourceClassIri,
+    project: KnoraProject,
+    user: User,
+    pageAndSize: PageAndSize,
+  ): Task[PagedResponse[ResourceIriAndLabel]] = {
+
+    val resVar   = variable("resourceIri")
+    val resLabel = variable("resourceLabel")
+    val permVar  = variable("permissions")
+
+    val resourcePatternCount = resVar
+      .isA(toRdfIri(resourceClassIri))
+      .andHas(KB.hasPermissions, permVar)
+    val wherePatternCount =
+      buildPermissionPattern(user, permVar, project).map(_.and(resourcePatternCount)).getOrElse(resourcePatternCount)
+    val countQuery = Queries
+      .SELECT(Expressions.count(resVar).as(variable("totalCount")))
+      .prefix(RDFS.NS, KB.NS)
+      .from(fromDataGraph(project))
+      .where(wherePatternCount, filterNotExistsIsDeleted(resVar))
+
+    val resourcePatternSelect = resVar
+      .isA(toRdfIri(resourceClassIri))
+      .andHas(RDFS.LABEL, resLabel)
+      .andHas(KB.hasPermissions, permVar)
+    val wherePatternSelect =
+      buildPermissionPattern(user, permVar, project)
+        .map(_.and(resourcePatternSelect))
+        .getOrElse(resourcePatternSelect)
+
+    val selectQuery = Queries
+      .SELECT(resVar, resLabel)
+      .prefix(RDFS.NS, KB.NS)
+      .from(fromDataGraph(project))
+      .where(wherePatternSelect, filterNotExistsIsDeleted(resVar))
+      .orderBy(resLabel.asc())
+      .limit(pageAndSize.size)
+      .offset((pageAndSize.page - 1) * pageAndSize.size)
+
+    for {
+      _               <- ZIO.logError("COUNT:\n" + countQuery.getQueryString)
+      _               <- ZIO.logError("SELECT:\n" + selectQuery.getQueryString)
+      totalCountFork  <- triplestore.select(countQuery).fork
+      resourcesResult <- triplestore.select(selectQuery)
+      totalCount      <- totalCountFork.join.map(_.getFirstInt("totalCount").getOrElse(0))
+      result = resourcesResult.map(row =>
+                 ResourceIriAndLabel(
+                   ResourceIri.unsafeFrom(row.getRequired("resourceIri").toSmartIri),
+                   row.getRequired("resourceLabel"),
+                 ),
+               )
+    } yield PagedResponse.from(result, totalCount, pageAndSize)
+  }
+
+  private def buildPermissionPattern(
+    user: User,
+    variable: Variable,
+    prj: KnoraProject,
+  ): Option[GraphPattern] =
+    if user.isSystemUser || user.isSystemAdmin || user.isProjectAdmin(prj.id) then None
+    else
+      val builtInGroups: Set[KnoraGroup] =
+        if user.isAnonymousUser then Set(UnknownUser)
+        else if user.isProjectMember(prj.id) then Set(ProjectMember, KnownUser)
+        else Set(KnownUser)
+
+      val groupsForPermissions: Set[KnoraGroup] = builtInGroups ++ user.groups.map(toKnoraGroup)
+
+      val expressions = ObjectAccess.all.flatMap(oa =>
+        groupsForPermissions.map(SparqlPermissionFilter.buildSparqlRegex(variable, oa, _)),
+      )
+      val pattern = expressions.reduce(Expressions.or(_, _))
+
+      Some(GraphPatterns.and().filter(pattern))
+
+  private def toKnoraGroup(group: Group): KnoraGroup = KnoraGroup(
+    GroupIri.unsafeFrom(group.id),
+    GroupName.unsafeFrom(group.name),
+    GroupDescriptions.unsafeFrom(group.descriptions),
+    GroupStatus.from(group.status),
+    group.project.map(_.id),
+    GroupSelfJoin.from(group.selfjoin),
+  )
 }
 
 object ResourcesRepoLive {

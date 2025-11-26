@@ -22,7 +22,9 @@ object Pagination {
     Pagination(pageAndSize.size, totalItems, totalPages, pageAndSize.page)
 }
 
-final case class PagedResponse[A] private (data: Seq[A], pagination: Pagination)
+final case class PagedResponse[A] private (data: Seq[A], pagination: Pagination) {
+  def mapData[B](f: A => B): PagedResponse[B] = PagedResponse(data.map(f), pagination)
+}
 object PagedResponse {
   given [A: JsonCodec]: JsonCodec[PagedResponse[A]] = DeriveJsonCodec.gen[PagedResponse[A]]
   inline given [A]: Schema[PagedResponse[A]] = Schema

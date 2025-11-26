@@ -11,6 +11,7 @@ enum V3ErrorCode:
   case project_not_found
   case ontology_not_found
   case resourceClass_not_found
+  case invalid_resourceClassIri
 
 object V3ErrorCode:
   given JsonCodec[V3ErrorCode] = JsonCodec.string

@@ -17,6 +17,7 @@ import org.knora.webapi.slice.api.v3.ontology.OntologyRestServiceV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesEndpointsV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesRestServiceV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpointsV3
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.security.Authenticator
@@ -27,6 +28,7 @@ object ApiV3Module {
     // format: off
     Authenticator &
     ExportServerEndpoints &
+    IriConverter &
     KnoraProjectService &
     OntologyRepo &
     ResourcesRepo &
