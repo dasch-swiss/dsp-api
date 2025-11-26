@@ -1166,7 +1166,7 @@ final case class ValuesResponderV2(
                         schemaOptions = Set.empty,
                         requestingUser = KnoraSystemInstances.Users.SystemUser,
                       )
-                      .map(_.toResource(deleteValue.resourceIri.toString))
+                      .flatMap(_.toResource(deleteValue.resourceIri.toString))
 
     // Check that the resource belongs to the class that the client submitted.
     _ <- ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toInternalSchema) {
@@ -1552,7 +1552,8 @@ final case class ValuesResponderV2(
       // Run the query.
       query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
       searchResponse <- searchResponderV2.gravsearchV2(query, SchemaRendering.default, requestingUser)
-    } yield searchResponse.toResource(resourceIri)
+      result         <- searchResponse.toResource(resourceIri)
+    } yield result
 
   /**
    * Checks that a link value points to a resource with the correct type for the link property's object class constraint.
@@ -1582,7 +1583,7 @@ final case class ValuesResponderV2(
       resourcePreviewResponse <- messageRelay.ask[ReadResourcesSequenceV2](resourcePreviewRequest)
 
       // If we get a resource, we know the user has permission to view it.
-      resource = resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
+      resource <- resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
 
       // Ask the ontology responder whether the resource's class is a subclass of the link property's object class constraint.
       subClassRequest = CheckSubClassRequestV2(
