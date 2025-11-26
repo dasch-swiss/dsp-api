@@ -19,7 +19,7 @@ import scala.util.chaining.scalaUtilChainingOps
  *
  * Use git diff or the test output to inspect the differences and either update the standard or update the code.
  *
- * Beware: running sbt tests with the "~" prefix and rewrite = true will introduce an indefinite loop.
+ * Beware: a test run with the "~" prefix in sbt and "rewrite = true" will loop, if the output keeps changing.
  */
 trait GoldenTest {
   val rewriteAll: Boolean = false
@@ -33,16 +33,20 @@ trait GoldenTest {
   ): TestResult = {
     val (name, store) = GoldenTest.goldenPath(suffix)
     val path          = Paths.get(store)
+    val expected: Option[String] = Option.when(Files.exists(path)) {
+      new String(Files.readAllBytes(path), "UTF-8")
+    }
 
     if (rewrite || rewriteAll) {
-      Files.write(path, actual.getBytes("UTF-8"))
+      // NOTE: this should prevent infinite loops, if the output is stable
+      if (expected != Some(actual)) Files.write(path, actual.getBytes("UTF-8")): Unit
+
       assertNever(s"[GoldenTest] Rewritten: $path")
     } else {
-      if (!Files.exists(path)) {
+      if (expected.isEmpty) {
         assertNever(s"[GoldenTest] File not found: $path (to create, set rewrite = true)")
       } else {
-        val expected = new String(Files.readAllBytes(path), "UTF-8")
-        assertTrue(actual == expected).label(s"[GoldenTest] Failed for $name (to override, set rewrite = true)")
+        assertTrue(expected == Some(actual)).label(s"[GoldenTest] Failed for $name (to override, set rewrite = true)")
       }
     }
   }
@@ -51,18 +55,20 @@ trait GoldenTest {
 object GoldenTest {
   inline def goldenPath(suffix: String): (String, String) = ${ goldenPathImpl('suffix) }
 
+  // NOTE: the suffixExpr.valueOrAbort was failing in the IDE, so ALL `.get`s were eliminated in the macro code
+
   private def goldenPathImpl(suffixExpr: Expr[String])(using q: Quotes) =
     import q.reflect.*
 
-    val absPath: Path = Position.ofMacroExpansion.sourceFile.getJPath.get
+    val absPath: Option[Path] = Position.ofMacroExpansion.sourceFile.getJPath
 
-    val suffix          = suffixExpr.valueOrAbort
+    val suffix          = suffixExpr.value.getOrElse("")
     val suffixDefaulted = if (suffix == "") "" else s"__$suffix"
 
-    val baseName = absPath.getFileName.toString.stripSuffix(".scala") // Demo
+    val baseName = absPath.map(_.getFileName.toString).getOrElse("").stripSuffix(".scala") // Demo
     val name     = s"${baseName}${suffixDefaulted}"
     val outPath =
-      s"${absPath.getParent}/$name.txt"
+      s"${absPath.map(_.getParent).getOrElse("")}/$name.txt"
         .pipe(_.replace("/src/test/scala/", "/src/test/resources/"))
 
     Files.createDirectories(Paths.get(outPath).getParent)
