@@ -219,11 +219,6 @@ function file_pre_flight(identifier, cookie)
 
     local filepath_preview = find_file(file_name_preview, shortcode)
     log("file_pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
-    if shortcode == "082A" then
-        -- SVA / 082A allows file access no matter what permissions are set!
-        log("file_pre_flight - file requested for 082A: " .. identifier, server.loglevel.LOG_WARNING)
-        return "allow", filepath
-    end
     local jwt_raw = auth_get_jwt_raw()
     local permission_info = get_permission_on_file(shortcode, file_name, jwt_raw)
     if permission_info == nil then
