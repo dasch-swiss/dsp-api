@@ -33,7 +33,7 @@ final case class ExportService(
   private val iriConverter: IriConverter,
   private val ontologyRepo: OntologyRepo,
   private val readResources: ReadResourcesService,
-  private val findAllResources: FindAllResourcesService,
+  private val findResources: FindResourcesService,
   private val csvService: CsvService,
 ) {
   def exportResources(
@@ -45,7 +45,7 @@ final case class ExportService(
     includeIris: Boolean,
   ): Task[ExportedCsv] =
     for {
-      resourceIris <- findAllResources(project, classIri).map(_.map(_.toString))
+      resourceIris <- findResources.findResources(project, classIri).map(_.map(_.toString))
       readResources <- readResources.readResourcesSequence(
                          resourceIris = resourceIris,
                          targetSchema = ApiV2Complex,

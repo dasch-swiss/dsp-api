@@ -130,7 +130,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       CsvService.layer,
       emptyDataset,
       ExportService.layer,
-      FindAllResourcesService.layer,
+      FindResourcesService.layer,
       IriConverter.layer,
       KnoraProjectRepoLive.layer,
       KnoraProjectService.layer,

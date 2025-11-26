@@ -43,7 +43,7 @@ object ExportApiModule { self =>
       ExportRestService.layer,
       ExportServerEndpoints.layer,
       ExportService.layer,
-      FindAllResourcesService.layer,
+      FindResourcesService.layer,
       V3BaseEndpoint.layer,
     )
 }
