@@ -5,9 +5,13 @@
 
 package org.knora.webapi.slice.api.v3.resources
 
+import sttp.model.StatusCode
 import sttp.tapir.*
+import sttp.tapir.EndpointIO.Example
 import sttp.tapir.json.zio.jsonBody
+import zio.Chunk
 import zio.ZLayer
+
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.ErrorDetail
 import org.knora.webapi.slice.api.v3.LanguageStringDto
@@ -21,9 +25,6 @@ import org.knora.webapi.slice.api.v3.V3ErrorCode
 import org.knora.webapi.slice.api.v3.V3ErrorCode.project_not_found
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
-import sttp.model.StatusCode
-import sttp.tapir.EndpointIO.Example
-import zio.Chunk
 
 trait EndpointHelper:
   import sttp.tapir.generic.auto._

@@ -15,6 +15,7 @@ import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
 import zio.*
 import zio.json.JsonEncoder
+
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.security.Authenticator
