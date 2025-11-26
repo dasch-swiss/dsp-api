@@ -17,6 +17,7 @@ import zio.json.interop.refined.*
 
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.*
 
@@ -26,7 +27,6 @@ case class AuthenticationEndpointsV2(
 ) {
 
   private val basePath: EndpointInput[Unit] = "v2" / "authentication"
-  private val cookieName                    = authenticator.calculateCookieName()
 
   val getV2Authentication = baseEndpoints.securedEndpoint.get
     .in(basePath)
@@ -35,14 +35,11 @@ case class AuthenticationEndpointsV2(
   val postV2Authentication = baseEndpoints.publicEndpoint.post
     .in(basePath)
     .in(jsonBody[LoginPayload])
-    .out(setCookie(cookieName))
     .out(jsonBody[TokenResponse])
 
   val deleteV2Authentication = baseEndpoints.publicEndpoint.delete
     .in(basePath)
     .in(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
-    .in(cookie[Option[String]](cookieName))
-    .out(setCookie(cookieName))
     .out(jsonBody[LogoutResponse])
 
   val getV2Login = baseEndpoints.publicEndpoint.get
@@ -52,7 +49,6 @@ case class AuthenticationEndpointsV2(
   val postV2Login = baseEndpoints.publicEndpoint.post
     .in("v2" / "login")
     .in(formBody[LoginForm])
-    .out(setCookie(cookieName))
     .out(jsonBody[TokenResponse])
 }
 
@@ -67,7 +63,8 @@ object AuthenticationEndpointsV2 {
 
   final case class TokenResponse(token: String)
   object TokenResponse {
-    given JsonCodec[TokenResponse] = DeriveJsonCodec.gen[TokenResponse]
+    given JsonCodec[TokenResponse]       = DeriveJsonCodec.gen[TokenResponse]
+    def apply(token: Jwt): TokenResponse = TokenResponse(token.jwtString)
   }
 
   final case class LogoutResponse(status: Int, message: String)

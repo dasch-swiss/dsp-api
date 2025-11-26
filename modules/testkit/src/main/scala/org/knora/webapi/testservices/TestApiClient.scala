@@ -19,7 +19,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
@@ -28,11 +27,10 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 
 final case class TestApiClient(
   private val apiConfig: KnoraApi,
-  private val authenticator: Authenticator,
   private val be: StreamBackend[Task, ZioStreams],
   private val jwtService: JwtService,
   private val scopeResolver: ScopeResolver,
-) extends BaseApiClient(authenticator, be, jwtService, scopeResolver) {
+) extends BaseApiClient(be, jwtService, scopeResolver) {
 
   protected override val baseUrl = uri"${apiConfig.externalKnoraApiBaseUrl}"
 

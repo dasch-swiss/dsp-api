@@ -462,14 +462,17 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
     ),
   )
 
-  private def getResource(resourceIri: IRI) = resourceResponder(
-    _.getResourcesWithDeletedResource(
-      resourceIris = Seq(resourceIri),
-      targetSchema = ApiV2Complex,
-      schemaOptions = Set.empty,
-      requestingUser = anythingUser2,
-    ),
-  ).map(_.toResource(resourceIri).toOntologySchema(ApiV2Complex))
+  private def getResource(resourceIri: IRI) = for {
+    getResult <- resourceResponder(
+                   _.getResourcesWithDeletedResource(
+                     resourceIris = Seq(resourceIri),
+                     targetSchema = ApiV2Complex,
+                     schemaOptions = Set.empty,
+                     requestingUser = anythingUser2,
+                   ),
+                 )
+    result <- getResult.toResource(resourceIri)
+  } yield result.toOntologySchema(ApiV2Complex)
 
   private def checkCreateResource(
     inputResourceIri: IRI,
@@ -848,7 +851,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <-
             resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
-          actualFromResponse = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+          actualFromResponse <- response.toResource(resourceIri).map(_.toOntologySchema(ApiV2Complex))
           _ <- checkCreateResource(
                  inputResourceIri = resourceIri,
                  inputResource = inputResource,
@@ -2068,7 +2071,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           response <-
             resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
           // Check that the response contains the correct metadata.
-          actualFromResponse = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+          actualFromResponse <- response.toResource(resourceIri).map(_.toOntologySchema(ApiV2Complex))
           _ <- checkCreateResource(
                  inputResourceIri = resourceIri,
                  inputResource = inputResource,

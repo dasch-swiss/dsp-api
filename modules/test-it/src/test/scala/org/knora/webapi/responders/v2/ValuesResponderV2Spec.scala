@@ -178,10 +178,11 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       )
       .toString
     for {
-      query  <- ZIO.attempt(GravsearchParser.parseQuery(gravsearchQuery))
-      schema  = SchemaRendering.apiV2SchemaWithOption(MarkupRendering.Xml)
-      result <- searchResponder(_.gravsearchV2(query, schema, requestingUser))
-    } yield result.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+      query        <- ZIO.attempt(GravsearchParser.parseQuery(gravsearchQuery))
+      schema        = SchemaRendering.apiV2SchemaWithOption(MarkupRendering.Xml)
+      searchResult <- searchResponder(_.gravsearchV2(query, schema, requestingUser))
+      result       <- searchResult.toResource(resourceIri)
+    } yield result.toOntologySchema(ApiV2Complex)
   }
 
   private def getValuesFromResource(resource: ReadResourceV2, propertyIriInResult: SmartIri): Seq[ReadValueV2] =
@@ -223,7 +224,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                        requestingUser = requestingUser,
                      ),
                    )
-    resource = getResponse.toResource(resourceIri.toString)
+    resource <- getResponse.toResource(resourceIri.toString)
     //  ensure the resource was not deleted
     _ <- ZIO.fail(AssertionException("resource was deleted")).when(resource.deletionInfo.nonEmpty)
 
@@ -322,7 +323,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                            requestingUser = requestingUser,
                          ),
                        )
-    resourcePreview = previewResponse.toResource(resourceIri)
+    resourcePreview <- previewResponse.toResource(resourceIri)
   } yield resourcePreview.lastModificationDate
 
   private def getValueUUID(valueIri: IRI): ZIO[TriplestoreService, Throwable, Option[UUID]] = {
@@ -1712,7 +1713,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         valueContent = IntegerValueContentV2(ApiV2Complex, intValue),
       )
       valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID)).exit
-        .map(actual => assert(actual)(diesWithA[NotFoundException]))
+        .map(actual => assert(actual)(failsWithA[NotFoundException]))
     },
     test("not add a new value to a deleted resource") {
       val resourceIri    = "http://rdfh.ch/0803/9935159f67"
@@ -1730,7 +1731,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         ),
       )
       valuesResponder(_.createValueV2(createParams, incunabulaMemberUser, randomUUID)).exit
-        .map(actual => assert(actual)(diesWithA[NotFoundException]))
+        .map(actual => assert(actual)(failsWithA[NotFoundException]))
     },
     test("not add a new value if the resource's rdf:type is not correctly given") {
       val resourceIri = aThingIri

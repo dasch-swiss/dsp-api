@@ -7,7 +7,7 @@
 -- Parameters:
 --    prefix: This is the prefix that is given on the IIIF url
 --    identifier: the identifier for the image
---    cookie: The cookie that may be present
+--    cookie: The cookie that may be present // ignored for now
 --
 -- Returns:
 --    permission:
@@ -26,9 +26,9 @@ function pre_flight(prefix,identifier,cookie)
     --
 
     filepath = config.imgroot .. '/knora/Leaves.jp2'
-    
+
     server.log("Returning test file " .. filepath, server.loglevel.LOG_INFO)
-    
+
     return 'allow', filepath
 
 end
