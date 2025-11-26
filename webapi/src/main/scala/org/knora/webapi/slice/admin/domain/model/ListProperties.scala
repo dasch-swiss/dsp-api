@@ -5,12 +5,8 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import zio.prelude.Validation
-
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
@@ -59,9 +55,12 @@ object ListProperties {
   final case class ListName private (value: String) extends StringValue
   object ListName extends StringValueCompanion[ListName] {
     def from(value: String): Either[String, ListName] =
-      if (value.isEmpty) Left("List name cannot be empty.")
-      else Iri.toSparqlEncodedString(value).toRight("List name is invalid.").map(ListName.apply)
+      if value.isEmpty then Left("List name cannot be empty.")
+      else if hasLineBreaks(value) then Left("List name is invalid.")
+      else Right(ListName(value))
   }
+
+  private def hasLineBreaks: String => Boolean = str => str.contains('\r') || str.contains('\n')
 
   final case class Position private (value: Int) extends IntValue {
     def >(other: Int): Boolean = value > other
@@ -78,42 +77,18 @@ object ListProperties {
   final case class Labels private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]]
 
   object Labels extends WithFrom[Seq[StringLiteralV2], Labels] {
-    def from(value: Seq[StringLiteralV2]): Either[String, Labels] =
-      if (value.isEmpty) Left("At least one label needs to be supplied.")
-      else {
-        val validatedLabels = value.map(l =>
-          Validation
-            .fromOption(Iri.toSparqlEncodedString(l.value))
-            .mapError(_ => "Invalid label.")
-            .map(newValue =>
-              l match {
-                case PlainStringLiteralV2(_)                    => StringLiteralV2.from(newValue)
-                case LanguageTaggedStringLiteralV2(_, language) => StringLiteralV2.from(newValue, language)
-              },
-            ),
-        )
-        Validation.validateAll(validatedLabels).map(Labels.apply).toEitherWith(_.head)
-      }
+    def from(values: Seq[StringLiteralV2]): Either[String, Labels] =
+      if values.isEmpty then Left("At least one label needs to be supplied.")
+      else if values.exists(lit => hasLineBreaks(lit.value)) then Left("Invalid label.")
+      else Right(Labels(values))
   }
 
   final case class Comments private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]]
 
   object Comments extends WithFrom[Seq[StringLiteralV2], Comments] {
-    def from(value: Seq[StringLiteralV2]): Either[String, Comments] =
-      if (value.isEmpty) Left("At least one comment needs to be supplied.")
-      else {
-        val validatedComments = value.map(c =>
-          Validation
-            .fromOption(Iri.toSparqlEncodedString(c.value))
-            .mapError(_ => "Invalid comment.")
-            .map(s =>
-              c match {
-                case PlainStringLiteralV2(_)                    => StringLiteralV2.from(s)
-                case LanguageTaggedStringLiteralV2(_, language) => StringLiteralV2.from(s, language)
-              },
-            ),
-        )
-        Validation.validateAll(validatedComments).map(Comments.apply).toEitherWith(_.head)
-      }
+    def from(values: Seq[StringLiteralV2]): Either[String, Comments] =
+      if values.isEmpty then Left("At least one comment needs to be supplied.")
+      else if values.exists(lit => hasLineBreaks(lit.value)) then Left("Invalid comment.")
+      else Right(Comments(values))
   }
 }
