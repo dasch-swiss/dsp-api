@@ -23,11 +23,59 @@ import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-final case class ReadResourcesService(
+trait ReadResourcesService {
+  def readResourcesSequence(
+    resourceIris: Seq[IRI],
+    propertyIri: Option[SmartIri] = None,
+    valueUuid: Option[UUID] = None,
+    preview: Boolean = false,
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+    withDeleted: Boolean = true,
+  ): Task[ReadResourcesSequenceV2]
+
+  def getResources(
+    resourceIris: Seq[IRI],
+    propertyIri: Option[SmartIri] = None,
+    targetSchema: ApiV2Schema,
+    schemaOptions: Set[Rendering],
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2]
+
+  def getResourcesWithDeletedResource(
+    resourceIris: Seq[IRI],
+    propertyIri: Option[SmartIri] = None,
+    valueUuid: Option[UUID] = None,
+    versionDate: Option[VersionDate] = None,
+    withDeleted: Boolean = true,
+    showDeletedValues: Boolean = false,
+    targetSchema: ApiV2Schema,
+    schemaOptions: Set[Rendering],
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2]
+
+  def getResourcePreviewWithDeletedResource(
+    resourceIris: Seq[IRI],
+    withDeleted: Boolean = true,
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2]
+
+  def getResourcePreview(
+    resourceIris: Seq[IRI],
+    withDeleted: Boolean = true,
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2]
+}
+
+// Raitis TODO: add scaladoc
+final case class ReadResourcesServiceLive(
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val triplestore: TriplestoreService,
-)(implicit val stringFormatter: StringFormatter) {
+)(implicit val stringFormatter: StringFormatter)
+    extends ReadResourcesService {
   private def readResourcesSequence_(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
@@ -104,14 +152,16 @@ final case class ReadResourcesService(
     preview: Boolean = false,
     targetSchema: ApiV2Schema,
     requestingUser: User,
+    withDeleted: Boolean = true,
   ): Task[ReadResourcesSequenceV2] =
     readResourcesSequence_(
       resourceIris,
       propertyIri,
-      valueUuid,
-      preview,
+      valueUuid = valueUuid,
+      preview = preview,
       targetSchema,
       requestingUser,
+      withDeleted = withDeleted,
     )
 
   def getResources(
@@ -188,6 +238,6 @@ final case class ReadResourcesService(
     )
 }
 
-object ReadResourcesService {
-  val layer = ZLayer.derive[ReadResourcesService]
+object ReadResourcesServiceLive {
+  val layer = ZLayer.derive[ReadResourcesServiceLive]
 }

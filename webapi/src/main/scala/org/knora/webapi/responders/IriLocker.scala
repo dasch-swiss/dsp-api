@@ -19,6 +19,7 @@ import dsp.errors.ApplicationLockException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.util.JavaUtil
 
 /**
@@ -113,6 +114,9 @@ object IriLocker {
 
   def runWithIriLock[A](apiRequestID: UUID, iri: KnoraIri)(task: Task[A]): Task[A] =
     runWithIriLock(apiRequestID, iri.smartIri)(task)
+
+  def runWithIriLock[A](apiRequestID: UUID, iri: StringValue)(task: Task[A]): Task[A] =
+    runWithIriLock(apiRequestID, iri.value)(task)
 
   /**
    * Tries to acquire an update lock for an API request on an IRI. If the API request already

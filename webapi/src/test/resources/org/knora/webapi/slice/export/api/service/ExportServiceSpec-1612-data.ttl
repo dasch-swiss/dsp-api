@@ -1,0 +1,330 @@
+PREFIX dcterms:     <http://purl.org/dc/terms/>
+PREFIX foaf:        <http://xmlns.com/foaf/0.1/>
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+PREFIX knora-base:  <http://www.knora.org/ontology/knora-base#>
+PREFIX ns1:         <http://www.knora.org/ontology/0801/biblio#>
+PREFIX ns2:         <http://www.knora.org/ontology/0801/beol#>
+PREFIX ns3:         <http://www.knora.org/ontology/0801/newton#>
+PREFIX ns4:         <http://www.knora.org/ontology/0801/leibniz#>
+PREFIX owl:         <http://www.w3.org/2002/07/owl#>
+PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:        <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX salsah-gui:  <http://www.knora.org/ontology/salsah-gui#>
+PREFIX standoff:    <http://www.knora.org/ontology/standoff#>
+PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
+
+<http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#Class1>;
+        rdfs:label                    "Resource11";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2025-11-24T09:46:30.814066Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
+<http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#Class1>;
+        rdfs:label                    "Resource0";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2025-11-24T09:46:24.126020Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/5fqgDXslTiWEjKxS5F3MrA>
+        rdf:type                      knora-base:LinkValue;
+        rdf:object                    <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w>;
+        rdf:predicate                 <http://www.knora.org/ontology/1612/Data#LinkProperty>;
+        rdf:subject                   <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:32:35.114097Z"^^xsd:dateTime;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasRefCount   1;
+        knora-base:valueHasString     "http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w";
+        knora-base:valueHasUUID       "-AbBHM3BT2uETX1D1FDOjA" .
+
+<http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/q4S8CTYUSQu0_1gxCDRlFw>
+        rdf:type                      knora-base:LinkValue;
+        rdf:object                    <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA>;
+        rdf:predicate                 <http://www.knora.org/ontology/1612/Data#LinkProperty>;
+        rdf:subject                   <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:32:22.911407Z"^^xsd:dateTime;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasRefCount   1;
+        knora-base:valueHasString     "http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA";
+        knora-base:valueHasUUID       "YqpTY98cRPiPq7mv3xttdg" .
+
+<http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/LMXaR3dATMmn5s6NgLn1Ww>
+        rdf:type                        knora-base:GeonameValue;
+        knora-base:attachedToUser       <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions       "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted            false;
+        knora-base:valueCreationDate    "2025-11-24T09:32:03.341988Z"^^xsd:dateTime;
+        knora-base:valueHasGeonameCode  "2768042";
+        knora-base:valueHasOrder        0;
+        knora-base:valueHasString       "2768042";
+        knora-base:valueHasUUID         "LMXaR3dATMmn5s6NgLn1Ww" .
+
+<http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/ecf3pqd6Q6KhE8lHOfNhBQ>
+        rdf:type                      knora-base:TextValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:hasTextValueType   knora-base:UnformattedText;
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:32:03.341988Z"^^xsd:dateTime;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasString     "Ource2";
+        knora-base:valueHasUUID       "ecf3pqd6Q6KhE8lHOfNhBQ" .
+
+<http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/Yf0Pk37ETLOcTVLL_YOYxA/standoff/1>
+        rdf:type                        standoff:StandoffParagraphTag;
+        knora-base:standoffTagHasEnd    9;
+        knora-base:standoffTagHasStart  0;
+        knora-base:standoffTagHasStartIndex
+                1;
+        knora-base:standoffTagHasStartParent
+                <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/Yf0Pk37ETLOcTVLL_YOYxA/standoff/0>;
+        knora-base:standoffTagHasUUID   "W4MzJQvYTOebTk0wKCh9bQ" .
+
+<http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/Yf0Pk37ETLOcTVLL_YOYxA/standoff/0>
+        rdf:type                        standoff:StandoffRootTag;
+        knora-base:standoffTagHasEnd    10;
+        knora-base:standoffTagHasStart  0;
+        knora-base:standoffTagHasStartIndex
+                0;
+        knora-base:standoffTagHasUUID   "EZVzqOiMSJmZbmvmFAkBqQ" .
+
+<http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/Yf0Pk37ETLOcTVLL_YOYxA>
+        rdf:type                      knora-base:TextValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:hasTextValueType   knora-base:FormattedText;
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:32:03.341988Z"^^xsd:dateTime;
+        knora-base:valueHasMapping    <http://rdfh.ch/standoff/mappings/StandardMapping>;
+        knora-base:valueHasMaxStandoffStartIndex
+                1;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasStandoff   <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/Yf0Pk37ETLOcTVLL_YOYxA/standoff/1> , <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/Yf0Pk37ETLOcTVLL_YOYxA/standoff/0>;
+        knora-base:valueHasString     "Rich rich";
+        knora-base:valueHasUUID       "Yf0Pk37ETLOcTVLL_YOYxA" .
+
+<http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/ACcXqYjOQxu8Q-WrRQOR4Q>
+        rdf:type                      knora-base:ListValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:32:03.341988Z"^^xsd:dateTime;
+        knora-base:valueHasListNode   <http://rdfh.ch/lists/1612/kd-EToXGRhiPnwFCAJTbbg>;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasString     "http://rdfh.ch/lists/1612/kd-EToXGRhiPnwFCAJTbbg";
+        knora-base:valueHasUUID       "ACcXqYjOQxu8Q-WrRQOR4Q" .
+
+<http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/5DQvCd4-SjiAu--9BjjA6A>
+        rdf:type                      knora-base:TextValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:hasTextValueType   knora-base:UnformattedText;
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:32:03.341988Z"^^xsd:dateTime;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasString     "Text text";
+        knora-base:valueHasUUID       "5DQvCd4-SjiAu--9BjjA6A" .
+
+<http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#Class1>;
+        rdfs:label                    "Resource2";
+        <http://www.knora.org/ontology/1612/Data#FunkList>
+                <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/ACcXqYjOQxu8Q-WrRQOR4Q>;
+        <http://www.knora.org/ontology/1612/Data#LinkProperty>
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA>;
+        <http://www.knora.org/ontology/1612/Data#LinkPropertyValue>
+                <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/q4S8CTYUSQu0_1gxCDRlFw>;
+        <http://www.knora.org/ontology/1612/Data#Place>
+                <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/LMXaR3dATMmn5s6NgLn1Ww>;
+        <http://www.knora.org/ontology/1612/Data#TextParagraph>
+                <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/5DQvCd4-SjiAu--9BjjA6A>;
+        <http://www.knora.org/ontology/1612/Data#TextRich>
+                <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/Yf0Pk37ETLOcTVLL_YOYxA>;
+        <http://www.knora.org/ontology/1612/Data#TextShort>
+                <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/ecf3pqd6Q6KhE8lHOfNhBQ>;
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2025-11-24T09:32:03.341988Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false;
+        knora-base:lastModificationDate
+                "2025-11-24T09:32:22.911407Z"^^xsd:dateTime .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/gAXaUlRMTNC15dXxfijJkQ>
+        rdf:type                        knora-base:GeonameValue;
+        knora-base:attachedToUser       <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions       "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted            false;
+        knora-base:valueCreationDate    "2025-11-24T09:29:32.559220Z"^^xsd:dateTime;
+        knora-base:valueHasGeonameCode  "2661604";
+        knora-base:valueHasOrder        0;
+        knora-base:valueHasString       "2661604";
+        knora-base:valueHasUUID         "gAXaUlRMTNC15dXxfijJkQ" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/CekMbBRlSXaNh2XjDVo1vA>
+        rdf:type                      knora-base:TextValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:hasTextValueType   knora-base:UnformattedText;
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:29:32.559220Z"^^xsd:dateTime;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasString     "Short text";
+        knora-base:valueHasUUID       "CekMbBRlSXaNh2XjDVo1vA" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/4>
+        rdf:type                        standoff:StandoffParagraphTag;
+        knora-base:standoffTagHasEnd    38;
+        knora-base:standoffTagHasStart  20;
+        knora-base:standoffTagHasStartIndex
+                4;
+        knora-base:standoffTagHasStartParent
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/0>;
+        knora-base:standoffTagHasUUID   "Yy1uw8oxR4i8z3HcVZymJA" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/3>
+        rdf:type                        standoff:StandoffParagraphTag;
+        knora-base:standoffTagHasEnd    19;
+        knora-base:standoffTagHasStart  18;
+        knora-base:standoffTagHasStartIndex
+                3;
+        knora-base:standoffTagHasStartParent
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/0>;
+        knora-base:standoffTagHasUUID   "PzXZO9ftToSucIvKxm9mAA" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/2>
+        rdf:type                        standoff:StandoffBoldTag;
+        knora-base:standoffTagHasEnd    11;
+        knora-base:standoffTagHasStart  4;
+        knora-base:standoffTagHasStartIndex
+                2;
+        knora-base:standoffTagHasStartParent
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/1>;
+        knora-base:standoffTagHasUUID   "e0Swap02SFmj8mgcV60y_Q" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/1>
+        rdf:type                        standoff:StandoffParagraphTag;
+        knora-base:standoffTagHasEnd    17;
+        knora-base:standoffTagHasStart  0;
+        knora-base:standoffTagHasStartIndex
+                1;
+        knora-base:standoffTagHasStartParent
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/0>;
+        knora-base:standoffTagHasUUID   "uqPq6zZURJWncVUXuKA3bA" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/0>
+        rdf:type                        standoff:StandoffRootTag;
+        knora-base:standoffTagHasEnd    39;
+        knora-base:standoffTagHasStart  0;
+        knora-base:standoffTagHasStartIndex
+                0;
+        knora-base:standoffTagHasUUID   "lPuHhLE_RWOqEKEp4o_VVA" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw>
+        rdf:type                      knora-base:TextValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:hasTextValueType   knora-base:FormattedText;
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:29:32.559220Z"^^xsd:dateTime;
+        knora-base:valueHasMapping    <http://rdfh.ch/standoff/mappings/StandardMapping>;
+        knora-base:valueHasMaxStandoffStartIndex
+                4;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasStandoff   <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/4> , <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/3> , <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/2> , <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/1> , <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw/standoff/0>;
+        knora-base:valueHasString     "The richest text… … you can imagine.";
+        knora-base:valueHasUUID       "lbL9HBh9RdONi97gkXJUcw" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/HI_gRiwARLqmfdsodKlY1w>
+        rdf:type                      knora-base:ListValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:29:32.559220Z"^^xsd:dateTime;
+        knora-base:valueHasListNode   <http://rdfh.ch/lists/1612/afx99e0aS0uGbsMaPhweoA>;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasString     "http://rdfh.ch/lists/1612/afx99e0aS0uGbsMaPhweoA";
+        knora-base:valueHasUUID       "HI_gRiwARLqmfdsodKlY1w" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/RDavpCfpTGugZaH2OpbyWA>
+        rdf:type                      knora-base:TextValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:hasTextValueType   knora-base:UnformattedText;
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:29:32.559220Z"^^xsd:dateTime;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasString     "Lazy\nFox\nJumped";
+        knora-base:valueHasUUID       "RDavpCfpTGugZaH2OpbyWA" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#Class1>;
+        rdfs:label                    "Resource1";
+        <http://www.knora.org/ontology/1612/Data#FunkList>
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/HI_gRiwARLqmfdsodKlY1w>;
+        <http://www.knora.org/ontology/1612/Data#LinkProperty>
+                <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w>;
+        <http://www.knora.org/ontology/1612/Data#LinkPropertyValue>
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/5fqgDXslTiWEjKxS5F3MrA>;
+        <http://www.knora.org/ontology/1612/Data#Place>
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/gAXaUlRMTNC15dXxfijJkQ>;
+        <http://www.knora.org/ontology/1612/Data#TextParagraph>
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/RDavpCfpTGugZaH2OpbyWA>;
+        <http://www.knora.org/ontology/1612/Data#TextRich>
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/lbL9HBh9RdONi97gkXJUcw>;
+        <http://www.knora.org/ontology/1612/Data#TextShort>
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/CekMbBRlSXaNh2XjDVo1vA>;
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2025-11-24T09:29:32.559220Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false;
+        knora-base:lastModificationDate
+                "2025-11-24T09:32:35.114097Z"^^xsd:dateTime .
+
+<http://rdfh.ch/lists/1612/DQT8CDARQby8ysAKrjEDFA>
+        rdf:type                     knora-base:ListNode;
+        rdfs:label                   "Earth, Wind & Fire"@en;
+        knora-base:hasRootNode       <http://rdfh.ch/lists/1612/PCkZVGmXQ9uMnkpyEU-4-Q>;
+        knora-base:listNodeName      "Vk0NruDmRyeZCZvOVwXOnw-8psurna5eyajoyhx8mybsf";
+        knora-base:listNodePosition  3 .
+
+<http://rdfh.ch/lists/1612/ompno-X7T3qsJE417SyE8A>
+        rdf:type                     knora-base:ListNode;
+        rdfs:label                   "Marvin Gaye"@en;
+        knora-base:hasRootNode       <http://rdfh.ch/lists/1612/PCkZVGmXQ9uMnkpyEU-4-Q>;
+        knora-base:listNodeName      "Vk0NruDmRyeZCZvOVwXOnw-yd3zyw4xrdnvulnm2p4q";
+        knora-base:listNodePosition  2 .
+
+<http://rdfh.ch/lists/1612/kd-EToXGRhiPnwFCAJTbbg>
+        rdf:type                     knora-base:ListNode;
+        rdfs:label                   "Hiatus Kaiyote"@en;
+        knora-base:hasRootNode       <http://rdfh.ch/lists/1612/PCkZVGmXQ9uMnkpyEU-4-Q>;
+        knora-base:listNodeName      "Vk0NruDmRyeZCZvOVwXOnw-egjv8ak438eo71665walbo";
+        knora-base:listNodePosition  1 .
+
+<http://rdfh.ch/lists/1612/afx99e0aS0uGbsMaPhweoA>
+        rdf:type                     knora-base:ListNode;
+        rdfs:label                   "Vulfpeck"@en;
+        knora-base:hasRootNode       <http://rdfh.ch/lists/1612/PCkZVGmXQ9uMnkpyEU-4-Q>;
+        knora-base:listNodeName      "Vk0NruDmRyeZCZvOVwXOnw-z2myqvsqj2l01r08cqbehdz";
+        knora-base:listNodePosition  0 .
+
+<http://rdfh.ch/lists/1612/PCkZVGmXQ9uMnkpyEU-4-Q>
+        rdf:type                      knora-base:ListNode;
+        rdfs:comment                  "Vocabulary of Funk"@en;
+        rdfs:label                    "Funky Vocabulary"@en;
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:hasSubListNode     <http://rdfh.ch/lists/1612/DQT8CDARQby8ysAKrjEDFA> , <http://rdfh.ch/lists/1612/ompno-X7T3qsJE417SyE8A> , <http://rdfh.ch/lists/1612/kd-EToXGRhiPnwFCAJTbbg> , <http://rdfh.ch/lists/1612/afx99e0aS0uGbsMaPhweoA>;
+        knora-base:isRootNode         true .

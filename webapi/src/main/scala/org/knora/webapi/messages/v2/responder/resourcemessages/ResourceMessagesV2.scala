@@ -884,6 +884,8 @@ case class ReadResourcesSequenceV2(
 
     allProjects.head
   }
+
+  def resourcesMap: Map[IRI, ReadResourceV2] = resources.map(r => (r.resourceIri, r)).toMap
 }
 
 /**

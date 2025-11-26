@@ -54,6 +54,7 @@ import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
+import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
@@ -101,14 +102,14 @@ object LayersLive { self =>
     ProjectExportService &
     ProjectExportStorageService &
     ProjectImportService &
+    ReadResourcesService &
     RepositoryUpdater &
-    ResourceUtilV2 &
     ResourcesApiServerEndpoints &
     ResourcesRepo &
     ResourcesResponderV2 &
+    ResourceUtilV2 &
     SearchResponderV2Module.Provided &
     SearchServerEndpoints &
-    SecurityModule.Provided &
     SecurityModule.Provided &
     ShaclApiModule.Provided &
     ShaclEndpoints &
@@ -165,7 +166,7 @@ object LayersLive { self =>
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,
       RepositoryUpdater.layer,
-      ReadResourcesService.layer,
+      ReadResourcesServiceLive.layer,
       ResourceUtilV2.layer,
       ResourcesApiModule.layer,
       ResourcesModule.layer,
