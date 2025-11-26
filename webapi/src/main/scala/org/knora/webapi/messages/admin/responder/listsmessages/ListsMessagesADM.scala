@@ -10,9 +10,7 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.json.jsonDiscriminator
 
-import dsp.valueobjects.Iri
 import org.knora.webapi.*
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.util.WithAsIs
@@ -270,24 +268,6 @@ final case class ListRootNodeInfoADM(
     )
 
   /**
-   * unescapes the special characters in labels, comments, and name for comparison in tests.
-   */
-  def unescape: ListRootNodeInfoADM = {
-    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
-
-    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
-
-    val unescapedName: Option[String] = name match {
-      case None        => None
-      case Some(value) => Some(Iri.fromSparqlEncodedString(value))
-    }
-
-    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
-  }
-
-  /**
    * Gets the label in the user's preferred language.
    *
    * @param userLang     the user's preferred language.
@@ -336,24 +316,6 @@ final case class ListChildNodeInfoADM(
       position = position,
       hasRootNode = hasRootNode,
     )
-
-  /**
-   * unescapes the special characters in labels, comments, and name for comparison in tests.
-   */
-  def unescape: ListChildNodeInfoADM = {
-    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
-
-    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
-
-    val unescapedName: Option[String] = name match {
-      case None        => None
-      case Some(value) => Some(Iri.fromSparqlEncodedString(value))
-    }
-
-    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
-  }
 
   /**
    * Gets the label in the user's preferred language.
@@ -474,23 +436,6 @@ final case class ListRootNodeADM(
     )
 
   /**
-   * unescapes the special characters in labels, comments, and name for comparison in tests.
-   */
-  def unescape: ListRootNodeADM = {
-    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val unescapedLabels   = stringFormatter.unescapeStringLiteralSeq(labels)
-    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
-
-    val unescapedName: Option[String] = name match {
-      case None        => None
-      case Some(value) => Some(Iri.fromSparqlEncodedString(value))
-    }
-
-    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
-  }
-
-  /**
    * Gets the label in the user's preferred language.
    *
    * @param userLang     the user's preferred language.
@@ -543,23 +488,6 @@ final case class ListChildNodeADM(
    */
   override def sorted: ListChildNodeADM =
     this.copy(labels = labels.sortByLanguage, children = children.sortBy(_.position).map(_.sorted))
-
-  /**
-   * unescapes the special characters in labels, comments, and name for comparison in tests.
-   */
-  def unescape: ListChildNodeADM = {
-    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val unescapedLabels   = stringFormatter.unescapeStringLiteralSeq(labels)
-    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
-
-    val unescapedName: Option[String] = name match {
-      case Some(value) => Some(Iri.fromSparqlEncodedString(value))
-      case None        => None
-    }
-
-    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
-  }
 
   /**
    * Gets the label in the user's preferred language.
