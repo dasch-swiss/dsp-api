@@ -23,7 +23,7 @@ enum RepresentationClass(val iri: Option[String]):
 
 object RepresentationClass {
   given JsonCodec[RepresentationClass] = DeriveJsonCodec.gen[RepresentationClass]
-  given Schema[RepresentationClass]    = Schema.derived[RepresentationClass]
+  given Schema[RepresentationClass]    = Schema.derivedEnumeration[RepresentationClass].defaultStringBased
 
   def from(iri: ResourceClassIri): Option[RepresentationClass] = from(iri.smartIri)
   def from(iri: SmartIri): Option[RepresentationClass] =

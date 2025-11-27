@@ -10,18 +10,22 @@ import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
 
 import org.knora.webapi.slice.api.v3.ApiV3
+import org.knora.webapi.slice.api.v3.EndpointHelper
 import org.knora.webapi.slice.api.v3.LanguageStringDto
 import org.knora.webapi.slice.api.v3.OntologyAndResourceClasses
 import org.knora.webapi.slice.api.v3.OntologyDto
 import org.knora.webapi.slice.api.v3.ResourceClassAndCountDto
 import org.knora.webapi.slice.api.v3.ResourceClassDto
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
+import org.knora.webapi.slice.api.v3.V3ErrorCode.project_not_found
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
 
-class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) {
+class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) extends EndpointHelper {
 
-  val getResourcesResourcesPerOntology = baseEndpoint.publicEndpoint.get
+  val getResourcesResourcesPerOntology = baseEndpoint
+    .public(oneOf(notFoundVariant(project_not_found)))
+    .get
     .in(ApiV3.V3ProjectsProjectIri / "resourcesPerOntology")
     .out(
       jsonBody[List[OntologyAndResourceClasses]].example(
