@@ -16,9 +16,12 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
+import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
@@ -34,6 +37,7 @@ final case class ExportService(
   private val ontologyRepo: OntologyRepo,
   private val readResources: ReadResourcesService,
   private val findResources: FindResourcesService,
+  private val listsResponder: ListsResponder,
   private val csvService: CsvService,
 ) {
   def exportResources(
@@ -54,10 +58,18 @@ final case class ExportService(
                          withDeleted = false,
                        )
       headers <- rowHeaders(selectedProperties, language, includeIris)
+
+      rootVocabularies <- listsResponder.getLists(Some(Left(project.id)))
+      vocabularies <-
+        ZIO
+          .foreach(rootVocabularies.lists) { list =>
+            listsResponder.listGetRequestADM(ListIri.unsafeFrom(list.id)).map(_.toIriLabelMap(language.value))
+          }
+          .map(_.foldK)
     } yield ExportedCsv(
       headers,
       sort(readResources.resources.toList).map(
-        exportSingleRow(_, selectedProperties, includeIris, readResources.resourcesMap),
+        exportSingleRow(_, selectedProperties, includeIris, readResources.resourcesMap, vocabularies),
       ),
     )
 
@@ -115,14 +127,20 @@ final case class ExportService(
     selectedProperties: List[PropertyIri],
     includeIris: Boolean,
     resources: Map[IRI, ReadResourceV2],
+    vocabularies: Map[String, String],
   ): ExportedResource =
     ExportedResource(
       ListMap("Resource IRI" -> resource.resourceIri.toString) ++
         ListMap("Label" -> resource.label) ++
         ListMap.from(
           selectedProperties.flatMap { property =>
-            val readValues = resource.values.get(property.smartIri.toInternalSchema).foldK
-            valueColumns(property, readValues.map(_.valueContent), includeIris, resources).map { case (k, vs) =>
+            valueColumns(
+              property,
+              resource.values.get(property.smartIri.toInternalSchema).foldK.map(_.valueContent),
+              includeIris,
+              resources,
+              vocabularies,
+            ).map { case (k, vs) =>
               (k, vs.mkString(" :: "))
             }
           },
@@ -134,6 +152,7 @@ final case class ExportService(
     vcs: Seq[ValueContentV2],
     includeIris: Boolean,
     resources: Map[IRI, ReadResourceV2],
+    vocabularies: Map[String, String],
   ): ListMap[String, List[String]] =
     Some(vcs)
       .filter(_.nonEmpty)
@@ -142,10 +161,12 @@ final case class ExportService(
           vc match
             case gvc: GeonameValueContentV2 =>
               ListMap(property.smartIri.toString -> List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
+            case lvc: HierarchicalListValueContentV2 =>
+              ListMap(property.smartIri.toString -> List(vocabularies.get(lvc.valueHasString).getOrElse("")))
             case lvc: LinkValueContentV2 =>
               val resource    = lvc.nestedResource.orElse(resources.get(lvc.referredResourceIri))
               val propertyIri = property.smartIri.toString
-              List[ListMap[String, List[String]]](
+              List(
                 ListMap(propertyIri -> List(resource.map(_.label).getOrElse(""))),
                 ListMap(s"${propertyIri}_IRI" -> List(stringFormat(vc.valueHasString))).filter(_ => includeIris),
               ).fold(ListMap.empty)(_ ++ _)

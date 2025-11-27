@@ -49,7 +49,17 @@ object ListsGetResponseADM {
 }
 
 @jsonDiscriminator("type")
-sealed trait ListItemGetResponseADM extends AdminKnoraResponseADM with WithAsIs[ListItemGetResponseADM]
+sealed trait ListItemGetResponseADM extends AdminKnoraResponseADM with WithAsIs[ListItemGetResponseADM] {
+  def listItemADM: ListItemADM
+
+  def toIriLabelMap(language: String): Map[String, String] =
+    Map.from(
+      listItemADM.withChildren.flatMap { node =>
+        node.labels.getPreferredLanguage(language, "en").map(node.id -> _)
+      },
+    )
+}
+
 object ListItemGetResponseADM {
   implicit lazy val codec: JsonCodec[ListItemGetResponseADM] = DeriveJsonCodec.gen[ListItemGetResponseADM]
   implicit def schema: Schema[ListItemGetResponseADM]        = Schema.derived[ListItemGetResponseADM]
@@ -60,7 +70,9 @@ object ListItemGetResponseADM {
  *
  * @param list the complete list.
  */
-final case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM
+final case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM {
+  def listItemADM: ListItemADM = list
+}
 object ListGetResponseADM {
   implicit lazy val codec: JsonCodec[ListGetResponseADM] = DeriveJsonCodec.gen[ListGetResponseADM]
   implicit def schema: Schema[ListGetResponseADM]        = Schema.derived[ListGetResponseADM]
@@ -71,7 +83,9 @@ object ListGetResponseADM {
  *
  * @param node the node.
  */
-final case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM
+final case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM {
+  def listItemADM: ListItemADM = node
+}
 object ListNodeGetResponseADM {
   implicit lazy val codec: JsonCodec[ListNodeGetResponseADM] = DeriveJsonCodec.gen[ListNodeGetResponseADM]
   implicit def schema: Schema[ListNodeGetResponseADM]        = Schema.derived[ListNodeGetResponseADM]
@@ -152,7 +166,10 @@ object NodePositionChangeResponseADM {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 @jsonDiscriminator("type")
-sealed trait ListItemADM
+sealed trait ListItemADM {
+  def withChildren: Seq[ListNode]
+}
+
 object ListItemADM {
   implicit lazy val codec: JsonCodec[ListItemADM] = DeriveJsonCodec.gen[ListItemADM]
   implicit def schema: Schema[ListItemADM]        = Schema.derived[ListItemADM]
@@ -166,6 +183,8 @@ final case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildN
    * @return a sorted [[List]].
    */
   def sorted: ListADM = this.copy(children = children.sortBy(_.position).map(_.sorted))
+
+  def withChildren: Seq[ListNode] = listinfo +: children
 }
 object ListADM {
   implicit lazy val codec: JsonCodec[ListADM] = DeriveJsonCodec.gen[ListADM]
@@ -180,17 +199,24 @@ final case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChild
    * @return a sorted [[List]].
    */
   def sorted: NodeADM = this.copy(children = children.sortBy(_.position).map(_.sorted))
+
+  def withChildren: Seq[ListNode] = nodeinfo +: children
 }
 object NodeADM {
   implicit lazy val codec: JsonCodec[NodeADM] = DeriveJsonCodec.gen[NodeADM]
   implicit def schema: Schema[NodeADM]        = Schema.derived[NodeADM]
 }
 
+sealed trait ListNode {
+  def id: IRI
+  def labels: StringLiteralSequenceV2
+}
+
 /**
  * Represents basic information about a list node, the information which is found in the list's root or child node.
  */
 @jsonDiscriminator("type")
-sealed trait ListNodeInfoADM {
+sealed trait ListNodeInfoADM extends ListNode {
 
   /**
    * @return The IRI of the list node.
@@ -346,7 +372,7 @@ object ListChildNodeInfoADM {
  * Represents a hierarchical list node.
  */
 @jsonDiscriminator("type")
-sealed trait ListNodeADM {
+sealed trait ListNodeADM extends ListNode {
 
   /**
    * The IRI of the list node.
@@ -398,6 +424,7 @@ sealed trait ListNodeADM {
    */
   def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String]
 }
+
 object ListNodeADM {
   implicit lazy val codec: JsonCodec[ListNodeADM] = DeriveJsonCodec.gen[ListNodeADM]
   implicit def schema: Schema[ListNodeADM]        = Schema.derived[ListNodeADM]
