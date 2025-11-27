@@ -46,7 +46,7 @@ trait EndpointHelper {
 class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) extends EndpointHelper {
 
   val getResourcesResourcesPerOntology = baseEndpoint
-    .publicWithErrorOut(oneOf(notFoundVariant(project_not_found)))
+    .public(oneOf(notFoundVariant(project_not_found)))
     .get
     .in(ApiV3.V3ProjectsProjectIri / "resourcesPerOntology")
     .out(
