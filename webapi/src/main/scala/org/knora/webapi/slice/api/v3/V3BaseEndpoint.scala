@@ -22,28 +22,17 @@ import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError.*
 
 final case class V3BaseEndpoint(private val authenticator: Authenticator) {
-  private val defaultErrorOut: EndpointOutput.OneOf[V3ErrorInfo, V3ErrorInfo] =
-    oneOf[V3ErrorInfo](
-      // default
-      oneOfVariant(statusCode(StatusCode.NotFound).and(jsonBody[NotFound])),
-      oneOfVariant(statusCode(StatusCode.BadRequest).and(jsonBody[BadRequest])),
-    )
 
   private val secureErrorOut = oneOf[V3ErrorInfo](
-    // default
-    oneOfVariant(statusCode(StatusCode.NotFound).and(jsonBody[NotFound])),
-    oneOfVariant(statusCode(StatusCode.BadRequest).and(jsonBody[BadRequest])),
-    // plus security
     oneOfVariant(statusCode(StatusCode.Unauthorized).and(jsonBody[Unauthorized])),
     oneOfVariant(statusCode(StatusCode.Forbidden).and(jsonBody[Forbidden])),
   )
 
   def publicWithErrorOut[O <: V3ErrorInfo](
-    errorOut: EndpointOutput.OneOfVariant[O],
+    errorOutFirst: EndpointOutput.OneOfVariant[O],
+    errorOutOther: EndpointOutput.OneOfVariant[O]*,
   ): PublicEndpoint[Unit, V3ErrorInfo, Unit, Any] =
-    endpoint.errorOut(oneOf[V3ErrorInfo](errorOut))
-
-  val publicEndpoint: PublicEndpoint[Unit, V3ErrorInfo, Unit, Any] = endpoint.errorOut(defaultErrorOut)
+    endpoint.errorOut(oneOf[V3ErrorInfo](errorOutFirst, errorOutOther: _*))
 
   private val endpointWithSecureErrorOut = endpoint.errorOut(secureErrorOut)
 
