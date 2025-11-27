@@ -9,6 +9,7 @@ import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
+import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 import org.knora.webapi.slice.api.v3.export_.ExportService
@@ -27,6 +28,7 @@ object ExportApiModule { self =>
     CsvService &
     IriConverter &
     KnoraProjectService &
+    ListsResponder &
     OntologyRepo &
     ReadResourcesService &
     TriplestoreService
