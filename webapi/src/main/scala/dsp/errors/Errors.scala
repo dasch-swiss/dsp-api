@@ -133,6 +133,8 @@ object NotFoundException {
   )
   def from(shortcode: Shortcode): NotFoundException =
     NotFoundException(s"Project with shortcode ${shortcode.value} was not found")
+  def from(projectIri: ProjectIri): NotFoundException =
+    NotFoundException(s"Project with IRI ${projectIri} was not found")
 
   implicit val codec: JsonCodec[NotFoundException] = DeriveJsonCodec.gen[NotFoundException]
 }

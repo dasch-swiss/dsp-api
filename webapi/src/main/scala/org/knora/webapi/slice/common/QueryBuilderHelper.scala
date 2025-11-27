@@ -26,6 +26,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
@@ -50,18 +51,19 @@ trait QueryBuilderHelper {
     case PlainStringLiteralV2(value)                => Rdf.literalOf(value)
   }
 
-  def toRdfLiteral(booleanV2: BooleanLiteralV2): RdfLiteral.StringLiteral =
-    Rdf.literalOfType(booleanV2.value.toString, XSD.BOOLEAN)
+  def toRdfLiteral(booleanV2: BooleanLiteralV2): RdfLiteral.StringLiteral = toRdfLiteral(booleanV2.value)
 
   def toRdfLiteral(lmd: LastModificationDate): RdfLiteral.StringLiteral = toRdfLiteral(lmd.value)
   def toRdfLiteral(instant: Instant): RdfLiteral.StringLiteral          = Rdf.literalOfType(instant.toString, XSD.DATETIME)
+  def toRdfLiteral(boolean: Boolean): RdfLiteral.StringLiteral = Rdf.literalOfType(boolean.toString, XSD.BOOLEAN)
 
   def toRdfLiteral(int: Int): RdfLiteral.StringLiteral = Rdf.literalOfType(int.toString, XSD.INT)
   def toRdfLiteralNonNegative(int: Int): RdfLiteral.StringLiteral =
     Rdf.literalOfType(int.toString, XSD.NON_NEGATIVE_INTEGER)
 
-  def toRdfIri(iri: KnoraIri): Iri    = toRdfIri(iri.smartIri)
-  def toRdfIri(iri: SmartIri): Iri    = Rdf.iri(iri.toInternalSchema.toIri)
+  def toRdfIri(iri: KnoraIri): Iri   = toRdfIri(iri.smartIri)
+  def toRdfIri(iri: SmartIri): Iri   = Rdf.iri(iri.toInternalSchema.toIri)
+  def toRdfIri(iri: ProjectIri): Iri = Rdf.iri(iri.value)
   def toRdfIri(iri: InternalIri): Iri = Rdf.iri(iri.value)
   def toRdfIri(iri: StringValue): Iri = Rdf.iri(iri.value)
 

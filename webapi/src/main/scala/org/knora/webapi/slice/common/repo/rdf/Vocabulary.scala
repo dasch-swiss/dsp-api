@@ -90,6 +90,7 @@ object Vocabulary {
     val listNodePosition: Iri = iri(kb + "listNodePosition")
 
     val isDeleted: Iri              = iri(kb + "isDeleted")
+    val isShared: Iri               = iri(kb + "isShared")
     val attachedToUser: Iri         = iri(kb + "attachedToUser")
     val attachedToProject: Iri      = iri(kb + "attachedToProject")
     val hasPermissions: Iri         = iri(kb + "hasPermissions")

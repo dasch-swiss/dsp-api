@@ -54,6 +54,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.repo.ChangeClassLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
+import org.knora.webapi.slice.ontology.repo.CreateOntologyQuery
 import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
 import org.knora.webapi.slice.ontology.repo.DeleteOntologyCommentQuery
 import org.knora.webapi.slice.ontology.repo.UpdateOntologyMetadataQuery
@@ -396,9 +397,25 @@ final case class OntologyResponderV2(
    * @param createOntologyRequest the request message.
    * @return a [[SuccessResponseV2]].
    */
-  def createOntology(createOntologyRequest: CreateOntologyRequestV2): Task[ReadOntologyMetadataV2] = {
-    def makeTaskFuture(ontologyIri: OntologyIri): Task[ReadOntologyMetadataV2] =
+  def createOntology(createRequest: CreateOntologyRequestV2): Task[ReadOntologyMetadataV2] =
+    IriLocker.runWithIriLock(createRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI) {
       for {
+        project <- knoraProjectService
+                     .findById(createRequest.projectIri)
+                     .someOrFail(NotFoundException.from(createRequest.projectIri))
+
+        // Check that the ontology name is valid.
+        validOntologyName <-
+          ZIO
+            .fromEither(OntologyName.from(createRequest.ontologyName))
+            .mapError(BadRequestException.apply)
+            .filterOrFail(!_.isBuiltIn)(BadRequestException("A built in ontology cannot be created"))
+        ontologyIri = OntologyIri.makeNew(
+                        validOntologyName,
+                        createRequest.isShared,
+                        Some(project.shortcode),
+                        stringFormatter,
+                      )
         _ <- ontologyRepo
                .findById(ontologyIri)
                .filterOrFail(_.isEmpty)(
@@ -410,7 +427,7 @@ final case class OntologyResponderV2(
         // If this is a shared ontology, make sure it's in the default shared ontologies project.
         _ <-
           ZIO.when(
-            createOntologyRequest.isShared && createOntologyRequest.projectIri != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+            createRequest.isShared && createRequest.projectIri != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
           ) {
             val msg =
               s"Shared ontologies must be created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}>"
@@ -420,7 +437,7 @@ final case class OntologyResponderV2(
         // If it's in the default shared ontologies project, make sure it's a shared ontology.
         _ <-
           ZIO.when(
-            !createOntologyRequest.isShared && createOntologyRequest.projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+            !createRequest.isShared && createRequest.projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
           ) {
             val msg =
               s"Ontologies created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}> must be shared"
@@ -428,51 +445,27 @@ final case class OntologyResponderV2(
           }
 
         // Create the ontology.
-        currentTime <- Clock.instant
-        createOntologySparql = sparql.v2.txt
-                                 .createOntology(
-                                   ontologyNamedGraphIri = ontologyIri.toInternalSchema,
-                                   ontologyIri = ontologyIri.toInternalSchema,
-                                   projectIri = createOntologyRequest.projectIri,
-                                   isShared = createOntologyRequest.isShared,
-                                   ontologyLabel = createOntologyRequest.label,
-                                   ontologyComment = createOntologyRequest.comment,
-                                   currentTime = currentTime,
-                                 )
-        _ <- save(Update(createOntologySparql))
+        queryAndCurrentTime <- CreateOntologyQuery.build(
+                                 ontologyIri,
+                                 project,
+                                 createRequest.isShared,
+                                 createRequest.label,
+                                 createRequest.comment.map(_.value),
+                               )
+        (query, currentTime) = queryAndCurrentTime
+        _                   <- save(query)
       } yield ReadOntologyMetadataV2(ontologies =
         Set(
           OntologyMetadataV2(
             ontologyIri = ontologyIri.smartIri,
-            projectIri = Some(createOntologyRequest.projectIri),
-            label = Some(createOntologyRequest.label),
-            comment = createOntologyRequest.comment,
+            projectIri = Some(createRequest.projectIri),
+            label = Some(createRequest.label),
+            comment = createRequest.comment,
             lastModificationDate = Some(currentTime),
-          ).unescape,
+          ),
         ),
       )
-
-    for {
-      // Check that the ontology name is valid.
-      validOntologyName <-
-        ZIO
-          .fromEither(OntologyName.from(createOntologyRequest.ontologyName))
-          .mapError(BadRequestException.apply)
-          .filterOrFail(!_.isBuiltIn)(BadRequestException("A built in ontology cannot be created"))
-
-      // Make the internal ontology IRI.
-      projectIri = createOntologyRequest.projectIri
-      project <-
-        knoraProjectService.findById(projectIri).someOrFail(BadRequestException(s"Project not found: $projectIri"))
-      ontologyIri: OntologyIri =
-        OntologyIri.makeNew(validOntologyName, createOntologyRequest.isShared, Some(project.shortcode), stringFormatter)
-
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(createOntologyRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
-                      makeTaskFuture(ontologyIri),
-                    )
-    } yield taskResult
-  }
+    }
 
   private def save(sparql: Update) = triplestoreService.query(sparql) *> ontologyCache.refreshCache()
 
