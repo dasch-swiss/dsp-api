@@ -22,33 +22,29 @@ import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError.*
 
 final case class V3BaseEndpoint(private val authenticator: Authenticator) {
-  private val defaultErrorOut: EndpointOutput.OneOf[V3ErrorInfo, V3ErrorInfo] =
-    oneOf[V3ErrorInfo](
-      // default
-      oneOfVariant(statusCode(StatusCode.NotFound).and(jsonBody[NotFound])),
-      oneOfVariant(statusCode(StatusCode.BadRequest).and(jsonBody[BadRequest])),
-    )
 
-  private val secureErrorOut = oneOf[V3ErrorInfo](
-    // default
-    oneOfVariant(statusCode(StatusCode.NotFound).and(jsonBody[NotFound])),
-    oneOfVariant(statusCode(StatusCode.BadRequest).and(jsonBody[BadRequest])),
-    // plus security
-    oneOfVariant(statusCode(StatusCode.Unauthorized).and(jsonBody[Unauthorized])),
-    oneOfVariant(statusCode(StatusCode.Forbidden).and(jsonBody[Forbidden])),
+  private type ErrorOut = EndpointOutput.OneOf[V3ErrorInfo, V3ErrorInfo]
+  private val unauthorizedVariant = oneOfVariant(
+    statusCode(StatusCode.Unauthorized).and(jsonBody[Unauthorized].example(Unauthorized("Invalid token."))),
+  )
+  private val forbiddenVariant = oneOfVariant(
+    statusCode(StatusCode.Forbidden).and(jsonBody[Forbidden].example(Forbidden("User not active."))),
   )
 
-  val publicEndpoint: PublicEndpoint[Unit, V3ErrorInfo, Unit, Any] = endpoint.errorOut(defaultErrorOut)
+  def public(errorOut: ErrorOut): PublicEndpoint[Unit, V3ErrorInfo, Unit, Any] =
+    endpoint.errorOut(errorOut)
 
-  private val endpointWithSecureErrorOut = endpoint.errorOut(secureErrorOut)
-
-  val securedEndpoint: ZPartialServerEndpoint[Any, String, User, Unit, V3ErrorInfo, Unit, Any] =
-    endpointWithSecureErrorOut
+  def secured(errorOut: ErrorOut): ZPartialServerEndpoint[Any, String, User, Unit, V3ErrorInfo, Unit, Any] =
+    endpoint
+      .errorOut(errorOut)
+      .errorOutVariantsPrepend(unauthorizedVariant, forbiddenVariant)
       .securityIn(auth.bearer[String](WWWAuthenticateChallenge.bearer))
       .zServerSecurityLogic(handleBearerJwt)
 
-  val withUserEndpoint: ZPartialServerEndpoint[Any, Option[String], User, Unit, V3ErrorInfo, Unit, Any] =
-    endpointWithSecureErrorOut
+  def withUser(errorOut: ErrorOut): ZPartialServerEndpoint[Any, Option[String], User, Unit, V3ErrorInfo, Unit, Any] =
+    endpoint
+      .errorOut(errorOut)
+      .errorOutVariantsPrepend(unauthorizedVariant, forbiddenVariant)
       .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
       .zServerSecurityLogic {
         case Some(jwt) => handleBearerJwt(jwt)
@@ -58,7 +54,7 @@ final case class V3BaseEndpoint(private val authenticator: Authenticator) {
   private def handleBearerJwt(jwt: String): IO[V3ErrorInfo, User] =
     authenticator.authenticate(jwt).mapError {
       case BadCredentials => Unauthorized("Invalid token.")
-      case UserNotFound   => NotFound("User not found.")
+      case UserNotFound   => Forbidden("User not found.")
       case UserNotActive  => Forbidden("User not active.")
     }
 }
