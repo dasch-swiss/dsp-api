@@ -5,9 +5,15 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import sttp.tapir.Codec
+import sttp.tapir.CodecFormat
+import zio.json.JsonCodec
+
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
@@ -20,6 +26,9 @@ object ListProperties {
   final case class ListIri private (value: String) extends StringValue
 
   object ListIri extends StringValueCompanion[ListIri] {
+
+    given JsonCodec[ListIri]                            = ZioJsonCodec.stringCodec(ListIri.from)
+    given Codec[String, ListIri, CodecFormat.TextPlain] = TapirCodec.stringCodec(ListIri.from)
 
     /**
      * Explanation of the list IRI regex:

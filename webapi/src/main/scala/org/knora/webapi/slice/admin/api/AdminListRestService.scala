@@ -111,7 +111,7 @@ final case class AdminListRestService(
   } yield response
 
   def canDeleteListRequestADM(iri: ListIri): Task[CanDeleteListResponseADM] =
-    listsResponder.canDeleteListRequestADM(iri)
+    listsResponder.canDeleteList(iri)
 
   def deleteListNodeCommentsADM(@unused user: User)(iri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
     listsResponder.deleteListNodeCommentsADM(iri)

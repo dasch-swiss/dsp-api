@@ -20,7 +20,6 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.listsmessages.ListGetResponseV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -29,7 +28,7 @@ import org.knora.webapi.slice.common.domain.LanguageCode.EN
 
 final case class ListsEndpointsV2(private val base: BaseEndpoints) {
   val listIri =
-    path[ListIri](TapirCodec.listIri)
+    path[ListIri]
       .name("listIri")
       .description("The iri to a list.")
       .example(ListIri.unsafeFrom("http://rdfh.ch/lists/0001/" + UuidUtil.makeRandomBase64EncodedUuid))
