@@ -12,6 +12,7 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.Chunk
 import zio.ZLayer
+
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.ErrorDetail
 import org.knora.webapi.slice.api.v3.LanguageStringDto
