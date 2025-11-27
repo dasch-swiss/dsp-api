@@ -51,6 +51,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -203,7 +204,7 @@ trait SearchResponderV2 {
   def fulltextSearchCountV2(
     searchValue: IRI,
     limitToProject: Option[ProjectIri],
-    limitToResourceClass: Option[SmartIri],
+    limitToResourceClass: Option[ResourceClassIri],
     limitToStandoffClass: Option[SmartIri],
   ): Task[ResourceCountV2]
 
@@ -224,7 +225,7 @@ trait SearchResponderV2 {
     searchValue: IRI,
     offset: Int,
     limitToProject: Option[ProjectIri],
-    limitToResourceClass: Option[SmartIri],
+    limitToResourceClass: Option[ResourceClassIri],
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
     schemaAndOptions: SchemaRendering,
@@ -242,7 +243,7 @@ trait SearchResponderV2 {
   def searchResourcesByLabelCountV2(
     searchValue: String,
     limitToProject: Option[ProjectIri],
-    limitToResourceClass: Option[SmartIri],
+    limitToResourceClass: Option[ResourceClassIri],
   ): Task[ResourceCountV2]
 
   /**
@@ -260,7 +261,7 @@ trait SearchResponderV2 {
     searchValue: String,
     offset: Int,
     limitToProject: Option[ProjectIri],
-    limitToResourceClass: Option[SmartIri],
+    limitToResourceClass: Option[ResourceClassIri],
     targetSchema: ApiV2Schema,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2]
@@ -507,20 +508,19 @@ final case class SearchResponderV2Live(
   override def fulltextSearchCountV2(
     searchValue: IRI,
     limitToProject: Option[ProjectIri],
-    limitToResourceClass: Option[SmartIri],
+    limitToResourceClass: Option[ResourceClassIri],
     limitToStandoffClass: Option[SmartIri],
   ): Task[ResourceCountV2] =
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
       searchValue          <- validateSearchString(searchValue)
-      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       countSparql <- ZIO.attempt(
                        sparql.v2.txt
                          .searchFulltext(
                            searchTerms = LuceneQueryString(searchValue),
                            limitToProject = limitToProject.map(_.value),
-                           limitToResourceClass = limitToResourceClass.map(_.toString),
+                           limitToResourceClass = limitToResourceClass.map(_.toInternalSchema.toString),
                            limitToStandoffClass = limitToStandoffClass.map(_.toString),
                            returnFiles = false, // not relevant for a count query
                            separator = None,    // no separator needed for count query
@@ -556,7 +556,7 @@ final case class SearchResponderV2Live(
     searchValue: String,
     offset: Int,
     limitToProject: Option[ProjectIri],
-    limitToResourceClass: Option[SmartIri],
+    limitToResourceClass: Option[ResourceClassIri],
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
     schemaAndOptions: SchemaRendering,
@@ -566,7 +566,6 @@ final case class SearchResponderV2Live(
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
       searchValue          <- validateSearchString(searchValue)
-      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       searchSparql <-
         ZIO.attempt(
@@ -574,7 +573,7 @@ final case class SearchResponderV2Live(
             .searchFulltext(
               searchTerms = LuceneQueryString(searchValue),
               limitToProject = limitToProject.map(_.value),
-              limitToResourceClass = limitToResourceClass.map(_.toString),
+              limitToResourceClass = limitToResourceClass.map(_.toInternalSchema.toString),
               limitToStandoffClass = limitToStandoffClass.map(_.toString),
               returnFiles = returnFiles,
               separator = Some(StringFormatter.INFORMATION_SEPARATOR_ONE),
@@ -1129,17 +1128,15 @@ final case class SearchResponderV2Live(
   override def searchResourcesByLabelCountV2(
     searchValue: String,
     limitToProject: Option[ProjectIri],
-    limitToResourceClass: Option[SmartIri],
+    limitToResourceClass: Option[ResourceClassIri],
   ): Task[ResourceCountV2] =
     for {
-      searchValue          <- validateSearchString(searchValue)
-      _                    <- ensureIsFulltextSearch(searchValue)
-      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
+      searchValue <- validateSearchString(searchValue)
+      _           <- ensureIsFulltextSearch(searchValue)
       searchTerm <- ApacheLuceneSupport
                       .asLuceneQueryForSearchByLabel(searchValue)
                       .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
-      countSparql =
-        SearchQueries.selectCountByLabel(searchTerm, limitToProject.map(_.value), limitToResourceClass.map(_.toString))
+      countSparql    = SearchQueries.selectCountByLabel(searchTerm, limitToProject, limitToResourceClass)
       countResponse <- triplestore.query(countSparql)
 
       count <- // query response should contain one result with one row with the name "count"
@@ -1153,13 +1150,6 @@ final case class SearchResponderV2Live(
           .as(countResponse.getFirstOrThrow("count"))
 
     } yield ResourceCountV2(count.toInt)
-
-  private def ensureResourceClassIri(resourceClassIri: SmartIri): Task[SmartIri] = {
-    val errMsg = s"Resource class IRI <$resourceClassIri> is not a valid Knora API v2 entity IRI"
-    if (resourceClassIri.isKnoraApiV2EntityIri) {
-      iriConverter.asInternalSmartIri(resourceClassIri).orElseFail(BadRequestException(errMsg))
-    } else { ZIO.fail(BadRequestException(errMsg)) }
-  }
 
   private def ensureStandoffClass(standoffClassIri: SmartIri): Task[SmartIri] = {
     val errMsg = s"Invalid standoff class IRI: $standoffClassIri"
@@ -1189,23 +1179,22 @@ final case class SearchResponderV2Live(
     searchValue: String,
     offset: Int,
     limitToProject: Option[ProjectIri],
-    limitToResourceClass: Option[SmartIri],
+    limitToResourceClass: Option[ResourceClassIri],
     targetSchema: ApiV2Schema,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
     val searchLimit  = appConfig.v2.resourcesSequence.resultsPerPage
     val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage
     for {
-      searchValue          <- validateSearchString(searchValue)
-      _                    <- ensureIsFulltextSearch(searchValue)
-      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
+      searchValue <- validateSearchString(searchValue)
+      _           <- ensureIsFulltextSearch(searchValue)
       searchTerm <- ApacheLuceneSupport
                       .asLuceneQueryForSearchByLabel(searchValue)
                       .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
       searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(
                                       searchTerm,
-                                      limitToResourceClass.map(_.toIri),
-                                      limitToProject.map(_.value),
+                                      limitToProject,
+                                      limitToResourceClass,
                                       searchLimit,
                                       searchOffset,
                                     )
