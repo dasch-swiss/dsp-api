@@ -28,14 +28,13 @@ import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 import org.knora.webapi.routing.*
+import org.knora.webapi.slice.`export`.api.ExportApiModule
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
 import org.knora.webapi.slice.api.v3.ApiV3Module
 import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
-import org.knora.webapi.slice.api.v3.export_.ExportApiModule
-import org.knora.webapi.slice.api.v3.export_.ExportServerEndpoints
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.CommonModule
 import org.knora.webapi.slice.common.api.*
@@ -54,6 +53,7 @@ import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
+import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
@@ -101,14 +101,14 @@ object LayersLive { self =>
     ProjectExportService &
     ProjectExportStorageService &
     ProjectImportService &
+    ReadResourcesService &
     RepositoryUpdater &
-    ResourceUtilV2 &
     ResourcesApiServerEndpoints &
     ResourcesRepo &
     ResourcesResponderV2 &
+    ResourceUtilV2 &
     SearchResponderV2Module.Provided &
     SearchServerEndpoints &
-    SecurityModule.Provided &
     SecurityModule.Provided &
     ShaclApiModule.Provided &
     ShaclEndpoints &
@@ -165,7 +165,7 @@ object LayersLive { self =>
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,
       RepositoryUpdater.layer,
-      ReadResourcesService.layer,
+      ReadResourcesServiceLive.layer,
       ResourceUtilV2.layer,
       ResourcesApiModule.layer,
       ResourcesModule.layer,

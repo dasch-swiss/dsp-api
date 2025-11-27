@@ -40,11 +40,10 @@ final case class ExportRestService(
 
       data <-
         exportService
-          .exportResources(project, resourceClassIri, properties, user, request.language, request.includeResourceIri)
+          .exportResources(project, resourceClassIri, properties, user, request.language, request.includeIris)
           .orDie
-      (headers, rows) = data
-      csv            <- ZIO.scoped(csvService.writeToString(rows)(using ExportedResource.rowBuilder(headers))).orDie
-      now            <- Clock.instant
+      csv <- exportService.toCsv(data).orDie
+      now <- Clock.instant
     } yield (
       csv,
       MediaType.TextCsv,

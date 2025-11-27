@@ -39,14 +39,14 @@ trait GoldenTest {
 
     if (rewrite || rewriteAll) {
       // NOTE: this should prevent infinite loops, if the output is stable
-      if (!expected.contains(actual)) Files.write(path, actual.getBytes("UTF-8")): Unit
+      if (expected != Some(actual)) Files.write(path, actual.getBytes("UTF-8")): Unit
 
       assertNever(s"[GoldenTest] Rewritten: $path")
     } else {
       if (expected.isEmpty) {
         assertNever(s"[GoldenTest] File not found: $path (to create, set rewrite = true)")
       } else {
-        assertTrue(expected.contains(actual)).label(s"[GoldenTest] Failed for $name (to override, set rewrite = true)")
+        assertTrue(expected == Some(actual)).label(s"[GoldenTest] Failed for $name (to override, set rewrite = true)")
       }
     }
   }

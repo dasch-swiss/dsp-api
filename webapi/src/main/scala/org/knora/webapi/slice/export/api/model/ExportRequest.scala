@@ -14,7 +14,7 @@ final case class ExportRequest(
   resourceClass: String,
   selectedProperties: List[String],
   language: LanguageCode = LanguageCode.EN,
-  includeResourceIri: Boolean = false,
+  includeIris: Boolean = false,
 )
 
 object ExportRequest {

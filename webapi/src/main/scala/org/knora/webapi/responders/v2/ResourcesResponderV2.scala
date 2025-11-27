@@ -187,8 +187,8 @@ final case class ResourcesResponderV2(
                           requestingUser = updateResourceMetadataRequestV2.requestingUser,
                         )
 
-        resource: ReadResourceV2 = resourcesSeq.toResource(updateResourceMetadataRequestV2.resourceIri)
-        internalResourceClassIri = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
+        resource: ReadResourceV2 <- resourcesSeq.toResource(updateResourceMetadataRequestV2.resourceIri)
+        internalResourceClassIri  = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
 
         // Make sure that the resource's class is what the client thinks it is.
         _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
@@ -286,7 +286,7 @@ final case class ResourcesResponderV2(
                         targetSchema = ApiV2Complex,
                         requestingUser = deleteResourceV2.requestingUser,
                       )
-                      .map(_.toResource(deleteResourceV2.resourceIri))
+                      .flatMap(_.toResource(deleteResourceV2.resourceIri))
 
         _ <- canDeleteResource(deleteResourceV2, Some(resource)).map(_.assertGoodRequestEither).absolve
 
@@ -387,7 +387,7 @@ final case class ResourcesResponderV2(
                         targetSchema = ApiV2Complex,
                         requestingUser = requestingUser,
                       )
-                      .map(_.toResource(deleteResourceV2.resourceIri))
+                      .flatMap(_.toResource(deleteResourceV2.resourceIri))
                   }
 
       internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
@@ -443,7 +443,7 @@ final case class ResourcesResponderV2(
               targetSchema = ApiV2Complex,
               requestingUser = eraseResourceV2.requestingUser,
             )
-            .map(_.toResource(eraseResourceV2.resourceIri))
+            .flatMap(_.toResource(eraseResourceV2.resourceIri))
 
         // Ensure that the requesting user is a system admin, or an admin of this project.
         _ <- ZIO.when(
@@ -544,7 +544,7 @@ final case class ResourcesResponderV2(
                      requestingUser = requestingUser,
                    )
 
-      resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
+      resource: ReadResourceV2 <- resources.toResource(gravsearchTemplateIri)
 
       _ <- ZIO.when(resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
              val msg = s"Resource $gravsearchTemplateIri is not a Gravsearch template (text file expected)"
@@ -706,7 +706,7 @@ final case class ResourcesResponderV2(
 
             resource <- searchResponderV2
                           .gravsearchV2(query, apiV2SchemaWithOption(MarkupRendering.Xml), requestingUser)
-                          .mapAttempt(_.toResource(resourceIri))
+                          .flatMap(_.toResource(resourceIri))
           } yield resource
 
         } else {
@@ -728,7 +728,7 @@ final case class ResourcesResponderV2(
                             schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                             requestingUser = requestingUser,
                           )
-                          .mapAttempt(_.toResource(resourceIri))
+                          .flatMap(_.toResource(resourceIri))
           } yield resource
         }
 
@@ -1167,7 +1167,7 @@ final case class ResourcesResponderV2(
                                    requestingUser = KnoraSystemInstances.Users.SystemUser,
                                  )
 
-      resourcePreview: ReadResourceV2 = resourcePreviewResponse.toResource(resourceHistoryRequest.resourceIri)
+      resourcePreview <- resourcePreviewResponse.toResource(resourceHistoryRequest.resourceIri)
 
       // Get the version history of the resource's values.
 
@@ -1241,7 +1241,7 @@ final case class ResourcesResponderV2(
                           requestingUser,
                         )
 
-      resource      = searchResponse.toResource(resourceIri)
+      resource     <- searchResponse.toResource(resourceIri)
       incomingLinks = resource.values.getOrElse(OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri, Seq.empty)
 
       representations: Seq[ReadResourceV2] = incomingLinks.collect { case readLinkValueV2: ReadLinkValueV2 =>

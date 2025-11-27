@@ -1,0 +1,5 @@
+Resource IRI,Label,Place Label,Link Property Label,Link Property Label IRI,Text Paragraph Label,Text Rich Text Label,Funk List Label
+http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw,Resource0,,,,,
+http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA,Resource1,https://www.geonames.org/2661604,Resource2,http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w,Lazy\nFox\nJumped,The richest text…   … you can imagine. ,Vulfpeck
+http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ,Resource11,,,,,
+http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w,Resource2,https://www.geonames.org/2768042,Resource1,http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA,Text text,Rich rich ,Hiatus Kaiyote
