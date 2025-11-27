@@ -27,3 +27,11 @@ object V3ErrorCode:
       str => V3ErrorCode.values.find(_.toString == str).toRight(s"Unknown V3ErrorCode: $str"),
       _.toString.toLowerCase,
     )
+
+  extension (code: V3ErrorCode) {
+    def description: String =
+      s"""Example template string for code `$code`:
+         |```
+         |${code.template}
+         |```""".stripMargin
+  }

@@ -8,10 +8,10 @@ package org.knora.webapi.slice.api.v3.resources
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.EndpointIO.Example
+import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.Chunk
 import zio.ZLayer
-
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.ErrorDetail
 import org.knora.webapi.slice.api.v3.LanguageStringDto
@@ -23,33 +23,29 @@ import org.knora.webapi.slice.api.v3.ResourceClassDto
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 import org.knora.webapi.slice.api.v3.V3ErrorCode
 import org.knora.webapi.slice.api.v3.V3ErrorCode.project_not_found
+import org.knora.webapi.slice.api.v3.V3ErrorInfo
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
 
-trait EndpointHelper:
-  import sttp.tapir.generic.auto._
-  def oneOfNotFoundsErrorCode(codes: V3ErrorCode.NotFounds*): EndpointOutput.OneOfVariant[NotFound] =
+trait EndpointHelper {
+  def notFoundVariant(codes: V3ErrorCode.NotFounds*): EndpointOutput.OneOfVariant[NotFound] =
     oneOfVariant(
       statusCode(StatusCode.NotFound).and(
         jsonBody[NotFound].examples(codes.toList.map(mkExampleNotFound)),
       ),
     )
 
-  private def mkExampleNotFound(code: V3ErrorCode.NotFounds) = Example
-    .of(NotFound(code, "Not found example message", Map("id" -> "example_id")))
-    .name(code.toString)
-    .description(show(code))
+  private def mkExampleNotFound(code: V3ErrorCode.NotFounds) =
+    mkExample(NotFound(code, "Not found example message", Map("id" -> "example_id")), code)
 
-  private def show(code: V3ErrorCode) =
-    s"""Example template string for code `$code`:
-       |```
-       |${code.template}
-       |```""".stripMargin
+  private def mkExample[O <: V3ErrorInfo](example: O, code: V3ErrorCode) =
+    Example.of(example).name(code.toString).description(code.description)
+}
 
 class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) extends EndpointHelper {
 
   val getResourcesResourcesPerOntology = baseEndpoint
-    .publicWithErrorOut(oneOfNotFoundsErrorCode(project_not_found))
+    .publicWithErrorOut(oneOf(notFoundVariant(project_not_found)))
     .get
     .in(ApiV3.V3ProjectsProjectIri / "resourcesPerOntology")
     .out(

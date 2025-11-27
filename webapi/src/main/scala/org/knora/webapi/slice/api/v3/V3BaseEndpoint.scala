@@ -28,11 +28,9 @@ final case class V3BaseEndpoint(private val authenticator: Authenticator) {
     oneOfVariant(statusCode(StatusCode.Forbidden).and(jsonBody[Forbidden])),
   )
 
-  def publicWithErrorOut[O <: V3ErrorInfo](
-    errorOutFirst: EndpointOutput.OneOfVariant[O],
-    errorOutOther: EndpointOutput.OneOfVariant[O]*,
-  ): PublicEndpoint[Unit, V3ErrorInfo, Unit, Any] =
-    endpoint.errorOut(oneOf[V3ErrorInfo](errorOutFirst, errorOutOther: _*))
+  def publicWithErrorOut(
+    value: EndpointOutput.OneOf[V3ErrorInfo, V3ErrorInfo],
+  ): PublicEndpoint[Unit, V3ErrorInfo, Unit, Any] = endpoint.errorOut(value)
 
   private val endpointWithSecureErrorOut = endpoint.errorOut(secureErrorOut)
 
