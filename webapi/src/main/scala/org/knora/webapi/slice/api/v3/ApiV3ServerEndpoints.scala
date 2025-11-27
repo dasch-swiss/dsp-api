@@ -8,7 +8,7 @@ package org.knora.webapi.slice.api.v3
 import sttp.tapir.ztapir.*
 import zio.*
 
-import org.knora.webapi.slice.api.v3.export_.ExportServerEndpoints
+import org.knora.webapi.slice.`export`.api.ExportServerEndpoints
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpointsV3
 
 class ApiV3ServerEndpoints(

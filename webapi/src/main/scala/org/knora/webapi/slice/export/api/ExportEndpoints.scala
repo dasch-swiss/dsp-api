@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.api.v3.export_
+package org.knora.webapi.slice.`export`.api
 
 import sttp.model.HeaderNames
 import sttp.model.MediaType
@@ -17,11 +17,23 @@ import java.nio.charset.StandardCharsets
 
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
+import org.knora.webapi.slice.api.v3.V3ErrorCode.*
+import org.knora.webapi.slice.api.v3.export_.ExportRequest
+import org.knora.webapi.slice.api.v3.resources.EndpointHelper
 
 final case class ExportEndpoints(
   baseEndpoints: V3BaseEndpoint,
-) {
-  val postExportResources = baseEndpoints.withUserEndpoint.post
+) extends EndpointHelper {
+  val postExportResources = baseEndpoints
+    .withUser(
+      oneOf(
+        notFoundVariant(project_not_found),
+        notFoundVariant(ontology_not_found),
+        notFoundVariant(resourceClass_not_found),
+        badRequestVariant,
+      ),
+    )
+    .post
     .in(ApiV3.basePath / "export" / "resources")
     .in(
       jsonBody[ExportRequest].example(

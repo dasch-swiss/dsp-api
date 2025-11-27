@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.api.v3.export_
+package org.knora.webapi.slice.`export`.api
 
 import zio.*
 import zio.ZLayer
 
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint.EndpointT
+import org.knora.webapi.slice.api.v3.export_.ExportRestService
 
 final case class ExportServerEndpoints(
   exportEndpoints: ExportEndpoints,

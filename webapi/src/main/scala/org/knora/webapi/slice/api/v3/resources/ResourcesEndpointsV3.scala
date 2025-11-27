@@ -14,6 +14,7 @@ import zio.Chunk
 import zio.ZLayer
 
 import org.knora.webapi.slice.api.v3.ApiV3
+import org.knora.webapi.slice.api.v3.BadRequest
 import org.knora.webapi.slice.api.v3.ErrorDetail
 import org.knora.webapi.slice.api.v3.LanguageStringDto
 import org.knora.webapi.slice.api.v3.NotFound
@@ -35,6 +36,9 @@ trait EndpointHelper {
         jsonBody[NotFound].examples(codes.toList.map(mkExampleNotFound)),
       ),
     )
+
+  def badRequestVariant: EndpointOutput.OneOfVariant[BadRequest] =
+    oneOfVariant(statusCode(StatusCode.BadRequest).and(jsonBody[BadRequest]))
 
   private def mkExampleNotFound(code: V3ErrorCode.NotFounds) =
     mkExample(NotFound(code, "Not found example message", Map("id" -> "example_id")), code)

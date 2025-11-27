@@ -9,10 +9,10 @@ import sttp.tapir.*
 import zio.*
 
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.`export`.api.ExportServerEndpoints
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.api.v3.export_.ExportServerEndpoints
 import org.knora.webapi.slice.api.v3.ontology.OntologyRestServiceV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesEndpointsV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesRestServiceV3

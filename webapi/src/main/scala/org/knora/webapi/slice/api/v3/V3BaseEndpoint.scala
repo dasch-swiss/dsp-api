@@ -41,9 +41,10 @@ final case class V3BaseEndpoint(private val authenticator: Authenticator) {
       .securityIn(auth.bearer[String](WWWAuthenticateChallenge.bearer))
       .zServerSecurityLogic(handleBearerJwt)
 
-  val withUserEndpoint: ZPartialServerEndpoint[Any, Option[String], User, Unit, V3ErrorInfo, Unit, Any] =
+  def withUser(errorOut: ErrorOut): ZPartialServerEndpoint[Any, Option[String], User, Unit, V3ErrorInfo, Unit, Any] =
     endpoint
-      .errorOut(oneOf(unauthorizedVariant, forbiddenVariant))
+      .errorOut(errorOut)
+      .errorOutVariantsPrepend(unauthorizedVariant, forbiddenVariant)
       .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
       .zServerSecurityLogic {
         case Some(jwt) => handleBearerJwt(jwt)
