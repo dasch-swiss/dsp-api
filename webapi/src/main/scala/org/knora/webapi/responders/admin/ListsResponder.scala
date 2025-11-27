@@ -39,6 +39,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resources.repo.AskListNameInProjectExistsQuery
+import org.knora.webapi.slice.resources.repo.CanDeleteListQuery
 import org.knora.webapi.slice.resources.repo.CreateListNodeQuery
 import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -1055,10 +1056,7 @@ final case class ListsResponder(
    * Checks if a list can be deleted (none of its nodes is used in data).
    */
   def canDeleteListRequestADM(iri: ListIri): Task[CanDeleteListResponseADM] =
-    triplestore
-      .query(Select(sparql.admin.txt.canDeleteList(iri.value)))
-      .map(_.isEmpty)
-      .map(CanDeleteListResponseADM(iri.value, _))
+    triplestore.query(CanDeleteListQuery.build(iri)).map(CanDeleteListResponseADM(iri.value, _))
 
   /**
    * Deletes all comments from requested list node (only child).
