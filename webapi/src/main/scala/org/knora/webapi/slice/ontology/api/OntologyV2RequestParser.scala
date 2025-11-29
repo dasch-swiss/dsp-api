@@ -24,6 +24,7 @@ import dsp.valueobjects.Schema.GuiObject
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
+import org.knora.webapi.messages.OntologyConstants.Owl
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
@@ -88,7 +89,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private def extractOntologyMetadata(m: Model): ZIO[Scope, String, OntologyMetadata] =
     for {
-      r                    <- ZIO.fromEither(m.singleRootResource)
+      r                    <- ZIO.fromEither(m.singleRootResourceByType(Owl.Ontology))
       ontologyIri          <- uriAsOntologyIri(r)
       label                <- ZIO.fromEither(r.objectStringOption(RDFS.label))
       comment              <- ZIO.fromEither(ontologyRdfsComment(r))
