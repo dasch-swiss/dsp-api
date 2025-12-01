@@ -1,5 +1,12 @@
 # Changelog
 
+## [33.1.1](https://github.com/dasch-swiss/dsp-api/compare/v33.1.0...v33.1.1) (2025-12-01)
+
+
+### Bug Fixes
+
+* Prevent an exception when no comment is given when creating a child node ([#3882](https://github.com/dasch-swiss/dsp-api/issues/3882)) ([3c5df3b](https://github.com/dasch-swiss/dsp-api/commit/3c5df3b86b0515a28a38274eea7e401f2dc5ad11))
+
 ## [33.1.0](https://github.com/dasch-swiss/dsp-api/compare/v33.0.0...v33.1.0) (2025-12-01)
 
 
