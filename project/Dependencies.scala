@@ -103,7 +103,7 @@ object Dependencies {
 
   // input validation
   val commonsValidator =
-    "commons-validator" % "commons-validator" % "1.10.0" exclude ("commons-logging", "commons-logging")
+    "commons-validator" % "commons-validator" % "1.10.1" exclude ("commons-logging", "commons-logging")
 
   // authentication
   val jwtZioJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.3"
