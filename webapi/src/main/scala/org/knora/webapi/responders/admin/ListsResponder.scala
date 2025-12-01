@@ -601,26 +601,21 @@ final case class ListsResponder(
       // Create the new list node depending on type
       query = createNodeRequest match {
                 case r: ListCreateRootNodeRequest =>
-                  CreateListNodeQuery.build(
+                  CreateListNodeQuery.createRootNode(
                     project,
                     ListIri.unsafeFrom(newListNodeIri),
-                    None,
                     r.name,
                     r.labels,
                     r.comments,
                   )
                 case c: ListCreateChildNodeRequest =>
-                  CreateListNodeQuery.build(
+                  CreateListNodeQuery.createChildNode(
                     project,
                     ListIri.unsafeFrom(newListNodeIri),
-                    Some(
-                      c.parentNodeIri,
-                      ListIri.unsafeFrom(rootNodeIri.get),
-                      Position.unsafeFrom(newPosition.get),
-                    ),
+                    (c.parentNodeIri, ListIri.unsafeFrom(rootNodeIri.get), Position.unsafeFrom(newPosition.get)),
                     c.name,
                     c.labels,
-                    c.comments.get,
+                    c.comments,
                   )
               }
       _ <- triplestore.query(Update(query))

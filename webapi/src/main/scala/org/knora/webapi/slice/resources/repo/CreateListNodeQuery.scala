@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.resources.repo
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
+import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 
@@ -21,15 +22,32 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 
 object CreateListNodeQuery extends QueryBuilderHelper {
 
-  def build(
-    knoraProject: KnoraProject,
+  def createRootNode(
+    project: KnoraProject,
+    node: ListIri,
+    name: Option[ListName],
+    labels: Labels,
+    comments: Comments,
+  ): ModifyQuery = build(project, node, None, name, labels, Some(comments))
+
+  def createChildNode(
+    project: KnoraProject,
+    node: ListIri,
+    parent: (ListIri, ListIri, Position),
+    name: Option[ListName],
+    labels: Labels,
+    comments: Option[Comments],
+  ): ModifyQuery = build(project, node, Some(parent), name, labels, comments)
+
+  private def build(
+    project: KnoraProject,
     node: ListIri,
     parent: Option[(ListIri, ListIri, Position)],
     name: Option[ListName],
     labels: Labels,
-    comments: Comments,
+    comments: Option[Comments],
   ) = {
-    val graphName                          = graphIri(knoraProject)
+    val graphName                          = graphIri(project)
     val nodeIri                            = toRdfIri(node)
     val insertPatterns: Seq[TriplePattern] = {
       val nodePatterns = parent
@@ -45,13 +63,13 @@ object CreateListNodeQuery extends QueryBuilderHelper {
         .getOrElse(
           List(
             nodeIri
-              .has(KnoraBase.attachedToProject, toRdfIri(knoraProject.id))
+              .has(KnoraBase.attachedToProject, toRdfIri(project.id))
               .andHas(KnoraBase.isRootNode, true),
           ),
         )
       val namePatterns    = name.toList.map(n => nodeIri.has(KnoraBase.listNodeName, n.value))
       val labelPatterns   = labels.value.map(toRdfLiteral).map(nodeIri.has(RDFS.LABEL, _))
-      val commentPatterns = comments.value.map(toRdfLiteral).map(nodeIri.has(RDFS.COMMENT, _))
+      val commentPatterns = comments.toList.flatMap(_.value).map(toRdfLiteral).map(nodeIri.has(RDFS.COMMENT, _))
       Seq(nodeIri.isA(KnoraBase.ListNode)) ++ nodePatterns ++ namePatterns ++ labelPatterns ++ commentPatterns
     }
 
