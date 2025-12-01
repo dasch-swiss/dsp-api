@@ -132,7 +132,7 @@ object Dependencies {
 
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.2"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.0"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.13.2"
 
@@ -209,7 +209,6 @@ object Dependencies {
   val hikariVersion         = "7.0.2"
   val quillVersion          = "4.8.6"
   val sqliteVersion         = "3.51.0.0"
-  val testContainersVersion = "1.20.4"
 
   val db = Seq(
     "org.xerial"   % "sqlite-jdbc"    % sqliteVersion,
