@@ -1,5 +1,29 @@
 # Changelog
 
+## [33.1.0](https://github.com/dasch-swiss/dsp-api/compare/v33.0.0...v33.1.0) (2025-12-01)
+
+
+### Maintenances
+
+* Dependency updates ([#3881](https://github.com/dasch-swiss/dsp-api/issues/3881)) ([7338aac](https://github.com/dasch-swiss/dsp-api/commit/7338aac04a52ecf0d83d190f76c8bd754c485a0e))
+* Minor dependency updates ([#3880](https://github.com/dasch-swiss/dsp-api/issues/3880)) ([737faa1](https://github.com/dasch-swiss/dsp-api/commit/737faa1845e7cf0f098149370ca00c26570ff047))
+* Patch dependency updates ([#3879](https://github.com/dasch-swiss/dsp-api/issues/3879)) ([b0f2104](https://github.com/dasch-swiss/dsp-api/commit/b0f2104e7fab64bbe958dfa602046320a3d0fdc8))
+* Remove manual sparql encoding list properties (DEV-5645) ([#3871](https://github.com/dasch-swiss/dsp-api/issues/3871)) ([63ca5bc](https://github.com/dasch-swiss/dsp-api/commit/63ca5bc078fc5b44ecbc4ace4e1e578973849642))
+
+
+### Enhancements
+
+* CSV export backend improvements (DEV-5630) ([#3868](https://github.com/dasch-swiss/dsp-api/issues/3868)) ([c825f29](https://github.com/dasch-swiss/dsp-api/commit/c825f29ffd0d1d95e7cfd3c22053e5395633f274))
+* ExportService: load vocabularies (DEV-3630) ([#3876](https://github.com/dasch-swiss/dsp-api/issues/3876)) ([126a181](https://github.com/dasch-swiss/dsp-api/commit/126a181ebe0baa09bec4b7814db1262ca46f15ea))
+* Improve OpenAPI documentation and refine enum types v3 ([#3875](https://github.com/dasch-swiss/dsp-api/issues/3875)) ([762ae7f](https://github.com/dasch-swiss/dsp-api/commit/762ae7fc92ee632789c4bfd0e0efa4217cd75bb0))
+
+
+### Bug Fixes
+
+* Allow to limit to class and project searchbylabel (DEV-5580) ([#3877](https://github.com/dasch-swiss/dsp-api/issues/3877)) ([db3e78b](https://github.com/dasch-swiss/dsp-api/commit/db3e78b7f648f6dad96c486a837b387649a997a2))
+* Do not die if ReadResourceV2 cannot be transformed to single Resource but fail with a RequestRejectedException ([#3872](https://github.com/dasch-swiss/dsp-api/issues/3872)) ([eb4eb18](https://github.com/dasch-swiss/dsp-api/commit/eb4eb18fd14d978fd05eedfaf6bade6b7c339614))
+* Remove custom permission logic in Sipi (DEV-5484) ([#3874](https://github.com/dasch-swiss/dsp-api/issues/3874)) ([b173593](https://github.com/dasch-swiss/dsp-api/commit/b17359322f182c5c60f5217febce4b75e87d2e01))
+
 ## [33.0.0](https://github.com/dasch-swiss/dsp-api/compare/v32.7.0...v33.0.0) (2025-11-21)
 
 
