@@ -60,10 +60,9 @@ object CreateListNodeQuerySpec extends ZIOSpecDefault {
         ),
       )
 
-      val query = CreateListNodeQuery.build(
-        knoraProject = testProject,
+      val query = CreateListNodeQuery.createRootNode(
+        project = testProject,
         node = rootNodeIri,
-        parent = None,
         name = Some(listName),
         labels = labels,
         comments = comments,
@@ -97,10 +96,9 @@ object CreateListNodeQuerySpec extends ZIOSpecDefault {
         ),
       )
 
-      val query = CreateListNodeQuery.build(
-        knoraProject = testProject,
+      val query = CreateListNodeQuery.createRootNode(
+        project = testProject,
         node = rootNodeIri,
-        parent = None,
         name = None,
         labels = labels,
         comments = comments,
@@ -133,13 +131,13 @@ object CreateListNodeQuerySpec extends ZIOSpecDefault {
       )
       val position = Position.unsafeFrom(0)
 
-      val query = CreateListNodeQuery.build(
-        knoraProject = testProject,
+      val query = CreateListNodeQuery.createChildNode(
+        project = testProject,
         node = childNodeIri,
-        parent = Some((parentNodeIri, rootNodeIri, position)),
+        parent = (parentNodeIri, rootNodeIri, position),
         name = Some(listName),
         labels = labels,
-        comments = comments,
+        comments = Some(comments),
       )
 
       assertTrue(
@@ -162,13 +160,13 @@ object CreateListNodeQuerySpec extends ZIOSpecDefault {
       val comments = Comments.unsafeFrom(List(StringLiteralV2.from("Fifth node", EN)))
       val position = Position.unsafeFrom(5)
 
-      val query = CreateListNodeQuery.build(
-        knoraProject = testProject,
+      val query = CreateListNodeQuery.createChildNode(
+        project = testProject,
         node = childNodeIri,
-        parent = Some((parentNodeIri, rootNodeIri, position)),
+        parent = (parentNodeIri, rootNodeIri, position),
         name = None,
         labels = labels,
-        comments = comments,
+        comments = Some(comments),
       )
 
       assertTrue(
@@ -202,10 +200,9 @@ object CreateListNodeQuerySpec extends ZIOSpecDefault {
         ),
       )
 
-      val query = CreateListNodeQuery.build(
-        knoraProject = testProject,
+      val query = CreateListNodeQuery.createRootNode(
+        project = testProject,
         node = rootNodeIri,
-        parent = None,
         name = Some(ListName.unsafeFrom("multilingualList")),
         labels = labels,
         comments = comments,
@@ -249,10 +246,9 @@ object CreateListNodeQuerySpec extends ZIOSpecDefault {
       val labels   = Labels.unsafeFrom(List(StringLiteralV2.from("Image Types", EN)))
       val comments = Comments.unsafeFrom(List(StringLiteralV2.from("Types of images", EN)))
 
-      val query = CreateListNodeQuery.build(
-        knoraProject = otherProject,
+      val query = CreateListNodeQuery.createRootNode(
+        project = otherProject,
         node = nodeIri,
-        parent = None,
         name = Some(ListName.unsafeFrom("imageTypes")),
         labels = labels,
         comments = comments,
@@ -284,10 +280,9 @@ object CreateListNodeQuerySpec extends ZIOSpecDefault {
         ),
       )
 
-      val query = CreateListNodeQuery.build(
-        knoraProject = testProject,
+      val query = CreateListNodeQuery.createRootNode(
+        project = testProject,
         node = rootNodeIri,
-        parent = None,
         name = None,
         labels = labels,
         comments = comments,
