@@ -94,7 +94,7 @@ object ProjectsEndpointsResponses {
     def from(report: ChecksumReport): AssetCheckResultResponse = {
       val reportResults = report.results
       val results       = reportResults.map { case (info, checksum) => AssetCheckResultEntry.from(info, checksum) }.toList
-      val summary = AssetCheckResultSummary(
+      val summary       = AssetCheckResultSummary(
         reportResults.keys.size,
         reportResults.values.map(_.size).sum,
         reportResults.values.map(_.count(_.checksumMatches)).sum,

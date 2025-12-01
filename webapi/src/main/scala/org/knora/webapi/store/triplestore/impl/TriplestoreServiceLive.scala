@@ -75,7 +75,7 @@ case class TriplestoreServiceLive(
       ZIO.logError(msg) *> ZIO.fail(TriplestoreTimeoutException(msg))
     } else {
       val delimiter: String = "\n" + StringUtils.repeat('=', 80) + "\n"
-      val msg =
+      val msg               =
         s"Couldn't parse response from triplestore:$delimiter$response${delimiter}in response to SPARQL query:$delimiter$sparql"
       ZIO.logError(msg) *> ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
     }
@@ -102,7 +102,7 @@ case class TriplestoreServiceLive(
   override def query(query: Construct): Task[SparqlConstructResponse] =
     for {
       turtleStr <- executeSparqlQuery(query, mimeTypeTextTurtle)
-      rdfModel <- ZIO
+      rdfModel  <- ZIO
                     .attempt(RdfModel.fromTurtle(turtleStr))
                     .orElse(processError(query.sparql, turtleStr))
     } yield SparqlConstructResponse.make(rdfModel)
@@ -153,7 +153,7 @@ case class TriplestoreServiceLive(
     for {
       resultString <- executeSparqlQuery(query)
       _            <- ZIO.logTrace(s"sparqlHttpAsk - resultString: $resultString")
-      result <-
+      result       <-
         ZIO
           .fromEither(for {
             obj     <- resultString.fromJson[Json.Obj]
@@ -328,7 +328,7 @@ case class TriplestoreServiceLive(
         )
       response <- doHttpRequest(request)
       rdfBody  <- ensuringBody(response.body).map(RdfStringSource(_))
-      _ <- ZIO.attemptBlocking {
+      _        <- ZIO.attemptBlocking {
              RdfFormatUtil.turtleToQuadsFile(rdfBody, graphIri.value, outputFile.toFile.toPath, outputFormat, APPEND)
            }
     } yield ()

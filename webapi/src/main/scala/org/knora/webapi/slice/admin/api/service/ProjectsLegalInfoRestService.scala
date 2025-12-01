@@ -45,7 +45,7 @@ final case class ProjectsLegalInfoRestService(
     filterAndOrder: FilterAndOrder,
     showEnabledOnly: Boolean,
   ): IO[NotFoundException, PagedResponse[ProjectLicenseDto]] = for {
-    prj <- projects.findByShortcode(shortcode).orDie.someOrFail(NotFoundException(s"Project $shortcode not found"))
+    prj      <- projects.findByShortcode(shortcode).orDie.someOrFail(NotFoundException(s"Project $shortcode not found"))
     licenses <- if (showEnabledOnly) { legalInfos.findEnabledLicenses(shortcode) }
                 else { legalInfos.findAvailableLicenses(shortcode) }
     licenseDtos = licenses.map(ProjectLicenseDto.from(_, prj)).toSeq
@@ -55,7 +55,7 @@ final case class ProjectsLegalInfoRestService(
     shortcode: Shortcode,
     licenseIri: LicenseIri,
   ): IO[NotFoundException, ProjectLicenseDto] = for {
-    prj <- projects.findByShortcode(shortcode).orDie.someOrFail(NotFoundException(s"Project $shortcode not found"))
+    prj     <- projects.findByShortcode(shortcode).orDie.someOrFail(NotFoundException(s"Project $shortcode not found"))
     license <- legalInfos
                  .findAvailableLicenseByIdAndShortcode(licenseIri, shortcode)
                  .someOrFail(NotFoundException(s"License $licenseIri not found in project $shortcode"))

@@ -79,7 +79,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
 
       // then
       mockJwt <- getTokenForDspIngest
-      _ <- HttpMockServer.verify.request(
+      _       <- HttpMockServer.verify.request(
              postRequestedFor(urlPathEqualTo(expectedUrl))
                .withHeader("Authorization", equalTo(s"Bearer $mockJwt")),
            )
@@ -91,7 +91,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
     implicit val encoder: JsonEncoder[AssetInfoResponse] = DeriveJsonEncoder.gen[AssetInfoResponse]
     val assetId                                          = AssetId.unsafeFrom("4sAf4AmPeeg-ZjDn3Tot1Zt")
     val expectedUrl                                      = s"/projects/$testShortcodeStr/assets/$assetId"
-    val expected = AssetInfoResponse(
+    val expected                                         = AssetInfoResponse(
       internalFilename = s"$assetId.txt",
       originalInternalFilename = s"$assetId.txt.orig",
       originalFilename = "test.txt",
@@ -109,7 +109,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
 
       // then
       mockJwt <- getTokenForDspIngest
-      _ <- HttpMockServer.verify.request(
+      _       <- HttpMockServer.verify.request(
              getRequestedFor(urlPathEqualTo(expectedUrl))
                .withHeader("Authorization", equalTo(s"Bearer $mockJwt")),
            )

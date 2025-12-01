@@ -81,7 +81,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
-          exportedCsv <-
+          exportedCsv   <-
             exportService.exportResources(
               project,
               resourceClassIri,
@@ -105,7 +105,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
-          exportedCsv <-
+          exportedCsv   <-
             exportService.exportResources(
               project,
               resourceClassIri,

@@ -95,7 +95,7 @@ case class CreateValueResponseV2(
           JsonLDKeywords.ID   -> JsonLDString(valueIri),
           JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
           ValueHasUUID        -> JsonLDString(UuidUtil.base64Encode(valueUUID)),
-          ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+          ValueCreationDate   -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueCreationDate.toString,
             datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           ),
@@ -224,7 +224,7 @@ case class DeletionInfo(deleteDate: Instant, maybeDeleteComment: Option[String])
     }
 
     Map(
-      IsDeleted -> JsonLDBoolean(true),
+      IsDeleted  -> JsonLDBoolean(true),
       DeleteDate -> JsonLDObject(
         Map(
           JsonLDKeywords.TYPE  -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
@@ -330,12 +330,12 @@ sealed trait ReadValueV2 {
               AttachedToUser      -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
               HasPermissions      -> JsonLDString(permissions),
               UserHasPermission   -> JsonLDString(userPermission.toString),
-              ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+              ValueCreationDate   -> JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueCreationDate.toString,
                 datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
               ),
               ValueHasUUID -> JsonLDString(UuidUtil.base64Encode(valueHasUUID)),
-              ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+              ArkUrl       -> JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri,
               ),
@@ -707,7 +707,7 @@ object ValueContentV2 {
     ZIO.foreach(filenameMaybe) { filename =>
       for {
         sipiService <- ZIO.service[SipiService]
-        assetId <- ZIO
+        assetId     <- ZIO
                      .fromEither(AssetId.fromFilename(filename))
                      .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
         meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
@@ -1022,8 +1022,8 @@ case class TextValueContentV2(
 
               // the xml was converted to HTML
               Map(
-                TextValueAsHtml -> JsonLDString(xmlTransformed),
-                TextValueAsXml  -> JsonLDString(xmlFromStandoff),
+                TextValueAsHtml     -> JsonLDString(xmlTransformed),
+                TextValueAsXml      -> JsonLDString(xmlFromStandoff),
                 TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(
                   definedMappingIri,
                 ),
@@ -1031,7 +1031,7 @@ case class TextValueContentV2(
 
             case None =>
               Map(
-                TextValueAsXml -> JsonLDString(xmlFromStandoff),
+                TextValueAsXml      -> JsonLDString(xmlFromStandoff),
                 TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(
                   definedMappingIri,
                 ),
@@ -1219,7 +1219,7 @@ object TextValueContentV2 {
     maybeTextValueAsXml   <- ZIO.fromEither(r.objectStringOption(TextValueAsXml))
     comment               <- ZIO.fromEither(objectCommentOption(r))
     mappingIriOption      <- ZIO.fromEither(r.objectUriOption(TextValueHasMapping))
-    maybeMappingResponse <- ZIO
+    maybeMappingResponse  <- ZIO
                               .foreach(mappingIriOption) { mappingIri =>
                                 messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri))
                               }
@@ -1625,7 +1625,7 @@ object HierarchicalListValueContentV2 {
   def from(r: Resource, converter: IriConverter): IO[String, HierarchicalListValueContentV2] = for {
     comment  <- ZIO.fromEither(objectCommentOption(r))
     listNode <- ZIO.fromEither(r.objectUri(ListValueAsListNode))
-    _ <- ZIO
+    _        <- ZIO
            .fail(s"List node IRI <$listNode> is not a Knora data IRI")
            .unlessZIO(converter.isKnoraDataIri(listNode).mapError(_.getMessage))
   } yield HierarchicalListValueContentV2(ApiV2Complex, listNode, None, comment)
@@ -1850,9 +1850,9 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
     def mkJsonLdString: StringValue => JsonLDString           = sv => JsonLDString(sv.value)
     def mkJsonLdStringArray: List[StringValue] => JsonLDArray = values => JsonLDArray(values.map(mkJsonLdString))
     def mkJsLdId: StringValue => JsonLDObject                 = str => JsonLDObject(Map("@id" -> JsonLDString(str.value)))
-    val knownValues: Map[IRI, JsonLDValue] = Map(
+    val knownValues: Map[IRI, JsonLDValue]                    = Map(
       FileValueHasFilename -> JsonLDString(fileValue.internalFilename),
-      FileValueAsUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+      FileValueAsUrl       -> JsonLDUtil.datatypeValueToJsonLDObject(
         value = fileUrl,
         datatype = OntologyConstants.Xsd.Uri.toSmartIri,
       ),
@@ -1907,8 +1907,8 @@ case class StillImageFileValueContentV2(
       case ApiV2Complex =>
         JsonLDObject(
           toJsonLDObjectMapInComplexSchema(fileUrl) ++ Map(
-            StillImageFileValueHasDimX -> JsonLDInt(dimX),
-            StillImageFileValueHasDimY -> JsonLDInt(dimY),
+            StillImageFileValueHasDimX        -> JsonLDInt(dimX),
+            StillImageFileValueHasDimY        -> JsonLDInt(dimY),
             StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil
               .datatypeValueToJsonLDObject(
                 value = s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}",
@@ -2098,7 +2098,7 @@ case class ArchiveFileValueContentV2(
       s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
 
     targetSchema match {
-      case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
+      case ApiV2Simple  => toJsonLDValueInSimpleSchema(fileUrl)
       case ApiV2Complex =>
         JsonLDObject(
           toJsonLDObjectMapInComplexSchema(
@@ -2391,7 +2391,7 @@ object LinkValueContentV2 {
     for {
       targetIri <- ZIO.fromEither(r.objectUri(LinkValueHasTargetIri))
       comment   <- ZIO.fromEither(objectCommentOption(r))
-      _ <- ZIO
+      _         <- ZIO
              .fail(s"Link target IRI <$targetIri> is not a Knora data IRI")
              .unlessZIO(converter.isKnoraDataIri(targetIri).mapError(_.getMessage))
     } yield LinkValueContentV2(ApiV2Complex, referredResourceIri = targetIri, comment = comment)

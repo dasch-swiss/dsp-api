@@ -314,7 +314,7 @@ object RdfFormatUtil {
     openOption: OpenOption = StandardOpenOption.CREATE,
   ): Unit = {
     val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile, openOption))
-    val streamRDF = new jena.riot.system.StreamRDF {
+    val streamRDF                = new jena.riot.system.StreamRDF {
       val inner: jena.riot.system.StreamRDF = jena.riot.system.StreamRDFWriter.getWriterStream(
         bufferedFileOutputStream,
         RdfFormatUtil.rdfFormatToJenaParsingLang(outputFormat),
@@ -332,7 +332,7 @@ object RdfFormatUtil {
       override def base(s: String): Unit                              = {}
       override def prefix(prefixStr: String, namespace: String): Unit = inner.prefix(prefixStr, namespace)
       override def finish(): Unit                                     = inner.finish()
-      override def triple(triple: jena.graph.Triple): Unit =
+      override def triple(triple: jena.graph.Triple): Unit            =
         quad(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))
       override def quad(quad: jena.sparql.core.Quad): Unit = processStatement(JenaStatement(quad))
     }

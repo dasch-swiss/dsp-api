@@ -111,7 +111,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
       suite("findById")(
         test("return project if it exists") {
           for {
-            _ <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+            _      <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
             actual <- KnoraProjectRepo(_.findById(ProjectIri.unsafeFrom("http://rdfh.ch/projects/1234")))
                         .someOrFail(Exception("Project not found"))
           } yield assertTrue(actual == someProject)
@@ -132,7 +132,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
       suite("find by Shortcode")(
         test("return project if it exists") {
           for {
-            _ <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+            _      <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
             actual <- KnoraProjectRepo(_.findByShortcode(Shortcode.unsafeFrom("1234")))
                         .someOrFail(Exception("Project not found"))
           } yield assertTrue(actual == someProject)
@@ -154,7 +154,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
       suite("find by Shortname")(
         test("return project if it exists") {
           for {
-            _ <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+            _      <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
             actual <- KnoraProjectRepo(_.findByShortname(Shortname.unsafeFrom("project1")))
                         .someOrFail(Exception("Project not found"))
           } yield assertTrue(actual == someProject)

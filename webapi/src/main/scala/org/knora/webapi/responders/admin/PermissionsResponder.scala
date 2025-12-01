@@ -164,7 +164,7 @@ final case class PermissionsResponder(
         _ <- validate(createRequest)
         // does the permission already exist
         projectId <- ZIO.fromEither(ProjectIri.from(createRequest.forProject)).mapError(BadRequestException.apply)
-        _ <- // ensure that no permission already exists for project and group
+        _         <- // ensure that no permission already exists for project and group
           administrativePermissionService
             .findByGroupAndProject(GroupIri.unsafeFrom(createRequest.forGroup), projectId)
             .map(_.map(AdministrativePermissionADM.from))
@@ -192,7 +192,7 @@ final case class PermissionsResponder(
             ZIO.succeed(createRequest.forGroup)
           } else {
             for {
-              iri <- ZIO.fromEither(GroupIri.from(createRequest.forGroup)).mapError(ValidationException(_))
+              iri   <- ZIO.fromEither(GroupIri.from(createRequest.forGroup)).mapError(ValidationException(_))
               group <-
                 groupService
                   .findById(iri)
@@ -201,7 +201,7 @@ final case class PermissionsResponder(
           }
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => stringFormatter.toSmartIri(iri))
-        newPermissionIri <- iriService.checkOrCreateEntityIri(
+        newPermissionIri                     <- iriService.checkOrCreateEntityIri(
                               customPermissionIri,
                               PermissionIri.makeNew(project.shortcode).value,
                             )
@@ -238,7 +238,7 @@ final case class PermissionsResponder(
   private def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: User) =
     for {
       administrativePermission <- permissionGetADM(administrativePermissionIri, requestingUser)
-      result <- administrativePermission match {
+      result                   <- administrativePermission match {
                   case ap: AdministrativePermissionADM =>
                     ZIO.succeed(AdministrativePermissionGetResponseADM(ap))
                   case _ =>
@@ -541,7 +541,7 @@ final case class PermissionsResponder(
 
     for {
       permissions <- calculatePermissionWithPrecedence(permissionTasks)
-      result = permissions
+      result       = permissions
                  .getOrElse(Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.Creator.id.value)))
       resultStr = PermissionUtilADM.formatPermissionADMs(result, DOAP)
     } yield DefaultObjectAccessPermissionsStringResponseADM(resultStr)
@@ -551,8 +551,8 @@ final case class PermissionsResponder(
     req: CreateDefaultObjectAccessPermissionAPIRequestADM,
   ): IO[String, DefaultObjectAccessPermission] =
     for {
-      projectIri <- ZIO.fromEither(ProjectIri.from(req.forProject))
-      project    <- knoraProjectService.findById(projectIri).orDie.someOrFail("Project not found")
+      projectIri    <- ZIO.fromEither(ProjectIri.from(req.forProject))
+      project       <- knoraProjectService.findById(projectIri).orDie.someOrFail("Project not found")
       permissionIri <-
         ZIO
           .foreach(req.id)(iriConverter.asSmartIri)
@@ -574,12 +574,12 @@ final case class PermissionsResponder(
     val createPermissionTask =
       for {
         doap <- validate(createRequest).mapError(BadRequestException(_))
-        _ <- doapService.findByProjectAndForWhat(doap.forProject, doap.forWhat).flatMap {
+        _    <- doapService.findByProjectAndForWhat(doap.forProject, doap.forWhat).flatMap {
                case Some(existing: DefaultObjectAccessPermission) =>
                  val msg = existing.forWhat match
-                   case Group(g)          => s"and group: '${g.value}' "
-                   case ResourceClass(rc) => s"and resourceClass: '${rc.value}' "
-                   case Property(prop)    => s"and property: '${prop.value}' "
+                   case Group(g)                           => s"and group: '${g.value}' "
+                   case ResourceClass(rc)                  => s"and resourceClass: '${rc.value}' "
+                   case Property(prop)                     => s"and property: '${prop.value}' "
                    case ResourceClassAndProperty(rc, prop) =>
                      s"and resourceClass: '${rc.value}' and property: '${prop.value}' "
                  ZIO.fail(
@@ -703,7 +703,7 @@ final case class PermissionsResponder(
       group         <- ZIO.foreach(req.forGroup)(checkGroupExists)
       resourceClass <- ZIO.foreach(req.forResourceClass)(checkResourceClassIri)
       property      <- ZIO.foreach(req.forProperty)(checkPropertyIri)
-      newForWhat <- ZIO
+      newForWhat    <- ZIO
                       .fromEither(ForWhat.fromIris(group, resourceClass, property))
                       .when(req.hasForWhat)
                       .mapError(BadRequestException.apply)
@@ -760,7 +760,7 @@ final case class PermissionsResponder(
     val verifyPermissionGroupUpdate =
       for {
         updatedPermission <- permissionGetADM(permissionIri.value, requestingUser)
-        _ = updatedPermission match {
+        _                  = updatedPermission match {
               case ap: AdministrativePermissionADM =>
                 if (ap.forGroup != groupIri.value)
                   throw UpdateNotPerformedException(
@@ -787,7 +787,7 @@ final case class PermissionsResponder(
       for {
         // get permission
         permission <- permissionGetADM(permissionIri.value, requestingUser)
-        response <-
+        response   <-
           permission match {
             // Is permission an administrative permission?
             case ap: AdministrativePermissionADM =>
@@ -854,12 +854,12 @@ final case class PermissionsResponder(
       for {
         // get permission
         permission <- permissionGetADM(permissionIriInternal, requestingUser)
-        response <- permission match {
+        response   <- permission match {
                       // Is permission an administrative permission?
                       case ap: AdministrativePermissionADM =>
                         // Yes.
                         for {
-                          verifiedPermissions <- verifyHasPermissionsAP(newHasPermissions.toSet)
+                          verifiedPermissions  <- verifyHasPermissionsAP(newHasPermissions.toSet)
                           formattedPermissions <-
                             ZIO.attempt(
                               PermissionUtilADM.formatPermissionADMs(verifiedPermissions, PermissionType.AP),
@@ -948,7 +948,7 @@ final case class PermissionsResponder(
       permissionQueryResponse <- triplestore.query(Select(sparql.admin.txt.getPermissionByIRI(permissionIri)))
 
       /* extract response rows */
-      permissionQueryResponseRows = permissionQueryResponse.results.bindings
+      permissionQueryResponseRows     = permissionQueryResponse.results.bindings
       groupedPermissionsQueryResponse = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                                           case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                                         }

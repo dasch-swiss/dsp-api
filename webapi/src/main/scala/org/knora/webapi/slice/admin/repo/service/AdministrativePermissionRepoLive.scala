@@ -130,7 +130,7 @@ object AdministrativePermissionRepoLive {
     private def toStringLiteral(permissions: Chunk[AdministrativePermissionPart]): String = {
       def useKnoraAdminPrefix(str: String) = str.replace(KnoraAdminPrefixExpansion, KnoraAdminPrefix)
       permissions.map {
-        case AdministrativePermissionPart.Simple(permission) => permission.token
+        case AdministrativePermissionPart.Simple(permission)             => permission.token
         case AdministrativePermissionPart.ResourceCreateRestricted(iris) =>
           s"${Permission.Administrative.ProjectResourceCreateRestricted.token} ${iris.map(_.value).mkString(",")}"
         case AdministrativePermissionPart.ProjectAdminGroupRestricted(groups) =>

@@ -56,7 +56,7 @@ trait QueryBuilderHelper {
   def toRdfLiteral(lmd: LastModificationDate): RdfLiteral.StringLiteral = toRdfLiteral(lmd.value)
   def toRdfLiteral(instant: Instant): RdfLiteral.StringLiteral          = Rdf.literalOfType(instant.toString, XSD.DATETIME)
 
-  def toRdfLiteral(int: Int): RdfLiteral.StringLiteral = Rdf.literalOfType(int.toString, XSD.INT)
+  def toRdfLiteral(int: Int): RdfLiteral.StringLiteral            = Rdf.literalOfType(int.toString, XSD.INT)
   def toRdfLiteralNonNegative(int: Int): RdfLiteral.StringLiteral =
     Rdf.literalOfType(int.toString, XSD.NON_NEGATIVE_INTEGER)
 

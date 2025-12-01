@@ -29,8 +29,8 @@ object CreateListNodeQuery extends QueryBuilderHelper {
     labels: Labels,
     comments: Comments,
   ) = {
-    val graphName = graphIri(knoraProject)
-    val nodeIri   = toRdfIri(node)
+    val graphName                          = graphIri(knoraProject)
+    val nodeIri                            = toRdfIri(node)
     val insertPatterns: Seq[TriplePattern] = {
       val nodePatterns = parent
         .map((a, b, c) => (toRdfIri(a), toRdfIri(b), c))

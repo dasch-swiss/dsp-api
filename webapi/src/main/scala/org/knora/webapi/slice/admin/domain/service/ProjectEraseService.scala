@@ -80,7 +80,7 @@ final case class ProjectEraseService(
   private def cleanUpPermissions(project: KnoraProject) = for {
     aps   <- apRepo.findByProject(project)
     doaps <- doapRepo.findByProject(project)
-    _ <-
+    _     <-
       ZIO.logInfo(
         s"${logPrefix(project)} Removing permissions ap ${mkString(aps.map(_.id))} , doap ${mkString(doaps.map(_.id))}",
       )

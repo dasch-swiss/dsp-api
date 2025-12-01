@@ -93,7 +93,7 @@ object OntologyHelpers {
       val ontologyIri = propertyIri.getOntologyFromEntity
 
       val isResourceProp = allKnoraResourceProps.contains(propertyIri)
-      val isValueProp =
+      val isValueProp    =
         allSubPropertyOfRelations(propertyIri).contains(OntologyConstants.KnoraBase.HasValue.toSmartIri)
       val isLinkProp      = allLinkProps.contains(propertyIri)
       val isLinkValueProp = allLinkValueProps.contains(propertyIri)
@@ -245,7 +245,7 @@ object OntologyHelpers {
       val allBaseClasses: Seq[SmartIri] = allSubClassOfRelations(classIri)
       val isKnoraResourceClass          = allBaseClasses.contains(OntologyConstants.KnoraBase.Resource.toSmartIri)
       val isStandoffClass               = allBaseClasses.contains(OntologyConstants.KnoraBase.StandoffTag.toSmartIri)
-      val isValueClass = !(isKnoraResourceClass || isStandoffClass) && allBaseClasses.contains(
+      val isValueClass                  = !(isKnoraResourceClass || isStandoffClass) && allBaseClasses.contains(
         OntologyConstants.KnoraBase.Value.toSmartIri,
       )
 
@@ -515,7 +515,7 @@ object OntologyHelpers {
 
       blankNodeTypeObjs match {
         case Seq(IriLiteralV2(OntologyConstants.Owl.Restriction)) => ()
-        case _ =>
+        case _                                                    =>
           throw InconsistentRepositoryDataException(s"Blank node '${blankNodeID.value}' is not an owl:Restriction")
       }
 
@@ -543,7 +543,7 @@ object OntologyHelpers {
 
       val owlCardinalityValue: Int = blankNode(owlCardinalityIri) match {
         case Seq(IntLiteralV2(intVal)) => intVal
-        case other =>
+        case other                     =>
           throw InconsistentRepositoryDataException(
             s"Expected one integer object for predicate $owlCardinalityIri in blank node '${blankNodeID.value}', got $other",
           )
@@ -552,7 +552,7 @@ object OntologyHelpers {
       val guiOrder: Option[Int] = blankNode.get(SalsahGui.GuiOrder.toSmartIri) match {
         case Some(Seq(IntLiteralV2(intVal))) => Some(intVal)
         case None                            => None
-        case other =>
+        case other                           =>
           throw InconsistentRepositoryDataException(
             s"Expected one integer object for predicate ${SalsahGui.GuiOrder} in blank node '${blankNodeID.value}', got $other",
           )
@@ -991,7 +991,7 @@ object OntologyHelpers {
           .map(_.toSet)
       }
 
-      existingLinkValuePropsToKeep = existingLinkPropsToKeep.map(_.fromLinkPropToLinkValueProp)
+      existingLinkValuePropsToKeep       = existingLinkPropsToKeep.map(_.fromLinkPropToLinkValueProp)
       newLinkPropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities
                                              .filter(_.isLinkProp)
                                              .map(_.entityInfoContent.propertyIri) -- existingLinkPropsToKeep

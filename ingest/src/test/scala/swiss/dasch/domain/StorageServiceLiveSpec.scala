@@ -63,12 +63,12 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
       test("should create a temp directory") {
         ZIO.scoped {
           for {
-            now         <- Clock.instant
-            _           <- TestClock.setTime(now)
-            testDirName <- Random.nextUUID.map(_.toString)
-            tempDir     <- StorageService.createTempDirectoryScoped(testDirName)
-            exists      <- Files.isDirectory(tempDir)
-            containsName = tempDir.filename.toString == testDirName
+            now                <- Clock.instant
+            _                  <- TestClock.setTime(now)
+            testDirName        <- Random.nextUUID.map(_.toString)
+            tempDir            <- StorageService.createTempDirectoryScoped(testDirName)
+            exists             <- Files.isDirectory(tempDir)
+            containsName        = tempDir.filename.toString == testDirName
             parentNameIsCorrect =
               tempDir.parent
                 .exists(
@@ -83,7 +83,7 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
       test("Should remove directory and content after scope") {
         for {
           testDirName <- Random.nextUUID.map(_.toString)
-          tempDir <-
+          tempDir     <-
             ZIO.scoped(
               StorageService.createTempDirectoryScoped(testDirName).tap(p => Files.createFile(p / "test.txt")),
             )

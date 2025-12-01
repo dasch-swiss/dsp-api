@@ -19,7 +19,7 @@ import org.knora.webapi.slice.common.jena.ResourceOps.*
 
 object StatementOps {
   extension (stmt: Statement) {
-    def subjectUri(): Option[String] = Option(stmt.getSubject.getURI)
+    def subjectUri(): Option[String]                 = Option(stmt.getSubject.getURI)
     def objectAsResource(): Either[String, Resource] =
       Try(stmt.getObject.asResource()).toEither.left.map(e =>
         s"Object is not a resource: ${stmt.getPredicate} ${e.getMessage}",

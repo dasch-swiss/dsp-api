@@ -1692,14 +1692,14 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
            |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
            |    }
            |}""".stripMargin
-      val xmlPart = Paths.get("test_data/test_route/texts/mappingForHTML.xml")
+      val xmlPart                   = Paths.get("test_data/test_route/texts/mappingForHTML.xml")
       val createStandoffMappingBody = Seq(
         multipart("json", jsonPart).contentType("application/json"),
         multipartFile("xml", xmlPart).contentType("text/xml(UTF-8)"),
       )
 
       // Next, create a resource with a text value containing a standoff date tag.
-      val xmlForJson = FileUtil.readTextFile(Paths.get("test_data/test_route/texts/HTML.xml"))
+      val xmlForJson      = FileUtil.readTextFile(Paths.get("test_data/test_route/texts/HTML.xml"))
       val createValueBody = Json.Obj(
         ("@id", Json.Str("http://rdfh.ch/0001/a-thing")),
         ("@type", Json.Str("anything:Thing")),
@@ -2085,7 +2085,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
                             .flatMap(_.assert200)
                             .mapAttempt(JsonLDUtil.parseJsonLD)
         actualResourceIri <- ZIO.fromEither(actualResponse.body.getRequiredString(JsonLDKeywords.ID))
-        xmlFromResponse <- ZIO.fromEither(
+        xmlFromResponse   <- ZIO.fromEither(
                              actualResponse.body
                                .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText")
                                .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)),
@@ -2350,7 +2350,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
         "and search for the large text and its markup and receive it as XML, and check that it matches the original XML",
     ) {
       // Create a resource containing the text of Hamlet.
-      val hamletXml = FileUtil.readTextFile(Paths.get("test_data/generated_test_data/resourcesR2RV2/hamlet.xml"))
+      val hamletXml            = FileUtil.readTextFile(Paths.get("test_data/generated_test_data/resourcesR2RV2/hamlet.xml"))
       val createResourceJsonLd = Json.Obj(
         ("@type", Json.Str("anything:Thing")),
         (
@@ -2402,7 +2402,7 @@ object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extend
                             .flatMap(_.assert200)
                             .mapAttempt(JsonLDUtil.parseJsonLD)
         actualResourceIri <- ZIO.fromEither(actualResponse.body.getRequiredString(JsonLDKeywords.ID))
-        xmlFromResponse <- ZIO.fromEither(
+        xmlFromResponse   <- ZIO.fromEither(
                              actualResponse.body
                                .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
                                .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)),

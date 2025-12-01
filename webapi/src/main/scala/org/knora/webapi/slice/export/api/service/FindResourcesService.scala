@@ -48,7 +48,7 @@ final case class FindResourcesServiceLive(
     for {
       query <- ZIO.succeed(resourceQuery(project, classIri))
       rows  <- triplestore.selectWithTimeout(query, SparqlTimeout.Gravsearch).map(_.results.bindings)
-      rows <- ZIO.foreach(rows) { row =>
+      rows  <- ZIO.foreach(rows) { row =>
                 for {
                   value    <- ZIO.attempt(row.rowMap.getOrElse(resourceIriVar, throw new InconsistentDataException("")))
                   smartIri <- iriConverter.asSmartIri(value)
@@ -66,7 +66,7 @@ final case class FindResourcesServiceLive(
       .select(variable(resourceIriVar))
       .distinct()
 
-    val projectGraph = projectService.getDataGraphForProject(project)
+    val projectGraph  = projectService.getDataGraphForProject(project)
     val resourceWhere =
       variable(resourceIriVar)
         .isA(variable(classIriVar))

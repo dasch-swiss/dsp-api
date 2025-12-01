@@ -121,7 +121,7 @@ object UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
     },
     test("should produce correct query to update all fields") {
-      val name = ListName.unsafeFrom("completeUpdate")
+      val name   = ListName.unsafeFrom("completeUpdate")
       val labels = Labels.unsafeFrom(
         List(
           StringLiteralV2.from("Complete Label", EN),
@@ -164,7 +164,7 @@ object UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
     },
     test("should produce correct query to update labels and name") {
-      val name = ListName.unsafeFrom("partialUpdate")
+      val name   = ListName.unsafeFrom("partialUpdate")
       val labels = Labels.unsafeFrom(
         List(
           StringLiteralV2.from("Partial Label", EN),
@@ -195,7 +195,7 @@ object UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
     },
     test("should produce correct query to update name and comments") {
-      val name = ListName.unsafeFrom("nameAndComments")
+      val name     = ListName.unsafeFrom("nameAndComments")
       val comments = Comments.unsafeFrom(
         List(
           StringLiteralV2.from("Name and comments update", EN),

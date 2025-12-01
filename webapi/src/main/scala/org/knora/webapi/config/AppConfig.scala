@@ -216,7 +216,7 @@ object AppConfig {
       appConfigLayer.project(_.features) ++
       appConfigLayer.project(_.openTelemetry) ++
       appConfigLayer.project { appConfig =>
-        val jwtConfig = appConfig.jwt
+        val jwtConfig                                 = appConfig.jwt
         val issuerFromConfigOrDefault: Option[String] =
           jwtConfig.issuer.orElse(Some(appConfig.knoraApi.externalKnoraApiHostPort))
         jwtConfig.copy(issuer = issuerFromConfigOrDefault)

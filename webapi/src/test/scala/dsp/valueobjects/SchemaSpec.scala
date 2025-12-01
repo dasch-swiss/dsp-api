@@ -17,7 +17,7 @@ import dsp.errors.ValidationException
  */
 object SchemaSpec extends ZIOSpecDefault {
 
-  private val guiAttributeSize = Schema.GuiAttribute.make("size=80").fold(e => throw e.head, v => v)
+  private val guiAttributeSize  = Schema.GuiAttribute.make("size=80").fold(e => throw e.head, v => v)
   private val guiAttributeHlist =
     Schema.GuiAttribute
       .make("hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>")

@@ -65,7 +65,7 @@ object UpdateOntologyMetadataQuery extends QueryBuilderHelper {
 
       for {
         insertPatterns <- buildInsertPatterns(ontology, newLabel, newComment)
-        query = Queries
+        query           = Queries
                   .MODIFY()
                   .prefix(KB.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS)
                   .from(ontology)

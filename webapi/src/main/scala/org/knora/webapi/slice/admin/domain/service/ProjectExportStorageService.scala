@@ -45,7 +45,7 @@ object ProjectExportStorageService {
 
 final case class ProjectExportStorageServiceLive(exportDirectory: Path) extends ProjectExportStorageService {
   override def projectExportDirectory(shortcode: Shortcode): Path = exportDirectory / shortcode.value
-  override def listExports(): Task[Chunk[ProjectExportInfo]] =
+  override def listExports(): Task[Chunk[ProjectExportInfo]]      =
     Files
       .list(exportDirectory)
       .filterZIO(Files.isDirectory(_))

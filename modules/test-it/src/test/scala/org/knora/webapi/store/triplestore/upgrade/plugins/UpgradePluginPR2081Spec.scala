@@ -45,7 +45,7 @@ class UpgradePluginPR2081Spec extends UpgradePluginSpec {
       val newResource1CreationDate         = getDateValue(model, resource1, creationDate)
       val newResource2CreationDate         = getDateValue(model, resource2, creationDate)
       val newResource2LastModificationDate = getDateValue(model, resource2, lastModificationDate)
-      val newResource3CreationDate =
+      val newResource3CreationDate         =
         getDateValue(model, resource3, creationDate) // only this one should have stayed the same
       val newResource3LastModificationDate = getDateValue(model, resource3, lastModificationDate)
       val newResource3DeletionDate         = getDateValue(model, resource3, deletionDate)

@@ -53,7 +53,7 @@ object ListProperties {
   }
 
   final case class ListName private (value: String) extends StringValue
-  object ListName extends StringValueCompanion[ListName] {
+  object ListName                                   extends StringValueCompanion[ListName] {
     def from(value: String): Either[String, ListName] =
       if value.isEmpty then Left("List name cannot be empty.")
       else if hasLineBreaks(value) then Left("List name is invalid.")

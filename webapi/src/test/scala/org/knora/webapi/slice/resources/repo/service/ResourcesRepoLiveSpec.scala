@@ -83,7 +83,7 @@ object TestData {
     comment = None,
   )
 
-  val standoffTagUuid = UUID.randomUUID()
+  val standoffTagUuid              = UUID.randomUUID()
   val formattedTextValueDefinition = ValueInfo(
     resourceIri = resourceIri,
     propertyIri = InternalIri("foo:hasFormattedTextValue"),
@@ -902,7 +902,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     test("Create a new resource with a still image external file value") {
       val resource    = resourceDefinition.copy(valueInfos = List(stillImageExternalFileValueDefinition))
       val uuidEncoded = UuidUtil.base64Encode(stillImageExternalFileValueDefinition.valueUUID)
-      val expected = Update(
+      val expected    = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

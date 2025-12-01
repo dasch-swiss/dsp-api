@@ -48,7 +48,7 @@ object ProjectImportServiceE2ESpec extends E2EZSpec {
         sizeDefaultGraphBefore <- triplestore(_.query(queryDefaultGraph)).map(_.size)
         filePath               <- FileTestUtil.createTempTextFileScoped(trigContent, ".trig")
         _                      <- projectImportService(_.importTrigFile(filePath))
-        nrResultsInNamedGraph <- triplestore(
+        nrResultsInNamedGraph  <- triplestore(
                                    _.query(
                                      Select(
                                        """

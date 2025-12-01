@@ -24,7 +24,7 @@ sealed trait SipiCommand {
 
 object SipiCommand {
   final case class QueryArgument(fileIn: Path) extends SipiCommand {
-    def flag(): String = "--query"
+    def flag(): String              = "--query"
     def render(): UIO[List[String]] =
       fileIn.toAbsolutePath.orDie.map(abs => List(flag(), abs.toString))
   }
@@ -34,7 +34,7 @@ object SipiCommand {
     fileIn: Path,
     fileOut: Path,
   ) extends SipiCommand {
-    def flag(): String = "--format"
+    def flag(): String              = "--format"
     def render(): UIO[List[String]] =
       (for {
         abs1 <- fileIn.toAbsolutePath
@@ -60,7 +60,7 @@ object SipiCommand {
     fileIn: Path,
     fileOut: Path,
   ) extends SipiCommand {
-    def flag(): String = "--topleft"
+    def flag(): String              = "--topleft"
     def render(): UIO[List[String]] =
       (for {
         abs1 <- fileIn.toAbsolutePath

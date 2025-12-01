@@ -69,7 +69,7 @@ object ListPropertiesSpec extends ZIOSpecDefault {
         val actual = Position.from(i)
         i match {
           case i if i >= -1 => assertTrue(actual.map(_.value) == Right(i))
-          case _ =>
+          case _            =>
             assertTrue(
               actual == Left("Invalid position value is given. Position should be either a positive value, 0 or -1."),
             )

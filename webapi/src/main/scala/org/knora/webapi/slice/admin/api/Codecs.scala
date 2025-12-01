@@ -86,11 +86,11 @@ object Codecs {
     implicit val assetId: StringCodec[AssetId] = stringCodec(AssetId.from, _.value)
 
     // project
-    implicit val keyword: StringCodec[Keyword]                        = stringCodec(Keyword.from)
-    implicit val logo: StringCodec[Logo]                              = stringCodec(Logo.from)
-    implicit val longname: StringCodec[Longname]                      = stringCodec(Longname.from)
-    implicit val projectIri: StringCodec[ProjectIri]                  = stringCodec(ProjectIri.from)
-    implicit val restrictedViewSize: StringCodec[RestrictedView.Size] = stringCodec(RestrictedView.Size.from)
+    implicit val keyword: StringCodec[Keyword]                                  = stringCodec(Keyword.from)
+    implicit val logo: StringCodec[Logo]                                        = stringCodec(Logo.from)
+    implicit val longname: StringCodec[Longname]                                = stringCodec(Longname.from)
+    implicit val projectIri: StringCodec[ProjectIri]                            = stringCodec(ProjectIri.from)
+    implicit val restrictedViewSize: StringCodec[RestrictedView.Size]           = stringCodec(RestrictedView.Size.from)
     implicit val restrictedViewWatermark: StringCodec[RestrictedView.Watermark] = booleanCodec(
       RestrictedView.Watermark.from,
     )
@@ -110,8 +110,8 @@ object Codecs {
     implicit val systemAdmin: StringCodec[SystemAdmin] = booleanCodec(SystemAdmin.from)
 
     // group
-    implicit val groupIri: StringCodec[GroupIri]   = stringCodec(GroupIri.from)
-    implicit val groupName: StringCodec[GroupName] = stringCodec(GroupName.from)
+    implicit val groupIri: StringCodec[GroupIri]                   = stringCodec(GroupIri.from)
+    implicit val groupName: StringCodec[GroupName]                 = stringCodec(GroupName.from)
     implicit val groupDescriptions: StringCodec[GroupDescriptions] =
       JsonCodec[Seq[StringLiteralV2]].transformOrFail(GroupDescriptions.from, _.value)
     implicit val groupStatus: StringCodec[GroupStatus]     = booleanCodec(GroupStatus.from)

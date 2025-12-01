@@ -68,7 +68,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
   def findByIds(iris: Seq[ValueIri]) = ZIO.foreach(iris)(findById)
 
   def findById(iri: ValueIri): Task[Option[ValueModel]] =
-    val id = Rdf.iri(iri.toString)
+    val id                                                      = Rdf.iri(iri.toString)
     val (clazz, isDeleted, previousValue, lastModificationDate) =
       (variable("valueClass"), variable("isDeleted"), variable("previousValue"), variable("lastModificationDate"))
 
@@ -93,7 +93,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
 
   private def mapResult(maybe: Option[Resource]): Task[Option[ValueModel]] =
     maybe match
-      case None => ZIO.none
+      case None           => ZIO.none
       case Some(resource) =>
         ZIO
           .fromEither(
@@ -140,7 +140,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     val standoffValues     = soLink.has(soP, soO)
 
     val projectDataGraph = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
-    val queryStandoff = Queries
+    val queryStandoff    = Queries
       .DELETE(standoffValues)
       .`with`(projectDataGraph)
       .where(delete, deleteReverse, standoffLinked, standoffValues)
@@ -158,7 +158,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     val (s, p, o)        = (variable("s"), variable("p"), variable("o"))
     val delete           = s.has(p, o)
     val projectDataGraph = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
-    val query = Queries
+    val query            = Queries
       .DELETE(delete)
       .`with`(projectDataGraph)
       .where(

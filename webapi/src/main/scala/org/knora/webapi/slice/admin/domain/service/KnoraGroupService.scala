@@ -43,7 +43,7 @@ case class KnoraGroupService(
     for {
       _        <- ensureGroupNameIsUnique(request.name)
       groupIri <- iriService.checkOrCreateNewGroupIri(request.id, project.shortcode)
-      group =
+      group     =
         KnoraGroup(
           id = groupIri,
           groupName = request.name,
@@ -73,7 +73,7 @@ case class KnoraGroupService(
   def updateGroupStatus(groupToUpdate: KnoraGroup, status: GroupStatus): Task[KnoraGroup] =
     for {
       group <- knoraGroupRepo.save(groupToUpdate.copy(status = status))
-      _ <- ZIO.unless(group.status.value)(knoraUserService.findByGroupMembership(group.id).flatMap { members =>
+      _     <- ZIO.unless(group.status.value)(knoraUserService.findByGroupMembership(group.id).flatMap { members =>
              ZIO.foreachDiscard(members)(user => knoraUserService.removeUserFromKnoraGroup(user, group.id))
            })
     } yield group

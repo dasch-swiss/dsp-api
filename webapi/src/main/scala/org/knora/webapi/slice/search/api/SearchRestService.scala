@@ -39,7 +39,7 @@ final case class SearchRestService(
     limitByResourceClass: Option[InputIri],
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iriConverter.asSmartIri)
-    searchResult <-
+    searchResult  <-
       searchResponderV2.searchResourcesByLabelV2(query, offset.value, project, resourceClass, opts.schema, user)
     response <- renderer.render(searchResult, opts)
   } yield response
@@ -51,7 +51,7 @@ final case class SearchRestService(
     limitByResourceClass: Option[InputIri],
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iriConverter.asSmartIri)
-    searchResult <-
+    searchResult  <-
       searchResponderV2.searchResourcesByLabelCountV2(query, project, resourceClass)
     response <- renderer.render(searchResult, opts)
   } yield response
@@ -188,7 +188,7 @@ final case class SearchRestService(
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(resourceClass.map(_.value))(iriConverter.asSmartIri)
     standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)
-    searchResult <- searchResponderV2.fulltextSearchV2(
+    searchResult  <- searchResponderV2.fulltextSearchV2(
                       query,
                       offset.value,
                       project,

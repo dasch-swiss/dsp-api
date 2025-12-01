@@ -327,7 +327,7 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo
     requestingUser: User,
   ): Task[ProjectIri] =
     for {
-      cacheData <- ontologyCache.getCacheData
+      cacheData  <- ontologyCache.getCacheData
       projectIri <-
         ZIO
           .succeed(cacheData.ontologies.get(internalOntologyIri).flatMap(_.ontologyMetadata.projectIri))

@@ -542,7 +542,7 @@ object RdfModelSpec extends ZIOSpecDefault {
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
-            literal <-
+            literal  <-
               resource.getLangStringLiteralOrFail[LangStringContainer]("http://example.org/does-not-exist").exit
           } yield assert(literal)(failsWithA[LiteralNotPresent])
         },
@@ -554,7 +554,7 @@ object RdfModelSpec extends ZIOSpecDefault {
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
-            literal <-
+            literal  <-
               resource.getLangStringLiteralOrFail[LangStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[NotALiteral])
         },
@@ -567,7 +567,7 @@ object RdfModelSpec extends ZIOSpecDefault {
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
-            literal <-
+            literal  <-
               resource.getLangStringLiteralOrFail[LangStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         },
@@ -579,7 +579,7 @@ object RdfModelSpec extends ZIOSpecDefault {
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
-            literal <-
+            literal  <-
               resource.getLangStringLiteralOrFail[FailingLangStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         },

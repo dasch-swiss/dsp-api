@@ -25,7 +25,7 @@ object AssetFilename {
       _ <- if (valueAsPath.normalize.filename.toString != value) {
              Left("Filename must not contain any path information")
            } else { Right(()) }
-      _ <- SupportedFileType.fromPath(valueAsPath).toRight("Filename must have a valid file extension")
+      _        <- SupportedFileType.fromPath(valueAsPath).toRight("Filename must have a valid file extension")
       filename <- if (regex.matches(value)) { Right(new AssetFilename(value)) }
                   else { Left("Filename contains invalid characters") }
     } yield filename

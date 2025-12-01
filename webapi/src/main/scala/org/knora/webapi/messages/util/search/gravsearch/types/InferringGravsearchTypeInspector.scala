@@ -498,7 +498,7 @@ final case class InferringGravsearchTypeInspector(
             val isValueType       = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeFromFilter.toString)
             val isStandoffTagType = typeFromFilter.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag
             val isResourceType    = !(isValueType || isStandoffTagType)
-            val inferredType = NonPropertyTypeInfo(
+            val inferredType      = NonPropertyTypeInfo(
               typeFromFilter,
               isResourceType = isResourceType,
               isValueType = isValueType,
@@ -898,7 +898,7 @@ final case class InferringGravsearchTypeInspector(
                                              ) { case (acc, (propertyIri, propertyDef)) =>
                                                val propertyIriSchema = propertyIri.getOntologySchema match {
                                                  case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-                                                 case other =>
+                                                 case other                          =>
                                                    throw AssertionException(s"Expected an ApiV2Schema, got $other")
                                                }
 
@@ -1379,7 +1379,7 @@ final case class InferringGravsearchTypeInspector(
 
       val rightTypeableEntity: TypeableEntity = GravsearchTypeInspectionUtil.maybeTypeableEntity(rightEntity) match {
         case Some(typeableEntity) => typeableEntity
-        case None =>
+        case None                 =>
           throw GravsearchException(s"Entity ${rightEntity.toSparql} is not valid in a comparison expression")
       }
 
@@ -1412,7 +1412,7 @@ final case class InferringGravsearchTypeInspector(
           rightEntity match {
             case xsdLiteral: XsdLiteral =>
               // A variable is compared to an XSD literal. Index the variable and the literal's type.
-              val typeableVariable = TypeableVariable(leftQueryVariable.variableName)
+              val typeableVariable                          = TypeableVariable(leftQueryVariable.variableName)
               val currentVarTypesFromFilters: Set[SmartIri] =
                 usageIndex.typedEntitiesInFilters.getOrElse(typeableVariable, Set.empty)
 
@@ -1429,7 +1429,7 @@ final case class InferringGravsearchTypeInspector(
                 throw GravsearchException(s"A Knora property IRI can be compared only with the equals operator")
               }
 
-              val typeableVariable = TypeableVariable(leftQueryVariable.variableName)
+              val typeableVariable           = TypeableVariable(leftQueryVariable.variableName)
               val currentIris: Set[SmartIri] =
                 usageIndex.knoraPropertyVariablesInFilters.getOrElse(typeableVariable, Set.empty)
 
@@ -1485,7 +1485,7 @@ final case class InferringGravsearchTypeInspector(
       functionCallExpression.functionIri.iri.toString match {
         case OntologyConstants.KnoraApiV2Simple.MatchTextFunction =>
           // The first argument is a variable representing a string.
-          val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+          val textVar                                       = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
           val currentTextVarTypesFromFilters: Set[SmartIri] =
             usageIndex.typedEntitiesInFilters.getOrElse(textVar, Set.empty)
 
@@ -1496,7 +1496,7 @@ final case class InferringGravsearchTypeInspector(
 
         case OntologyConstants.KnoraApiV2Complex.MatchTextFunction =>
           // The first argument is a variable representing a text value.
-          val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+          val textVar                                       = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
           val currentTextVarTypesFromFilters: Set[SmartIri] =
             usageIndex.typedEntitiesInFilters.getOrElse(textVar, Set.empty)
 
@@ -1507,7 +1507,7 @@ final case class InferringGravsearchTypeInspector(
 
         case OntologyConstants.KnoraApiV2Simple.MatchLabelFunction =>
           // The first argument is a variable representing a resource.
-          val resourceVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+          val resourceVar                                       = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
           val currentResourceVarTypesFromFilters: Set[SmartIri] =
             usageIndex.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty)
 
@@ -1518,7 +1518,7 @@ final case class InferringGravsearchTypeInspector(
 
         case OntologyConstants.KnoraApiV2Complex.MatchLabelFunction =>
           // The first argument is a variable representing a resource.
-          val resourceVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+          val resourceVar                                       = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
           val currentResourceVarTypesFromFilters: Set[SmartIri] =
             usageIndex.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty)
 
@@ -1529,12 +1529,12 @@ final case class InferringGravsearchTypeInspector(
 
         case OntologyConstants.KnoraApiV2Complex.MatchTextInStandoffFunction =>
           // The first argument is a variable representing a text value.
-          val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+          val textVar                                       = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
           val currentTextVarTypesFromFilters: Set[SmartIri] =
             usageIndex.typedEntitiesInFilters.getOrElse(textVar, Set.empty)
 
           // The second argument is a variable representing a standoff tag.
-          val standoffTagVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
+          val standoffTagVar                                    = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
           val currentStandoffVarTypesFromFilters: Set[SmartIri] =
             usageIndex.typedEntitiesInFilters.getOrElse(standoffTagVar, Set.empty)
 
@@ -1561,7 +1561,7 @@ final case class InferringGravsearchTypeInspector(
             }
 
           // The second argument is a variable representing a standoff tag.
-          val standoffTagVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
+          val standoffTagVar                                    = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
           val currentStandoffVarTypesFromFilters: Set[SmartIri] =
             usageIndex.typedEntitiesInFilters.getOrElse(standoffTagVar, Set.empty)
 

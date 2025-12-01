@@ -105,7 +105,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
       ) {
         val project = TestDataFactory.someProject
         for {
-          _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project))
+          _          <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project))
           userIsAdmin =
             activeNormalUser.copy(permissions =
               PermissionsDataADM(Map(project.id.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
@@ -116,7 +116,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
       test(
         "and given the project does not exists for which the user is project admin when ensureSystemAdminOrProjectAdmin then succeed",
       ) {
-        val project = TestDataFactory.someProject
+        val project     = TestDataFactory.someProject
         val userIsAdmin =
           activeNormalUser.copy(permissions =
             PermissionsDataADM(Map(project.id.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),

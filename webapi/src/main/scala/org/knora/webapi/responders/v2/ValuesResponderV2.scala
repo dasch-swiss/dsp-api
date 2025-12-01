@@ -265,7 +265,7 @@ final case class ValuesResponderV2(
 
               // Is the requesting user a system admin, or an admin of this project?
               userPermissions = requestingUser.permissions
-              _ <- ZIO.when(!(userPermissions.isProjectAdmin(requestingUser.id) || userPermissions.isSystemAdmin)) {
+              _              <- ZIO.when(!(userPermissions.isProjectAdmin(requestingUser.id) || userPermissions.isSystemAdmin)) {
 
                      // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
                      val permissionComparisonResult: PermissionComparisonResult =
@@ -507,7 +507,7 @@ final case class ValuesResponderV2(
     // Make a new value UUID.
 
     for {
-      newValueUUID <- ValuesResponderV2.makeNewValueUUID(maybeValueIri, maybeValueUUID)
+      newValueUUID             <- ValuesResponderV2.makeNewValueUUID(maybeValueIri, maybeValueUUID)
       sparqlTemplateLinkUpdate <-
         incrementLinkValue(
           sourceResourceInfo = resourceInfo,
@@ -581,7 +581,7 @@ final case class ValuesResponderV2(
 
       // Validate and reformat the submitted permissions.
       newValuePermissionLiteral <- permissionUtilADM.validatePermissions(updateValue.permissions)
-      _ <- resourceUtilV2.checkValuePermission(
+      _                         <- resourceUtilV2.checkValuePermission(
              resourceInfo = resourceInfo,
              valueInfo = currentValue,
              permissionNeeded = Permission.ObjectAccess.ChangeRights,
@@ -635,7 +635,7 @@ final case class ValuesResponderV2(
       // Check that the user has permission to do the update. If they want to change the permissions
       // on the value, they need Permission.ObjectAccess.ChangeRights, otherwise they need Permission.ObjectAccess.Modify.
       currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
-      newPermissionsParsed <-
+      newPermissionsParsed     <-
         ZIO.attempt(
           PermissionUtilADM.parsePermissions(
             newValueVersionPermissionLiteral,
@@ -822,7 +822,7 @@ final case class ValuesResponderV2(
               s"Resource <${updateValue.resourceIri}> does not have value <${updateValue.valueIri}> as an object of property <${updateValue.propertyIri}>",
             ),
           )
-      isSameType = currentValue.valueContent.valueType == submittedInternalValueType
+      isSameType        = currentValue.valueContent.valueType == submittedInternalValueType
       isStillImageTypes =
         Set(
           submittedInternalValueType.toInternalIri.value,
@@ -1092,7 +1092,7 @@ final case class ValuesResponderV2(
         allPrevious      <- valueRepo.findAllPrevious(valueIri)
         isLink            = cond(value) { case _: ReadLinkValueV2 => true }
         deletableValueIri = if (onlyHistory) List() else List(valueIri)
-        _ <- ZIO.foreachDiscard(allPrevious.reverse ++ deletableValueIri) { deletableIri =>
+        _                <- ZIO.foreachDiscard(allPrevious.reverse ++ deletableValueIri) { deletableIri =>
                ZIO.when(isLink)(valueRepo.eraseValueDirectLink(project)(deletableIri)) *>
                  valueRepo.eraseValue(project)(deletableIri)
              }
@@ -1120,7 +1120,7 @@ final case class ValuesResponderV2(
         }
       """)
       historyHasLinks <- triplestoreService.query(Select(query)).map(_.results.bindings.nonEmpty)
-      result <- ZIO
+      result          <- ZIO
                   .fail(BadRequestException("Erasing standoff text values with links is not supported"))
                   .when {
                     (historyHasLinks, value) match
@@ -1135,7 +1135,7 @@ final case class ValuesResponderV2(
     requestingUser: User,
     onlyHistory: Boolean = false,
   ): IO[Throwable, (ReadResourceV2, ReadPropertyInfoV2, ReadValueV2)] = for {
-    _ <- auth.ensureUserIsNotAnonymous(requestingUser)
+    _           <- auth.ensureUserIsNotAnonymous(requestingUser)
     propertyIri <-
       ZIO
         .succeed(deleteValue.propertyIri)
@@ -1180,7 +1180,7 @@ final case class ValuesResponderV2(
     // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
     // Check that the user has permission to delete the value.
     submittedInternalPropertyIri = propertyIri.toInternalSchema
-    currentValue <-
+    currentValue                <-
       ZIO
         .fromOption(for {
           values <- resourceInfo.values.get(submittedInternalPropertyIri)
@@ -1989,7 +1989,7 @@ object ValuesResponderV2 {
     (maybeCustomIri, maybeCustomUUID) match {
       case (Some(customIri: SmartIri), Some(customValueUUID)) => combineCustoms(customIri, customValueUUID)
       case (None, Some(customValueUUID))                      => ZIO.succeed(customValueUUID)
-      case (Some(customIri), None) =>
+      case (Some(customIri), None)                            =>
         ZIO.fromOption(customIri.getUuid).orElseFail(BadRequestException(s"Invalid UUID in IRI: $customIri"))
       case (None, None) => Random.nextUUID
 

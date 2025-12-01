@@ -46,7 +46,7 @@ final case class AdminListRestService(
     listsResponder.listNodeInfoGetRequestADM(iri.value)
 
   def listChange(user: User)(iri: ListIri, request: ListChangeRequest): Task[NodeInfoGetResponseADM] = for {
-    _ <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
+    _       <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
     project <- knoraProjectService
                  .findById(request.projectIri)
                  .someOrFail(BadRequestException("Project not found"))
@@ -101,7 +101,7 @@ final case class AdminListRestService(
   def listCreateChildNode(
     user: User,
   )(iri: ListIri, req: ListCreateChildNodeRequest): Task[ChildNodeInfoGetResponseADM] = for {
-    _ <- ZIO.fail(BadRequestException("Route and payload parentNodeIri mismatch.")).when(iri != req.parentNodeIri)
+    _       <- ZIO.fail(BadRequestException("Route and payload parentNodeIri mismatch.")).when(iri != req.parentNodeIri)
     project <- knoraProjectService
                  .findById(req.projectIri)
                  .someOrFail(BadRequestException("Project not found"))
