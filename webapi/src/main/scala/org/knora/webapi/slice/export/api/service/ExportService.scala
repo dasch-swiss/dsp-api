@@ -14,6 +14,7 @@ import scala.collection.immutable.ListMap
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoADM
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
@@ -31,7 +32,6 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
-import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoADM
 
 final case class ExportService(
   private val iriConverter: IriConverter,
@@ -50,7 +50,7 @@ final case class ExportService(
     includeIris: Boolean,
   ): Task[ExportedCsv] =
     for {
-      resourceIris <- findResources.findResources(project, classIri).map(_.map(_.toString))
+      resourceIris  <- findResources.findResources(project, classIri).map(_.map(_.toString))
       readResources <- readResources.readResourcesSequencePar(
                          resourceIris = resourceIris,
                          targetSchema = ApiV2Complex,
