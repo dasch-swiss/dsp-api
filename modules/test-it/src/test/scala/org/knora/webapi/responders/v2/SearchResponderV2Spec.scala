@@ -19,6 +19,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 
 object SearchResponderV2Spec extends E2EZSpec {
 
@@ -39,8 +40,9 @@ object SearchResponderV2Spec extends E2EZSpec {
   )
 
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
-  private val bookClassIri                  = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri.toComplexSchema
-  private val searchResponder               = ZIO.serviceWithZIO[SearchResponderV2]
+  private val bookClassIri =
+    ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri.toComplexSchema)
+  private val searchResponder = ZIO.serviceWithZIO[SearchResponderV2]
 
   override val e2eSpec = suite("The search responder v2")(
     test("perform a fulltext search for 'Narr'") {

@@ -5,17 +5,23 @@
 
 package org.knora.webapi.responders.v2
 
-import org.knora.webapi.IRI
+import org.eclipse.rdf4j.model.vocabulary.RDFS
+import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
+
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.FusekiLucenceQuery
 
-object SearchQueries {
+object SearchQueries extends QueryBuilderHelper {
 
   def selectCountByLabel(
     luceneQuery: FusekiLucenceQuery,
-    limitToProject: Option[IRI],
-    limitToResourceClass: Option[IRI],
+    limitToProject: Option[ProjectIri],
+    limitToResourceClass: Option[ResourceClassIri],
   ): Select =
     Select(
       s"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -25,26 +31,31 @@ object SearchQueries {
           |    ?resource <http://jena.apache.org/text#query> (rdfs:label "${luceneQuery.getQueryString}") ;
           |        a ?resourceClass .
           |    ?resourceClass rdfs:subClassOf* knora-base:Resource .
-          |    ${limitToResourceClass.fold("")(resourceClass => s"?resourceClass rdfs:subClassOf* <$resourceClass> .")}
-          |    ${limitToProject.fold("")(project => s"?resource knora-base:attachedToProject <$project> .")}
+          |    ${filterByProjectAndResourceClass(limitToProject, limitToResourceClass)}
           |    FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
           |}
           |""".stripMargin,
     )
 
+  private def filterByProjectAndResourceClass(
+    limitToProject: Option[ProjectIri],
+    limitToResourceClass: Option[ResourceClassIri],
+  ): String = List(
+    limitToProject
+      .map(toRdfIri)
+      .map(prj => variable("resource").has(KnoraBase.attachedToProject, prj)),
+    limitToResourceClass
+      .map(toRdfIri)
+      .map(cls => variable("resourceClass").has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrOne().build(), cls)),
+  ).flatten.map(_.getQueryString).mkString("\n")
+
   def constructSearchByLabel(
     luceneQuery: FusekiLucenceQuery,
-    limitToResourceClass: Option[IRI] = None,
-    limitToProject: Option[IRI] = None,
+    limitToProject: Option[ProjectIri],
+    limitToResourceClass: Option[ResourceClassIri],
     limit: Int,
-    offset: Int = 0,
-  ): Construct = {
-    val limitToClassOrProject =
-      (limitToResourceClass, limitToProject) match {
-        case (Some(cls), _)     => s"?resourceClass rdfs:subClassOf* <$cls> ."
-        case (_, Some(project)) => s"?resource knora-base:attachedToProject <$project> ."
-        case _                  => ""
-      }
+    offset: Int,
+  ): Construct =
     Construct(
       s"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -69,7 +80,7 @@ object SearchQueries {
           |            ?resource <http://jena.apache.org/text#query> (rdfs:label "${luceneQuery.getQueryString}") ;
           |                a ?resourceClass ;
           |                rdfs:label ?label .
-          |            $limitToClassOrProject
+          |            ${filterByProjectAndResourceClass(limitToProject, limitToResourceClass)}
           |            FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
           |        }
           |        ORDER BY ?resource
@@ -97,5 +108,4 @@ object SearchQueries {
           |}
           |""".stripMargin,
     )
-  }
 }
