@@ -40,7 +40,7 @@ object SearchResponderV2Spec extends E2EZSpec {
   )
 
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
-  private val bookClassIri =
+  private val bookClassIri                  =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri.toComplexSchema)
   private val searchResponder = ZIO.serviceWithZIO[SearchResponderV2]
 

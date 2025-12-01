@@ -28,7 +28,7 @@ case class StandoffRestService(
     user: User,
   )(mappingForm: CreateStandoffMappingForm, opts: FormatOptions): ZIO[Any, Throwable, (RenderedResponse, MediaType)] =
     for {
-      _ <- auth.ensureUserIsNotAnonymous(user)
+      _             <- auth.ensureUserIsNotAnonymous(user)
       createRequest <- requestParser
                          .createMappingRequestMetadataV2(mappingForm)
                          .mapError(BadRequestException.apply)

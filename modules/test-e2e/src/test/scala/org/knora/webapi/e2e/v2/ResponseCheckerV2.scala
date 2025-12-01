@@ -195,7 +195,7 @@ object ResponseCheckerV2 {
    * @return an assertion that the actual amount of results corresponds with the expected number of results.
    */
   def checkSearchResponseNumberOfResults(receivedJSONLD: String, expectedNumber: Int): Unit = {
-    val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
+    val receivedJsonLDDocument                = JsonLDUtil.parseJsonLD(receivedJSONLD)
     val receivedResourcesAsArray: JsonLDArray = elementToArray(
       receivedJsonLDDocument.body.value.getOrElse(JsonLDKeywords.GRAPH, receivedJsonLDDocument.body),
     )

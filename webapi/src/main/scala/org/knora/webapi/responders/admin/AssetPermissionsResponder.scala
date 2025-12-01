@@ -47,7 +47,7 @@ final case class AssetPermissionsResponder(
   private def queryForFileValue(filename: String): Task[SparqlExtendedConstructResponse] =
     for {
       response <- triplestoreService.query(Construct(sparql.admin.txt.getFileValue(filename))).flatMap(_.asExtended)
-      _ <- ZIO
+      _        <- ZIO
              .fail(NotFoundException(s"No file value was found for filename $filename"))
              .when(response.statements.isEmpty)
     } yield response
@@ -60,7 +60,7 @@ final case class AssetPermissionsResponder(
     ZIO.attempt {
       val fileValueIriSubject = queryResponse.statements.keys.head match {
         case iriSubject: IriSubjectV2 => iriSubject
-        case _ =>
+        case _                        =>
           throw InconsistentRepositoryDataException(
             s"The subject of the file value with filename $filename is not an IRI",
           )

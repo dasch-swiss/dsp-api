@@ -27,7 +27,7 @@ object OpenTelemetry {
     for {
       config    <- ZIO.service[OpenTelemetryConfig]
       apiConfig <- ZIO.service[KnoraApi]
-      _ <- ZIO
+      _         <- ZIO
              .fromOption(config.dsn)
              .zipLeft(ZIO.logInfo("Sentry DSN is set, initializing Sentry."))
              .map { dsn =>

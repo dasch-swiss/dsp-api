@@ -298,12 +298,12 @@ object PermissionUtilADM {
       }
 
       val abbreviation: String = splitPermission(0)
-      val perm = Permission.ObjectAccess
+      val perm                 = Permission.ObjectAccess
         .fromToken(abbreviation)
         .getOrElse(errorFun(permissionLiteral))
 
       val shortGroups: Set[String] = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter).toSet
-      val groups = shortGroups.map(
+      val groups                   = shortGroups.map(
         _.replace(OntologyConstants.KnoraAdmin.KnoraAdminPrefix, OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion),
       )
       (perm, groups)

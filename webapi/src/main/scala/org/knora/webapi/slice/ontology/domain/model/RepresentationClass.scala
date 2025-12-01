@@ -26,6 +26,6 @@ object RepresentationClass {
   given Schema[RepresentationClass]    = Schema.derivedEnumeration[RepresentationClass].defaultStringBased
 
   def from(iri: ResourceClassIri): Option[RepresentationClass] = from(iri.smartIri)
-  def from(iri: SmartIri): Option[RepresentationClass] =
+  def from(iri: SmartIri): Option[RepresentationClass]         =
     RepresentationClass.values.find(_.iri.contains(iri.toInternalSchema.toIri))
 }

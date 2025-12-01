@@ -29,8 +29,8 @@ object ModelOps { self =>
         asTriG.flatMap(Console.printLine(_)).logError.ignore *>
         Console.printLine("/// Model TRIG END ///").ignore
 
-    def asTurtle: Task[String] = as(Lang.TURTLE)
-    def asTriG: Task[String]   = as(Lang.TRIG)
+    def asTurtle: Task[String]       = as(Lang.TURTLE)
+    def asTriG: Task[String]         = as(Lang.TRIG)
     def as(lang: Lang): Task[String] =
       ZIO.attempt {
         val out = new java.io.ByteArrayOutputStream()
@@ -38,11 +38,11 @@ object ModelOps { self =>
         out.toString(java.nio.charset.StandardCharsets.UTF_8)
       }
 
-    def resourceOption(uri: String): Option[Resource] = Option(model.getResource(uri))
+    def resourceOption(uri: String): Option[Resource]   = Option(model.getResource(uri))
     def resource(uri: String): Either[String, Resource] =
       model.resourceOption(uri).toRight(s"Resource not found '$uri'")
 
-    def statementOption(s: Resource, p: Property): Option[Statement] = Option(model.getProperty(s, p))
+    def statementOption(s: Resource, p: Property): Option[Statement]   = Option(model.getProperty(s, p))
     def statement(s: Resource, p: Property): Either[String, Statement] =
       statementOption(s, p).toRight(s"Statement not found '${s.getURI} ${p.getURI} ?o .'")
 
@@ -53,7 +53,7 @@ object ModelOps { self =>
       candidates match {
         case iris if iris.size == 1 => Right(iris.head)
         case iris if iris.isEmpty   => Left("Expected a single root resource. No root resource found in model")
-        case iris =>
+        case iris                   =>
           Left(s"Expected a single root resource. Multiple root resources found in model: ${iris.mkString(", ")}")
       }
 

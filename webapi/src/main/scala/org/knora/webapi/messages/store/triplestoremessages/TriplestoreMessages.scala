@@ -28,7 +28,7 @@ import org.knora.webapi.slice.common.domain.LanguageCode
  * @param statements a map of subject IRIs to statements about each subject.
  */
 case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]], rdfModel: RdfModel) {
-  def isEmpty: Boolean = statements.isEmpty
+  def isEmpty: Boolean                                                                                       = statements.isEmpty
   def asExtended(implicit sf: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] =
     SparqlExtendedConstructResponse.make(rdfModel)
 }
@@ -236,7 +236,7 @@ sealed trait StringLiteralV2 extends LiteralV2 with OntologyLiteralV2 with Order
   def value: String
   override def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
   override def toString: String                    = value
-  def languageOption: Option[LanguageCode] = this match {
+  def languageOption: Option[LanguageCode]         = this match {
     case LanguageTaggedStringLiteralV2(_, language) => Some(language)
     case PlainStringLiteralV2(_)                    => None
   }
@@ -273,13 +273,13 @@ object StringLiteralV2 {
 
   implicit val schema: Schema[StringLiteralV2] = Schema.derived[StringLiteralV2]
 
-  val orderByValue: Ordering[StringLiteralV2] = Ordering.by(_.value)
+  val orderByValue: Ordering[StringLiteralV2]    = Ordering.by(_.value)
   val orderByLanguage: Ordering[StringLiteralV2] = Ordering.by {
     case LanguageTaggedStringLiteralV2(_, language) => language.value
     case PlainStringLiteralV2(_)                    => ""
   }
 
-  def from(value: String): StringLiteralV2 = PlainStringLiteralV2(value)
+  def from(value: String): StringLiteralV2                                       = PlainStringLiteralV2(value)
   def from(value: String, language: LanguageCode): LanguageTaggedStringLiteralV2 =
     LanguageTaggedStringLiteralV2(value, language)
   def from(value: String, language: Option[String]): Either[String, StringLiteralV2] =

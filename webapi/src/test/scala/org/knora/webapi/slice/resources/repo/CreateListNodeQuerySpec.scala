@@ -47,7 +47,7 @@ object CreateListNodeQuerySpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment, Any] = suite("CreateListNodeQuerySpec")(
     test("should produce correct query for root node with name, labels, and comments") {
       val listName = ListName.unsafeFrom("testList")
-      val labels = Labels.unsafeFrom(
+      val labels   = Labels.unsafeFrom(
         List(
           StringLiteralV2.from("Test List", EN),
           StringLiteralV2.from("Liste de test", FR),
@@ -121,7 +121,7 @@ object CreateListNodeQuerySpec extends ZIOSpecDefault {
     },
     test("should produce correct query for child node with parent, position, name, labels, and comments") {
       val listName = ListName.unsafeFrom("childNode")
-      val labels = Labels.unsafeFrom(
+      val labels   = Labels.unsafeFrom(
         List(
           StringLiteralV2.from("Child Node", EN),
         ),

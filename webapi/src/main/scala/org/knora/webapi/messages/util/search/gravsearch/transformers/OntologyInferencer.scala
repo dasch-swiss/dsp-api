@@ -30,7 +30,7 @@ final case class OntologyInferencer(
     baseClassIri <-
       statementPattern.obj match {
         case iriRef: IriRef => ZIO.succeed(iriRef)
-        case other =>
+        case other          =>
           ZIO.fail(GravsearchException(s"The object of rdf:type must be an IRI, but $other was used"))
       }
   } yield {
@@ -102,7 +102,7 @@ final case class OntologyInferencer(
         ZIO.succeed(Seq(statementPattern.copy(pred = pred)))
       case iriRef: IriRef if simulateInference =>
         for {
-          ontoCache <- ontologyCache.getCacheData
+          ontoCache             <- ontologyCache.getCacheData
           patternsWithInference <-
             if (iriRef.iri.toIri == OntologyConstants.Rdf.Type)
               inferSubclasses(statementPattern, ontoCache, limitInferenceToOntologies, queryVariableSuffix)

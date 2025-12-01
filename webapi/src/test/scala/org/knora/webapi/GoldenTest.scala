@@ -31,8 +31,8 @@ trait GoldenTest {
     suffix: String, // NOTE: as of right now, adding a default breaks the macros, so no default
     rewrite: Boolean = false,
   ): TestResult = {
-    val (name, store) = GoldenTest.goldenPath(suffix)
-    val path          = Paths.get(store)
+    val (name, store)            = GoldenTest.goldenPath(suffix)
+    val path                     = Paths.get(store)
     val expected: Option[String] = Option.when(Files.exists(path)) {
       new String(Files.readAllBytes(path), "UTF-8")
     }
@@ -67,7 +67,7 @@ object GoldenTest {
 
     val baseName = absPath.map(_.getFileName.toString).getOrElse("").stripSuffix(".scala") // Demo
     val name     = s"${baseName}${suffixDefaulted}"
-    val outPath =
+    val outPath  =
       s"${absPath.map(_.getParent).getOrElse("")}/$name.txt"
         .pipe(_.replace("/src/test/scala/", "/src/test/resources/"))
 

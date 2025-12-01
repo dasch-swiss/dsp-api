@@ -43,8 +43,8 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
 
   "An RdfModel" should {
     "add a triple with a datatype literal object, without first creating a Statement" in {
-      val subj: IriNode = JenaNodeFactory.makeIriNode("http://example.org/1")
-      val pred: IriNode = JenaNodeFactory.makeIriNode("http://example.org/int_prop")
+      val subj: IriNode        = JenaNodeFactory.makeIriNode("http://example.org/1")
+      val pred: IriNode        = JenaNodeFactory.makeIriNode("http://example.org/int_prop")
       val obj: DatatypeLiteral =
         JenaNodeFactory.makeDatatypeLiteral(value = "5", datatype = OntologyConstants.Xsd.Integer)
 
@@ -226,8 +226,8 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
     }
 
     "Remove a statement from the default graph, rather than an otherwise identical statement in a named graph" in {
-      val subj: IriNode = JenaNodeFactory.makeIriNode("http://example.org/foo")
-      val pred: IriNode = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
+      val subj: IriNode        = JenaNodeFactory.makeIriNode("http://example.org/foo")
+      val pred: IriNode        = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
       val obj: DatatypeLiteral =
         JenaNodeFactory.makeDatatypeLiteral(value = "Foo", datatype = OntologyConstants.Xsd.String)
 
@@ -260,8 +260,8 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
     }
 
     "Remove a statement from the default graph, and an otherwise identical statement in a named graph" in {
-      val subj: IriNode = JenaNodeFactory.makeIriNode("http://example.org/bar")
-      val pred: IriNode = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
+      val subj: IriNode        = JenaNodeFactory.makeIriNode("http://example.org/bar")
+      val pred: IriNode        = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
       val obj: DatatypeLiteral =
         JenaNodeFactory.makeDatatypeLiteral(value = "Bar", datatype = OntologyConstants.Xsd.String)
 

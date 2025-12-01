@@ -45,7 +45,7 @@ object ChangePropertyLabelsOrCommentsQuery extends QueryBuilderHelper {
 
     for {
       insertPatterns <- buildInsertPatterns(ontology, property, maybeLinkValue, predicate, newValues)
-      wherePatterns =
+      wherePatterns   =
         List(
           ontology.isA(OWL.ONTOLOGY).andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate)),
           property.has(predicate, oldValues).optional(),
@@ -69,8 +69,8 @@ object ChangePropertyLabelsOrCommentsQuery extends QueryBuilderHelper {
     predicate: Iri,
     newValues: Seq[StringLiteralV2],
   ): UIO[Seq[TriplePattern]] = Clock.instant.map { now =>
-    val ontologyModPattern = ontology.has(KB.lastModificationDate, toRdfLiteral(now))
-    val newValuesPatterns  = newValues.map(toRdfLiteral).map(propertyIri.has(predicate, _)).toList
+    val ontologyModPattern   = ontology.has(KB.lastModificationDate, toRdfLiteral(now))
+    val newValuesPatterns    = newValues.map(toRdfLiteral).map(propertyIri.has(predicate, _)).toList
     val newLinkValuePatterns =
       maybeLinkValue.map(iri => newValues.map(toRdfLiteral).map(iri.has(predicate, _))).toList.flatten
     ontologyModPattern +: newValuesPatterns ::: newLinkValuePatterns

@@ -216,7 +216,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val s                = iri(id.toString)
     val clazz            = variable("clazz")
     val resourceSubclass = clazz.has(RDFS.SUBCLASSOF, KB.Resource)
-    val whereClause = s
+    val whereClause      = s
       .isA(clazz)
       .andHas(RDFS.LABEL, variable("label"))
       .andHas(KB.isDeleted, variable("isDeleted"))
@@ -245,7 +245,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val attachedToUser         = row.getRequired("attachedToUser", UserIri.from)
     val creationDate           = row.getRequired("creationDate", s => Try(Instant.parse(s)).toEither.left.map(_.getMessage))
     val attachedToProject      = row.getRequired("attachedToProject", ProjectIri.from)
-    val lastModificationDate =
+    val lastModificationDate   =
       row.get("lastModificationDate", s => Try(Instant.parse(s)).toEither.left.map(_.getMessage))
     val hasPermissions = PermissionUtilADM
       .parsePermissions(row.getRequired("hasPermissions"))
@@ -523,7 +523,7 @@ object ResourcesRepoLive {
         case _: OtherFileValueInfo              => result
         case v: StillImageFileValueInfo         => result.andHas(KB.dimX, literalOf(v.dimX)).andHas(KB.dimY, literalOf(v.dimY))
         case v: StillImageExternalFileValueInfo => result.andHas(KB.externalUrl, literalOf(v.externalUrl))
-        case v: DocumentFileValueInfo =>
+        case v: DocumentFileValueInfo           =>
           result
             .andHasOptional(KB.dimX, v.dimX.map(i => literalOf(i)))
             .andHasOptional(KB.dimY, v.dimY.map(i => literalOf(i)))

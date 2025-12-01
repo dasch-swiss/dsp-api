@@ -49,7 +49,7 @@ final case class ExportService(
     includeIris: Boolean,
   ): Task[ExportedCsv] =
     for {
-      resourceIris <- findResources.findResources(project, classIri).map(_.map(_.toString))
+      resourceIris  <- findResources.findResources(project, classIri).map(_.map(_.toString))
       readResources <- readResources.readResourcesSequence(
                          resourceIris = resourceIris,
                          targetSchema = ApiV2Complex,
@@ -60,7 +60,7 @@ final case class ExportService(
       headers <- rowHeaders(selectedProperties, language, includeIris)
 
       rootVocabularies <- listsResponder.getLists(Some(Left(project.id)))
-      vocabularies <-
+      vocabularies     <-
         ZIO
           .foreach(rootVocabularies.lists) { list =>
             listsResponder.listGetRequestADM(ListIri.unsafeFrom(list.id)).map(_.toIriLabelMap(language.value))

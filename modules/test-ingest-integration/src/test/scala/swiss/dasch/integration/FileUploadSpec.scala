@@ -39,7 +39,7 @@ object FileUploadSpec extends ZIOSpecDefault {
   }
 
   private val contentLength = 1.MB
-  val spec = suite("Upload File")(
+  val spec                  = suite("Upload File")(
     test(
       "uploading a supported file should work " +
         "/projects/:shortcode/bulk-ingest/ingest/:filename",

@@ -23,7 +23,7 @@ object CommandExecutorLiveSpec extends ZIOSpecDefault {
       for {
         cmd      <- CommandExecutor.buildCommand("customCommand", "customParams").provideSome[StorageService](devLayer)
         assetDir <- StorageService.getAssetsBaseFolder().flatMap(_.toAbsolutePath)
-        expected =
+        expected  =
           s"docker run --entrypoint customCommand -v $assetDir:$assetDir daschswiss/knora-sipi:${BuildInfo.knoraSipiVersion} customParams"
       } yield assertTrue(cmd.cmd.mkString(" ") == expected)
     },

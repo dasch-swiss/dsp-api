@@ -111,7 +111,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
 
       JsonLDObject(
         Map(
-          "@id" -> JsonLDString(node.id),
+          "@id"   -> JsonLDString(node.id),
           "@type" -> JsonLDString(
             OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
           ),
@@ -146,7 +146,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
 
     val body = rdf.JsonLDObject(
       Map(
-        "@id" -> JsonLDString(listinfo.id),
+        "@id"   -> JsonLDString(listinfo.id),
         "@type" -> JsonLDString(
           OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
         ),
@@ -203,7 +203,7 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
 
         JsonLDObject(
           Map(
-            "@id" -> JsonLDString(root.id),
+            "@id"   -> JsonLDString(root.id),
             "@type" -> JsonLDString(
               OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
             ),
@@ -232,7 +232,7 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
 
         JsonLDObject(
           Map(
-            "@id" -> JsonLDString(child.id),
+            "@id"   -> JsonLDString(child.id),
             "@type" -> JsonLDString(
               OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
             ),

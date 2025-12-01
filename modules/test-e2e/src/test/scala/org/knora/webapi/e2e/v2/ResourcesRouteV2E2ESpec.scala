@@ -205,7 +205,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         historyResponseAsString <-
           TestApiClient.getJsonLd(uri"/v2/resources/history/$aThingWithHistoryIri").flatMap(_.assert200)
         jsonLDDocument = JsonLDUtil.parseJsonLD(historyResponseAsString)
-        entries = jsonLDDocument.body
+        entries        = jsonLDDocument.body
                     .getRequiredArray("@graph")
                     .fold(e => throw BadRequestException(e), identity)
         _ <- ZIO.foreachDiscard(entries.value) {
@@ -219,7 +219,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                                         ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
                                     ),
                                   )
-                   arkTimestamp <- ZIO.succeed(sf.formatArkTimestamp(versionDate))
+                   arkTimestamp            <- ZIO.succeed(sf.formatArkTimestamp(versionDate))
                    versionResponseAsString <-
                      TestApiClient
                        .getJsonLd(uri"/v2/resources/$aThingWithHistoryIri", addVersionQueryParam(arkTimestamp))
@@ -464,7 +464,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
              )
         // Check that the text value with standoff is correct in the simple schema.
         resourceSimpleAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceSimpleGetResponseAsString)
-        text: String =
+        text: String                           =
           resourceSimpleAsJsonLD.body
             .getRequiredString("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasRichtext")
             .fold(msg => throw BadRequestException(msg), identity)
@@ -569,7 +569,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
              )
         // Check that the value is correct in the simple schema.
         resourceSimpleAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceSimpleGetResponseAsString)
-        foafName: String =
+        foafName: String                       =
           resourceSimpleAsJsonLD.body
             .getRequiredString("http://0.0.0.0:3333/ontology/0001/freetest/simple/v2#hasFoafName")
             .fold(msg => throw BadRequestException(msg), identity)
@@ -580,7 +580,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
     },
     test("create a resource whose label contains a Unicode escape and quotation marks") {
       for {
-        jsonLdEntity <- readFile("ThingWithUnicodeEscape.jsonld")
+        jsonLdEntity    <- readFile("ThingWithUnicodeEscape.jsonld")
         responseJsonDoc <-
           TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLdEntity, anythingUser1).flatMap(_.assert200)
         resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -617,7 +617,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         responseJsonDoc <- TestApiClient
                              .postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1)
                              .flatMap(_.assert200)
-        resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        resourceIri: IRI           = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
                                        key = KnoraApiV2Complex.CreationDate,
                                        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
@@ -679,7 +679,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
            |}""".stripMargin
 
       for {
-        errorMessage <- TestApiClient.postJsonLd(uri"/v2/resources", params, anythingUser1).flatMap(_.assert400)
+        errorMessage       <- TestApiClient.postJsonLd(uri"/v2/resources", params, anythingUser1).flatMap(_.assert400)
         invalidIri: Boolean =
           errorMessage.contains(s"IRI: 'http://rdfh.ch/0001/a-thing' already exists, try another one.")
       } yield assertTrue(invalidIri)
@@ -791,35 +791,35 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         customCreationDate <- ZIO.succeed(Instant.parse("2019-01-09T15:45:54.502951Z"))
         customValueIRI     <- ZIO.succeed(SharedTestDataADM.customValueIRI_withResourceIriAndValueIRIAndValueUUID)
         customValueUUID    <- ZIO.succeed(SharedTestDataADM.customValueUUID)
-        jsonLDEntity = s"""{
-                          |   "@id" : "$customResourceIRI",
-                          |  "@type" : "anything:Thing",
-                          |  "knora-api:attachedToProject" : {
-                          |    "@id" : "http://rdfh.ch/projects/0001"
-                          |  },
-                          |  "anything:hasBoolean" : {
-                          |    "@id": "$customValueIRI",
-                          |    "@type" : "knora-api:BooleanValue",
-                          |    "knora-api:booleanValueAsBoolean" : true,
-                          |    "knora-api:valueHasUUID" : "$customValueUUID"
-                          |  },
-                          |  "rdfs:label" : "test thing",
-                          |  "knora-api:creationDate" : {
-                          |    "@type" : "xsd:dateTimeStamp",
-                          |    "@value" : "$customCreationDate"
-                          |  },
-                          |  "@context" : {
-                          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                          |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                          |  }
-                          |}""".stripMargin
+        jsonLDEntity        = s"""{
+                                 |   "@id" : "$customResourceIRI",
+                                 |  "@type" : "anything:Thing",
+                                 |  "knora-api:attachedToProject" : {
+                                 |    "@id" : "http://rdfh.ch/projects/0001"
+                                 |  },
+                                 |  "anything:hasBoolean" : {
+                                 |    "@id": "$customValueIRI",
+                                 |    "@type" : "knora-api:BooleanValue",
+                                 |    "knora-api:booleanValueAsBoolean" : true,
+                                 |    "knora-api:valueHasUUID" : "$customValueUUID"
+                                 |  },
+                                 |  "rdfs:label" : "test thing",
+                                 |  "knora-api:creationDate" : {
+                                 |    "@type" : "xsd:dateTimeStamp",
+                                 |    "@value" : "$customCreationDate"
+                                 |  },
+                                 |  "@context" : {
+                                 |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                                 |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                                 |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                                 |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                                 |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                                 |  }
+                                 |}""".stripMargin
         responseJsonDoc <-
           TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200)
 
-        resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        resourceIri: IRI             = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         resourceGetResponseAsJsonLD <-
           TestApiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri", anythingUser1).flatMap(_.assert200)
         valueIri: IRI = resourceGetResponseAsJsonLD.body
@@ -882,7 +882,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                              .postJsonLdDocument(uri"/v2/resources", jsonLDEntity, SharedTestDataADM.anythingAdminUser)
                              .flatMap(_.assert200)
 
-        resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        resourceIri: IRI         = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         savedAttachedToUser: IRI =
           responseJsonDoc.body.requireIriInObject(
             KnoraApiV2Complex.AttachedToUser,
@@ -925,7 +925,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
     },
     test("create a resource containing escaped text") {
       for {
-        jsonLd <- readFile("CreateResourceWithEscape.jsonld")
+        jsonLd          <- readFile("CreateResourceWithEscape.jsonld")
         responseJsonDoc <-
           TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLd, anythingUser1).flatMap(_.assert200)
         resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -992,27 +992,27 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         newLabel            <- ZIO.succeed("test thing with modified label again")
         newPermissions      <- ZIO.succeed("CR knora-admin:ProjectMember|V knora-admin:ProjectMember")
         newModificationDate <- ZIO.succeed(Instant.now.plus(java.time.Duration.ofDays(1)))
-        jsonLDEntity = s"""|{
-                           |  "@id" : "$aThingIri",
-                           |  "@type" : "anything:Thing",
-                           |  "rdfs:label" : "$newLabel",
-                           |  "knora-api:hasPermissions" : "$newPermissions",
-                           |  "knora-api:lastModificationDate" : {
-                           |    "@type" : "xsd:dateTimeStamp",
-                           |    "@value" : "$aThingLastModificationDate"
-                           |  },
-                           |  "knora-api:newModificationDate" : {
-                           |    "@type" : "xsd:dateTimeStamp",
-                           |    "@value" : "$newModificationDate"
-                           |  },
-                           |  "@context" : {
-                           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                           |  }
-                           |}""".stripMargin
+        jsonLDEntity         = s"""|{
+                                   |  "@id" : "$aThingIri",
+                                   |  "@type" : "anything:Thing",
+                                   |  "rdfs:label" : "$newLabel",
+                                   |  "knora-api:hasPermissions" : "$newPermissions",
+                                   |  "knora-api:lastModificationDate" : {
+                                   |    "@type" : "xsd:dateTimeStamp",
+                                   |    "@value" : "$aThingLastModificationDate"
+                                   |  },
+                                   |  "knora-api:newModificationDate" : {
+                                   |    "@type" : "xsd:dateTimeStamp",
+                                   |    "@value" : "$newModificationDate"
+                                   |  },
+                                   |  "@context" : {
+                                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                                   |  }
+                                   |}""".stripMargin
         updateResponseAsString <-
           TestApiClient.putJsonLd(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         expectedResponse = updateResourceMetadataResponse(
@@ -1023,7 +1023,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                            )
         previewResponseAsString <-
           TestApiClient.getJsonLd(uri"/v2/resourcespreview/$aThingIri", anythingUser1).flatMap(_.assert200)
-        previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+        previewJsonLD        = JsonLDUtil.parseJsonLD(previewResponseAsString)
         updatedLabel: String = previewJsonLD.body
                                  .getRequiredString(OntologyConstants.Rdfs.Label)
                                  .fold(msg => throw BadRequestException(msg), identity)
@@ -1049,7 +1049,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         responseJsonDoc <- TestApiClient
                              .postJsonLdDocument(uri"/v2/resources", createResourceReqPayload(), anythingUser1)
                              .flatMap(_.assert200)
-        resourceIri <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        resourceIri          <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         lastModificationDate <- responseJsonDoc.body
                                   .getDataTypeValueInObject(
                                     KnoraApiV2Complex.CreationDate,
@@ -1087,7 +1087,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         responseJsonDoc <- TestApiClient
                              .postJsonLdDocument(uri"/v2/resources", createResourceReqPayload(), anythingUser1)
                              .flatMap(_.assert200)
-        resourceIri <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
+        resourceIri          <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         lastModificationDate <- responseJsonDoc.body
                                   .getDataTypeValueInObject(
                                     KnoraApiV2Complex.CreationDate,
@@ -1155,7 +1155,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
           TestApiClient.postJsonLd(uri"/v2/resources/delete", jsonLDEntity, anythingUser1).flatMap(_.assert200)
         previewResponseAsString <-
           TestApiClient.getJsonLd(uri"/v2/resourcespreview/$resourceIri", anythingUser1).flatMap(_.assert200)
-        previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+        previewJsonLD     = JsonLDUtil.parseJsonLD(previewResponseAsString)
         responseIsDeleted = previewJsonLD.body
                               .getRequiredBoolean(KnoraApiV2Complex.IsDeleted)
                               .fold(e => throw BadRequestException(e), identity)
@@ -1192,7 +1192,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                                     .flatMap(_.assert200)
         previewResponseAsString <-
           TestApiClient.getJsonLd(uri"/v2/resourcespreview/$resourceIri", anythingUser1).flatMap(_.assert200)
-        previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+        previewJsonLD     = JsonLDUtil.parseJsonLD(previewResponseAsString)
         responseIsDeleted = previewJsonLD.body
                               .getRequiredBoolean(KnoraApiV2Complex.IsDeleted)
                               .fold(e => throw BadRequestException(e), identity)
@@ -1247,7 +1247,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
     },
     test("create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)") {
       for {
-        hamletXml <- readFile("hamlet.xml")
+        hamletXml   <- readFile("hamlet.xml")
         jsonLDEntity = s"""{
                           |  "@type" : "anything:Thing",
                           |  "anything:hasRichtext" : {
@@ -1279,7 +1279,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
 
     test("read the large text and its markup as XML, and check that it matches the original XML") {
       for {
-        hamletXml <- readFile("hamlet.xml")
+        hamletXml                   <- readFile("hamlet.xml")
         resourceGetResponseAsString <-
           TestApiClient.getJsonLd(uri"/v2/resources/${hamletResourceIri.get}", anythingUser1).flatMap(_.assert200)
         _ <- instanceChecker.check(
@@ -1287,7 +1287,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
              )
         resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
-        xmlFromResponse: String = resourceGetResponseAsJsonLD.body
+        xmlFromResponse: String     = resourceGetResponseAsJsonLD.body
                                     .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
                                     .flatMap(_.getRequiredString(KnoraApiV2Complex.TextValueAsXml))
                                     .fold(e => throw BadRequestException(e), identity)
@@ -1310,13 +1310,13 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
                "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
              )
         resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
-        textValue = resourceGetResponseAsJsonLD.body
+        textValue                   = resourceGetResponseAsJsonLD.body
                       .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
                       .fold(e => throw BadRequestException(e), identity)
         maybeTextValueAsXml = textValue
                                 .getString(KnoraApiV2Complex.TextValueAsXml)
                                 .fold(msg => throw BadRequestException(msg), identity)
-        textValueIri = textValue.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        textValueIri    = textValue.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         standoffBuffer <- {
           def getStandoffResponse(offset: Int): ZIO[TestApiClient, Throwable, JsonLDDocument] = TestApiClient
             .getJsonLdDocument(uri"/v2/standoff/${hamletResourceIri.get}/$textValueIri/$offset", anythingUser1)
@@ -1361,21 +1361,21 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
     test("erase a resource") {
       for {
         resourceLastModificationDate <- ZIO.succeed(Instant.parse("2019-02-13T09:05:10Z"))
-        jsonLDEntity = s"""|{
-                           |  "@id" : "$aThingWithHistoryIri",
-                           |  "@type" : "anything:Thing",
-                           |  "knora-api:lastModificationDate" : {
-                           |    "@type" : "xsd:dateTimeStamp",
-                           |    "@value" : "$resourceLastModificationDate"
-                           |  },
-                           |  "@context" : {
-                           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                           |  }
-                           |}""".stripMargin
+        jsonLDEntity                  = s"""|{
+                                            |  "@id" : "$aThingWithHistoryIri",
+                                            |  "@type" : "anything:Thing",
+                                            |  "knora-api:lastModificationDate" : {
+                                            |    "@type" : "xsd:dateTimeStamp",
+                                            |    "@value" : "$resourceLastModificationDate"
+                                            |  },
+                                            |  "@context" : {
+                                            |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                                            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                                            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                                            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                                            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                                            |  }
+                                            |}""".stripMargin
         _ <- TestApiClient
                .postJsonLd(uri"/v2/resources/erase", jsonLDEntity, SharedTestDataADM.anythingAdminUser)
                .flatMap(_.assert200)
@@ -1411,7 +1411,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         responseJsonDoc <-
           TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200)
 
-        resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        resourceIri: IRI                    = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         resourceComplexGetResponseAsString <-
           TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri", anythingUser1).flatMap(_.assert200)
         _ <- instanceChecker.check(
@@ -1452,11 +1452,11 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         responseJsonDoc <-
           TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200)
 
-        resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        resourceIri: IRI                    = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         resourceComplexGetResponseAsString <-
           TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri", anythingUser1).flatMap(_.assert200)
         resourceJsonLDDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceComplexGetResponseAsString)
-        numberOfStandofHasLinkValue = resourceJsonLDDoc.body
+        numberOfStandofHasLinkValue       = resourceJsonLDDoc.body
                                         .value(KnoraApiV2Complex.HasStandoffLinkToValue)
                                         .asInstanceOf[JsonLDArray]
                                         .value
@@ -1480,44 +1480,44 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
     ) {
       for {
         freetestLastModDate <- ZIO.succeed(Instant.parse("2012-12-12T12:12:12.12Z"))
-        createResourceClass = s"""{
-                                 |  "@id" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}",
-                                 |  "@type" : "owl:Ontology",
-                                 |  "knora-api:lastModificationDate" : {
-                                 |    "@type" : "xsd:dateTimeStamp",
-                                 |    "@value" : "$freetestLastModDate"
-                                 |  },
-                                 |  "@graph" : [ {
-                                 |    "@id" : "freetest:NewClass",
-                                 |    "@type" : "owl:Class",
-                                 |    "rdfs:label" : {
-                                 |      "@language" : "en",
-                                 |      "@value" : "New resource class"
-                                 |    },
-                                 |    "rdfs:subClassOf" : [
-                                 |            {
-                                 |               "@id": "knora-api:Resource"
-                                 |            },
-                                 |      {
-                                 |        "@type": "http://www.w3.org/2002/07/owl#Restriction",
-                                 |        "owl:maxCardinality": 1,
-                                 |        "owl:onProperty": {
-                                 |          "@id": "freetest:hasName"
-                                 |        },
-                                 |        "salsah-gui:guiOrder": 1
-                                 |      }
-                                 |    ]
-                                 |  } ],
-                                 |  "@context" : {
-                                 |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                                 |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                                 |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
-                                 |    "owl" : "http://www.w3.org/2002/07/owl#",
-                                 |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                                 |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                                 |    "freetest" : "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
-                                 |  }
-                                 |}""".stripMargin
+        createResourceClass  = s"""{
+                                  |  "@id" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}",
+                                  |  "@type" : "owl:Ontology",
+                                  |  "knora-api:lastModificationDate" : {
+                                  |    "@type" : "xsd:dateTimeStamp",
+                                  |    "@value" : "$freetestLastModDate"
+                                  |  },
+                                  |  "@graph" : [ {
+                                  |    "@id" : "freetest:NewClass",
+                                  |    "@type" : "owl:Class",
+                                  |    "rdfs:label" : {
+                                  |      "@language" : "en",
+                                  |      "@value" : "New resource class"
+                                  |    },
+                                  |    "rdfs:subClassOf" : [
+                                  |            {
+                                  |               "@id": "knora-api:Resource"
+                                  |            },
+                                  |      {
+                                  |        "@type": "http://www.w3.org/2002/07/owl#Restriction",
+                                  |        "owl:maxCardinality": 1,
+                                  |        "owl:onProperty": {
+                                  |          "@id": "freetest:hasName"
+                                  |        },
+                                  |        "salsah-gui:guiOrder": 1
+                                  |      }
+                                  |    ]
+                                  |  } ],
+                                  |  "@context" : {
+                                  |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                                  |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+                                  |    "owl" : "http://www.w3.org/2002/07/owl#",
+                                  |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                                  |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                                  |    "freetest" : "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+                                  |  }
+                                  |}""".stripMargin
         _ <- TestApiClient
                .postJsonLd(uri"/v2/ontologies/classes", createResourceClass, SharedTestDataADM.anythingAdminUser)
                .flatMap(_.assert200)
@@ -1544,7 +1544,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
             .postJsonLdDocument(uri"/v2/resources", createResourceWithValues, SharedTestDataADM.anythingAdminUser)
             .flatMap(_.assert200)
 
-        resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        resourceIri: IRI            = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         resourceComplexGetResponse <-
           TestApiClient
             .getJsonLdDocument(uri"/v2/resources/$resourceIri", SharedTestDataADM.anythingAdminUser)
@@ -1552,7 +1552,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         valueObject = resourceComplexGetResponse.body
                         .getRequiredObject("http://0.0.0.0:3333/ontology/0001/freetest/v2#hasName")
                         .fold(e => throw BadRequestException(e), identity)
-        valueIri: IRI = valueObject.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
+        valueIri: IRI      = valueObject.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
         valueAsString: IRI = valueObject
                                .getRequiredString("http://api.knora.org/ontology/knora-api/v2#valueAsString")
                                .fold(msg => throw BadRequestException(msg), identity)
@@ -1577,8 +1577,8 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
       "create a resource with TextValue comment containing linebreaks should store linebreaks as Unicode (DEV-5311)",
     ) {
       val commentWithLinebreaks = "This is line one\nThis is line two\nThis is line three"
-      val createJsonLd = Json.Obj(
-        "@type" -> Json.Str("anything:Thing"),
+      val createJsonLd          = Json.Obj(
+        "@type"            -> Json.Str("anything:Thing"),
         "anything:hasText" -> Json.Obj(
           "@type"                     -> Json.Str("knora-api:TextValue"),
           "knora-api:valueAsString"   -> Json.Str("Text value with comment containing linebreaks"),
@@ -1588,7 +1588,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
           "@id" -> Json.Str("http://rdfh.ch/projects/0001"),
         ),
         "rdfs:label" -> Json.Str("Resource with linebreak comment"),
-        "@context" -> Json.Obj(
+        "@context"   -> Json.Obj(
           "rdf"       -> Json.Str("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
           "knora-api" -> Json.Str("http://api.knora.org/ontology/knora-api/v2#"),
           "rdfs"      -> Json.Str("http://www.w3.org/2000/01/rdf-schema#"),
@@ -1602,7 +1602,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         resourceIri <-
           createResponse.body.getRequiredIdValueAsKnoraDataIri.flatMap(sIri => ZIO.fromEither(ResourceIri.from(sIri)))
         updatedResource <- TestResourcesApiClient.getResource(resourceIri, anythingUser1).flatMap(_.assert200)
-        savedComment <- ZIO.fromEither(
+        savedComment    <- ZIO.fromEither(
                           updatedResource.body
                             .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText")
                             .flatMap(_.getRequiredString(KnoraApiV2Complex.ValueHasComment)),

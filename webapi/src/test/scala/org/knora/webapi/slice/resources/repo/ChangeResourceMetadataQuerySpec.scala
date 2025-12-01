@@ -41,7 +41,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
     Set.empty,
   )
 
-  private val testResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing".toSmartIri)
+  private val testResourceIri      = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing".toSmartIri)
   private val testResourceClassIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
   private val testLastModificationDate = LastModificationDate.from(Instant.parse("2023-08-01T10:30:00Z"))

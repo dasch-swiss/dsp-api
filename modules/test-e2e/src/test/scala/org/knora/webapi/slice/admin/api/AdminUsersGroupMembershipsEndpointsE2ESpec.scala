@@ -29,7 +29,7 @@ object AdminUsersGroupMembershipsEndpointsE2ESpec extends E2EZSpec {
   private def createNewUser =
     val firstName = faker.name().firstName()
     val lastName  = faker.name().lastName()
-    val req = UserCreateRequest(
+    val req       = UserCreateRequest(
       id = None,
       Username.unsafeFrom(s"$firstName.${faker.number().positive()}"),
       Email.unsafeFrom(s"$firstName.$lastName@example.org"),

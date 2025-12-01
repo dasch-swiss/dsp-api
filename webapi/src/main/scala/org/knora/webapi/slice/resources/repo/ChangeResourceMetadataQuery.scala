@@ -80,7 +80,7 @@ object ChangeResourceMetadataQuery extends QueryBuilderHelper {
 
         val lastModPattern: GraphPattern = maybeLastModificationDate match {
           case Some(lmd) => resource.has(KB.lastModificationDate, toRdfLiteral(lmd))
-          case None => // If no lastModificationDate provided, ensure the resource doesn't have one
+          case None      => // If no lastModificationDate provided, ensure the resource doesn't have one
             GraphPatterns.filterNotExists(resource.has(KB.lastModificationDate, anyLastModificationDate))
         }
 

@@ -22,14 +22,14 @@ object Dependencies {
   val TopbraidShaclVersion = "1.4.4"
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
-  val ZioConfigVersion            = "4.0.5"
-  val ZioLoggingVersion           = "2.5.1"
+  val ZioConfigVersion            = "4.0.6"
+  val ZioLoggingVersion           = "2.5.2"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.5.0"
+  val ZioMetricsConnectorsVersion = "2.5.4"
   val ZioPreludeVersion           = "1.0.0-RC43"
   val ZioSchemaVersion            = "1.7.5"
   val ZioMockVersion              = "1.0.0-RC12"
-  val ZioVersion                  = "2.1.21"
+  val ZioVersion                  = "2.1.23"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
@@ -61,11 +61,11 @@ object Dependencies {
     "dev.zio"      %% "zio-test-junit"         % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-magnolia"      % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-sbt"           % ZioVersion     % Test,
-    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.0"        % Test,
+    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.2"        % Test,
   )
 
-  val SttpClientVersion = "4.0.12"
-  val zioSttpClient = Seq(
+  val SttpClientVersion = "4.0.13"
+  val zioSttpClient     = Seq(
     "com.softwaremill.sttp.client4" %% "zio"      % SttpClientVersion,
     "com.softwaremill.sttp.client4" %% "zio-json" % SttpClientVersion,
   )
@@ -103,12 +103,12 @@ object Dependencies {
 
   // input validation
   val commonsValidator =
-    "commons-validator" % "commons-validator" % "1.10.0" exclude ("commons-logging", "commons-logging")
+    "commons-validator" % "commons-validator" % "1.10.1" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtZioJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.3"
+  val jwtZioJson         = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.3"
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.5.5" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.5.7" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -128,18 +128,18 @@ object Dependencies {
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
-  val dataFaker = "net.datafaker" % "datafaker" % "2.5.2"
+  val dataFaker = "net.datafaker" % "datafaker" % "2.5.3"
 
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.0"
 
-  val wiremock = "org.wiremock" % "wiremock" % "3.13.1"
+  val wiremock = "org.wiremock" % "wiremock" % "3.13.2"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.11.49"
+  val tapirVersion = "1.11.50"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -154,7 +154,7 @@ object Dependencies {
   )
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"                 %% "zio-opentelemetry"              % "3.1.10",
+    "dev.zio"                 %% "zio-opentelemetry"              % "3.1.12",
     "io.sentry"                % "sentry-opentelemetry-agentless" % "8.27.1",
     "io.opentelemetry"         % "opentelemetry-sdk"              % "1.56.0",
     "io.opentelemetry.semconv" % "opentelemetry-semconv"          % "1.37.0",
@@ -203,13 +203,12 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion         = "11.17.0"
-  val otelAgentVersion      = "v2.18.1"
-  val otelPyroscopeVersion  = "v1.0.4"
-  val hikariVersion         = "7.0.2"
-  val quillVersion          = "4.8.6"
-  val sqliteVersion         = "3.51.0.0"
-  val testContainersVersion = "1.20.4"
+  val flywayVersion        = "11.17.2"
+  val otelAgentVersion     = "v2.18.1"
+  val otelPyroscopeVersion = "v1.0.4"
+  val hikariVersion        = "7.0.2"
+  val quillVersion         = "4.8.6"
+  val sqliteVersion        = "3.51.0.0"
 
   val db = Seq(
     "org.xerial"   % "sqlite-jdbc"    % sqliteVersion,

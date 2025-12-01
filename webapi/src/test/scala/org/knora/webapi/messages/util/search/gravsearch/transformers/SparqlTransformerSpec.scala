@@ -71,7 +71,7 @@ object SparqlTransformerSpec extends ZIOSpecDefault {
         linkStatement,
       )
       val optimisedPatterns = SparqlTransformer.optimiseIsDeletedWithFilter(patterns)
-      val expectedPatterns = Seq(
+      val expectedPatterns  = Seq(
         typeStatement,
         linkStatement,
         FilterNotExistsPattern(
@@ -105,7 +105,7 @@ object SparqlTransformerSpec extends ZIOSpecDefault {
         hasValueStatement,
         bindPattern,
       )
-      val optimisedPatterns = SparqlTransformer.moveBindToBeginning(patterns)
+      val optimisedPatterns                   = SparqlTransformer.moveBindToBeginning(patterns)
       val expectedPatterns: Seq[QueryPattern] = Seq(
         bindPattern,
         typeStatement,
@@ -139,7 +139,7 @@ object SparqlTransformerSpec extends ZIOSpecDefault {
         valueHasStringStatement,
         luceneQueryPattern,
       )
-      val optimisedPatterns = SparqlTransformer.moveLuceneToBeginning(patterns)
+      val optimisedPatterns                   = SparqlTransformer.moveLuceneToBeginning(patterns)
       val expectedPatterns: Seq[QueryPattern] = Seq(
         luceneQueryPattern,
         hasValueStatement,

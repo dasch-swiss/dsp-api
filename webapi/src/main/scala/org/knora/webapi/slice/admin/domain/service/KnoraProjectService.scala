@@ -32,8 +32,8 @@ final case class KnoraProjectService(
   private val licenseRepo: LicenseRepo,
   private val ontologyRepo: OntologyRepo,
 ) {
-  def findById(id: ProjectIri): Task[Option[KnoraProject]] = projectRepo.findById(id)
-  def existsById(id: ProjectIri): Task[Boolean]            = projectRepo.existsById(id)
+  def findById(id: ProjectIri): Task[Option[KnoraProject]]                          = projectRepo.findById(id)
+  def existsById(id: ProjectIri): Task[Boolean]                                     = projectRepo.existsById(id)
   def enableLicense(license: LicenseIri, project: KnoraProject): Task[KnoraProject] =
     withProjectFromDb(project.id) { project =>
       projectRepo.save(project.copy(enabledLicenses = project.enabledLicenses.incl(license)))
@@ -42,9 +42,9 @@ final case class KnoraProjectService(
     withProjectFromDb(project.id) { project =>
       projectRepo.save(project.copy(enabledLicenses = project.enabledLicenses.excl(license)))
     }
-  def findByShortcode(code: Shortcode): Task[Option[KnoraProject]] = projectRepo.findByShortcode(code)
-  def findByShortname(code: Shortname): Task[Option[KnoraProject]] = projectRepo.findByShortname(code)
-  def findAll(): Task[Chunk[KnoraProject]]                         = projectRepo.findAll()
+  def findByShortcode(code: Shortcode): Task[Option[KnoraProject]]                                    = projectRepo.findByShortcode(code)
+  def findByShortname(code: Shortname): Task[Option[KnoraProject]]                                    = projectRepo.findByShortname(code)
+  def findAll(): Task[Chunk[KnoraProject]]                                                            = projectRepo.findAll()
   def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[RestrictedView] =
     withProjectFromDb(project.id) { project =>
       val newSettings = settings match {
@@ -58,7 +58,7 @@ final case class KnoraProjectService(
     _            <- ensureShortcodeIsUnique(req.shortcode)
     _            <- ensureShortnameIsUnique(req.shortname)
     descriptions <- toNonEmptyChunk(req.description)
-    licenses <- req.enabledLicenses match {
+    licenses     <- req.enabledLicenses match {
                   case Some(iris) =>
                     licenseRepo.findByIds(iris.toSeq).map(_.map(_.id)).flatMap { found =>
                       val notFound = iris.diff(found.toSet)
@@ -68,7 +68,7 @@ final case class KnoraProjectService(
                   case None => licenseRepo.findRecommendedLicenses().map(_.map(_.id))
                 }
     copyrightHolders = req.allowedCopyrightHolders.getOrElse(Set.empty) ++ CopyrightHolder.default
-    project = KnoraProject(
+    project          = KnoraProject(
                 req.id.getOrElse(ProjectIri.makeNew),
                 req.shortname,
                 req.shortcode,

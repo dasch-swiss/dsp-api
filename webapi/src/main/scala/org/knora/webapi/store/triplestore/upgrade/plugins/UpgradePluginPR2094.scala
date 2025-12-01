@@ -18,7 +18,7 @@ class UpgradePluginPR2094 extends UpgradePlugin {
   override def transform(model: RdfModel): Unit = {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
-    val newObjectValue: String => DatatypeLiteral = (value: String) =>
+    val newObjectValue: String => DatatypeLiteral             = (value: String) =>
       JenaNodeFactory.makeDatatypeLiteral(value, OntologyConstants.Xsd.Uri)
 
     for (statement: Statement <- model) {

@@ -148,7 +148,7 @@ object KnoraProject {
 
   object Keyword extends StringValueCompanion[Keyword] {
 
-    private val keywordRegex: Regex = "^.{3,64}$".r
+    private val keywordRegex: Regex                = "^.{3,64}$".r
     def from(str: String): Either[String, Keyword] =
       if (keywordRegex.matches(str)) Right(Keyword(str))
       else Left("Keyword must be 3 to 64 characters long.")

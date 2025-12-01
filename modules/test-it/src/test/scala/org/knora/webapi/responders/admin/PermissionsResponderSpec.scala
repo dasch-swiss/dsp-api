@@ -126,7 +126,7 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "create and return an administrative permission even if irrelevant values were given for name and code of its permission",
       ) {
-        val customIri = "http://rdfh.ch/permissions/0001/0pd-VUDeShWNJ2Nq3fGGGQ"
+        val customIri      = "http://rdfh.ch/permissions/0001/0pd-VUDeShWNJ2Nq3fGGGQ"
         val hasPermissions = Set(
           PermissionADM(
             name = Permission.Administrative.ProjectResourceCreateAll.token,
@@ -809,7 +809,7 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "ignore irrelevant parameters given in ChangePermissionHasPermissionsApiRequestADM for an administrative permission",
       ) {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = Permission.Administrative.ProjectAdminAll.token,
@@ -835,7 +835,7 @@ object PermissionsResponderSpec extends E2EZSpec {
         )
       },
       test("update hasPermissions of a default object access permission") {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val hasPermissions = NonEmptyChunk(
           PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
           PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -860,7 +860,7 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "add missing name of the permission, if permissionCode of permission was given in hasPermissions of a default object access permission",
       ) {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = "",
@@ -895,7 +895,7 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "add missing permissionCode of the permission, if name of permission was given in hasPermissions of a default object access permission",
       ) {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = Permission.ObjectAccess.Delete.token,
@@ -929,9 +929,9 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "not update hasPermissions of a default object access permission, if both name and project code of a permission were missing",
       ) {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
-        val code          = 1
-        val name          = Permission.ObjectAccess.Delete.token
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
+        val code           = 1
+        val name           = Permission.ObjectAccess.Delete.token
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = name,
@@ -963,8 +963,8 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "not update hasPermissions of a default object access permission, if an invalid name was given for a permission",
       ) {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
-        val name          = "invalidName"
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
+        val name           = "invalidName"
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = name,
@@ -997,8 +997,8 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "not update hasPermissions of a default object access permission, if an invalid code was given for a permission",
       ) {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
-        val code          = 10
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
+        val code           = 10
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = Permission.ObjectAccess.Delete.token,
@@ -1031,7 +1031,7 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "not update hasPermissions of a default object access permission, if given name and project code are not consistent",
       ) {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = "",

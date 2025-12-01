@@ -21,7 +21,7 @@ import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.WithFrom
 
 final case class ValueUuid private (value: UUID) extends Value[UUID]
-object ValueUuid extends WithFrom[String, ValueUuid] {
+object ValueUuid                                 extends WithFrom[String, ValueUuid] {
 
   given TapirCodec.StringCodec[ValueUuid] = TapirCodec.stringCodec(from, _.value.toString)
 
@@ -30,7 +30,7 @@ object ValueUuid extends WithFrom[String, ValueUuid] {
 }
 
 final case class VersionDate private (value: Instant) extends Value[Instant]
-object VersionDate extends WithFrom[String, VersionDate] {
+object VersionDate                                    extends WithFrom[String, VersionDate] {
 
   given TapirCodec.StringCodec[VersionDate] = TapirCodec.stringCodec(from, _.value.toString)
 
@@ -45,7 +45,7 @@ object VersionDate extends WithFrom[String, VersionDate] {
 }
 
 final case class IriDto(value: String) extends StringValue
-object IriDto extends StringValueCompanion[IriDto] {
+object IriDto                          extends StringValueCompanion[IriDto] {
 
   given JsonCodec[IriDto]              = ZioJsonCodec.stringCodec(IriDto.from)
   given TapirCodec.StringCodec[IriDto] = TapirCodec.stringCodec(IriDto.from)

@@ -436,7 +436,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("should parse StillImageFileValue") {
       for {
-        _ <- configureSipiServiceMock
+        _      <- configureSipiServiceMock
         actual <-
           service(
             _.createValueV2FromJsonLd(
@@ -469,7 +469,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("should parse StillImageFileValue with copyright and license information") {
       for {
-        _ <- configureSipiServiceMock
+        _      <- configureSipiServiceMock
         actual <-
           service(
             _.createValueV2FromJsonLd(
@@ -511,7 +511,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("should parse StillImageExternalFileValue") {
       for {
-        _ <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        _      <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
         actual <-
           service(
             _.createValueV2FromJsonLd(
@@ -548,7 +548,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("should parse DocumentFileValue") {
       for {
-        _ <- configureSipiServiceMock
+        _      <- configureSipiServiceMock
         actual <- service(
                     _.createValueV2FromJsonLd(
                       s"""
@@ -581,7 +581,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("should parse TextFileValueContentV2") {
       for {
-        _ <- configureSipiServiceMock
+        _      <- configureSipiServiceMock
         actual <- service(
                     _.createValueV2FromJsonLd(
                       s"""
@@ -607,7 +607,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("should parse AudioFileValueContentV2") {
       for {
-        _ <- configureSipiServiceMock
+        _      <- configureSipiServiceMock
         actual <- service(
                     _.createValueV2FromJsonLd(
                       s"""
@@ -633,7 +633,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("should parse MovingImageFileValueContentV2") {
       for {
-        _ <- configureSipiServiceMock
+        _      <- configureSipiServiceMock
         actual <- service(
                     _.createValueV2FromJsonLd(
                       s"""
@@ -659,7 +659,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("should parse ArchiveFileValueContentV2") {
       for {
-        _ <- configureSipiServiceMock
+        _      <- configureSipiServiceMock
         actual <- service(
                     _.createValueV2FromJsonLd(
                       s"""

@@ -24,13 +24,13 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
 
   override val e2eSpec = suite("ConstructResponseUtilV2")(
     test("convert a resource Turtle response into a resource") {
-      val resourceIri: IRI = "http://rdfh.ch/0803/c5058f3a"
+      val resourceIri: IRI  = "http://rdfh.ch/0803/c5058f3a"
       val turtleStr: String =
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/constructResponseUtilV2/Zeitglocklein.ttl"),
         )
       for {
-        resourceRequestResponse <- SparqlExtendedConstructResponse.make(turtleStr)
+        resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
           constructResponseUtilV2(
             _.splitMainResourcesAndValueRdfData(resourceRequestResponse, incunabulaProjectAdminUser),
@@ -56,13 +56,13 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       } yield check
     },
     test("convert a resource Turtle response with hidden values into a resource with the anything admin user") {
-      val resourceIri: IRI = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
+      val resourceIri: IRI  = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
       val turtleStr: String =
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"),
         )
       for {
-        resourceRequestResponse <- SparqlExtendedConstructResponse.make(turtleStr)
+        resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
           constructResponseUtilV2(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
         resourceSequence <- constructResponseUtilV2ZIO(
@@ -86,13 +86,13 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       } yield check
     },
     test("convert a resource Turtle response with hidden values into a resource with the incunabula user") {
-      val resourceIri: IRI = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
+      val resourceIri: IRI  = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
       val turtleStr: String =
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"),
         )
       for {
-        resourceRequestResponse <- SparqlExtendedConstructResponse.make(turtleStr)
+        resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
           constructResponseUtilV2(
             _.splitMainResourcesAndValueRdfData(resourceRequestResponse, incunabulaProjectAdminUser),
@@ -118,13 +118,13 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       } yield check
     },
     test("convert a resource Turtle response with a hidden thing into a resource with the anything admin user") {
-      val resourceIri: IRI = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
+      val resourceIri: IRI  = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
       val turtleStr: String =
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl"),
         )
       for {
-        resourceRequestResponse <- SparqlExtendedConstructResponse.make(turtleStr)
+        resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
           constructResponseUtilV2(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
         resourceSequence <- constructResponseUtilV2ZIO(
@@ -148,12 +148,12 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       } yield check
     },
     test("convert a resource Turtle response with a hidden thing into a resource with an unknown user") {
-      val resourceIri: IRI = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
+      val resourceIri: IRI  = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
       val turtleStr: String = FileUtil.readTextFile(
         Paths.get("test_data/generated_test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl"),
       )
       for {
-        resourceRequestResponse <- SparqlExtendedConstructResponse.make(turtleStr)
+        resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
           constructResponseUtilV2(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anonymousUser))
         resourceSequence <- constructResponseUtilV2ZIO(
@@ -177,13 +177,13 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       } yield check
     },
     test("convert a resource Turtle response with standoff into a resource with anything admin user") {
-      val resourceIri: IRI = "http://rdfh.ch/0001/a-thing-with-text-values"
+      val resourceIri: IRI  = "http://rdfh.ch/0001/a-thing-with-text-values"
       val turtleStr: String =
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/constructResponseUtilV2/thingWithStandoff.ttl"),
         )
       for {
-        resourceRequestResponse <- SparqlExtendedConstructResponse.make(turtleStr)
+        resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
           constructResponseUtilV2(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
         resourceSequence <- constructResponseUtilV2ZIO(
@@ -239,10 +239,10 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
        */
 
       val resourceIris: Seq[IRI] = Seq("http://rdfh.ch/0803/76570a749901", "http://rdfh.ch/0803/773f258402")
-      val turtleStr: String =
+      val turtleStr: String      =
         FileUtil.readTextFile(Paths.get("test_data/generated_test_data/constructResponseUtilV2/mainQuery1.ttl"))
       for {
-        resourceRequestResponse <- SparqlExtendedConstructResponse.make(turtleStr)
+        resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
           constructResponseUtilV2(
             _.splitMainResourcesAndValueRdfData(resourceRequestResponse, incunabulaProjectAdminUser),
@@ -301,7 +301,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
        */
 
       val resourceIris: Seq[IRI] = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/ff17e5ef9601")
-      val turtleStr: String =
+      val turtleStr: String      =
         FileUtil.readTextFile(Paths.get("test_data/generated_test_data/constructResponseUtilV2/mainQuery2.ttl"))
       for {
         mainResourcesAndValueRdfData <-

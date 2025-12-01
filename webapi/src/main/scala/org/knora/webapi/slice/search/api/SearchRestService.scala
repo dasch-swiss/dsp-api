@@ -196,7 +196,7 @@ final case class SearchRestService(
                          iriConverter.asResourceClassIri(iri).mapError(BadRequestException(_)),
                        )
     standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)
-    searchResult <- searchResponderV2.fulltextSearchV2(
+    searchResult  <- searchResponderV2.fulltextSearchV2(
                       query,
                       offset.value,
                       project,

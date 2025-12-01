@@ -39,9 +39,9 @@ object RestCardinalityServiceSpec extends ZIOSpecDefault {
         .assignToProject(IriTestConstants.Project.TestProject),
     )
     .build
-  private val projectIri       = IriTestConstants.Project.TestProject
-  private val classIri: IRI    = IriTestConstants.Biblio.Class.Article.value
-  private val propertyIri: IRI = IriTestConstants.Biblio.Property.hasTitle.value
+  private val projectIri           = IriTestConstants.Project.TestProject
+  private val classIri: IRI        = IriTestConstants.Biblio.Class.Article.value
+  private val propertyIri: IRI     = IriTestConstants.Biblio.Property.hasTitle.value
   private val userWithAccess: User =
     SystemUser.copy(permissions =
       SystemUser.permissions
@@ -53,7 +53,7 @@ object RestCardinalityServiceSpec extends ZIOSpecDefault {
       suite("canSetCardinality")(
         test("should render a success Response") {
           for {
-            _ <- StubCardinalitiesService.setSetResponseSuccess()
+            _        <- StubCardinalitiesService.setSetResponseSuccess()
             response <- ZIO.serviceWithZIO[RestCardinalityService](
                           _.canSetCardinality(classIri, propertyIri, "1", userWithAccess),
                         )
@@ -214,8 +214,8 @@ object RestCardinalityServiceSpec extends ZIOSpecDefault {
       failure: ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.Failure,
     ): ZIO[StubCardinalitiesService, Nothing, Unit] =
       ZIO.serviceWithZIO[StubCardinalitiesService](_.setReplaceFailure(failure))
-    private val replaceSuccess = CanReplaceCardinalityCheckResult.Success
-    private val setSuccess     = Right(CanSetCardinalityCheckResult.Success)
+    private val replaceSuccess                  = CanReplaceCardinalityCheckResult.Success
+    private val setSuccess                      = Right(CanSetCardinalityCheckResult.Success)
     val layer: ULayer[StubCardinalitiesService] = ZLayer.fromZIO {
       for {
         refSet <-

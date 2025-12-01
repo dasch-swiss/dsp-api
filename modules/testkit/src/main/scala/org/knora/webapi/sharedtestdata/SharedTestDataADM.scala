@@ -554,8 +554,8 @@ object SharedTestDataADM {
    * Anything Admin Data             *
    * *********************************
    */
-  val anythingProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-  val anythingShortcode: Shortcode   = Shortcode.unsafeFrom("0001")
+  val anythingProjectIri: ProjectIri   = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  val anythingShortcode: Shortcode     = Shortcode.unsafeFrom("0001")
   val anythingOntologyIri: OntologyIri =
     OntologyIri.unsafeFrom(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI.toSmartIri)
 
@@ -569,8 +569,8 @@ object SharedTestDataADM {
   )
   val anythingRdfOntologyAndData: List[RdfDataObject] = List(anythingRdfData, anythingRdfOntology)
 
-  val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
-  val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
+  val customResourceIRI: IRI                                     = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
+  val customResourceIRI_resourceWithValues: IRI                  = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
   val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI =
     "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/fdqCOaqT6dP19pWI84X1XQ"
   val customValueUUID                     = "fdqCOaqT6dP19pWI84X1XQ"

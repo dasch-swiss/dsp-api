@@ -80,7 +80,7 @@ object AuthenticationEndpointsV2E2ESpec extends E2EZSpec {
       test("logout with token should invalidate the token") {
         for {
           token <- TestApiClient.getRootToken
-          _ <-
+          _     <-
             TestApiClient.deleteJson[LogoutResponse](uri"/v2/authentication", _.auth.bearer(token)).flatMap(_.assert200)
           checkAfterLogout <- TestApiClient.getJson[CheckResponse](uri"/v2/authentication", _.auth.bearer(token))
         } yield assertTrue(

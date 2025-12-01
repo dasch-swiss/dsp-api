@@ -34,21 +34,21 @@ object Base64UrlCheckDigitZSpec extends ZIOSpecDefault {
         assertTrue(!base64UrlCheckDigit.isValid(correctResourceIDWithIncorrectCheckDigit))
       } +
       test("reject a string with a missing character") {
-        val resourceIDWithMissingCharacter = "cmfk1DMHRBiR4-6HXpEFA"
+        val resourceIDWithMissingCharacter                     = "cmfk1DMHRBiR4-6HXpEFA"
         val resourceIDWithMissingCharacterAndCorrectCheckDigit =
           resourceIDWithMissingCharacter + correctResourceIDCheckDigit
 
         assertTrue(!base64UrlCheckDigit.isValid(resourceIDWithMissingCharacterAndCorrectCheckDigit))
       } +
       test("reject a string with an incorrect character") {
-        val resourceIDWithIncorrectCharacter = "cmfk1DMHRBir4-_6HXpEFA"
+        val resourceIDWithIncorrectCharacter                     = "cmfk1DMHRBir4-_6HXpEFA"
         val resourceIDWithIncorrectCharacterAndCorrectCheckDigit =
           resourceIDWithIncorrectCharacter + correctResourceIDCheckDigit
 
         assertTrue(!base64UrlCheckDigit.isValid(resourceIDWithIncorrectCharacterAndCorrectCheckDigit))
       } +
       test("reject a string with swapped characters") {
-        val resourceIDWithSwappedCharacters = "cmfk1DMHRBiR4_-6HXpEFA"
+        val resourceIDWithSwappedCharacters                     = "cmfk1DMHRBiR4_-6HXpEFA"
         val resourceIDWithSwappedCharactersAndCorrectCheckDigit =
           resourceIDWithSwappedCharacters + correctResourceIDCheckDigit
 

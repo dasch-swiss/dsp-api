@@ -82,7 +82,7 @@ object SipiTestContainer {
   private val initSipi = ZLayer.fromZIO(
     for {
       container <- ZIO.service[SipiTestContainer]
-      _ <- ZIO.attemptBlocking {
+      _         <- ZIO.attemptBlocking {
              container.execInContainer("mkdir", s"$imagesDir/tmp")
              container.execInContainer("chmod", "777", s"$imagesDir/tmp")
            }

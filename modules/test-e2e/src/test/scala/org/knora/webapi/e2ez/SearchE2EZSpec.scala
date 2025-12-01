@@ -32,8 +32,8 @@ object SearchE2EZSpec extends E2EZSpec {
     val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
 
     test("Successfully retrieve incoming links for a resource with offset=0") {
-      val url      = uri"/v2/searchIncomingLinks/$resourceIri".withParam("offset", "0")
-      val idCursor = JsonCursor.field("@id").isString
+      val url          = uri"/v2/searchIncomingLinks/$resourceIri".withParam("offset", "0")
+      val idCursor     = JsonCursor.field("@id").isString
       val targetCursor = JsonCursor
         .field("anything:hasThingPictureValue")
         .isObject
@@ -52,8 +52,8 @@ object SearchE2EZSpec extends E2EZSpec {
     }
 
     test("Successfully retrieve incoming links for a resource with default offset") {
-      val url      = uri"/v2/searchIncomingLinks/$resourceIri"
-      val idCursor = JsonCursor.field("@id").isString
+      val url          = uri"/v2/searchIncomingLinks/$resourceIri"
+      val idCursor     = JsonCursor.field("@id").isString
       val targetCursor = JsonCursor
         .field("anything:hasThingPictureValue")
         .isObject
@@ -91,9 +91,9 @@ object SearchE2EZSpec extends E2EZSpec {
     val resourceIri = "http://rdfh.ch/0001/thing-with-pages"
 
     test("Successfully retrieve StillImageRepresentations for a resource with offset=0") {
-      val url         = uri"/v2/searchStillImageRepresentations/$resourceIri".withParam("offset", "0")
-      val idCursor    = JsonCursor.field("@id").isString
-      val labelCursor = JsonCursor.field("rdfs:label").isString
+      val url            = uri"/v2/searchStillImageRepresentations/$resourceIri".withParam("offset", "0")
+      val idCursor       = JsonCursor.field("@id").isString
+      val labelCursor    = JsonCursor.field("rdfs:label").isString
       val filenameCursor =
         JsonCursor.field("knora-api:hasStillImageFileValue").isObject.field("knora-api:fileValueHasFilename").isString
 
@@ -110,9 +110,9 @@ object SearchE2EZSpec extends E2EZSpec {
     }
 
     test("Successfully retrieve StillImageRepresentations for a resource with default offset") {
-      val url         = uri"/v2/searchStillImageRepresentations/$resourceIri"
-      val idCursor    = JsonCursor.field("@id").isString
-      val labelCursor = JsonCursor.field("rdfs:label").isString
+      val url            = uri"/v2/searchStillImageRepresentations/$resourceIri"
+      val idCursor       = JsonCursor.field("@id").isString
+      val labelCursor    = JsonCursor.field("rdfs:label").isString
       val filenameCursor =
         JsonCursor.field("knora-api:hasStillImageFileValue").isObject.field("knora-api:fileValueHasFilename").isString
 

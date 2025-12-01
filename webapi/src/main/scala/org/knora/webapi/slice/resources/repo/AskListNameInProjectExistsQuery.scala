@@ -18,7 +18,7 @@ object AskListNameInProjectExistsQuery extends QueryBuilderHelper {
   def build(name: ListName, projectIri: ProjectIri): Ask = {
     val rootNodeVar = variable("rootNode")
     val nodeVar     = variable("node")
-    val askPattern = rootNodeVar
+    val askPattern  = rootNodeVar
       .has(RDF.TYPE, KnoraBase.ListNode)
       .andHas(KnoraBase.attachedToProject, toRdfIri(projectIri))
       .andHas(PropertyPathBuilder.of(KnoraBase.hasSubListNode).zeroOrMore().build(), nodeVar)
