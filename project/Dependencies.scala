@@ -112,7 +112,7 @@ object Dependencies {
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.82"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.83"
 
   // caching
   val ehcache = "org.ehcache" % "ehcache" % "3.11.1"
