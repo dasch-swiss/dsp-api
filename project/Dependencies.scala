@@ -108,7 +108,7 @@ object Dependencies {
   // authentication
   val jwtZioJson         = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.3"
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.5.5" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.5.7" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
