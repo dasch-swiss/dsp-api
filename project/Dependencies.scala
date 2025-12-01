@@ -137,7 +137,7 @@ object Dependencies {
   val wiremock = "org.wiremock" % "wiremock" % "3.13.1"
 
   // found/added by the plugin but deleted anyway
-  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.19.0"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
   val tapirVersion = "1.11.49"
 
@@ -155,7 +155,7 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"                 %% "zio-opentelemetry"              % "3.1.10",
-    "io.sentry"                % "sentry-opentelemetry-agentless" % "8.26.0",
+    "io.sentry"                % "sentry-opentelemetry-agentless" % "8.27.1",
     "io.opentelemetry"         % "opentelemetry-sdk"              % "1.56.0",
     "io.opentelemetry.semconv" % "opentelemetry-semconv"          % "1.37.0",
   )
