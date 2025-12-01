@@ -14,6 +14,7 @@ import zio.telemetry.opentelemetry.tracing.Tracing
 
 import scala.annotation.unused
 
+import dsp.errors.BadRequestException
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
@@ -38,8 +39,10 @@ final case class SearchRestService(
     project: Option[ProjectIri],
     limitByResourceClass: Option[InputIri],
   ): Task[(RenderedResponse, MediaType)] = for {
-    resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iriConverter.asSmartIri)
-    searchResult  <-
+    resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iri =>
+                       iriConverter.asResourceClassIri(iri).mapError(BadRequestException(_)),
+                     )
+    searchResult <-
       searchResponderV2.searchResourcesByLabelV2(query, offset.value, project, resourceClass, opts.schema, user)
     response <- renderer.render(searchResult, opts)
   } yield response
@@ -50,8 +53,10 @@ final case class SearchRestService(
     project: Option[ProjectIri],
     limitByResourceClass: Option[InputIri],
   ): Task[(RenderedResponse, MediaType)] = for {
-    resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iriConverter.asSmartIri)
-    searchResult  <-
+    resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iri =>
+                       iriConverter.asResourceClassIri(iri).mapError(BadRequestException(_)),
+                     )
+    searchResult <-
       searchResponderV2.searchResourcesByLabelCountV2(query, project, resourceClass)
     response <- renderer.render(searchResult, opts)
   } yield response
@@ -186,7 +191,10 @@ final case class SearchRestService(
     standoffClass: Option[InputIri],
     returnFiles: Boolean,
   ): Task[(RenderedResponse, MediaType)] = for {
-    resourceClass <- ZIO.foreach(resourceClass.map(_.value))(iriConverter.asSmartIri)
+    resourceClass <- ZIO
+                       .foreach(resourceClass.map(_.value))(iri =>
+                         iriConverter.asResourceClassIri(iri).mapError(BadRequestException(_)),
+                       )
     standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)
     searchResult  <- searchResponderV2.fulltextSearchV2(
                       query,
@@ -210,7 +218,10 @@ final case class SearchRestService(
   ): Task[
     (KnoraResponseRenderer.RenderedResponse, MediaType),
   ] = for {
-    resourceClass <- ZIO.foreach(resourceClass.map(_.value))(iriConverter.asSmartIri)
+    resourceClass <- ZIO
+                       .foreach(resourceClass.map(_.value))(iri =>
+                         iriConverter.asResourceClassIri(iri).mapError(BadRequestException(_)),
+                       )
     standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)
     searchResult  <- searchResponderV2.fulltextSearchCountV2(query, project, resourceClass, standoffClass)
     response      <- renderer.render(searchResult, opts)
