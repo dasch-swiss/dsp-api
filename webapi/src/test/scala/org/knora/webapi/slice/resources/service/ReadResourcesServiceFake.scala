@@ -28,6 +28,17 @@ final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) ex
   ): Task[ReadResourcesSequenceV2] =
     ZIO.succeed(ReadResourcesSequenceV2(readResources, Set.empty, false))
 
+  def readResourcesSequencePar(
+    resourceIris: Seq[IRI],
+    propertyIri: Option[SmartIri] = None,
+    valueUuid: Option[UUID] = None,
+    preview: Boolean = false,
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+    withDeleted: Boolean = true,
+    skipRetrievalChecks: Boolean = false,
+  ): Task[ReadResourcesSequenceV2] = null
+
   def getResources(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,

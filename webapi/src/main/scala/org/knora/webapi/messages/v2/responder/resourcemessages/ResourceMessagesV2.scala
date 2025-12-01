@@ -735,6 +735,13 @@ case class ReadResourcesSequenceV2(
       resources = resources.map(_.toOntologySchema(targetSchema)),
     )
 
+  def ++(that: ReadResourcesSequenceV2): ReadResourcesSequenceV2 =
+    ReadResourcesSequenceV2(
+      this.resources ++ that.resources,
+      this.hiddenResourceIris ++ that.hiddenResourceIris,
+      this.mayHaveMoreResults || that.mayHaveMoreResults,
+    )
+
   private def getOntologiesFromResource(resource: ReadResourceV2): Set[SmartIri] = {
     val propertyIriOntologies: Set[SmartIri] = resource.values.keySet.map(_.getOntologyFromEntity)
 
@@ -852,17 +859,20 @@ case class ReadResourcesSequenceV2(
    * @param targetResourceIris the IRIs to be checked.
    * @param resourcesSequence  the result of requesting those IRIs.
    */
-  def checkResourceIris(targetResourceIris: Set[IRI], resourcesSequence: ReadResourcesSequenceV2): Task[Unit] =
+  def checkResourceIris(
+    targetResourceIris: Set[IRI],
+    resourcesSequence: ReadResourcesSequenceV2,
+  ): Task[Option[Throwable]] =
     targetResourceIris.intersect(resourcesSequence.hiddenResourceIris) match
       case hiddenTargetResourceIris if hiddenTargetResourceIris.nonEmpty =>
         lazy val msg =
           s"You do not have permission to see one or more resources: ${hiddenTargetResourceIris.map(iri => s"<$iri>").mkString(", ")}"
-        ZIO.fail(ForbiddenException(msg))
+        ZIO.some(ForbiddenException(msg))
       case _ => {
         val missingResourceIris = targetResourceIris -- resourcesSequence.resources.map(_.resourceIri).toSet
         lazy val msg            =
           s"One or more resources were not found:  ${missingResourceIris.map(iri => s"<$iri>").mkString(", ")}"
-        ZIO.when(missingResourceIris.nonEmpty)(ZIO.fail(NotFoundException(msg))).unit
+        ZIO.when(missingResourceIris.nonEmpty)(ZIO.succeed(NotFoundException(msg)))
       }
 
   /**

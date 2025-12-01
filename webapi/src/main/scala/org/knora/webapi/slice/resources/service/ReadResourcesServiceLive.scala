@@ -34,6 +34,17 @@ trait ReadResourcesService {
     withDeleted: Boolean = true,
   ): Task[ReadResourcesSequenceV2]
 
+  def readResourcesSequencePar(
+    resourceIris: Seq[IRI],
+    propertyIri: Option[SmartIri] = None,
+    valueUuid: Option[UUID] = None,
+    preview: Boolean = false,
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+    withDeleted: Boolean = true,
+    skipRetrievalChecks: Boolean = false,
+  ): Task[ReadResourcesSequenceV2]
+
   def getResources(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
@@ -89,6 +100,7 @@ final case class ReadResourcesServiceLive(
     failOnMissingValueUuid: Boolean = false,
     markDeletions: Boolean = false,
     showDeletedValues: Boolean = false,
+    skipRetrievalChecks: Boolean = false,
   ): Task[ReadResourcesSequenceV2] =
     for {
       resourcesWithValues <-
@@ -129,7 +141,15 @@ final case class ReadResourcesServiceLive(
           requestingUser = requestingUser,
         )
 
-      _ <- readSequence.checkResourceIris(resourceIris.toSet, readSequence)
+      _ <-
+        readSequence.checkResourceIris(resourceIris.toSet, readSequence).flatMap {
+          ZIO.foreach(_) { throwable =>
+            if (skipRetrievalChecks)
+              ZIO.logError(throwable.toString)
+            else
+              ZIO.fail(throwable)
+          }
+        }
 
       _ <-
         ZIO.when(failOnMissingValueUuid) {
@@ -144,6 +164,32 @@ final case class ReadResourcesServiceLive(
     } yield readSequence
       .focus(_.resources)
       .modify(_.map(r => if (markDeletions) r.markDeleted(versionDate, showDeletedValues) else r))
+
+  def readResourcesSequencePar(
+    resourceIris: Seq[IRI],
+    propertyIri: Option[SmartIri] = None,
+    valueUuid: Option[UUID] = None,
+    preview: Boolean = false,
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+    withDeleted: Boolean = true,
+    skipRetrievalChecks: Boolean = false,
+  ): Task[ReadResourcesSequenceV2] =
+    ZIO
+      .foreachPar(Chunk.fromIterable(resourceIris).grouped(500).map(_.toSeq).toArray) { resourceIris =>
+        readResourcesSequence_(
+          resourceIris,
+          propertyIri,
+          valueUuid = valueUuid,
+          preview = preview,
+          targetSchema,
+          requestingUser,
+          withDeleted = withDeleted,
+          skipRetrievalChecks = skipRetrievalChecks,
+        )
+      }
+      .withParallelism(50)
+      .map(_.fold(ReadResourcesSequenceV2(Seq.empty))(_ ++ _))
 
   def readResourcesSequence(
     resourceIris: Seq[IRI],
