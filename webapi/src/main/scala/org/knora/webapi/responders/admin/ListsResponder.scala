@@ -39,6 +39,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resources.repo.AskListNameInProjectExistsQuery
+import org.knora.webapi.slice.resources.repo.ChangeParentNodeQuery
 import org.knora.webapi.slice.resources.repo.CreateListNodeQuery
 import org.knora.webapi.slice.resources.repo.IsListInUseQuery
 import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
@@ -306,13 +307,22 @@ final case class ListsResponder(
     }
 
   /**
+   * Find a node including its immediate children. The node can be a root node or a child node.
+   *
+   * @param nodeIri              the IRI of the list node to be queried.
+   * @return a optional [[ListNodeADM]]
+   */
+  private def findNode(nodeIri: ListIri): IO[Option[Throwable], ListNodeADM] =
+    listNodeGetADM(nodeIri.value, true).some
+
+  /**
    * Retrieves a complete node including children. The node can be the lists root node or child node.
    *
    * @param nodeIri              the IRI of the list node to be queried.
    * @param shallow              denotes if all children or only the immediate children will be returned.
    * @return a optional [[ListNodeADM]]
    */
-  private def listNodeGetADM(nodeIri: IRI, shallow: Boolean) = {
+  private def listNodeGetADM(nodeIri: IRI, shallow: Boolean): Task[Option[ListNodeADM]] = {
     for {
       // this query will give us only the information about the root node.
       statements <- triplestore
@@ -967,7 +977,7 @@ final case class ListsResponder(
       newParentIri: IRI,
       currParentIri: IRI,
       givenPosition: Int,
-      dataNamedGraph: IRI,
+      project: KnoraProject,
     ): Task[Int] =
       for {
         // get current parent node with its immediate children
@@ -985,7 +995,8 @@ final case class ListsResponder(
         newPosition = if (givenPosition == -1) { newSiblings.size }
                       else givenPosition
         // update the position of the node itself
-        _ <- updatePositionOfNode(
+        dataNamedGraph <- getDataNamedGraph(project.id)
+        _              <- updatePositionOfNode(
                nodeIri = node.id,
                newPosition = newPosition,
                dataNamedGraph = dataNamedGraph,
@@ -1007,7 +1018,8 @@ final case class ListsResponder(
           }
 
         /* update the sublists of parent nodes */
-        _ <- changeParentNode(node.id, currParentIri, newParentIri, dataNamedGraph)
+        _ <-
+          changeParentNode(project, node.listIri, ListIri.unsafeFrom(currParentIri), ListIri.unsafeFrom(newParentIri))
       } yield newPosition
 
     val updateTask =
@@ -1037,7 +1049,7 @@ final case class ListsResponder(
               newParentIri = changeNodePositionRequest.parentNodeIri.value,
               currParentIri = currentParentNodeIri,
               givenPosition = changeNodePositionRequest.position.value,
-              dataNamedGraph = dataNamedGraph,
+              project,
             )
           }
         /* Verify that the node position and parent children position were updated */
@@ -1418,33 +1430,44 @@ final case class ListsResponder(
    * @throws UpdateNotPerformedException if the parent of a node could not be updated.
    */
   private def changeParentNode(
-    nodeIri: IRI,
-    oldParentIri: IRI,
-    newParentIri: IRI,
-    dataNamedGraph: IRI,
-  ): Task[Unit] = for {
-    _ <-
-      triplestore.query(Update(sparql.admin.txt.changeParentNode(dataNamedGraph, nodeIri, oldParentIri, newParentIri)))
+    project: KnoraProject,
+    nodeIri: ListIri,
+    oldParentIri: ListIri,
+    newParentIri: ListIri,
+  ): Task[Unit] =
+    for {
+      _ <- triplestore.query(ChangeParentNodeQuery.build(project, nodeIri, oldParentIri, newParentIri))
 
-    /* verify that parents were updated */
-    // get old parent node with its immediate children
-    maybeOldParent     <- listNodeGetADM(nodeIri = oldParentIri, shallow = true)
-    childrenOfOldParent = maybeOldParent.get.children
-    _                  <- ZIO.when(childrenOfOldParent.exists(node => node.id == nodeIri)) {
-           ZIO.fail(
-             UpdateNotPerformedException(
-               s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug.",
-             ),
-           )
-         }
-    // get new parent node with its immediate children
-    maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri, shallow = true)
-    childrenOfNewParent = maybeNewParentNode.get.children
-    _                  <- ZIO.when(!childrenOfNewParent.exists(node => node.id == nodeIri)) {
-           ZIO.fail(UpdateNotPerformedException(s"Node $nodeIri is not added to parent node $newParentIri. "))
-         }
-
-  } yield ()
+      /* verify that parents were updated */
+      // get old parent node with its immediate children
+      childrenOfOldParent <-
+        findNode(oldParentIri).mapBoth(
+          {
+            case None      => UpdateNotPerformedException(s"Old parent $oldParentIri not found, report this as a bug.")
+            case Some(err) => err
+          },
+          _.children,
+        )
+      _ <- ZIO.when(childrenOfOldParent.exists(_.listIri == nodeIri)) {
+             ZIO.fail(
+               UpdateNotPerformedException(
+                 s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug.",
+               ),
+             )
+           }
+      // get new parent node with its immediate children
+      childrenOfNewParent <-
+        findNode(newParentIri).mapBoth(
+          {
+            case None      => UpdateNotPerformedException(s"New parent $newParentIri not found, report this as a bug.")
+            case Some(err) => err
+          },
+          _.children,
+        )
+      _ <- ZIO.when(!childrenOfNewParent.exists(_.listIri == nodeIri)) {
+             ZIO.fail(UpdateNotPerformedException(s"Node $nodeIri is not added to parent node $newParentIri. "))
+           }
+    } yield ()
 }
 
 object ListsResponder {
