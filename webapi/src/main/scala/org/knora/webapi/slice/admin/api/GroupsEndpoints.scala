@@ -32,43 +32,47 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
   val getGroups = baseEndpoints.publicEndpoint.get
     .in(base)
     .out(jsonBody[GroupsGetResponseADM].example(Examples.GroupEndpointsExample.groupsGetResponseADM))
-    .description("Return all groups.")
+    .description("Return all groups. Publicly accessible.")
 
   val getGroupByIri = baseEndpoints.publicEndpoint.get
     .in(base / groupIriPathVar)
     .out(groupGetResponse)
-    .description("Return a single group identified by its IRI.")
+    .description("Return a single group identified by its IRI. Publicly accessible.")
 
   val getGroupMembers = baseEndpoints.securedEndpoint.get
     .in(base / groupIriPathVar / "members")
     .out(jsonBody[GroupMembersGetResponseADM].example(Examples.GroupEndpointsExample.groupGetMembersResponse))
-    .description("Return all members of a single group.")
+    .description(
+      "Return all members of a single group. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
+    )
 
   val postGroup = baseEndpoints.securedEndpoint.post
     .in(base)
     .in(jsonBody[GroupCreateRequest].example(Examples.GroupEndpointsExample.groupCreateRequest))
     .out(groupGetResponse)
     .name("Create new group")
-    .description(
-      "**Required permissions**: User must SystemAdmin or ProjectAdmin of the project the group is created in.",
-    )
+    .description("Create new group. Requires SystemAdmin or ProjectAdmin permissions for the project.")
 
   val putGroup = baseEndpoints.securedEndpoint.put
     .in(base / groupIriPathVar)
     .in(jsonBody[GroupUpdateRequest].example(Examples.GroupEndpointsExample.groupUpdateRequest))
     .out(groupGetResponse)
-    .description("Update a group's basic information.")
+    .description(
+      "Update a group's basic information. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
+    )
 
   val putGroupStatus = baseEndpoints.securedEndpoint.put
     .in(base / groupIriPathVar / "status")
     .in(jsonBody[GroupStatusUpdateRequest])
     .out(groupGetResponse)
-    .description("Updates a group's status.")
+    .description("Updates a group's status. Requires SystemAdmin or ProjectAdmin permissions for the group's project.")
 
   val deleteGroup = baseEndpoints.securedEndpoint.delete
     .in(base / groupIriPathVar)
     .out(groupGetResponse)
-    .description("Deletes a group by changing its status to 'false'.")
+    .description(
+      "Deletes a group by changing its status to 'false'. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
+    )
 }
 
 object GroupsRequests {

@@ -34,7 +34,7 @@ case class ShaclEndpoints(baseEndpoints: BaseEndpoints) {
   val validate =
     baseEndpoints.publicEndpoint.post
       .in("shacl" / "validate")
-      .description("foo")
+      .description("Validate RDF data against SHACL shapes. Publicly accessible.")
       .in(multipartBody[ValidationFormData])
       .out(streamTextBody(ZioStreams)(new CodecFormat {
         override val mediaType: MediaType = MediaType("text", "turtle")

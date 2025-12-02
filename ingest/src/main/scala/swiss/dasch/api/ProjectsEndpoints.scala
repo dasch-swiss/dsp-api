@@ -214,6 +214,11 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .in(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
     .out(jsonBody[AssetInfoResponse])
     .tag("assets")
+    .description(
+      "Ingest a single asset file to the project. " +
+        "Authorization: write:project:1234 scope required " +
+        "(SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
+    )
 
   val postBulkIngest = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "bulk-ingest")

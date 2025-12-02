@@ -40,18 +40,21 @@ final case class MonitoringEndpoints(base: BaseEndpoints) {
       .in("info")
       .out(jsonBody[InfoEndpointResponse].example(InfoEndpointResponse.instance))
       .tag(monitoring)
+      .description("Get build and version information. Publicly accessible.")
 
   val healthEndpoint: PublicEndpoint[Unit, ApiProblem, AggregatedHealth, Any] =
     base.publicEndpoint.get
       .in("health")
       .out(jsonBody[AggregatedHealth].example(AggregatedHealth(Health.Status.UP, None)))
       .tag(monitoring)
+      .description("Get health status. Publicly accessible.")
 
   val metricsEndpoint: PublicEndpoint[Unit, ApiProblem, String, Any] =
     base.publicEndpoint.get
       .in("metrics")
       .out(stringBody)
       .tag(monitoring)
+      .description("Get Prometheus metrics. Publicly accessible.")
 
   val endpoints = List(infoEndpoint, healthEndpoint, metricsEndpoint)
 }

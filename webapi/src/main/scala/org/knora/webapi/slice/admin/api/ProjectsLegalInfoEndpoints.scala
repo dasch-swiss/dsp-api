@@ -86,12 +86,12 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
       jsonBody[PagedResponse[ProjectLicenseDto]]
         .example(Examples.PagedResponse.fromTotal(License.BUILT_IN.map(l => ProjectLicenseDto.from(l, true)))),
     )
-    .description("Get the available licenses for use within this project.")
+    .description("Get the available licenses for use within this project. Publicly accessible.")
 
   val getProjectLicensesIri = baseEndpoints.publicEndpoint.get
     .in(base / "licenses" / licenseIriPath)
     .out(jsonBody[ProjectLicenseDto])
-    .description("Get a specific license by its IRI for use within this project.")
+    .description("Get a specific license by its IRI for use within this project. Publicly accessible.")
 
   val putProjectLicensesEnable = baseEndpoints.securedEndpoint.put
     .in(base / "licenses" / licenseIriPath / "enable")

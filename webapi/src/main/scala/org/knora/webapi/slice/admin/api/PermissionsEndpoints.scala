@@ -50,38 +50,48 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
 
   val postPermissionsAp = base.securedEndpoint.post
     .in(permissionsBase / "ap")
-    .description("Create a new administrative permission")
+    .description(
+      "Create a new administrative permission. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+    )
     .in(jsonBody[CreateAdministrativePermissionAPIRequestADM])
     .out(jsonBody[AdministrativePermissionCreateResponseADM])
 
   val getPermissionsApByProjectIri = base.securedEndpoint.get
     .in(permissionsBase / "ap" / projectIri)
-    .description("Get all administrative permissions for a project.")
+    .description(
+      "Get all administrative permissions for a project. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+    )
     .out(jsonBody[AdministrativePermissionsForProjectGetResponseADM])
 
   val getPermissionsApByProjectAndGroupIri = base.securedEndpoint.get
     .in(permissionsBase / "ap" / projectIri / groupIriPathVar)
-    .description("Get all administrative permissions for a project and a group.")
+    .description(
+      "Get all administrative permissions for a project and a group. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+    )
     .out(jsonBody[AdministrativePermissionGetResponseADM])
 
   val getPermissionsDoapByProjectIri = base.securedEndpoint.get
     .in(permissionsBase / "doap" / projectIri)
-    .description("Get all default object access permissions for a project.")
+    .description(
+      "Get all default object access permissions for a project. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+    )
     .out(jsonBody[DefaultObjectAccessPermissionsForProjectGetResponseADM])
 
   val getPermissionsByProjectIri = base.securedEndpoint.get
     .in(permissionsBase / projectIri)
-    .description("Get all permissions for a project.")
+    .description("Get all permissions for a project. Requires SystemAdmin or ProjectAdmin permissions for the project.")
     .out(jsonBody[PermissionsForProjectGetResponseADM])
 
   val deletePermission = base.securedEndpoint.delete
     .in(permissionsBase / permissionIri)
-    .description("Delete an permission.")
+    .description("Delete an permission. Requires SystemAdmin permissions.")
     .out(jsonBody[PermissionDeleteResponseADM])
 
   val postPermissionsDoap = base.securedEndpoint.post
     .in(permissionsBase / "doap")
-    .description("Create a new default object access permission")
+    .description(
+      "Create a new default object access permission. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+    )
     .in(jsonBody[CreateDefaultObjectAccessPermissionAPIRequestADM])
     .out(jsonBody[DefaultObjectAccessPermissionCreateResponseADM])
 
@@ -89,7 +99,8 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
     .in(permissionsBase / "doap" / permissionIri)
     .description(
       "Update an existing default object access permission. " +
-        "The request may update the hasPermission and/or any allowed combination of group, resource class and property for the permission.",
+        "The request may update the hasPermission and/or any allowed combination of group, resource class and property for the permission. " +
+        "Requires SystemAdmin permissions.",
     )
     .in(
       jsonBody[ChangeDoapRequest]
@@ -124,26 +135,30 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
 
   val putPermissionsProjectIriGroup = base.securedEndpoint.put
     .in(permissionsBase / permissionIri / "group")
-    .description("Update a permission's group")
+    .description("Update a permission's group. Requires SystemAdmin permissions.")
     .in(jsonBody[ChangePermissionGroupApiRequestADM])
     .out(jsonBody[PermissionGetResponseADM])
 
   val putPerrmissionsHasPermissions = base.securedEndpoint.put
     .in(permissionsBase / permissionIri / "hasPermissions")
-    .description("Update a permission's set of hasPermissions")
+    .description("Update a permission's set of hasPermissions. Requires SystemAdmin permissions.")
     .in(jsonBody[ChangePermissionHasPermissionsApiRequestADM])
     .out(jsonBody[PermissionGetResponseADM])
 
   val putPermisssionsResourceClass = base.securedEndpoint.put
     .in(permissionsBase / permissionIri / "resourceClass")
-    .description("Update a DOAP's resource class. Use `PUT /admin/permissions/doap/{permissionIri}` instead.")
+    .description(
+      "Update a DOAP's resource class. Use `PUT /admin/permissions/doap/{permissionIri}` instead. Requires SystemAdmin permissions.",
+    )
     .in(jsonBody[ChangePermissionResourceClassApiRequestADM])
     .out(jsonBody[DefaultObjectAccessPermissionGetResponseADM])
     .deprecated()
 
   val putPermissionsProperty = base.securedEndpoint.put
     .in(permissionsBase / permissionIri / "property")
-    .description("Update a DAOP's property. Use `PUT /admin/permissions/doap/{permissionIri}` instead.")
+    .description(
+      "Update a DAOP's property. Use `PUT /admin/permissions/doap/{permissionIri}` instead. Requires SystemAdmin permissions.",
+    )
     .in(jsonBody[ChangePermissionPropertyApiRequestADM])
     .out(jsonBody[DefaultObjectAccessPermissionGetResponseADM])
     .deprecated()

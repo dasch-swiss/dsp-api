@@ -52,24 +52,36 @@ final case class ResourcesEndpoints(
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Get a preview of one or more resources. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getResourcesIiifManifest = baseEndpoints.withUserEndpoint.get
     .in(base / "iiifmanifest" / path[IriDto].name("resourceIri"))
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Get the IIIF manifest for a resource. Publicly accessible. Requires appropriate object access permissions on the resource.",
+    )
 
   val getResourcesProjectHistoryEvents = baseEndpoints.withUserEndpoint.get
     .in(base / "projectHistoryEvents" / path[ProjectIri].name("projectIri"))
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Get history events for all resources in a project. Publicly accessible. Requires appropriate object access permissions.",
+    )
 
   val getResourcesHistoryEvents = baseEndpoints.withUserEndpoint.get
     .in(base / "resourceHistoryEvents" / path[IriDto].name("resourceIri"))
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Get history events for a specific resource. Publicly accessible. Requires appropriate object access permissions on the resource.",
+    )
 
   val getResourcesHistory = baseEndpoints.withUserEndpoint.get
     .in(base / "history" / path[IriDto].name("resourceIri"))
@@ -78,6 +90,9 @@ final case class ResourcesEndpoints(
     .in(endDateQuery)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Get the version history of a resource. Publicly accessible. Requires appropriate object access permissions on the resource.",
+    )
 
   val getResources = baseEndpoints.withUserEndpoint.get
     .in(base / paths)
@@ -85,6 +100,9 @@ final case class ResourcesEndpoints(
     .in(versionQuery)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Get one or more resources. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getResourcesParams = baseEndpoints.withUserEndpoint.get
     .in(base)
@@ -95,6 +113,9 @@ final case class ResourcesEndpoints(
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Search for resources by class and project. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getResourcesGraph = baseEndpoints.withUserEndpoint.get
     .in("v2" / "graph" / path[IriDto].name("resourceIri"))
@@ -109,6 +130,9 @@ final case class ResourcesEndpoints(
     .in(query[Option[IriDto]]("excludeProperty"))
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Get a graph of resources starting from a specific resource. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getResourcesTei = baseEndpoints.withUserEndpoint.get
     .in("v2" / "tei" / path[IriDto].name("resourceIri"))
@@ -118,6 +142,9 @@ final case class ResourcesEndpoints(
     .in(query[Option[IriDto]]("headerXSLTIri"))
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Get a resource as TEI/XML. Publicly accessible. Requires appropriate object access permissions on the resource.",
+    )
 
   val postResourcesErase = baseEndpoints.withUserEndpoint.post
     .in(base / "erase")
@@ -125,6 +152,9 @@ final case class ResourcesEndpoints(
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Erase a Resource and all of its values from the database completely. Requires SystemAdmin or ProjectAdmin permissions for the resource's project.",
+    )
 
   val getResourcesCanDelete = baseEndpoints.withUserEndpoint.get
     .in(base / "candelete")
@@ -132,6 +162,9 @@ final case class ResourcesEndpoints(
     .in(query[String]("jsonLd"))
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Check if a resource can be deleted. Publicly accessible. Requires appropriate object access permissions on the resource.",
+    )
 
   val postResourcesDelete = baseEndpoints.withUserEndpoint.post
     .in(base / "delete")
@@ -139,6 +172,7 @@ final case class ResourcesEndpoints(
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description("Mark a resource as deleted. Requires appropriate object access permissions on the resource.")
 
   val postResources = baseEndpoints.withUserEndpoint.post
     .in(base)
@@ -146,6 +180,7 @@ final case class ResourcesEndpoints(
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description("Create a new resource. Requires appropriate object access permissions.")
 
   val putResources = baseEndpoints.withUserEndpoint.put
     .in(base)
@@ -153,6 +188,7 @@ final case class ResourcesEndpoints(
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description("Update resource metadata. Requires appropriate object access permissions on the resource.")
 
   val endpoints: Seq[AnyEndpoint] = Seq(
     getResourcesIiifManifest,
