@@ -186,7 +186,7 @@ final case class ReadResourcesServiceLive(
           skipRetrievalChecks = skipRetrievalChecks,
         )
       }
-      .withParallelism(50)
+      .withParallelism(5)
       .map(_.fold(ReadResourcesSequenceV2(Seq.empty))(_ ++ _))
 
   def readResourcesSequence(
