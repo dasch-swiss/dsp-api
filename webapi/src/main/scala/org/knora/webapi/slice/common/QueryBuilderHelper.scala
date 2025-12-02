@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.common
 
+import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.PropertyPath
@@ -86,5 +87,6 @@ trait QueryBuilderHelper {
 
   def variable(name: String): Variable = SparqlBuilder.`var`(name)
 
-  def zeroOrMore(pred: Iri): PropertyPath = PropertyPathBuilder.of(pred).zeroOrMore().build()
+  def zeroOrMore(pred: Iri): PropertyPath             = PropertyPathBuilder.of(pred).zeroOrMore().build()
+  def zeroOrMore(pred: rdf4j.model.IRI): PropertyPath = PropertyPathBuilder.of(pred).zeroOrMore().build()
 }
