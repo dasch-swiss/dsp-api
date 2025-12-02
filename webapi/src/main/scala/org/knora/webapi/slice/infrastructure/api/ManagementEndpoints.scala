@@ -69,16 +69,19 @@ final case class ManagementEndpoints(baseEndpoints: BaseEndpoints) {
   private[infrastructure] val getVersion = baseEndpoints.publicEndpoint.get
     .in("version")
     .out(jsonBody[VersionResponse].example(VersionResponse.current))
+    .description("Get version information. Publicly accessible.")
 
   private[infrastructure] val getHealth = baseEndpoints.publicEndpoint.get
     .in("health")
     .out(jsonBody[HealthResponse])
     .out(statusCode)
+    .description("Get health status. Publicly accessible.")
 
   private[infrastructure] val postStartCompaction = baseEndpoints.securedEndpoint.post
     .in("start-compaction")
     .out(jsonBody[String])
     .out(statusCode)
+    .description("Start triplestore compaction. Requires SystemAdmin permissions.")
 }
 
 object ManagementEndpoints {

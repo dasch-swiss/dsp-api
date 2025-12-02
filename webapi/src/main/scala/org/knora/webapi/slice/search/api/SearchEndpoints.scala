@@ -68,7 +68,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToProject)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Search for resources using a Gravsearch query.")
+    .description(
+      "Search for resources using a Gravsearch query. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getGravsearch = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchextended" / path[String].description(gravsearchDescription))
@@ -76,7 +78,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToProject)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Search for resources using a Gravsearch query.")
+    .description(
+      "Search for resources using a Gravsearch query. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val postGravsearchCount = baseEndpoints.withUserEndpoint.post
     .in("v2" / "searchextended" / "count")
@@ -85,7 +89,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToProject)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Count resources using a Gravsearch query.")
+    .description(
+      "Count resources using a Gravsearch query. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getGravsearchCount = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchextended" / "count" / path[String].description(gravsearchDescription))
@@ -93,7 +99,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToProject)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Count resources using a Gravsearch query.")
+    .description(
+      "Count resources using a Gravsearch query. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getSearchIncomingLinks = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchIncomingLinks" / path[InputIri]("resourceIri").description("The IRI of the resource to retrieve"))
@@ -102,7 +110,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToProject)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Search for incoming links using a Gravsearch query with an offset.")
+    .description(
+      "Search for incoming links using a Gravsearch query with an offset. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getSearchStillImageRepresentations = baseEndpoints.withUserEndpoint.get
     .in(
@@ -115,7 +125,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToProject)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Search for StillImageRepresentations using a Gravsearch query with an offset.")
+    .description(
+      "Search for StillImageRepresentations using a Gravsearch query with an offset. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getSearchStillImageRepresentationsCount = baseEndpoints.withUserEndpoint.get
     .in(
@@ -127,7 +139,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToProject)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Count SearchStillImageRepresentations using a Gravsearch query.")
+    .description(
+      "Count SearchStillImageRepresentations using a Gravsearch query. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getSearchIncomingRegions = baseEndpoints.withUserEndpoint.get
     .in(
@@ -139,7 +153,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToProject)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Search for incoming regions using a Gravsearch query with an offset.")
+    .description(
+      "Search for incoming regions using a Gravsearch query with an offset. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getSearchByLabel = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchbylabel" / path[String]("searchTerm"))
@@ -149,7 +165,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToResourceClass)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Search for resources by label.")
+    .description(
+      "Search for resources by label. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getSearchByLabelCount = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchbylabel" / "count" / path[String]("searchTerm"))
@@ -158,7 +176,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToResourceClass)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Search for resources by label.")
+    .description(
+      "Count resources by label. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getFullTextSearch = baseEndpoints.withUserEndpoint.get
     .in("v2" / "search" / path[String]("searchTerm"))
@@ -170,7 +190,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.returnFiles)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Search for resources by label.")
+    .description(
+      "Full-text search for resources. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 
   val getFullTextSearchCount = baseEndpoints.withUserEndpoint.get
     .in("v2" / "search" / "count" / path[String]("searchTerm"))
@@ -180,7 +202,9 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToStandoffClass)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Search for resources by label.")
+    .description(
+      "Count full-text search results. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
 }
 
 object SearchEndpoints {
