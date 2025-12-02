@@ -25,6 +25,7 @@ final case class StandoffEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description("Create a standoff mapping for XML to standoff conversion. Requires authentication.")
 }
 
 object StandoffEndpoints {

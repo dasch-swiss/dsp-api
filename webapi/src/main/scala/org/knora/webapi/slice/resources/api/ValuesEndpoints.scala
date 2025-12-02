@@ -30,7 +30,7 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description(linkToValuesDocumentation)
+    .description(s"Get a value of a resource. Publicly accessible. Requires appropriate object access permissions on the resource. $linkToValuesDocumentation")
 
   val postValues = baseEndpoint.withUserEndpoint.post
     .in(base)
@@ -41,7 +41,7 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     )
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description(linkToValuesDocumentation)
+    .description(s"Create a new value for a resource. Requires appropriate object access permissions on the resource. $linkToValuesDocumentation")
 
   val putValues = baseEndpoint.withUserEndpoint.put
     .in(base)
@@ -52,14 +52,14 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     )
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description(linkToValuesDocumentation)
+    .description(s"Update a value of a resource. Requires appropriate object access permissions on the resource. $linkToValuesDocumentation")
 
   val deleteValues = baseEndpoint.withUserEndpoint.post
     .in(base / "delete")
     .in(stringJsonBody.example(ValuesEndpoints.Examples.deleteValue))
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description(linkToValuesDocumentation)
+    .description(s"Mark a value as deleted. Requires appropriate object access permissions on the resource. $linkToValuesDocumentation")
 
   val postValuesErase = baseEndpoint.securedEndpoint.post
     .in(base / "erase")

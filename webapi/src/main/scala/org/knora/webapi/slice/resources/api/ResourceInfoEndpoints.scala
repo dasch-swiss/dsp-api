@@ -25,6 +25,7 @@ final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(Order.queryParam)
     .in(OrderBy.queryParam.default(OrderBy.LastModificationDate))
     .out(jsonBody[ListResponseDto])
+    .description("Get information about resources of a specific class in a project. Publicly accessible.")
 }
 
 object ResourceInfoEndpoints {

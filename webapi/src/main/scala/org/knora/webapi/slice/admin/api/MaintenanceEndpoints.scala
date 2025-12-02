@@ -39,6 +39,7 @@ final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
                        |""".stripMargin),
     )
     .out(statusCode(StatusCode.Accepted))
+    .description("Execute a maintenance action. Requires SystemAdmin permissions.")
 }
 
 object MaintenanceEndpoints {

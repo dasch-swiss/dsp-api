@@ -27,7 +27,8 @@ final case class FilesEndpoints(base: BaseEndpoints) {
     .in("admin" / "files" / projectShortcode / filename)
     .out(jsonBody[PermissionCodeAndProjectRestrictedViewSettings])
     .description(
-      "Returns the permission code and the project's restricted view settings for a given shortcode and filename.",
+      "Returns the permission code and the project's restricted view settings for a given shortcode and filename. " +
+        "Publicly accessible.",
     )
 }
 
