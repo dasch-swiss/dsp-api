@@ -12,7 +12,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
-object isPropertyUsedInResourcesQuery extends QueryBuilderHelper {
+object IsPropertyUsedInResourcesQuery extends QueryBuilderHelper {
 
   def build(propertyIri: PropertyIri, classIri: ResourceClassIri): Ask =
     val property      = toRdfIri(propertyIri)
