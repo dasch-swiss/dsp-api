@@ -125,6 +125,9 @@ final case class ResourcesEndpoints(
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Erase a Resource and all of its values from the database completely. Requires SystemAdmin or ProjectAdmin permissions for the resource's project.",
+    )
 
   val getResourcesCanDelete = baseEndpoints.withUserEndpoint.get
     .in(base / "candelete")

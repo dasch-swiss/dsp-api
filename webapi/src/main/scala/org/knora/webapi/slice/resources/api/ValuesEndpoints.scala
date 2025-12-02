@@ -66,7 +66,7 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .in(stringJsonBody.example(ValuesEndpoints.Examples.deleteValue))
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description(s"Erase a Value and all of its old versions from the database completely. $linkToValuesDocumentation")
+    .description(s"Erase a Value and all of its old versions from the database completely. Requires SystemAdmin permissions. $linkToValuesDocumentation")
 
   val postValuesErasehistory = baseEndpoint.securedEndpoint.post
     .in(base / "erasehistory")
@@ -74,7 +74,7 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Erase all old versions of a Value from the database completely and keep only the latest version. $linkToValuesDocumentation",
+      s"Erase all old versions of a Value from the database completely and keep only the latest version. Requires SystemAdmin permissions. $linkToValuesDocumentation",
     )
 }
 
