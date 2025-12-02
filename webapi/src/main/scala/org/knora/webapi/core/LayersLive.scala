@@ -5,7 +5,6 @@
 
 package org.knora.webapi.core
 
-import io.opentelemetry.api
 import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
 
@@ -75,7 +74,6 @@ object LayersLive { self =>
    */
   type Environment =
     // format: off
-    api.OpenTelemetry &
     AdminApiModule.Provided &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
@@ -88,9 +86,9 @@ object LayersLive { self =>
     CreateResourceV2Handler &
     DefaultObjectAccessPermissionService &
     Endpoints &
-    IriService &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
+    IriService &
     ListsApiModule.Provided &
     ListsResponder &
     MessageRelay &
@@ -105,10 +103,10 @@ object LayersLive { self =>
     ProjectImportService &
     ReadResourcesService &
     RepositoryUpdater &
+    ResourceUtilV2 &
     ResourcesApiServerEndpoints &
     ResourcesRepo &
     ResourcesResponderV2 &
-    ResourceUtilV2 &
     SearchResponderV2Module.Provided &
     SearchServerEndpoints &
     SecurityModule.Provided &
@@ -120,7 +118,8 @@ object LayersLive { self =>
     StandoffTagUtilV2 &
     State &
     Tracing &
-    ValuesResponderV2
+    ValuesResponderV2 &
+    io.opentelemetry.api.OpenTelemetry
     // format: on
 
   val remainingLayer: URLayer[AppConfigurations, Environment] =
