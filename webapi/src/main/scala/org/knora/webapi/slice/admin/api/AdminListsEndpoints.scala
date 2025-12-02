@@ -26,7 +26,6 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 case class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
-  import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.listIri
 
   private val base = "admin" / "lists"
 

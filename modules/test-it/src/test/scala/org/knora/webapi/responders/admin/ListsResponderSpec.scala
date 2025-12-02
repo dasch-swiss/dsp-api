@@ -683,35 +683,35 @@ object ListsResponderSpec extends E2EZSpec {
     suite("used to query if list can be deleted")(
       test("return FALSE for a node that is in use") {
         val nodeInUseIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
-        listsResponder(_.canDeleteListRequestADM(nodeInUseIri))
-          .map(response => assertTrue(response.listIri == nodeInUseIri.value, !response.canDeleteList))
+        listsResponder(_.canDeleteList(nodeInUseIri))
+          .map(response => assertTrue(response.listIri == nodeInUseIri, !response.canDeleteList))
       },
       test("return FALSE for a node that is unused but has a child which is used") {
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
-        listsResponder(_.canDeleteListRequestADM(nodeIri))
-          .map(response => assertTrue(response.listIri == nodeIri.value, !response.canDeleteList))
+        listsResponder(_.canDeleteList(nodeIri))
+          .map(response => assertTrue(response.listIri == nodeIri, !response.canDeleteList))
       },
       test(
         "return FALSE for a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode",
       ) {
         val nodeInUseInOntologyIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
-        listsResponder(_.canDeleteListRequestADM(nodeInUseInOntologyIri))
-          .map(response => assertTrue(response.listIri == nodeInUseInOntologyIri.value, !response.canDeleteList))
+        listsResponder(_.canDeleteList(nodeInUseInOntologyIri))
+          .map(response => assertTrue(response.listIri == nodeInUseInOntologyIri, !response.canDeleteList))
       },
       test("return TRUE for a middle child node that is not in use") {
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList012")
-        listsResponder(_.canDeleteListRequestADM(nodeIri))
-          .map(response => assertTrue(response.listIri == nodeIri.value, response.canDeleteList))
+        listsResponder(_.canDeleteList(nodeIri))
+          .map(response => assertTrue(response.listIri == nodeIri, response.canDeleteList))
       },
       test("return TRUE for a child node that is not in use") {
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList02")
-        listsResponder(_.canDeleteListRequestADM(nodeIri))
-          .map(response => assertTrue(response.listIri == nodeIri.value, response.canDeleteList))
+        listsResponder(_.canDeleteList(nodeIri))
+          .map(response => assertTrue(response.listIri == nodeIri, response.canDeleteList))
       },
       test("delete a list (i.e. root node) that is not in use in ontology") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
-        listsResponder(_.canDeleteListRequestADM(listIri))
-          .map(response => assertTrue(response.canDeleteList, response.listIri == listIri.value))
+        listsResponder(_.canDeleteList(listIri))
+          .map(response => assertTrue(response.listIri == listIri, response.canDeleteList))
       },
     ),
     suite("used to delete list node comments")(

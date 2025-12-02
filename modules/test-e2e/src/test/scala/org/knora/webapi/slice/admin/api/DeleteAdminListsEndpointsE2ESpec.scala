@@ -89,14 +89,14 @@ object DeleteAdminListsEndpointsE2ESpec extends E2EZSpec {
           TestApiClient
             .getJson[CanDeleteListResponseADM](uri"/admin/lists/candelete/$unusedList", rootUser)
             .flatMap(_.assert200)
-            .map(response => assertTrue(response.canDeleteList, response.listIri == unusedList.value))
+            .map(response => assertTrue(response.canDeleteList, response.listIri == unusedList))
         },
         test("return negative response for used list") {
           val usedList = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
           TestApiClient
             .getJson[CanDeleteListResponseADM](uri"/admin/lists/candelete/$usedList", rootUser)
             .flatMap(_.assert200)
-            .map(response => assertTrue(!response.canDeleteList, response.listIri == usedList.value))
+            .map(response => assertTrue(!response.canDeleteList, response.listIri == usedList))
         },
       ),
       suite("The admin lists comments route (/admin/lists/comments)")(

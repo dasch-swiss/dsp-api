@@ -13,6 +13,7 @@ import zio.json.jsonDiscriminator
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.util.WithAsIs
 
 /**
@@ -33,7 +34,7 @@ object ListNodeCommentsDeleteResponseADM {
  * @param listIri           the IRI of the list that is checked.
  * @param canDeleteList contains a boolean value if list node can be deleted.
  */
-final case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean) extends AdminKnoraResponseADM
+final case class CanDeleteListResponseADM(listIri: ListIri, canDeleteList: Boolean) extends AdminKnoraResponseADM
 object CanDeleteListResponseADM {
   implicit val codec: JsonCodec[CanDeleteListResponseADM] = DeriveJsonCodec.gen[CanDeleteListResponseADM]
 }

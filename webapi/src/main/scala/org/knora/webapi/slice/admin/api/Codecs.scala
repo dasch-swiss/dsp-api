@@ -15,7 +15,6 @@ import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
-import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
 import org.knora.webapi.slice.common.Value.BooleanValue
@@ -47,9 +46,6 @@ object Codecs {
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
     implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
 
-    // list properties
-    implicit val listIri: StringCodec[ListIri] = stringCodec(ListIri.from)
-
     // user value objects
     implicit val userIri: StringCodec[UserIri]   = stringCodec(UserIri.from)
     implicit val username: StringCodec[Username] = stringCodec(Username.from)
@@ -78,7 +74,6 @@ object Codecs {
       JsonCodec[StringLiteralV2].transformOrFail(Description.from, _.value)
     implicit val labels: StringCodec[Labels] =
       JsonCodec[Seq[StringLiteralV2]].transformOrFail(Labels.from, _.value)
-    implicit val listIri: StringCodec[ListIri]   = stringCodec(ListIri.from)
     implicit val listName: StringCodec[ListName] = stringCodec(ListName.from)
     implicit val position: StringCodec[Position] = intCodec(Position.from)
 

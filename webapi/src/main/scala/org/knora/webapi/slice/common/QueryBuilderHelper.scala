@@ -7,6 +7,8 @@ package org.knora.webapi.slice.common
 
 import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.PropertyPath
+import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
@@ -83,4 +85,6 @@ trait QueryBuilderHelper {
   def graphIri(knoraProject: KnoraProject): Iri = Rdf.iri(ProjectService.projectDataNamedGraphV2(knoraProject).value)
 
   def variable(name: String): Variable = SparqlBuilder.`var`(name)
+
+  def zeroOrMore(pred: Iri): PropertyPath = PropertyPathBuilder.of(pred).zeroOrMore().build()
 }
