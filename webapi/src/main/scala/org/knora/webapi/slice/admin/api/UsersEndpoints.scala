@@ -60,37 +60,37 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
     val users = baseEndpoints.securedEndpoint.get
       .in(base)
       .out(jsonBody[UsersResponse])
-      .description("Returns all users.")
+      .description("Returns all users. Requires SystemAdmin or ProjectAdmin permissions in any project.")
 
     val userByIri = baseEndpoints.withUserEndpoint.get
       .in(base / "iri" / PathVars.userIriPathVar)
       .out(jsonBody[UserResponse])
-      .description("Returns a user identified by their IRI.")
+      .description("Returns a user identified by their IRI. Publicly accessible. Returns detailed information to SystemAdmin and the user themselves, restricted information to others.")
 
     val userByEmail = baseEndpoints.withUserEndpoint.get
       .in(base / "email" / emailPathVar)
       .out(jsonBody[UserResponse])
-      .description("Returns a user identified by their Email.")
+      .description("Returns a user identified by their Email. Publicly accessible. Returns detailed information to SystemAdmin and the user themselves, restricted information to others.")
 
     val userByUsername = baseEndpoints.withUserEndpoint.get
       .in(base / "username" / usernamePathVar)
       .out(jsonBody[UserResponse])
-      .description("Returns a user identified by their Username.")
+      .description("Returns a user identified by their Username. Publicly accessible. Returns detailed information to SystemAdmin and the user themselves, restricted information to others.")
 
     val usersByIriProjectMemberShips = baseEndpoints.publicEndpoint.get
       .in(base / "iri" / userIriPathVar / "project-memberships")
       .out(jsonBody[UserProjectMembershipsGetResponseADM])
-      .description("Returns the user's project memberships for a user identified by their IRI.")
+      .description("Returns the user's project memberships for a user identified by their IRI. Publicly accessible.")
 
     val usersByIriProjectAdminMemberShips = baseEndpoints.publicEndpoint.get
       .in(base / "iri" / userIriPathVar / "project-admin-memberships")
       .out(jsonBody[UserProjectAdminMembershipsGetResponseADM])
-      .description("Returns the user's project admin memberships for a user identified by their IRI.")
+      .description("Returns the user's project admin memberships for a user identified by their IRI. Publicly accessible.")
 
     val usersByIriGroupMemberships = baseEndpoints.publicEndpoint.get
       .in(base / "iri" / userIriPathVar / "group-memberships")
       .out(jsonBody[UserGroupMembershipsGetResponseADM])
-      .description("Returns the user's group memberships for a user identified by their IRI.")
+      .description("Returns the user's group memberships for a user identified by their IRI. Publicly accessible.")
   }
 
   object post {
@@ -98,22 +98,22 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .in(base)
       .in(jsonBody[UserCreateRequest])
       .out(jsonBody[UserResponse])
-      .description("Create a new user.")
+      .description("Create a new user. Requires SystemAdmin permissions to create a system administrator. Requires SystemAdmin or ProjectAdmin permissions in any project to create a regular user.")
 
     val usersByIriProjectMemberShips = baseEndpoints.securedEndpoint.post
       .in(base / "iri" / PathVars.userIriPathVar / "project-memberships" / AdminPathVariables.projectIri)
       .out(jsonBody[UserResponse])
-      .description("Add a user to a project identified by IRI.")
+      .description("Add a user to a project identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.")
 
     val usersByIriProjectAdminMemberShips = baseEndpoints.securedEndpoint.post
       .in(base / "iri" / PathVars.userIriPathVar / "project-admin-memberships" / AdminPathVariables.projectIri)
       .out(jsonBody[UserResponse])
-      .description("Add a user as an admin to a project identified by IRI.")
+      .description("Add a user as an admin to a project identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.")
 
     val usersByIriGroupMemberShips = baseEndpoints.securedEndpoint.post
       .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIriPathVar)
       .out(jsonBody[UserResponse])
-      .description("Add a user to a group identified by IRI.")
+      .description("Add a user to a group identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the group's project.")
   }
 
   object put {
@@ -121,47 +121,47 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .in(base / "iri" / PathVars.userIriPathVar / "BasicUserInformation")
       .in(jsonBody[BasicUserInformationChangeRequest])
       .out(jsonBody[UserResponse])
-      .description("Update a user's basic information identified by IRI.")
+      .description("Update a user's basic information identified by IRI. Users can update their own information. SystemAdmin can update any user.")
 
     val usersIriPassword = baseEndpoints.securedEndpoint.put
       .in(base / "iri" / PathVars.userIriPathVar / "Password")
       .in(jsonBody[PasswordChangeRequest])
       .out(jsonBody[UserResponse])
-      .description("Change a user's password identified by IRI.")
+      .description("Change a user's password identified by IRI. Users can change their own password. SystemAdmin can change any user's password.")
 
     val usersIriStatus = baseEndpoints.securedEndpoint.put
       .in(base / "iri" / PathVars.userIriPathVar / "Status")
       .in(jsonBody[StatusChangeRequest])
       .out(jsonBody[UserResponse])
-      .description("Change a user's status identified by IRI.")
+      .description("Change a user's status identified by IRI. Users can update their own status. SystemAdmin can update any user's status.")
 
     val usersIriSystemAdmin = baseEndpoints.securedEndpoint.put
       .in(base / "iri" / PathVars.userIriPathVar / "SystemAdmin")
       .in(jsonBody[SystemAdminChangeRequest])
       .out(jsonBody[UserResponse])
-      .description("Change a user's SystemAdmin status identified by IRI.")
+      .description("Change a user's SystemAdmin status identified by IRI. Requires SystemAdmin permissions.")
   }
 
   object delete {
     val deleteUser = baseEndpoints.securedEndpoint.delete
       .in(base / "iri" / PathVars.userIriPathVar)
       .out(jsonBody[UserResponse])
-      .description("Delete a user identified by IRI (change status to false).")
+      .description("Delete a user identified by IRI (change status to false). Users can delete themselves. SystemAdmin can delete any user.")
 
     val usersByIriProjectMemberShips = baseEndpoints.securedEndpoint.delete
       .in(base / "iri" / PathVars.userIriPathVar / "project-memberships" / AdminPathVariables.projectIri)
       .out(jsonBody[UserResponse])
-      .description("Remove a user from a project membership identified by IRI.")
+      .description("Remove a user from a project membership identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.")
 
     val usersByIriProjectAdminMemberShips = baseEndpoints.securedEndpoint.delete
       .in(base / "iri" / PathVars.userIriPathVar / "project-admin-memberships" / AdminPathVariables.projectIri)
       .out(jsonBody[UserResponse])
-      .description("Remove a user form an admin project membership identified by IRI.")
+      .description("Remove a user form an admin project membership identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.")
 
     val usersByIriGroupMemberShips = baseEndpoints.securedEndpoint.delete
       .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIriPathVar)
       .out(jsonBody[UserResponse])
-      .description("Remove a user form an group membership identified by IRI.")
+      .description("Remove a user form an group membership identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the group's project.")
   }
 }
 
