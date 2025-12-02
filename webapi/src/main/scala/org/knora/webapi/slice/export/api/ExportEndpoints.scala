@@ -35,6 +35,7 @@ final case class ExportEndpoints(
     )
     .post
     .in(ApiV3.basePath / "export" / "resources")
+    .description("Export resources to CSV format. Publicly accessible. Requires appropriate object access permissions on the resources.")
     .in(
       jsonBody[ExportRequest].example(
         ExportRequest(
