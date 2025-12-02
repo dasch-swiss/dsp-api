@@ -38,6 +38,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.api.LastModificationDate
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
 trait QueryBuilderHelper {
 
@@ -89,4 +90,12 @@ trait QueryBuilderHelper {
 
   def zeroOrMore(pred: Iri): PropertyPath             = PropertyPathBuilder.of(pred).zeroOrMore().build()
   def zeroOrMore(pred: rdf4j.model.IRI): PropertyPath = PropertyPathBuilder.of(pred).zeroOrMore().build()
+
+  def askWhere(triplePattern: TriplePattern): Ask =
+    Ask(s"""
+           |ASK
+           |WHERE {
+           | ${triplePattern.getQueryString}
+           |}
+           |""".stripMargin)
 }

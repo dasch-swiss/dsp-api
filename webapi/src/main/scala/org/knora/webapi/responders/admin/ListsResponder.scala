@@ -42,9 +42,9 @@ import org.knora.webapi.slice.resources.repo.AskListNameInProjectExistsQuery
 import org.knora.webapi.slice.resources.repo.ChangeParentNodeQuery
 import org.knora.webapi.slice.resources.repo.CreateListNodeQuery
 import org.knora.webapi.slice.resources.repo.IsListInUseQuery
+import org.knora.webapi.slice.resources.repo.ListNodeExistsQuery
 import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -109,7 +109,7 @@ final case class ListsResponder(
   private def listGetADM(rootNodeIri: IRI) =
     for {
       // this query will give us only the information about the root node.
-      exists <- rootNodeByIriExists(rootNodeIri)
+      exists <- rootNodeExists(ListIri.unsafeFrom(rootNodeIri))
 
       maybeList <-
         if (exists) {
@@ -160,7 +160,7 @@ final case class ListsResponder(
                     }
       } yield ListNodeGetResponseADM(NodeADM(nodeInfo, childNode.children))
 
-    ZIO.ifZIO(rootNodeByIriExists(nodeIri.value))(
+    ZIO.ifZIO(rootNodeExists(nodeIri))(
       listGetADM(nodeIri.value)
         .someOrFail(NotFoundException(s"List '$nodeIri' not found"))
         .map(ListGetResponseADM.apply),
@@ -653,7 +653,7 @@ final case class ListsResponder(
   /**
    * Changes basic node information stored (root or child)
    *
-   * @param changeNodeRequest    the new node information.
+   * @param request    the new node information.
    * @param apiRequestID         the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
    * fails with a ForbiddenException          in the case that the user is not allowed to perform the operation.
@@ -968,7 +968,7 @@ final case class ListsResponder(
      * @param newParentIri   the IRI of the new parent node.
      * @param currParentIri  the IRI of the current parent node.
      * @param givenPosition  the new node position.
-     * @param dataNamedGraph the new node position.
+     * @param project        the project to which the list belongs.
      * @return the new position of the node [[Int]]
      * @throws UpdateNotPerformedException in the case the given new position is the same as current position.
      */
@@ -1258,22 +1258,20 @@ final case class ListsResponder(
   ////////////////////
 
   /**
-   * Helper method for checking if a list node identified by IRI exists and is a root node.
+   * Helper method for checking if a root list node identified by IRI exists.
    *
-   * @param rootNodeIri the IRI of the project.
+   * @param iri The [[ListIri]] of the node.
    * @return a [[Boolean]].
    */
-  private def rootNodeByIriExists(rootNodeIri: IRI): Task[Boolean] =
-    triplestore.query(Ask(sparql.admin.txt.checkListRootNodeExistsByIri(rootNodeIri)))
+  private def rootNodeExists(iri: ListIri): Task[Boolean] = triplestore.query(ListNodeExistsQuery.rootNodeExists(iri))
 
   /**
-   * Helper method for checking if a node identified by IRI exists.
+   * Helper method for checking if a node exists.
    *
-   * @param nodeIri the IRI of the project.
+   * @param iri The [[ListIri]] of the node.
    * @return a [[Boolean]].
    */
-  private def nodeByIriExists(nodeIri: IRI): Task[Boolean] =
-    triplestore.query(Ask(sparql.admin.txt.checkListNodeExistsByIri(nodeIri)))
+  private def nodeExists(iri: ListIri): Task[Boolean] = triplestore.query(ListNodeExistsQuery.anyNodeExists(iri))
 
   /**
    * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
@@ -1367,7 +1365,7 @@ final case class ListsResponder(
       _ <- // Verify that the node was deleted correctly.
         ZIO
           .fail(UpdateNotPerformedException(s"Node <$nodeIri> was not erased. Please report this as a possible bug."))
-          .whenZIO(nodeByIriExists(nodeIri))
+          .whenZIO(nodeExists(ListIri.unsafeFrom(nodeIri)))
     } yield ()
 
   /**
@@ -1423,10 +1421,10 @@ final case class ListsResponder(
   /**
    * Helper method to change parent node of a node.
    *
+   * @param project              the project to which the list belongs.
    * @param nodeIri              the IRI of the node.
    * @param oldParentIri         the IRI of the current parent node.
    * @param newParentIri         the IRI of the new parent node.
-   * @param dataNamedGraph       the data named graph of the project.
    * @throws UpdateNotPerformedException if the parent of a node could not be updated.
    */
   private def changeParentNode(
