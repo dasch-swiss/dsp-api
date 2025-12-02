@@ -14,6 +14,7 @@ import scala.collection.immutable.ListMap
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoADM
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
@@ -50,34 +51,31 @@ final case class ExportService(
   ): Task[ExportedCsv] =
     for {
       resourceIris  <- findResources.findResources(project, classIri).map(_.map(_.toString))
-      readResources <- readResources.readResourcesSequence(
+      readResources <- readResources.readResourcesSequencePar(
                          resourceIris = resourceIris,
                          targetSchema = ApiV2Complex,
                          requestingUser = requestingUser,
                          preview = false,
                          withDeleted = false,
+                         skipRetrievalChecks = true,
                        )
-      headers <- rowHeaders(selectedProperties, language, includeIris)
 
+      headers          <- rowHeaders(selectedProperties, language, includeIris)
       rootVocabularies <- listsResponder.getLists(Some(Left(project.id)))
-      vocabularies     <-
-        ZIO
-          .foreach(rootVocabularies.lists) { list =>
-            listsResponder.listGetRequestADM(ListIri.unsafeFrom(list.id)).map(_.toIriLabelMap(language.value))
-          }
-          .map(_.foldK)
+      vocabularies     <- ZIO.foreach(rootVocabularies.lists)(rootVocabularyLabels(_, language)).map(_.foldK)
+      resourcesMap      = readResources.resourcesMap // must be cached
     } yield ExportedCsv(
       headers,
-      sort(readResources.resources.toList).map(
-        exportSingleRow(_, selectedProperties, includeIris, readResources.resourcesMap, vocabularies),
-      ),
+      readResources.resources.toList.sortBy(_.label).map {
+        exportSingleRow(_, selectedProperties, includeIris, resourcesMap, vocabularies)
+      },
     )
+
+  private def rootVocabularyLabels(list: ListRootNodeInfoADM, language: LanguageCode): Task[Map[String, String]] =
+    listsResponder.listGetRequestADM(ListIri.unsafeFrom(list.id)).map(_.toIriLabelMap(language.value))
 
   def toCsv(csv: ExportedCsv): Task[String] =
     ZIO.scoped(csvService.writeToString(csv.rows)(using csv.rowBuilder))
-
-  private def sort(resources: List[ReadResourceV2]): List[ReadResourceV2] =
-    resources.sortBy(_.label)
 
   // NOTE: hidden invariant: if `includeIris`, then both rowHeaders and exportSingleRow must duplicate the IRI rows
   private def rowHeaders(

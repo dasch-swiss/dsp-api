@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
 import zio.IO
-import zio.Task
 import zio.ZIO
 
 import java.time.Instant
@@ -735,6 +734,13 @@ case class ReadResourcesSequenceV2(
       resources = resources.map(_.toOntologySchema(targetSchema)),
     )
 
+  def ++(that: ReadResourcesSequenceV2): ReadResourcesSequenceV2 =
+    ReadResourcesSequenceV2(
+      this.resources ++ that.resources,
+      this.hiddenResourceIris ++ that.hiddenResourceIris,
+      this.mayHaveMoreResults || that.mayHaveMoreResults,
+    )
+
   private def getOntologiesFromResource(resource: ReadResourceV2): Set[SmartIri] = {
     val propertyIriOntologies: Set[SmartIri] = resource.values.keySet.map(_.getOntologyFromEntity)
 
@@ -846,23 +852,27 @@ case class ReadResourcesSequenceV2(
 
   /**
    * Checks that requested resources were found and that the user has permission to see them. If not:
-   * Fails with a [[NotFoundException]]  if the requested resources are not found.
-   * Fails with a [[ForbiddenException]] if the user does not have permission to see the requested resources.
+   * Returns with a Some of [[NotFoundException]] if the requested resources are not found.
+   * Returns with a Some of [[ForbiddenException]] if the user does not have permission to see the requested resources.
+   * Otherwise None is returned.
    *
    * @param targetResourceIris the IRIs to be checked.
    * @param resourcesSequence  the result of requesting those IRIs.
    */
-  def checkResourceIris(targetResourceIris: Set[IRI], resourcesSequence: ReadResourcesSequenceV2): Task[Unit] =
+  def checkResourceIris(
+    targetResourceIris: Set[IRI],
+    resourcesSequence: ReadResourcesSequenceV2,
+  ): Option[Throwable] =
     targetResourceIris.intersect(resourcesSequence.hiddenResourceIris) match
       case hiddenTargetResourceIris if hiddenTargetResourceIris.nonEmpty =>
         lazy val msg =
           s"You do not have permission to see one or more resources: ${hiddenTargetResourceIris.map(iri => s"<$iri>").mkString(", ")}"
-        ZIO.fail(ForbiddenException(msg))
+        Some(ForbiddenException(msg))
       case _ => {
         val missingResourceIris = targetResourceIris -- resourcesSequence.resources.map(_.resourceIri).toSet
         lazy val msg            =
           s"One or more resources were not found:  ${missingResourceIris.map(iri => s"<$iri>").mkString(", ")}"
-        ZIO.when(missingResourceIris.nonEmpty)(ZIO.fail(NotFoundException(msg))).unit
+        Option.when(missingResourceIris.nonEmpty)(NotFoundException(msg))
       }
 
   /**
