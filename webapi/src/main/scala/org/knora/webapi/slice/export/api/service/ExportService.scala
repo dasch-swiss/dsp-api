@@ -63,7 +63,7 @@ final case class ExportService(
       headers          <- rowHeaders(selectedProperties, language, includeIris)
       rootVocabularies <- listsResponder.getLists(Some(Left(project.id)))
       vocabularies     <- ZIO.foreach(rootVocabularies.lists)(rootVocabularyLabels(_, language)).map(_.foldK)
-      resourcesMap      = readResources.resourcesMap // must be caached
+      resourcesMap      = readResources.resourcesMap // must be cached
     } yield ExportedCsv(
       headers,
       readResources.resources.toList.sortBy(_.label).map {
