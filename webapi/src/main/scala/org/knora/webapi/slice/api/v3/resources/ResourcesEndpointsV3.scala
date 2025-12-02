@@ -24,7 +24,11 @@ import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
 class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) extends EndpointHelper {
 
   val getResourcesResourcesPerOntology = baseEndpoint
-    .public(oneOf(notFoundVariant(project_not_found)))
+    .public(
+      oneOf(
+        notFoundVariant(project_not_found),
+      ),
+    )
     .get
     .in(ApiV3.V3ProjectsProjectIri / "resourcesPerOntology")
     .out(
