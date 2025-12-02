@@ -45,8 +45,9 @@ case class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[ListItemGetResponseADM])
     .description("Returns a list node, root or child, with children (if exist). Publicly accessible.")
 
-  private val getListInfoDesc = "Returns basic information about a list node, root or child, w/o children (if exist). Publicly accessible."
-  val getListsByIriInfo       = baseEndpoints.publicEndpoint.get
+  private val getListInfoDesc =
+    "Returns basic information about a list node, root or child, w/o children (if exist). Publicly accessible."
+  val getListsByIriInfo = baseEndpoints.publicEndpoint.get
     .in(base / listIriPathVar / "info")
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDesc)
@@ -69,13 +70,17 @@ case class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base)
     .in(jsonBody[ListCreateRootNodeRequest])
     .out(jsonBody[ListGetResponseADM])
-    .description("Creates a new list by creating the root node of the list. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+    .description(
+      "Creates a new list by creating the root node of the list. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+    )
 
   val postListsChild = baseEndpoints.securedEndpoint.post
     .in(base / listIriPathVar)
     .in(jsonBody[ListCreateChildNodeRequest])
     .out(jsonBody[ChildNodeInfoGetResponseADM])
-    .description("Creates a new list node as a child of the specified list node. Requires SystemAdmin or ProjectAdmin permissions for the list's project.")
+    .description(
+      "Creates a new list node as a child of the specified list node. Requires SystemAdmin or ProjectAdmin permissions for the list's project.",
+    )
 
   // Updates
   val putListsByIriName = baseEndpoints.securedEndpoint.put
@@ -88,25 +93,33 @@ case class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / listIriPathVar / "labels")
     .in(jsonBody[ListChangeLabelsRequest])
     .out(jsonBody[NodeInfoGetResponseADM])
-    .description("Update a list node's labels. Requires SystemAdmin or ProjectAdmin permissions for the list's project.")
+    .description(
+      "Update a list node's labels. Requires SystemAdmin or ProjectAdmin permissions for the list's project.",
+    )
 
   val putListsByIriComments = baseEndpoints.securedEndpoint.put
     .in(base / listIriPathVar / "comments")
     .in(jsonBody[ListChangeCommentsRequest])
     .out(jsonBody[NodeInfoGetResponseADM])
-    .description("Update a list node's comments. Requires SystemAdmin or ProjectAdmin permissions for the list's project.")
+    .description(
+      "Update a list node's comments. Requires SystemAdmin or ProjectAdmin permissions for the list's project.",
+    )
 
   val putListsByIriPosition = baseEndpoints.securedEndpoint.put
     .in(base / listIriPathVar / "position")
     .in(jsonBody[ListChangePositionRequest])
     .out(jsonBody[NodePositionChangeResponseADM])
-    .description("Update a list node's position. Requires SystemAdmin or ProjectAdmin permissions for the list's project.")
+    .description(
+      "Update a list node's position. Requires SystemAdmin or ProjectAdmin permissions for the list's project.",
+    )
 
   val putListsByIri = baseEndpoints.securedEndpoint.put
     .in(base / listIriPathVar)
     .in(jsonBody[ListChangeRequest])
     .out(jsonBody[NodeInfoGetResponseADM])
-    .description("Update a list node's properties. Requires SystemAdmin or ProjectAdmin permissions for the list's project.")
+    .description(
+      "Update a list node's properties. Requires SystemAdmin or ProjectAdmin permissions for the list's project.",
+    )
 
   // Deletes
   val deleteListsByIri = baseEndpoints.securedEndpoint.delete

@@ -42,7 +42,9 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
   val getGroupMembers = baseEndpoints.securedEndpoint.get
     .in(base / groupIriPathVar / "members")
     .out(jsonBody[GroupMembersGetResponseADM].example(Examples.GroupEndpointsExample.groupGetMembersResponse))
-    .description("Return all members of a single group. Requires SystemAdmin or ProjectAdmin permissions for the group's project.")
+    .description(
+      "Return all members of a single group. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
+    )
 
   val postGroup = baseEndpoints.securedEndpoint.post
     .in(base)
@@ -55,7 +57,9 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / groupIriPathVar)
     .in(jsonBody[GroupUpdateRequest].example(Examples.GroupEndpointsExample.groupUpdateRequest))
     .out(groupGetResponse)
-    .description("Update a group's basic information. Requires SystemAdmin or ProjectAdmin permissions for the group's project.")
+    .description(
+      "Update a group's basic information. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
+    )
 
   val putGroupStatus = baseEndpoints.securedEndpoint.put
     .in(base / groupIriPathVar / "status")
@@ -66,7 +70,9 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
   val deleteGroup = baseEndpoints.securedEndpoint.delete
     .in(base / groupIriPathVar)
     .out(groupGetResponse)
-    .description("Deletes a group by changing its status to 'false'. Requires SystemAdmin or ProjectAdmin permissions for the group's project.")
+    .description(
+      "Deletes a group by changing its status to 'false'. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
+    )
 }
 
 object GroupsRequests {

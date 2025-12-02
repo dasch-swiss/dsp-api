@@ -50,23 +50,31 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
 
   val postPermissionsAp = base.securedEndpoint.post
     .in(permissionsBase / "ap")
-    .description("Create a new administrative permission. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+    .description(
+      "Create a new administrative permission. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+    )
     .in(jsonBody[CreateAdministrativePermissionAPIRequestADM])
     .out(jsonBody[AdministrativePermissionCreateResponseADM])
 
   val getPermissionsApByProjectIri = base.securedEndpoint.get
     .in(permissionsBase / "ap" / projectIri)
-    .description("Get all administrative permissions for a project. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+    .description(
+      "Get all administrative permissions for a project. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+    )
     .out(jsonBody[AdministrativePermissionsForProjectGetResponseADM])
 
   val getPermissionsApByProjectAndGroupIri = base.securedEndpoint.get
     .in(permissionsBase / "ap" / projectIri / groupIriPathVar)
-    .description("Get all administrative permissions for a project and a group. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+    .description(
+      "Get all administrative permissions for a project and a group. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+    )
     .out(jsonBody[AdministrativePermissionGetResponseADM])
 
   val getPermissionsDoapByProjectIri = base.securedEndpoint.get
     .in(permissionsBase / "doap" / projectIri)
-    .description("Get all default object access permissions for a project. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+    .description(
+      "Get all default object access permissions for a project. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+    )
     .out(jsonBody[DefaultObjectAccessPermissionsForProjectGetResponseADM])
 
   val getPermissionsByProjectIri = base.securedEndpoint.get
@@ -81,7 +89,9 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
 
   val postPermissionsDoap = base.securedEndpoint.post
     .in(permissionsBase / "doap")
-    .description("Create a new default object access permission. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+    .description(
+      "Create a new default object access permission. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+    )
     .in(jsonBody[CreateDefaultObjectAccessPermissionAPIRequestADM])
     .out(jsonBody[DefaultObjectAccessPermissionCreateResponseADM])
 
@@ -137,14 +147,18 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
 
   val putPermisssionsResourceClass = base.securedEndpoint.put
     .in(permissionsBase / permissionIri / "resourceClass")
-    .description("Update a DOAP's resource class. Use `PUT /admin/permissions/doap/{permissionIri}` instead. Requires SystemAdmin permissions.")
+    .description(
+      "Update a DOAP's resource class. Use `PUT /admin/permissions/doap/{permissionIri}` instead. Requires SystemAdmin permissions.",
+    )
     .in(jsonBody[ChangePermissionResourceClassApiRequestADM])
     .out(jsonBody[DefaultObjectAccessPermissionGetResponseADM])
     .deprecated()
 
   val putPermissionsProperty = base.securedEndpoint.put
     .in(permissionsBase / permissionIri / "property")
-    .description("Update a DAOP's property. Use `PUT /admin/permissions/doap/{permissionIri}` instead. Requires SystemAdmin permissions.")
+    .description(
+      "Update a DAOP's property. Use `PUT /admin/permissions/doap/{permissionIri}` instead. Requires SystemAdmin permissions.",
+    )
     .in(jsonBody[ChangePermissionPropertyApiRequestADM])
     .out(jsonBody[DefaultObjectAccessPermissionGetResponseADM])
     .deprecated()

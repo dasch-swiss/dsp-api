@@ -109,48 +109,66 @@ final case class ProjectsEndpoints(
       .in(projectsByIri / restrictedViewSettings)
       .in(bodyProjectSetRestrictedViewSizeRequest)
       .out(jsonBody[RestrictedViewResponse])
-      .description("Sets the project's restricted view settings identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+      .description(
+        "Sets the project's restricted view settings identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      )
 
     val postAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.securedEndpoint.post
       .in(projectsByShortcode / restrictedViewSettings)
       .in(bodyProjectSetRestrictedViewSizeRequest)
       .out(jsonBody[RestrictedViewResponse])
-      .description("Sets the project's restricted view settings identified by the shortcode. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+      .description(
+        "Sets the project's restricted view settings identified by the shortcode. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      )
 
     val getAdminProjectsByProjectIriMembers = baseEndpoints.securedEndpoint.get
       .in(projectsByIri / members)
       .out(jsonBody[ProjectMembersGetResponseADM])
-      .description("Returns all project members of a project identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+      .description(
+        "Returns all project members of a project identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      )
 
     val getAdminProjectsByProjectShortcodeMembers = baseEndpoints.securedEndpoint.get
       .in(projectsByShortcode / members)
       .out(jsonBody[ProjectMembersGetResponseADM])
-      .description("Returns all project members of a project identified by the shortcode. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+      .description(
+        "Returns all project members of a project identified by the shortcode. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      )
 
     val getAdminProjectsByProjectShortnameMembers = baseEndpoints.securedEndpoint.get
       .in(projectsByShortname / members)
       .out(jsonBody[ProjectMembersGetResponseADM])
-      .description("Returns all project members of a project identified by the shortname. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+      .description(
+        "Returns all project members of a project identified by the shortname. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      )
 
     val getAdminProjectsByProjectIriAdminMembers = baseEndpoints.securedEndpoint.get
       .in(projectsByIri / adminMembers)
       .out(jsonBody[ProjectAdminMembersGetResponseADM])
-      .description("Returns all admin members of a project identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+      .description(
+        "Returns all admin members of a project identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      )
 
     val getAdminProjectsByProjectShortcodeAdminMembers = baseEndpoints.securedEndpoint.get
       .in(projectsByShortcode / adminMembers)
       .out(jsonBody[ProjectAdminMembersGetResponseADM])
-      .description("Returns all admin members of a project identified by the shortcode. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+      .description(
+        "Returns all admin members of a project identified by the shortcode. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      )
 
     val getAdminProjectsByProjectShortnameAdminMembers = baseEndpoints.securedEndpoint.get
       .in(projectsByShortname / adminMembers)
       .out(jsonBody[ProjectAdminMembersGetResponseADM])
-      .description("Returns all admin members of a project identified by the shortname. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+      .description(
+        "Returns all admin members of a project identified by the shortname. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      )
 
     val deleteAdminProjectsByIri = baseEndpoints.securedEndpoint.delete
       .in(projectsByIri)
       .out(jsonBody[ProjectOperationResponseADM])
-      .description("Deletes a project identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+      .description(
+        "Deletes a project identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      )
 
     val deleteAdminProjectsByProjectShortcodeErase = baseEndpoints.securedEndpoint.delete
       .in(projectsByShortcode / "erase")
@@ -205,14 +223,18 @@ final case class ProjectsEndpoints(
       .in(projectsByIri)
       .in(jsonBody[ProjectUpdateRequest])
       .out(jsonBody[ProjectOperationResponseADM])
-      .description("Updates a project identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+      .description(
+        "Updates a project identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      )
 
     val getAdminProjectsByIriAllData = baseEndpoints.securedEndpoint.get
       .in(projectsByIri / "AllData")
       .out(header[String]("Content-Disposition"))
       .out(header[String]("Content-Type"))
       .out(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
-      .description("Returns all ontologies, data, and configuration belonging to a project identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+      .description(
+        "Returns all ontologies, data, and configuration belonging to a project identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      )
   }
 }
 

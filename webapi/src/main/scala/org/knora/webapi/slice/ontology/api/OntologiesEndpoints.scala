@@ -98,7 +98,9 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Change the labels or comments of a class. Requires ProjectAdmin permissions for the ontology's project.")
+    .description(
+      "Change the labels or comments of a class. Requires ProjectAdmin permissions for the ontology's project.",
+    )
 
   val deleteOntologiesClassesComment = baseEndpoints.withUserEndpoint.delete
     .in(base / "classes" / "comment" / resourceClassIriPath)
@@ -106,7 +108,9 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Delete the comment of a class definition. Requires ProjectAdmin permissions for the ontology's project.")
+    .description(
+      "Delete the comment of a class definition. Requires ProjectAdmin permissions for the ontology's project.",
+    )
 
   val postOntologiesCardinalities = baseEndpoints.withUserEndpoint.post
     .in(base / "cardinalities")
@@ -173,7 +177,9 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Update the GUI order of properties in a class. Requires ProjectAdmin permissions for the ontology's project.")
+    .description(
+      "Update the GUI order of properties in a class. Requires ProjectAdmin permissions for the ontology's project.",
+    )
 
   val getOntologiesClassesIris = baseEndpoints.withUserEndpoint.get
     .in(base / "classes" / classIriPath)
@@ -220,7 +226,9 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Update a property's labels or comments. Requires ProjectAdmin permissions for the ontology's project.")
+    .description(
+      "Update a property's labels or comments. Requires ProjectAdmin permissions for the ontology's project.",
+    )
 
   val deletePropertiesComment = baseEndpoints.withUserEndpoint.delete
     .in(base / "properties" / "comment" / propertyIriPath)
@@ -228,7 +236,9 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Delete the comment of a property definition. Requires ProjectAdmin permissions for the ontology's project.")
+    .description(
+      "Delete the comment of a property definition. Requires ProjectAdmin permissions for the ontology's project.",
+    )
 
   val putOntologiesPropertiesGuielement = baseEndpoints.withUserEndpoint.put
     .in(base / "properties" / "guielement")
