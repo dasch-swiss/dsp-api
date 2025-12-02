@@ -142,13 +142,11 @@ final case class ReadResourcesServiceLive(
         )
 
       _ <-
-        readSequence.checkResourceIris(resourceIris.toSet, readSequence).flatMap {
-          ZIO.foreach(_) { throwable =>
-            if (skipRetrievalChecks)
-              ZIO.logError(throwable.toString)
-            else
-              ZIO.fail(throwable)
-          }
+        ZIO.foreach(readSequence.checkResourceIris(resourceIris.toSet, readSequence)) { throwable =>
+          if (skipRetrievalChecks)
+            ZIO.logError(throwable.toString)
+          else
+            ZIO.fail(throwable)
         }
 
       _ <-
