@@ -5,6 +5,7 @@
 
 package org.knora.webapi.core
 
+import io.opentelemetry.api
 import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
 
@@ -74,6 +75,7 @@ object LayersLive { self =>
    */
   type Environment =
     // format: off
+    api.OpenTelemetry &
     AdminApiModule.Provided &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
