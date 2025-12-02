@@ -5,45 +5,31 @@
 
 package org.knora.webapi.core
 
+import io.opentelemetry.api.OpenTelemetry
 import sttp.model.Method.*
 import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.metrics.zio.ZioMetrics
+import sttp.tapir.server.tracing.opentelemetry.OpenTelemetryTracing
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import zio.*
 import zio.http.*
 import zio.http.Server.Config.ResponseCompressionConfig
-import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.routing.Endpoints
 
-final case class DspApiServer(
+final class DspApiServer(
   server: Server,
   endpoints: Endpoints,
   c: KnoraApi,
-  tracing: Tracing,
+  otel: OpenTelemetry,
 ) {
-  val addUrlRouteSpan: Middleware[Any] =
-    new Middleware[Any] {
-      override def apply[Env1 <: Any, Err](routes: Routes[Env1, Err]): Routes[Env1, Err] =
-        routes.transform { handler =>
-          Handler.scoped[Env1] {
-            Handler.fromFunctionZIO { request =>
-              for {
-                traceId <- tracing.getCurrentSpanUnsafe
-                             .map(_.getSpanContext().getTraceId)
-                             .catchAllDefect(_ => ZIO.logWarning("Could not get current span") *> ZIO.succeed(""))
-                response <- ZIO.logAnnotate("traceId", traceId)(handler(request))
-              } yield response
-            }
-          }
-        }
-    }
 
   private val serverOptions: ZioHttpServerOptions[Any] =
     ZioHttpServerOptions.customiseInterceptors
+      .prependInterceptor(OpenTelemetryTracing(otel))
       .corsInterceptor(
         CORSInterceptor.customOrThrow(
           CORSConfig.default.allowCredentials
@@ -58,8 +44,7 @@ final case class DspApiServer(
 
   def startup(): UIO[Unit] = for {
     _          <- ZIO.logInfo("Starting DSP API server...")
-    baseApp     = ZioHttpInterpreter(serverOptions).toHttp(endpoints.serverEndpoints)
-    app         = baseApp @@ addUrlRouteSpan
+    app         = ZioHttpInterpreter(serverOptions).toHttp(endpoints.serverEndpoints)
     actualPort <- Server.install(app).provide(ZLayer.succeed(server))
     _          <- ZIO.logInfo(s"API available at http://${c.externalHost}:$actualPort/version")
   } yield ()
