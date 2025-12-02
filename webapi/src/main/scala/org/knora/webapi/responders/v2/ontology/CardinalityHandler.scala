@@ -22,7 +22,7 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
-import org.knora.webapi.slice.ontology.repo.IsPropertyUsedQuery
+import org.knora.webapi.slice.ontology.repo.isPropertyUsedInResourcesQuery
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -309,7 +309,7 @@ final case class CardinalityHandler(
    * @return a [[Boolean]] denoting if the property entity is used.
    */
   def isPropertyUsedInResources(classIri: ResourceClassIri, propertyIri: PropertyIri): Task[Boolean] =
-    triplestoreService.query(IsPropertyUsedQuery.build(propertyIri, classIri))
+    triplestoreService.query(isPropertyUsedInResources.build(propertyIri, classIri))
 
   /**
    * Checks if the class is defined inside the ontology found in the cache.
