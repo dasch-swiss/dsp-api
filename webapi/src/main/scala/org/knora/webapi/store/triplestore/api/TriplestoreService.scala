@@ -70,6 +70,7 @@ trait TriplestoreService {
    * @return a [[Unit]].
    */
   def query(sparql: Update): Task[Unit]
+  final def query(q: ModifyQuery): Task[Unit]      = query(Update(q))
   final def insert(q: InsertDataQuery): Task[Unit] = query(Update(q))
 
   /**

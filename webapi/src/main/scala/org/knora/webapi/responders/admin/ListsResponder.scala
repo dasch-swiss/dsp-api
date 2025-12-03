@@ -44,6 +44,7 @@ import org.knora.webapi.slice.resources.repo.CreateListNodeQuery
 import org.knora.webapi.slice.resources.repo.IsListInUseQuery
 import org.knora.webapi.slice.resources.repo.ListNodeExistsQuery
 import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
+import org.knora.webapi.slice.resources.repo.UpdateNodePositionQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -561,7 +562,7 @@ final case class ListsResponder(
 
     def getRootNodeAndPositionOfNewChild(
       parentNodeIri: IRI,
-      dataNamedGraph: IRI,
+      project: KnoraProject,
     ): Task[(Some[Int], Some[IRI])] =
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
@@ -577,7 +578,7 @@ final case class ListsResponder(
             case _                     => ZIO.succeed(size)
           }
         }
-        _ <- shiftNodes(position, size - 1, children, dataNamedGraph, ShiftRight).when(position != size)
+        _ <- shiftNodes(position, size - 1, children, project, ShiftRight).when(position != size)
       } yield (Some(position), Some(getRootNodeIri(parentListNode)))
 
     for {
@@ -589,16 +590,10 @@ final case class ListsResponder(
       /* verify that the list node name is unique for the project */
       _ <- name.map(ensureListNameInProjectDoesNotExist(_, project)).getOrElse(ZIO.unit)
 
-      // calculate the data named graph
-      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(project).value
-
       // if parent node is known, find the root node of the list and the position of the new child node
       positionAndNode <-
         if (parentNode.nonEmpty) {
-          getRootNodeAndPositionOfNewChild(
-            parentNodeIri = parentNode.get.value,
-            dataNamedGraph = dataNamedGraph,
-          )
+          getRootNodeAndPositionOfNewChild(parentNode.get.value, project)
         } else {
           ZIO.attempt((None, None))
         }
@@ -918,7 +913,7 @@ final case class ListsResponder(
      * @param node           the node whose position should be updated.
      * @param parentIri      the IRI of the parent node.
      * @param givenPosition  the new node position.
-     * @param dataNamedGraph the new node position.
+     * @param project        the project.
      * @return the new position of the node [[Int]]
      *         fails with a [[UpdateNotPerformedException]] in the case the given new position is the same as current position.
      */
@@ -926,7 +921,7 @@ final case class ListsResponder(
       node: ListChildNodeADM,
       parentIri: IRI,
       givenPosition: Int,
-      dataNamedGraph: IRI,
+      project: KnoraProject,
     ): Task[Int] =
       for {
         // get parent node with its immediate children
@@ -944,17 +939,13 @@ final case class ListsResponder(
           } else givenPosition
 
         // update the position of the node itself
-        _ <- updatePositionOfNode(
-               nodeIri = node.id,
-               newPosition = newPosition,
-               dataNamedGraph = dataNamedGraph,
-             )
+        _ <- updatePositionOfNode(node.id, newPosition, project)
 
         _ <- // update position of siblings
           if (currPosition < newPosition) {
-            shiftNodes(currPosition + 1, newPosition, parentChildren, dataNamedGraph, ShiftLeft)
+            shiftNodes(currPosition + 1, newPosition, parentChildren, project, ShiftLeft)
           } else if (currPosition > newPosition) {
-            shiftNodes(newPosition, currPosition - 1, parentChildren, dataNamedGraph, ShiftRight)
+            shiftNodes(newPosition, currPosition - 1, parentChildren, project, ShiftRight)
           } else {
             ZIO.fail(UpdateNotPerformedException(s"The given position is the same as node's current position."))
           }
@@ -994,17 +985,11 @@ final case class ListsResponder(
         // if givenPosition is -1, append the child to the end of the list of children
         newPosition = if (givenPosition == -1) { newSiblings.size }
                       else givenPosition
-        // update the position of the node itself
-        dataNamedGraph <- getDataNamedGraph(project.id)
-        _              <- updatePositionOfNode(
-               nodeIri = node.id,
-               newPosition = newPosition,
-               dataNamedGraph = dataNamedGraph,
-             )
+        _ <- updatePositionOfNode(node.id, newPosition, project)
 
         // shift current siblings with a higher position to left as if the node is deleted
         _ <-
-          shiftNodes(currentNodePosition + 1, currentSiblings.last.position, currentSiblings, dataNamedGraph, ShiftLeft)
+          shiftNodes(currentNodePosition + 1, currentSiblings.last.position, currentSiblings, project, ShiftLeft)
 
         // Is node supposed to be added to the end of new parent's children list?
         _ <-
@@ -1014,7 +999,7 @@ final case class ListsResponder(
           } else {
             // No. Shift new siblings with the same and higher position
             // to right, as if the node is inserted in the given position
-            shiftNodes(newPosition, newSiblings.last.position, newSiblings, dataNamedGraph, ShiftRight)
+            shiftNodes(newPosition, newSiblings.last.position, newSiblings, project, ShiftRight)
           }
 
         /* update the sublists of parent nodes */
@@ -1025,9 +1010,6 @@ final case class ListsResponder(
     val updateTask =
       for {
         project <- ensureUserIsAdminOrProjectOwner(nodeIri, requestingUser)
-
-        // get data names graph of the project
-        dataNamedGraph <- getDataNamedGraph(project.id)
         // get node in its current position
         node <- listNodeGetADM(nodeIri.value, shallow = true)
                   .map(_.collect { case child: ListChildNodeADM => child })
@@ -1041,7 +1023,7 @@ final case class ListsResponder(
               node = node,
               parentIri = currentParentNodeIri,
               givenPosition = changeNodePositionRequest.position.value,
-              dataNamedGraph = dataNamedGraph,
+              project,
             )
           } else {
             updateParentAndPosition(
@@ -1154,7 +1136,7 @@ final case class ListsResponder(
      * @param deletedNodeIri        the IRI of the deleted node.
      * @param positionOfDeletedNode the position of the deleted node.
      * @param parentNodeIri         the IRI of the deleted node's parent.
-     * @param dataNamedGraph        the data named graph.
+     * @param project               the project.
      * @return a [[ListNodeADM]]
      * @throws UpdateNotPerformedException if the node that had to be deleted is still in the list of parent's children.
      */
@@ -1162,7 +1144,7 @@ final case class ListsResponder(
       deletedNodeIri: IRI,
       positionOfDeletedNode: Int,
       parentNodeIri: IRI,
-      dataNamedGraph: IRI,
+      project: KnoraProject,
     ): Task[ListNodeADM] =
       for {
         parentNode <-
@@ -1187,7 +1169,7 @@ final case class ListsResponder(
                                    positionOfDeletedNode + 1,
                                    remainingChildren.last.position,
                                    remainingChildren,
-                                   dataNamedGraph,
+                                   project,
                                    ShiftLeft,
                                  )
             } yield shiftedChildren
@@ -1234,12 +1216,10 @@ final case class ListsResponder(
 
                     case Some(childNode: ListChildNodeADM) =>
                       for {
-                        _              <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
-                        parentNodeIri  <- getParentNodeIRI(nodeIri.value)
-                        dataNamedGraph <-
-                          deleteListItem(childNode.id, projectIri, childNode.children, isRootNode = false)
-                        updatedParentNode <-
-                          updateParentNode(nodeIri.value, childNode.position, parentNodeIri, dataNamedGraph)
+                        _                 <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
+                        parentNodeIri     <- getParentNodeIRI(nodeIri.value)
+                        _                 <- deleteListItem(childNode.id, projectIri, childNode.children, isRootNode = false)
+                        updatedParentNode <- updateParentNode(nodeIri.value, childNode.position, parentNodeIri, project)
                       } yield ChildNodeDeleteResponseADM(updatedParentNode)
 
                     case _ =>
@@ -1373,16 +1353,18 @@ final case class ListsResponder(
    *
    * @param nodeIri              the IRI of the node that must be shifted.
    * @param newPosition          the new position of the child node.
-   * @param dataNamedGraph       the data named graph of the project.
+   * @param project              the project.
    * @return a [[ListChildNodeADM]].
    */
   private def updatePositionOfNode(
     nodeIri: IRI,
     newPosition: Int,
-    dataNamedGraph: IRI,
+    project: KnoraProject,
   ): Task[ListChildNodeADM] =
     for {
-      _ <- triplestore.query(Update(sparql.admin.txt.updateNodePosition(dataNamedGraph, nodeIri, newPosition)))
+      _ <- triplestore.query(
+             UpdateNodePositionQuery.build(project, ListIri.unsafeFrom(nodeIri), Position.unsafeFrom(newPosition)),
+           )
       /* Verify that the node info was updated */
       childNode <- listNodeGetADM(nodeIri = nodeIri, shallow = false)
                      .someOrFail(BadRequestException(s"Node with $nodeIri could not be found to update its position."))
@@ -1410,11 +1392,17 @@ final case class ListsResponder(
    * @param namedGraph           the data named graph of the project.
    * @return a sequence of [[ListChildNodeADM]].
    */
-  private def shiftNodes(startPos: Int, endPos: Int, nodes: Seq[ListChildNodeADM], namedGraph: IRI, shift: ShiftDir) = {
+  private def shiftNodes(
+    startPos: Int,
+    endPos: Int,
+    nodes: Seq[ListChildNodeADM],
+    project: KnoraProject,
+    shift: ShiftDir,
+  ) = {
     val (start, rest)     = nodes.partition(_.position < startPos)
     val (needUpdate, end) = rest.partition(_.position <= endPos)
     ZIO
-      .foreach(needUpdate)(node => updatePositionOfNode(node.id, shift(node.position), namedGraph))
+      .foreach(needUpdate)(node => updatePositionOfNode(node.id, shift(node.position), project))
       .map(start ++ _ ++ end)
   }
 
