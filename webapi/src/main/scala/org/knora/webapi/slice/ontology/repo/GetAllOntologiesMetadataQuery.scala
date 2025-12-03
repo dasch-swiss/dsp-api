@@ -14,12 +14,8 @@ import org.knora.webapi.slice.common.QueryBuilderHelper
 
 object GetAllOntologiesMetadataQuery extends QueryBuilderHelper {
   def build: SelectQuery = {
-    val ontologyGraph = variable("ontologyGraph")
-    val ontologyIri   = variable("ontologyIri")
-    val ontologyPred  = variable("ontologyPred")
-    val ontologyObj   = variable("ontologyObj")
-    SparqlBuilder.select(ontologyGraph, ontologyIri, ontologyPred, ontologyObj)
-
+    val (ontologyGraph, ontologyIri, ontologyPred, ontologyObj) =
+      (variable("ontologyGraph"), variable("ontologyIri"), variable("ontologyPred"), variable("ontologyObj"))
     Queries
       .SELECT(ontologyGraph, ontologyIri, ontologyPred, ontologyObj)
       .prefix(OWL.NS)
