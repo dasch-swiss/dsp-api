@@ -26,10 +26,10 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.ontology.repo.GetAllOntologiesMetadataQuery
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 object OntologyCache {
   // The global ontology cache lock. This is needed because every ontology update replaces the whole ontology cache
@@ -438,7 +438,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
     for {
       // Get all ontology metadata.
       _                           <- ZIO.logDebug(s"Loading ontologies into cache")
-      allOntologyMetadataResponse <- triplestore.query(Select(sparql.v2.txt.getAllOntologyMetadata()))
+      allOntologyMetadataResponse <- triplestore.select(GetAllOntologiesMetadataQuery.build)
       allOntologyMetadata          = OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
 
       knoraBaseOntologyMetadata =

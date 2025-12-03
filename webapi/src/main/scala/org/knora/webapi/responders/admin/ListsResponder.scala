@@ -39,11 +39,12 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resources.repo.AskListNameInProjectExistsQuery
+import org.knora.webapi.slice.resources.repo.ChangeParentNodeQuery
 import org.knora.webapi.slice.resources.repo.CreateListNodeQuery
 import org.knora.webapi.slice.resources.repo.IsListInUseQuery
+import org.knora.webapi.slice.resources.repo.ListNodeExistsQuery
 import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -108,7 +109,7 @@ final case class ListsResponder(
   private def listGetADM(rootNodeIri: IRI) =
     for {
       // this query will give us only the information about the root node.
-      exists <- rootNodeByIriExists(rootNodeIri)
+      exists <- rootNodeExists(ListIri.unsafeFrom(rootNodeIri))
 
       maybeList <-
         if (exists) {
@@ -159,7 +160,7 @@ final case class ListsResponder(
                     }
       } yield ListNodeGetResponseADM(NodeADM(nodeInfo, childNode.children))
 
-    ZIO.ifZIO(rootNodeByIriExists(nodeIri.value))(
+    ZIO.ifZIO(rootNodeExists(nodeIri))(
       listGetADM(nodeIri.value)
         .someOrFail(NotFoundException(s"List '$nodeIri' not found"))
         .map(ListGetResponseADM.apply),
@@ -306,13 +307,22 @@ final case class ListsResponder(
     }
 
   /**
+   * Find a node including its immediate children. The node can be a root node or a child node.
+   *
+   * @param nodeIri              the IRI of the list node to be queried.
+   * @return a optional [[ListNodeADM]]
+   */
+  private def findNode(nodeIri: ListIri): IO[Option[Throwable], ListNodeADM] =
+    listNodeGetADM(nodeIri.value, true).some
+
+  /**
    * Retrieves a complete node including children. The node can be the lists root node or child node.
    *
    * @param nodeIri              the IRI of the list node to be queried.
    * @param shallow              denotes if all children or only the immediate children will be returned.
    * @return a optional [[ListNodeADM]]
    */
-  private def listNodeGetADM(nodeIri: IRI, shallow: Boolean) = {
+  private def listNodeGetADM(nodeIri: IRI, shallow: Boolean): Task[Option[ListNodeADM]] = {
     for {
       // this query will give us only the information about the root node.
       statements <- triplestore
@@ -643,7 +653,7 @@ final case class ListsResponder(
   /**
    * Changes basic node information stored (root or child)
    *
-   * @param changeNodeRequest    the new node information.
+   * @param request    the new node information.
    * @param apiRequestID         the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
    * fails with a ForbiddenException          in the case that the user is not allowed to perform the operation.
@@ -958,7 +968,7 @@ final case class ListsResponder(
      * @param newParentIri   the IRI of the new parent node.
      * @param currParentIri  the IRI of the current parent node.
      * @param givenPosition  the new node position.
-     * @param dataNamedGraph the new node position.
+     * @param project        the project to which the list belongs.
      * @return the new position of the node [[Int]]
      * @throws UpdateNotPerformedException in the case the given new position is the same as current position.
      */
@@ -967,7 +977,7 @@ final case class ListsResponder(
       newParentIri: IRI,
       currParentIri: IRI,
       givenPosition: Int,
-      dataNamedGraph: IRI,
+      project: KnoraProject,
     ): Task[Int] =
       for {
         // get current parent node with its immediate children
@@ -985,7 +995,8 @@ final case class ListsResponder(
         newPosition = if (givenPosition == -1) { newSiblings.size }
                       else givenPosition
         // update the position of the node itself
-        _ <- updatePositionOfNode(
+        dataNamedGraph <- getDataNamedGraph(project.id)
+        _              <- updatePositionOfNode(
                nodeIri = node.id,
                newPosition = newPosition,
                dataNamedGraph = dataNamedGraph,
@@ -1007,7 +1018,8 @@ final case class ListsResponder(
           }
 
         /* update the sublists of parent nodes */
-        _ <- changeParentNode(node.id, currParentIri, newParentIri, dataNamedGraph)
+        _ <-
+          changeParentNode(project, node.listIri, ListIri.unsafeFrom(currParentIri), ListIri.unsafeFrom(newParentIri))
       } yield newPosition
 
     val updateTask =
@@ -1037,7 +1049,7 @@ final case class ListsResponder(
               newParentIri = changeNodePositionRequest.parentNodeIri.value,
               currParentIri = currentParentNodeIri,
               givenPosition = changeNodePositionRequest.position.value,
-              dataNamedGraph = dataNamedGraph,
+              project,
             )
           }
         /* Verify that the node position and parent children position were updated */
@@ -1246,22 +1258,20 @@ final case class ListsResponder(
   ////////////////////
 
   /**
-   * Helper method for checking if a list node identified by IRI exists and is a root node.
+   * Helper method for checking if a root list node identified by IRI exists.
    *
-   * @param rootNodeIri the IRI of the project.
+   * @param iri The [[ListIri]] of the node.
    * @return a [[Boolean]].
    */
-  private def rootNodeByIriExists(rootNodeIri: IRI): Task[Boolean] =
-    triplestore.query(Ask(sparql.admin.txt.checkListRootNodeExistsByIri(rootNodeIri)))
+  private def rootNodeExists(iri: ListIri): Task[Boolean] = triplestore.query(ListNodeExistsQuery.rootNodeExists(iri))
 
   /**
-   * Helper method for checking if a node identified by IRI exists.
+   * Helper method for checking if a node exists.
    *
-   * @param nodeIri the IRI of the project.
+   * @param iri The [[ListIri]] of the node.
    * @return a [[Boolean]].
    */
-  private def nodeByIriExists(nodeIri: IRI): Task[Boolean] =
-    triplestore.query(Ask(sparql.admin.txt.checkListNodeExistsByIri(nodeIri)))
+  private def nodeExists(iri: ListIri): Task[Boolean] = triplestore.query(ListNodeExistsQuery.anyNodeExists(iri))
 
   /**
    * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
@@ -1355,7 +1365,7 @@ final case class ListsResponder(
       _ <- // Verify that the node was deleted correctly.
         ZIO
           .fail(UpdateNotPerformedException(s"Node <$nodeIri> was not erased. Please report this as a possible bug."))
-          .whenZIO(nodeByIriExists(nodeIri))
+          .whenZIO(nodeExists(ListIri.unsafeFrom(nodeIri)))
     } yield ()
 
   /**
@@ -1411,40 +1421,51 @@ final case class ListsResponder(
   /**
    * Helper method to change parent node of a node.
    *
+   * @param project              the project to which the list belongs.
    * @param nodeIri              the IRI of the node.
    * @param oldParentIri         the IRI of the current parent node.
    * @param newParentIri         the IRI of the new parent node.
-   * @param dataNamedGraph       the data named graph of the project.
    * @throws UpdateNotPerformedException if the parent of a node could not be updated.
    */
   private def changeParentNode(
-    nodeIri: IRI,
-    oldParentIri: IRI,
-    newParentIri: IRI,
-    dataNamedGraph: IRI,
-  ): Task[Unit] = for {
-    _ <-
-      triplestore.query(Update(sparql.admin.txt.changeParentNode(dataNamedGraph, nodeIri, oldParentIri, newParentIri)))
+    project: KnoraProject,
+    nodeIri: ListIri,
+    oldParentIri: ListIri,
+    newParentIri: ListIri,
+  ): Task[Unit] =
+    for {
+      _ <- triplestore.query(ChangeParentNodeQuery.build(project, nodeIri, oldParentIri, newParentIri))
 
-    /* verify that parents were updated */
-    // get old parent node with its immediate children
-    maybeOldParent     <- listNodeGetADM(nodeIri = oldParentIri, shallow = true)
-    childrenOfOldParent = maybeOldParent.get.children
-    _                  <- ZIO.when(childrenOfOldParent.exists(node => node.id == nodeIri)) {
-           ZIO.fail(
-             UpdateNotPerformedException(
-               s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug.",
-             ),
-           )
-         }
-    // get new parent node with its immediate children
-    maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri, shallow = true)
-    childrenOfNewParent = maybeNewParentNode.get.children
-    _                  <- ZIO.when(!childrenOfNewParent.exists(node => node.id == nodeIri)) {
-           ZIO.fail(UpdateNotPerformedException(s"Node $nodeIri is not added to parent node $newParentIri. "))
-         }
-
-  } yield ()
+      /* verify that parents were updated */
+      // get old parent node with its immediate children
+      childrenOfOldParent <-
+        findNode(oldParentIri).mapBoth(
+          {
+            case None      => UpdateNotPerformedException(s"Old parent $oldParentIri not found, report this as a bug.")
+            case Some(err) => err
+          },
+          _.children,
+        )
+      _ <- ZIO.when(childrenOfOldParent.exists(_.listIri == nodeIri)) {
+             ZIO.fail(
+               UpdateNotPerformedException(
+                 s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug.",
+               ),
+             )
+           }
+      // get new parent node with its immediate children
+      childrenOfNewParent <-
+        findNode(newParentIri).mapBoth(
+          {
+            case None      => UpdateNotPerformedException(s"New parent $newParentIri not found, report this as a bug.")
+            case Some(err) => err
+          },
+          _.children,
+        )
+      _ <- ZIO.when(!childrenOfNewParent.exists(_.listIri == nodeIri)) {
+             ZIO.fail(UpdateNotPerformedException(s"Node $nodeIri is not added to parent node $newParentIri. "))
+           }
+    } yield ()
 }
 
 object ListsResponder {
