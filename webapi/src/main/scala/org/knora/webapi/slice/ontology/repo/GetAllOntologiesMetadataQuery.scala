@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.ontology.repo
 
 import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 
