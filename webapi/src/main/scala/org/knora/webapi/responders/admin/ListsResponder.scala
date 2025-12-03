@@ -593,8 +593,7 @@ final case class ListsResponder(
       // if parent node is known, find the root node of the list and the position of the new child node
       positionAndNode <- if parentNode.nonEmpty then getRootNodeAndPositionOfNewChild(parentNode.get.value, project)
                          else ZIO.succeed((None, None))
-      newPosition: Option[Int] = positionAndNode._1
-      rootNodeIri: Option[IRI] = positionAndNode._2
+      (newPosition, rootNodeIri) = positionAndNode
 
       // check the custom IRI; if not given, create an unused IRI
       customListIri   = id.map(_.value).map(_.toSmartIri)
