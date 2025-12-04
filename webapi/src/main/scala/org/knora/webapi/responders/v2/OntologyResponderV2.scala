@@ -56,6 +56,7 @@ import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
 import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
 import org.knora.webapi.slice.ontology.repo.DeleteOntologyCommentQuery
+import org.knora.webapi.slice.ontology.repo.DeleteOntologyQuery
 import org.knora.webapi.slice.ontology.repo.UpdateOntologyMetadataQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
@@ -135,7 +136,6 @@ final case class OntologyResponderV2(
    *
    * @param classIris      the IRIs of the resource entities to be queried.
    * @param propertyIris   the IRIs of the property entities to be queried.
-   * @param requestingUser the user making the request.
    * @return an [[EntityInfoGetResponseV2]].
    */
   private def getEntityInfoResponseV2(
@@ -1417,7 +1417,7 @@ final case class OntologyResponderV2(
                  s"Ontology ${ontologyIri.toComplexSchema} cannot be deleted, because of subjects that refer to it: $sortedSubjects"
                ZIO.fail(BadRequestException(msg))
              }
-        _ <- save(Update(sparql.v2.txt.deleteOntology(ontologyIri.toInternalSchema)))
+        _ <- save(Update(DeleteOntologyQuery.build(ontologyIri)))
       } yield SuccessResponseV2(s"Ontology ${ontologyIri.toComplexSchema} has been deleted")
     IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteTask)
   }
