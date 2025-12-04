@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.infrastructure
 
+import io.opentelemetry.api
 import io.sentry.Sentry
 import io.sentry.SentryOptions
 import zio.*
@@ -44,6 +45,6 @@ object OpenTelemetry {
     } yield ()
   }
 
-  val layer: URLayer[OpenTelemetryConfig & KnoraApi, Tracing] =
-    otelSdkSentry >+> ZOpenTelemetry.global.orDie >+> ZOpenTelemetry.contextJVM >>> ZOpenTelemetry.tracing("global")
+  val layer: URLayer[OpenTelemetryConfig & KnoraApi, api.OpenTelemetry & Tracing] =
+    otelSdkSentry >+> ZOpenTelemetry.global.orDie >+> ZOpenTelemetry.contextJVM >+> ZOpenTelemetry.tracing("global")
 }
