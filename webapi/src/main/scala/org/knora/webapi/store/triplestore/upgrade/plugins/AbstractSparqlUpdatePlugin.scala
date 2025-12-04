@@ -11,9 +11,10 @@ import org.apache.jena.update.UpdateFactory
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 
 import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
-abstract class AbstractSparqlUpdatePlugin extends UpgradePlugin {
+abstract class AbstractSparqlUpdatePlugin extends UpgradePlugin with QueryBuilderHelper {
 
   def getQueries: List[ModifyQuery]
 

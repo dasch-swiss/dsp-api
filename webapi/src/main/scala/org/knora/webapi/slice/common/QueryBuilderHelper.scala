@@ -98,4 +98,7 @@ trait QueryBuilderHelper {
            | ${triplePattern.getQueryString}
            |}
            |""".stripMargin)
+
+  def spo: (Variable, Variable, Variable) = (variable("s"), variable("p"), variable("o"))
+
 }
