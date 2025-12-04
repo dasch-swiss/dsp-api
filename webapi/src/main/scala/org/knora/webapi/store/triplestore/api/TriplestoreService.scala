@@ -46,6 +46,7 @@ trait TriplestoreService {
    * @return a [[SparqlConstructResponse]]
    */
   def query(sparql: Construct): Task[SparqlConstructResponse]
+  final def query(sparql: ConstructQuery): Task[SparqlConstructResponse] = query(Construct(sparql))
 
   def queryRdf(sparql: Construct): Task[String]
 
