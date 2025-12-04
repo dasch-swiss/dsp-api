@@ -8,7 +8,6 @@ package org.knora.webapi.slice.resources.repo.service
 import org.apache.jena.rdf.model.Resource
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
@@ -28,6 +27,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_String_Property
 import org.knora.webapi.slice.common.jena.ResourceOps.*
@@ -56,7 +56,8 @@ final case class DeletedValue(
   lastModificationDate: Option[Instant],
 ) extends ValueModel
 
-final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: StringFormatter) {
+final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: StringFormatter)
+    extends QueryBuilderHelper {
   import org.knora.webapi.messages.IriConversions.ConvertibleIri
 
   def findActiveById(iri: ValueIri): Task[Option[ActiveValue]] =
@@ -155,7 +156,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
   /* Deletes the subject/predicate/object triple pointed to by a LinkValue. */
   def eraseValueDirectLink(project: KnoraProject)(valueIri: ValueIri): Task[Unit] = {
     val value            = iri(valueIri.toString)
-    val (s, p, o)        = (variable("s"), variable("p"), variable("o"))
+    val (s, p, o)        = spo
     val delete           = s.has(p, o)
     val projectDataGraph = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
     val query            = Queries

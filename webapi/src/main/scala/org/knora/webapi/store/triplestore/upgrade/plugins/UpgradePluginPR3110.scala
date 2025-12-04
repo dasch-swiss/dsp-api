@@ -6,7 +6,6 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
@@ -26,7 +25,7 @@ class UpgradePluginPR3110 extends AbstractSparqlUpdatePlugin {
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
   private val removeAllInstitutions: ModifyQuery = {
-    val (s, p, o) = (variable("s"), variable("p"), variable("o"))
+    val (s, p, o) = spo
     Queries
       .MODIFY()
       .prefix(Vocabulary.KnoraAdmin.NS, RDF.NS)
