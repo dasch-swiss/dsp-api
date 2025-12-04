@@ -6,8 +6,6 @@
 package org.knora.webapi.slice.search.api
 
 import io.opentelemetry.api.common.Attributes
-import io.sentry.Sentry
-import io.sentry.SentryLevel
 import sttp.model.MediaType
 import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
@@ -105,7 +103,6 @@ final case class SearchRestService(
           limitToProject,
         ) @@ tracing.aspects.span("query")
       response <- renderer.render(searchResult, opts) @@ tracing.aspects.span("render")
-      _        <- ZIO.succeed(Sentry.captureMessage("searchIncomingLinks", SentryLevel.INFO))
     } yield response) @@ tracing.aspects.root(
       spanName = "searchIncomingLinks",
       attributes = Attributes
