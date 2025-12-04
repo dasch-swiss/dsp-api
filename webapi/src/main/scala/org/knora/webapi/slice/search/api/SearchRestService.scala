@@ -67,7 +67,7 @@ final case class SearchRestService(
     (for {
       searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, limitToProject)
       response     <- renderer.render(searchResult, opts)
-    } yield response) @@ tracing.aspects.root(
+    } yield response) @@ tracing.aspects.span(
       spanName = "gravsearch",
       attributes = Attributes
         .builder()
@@ -103,7 +103,7 @@ final case class SearchRestService(
           limitToProject,
         ) @@ tracing.aspects.span("query")
       response <- renderer.render(searchResult, opts) @@ tracing.aspects.span("render")
-    } yield response) @@ tracing.aspects.root(
+    } yield response) @@ tracing.aspects.span(
       spanName = "searchIncomingLinks",
       attributes = Attributes
         .builder()
@@ -121,7 +121,7 @@ final case class SearchRestService(
   ): Task[(RenderedResponse, MediaType)] =
     for {
       response <-
-        tracing.root("searchStillImageRepresentations") {
+        tracing.span("searchStillImageRepresentations") {
           for {
             result <-
               searchResponderV2.searchStillImageRepresentationsV2(
@@ -143,7 +143,7 @@ final case class SearchRestService(
   ): Task[(RenderedResponse, MediaType)] =
     for {
       response <-
-        tracing.root("searchStillImageRepresentationsCount") {
+        tracing.span("searchStillImageRepresentationsCount") {
           for {
             result <-
               searchResponderV2.searchStillImageRepresentationsCountV2(
@@ -164,7 +164,7 @@ final case class SearchRestService(
   ): Task[(RenderedResponse, MediaType)] =
     for {
       response <-
-        tracing.root("searchIncomingRegions") {
+        tracing.span("searchIncomingRegions") {
           for {
             searchResult <-
               searchResponderV2.searchIncomingRegionsV2(
