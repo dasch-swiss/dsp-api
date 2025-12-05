@@ -15,7 +15,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.ontology.api.LastModificationDate
 
-object DeletePropertyCommentsSpec extends ZIOSpecDefault {
+object DeletePropertyCommentsQuerySpec extends ZIOSpecDefault {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -61,7 +61,7 @@ object DeletePropertyCommentsSpec extends ZIOSpecDefault {
              |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { anything:hasName rdfs:comment ?comments .
              |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
              |anything:hasLinkValue rdfs:comment ?comments . } }
-             |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "${instant}"^^xsd:dateTime . } }
+             |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "$instant"^^xsd:dateTime . } }
              |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
              |    knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
              |anything:hasName rdfs:comment ?comments . } }""".stripMargin,
@@ -85,7 +85,7 @@ object DeletePropertyCommentsSpec extends ZIOSpecDefault {
              |PREFIX incunabula: <http://www.knora.org/ontology/0803/incunabula#>
              |DELETE { GRAPH <http://www.knora.org/ontology/0803/incunabula> { incunabula:title rdfs:comment ?comments .
              |<http://www.knora.org/ontology/0803/incunabula> knora-base:lastModificationDate "2024-06-20T14:45:30Z"^^xsd:dateTime . } }
-             |INSERT { GRAPH <http://www.knora.org/ontology/0803/incunabula> { <http://www.knora.org/ontology/0803/incunabula> knora-base:lastModificationDate "${instant}"^^xsd:dateTime . } }
+             |INSERT { GRAPH <http://www.knora.org/ontology/0803/incunabula> { <http://www.knora.org/ontology/0803/incunabula> knora-base:lastModificationDate "$instant"^^xsd:dateTime . } }
              |WHERE { GRAPH <http://www.knora.org/ontology/0803/incunabula> { <http://www.knora.org/ontology/0803/incunabula> a owl:Ontology ;
              |    knora-base:lastModificationDate "2024-06-20T14:45:30Z"^^xsd:dateTime .
              |incunabula:title rdfs:comment ?comments . } }""".stripMargin,
