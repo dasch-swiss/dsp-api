@@ -149,7 +149,7 @@ final case class OntologiesRestService(
   ): Task[(RenderedResponse, MediaType)] = for {
     classIri <- iriConverter.asResourceClassIri(classIri.value).mapError(BadRequestException.apply)
     uuid     <- Random.nextUUID()
-    result   <- ontologyResponder.deleteClassComment(classIri, lastModificationDate.value, uuid, user)
+    result   <- ontologyResponder.deleteClassComment(classIri, lastModificationDate, uuid, user)
     response <- renderer.render(result, formatOptions)
   } yield response
 

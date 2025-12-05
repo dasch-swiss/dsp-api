@@ -55,6 +55,7 @@ import org.knora.webapi.slice.ontology.repo.ChangeClassLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
 import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
+import org.knora.webapi.slice.ontology.repo.DeleteClassCommentsQuery
 import org.knora.webapi.slice.ontology.repo.DeleteOntologyCommentQuery
 import org.knora.webapi.slice.ontology.repo.DeleteOntologyQuery
 import org.knora.webapi.slice.ontology.repo.DeletePropertyCommentsQuery
@@ -1864,28 +1865,14 @@ final case class OntologyResponderV2(
    */
   def deleteClassComment(
     classIri: ResourceClassIri,
-    lastModificationDate: Instant,
+    lastModificationDate: LastModificationDate,
     apiRequestID: UUID,
     requestingUser: User,
-  ): Task[ReadOntologyV2] = {
-    val ontologyIri       = classIri.ontologyIri
-    val deleteCommentTask = for {
-      currentTime <- Clock.instant
-      updateSparql = sparql.v2.txt
-                       .deleteClassComment(
-                         ontologyNamedGraphIri = ontologyIri.toInternalSchema,
-                         ontologyIri = ontologyIri.toInternalSchema,
-                         classIri = classIri.toInternalSchema,
-                         lastModificationDate = lastModificationDate,
-                         currentTime = currentTime,
-                       )
-      _ <- save(Update(updateSparql))
-    } yield ()
-
+  ): Task[ReadOntologyV2] = IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI) {
     for {
-      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(classIri.ontologyIri, lastModificationDate)
       _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
-             ontologyIri.toComplexSchema,
+             classIri.ontologyIri.toComplexSchema,
              classIri.toComplexSchema,
              requestingUser,
            )
@@ -1893,7 +1880,8 @@ final case class OntologyResponderV2(
                          .findClassBy(classIri)
                          .someOrFail(NotFoundException(s"Class ${classIri.toComplexSchema} not found"))
       hasComment = classToUpdate.entityInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)
-      _         <- IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteCommentTask).when(hasComment)
+      query     <- DeleteClassCommentsQuery.build(classIri, lastModificationDate)
+      _         <- save(Update(query)).when(hasComment)
       response  <- ontologyCacheHelpers.getClassAsReadOntologyV2(classIri, allLanguages = true, requestingUser)
     } yield response
   }
