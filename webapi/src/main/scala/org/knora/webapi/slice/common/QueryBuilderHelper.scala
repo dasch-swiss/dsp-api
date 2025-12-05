@@ -101,4 +101,6 @@ trait QueryBuilderHelper {
 
   def spo: (Variable, Variable, Variable) = (variable("s"), variable("p"), variable("o"))
 
+  def NS(ontologyIri: OntologyIri): SimpleNamespace =
+    SimpleNamespace(ontologyIri.ontologyName.value, ontologyIri.toInternalSchema.toString + "#")
 }
