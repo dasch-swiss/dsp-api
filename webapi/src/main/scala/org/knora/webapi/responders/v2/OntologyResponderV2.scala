@@ -57,6 +57,7 @@ import org.knora.webapi.slice.ontology.repo.CreateClassQuery
 import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
 import org.knora.webapi.slice.ontology.repo.DeleteOntologyCommentQuery
 import org.knora.webapi.slice.ontology.repo.DeleteOntologyQuery
+import org.knora.webapi.slice.ontology.repo.DeletePropertyQuery
 import org.knora.webapi.slice.ontology.repo.UpdateOntologyMetadataQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
@@ -1362,22 +1363,19 @@ final case class OntologyResponderV2(
            }
 
       // Delete the property from the triplestore.
-      currentTime <- Clock.instant
-      updateSparql = sparql.v2.txt.deleteProperty(
-                       ontologyNamedGraphIri = internalOntologyIri,
-                       ontologyIri = internalOntologyIri,
-                       propertyIri = internalPropertyIri,
-                       maybeLinkValuePropertyIri = maybeInternalLinkValuePropertyIri,
-                       lastModificationDate = lastModificationDate,
-                       currentTime = currentTime,
-                     )
-      _ <- save(Update(updateSparql))
+      currentTimeAndQuery <- DeletePropertyQuery.build(
+                               propertyIri,
+                               maybeInternalLinkValuePropertyIri.map(PropertyIri.unsafeFrom),
+                               LastModificationDate.from(lastModificationDate),
+                             )
+      (currentTime, query) = currentTimeAndQuery
+      _                   <- save(Update(query))
 
       propertiesToRemoveFromCache = Set(internalPropertyIri) ++ maybeInternalLinkValuePropertyIri
       updatedOntology             =
         ontology.copy(
           ontologyMetadata = ontology.ontologyMetadata.copy(
-            lastModificationDate = Some(currentTime),
+            lastModificationDate = Some(currentTime.value),
           ),
           properties = ontology.properties -- propertiesToRemoveFromCache,
         )
