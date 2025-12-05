@@ -10,11 +10,14 @@ import zio.*
 import zio.ZLayer
 
 import scala.collection.immutable.ListMap
+import scala.util.chaining.scalaUtilChainingOps
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoADM
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
@@ -60,69 +63,58 @@ final case class ExportService(
                          skipRetrievalChecks = true,
                        )
 
-      headers          <- rowHeaders(selectedProperties, language, includeIris)
+      propertyIriInfos <- propertyIriInfos(selectedProperties)
+      labelSmartIri    <- iriConverter.asSmartIri(OntologyConstants.Rdfs.Label)
+      propsWithInfos    = selectedProperties.map(p => (p, propertyIriInfos.get(p)))
+      headers           = rowHeaders(propsWithInfos, labelSmartIri, language, includeIris)
+
       rootVocabularies <- listsResponder.getLists(Some(Left(project.id)))
       vocabularies     <- ZIO.foreach(rootVocabularies.lists)(rootVocabularyLabels(_, language)).map(_.foldK)
       resourcesMap      = readResources.resourcesMap // must be cached
     } yield ExportedCsv(
       headers,
       readResources.resources.toList.sortBy(_.label).map {
-        exportSingleRow(_, selectedProperties, includeIris, resourcesMap, vocabularies)
+        exportSingleRow(_, propsWithInfos, includeIris, resourcesMap, vocabularies)
       },
     )
-
-  private def rootVocabularyLabels(list: ListRootNodeInfoADM, language: LanguageCode): Task[Map[String, String]] =
-    listsResponder.listGetRequestADM(ListIri.unsafeFrom(list.id)).map(_.toIriLabelMap(language.value))
 
   def toCsv(csv: ExportedCsv): Task[String] =
     ZIO.scoped(csvService.writeToString(csv.rows)(using csv.rowBuilder))
 
+  private def rootVocabularyLabels(list: ListRootNodeInfoADM, language: LanguageCode): Task[Map[String, String]] =
+    listsResponder
+      .listGetRequestADM(ListIri.unsafeFrom(list.id))
+      .map(_.toIriLabelMap(language.value))
+
+  private def propertyIriInfos(
+    propertyIris: List[PropertyIri],
+  ): Task[Map[PropertyIri, ReadPropertyInfoV2]] =
+    ZIO
+      .foreach(propertyIris)(i => ontologyRepo.findProperty(i).map(_.map(i -> _)))
+      .map(_.foldMapK(_.toMap))
+
   // NOTE: hidden invariant: if `includeIris`, then both rowHeaders and exportSingleRow must duplicate the IRI rows
   private def rowHeaders(
-    selectedProperties: List[PropertyIri],
+    propsWithInfo: List[(PropertyIri, Option[ReadPropertyInfoV2])],
+    labelSmartIri: SmartIri,
     language: LanguageCode,
     includeIris: Boolean,
-  ): Task[List[String]] =
-    propertyLabelsTranslated(selectedProperties, language, includeIris).map(labels =>
-      "Resource IRI" +: "Label" +: labels,
-    )
+  ): List[String] =
+    propsWithInfo.map { (propertyIri: PropertyIri, info: Option[ReadPropertyInfoV2]) =>
+      val labelsMap = info.map(_.entityInfoContent.getPredicateObjectsWithLangs(labelSmartIri)).foldK
 
-  private def propertyLabelsTranslated(
-    propertyIris: List[PropertyIri],
-    language: LanguageCode,
-    includeIris: Boolean,
-  ): Task[List[String]] =
-    ZIO
-      .foreach(propertyIris) { propertyIri =>
-        ontologyRepo
-          .findProperty(propertyIri)
-          .flatMap { propertyInfo =>
-            propertyInfo match {
-              case Some(info) =>
-                iriConverter
-                  .asSmartIri(OntologyConstants.Rdfs.Label)
-                  .map(info.entityInfoContent.getPredicateObjectsWithLangs(_))
-                  .map(labelsMap =>
-                    labelsMap
-                      .get(language.value)
-                      .orElse(labelsMap.get(LanguageCode.EN.value))
-                      .orElse(labelsMap.values.headOption)
-                      .getOrElse(propertyIri.toString),
-                  )
-                  .map(name =>
-                    if (info.isLinkValueProp) List(name) ++ List(s"${name} IRI").filter(_ => includeIris)
-                    else List(name),
-                  )
-              case None =>
-                ZIO.succeed(List(propertyIri.toString))
-            }
-          }
-      }
-      .map(_.flatten)
+      val name = labelsMap
+        .get(language.value)
+        .orElse(labelsMap.get(LanguageCode.EN.value))
+        .orElse(labelsMap.values.headOption)
+        .getOrElse(propertyIri.toString)
+      List(name) ++ (if (info.exists(_.isLinkValueProp) && includeIris) List(s"${name} IRI") else List.empty)
+    }
+      .pipe("Resource IRI" +: "Label" +: _.flatten)
 
   private def exportSingleRow(
     resource: ReadResourceV2,
-    selectedProperties: List[PropertyIri],
+    propsWithInfo: List[(PropertyIri, Option[ReadPropertyInfoV2])],
     includeIris: Boolean,
     resources: Map[IRI, ReadResourceV2],
     vocabularies: Map[String, String],
@@ -131,10 +123,11 @@ final case class ExportService(
       ListMap("Resource IRI" -> resource.resourceIri.toString) ++
         ListMap("Label" -> resource.label) ++
         ListMap.from(
-          selectedProperties.flatMap { property =>
+          propsWithInfo.flatMap { (propertyIri: PropertyIri, info: Option[ReadPropertyInfoV2]) =>
             valueColumns(
-              property,
-              resource.values.get(property.smartIri.toInternalSchema).foldK.map(_.valueContent),
+              propertyIri,
+              info,
+              resource.values.get(propertyIri.smartIri.toInternalSchema).foldK.map(_.valueContent),
               includeIris,
               resources,
               vocabularies,
@@ -147,32 +140,36 @@ final case class ExportService(
 
   private def valueColumns(
     property: PropertyIri,
+    info: Option[ReadPropertyInfoV2],
     vcs: Seq[ValueContentV2],
     includeIris: Boolean,
     resources: Map[IRI, ReadResourceV2],
     vocabularies: Map[String, String],
-  ): ListMap[String, List[String]] =
-    Some(vcs)
-      .filter(_.nonEmpty)
-      .map { vcs =>
-        vcs.map { vc =>
-          vc match
-            case gvc: GeonameValueContentV2 =>
-              ListMap(property.smartIri.toString -> List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
-            case lvc: HierarchicalListValueContentV2 =>
-              ListMap(property.smartIri.toString -> List(vocabularies.get(lvc.valueHasString).getOrElse("")))
-            case lvc: LinkValueContentV2 =>
-              val resource    = lvc.nestedResource.orElse(resources.get(lvc.referredResourceIri))
-              val propertyIri = property.smartIri.toString
-              List(
-                ListMap(propertyIri -> List(resource.map(_.label).getOrElse(""))),
-                ListMap(s"${propertyIri}_IRI" -> List(stringFormat(vc.valueHasString))).filter(_ => includeIris),
-              ).fold(ListMap.empty)(_ ++ _)
-            case vc =>
-              ListMap(property.smartIri.toString -> List(stringFormat(vc.valueHasString)))
-        }.fold(ListMap.empty)(_ ++ _)
-      }
-      .getOrElse(ListMap(property.smartIri.toString -> List()))
+  ): ListMap[String, List[String]] = {
+    val propertyIri = property.smartIri.toString
+    vcs.map { vc =>
+      vc match
+        case gvc: GeonameValueContentV2 =>
+          ListMap(propertyIri -> List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
+        case lvc: HierarchicalListValueContentV2 =>
+          ListMap(propertyIri -> List(vocabularies.get(lvc.valueHasString).getOrElse("")))
+        case lvc: LinkValueContentV2 =>
+          val resource = lvc.nestedResource.orElse(resources.get(lvc.referredResourceIri))
+          List(
+            ListMap(propertyIri -> List(resource.map(_.label).getOrElse(""))),
+            ListMap(s"${propertyIri}_IRI" -> List(stringFormat(vc.valueHasString))).filter(_ => includeIris),
+          ).fold(ListMap.empty)(_ ++ _)
+        case vc =>
+          ListMap(propertyIri -> List(stringFormat(vc.valueHasString)))
+    }.fold(ListMap.empty)(_ ++ _) match {
+      case listMap if listMap.nonEmpty =>
+        listMap
+      case _ if info.exists(_.isLinkValueProp) =>
+        ListMap(propertyIri -> List(), s"${propertyIri}_IRI" -> List())
+      case _ =>
+        ListMap(propertyIri -> List())
+    }
+  }
 
   private def stringFormat(s: String): String =
     s.replaceAll("\n", "\\\\n").replaceAll("\u001e", " ")
