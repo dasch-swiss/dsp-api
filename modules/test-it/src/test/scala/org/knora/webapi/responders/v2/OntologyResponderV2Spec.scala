@@ -45,6 +45,7 @@ import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.ontology.api.ChangeGuiOrderRequestV2
 import org.knora.webapi.slice.ontology.api.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
+import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.slice.ontology.api.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -5089,7 +5090,8 @@ case class LastModRef(private var value: Instant) {
   }
 }
 object LastModRef {
-  given Conversion[LastModRef, Instant]        = _.value
-  def make: LastModRef                         = LastModRef(Instant.now)
-  def unsafeFrom(dateTime: String): LastModRef = LastModRef(Instant.parse(dateTime))
+  given Conversion[LastModRef, Instant]              = _.value
+  given Conversion[LastModRef, LastModificationDate] = value => LastModificationDate.from(value.value)
+  def make: LastModRef                               = LastModRef(Instant.now)
+  def unsafeFrom(dateTime: String): LastModRef       = LastModRef(Instant.parse(dateTime))
 }

@@ -149,7 +149,7 @@ final case class OntologiesRestService(
   ): Task[(RenderedResponse, MediaType)] = for {
     classIri <- iriConverter.asResourceClassIri(classIri.value).mapError(BadRequestException.apply)
     uuid     <- Random.nextUUID()
-    result   <- ontologyResponder.deleteClassComment(classIri, lastModificationDate.value, uuid, user)
+    result   <- ontologyResponder.deleteClassComment(classIri, lastModificationDate, uuid, user)
     response <- renderer.render(result, formatOptions)
   } yield response
 
@@ -294,7 +294,7 @@ final case class OntologiesRestService(
   ): Task[(RenderedResponse, MediaType)] = for {
     propertyIri <- iriConverter.asPropertyIri(propertyIri.value).mapError(BadRequestException.apply)
     uuid        <- Random.nextUUID()
-    result      <- ontologyResponder.deletePropertyComment(propertyIri, lastModificationDate.value, uuid, user)
+    result      <- ontologyResponder.deletePropertyComment(propertyIri, lastModificationDate, uuid, user)
     response    <- renderer.render(result, formatOptions)
   } yield response
 
