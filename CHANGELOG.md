@@ -1,5 +1,38 @@
 # Changelog
 
+## [33.2.0](https://github.com/dasch-swiss/dsp-api/compare/v33.1.1...v33.2.0) (2025-12-06)
+
+
+### Maintenances
+
+* Migrate canDeleteList query to rdf4j (DEV-5651) ([#3878](https://github.com/dasch-swiss/dsp-api/issues/3878)) ([0d55646](https://github.com/dasch-swiss/dsp-api/commit/0d55646e4bb2f9a12e4e45ea07cef634124a9f23))
+* Migrate changeParentNode query to rdf4j (DEV-5661) ([#3887](https://github.com/dasch-swiss/dsp-api/issues/3887)) ([8cd69f0](https://github.com/dasch-swiss/dsp-api/commit/8cd69f0cb98e462e9472d94a51a71388b40b4564))
+* Migrate check ListNode exists queries to rdf4j (DEV-5666) ([#3890](https://github.com/dasch-swiss/dsp-api/issues/3890)) ([5437868](https://github.com/dasch-swiss/dsp-api/commit/54378686540a364c63f26dc53a1a156a952e21ab))
+* Migrate DeletePropertyComment & DeleteClassCommentsQuery queries to rdf4j ([#3898](https://github.com/dasch-swiss/dsp-api/issues/3898)) ([a7bf62e](https://github.com/dasch-swiss/dsp-api/commit/a7bf62e95030fdf49037a4b9c314b552185e9435))
+* Migrate DeletePropertyQuery to rdf4j ([#3897](https://github.com/dasch-swiss/dsp-api/issues/3897)) ([b97edd8](https://github.com/dasch-swiss/dsp-api/commit/b97edd8cec215be7ffb8677575de005ba26725f1))
+* Migrate getAllOntologyMetadata to rdf4j (DEV-5668) ([#3891](https://github.com/dasch-swiss/dsp-api/issues/3891)) ([aced342](https://github.com/dasch-swiss/dsp-api/commit/aced3421bb290c6a1f8f6058885045370caed19d))
+* Migrate GetOntologyGraphQuery and DeleteOntologyQuery to rdf4j (DEV-5673) ([#3894](https://github.com/dasch-swiss/dsp-api/issues/3894)) ([bfb840c](https://github.com/dasch-swiss/dsp-api/commit/bfb840c5be624868fc2058e5d213da3dbf56309b))
+* Migrate isPropertyUsed query to rdf4j (DEV-5658) ([#3886](https://github.com/dasch-swiss/dsp-api/issues/3886)) ([3039ed2](https://github.com/dasch-swiss/dsp-api/commit/3039ed2880b9dace2117196164fb5dc0bbeaf253))
+* Migrate updateNodePosition query to rdf4j (DEV-5670) ([#3893](https://github.com/dasch-swiss/dsp-api/issues/3893)) ([04d9ddb](https://github.com/dasch-swiss/dsp-api/commit/04d9ddb4894d9669854c7857273968f16162bd24))
+* Remove Sentry dependencies (DEV-5672) ([#3895](https://github.com/dasch-swiss/dsp-api/issues/3895)) ([2dd5357](https://github.com/dasch-swiss/dsp-api/commit/2dd5357c00465322a3b11580df7f3ee5350bfb53))
+* Turn root spans into normal spans ([#3896](https://github.com/dasch-swiss/dsp-api/issues/3896)) ([4eeee75](https://github.com/dasch-swiss/dsp-api/commit/4eeee758aea7c58886160718a07924a012d833bf))
+
+
+### Documentation
+
+* Add permissions of endpoints to OpenAPI Swagger docs (DEV-5663) ([#3888](https://github.com/dasch-swiss/dsp-api/issues/3888)) ([3869cc9](https://github.com/dasch-swiss/dsp-api/commit/3869cc9fec3f798f309970cf4b4b42325e85dee6))
+
+
+### Enhancements
+
+* ExportService: fixes to enable exporting EKWS resource classes (DEV-5650) ([#3884](https://github.com/dasch-swiss/dsp-api/issues/3884)) ([d99289b](https://github.com/dasch-swiss/dsp-api/commit/d99289bab1bda136ad5a55d1a64d56131bb5c999))
+* Propagate trace id from http request OpenTelemetry (DEV-5672) ([#3889](https://github.com/dasch-swiss/dsp-api/issues/3889)) ([a7753d2](https://github.com/dasch-swiss/dsp-api/commit/a7753d2696e10862295945015c05dc719986d076))
+
+
+### Bug Fixes
+
+* CSV export skipping columns fix (DEV-5671) ([#3899](https://github.com/dasch-swiss/dsp-api/issues/3899)) ([30fd3c8](https://github.com/dasch-swiss/dsp-api/commit/30fd3c86dd0711305ad389db07dcb765011134f7))
+
 ## [33.1.1](https://github.com/dasch-swiss/dsp-api/compare/v33.1.0...v33.1.1) (2025-12-01)
 
 
