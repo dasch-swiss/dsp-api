@@ -8,8 +8,8 @@ import sttp.tapir.ztapir.ZServerEndpoint
 import zio.ZLayer
 
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationServerEndpoints
+import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
 import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
-import org.knora.webapi.slice.lists.api.ListsV2ServerEndpoints
 import org.knora.webapi.slice.ontology.api.OntologiesServerEndpoints
 import org.knora.webapi.slice.resources.api.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints

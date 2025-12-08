@@ -36,7 +36,6 @@ import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OpenTelemetry
-import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.resources.ResourcesModule
@@ -77,7 +76,6 @@ object LayersLive { self =>
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     IriService &
-    ListsApiModule.Provided &
     ListsResponder &
     MessageRelay &
     OntologyApiModule.Provided &
@@ -130,7 +128,6 @@ object LayersLive { self =>
       InfrastructureModule.layer,
       IriService.layer,
       KnoraResponseRenderer.layer,
-      ListsApiModule.layer,
       ListsResponder.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,

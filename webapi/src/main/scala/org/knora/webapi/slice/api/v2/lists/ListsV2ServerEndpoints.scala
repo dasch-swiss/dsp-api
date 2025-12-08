@@ -3,17 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.lists.api
+package org.knora.webapi.slice.api.v2.lists
 
 import sttp.tapir.ztapir.*
 import zio.*
 
-import org.knora.webapi.slice.lists.api.service.ListsV2RestService
+final class ListsV2ServerEndpoints(endpoints: ListsEndpointsV2, restService: ListsV2RestService) {
 
-final case class ListsV2ServerEndpoints(
-  private val endpoints: ListsEndpointsV2,
-  private val restService: ListsV2RestService,
-) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getV2Lists.serverLogic(restService.getList),
     endpoints.getV2Node.serverLogic(restService.getNode),
@@ -21,5 +17,6 @@ final case class ListsV2ServerEndpoints(
 }
 
 object ListsV2ServerEndpoints {
-  val layer = ZLayer.derive[ListsV2ServerEndpoints]
+  val layer =
+    ListsEndpointsV2.layer >+> ListsV2RestService.layer >>> ZLayer.derive[ListsV2ServerEndpoints]
 }

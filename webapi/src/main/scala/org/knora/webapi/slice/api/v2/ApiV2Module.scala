@@ -7,13 +7,14 @@ package org.knora.webapi.slice.api.v2
 import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationServerEndpoints
+import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
 import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.lists.api.ListsV2ServerEndpoints
 import org.knora.webapi.slice.ontology.api.OntologiesServerEndpoints
 import org.knora.webapi.slice.resources.api.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
@@ -28,7 +29,7 @@ object ApiV2Module {
     BaseEndpoints &
     IriConverter &
     KnoraResponseRenderer &
-    ListsV2ServerEndpoints &
+    ListsResponder &
     OntologiesServerEndpoints &
     ResourceInfoServerEndpoints &
     ResourcesApiServerEndpoints &
@@ -38,5 +39,8 @@ object ApiV2Module {
 
   type Provided = ApiV2ServerEndpoints
 
-  val layer = SearchServerEndpoints.layer >+> AuthenticationServerEndpoints.layer >>> ApiV2ServerEndpoints.layer
+  val layer = AuthenticationServerEndpoints.layer >+>
+    ListsV2ServerEndpoints.layer >+>
+    SearchServerEndpoints.layer >>>
+    ApiV2ServerEndpoints.layer
 }
