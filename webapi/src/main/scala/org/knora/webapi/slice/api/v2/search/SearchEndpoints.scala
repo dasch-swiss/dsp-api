@@ -56,7 +56,7 @@ object SearchEndpointsInputs {
     query[Boolean]("returnFiles").description("Whether to return files in the search results.").default(false)
 }
 
-final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
+final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val gravsearchDescription =
     "The Gravsearch query. See https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/query-language/"

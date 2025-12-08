@@ -23,7 +23,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.service.IriConverter
 
-final case class SearchRestService(
+final class SearchRestService(
   searchResponderV2: SearchResponderV2,
   renderer: KnoraResponseRenderer,
   iriConverter: IriConverter,
