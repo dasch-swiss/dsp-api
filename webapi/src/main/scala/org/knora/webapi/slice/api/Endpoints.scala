@@ -10,9 +10,9 @@ import sttp.tapir.ztapir.*
 import zio.*
 
 import org.knora.webapi.slice.admin.api.AdminApiServerEndpoints
+import org.knora.webapi.slice.api.management.ManagementServerEndpoints
 import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
 import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
-import org.knora.webapi.slice.infrastructure.api.ManagementServerEndpoints
 import org.knora.webapi.slice.shacl.api.ShaclServerEndpoints
 
 final class Endpoints(

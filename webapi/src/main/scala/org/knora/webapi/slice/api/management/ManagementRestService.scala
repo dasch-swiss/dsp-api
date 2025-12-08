@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.infrastructure.api
+package org.knora.webapi.slice.api.management
 
 import sttp.model.StatusCode
 import zio.*
@@ -15,11 +15,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-final case class ManagementRestService(
-  private val auth: AuthorizationRestService,
-  private val state: State,
-  private val triplestore: TriplestoreService,
-) {
+final class ManagementRestService(auth: AuthorizationRestService, state: State, triplestore: TriplestoreService) {
 
   def healthCheck: UIO[(HealthResponse, StatusCode)] =
     state.getAppState.map { s =>
@@ -33,5 +29,5 @@ final case class ManagementRestService(
 }
 
 object ManagementRestService {
-  val layer = ZLayer.derive[ManagementRestService]
+  private[management] val layer = ZLayer.derive[ManagementRestService]
 }
