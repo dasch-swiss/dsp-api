@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.api.v2.search.api
+package org.knora.webapi.slice.api.v2.search
 
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
@@ -15,11 +15,10 @@ import zio.ZLayer
 
 import dsp.valueobjects.Iri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v2.search.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.*
-
-import SearchEndpointsInputs.InputIri
 
 object SearchEndpointsInputs {
 

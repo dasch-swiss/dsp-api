@@ -7,7 +7,7 @@ package org.knora.webapi.slice.api.v2
 import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.slice.api.v2.search.api.SearchServerEndpoints
+import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.service.IriConverter

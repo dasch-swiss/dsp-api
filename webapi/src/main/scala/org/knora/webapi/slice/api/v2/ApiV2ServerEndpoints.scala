@@ -8,7 +8,7 @@ package org.knora.webapi.slice.api.v2
 import sttp.tapir.ztapir.ZServerEndpoint
 import zio.ZLayer
 
-import org.knora.webapi.slice.api.v2.search.api.SearchServerEndpoints
+import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
 import org.knora.webapi.slice.lists.api.ListsV2ServerEndpoints
 import org.knora.webapi.slice.ontology.api.OntologiesServerEndpoints
 import org.knora.webapi.slice.resources.api.ResourceInfoServerEndpoints

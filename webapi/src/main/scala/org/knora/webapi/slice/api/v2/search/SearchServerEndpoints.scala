@@ -3,15 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.api.v2.search.api
+package org.knora.webapi.slice.api.v2.search
 
 import sttp.tapir.ztapir.*
 import zio.*
 
+import org.knora.webapi.slice.api.v2.search.SearchEndpointsInputs.Offset
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-
-import SearchEndpointsInputs.Offset
 
 final case class SearchServerEndpoints(
   private val searchEndpoints: SearchEndpoints,
