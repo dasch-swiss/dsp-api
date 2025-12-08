@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.security.api
+package org.knora.webapi.slice.api.v2.authentication
 
 import zio.json.*
 import zio.test.ZIOSpecDefault
