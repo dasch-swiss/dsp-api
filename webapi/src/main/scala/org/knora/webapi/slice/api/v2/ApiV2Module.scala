@@ -4,8 +4,26 @@
  */
 
 package org.knora.webapi.slice.api.v2
+import org.knora.webapi.slice.lists.api.ListsV2ServerEndpoints
+import org.knora.webapi.slice.ontology.api.OntologiesServerEndpoints
+import org.knora.webapi.slice.resources.api.ResourceInfoServerEndpoints
+import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
+import org.knora.webapi.slice.search.api.SearchServerEndpoints
+import org.knora.webapi.slice.security.api.AuthenticationServerEndpoints
 
 object ApiV2Module {
+
+  type Dependencies =
+    // format: off
+    AuthenticationServerEndpoints &
+    ListsV2ServerEndpoints &
+    OntologiesServerEndpoints &
+    ResourceInfoServerEndpoints &
+    ResourcesApiServerEndpoints &
+    SearchServerEndpoints
+    // format: on
+
+  type Provided = ApiV2ServerEndpoints
 
   val layer = ApiV2ServerEndpoints.layer
 }
