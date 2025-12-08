@@ -10,7 +10,7 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import org.knora.webapi.slice.admin.domain.model.*
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload
 
 object LoginPayloadSpec extends ZIOSpecDefault {
 

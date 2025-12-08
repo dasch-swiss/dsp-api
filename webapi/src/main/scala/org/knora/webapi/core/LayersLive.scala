@@ -49,7 +49,6 @@ import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.security.SecurityModule
-import org.knora.webapi.slice.security.api.AuthenticationApiModule
 import org.knora.webapi.slice.shacl.ShaclModule
 import org.knora.webapi.slice.shacl.api.ShaclApiModule
 import org.knora.webapi.slice.shacl.api.ShaclEndpoints
@@ -72,7 +71,6 @@ object LayersLive { self =>
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
     AssetPermissionsResponder &
-    AuthenticationApiModule.Provided &
     AuthorizationRestService &
     CardinalityHandler &
     CommonModule.Provided &
@@ -123,7 +121,6 @@ object LayersLive { self =>
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
       AssetPermissionsResponder.layer,
-      AuthenticationApiModule.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CardinalityHandler.layer,
