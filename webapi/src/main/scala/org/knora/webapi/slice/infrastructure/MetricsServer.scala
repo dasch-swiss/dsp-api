@@ -20,7 +20,7 @@ import org.knora.webapi.config.InstrumentationServerConfig
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.core.State
 import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.routing.Endpoints
+import org.knora.webapi.slice.api.Endpoints
 import org.knora.webapi.slice.infrastructure.api.PrometheusRoutes
 
 object MetricsServer {

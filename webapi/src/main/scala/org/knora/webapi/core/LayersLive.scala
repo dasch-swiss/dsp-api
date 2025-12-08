@@ -25,11 +25,11 @@ import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
-import org.knora.webapi.routing.*
 import org.knora.webapi.slice.`export`.api.ExportApiModule
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.api.ApiModule
 import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
 import org.knora.webapi.slice.api.v3.ApiV3Module
 import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
@@ -47,7 +47,6 @@ import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
-import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
@@ -72,6 +71,7 @@ object LayersLive { self =>
    */
   type Environment =
     // format: off
+    ApiModule.Dependencies &
     AdminApiModule.Provided &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
@@ -83,7 +83,6 @@ object LayersLive { self =>
     ConstructResponseUtilV2 &
     CreateResourceV2Handler &
     DefaultObjectAccessPermissionService &
-    Endpoints &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     IriService &
@@ -102,11 +101,9 @@ object LayersLive { self =>
     ReadResourcesService &
     RepositoryUpdater &
     ResourceUtilV2 &
-    ResourcesApiServerEndpoints &
     ResourcesRepo &
     ResourcesResponderV2 &
     SearchResponderV2Module.Provided &
-    SearchServerEndpoints &
     SecurityModule.Provided &
     ShaclApiModule.Provided &
     ShaclEndpoints &
@@ -140,7 +137,6 @@ object LayersLive { self =>
       CommonModule.layer,
       ConstructResponseUtilV2.layer,
       DspIngestClient.layer,
-      Endpoints.layer,
       ExportApiModule.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,

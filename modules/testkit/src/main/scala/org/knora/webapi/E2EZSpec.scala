@@ -22,6 +22,7 @@ import org.knora.webapi.core.LayersLive
 import org.knora.webapi.core.TestContainerLayers
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.slice.api.ApiModule
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestClientsModule
@@ -42,11 +43,12 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
     testLogger >>>
       TestContainerLayers.all >+>
       LayersLive.remainingLayer >+>
+      ApiModule.layer >+>
       TestClientsModule.layer
 
   def rdfDataObjects: List[RdfDataObject] = List.empty
 
-  type env = E2EZSpec.Environment & Scope
+  type env = E2EZSpec.Environment  & Scope
 
   private def prepare = for {
     _ <- Db.initWithTestData(rdfDataObjects)
@@ -76,6 +78,7 @@ object E2EZSpec {
   type Environment =
     // format: off
     LayersLive.Environment &
+    ApiModule.Provided &
     TestClientsModule.Provided &
     TestContainerLayers.Environment
     // format: on

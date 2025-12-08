@@ -18,7 +18,7 @@ import zio.http.*
 import zio.http.Server.Config.ResponseCompressionConfig
 
 import org.knora.webapi.config.KnoraApi
-import org.knora.webapi.routing.Endpoints
+import org.knora.webapi.slice.api.Endpoints
 
 final class DspApiServer(
   server: Server,

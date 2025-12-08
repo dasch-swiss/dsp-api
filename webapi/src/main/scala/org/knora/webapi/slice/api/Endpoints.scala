@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.slice.api
 
 import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir.*
 import zio.*
 
-import org.knora.webapi.routing
 import org.knora.webapi.slice.admin.api.AdminApiServerEndpoints
 import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
 import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
@@ -30,6 +29,7 @@ final case class Endpoints(
       management.serverEndpoints ++
       shacl.serverEndpoints
 }
+
 object Endpoints {
-  val layer = ZLayer.derive[Endpoints]
+  private[api] val layer = ZLayer.derive[Endpoints]
 }
