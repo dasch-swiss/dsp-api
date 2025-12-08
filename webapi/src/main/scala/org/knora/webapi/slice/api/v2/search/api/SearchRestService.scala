@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.search.api
+package org.knora.webapi.slice.api.v2.search.api
 
 import io.opentelemetry.api.common.Attributes
 import sttp.model.MediaType
@@ -20,8 +20,9 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
+
+import SearchEndpointsInputs.InputIri
+import SearchEndpointsInputs.Offset
 
 final case class SearchRestService(
   searchResponderV2: SearchResponderV2,
@@ -225,5 +226,5 @@ final case class SearchRestService(
   } yield response
 }
 object SearchRestService {
-  val layer = ZLayer.derive[SearchRestService]
+  private[search] val layer = ZLayer.derive[SearchRestService]
 }

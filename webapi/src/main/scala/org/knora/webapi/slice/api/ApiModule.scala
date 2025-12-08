@@ -21,7 +21,5 @@ object ApiModule {
 
   type Provided = Endpoints
 
-  val layer: URLayer[Dependencies, Provided] =
-    (ApiV2Module.layer <*> ApiV3Module.layer)
-      >>> Endpoints.layer
+  val layer: URLayer[Dependencies, Provided] = (ApiV2Module.layer <*> ApiV3Module.layer) >>> Endpoints.layer
 }

@@ -48,7 +48,6 @@ import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
-import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
 import org.knora.webapi.slice.shacl.ShaclModule
@@ -161,7 +160,6 @@ object LayersLive { self =>
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
       SearchResponderV2Module.layer,
-      SearchServerEndpoints.layer,
       SecurityModule.layer,
       ShaclApiModule.layer,
       ShaclModule.layer,

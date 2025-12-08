@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.search.api
+package org.knora.webapi.slice.api.v2.search.api
 
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
@@ -18,7 +18,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.*
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
+
+import SearchEndpointsInputs.InputIri
 
 object SearchEndpointsInputs {
 
@@ -208,5 +209,5 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 }
 
 object SearchEndpoints {
-  val layer = ZLayer.derive[SearchEndpoints]
+  private[search] val layer = ZLayer.derive[SearchEndpoints]
 }
