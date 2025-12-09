@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.api
+package org.knora.webapi.slice.api.v2.ontologies
+
 import zio.*
 
 import org.knora.webapi.config.AppConfig
@@ -13,8 +14,6 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.ontology.api.service.OntologiesRestService
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -35,7 +34,7 @@ object OntologyApiModule { self =>
     StringFormatter
     // format: on
 
-  type Provided = OntologiesServerEndpoints & OntologiesEndpoints & OntologyV2RequestParser
+  type Provided = OntologiesServerEndpoints
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](

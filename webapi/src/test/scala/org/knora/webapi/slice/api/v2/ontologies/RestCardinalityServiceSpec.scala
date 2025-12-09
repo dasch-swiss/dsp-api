@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.api.service
+package org.knora.webapi.slice.api.v2.ontologies
 
 import zio.*
 import zio.test.*
@@ -14,10 +14,11 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService
+import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubCardinalitiesService.replaceSuccess
+import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubCardinalitiesService.setSuccess
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceSpec.StubCardinalitiesService.replaceSuccess
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceSpec.StubCardinalitiesService.setSuccess
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
 import org.knora.webapi.slice.ontology.domain.ReadOntologyV2Builder
 import org.knora.webapi.slice.ontology.domain.model.Cardinality

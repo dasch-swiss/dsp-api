@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.api
+package org.knora.webapi.slice.api.v2.ontologies
+
 import eu.timepit.refined.types.string.NonEmptyString
 import zio.*
 import zio.test.*
@@ -26,6 +27,9 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v2.ontologies.ChangeOntologyMetadataRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.CreateClassRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.OntologyV2RequestParser
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri

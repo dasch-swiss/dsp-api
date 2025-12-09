@@ -11,11 +11,12 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationServerEndpoints
 import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
+import org.knora.webapi.slice.api.v2.ontologies.OntologiesServerEndpoints
+import org.knora.webapi.slice.api.v2.ontologies.OntologyApiModule
 import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.ontology.api.OntologiesServerEndpoints
 import org.knora.webapi.slice.resources.api.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.security.Authenticator
@@ -30,9 +31,9 @@ object ApiV2Module {
     IriConverter &
     KnoraResponseRenderer &
     ListsResponder &
-    OntologiesServerEndpoints &
     ResourceInfoServerEndpoints &
     ResourcesApiServerEndpoints &
+    OntologyApiModule.Dependencies &
     SearchResponderV2 &
     Tracing
     // format: on
@@ -41,6 +42,7 @@ object ApiV2Module {
 
   val layer = AuthenticationServerEndpoints.layer >+>
     ListsV2ServerEndpoints.layer >+>
-    SearchServerEndpoints.layer >>>
+    SearchServerEndpoints.layer >+>
+    OntologyApiModule.layer >>>
     ApiV2ServerEndpoints.layer
 }

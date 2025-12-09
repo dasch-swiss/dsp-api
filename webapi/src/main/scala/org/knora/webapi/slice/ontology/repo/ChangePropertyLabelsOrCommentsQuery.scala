@@ -16,10 +16,10 @@ import zio.*
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
+import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
-import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 object ChangePropertyLabelsOrCommentsQuery extends QueryBuilderHelper {

@@ -3,18 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.api
+package org.knora.webapi.slice.api.v2.ontologies
 
 import sttp.tapir.ztapir.*
 import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.ontology.api.service.OntologiesRestService
 
-final class OntologiesServerEndpoints(
-  private val endpoints: OntologiesEndpoints,
-  private val restService: OntologiesRestService,
-) {
+final class OntologiesServerEndpoints(endpoints: OntologiesEndpoints, restService: OntologiesRestService) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     // GET
@@ -53,5 +49,5 @@ final class OntologiesServerEndpoints(
   )
 }
 object OntologiesServerEndpoints {
-  val layer = ZLayer.derive[OntologiesServerEndpoints]
+  private[ontologies] val layer = ZLayer.derive[OntologiesServerEndpoints]
 }

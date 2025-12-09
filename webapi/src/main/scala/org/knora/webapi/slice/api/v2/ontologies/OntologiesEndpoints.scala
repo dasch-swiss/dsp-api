@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.api
+package org.knora.webapi.slice.api.v2.ontologies
 
 import sttp.tapir.*
 import zio.ZLayer
@@ -30,7 +30,7 @@ object LastModificationDate {
     ValuesValidator.parseXsdDateTimeStamp(value).map(LastModificationDate.apply)
 }
 
-final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
+final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val base = "v2" / "ontologies"
 
   private val ontologyIriPath      = path[IriDto].name("ontologyIri")
@@ -296,5 +296,5 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 }
 
 object OntologiesEndpoints {
-  val layer = ZLayer.derive[OntologiesEndpoints]
+  private[ontologies] val layer = ZLayer.derive[OntologiesEndpoints]
 }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.api
+package org.knora.webapi.slice.api.v2.ontologies
 
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.jena.query.Dataset
@@ -59,7 +59,7 @@ import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
-final case class OntologyV2RequestParser(iriConverter: IriConverter) {
+final class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private final case class OntologyMetadata(
     ontologyIri: OntologyIri,
@@ -533,5 +533,5 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 }
 
 object OntologyV2RequestParser {
-  val layer = ZLayer.derive[OntologyV2RequestParser]
+  private[ontologies] val layer = ZLayer.derive[OntologyV2RequestParser]
 }

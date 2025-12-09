@@ -31,13 +31,13 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.InternalIri
-import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
 trait QueryBuilderHelper {

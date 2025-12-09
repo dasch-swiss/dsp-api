@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.api.service
+package org.knora.webapi.slice.api.v2.ontologies
 
 import zio.IO
 import zio.Task
@@ -20,11 +20,11 @@ import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.rdf.JsonLDValue
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService.classIriKey
+import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService.newCardinalityKey
+import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService.propertyIriKey
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.classIriKey
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.newCardinalityKey
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.propertyIriKey
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult
@@ -32,7 +32,7 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
-case class RestCardinalityService(
+final class RestCardinalityService(
   cardinalityService: CardinalityService,
   iriConverter: IriConverter,
   ontologyRepo: OntologyRepo,
@@ -153,7 +153,7 @@ object RestCardinalityService {
   val propertyIriKey: String    = "propertyIri"
   val newCardinalityKey: String = "newCardinality"
 
-  val layer = ZLayer.derive[RestCardinalityService]
+  private[ontologies] val layer = ZLayer.derive[RestCardinalityService]
 }
 
 private final case class PermissionService(ontologyRepo: OntologyRepo) {

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.api.service
+package org.knora.webapi.slice.api.v2.ontologies
 
 import sttp.model.MediaType
 import zio.*
@@ -20,28 +20,28 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
+import org.knora.webapi.slice.api.v2.ontologies.OntologyV2RequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.ontology.api.LastModificationDate
-import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.api.model.IriDto
 
-final case class OntologiesRestService(
-  private val auth: AuthorizationRestService,
-  private val iriConverter: IriConverter,
-  private val ontologiesRepo: OntologyRepo,
-  private val ontologyResponder: OntologyResponderV2,
-  private val ontologyCacheHelpers: OntologyCacheHelpers,
-  private val restCardinalityService: RestCardinalityService,
-  private val requestParser: OntologyV2RequestParser,
-  private val renderer: KnoraResponseRenderer,
-  private val sf: StringFormatter,
-  private val appConfig: AppConfig,
+final class OntologiesRestService(
+  auth: AuthorizationRestService,
+  iriConverter: IriConverter,
+  ontologiesRepo: OntologyRepo,
+  ontologyResponder: OntologyResponderV2,
+  ontologyCacheHelpers: OntologyCacheHelpers,
+  restCardinalityService: RestCardinalityService,
+  requestParser: OntologyV2RequestParser,
+  renderer: KnoraResponseRenderer,
+  sf: StringFormatter,
+  appConfig: AppConfig,
 ) {
 
   def dereferenceOntologyIri(user: User)(
@@ -382,5 +382,5 @@ final case class OntologiesRestService(
 }
 
 object OntologiesRestService {
-  val layer = ZLayer.derive[OntologiesRestService]
+  private[ontologies] val layer = ZLayer.derive[OntologiesRestService]
 }

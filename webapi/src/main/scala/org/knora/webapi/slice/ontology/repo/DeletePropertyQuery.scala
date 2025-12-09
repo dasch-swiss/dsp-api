@@ -12,10 +12,10 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import zio.*
 
+import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
-import org.knora.webapi.slice.ontology.api.LastModificationDate
 
 object DeletePropertyQuery extends QueryBuilderHelper {
 

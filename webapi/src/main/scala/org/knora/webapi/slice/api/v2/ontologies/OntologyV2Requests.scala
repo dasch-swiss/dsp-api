@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.api
+package org.knora.webapi.slice.api.v2.ontologies
+
 import eu.timepit.refined.types.string.NonEmptyString
 
 import java.time.Instant
