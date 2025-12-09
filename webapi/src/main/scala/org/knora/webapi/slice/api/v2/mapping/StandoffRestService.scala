@@ -11,12 +11,12 @@ import zio.*
 import dsp.errors.BadRequestException
 import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v2.mapping.CreateStandoffMappingForm
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.resources.api.CreateStandoffMappingForm
 
 case class StandoffRestService(
   private val auth: AuthorizationRestService,
