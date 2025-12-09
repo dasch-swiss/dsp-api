@@ -3,17 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.security.api
+package org.knora.webapi.slice.api.v2.authentication
+
 import sttp.tapir.ztapir.*
 import zio.*
 
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginForm
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.CheckResponse
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginForm
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload
 
-case class AuthenticationServerEndpoints(
-  private val restService: AuthenticationRestService,
-  private val endpoints: AuthenticationEndpointsV2,
+final class AuthenticationServerEndpoints(
+  restService: AuthenticationRestService,
+  endpoints: AuthenticationEndpointsV2,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getV2Authentication.serverLogic(_ => _ => ZIO.succeed(CheckResponse("credentials are OK"))),
@@ -25,5 +26,6 @@ case class AuthenticationServerEndpoints(
 }
 
 object AuthenticationServerEndpoints {
-  val layer = ZLayer.derive[AuthenticationServerEndpoints]
+  val layer =
+    AuthenticationEndpointsV2.layer >+> AuthenticationRestService.layer >>> ZLayer.derive[AuthenticationServerEndpoints]
 }

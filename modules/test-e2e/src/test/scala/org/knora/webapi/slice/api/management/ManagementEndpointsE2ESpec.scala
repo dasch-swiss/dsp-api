@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.infrastructure.api
+package org.knora.webapi.slice.api.management
 
 import sttp.client4.*
 import sttp.model.*
@@ -15,6 +15,8 @@ import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.api.management.HealthResponse
+import org.knora.webapi.slice.api.management.VersionResponse
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 

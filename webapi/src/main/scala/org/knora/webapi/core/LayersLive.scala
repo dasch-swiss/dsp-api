@@ -25,36 +25,26 @@ import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
-import org.knora.webapi.routing.*
 import org.knora.webapi.slice.`export`.api.ExportApiModule
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.domain.service.*
-import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
-import org.knora.webapi.slice.api.v3.ApiV3Module
-import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
+import org.knora.webapi.slice.api.ApiModule
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.CommonModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OpenTelemetry
-import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
-import org.knora.webapi.slice.infrastructure.api.ManagementRestService
-import org.knora.webapi.slice.infrastructure.api.ManagementServerEndpoints
-import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
-import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
-import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.SecurityModule
-import org.knora.webapi.slice.security.api.AuthenticationApiModule
 import org.knora.webapi.slice.shacl.ShaclModule
 import org.knora.webapi.slice.shacl.api.ShaclApiModule
 import org.knora.webapi.slice.shacl.api.ShaclEndpoints
@@ -72,22 +62,20 @@ object LayersLive { self =>
    */
   type Environment =
     // format: off
+    ApiModule.Dependencies &
     AdminApiModule.Provided &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
     AssetPermissionsResponder &
-    AuthenticationApiModule.Provided &
     AuthorizationRestService &
     CardinalityHandler &
     CommonModule.Provided &
     ConstructResponseUtilV2 &
     CreateResourceV2Handler &
     DefaultObjectAccessPermissionService &
-    Endpoints &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     IriService &
-    ListsApiModule.Provided &
     ListsResponder &
     MessageRelay &
     OntologyApiModule.Provided &
@@ -102,11 +90,9 @@ object LayersLive { self =>
     ReadResourcesService &
     RepositoryUpdater &
     ResourceUtilV2 &
-    ResourcesApiServerEndpoints &
     ResourcesRepo &
     ResourcesResponderV2 &
     SearchResponderV2Module.Provided &
-    SearchServerEndpoints &
     SecurityModule.Provided &
     ShaclApiModule.Provided &
     ShaclEndpoints &
@@ -129,10 +115,7 @@ object LayersLive { self =>
       AdminApiModule.layer,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
-      ApiV2ServerEndpoints.layer,
-      ApiV3Module.layer,
       AssetPermissionsResponder.layer,
-      AuthenticationApiModule.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CardinalityHandler.layer,
@@ -140,17 +123,12 @@ object LayersLive { self =>
       CommonModule.layer,
       ConstructResponseUtilV2.layer,
       DspIngestClient.layer,
-      Endpoints.layer,
       ExportApiModule.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
       IriService.layer,
       KnoraResponseRenderer.layer,
-      ListsApiModule.layer,
       ListsResponder.layer,
-      ManagementEndpoints.layer,
-      ManagementRestService.layer,
-      ManagementServerEndpoints.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,
       OntologyModule.layer,
@@ -170,7 +148,6 @@ object LayersLive { self =>
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
       SearchResponderV2Module.layer,
-      SearchServerEndpoints.layer,
       SecurityModule.layer,
       ShaclApiModule.layer,
       ShaclModule.layer,

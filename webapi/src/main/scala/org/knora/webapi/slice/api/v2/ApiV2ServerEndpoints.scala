@@ -4,16 +4,15 @@
  */
 
 package org.knora.webapi.slice.api.v2
-
 import sttp.tapir.ztapir.ZServerEndpoint
 import zio.ZLayer
 
-import org.knora.webapi.slice.lists.api.ListsV2ServerEndpoints
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationServerEndpoints
+import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
+import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
 import org.knora.webapi.slice.ontology.api.OntologiesServerEndpoints
 import org.knora.webapi.slice.resources.api.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
-import org.knora.webapi.slice.search.api.SearchServerEndpoints
-import org.knora.webapi.slice.security.api.AuthenticationServerEndpoints
 
 class ApiV2ServerEndpoints(
   private val authenticationServerEndpoints: AuthenticationServerEndpoints,

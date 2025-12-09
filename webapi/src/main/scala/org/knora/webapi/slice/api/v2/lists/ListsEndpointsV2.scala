@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.lists.api
+package org.knora.webapi.slice.api.v2.lists
 
 import sttp.tapir.*
 import zio.*
@@ -26,7 +26,7 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.domain.LanguageCode.DE
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 
-final case class ListsEndpointsV2(private val base: BaseEndpoints) {
+final class ListsEndpointsV2(base: BaseEndpoints) {
   val listIri =
     path[ListIri]
       .name("listIri")

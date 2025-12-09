@@ -10,6 +10,7 @@ import zio.*
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.core.*
+import org.knora.webapi.slice.api.ApiModule
 import org.knora.webapi.slice.infrastructure.MetricsServer
 
 object Main extends ZIOApp {
@@ -19,12 +20,12 @@ object Main extends ZIOApp {
   /**
    * The `Environment` that we require to exist at startup.
    */
-  override type Environment = AppConfigurations & LayersLive.Environment
+  override type Environment = AppConfigurations & LayersLive.Environment & ApiModule.Provided
 
   /**
    * The layers provided to the application.
    */
-  override def bootstrap: ULayer[Environment] = LayersLive.bootstrap
+  override def bootstrap: ULayer[Environment] = LayersLive.bootstrap >+> ApiModule.layer
 
   /**
    *  Entrypoint of our Application

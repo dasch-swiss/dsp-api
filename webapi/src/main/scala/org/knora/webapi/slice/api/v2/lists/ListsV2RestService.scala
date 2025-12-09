@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.lists.api.service
+package org.knora.webapi.slice.api.v2.lists
 
 import sttp.model.MediaType
 import zio.*
@@ -20,11 +20,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 
-final case class ListsV2RestService(
-  private val appConfig: AppConfig,
-  private val listsResponder: ListsResponder,
-  private val renderer: KnoraResponseRenderer,
-) {
+final class ListsV2RestService(appConfig: AppConfig, listsResponder: ListsResponder, renderer: KnoraResponseRenderer) {
 
   /**
    * Gets a list from the triplestore.

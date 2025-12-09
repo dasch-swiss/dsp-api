@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.infrastructure.api
+package org.knora.webapi.slice.api.management
 
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
@@ -66,18 +66,18 @@ object HealthResponse {
 
 final case class ManagementEndpoints(baseEndpoints: BaseEndpoints) {
 
-  private[infrastructure] val getVersion = baseEndpoints.publicEndpoint.get
+  val getVersion = baseEndpoints.publicEndpoint.get
     .in("version")
     .out(jsonBody[VersionResponse].example(VersionResponse.current))
     .description("Get version information. Publicly accessible.")
 
-  private[infrastructure] val getHealth = baseEndpoints.publicEndpoint.get
+  val getHealth = baseEndpoints.publicEndpoint.get
     .in("health")
     .out(jsonBody[HealthResponse])
     .out(statusCode)
     .description("Get health status. Publicly accessible.")
 
-  private[infrastructure] val postStartCompaction = baseEndpoints.securedEndpoint.post
+  val postStartCompaction = baseEndpoints.securedEndpoint.post
     .in("start-compaction")
     .out(jsonBody[String])
     .out(statusCode)
@@ -85,5 +85,5 @@ final case class ManagementEndpoints(baseEndpoints: BaseEndpoints) {
 }
 
 object ManagementEndpoints {
-  val layer = ZLayer.derive[ManagementEndpoints]
+  private[management] val layer = ZLayer.derive[ManagementEndpoints]
 }

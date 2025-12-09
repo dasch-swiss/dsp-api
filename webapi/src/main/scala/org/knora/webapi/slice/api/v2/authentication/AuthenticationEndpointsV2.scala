@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.security.api
+package org.knora.webapi.slice.api.v2.authentication
 
 import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.tapir.*
@@ -16,15 +16,11 @@ import zio.json.internal.Write
 import zio.json.interop.refined.*
 
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.infrastructure.Jwt
-import org.knora.webapi.slice.security.Authenticator
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.*
 
-case class AuthenticationEndpointsV2(
-  private val baseEndpoints: BaseEndpoints,
-  private val authenticator: Authenticator,
-) {
+final class AuthenticationEndpointsV2(baseEndpoints: BaseEndpoints) {
 
   private val basePath: EndpointInput[Unit] = "v2" / "authentication"
 
@@ -54,7 +50,7 @@ case class AuthenticationEndpointsV2(
 
 object AuthenticationEndpointsV2 {
 
-  val layer = ZLayer.derive[AuthenticationEndpointsV2]
+  private[authentication] val layer = ZLayer.derive[AuthenticationEndpointsV2]
 
   final case class CheckResponse(message: String)
   object CheckResponse {

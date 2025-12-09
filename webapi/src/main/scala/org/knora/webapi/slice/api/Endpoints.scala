@@ -3,25 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.slice.api
 
 import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir.*
 import zio.*
 
-import org.knora.webapi.routing
 import org.knora.webapi.slice.admin.api.AdminApiServerEndpoints
+import org.knora.webapi.slice.api.management.ManagementServerEndpoints
 import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
 import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
-import org.knora.webapi.slice.infrastructure.api.ManagementServerEndpoints
 import org.knora.webapi.slice.shacl.api.ShaclServerEndpoints
 
-final case class Endpoints(
-  private val adminApi: AdminApiServerEndpoints, // admin api
-  private val apiV2: ApiV2ServerEndpoints,
-  private val apiV3: ApiV3ServerEndpoints,
-  private val shacl: ShaclServerEndpoints,
-  private val management: ManagementServerEndpoints,
+final class Endpoints(
+  adminApi: AdminApiServerEndpoints,
+  apiV2: ApiV2ServerEndpoints,
+  apiV3: ApiV3ServerEndpoints,
+  shacl: ShaclServerEndpoints,
+  management: ManagementServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
     adminApi.serverEndpoints ++
@@ -30,6 +29,7 @@ final case class Endpoints(
       management.serverEndpoints ++
       shacl.serverEndpoints
 }
+
 object Endpoints {
-  val layer = ZLayer.derive[Endpoints]
+  private[api] val layer = ZLayer.derive[Endpoints]
 }

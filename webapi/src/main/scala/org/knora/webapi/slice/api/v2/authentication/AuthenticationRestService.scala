@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.security.api
+package org.knora.webapi.slice.api.v2.authentication
 
 import zio.*
 
@@ -12,20 +12,17 @@ import scala.annotation.unused
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginForm
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload.EmailPassword
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload.IriPassword
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload.UsernamePassword
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LogoutResponse
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.TokenResponse
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginForm
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.EmailPassword
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.IriPassword
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.UsernamePassword
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
 
-final case class AuthenticationRestService(
-  private val authenticator: Authenticator,
-  private val appConfig: AppConfig,
-) {
+final class AuthenticationRestService(authenticator: Authenticator, appConfig: AppConfig) {
 
   def loginForm(@unused ignored: Unit): UIO[String] =
     val apiUrl = appConfig.knoraApi.externalKnoraApiBaseUrl
@@ -73,5 +70,5 @@ final case class AuthenticationRestService(
 }
 
 object AuthenticationRestService {
-  val layer = zio.ZLayer.derive[AuthenticationRestService]
+  private[authentication] val layer = zio.ZLayer.derive[AuthenticationRestService]
 }

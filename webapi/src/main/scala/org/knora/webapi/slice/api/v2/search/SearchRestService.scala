@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.search.api
+package org.knora.webapi.slice.api.v2.search
 
 import io.opentelemetry.api.common.Attributes
 import sttp.model.MediaType
@@ -16,14 +16,14 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v2.search.SearchEndpointsInputs.InputIri
+import org.knora.webapi.slice.api.v2.search.SearchEndpointsInputs.Offset
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
 
-final case class SearchRestService(
+final class SearchRestService(
   searchResponderV2: SearchResponderV2,
   renderer: KnoraResponseRenderer,
   iriConverter: IriConverter,
@@ -225,5 +225,5 @@ final case class SearchRestService(
   } yield response
 }
 object SearchRestService {
-  val layer = ZLayer.derive[SearchRestService]
+  private[search] val layer = ZLayer.derive[SearchRestService]
 }

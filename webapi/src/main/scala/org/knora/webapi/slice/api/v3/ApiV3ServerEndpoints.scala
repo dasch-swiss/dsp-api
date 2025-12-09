@@ -11,9 +11,9 @@ import zio.*
 import org.knora.webapi.slice.`export`.api.ExportServerEndpoints
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpointsV3
 
-class ApiV3ServerEndpoints(
-  private val resourcesServerEndpoints: ResourcesServerEndpointsV3,
-  private val exportServerEndpoints: ExportServerEndpoints,
+final class ApiV3ServerEndpoints(
+  resourcesServerEndpoints: ResourcesServerEndpointsV3,
+  exportServerEndpoints: ExportServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
     (resourcesServerEndpoints.endpoints ++ exportServerEndpoints.endpoints)

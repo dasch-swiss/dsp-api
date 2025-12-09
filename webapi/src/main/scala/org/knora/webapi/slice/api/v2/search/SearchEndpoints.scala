@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.search.api
+package org.knora.webapi.slice.api.v2.search
 
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
@@ -15,10 +15,10 @@ import zio.ZLayer
 
 import dsp.valueobjects.Iri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v2.search.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.*
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 
 object SearchEndpointsInputs {
 
@@ -56,7 +56,7 @@ object SearchEndpointsInputs {
     query[Boolean]("returnFiles").description("Whether to return files in the search results.").default(false)
 }
 
-final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
+final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val gravsearchDescription =
     "The Gravsearch query. See https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/query-language/"
@@ -208,5 +208,5 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 }
 
 object SearchEndpoints {
-  val layer = ZLayer.derive[SearchEndpoints]
+  private[search] val layer = ZLayer.derive[SearchEndpoints]
 }
