@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.api
+
 import zio.*
 
 import org.knora.webapi.slice.admin.api.AdminApiServerEndpoints

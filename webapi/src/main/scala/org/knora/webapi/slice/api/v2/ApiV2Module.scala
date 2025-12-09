@@ -15,6 +15,7 @@ import org.knora.webapi.slice.api.v2.ontologies.OntologiesServerEndpoints
 import org.knora.webapi.slice.api.v2.ontologies.OntologyApiModule
 import org.knora.webapi.slice.api.v2.resources.info.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
+import org.knora.webapi.slice.api.v2.values.ValuesServerEndpoints
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.service.IriConverter
@@ -36,7 +37,8 @@ object ApiV2Module {
     ResourceInfoRepo &
     OntologyApiModule.Dependencies &
     SearchResponderV2 &
-    Tracing
+    Tracing &
+    ValuesServerEndpoints.Dependencies
     // format: on
 
   type Provided = ApiV2ServerEndpoints
@@ -45,6 +47,7 @@ object ApiV2Module {
     ListsV2ServerEndpoints.layer >+>
     OntologyApiModule.layer >+>
     ResourceInfoServerEndpoints.layer >+>
-    SearchServerEndpoints.layer >>>
+    SearchServerEndpoints.layer >+>
+    ValuesServerEndpoints.layer >>>
     ApiV2ServerEndpoints.layer
 }

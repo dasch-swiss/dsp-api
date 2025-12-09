@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.resources.api
+
 import sttp.tapir.ztapir.*
 import zio.*
 
@@ -11,11 +12,9 @@ final case class ResourcesApiServerEndpoints(
   private val metadataServerEndpoints: MetadataServerEndpoints,
   private val resourcesServerEndpoints: ResourcesServerEndpoints,
   private val standoffServerEndpoints: StandoffServerEndpoints,
-  private val valuesServerEndpoints: ValuesServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
-    valuesServerEndpoints.serverEndpoints ++
-      resourcesServerEndpoints.serverEndpoints ++
+    resourcesServerEndpoints.serverEndpoints ++
       standoffServerEndpoints.serverEndpoints ++
       metadataServerEndpoints.serverEndpoints
 }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api
+package org.knora.webapi.slice.api.v2.values
 
 import sttp.tapir.*
 import zio.ZLayer
@@ -13,7 +13,7 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.resources.api.model.ValueUuid
 import org.knora.webapi.slice.resources.api.model.VersionDate
 
-final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
+final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
 
   private val base: EndpointInput[Unit] = "v2" / "values"
 
@@ -89,7 +89,7 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
 }
 
 object ValuesEndpoints {
-  val layer = ZLayer.derive[ValuesEndpoints]
+  private[values] val layer = ZLayer.derive[ValuesEndpoints]
 
   object Examples {
     val deleteValue: String =

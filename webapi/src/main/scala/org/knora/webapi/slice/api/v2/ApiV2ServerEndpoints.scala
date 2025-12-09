@@ -12,21 +12,24 @@ import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
 import org.knora.webapi.slice.api.v2.ontologies.OntologiesServerEndpoints
 import org.knora.webapi.slice.api.v2.resources.info.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
+import org.knora.webapi.slice.api.v2.values.ValuesServerEndpoints
 import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 
-class ApiV2ServerEndpoints(
-  private val authenticationServerEndpoints: AuthenticationServerEndpoints,
-  private val listsV2ServerEndpoints: ListsV2ServerEndpoints,
-  private val ontologiesServerEndpoints: OntologiesServerEndpoints,
-  private val resourceInfoServerEndpoints: ResourceInfoServerEndpoints,
-  private val resourcesApiServerEndpoints: ResourcesApiServerEndpoints,
-  private val searchServerEndpoints: SearchServerEndpoints,
+final class ApiV2ServerEndpoints(
+  authenticationServerEndpoints: AuthenticationServerEndpoints,
+  listsV2ServerEndpoints: ListsV2ServerEndpoints,
+  ontologiesServerEndpoints: OntologiesServerEndpoints,
+  resourceInfoServerEndpoints: ResourceInfoServerEndpoints,
+  resourcesApiServerEndpoints: ResourcesApiServerEndpoints,
+  searchServerEndpoints: SearchServerEndpoints,
+  valuesServerEndpoints: ValuesServerEndpoints,
 ) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
     (authenticationServerEndpoints.serverEndpoints ++
       listsV2ServerEndpoints.serverEndpoints ++
       resourceInfoServerEndpoints.serverEndpoints ++
+      valuesServerEndpoints.serverEndpoints ++
       resourcesApiServerEndpoints.serverEndpoints ++
       searchServerEndpoints.serverEndpoints ++
       ontologiesServerEndpoints.serverEndpoints)

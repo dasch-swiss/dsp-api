@@ -12,8 +12,6 @@ import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.StandoffResponderV2
-import org.knora.webapi.responders.v2.ValuesResponderV2
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -23,7 +21,6 @@ import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.resources.api.service.MetadataRestService
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 import org.knora.webapi.slice.resources.api.service.StandoffRestService
-import org.knora.webapi.slice.resources.api.service.ValuesRestService
 import org.knora.webapi.slice.resources.service.MetadataService
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
@@ -36,14 +33,12 @@ object ResourcesApiModule { self =>
     CsvService &
     GraphRoute &
     IriConverter &
-    KnoraProjectService &
     KnoraResponseRenderer &
     MetadataService &
     ReadResourcesService &
     ResourcesResponderV2 &
     SearchResponderV2 &
-    StandoffResponderV2 &
-    ValuesResponderV2
+    StandoffResponderV2
     //format: on
 
   type Provided =
@@ -51,8 +46,7 @@ object ResourcesApiModule { self =>
     MetadataEndpoints &
     ResourcesApiServerEndpoints &
     ResourcesEndpoints &
-    StandoffEndpoints &
-    ValuesEndpoints
+    StandoffEndpoints
     //format: on
 
   def layer: URLayer[self.Dependencies, self.Provided] =
@@ -67,8 +61,5 @@ object ResourcesApiModule { self =>
       StandoffEndpoints.layer,
       StandoffRestService.layer,
       StandoffServerEndpoints.layer,
-      ValuesEndpoints.layer,
-      ValuesRestService.layer,
-      ValuesServerEndpoints.layer,
     )
 }

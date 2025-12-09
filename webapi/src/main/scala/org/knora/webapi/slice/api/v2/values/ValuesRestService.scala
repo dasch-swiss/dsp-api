@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api.service
+package org.knora.webapi.slice.api.v2.values
+
 import sttp.model.MediaType
 import zio.Random
 import zio.Task
@@ -25,12 +26,12 @@ import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final class ValuesRestService(
-  private val auth: AuthorizationRestService,
-  private val valuesService: ValuesResponderV2,
-  private val readResources: ReadResourcesService,
-  private val requestParser: ApiComplexV2JsonLdRequestParser,
-  private val renderer: KnoraResponseRenderer,
-  private val knoraProjectService: KnoraProjectService,
+  auth: AuthorizationRestService,
+  valuesService: ValuesResponderV2,
+  readResources: ReadResourcesService,
+  requestParser: ApiComplexV2JsonLdRequestParser,
+  renderer: KnoraResponseRenderer,
+  knoraProjectService: KnoraProjectService,
 ) {
 
   def getValue(user: User)(
