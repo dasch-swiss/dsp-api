@@ -18,9 +18,8 @@ object Dependencies {
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion         = "5.2.0"
-  val TopbraidShaclVersion = "1.4.4"
-  val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
+  val Rdf4jVersion = "5.2.0"
+  val JenaVersion  = "5.2.0"
 
   val ZioConfigVersion            = "4.0.6"
   val ZioLoggingVersion           = "2.5.2"
@@ -88,12 +87,11 @@ object Dependencies {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
 
   // rdf and graph libraries
-  val jenaCore      = "org.apache.jena"   % "jena-core"           % JenaVersion
-  val jenaText      = "org.apache.jena"   % "jena-text"           % JenaVersion
-  val rdf4jClient   = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
-  val rdf4jShacl    = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
-  val rdf4jSparql   = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
-  val topbraidShacl = "org.topbraid"      % "shacl"               % TopbraidShaclVersion
+  val jenaCore    = "org.apache.jena"   % "jena-core"           % JenaVersion
+  val jenaText    = "org.apache.jena"   % "jena-text"           % JenaVersion
+  val rdf4jClient = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
+  val rdf4jShacl  = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
+  val rdf4jSparql = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
 
   // logging
   val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.17" // the logging interface
@@ -190,7 +188,6 @@ object Dependencies {
     slf4jApi,
     springSecurityCore,
     titaniumJSONLD,
-    topbraidShacl,
     zio,
     zioConfig,
     zioConfigMagnolia,
