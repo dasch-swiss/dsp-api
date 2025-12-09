@@ -13,11 +13,11 @@ import java.time.Instant
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-import org.knora.webapi.slice.resources.api.model.IriDto
 
 final case class LastModificationDate private (value: Instant) extends Value[Instant]
 object LastModificationDate {

@@ -38,7 +38,6 @@ import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OpenTelemetry
 import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.resources.ResourcesModule
-import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
@@ -140,7 +139,6 @@ object LayersLive { self =>
       RepositoryUpdater.layer,
       ReadResourcesServiceLive.layer,
       ResourceUtilV2.layer,
-      ResourcesApiModule.layer,
       ResourcesModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,

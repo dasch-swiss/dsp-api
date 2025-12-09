@@ -22,12 +22,12 @@ import dsp.errors.BadRequestException
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v2.metadata.ExportFormat
 import org.knora.webapi.slice.api.v2.metadata.ExportFormat.*
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
-import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.service.MetadataService
 
 final class MetadataRestService(

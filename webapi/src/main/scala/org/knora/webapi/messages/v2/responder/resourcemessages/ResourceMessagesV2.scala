@@ -30,8 +30,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.resources.api.model.VersionDate
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.

@@ -16,13 +16,13 @@ import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.api.v2.ValueUuid
+import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.resources.api.model.ValueUuid
-import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final class ValuesRestService(

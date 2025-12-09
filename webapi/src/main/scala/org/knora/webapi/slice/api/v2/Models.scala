@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api.model
+package org.knora.webapi.slice.api.v2
 
 import zio.json.JsonCodec
 

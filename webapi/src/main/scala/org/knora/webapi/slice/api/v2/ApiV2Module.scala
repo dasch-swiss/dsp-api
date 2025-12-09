@@ -15,13 +15,13 @@ import org.knora.webapi.slice.api.v2.mapping.StandoffServerEndpoints
 import org.knora.webapi.slice.api.v2.metadata.MetadataServerEndpoints
 import org.knora.webapi.slice.api.v2.ontologies.OntologiesServerEndpoints
 import org.knora.webapi.slice.api.v2.ontologies.OntologyApiModule
+import org.knora.webapi.slice.api.v2.resources.ResourcesServerEndpoints
 import org.knora.webapi.slice.api.v2.resources.info.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
 import org.knora.webapi.slice.api.v2.values.ValuesServerEndpoints
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 import org.knora.webapi.slice.security.Authenticator
 
@@ -36,7 +36,7 @@ object ApiV2Module {
     KnoraResponseRenderer &
     ListsResponder &
     MetadataServerEndpoints.Dependencies &
-    ResourcesApiServerEndpoints &
+    ResourcesServerEndpoints.Dependencies &
     ResourceInfoRepo &
     OntologyApiModule.Dependencies &
     StandoffServerEndpoints.Dependencies &
@@ -51,6 +51,7 @@ object ApiV2Module {
     ListsV2ServerEndpoints.layer >+>
     OntologyApiModule.layer >+>
     ResourceInfoServerEndpoints.layer >+>
+    ResourcesServerEndpoints.layer >+>
     MetadataServerEndpoints.layer >+>
     SearchServerEndpoints.layer >+>
     StandoffServerEndpoints.layer >+>

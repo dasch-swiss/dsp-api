@@ -12,10 +12,10 @@ import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
 import org.knora.webapi.slice.api.v2.mapping.StandoffServerEndpoints
 import org.knora.webapi.slice.api.v2.metadata.MetadataServerEndpoints
 import org.knora.webapi.slice.api.v2.ontologies.OntologiesServerEndpoints
+import org.knora.webapi.slice.api.v2.resources.ResourcesServerEndpoints
 import org.knora.webapi.slice.api.v2.resources.info.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
 import org.knora.webapi.slice.api.v2.values.ValuesServerEndpoints
-import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 
 final class ApiV2ServerEndpoints(
   authenticationServerEndpoints: AuthenticationServerEndpoints,
@@ -23,7 +23,7 @@ final class ApiV2ServerEndpoints(
   metadataServerEndpoints: MetadataServerEndpoints,
   ontologiesServerEndpoints: OntologiesServerEndpoints,
   resourceInfoServerEndpoints: ResourceInfoServerEndpoints,
-  resourcesApiServerEndpoints: ResourcesApiServerEndpoints,
+  resourcesServerEndpoints: ResourcesServerEndpoints,
   searchServerEndpoints: SearchServerEndpoints,
   standoffServerEndpoints: StandoffServerEndpoints,
   valuesServerEndpoints: ValuesServerEndpoints,
@@ -35,7 +35,7 @@ final class ApiV2ServerEndpoints(
       resourceInfoServerEndpoints.serverEndpoints ++
       valuesServerEndpoints.serverEndpoints ++
       metadataServerEndpoints.serverEndpoints ++
-      resourcesApiServerEndpoints.serverEndpoints ++
+      resourcesServerEndpoints.serverEndpoints ++
       searchServerEndpoints.serverEndpoints ++
       standoffServerEndpoints.serverEndpoints ++
       ontologiesServerEndpoints.serverEndpoints)

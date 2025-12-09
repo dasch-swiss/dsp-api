@@ -15,7 +15,6 @@ import org.knora.webapi.slice.admin.api.model.OrderBy
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.resources.api.model.ListResponseDto
 
 final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {
   val getResourcesInfo = baseEndpoints.publicEndpoint.get

@@ -15,10 +15,10 @@ import zio.json.JsonCodec
 import java.time.Instant
 
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
+import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.infrastructure.ColumnDef
 import org.knora.webapi.slice.infrastructure.CsvRowBuilder
-import org.knora.webapi.slice.resources.api.model.IriDto
 
 final case class ResourceMetadataDto(
   resourceClassIri: String,

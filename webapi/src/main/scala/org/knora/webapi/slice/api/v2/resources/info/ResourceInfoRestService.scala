@@ -15,8 +15,6 @@ import org.knora.webapi.slice.admin.api.model.Order
 import org.knora.webapi.slice.admin.api.model.OrderBy
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.resources.api.model.ListResponseDto
-import org.knora.webapi.slice.resources.api.model.ResourceInfoDto
 import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 
 final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: IriConverter) {

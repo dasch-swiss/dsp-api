@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api.service
+package org.knora.webapi.slice.api.v2.resources
+
 import sttp.model.MediaType
 import zio.*
 
@@ -12,14 +13,14 @@ import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v2.GraphDirection
+import org.knora.webapi.slice.api.v2.IriDto
+import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.resources.api.model.GraphDirection
-import org.knora.webapi.slice.resources.api.model.IriDto
-import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final case class ResourcesRestService(
@@ -191,5 +192,5 @@ final case class ResourcesRestService(
 }
 
 object ResourcesRestService {
-  val layer = ZLayer.derive[ResourcesRestService]
+  private[resources] val layer = ZLayer.derive[ResourcesRestService]
 }

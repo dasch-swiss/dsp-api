@@ -3,23 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api
+package org.knora.webapi.slice.api.v2.resources
 
 import sttp.tapir.*
 import zio.ZLayer
 
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v2.GraphDirection
+import org.knora.webapi.slice.api.v2.IriDto
+import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.resources.api.model.GraphDirection
-import org.knora.webapi.slice.resources.api.model.IriDto
-import org.knora.webapi.slice.resources.api.model.VersionDate
 
-final case class ResourcesEndpoints(
-  private val baseEndpoints: BaseEndpoints,
-  private val graphConfig: GraphRoute,
-) {
+final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphRoute) {
 
   private val base = "v2" / "resources"
 
@@ -209,5 +206,5 @@ final case class ResourcesEndpoints(
 }
 
 object ResourcesEndpoints {
-  val layer = ZLayer.derive[ResourcesEndpoints]
+  private[resources] val layer = ZLayer.derive[ResourcesEndpoints]
 }
