@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api
+package org.knora.webapi.slice.api.v2.metadata
 
 import sttp.model.MediaType
 import sttp.tapir.*
@@ -57,7 +57,7 @@ object ExportFormat {
   given PlainCodec[ExportFormat] = Codec.derivedEnumeration[String, ExportFormat].defaultStringBased
 }
 
-final case class MetadataEndpoints(private val baseEndpoints: BaseEndpoints) {
+final class MetadataEndpoints(baseEndpoints: BaseEndpoints) {
   val base = "v2" / "metadata"
 
   val getResourcesMetadata = baseEndpoints.securedEndpoint.get
@@ -102,5 +102,5 @@ final case class MetadataEndpoints(private val baseEndpoints: BaseEndpoints) {
 }
 
 object MetadataEndpoints {
-  val layer = ZLayer.derive[MetadataEndpoints]
+  private[metadata] val layer = ZLayer.derive[MetadataEndpoints]
 }

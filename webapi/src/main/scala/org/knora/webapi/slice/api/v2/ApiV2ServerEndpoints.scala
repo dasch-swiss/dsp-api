@@ -9,6 +9,7 @@ import zio.ZLayer
 
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationServerEndpoints
 import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
+import org.knora.webapi.slice.api.v2.metadata.MetadataServerEndpoints
 import org.knora.webapi.slice.api.v2.ontologies.OntologiesServerEndpoints
 import org.knora.webapi.slice.api.v2.resources.info.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
@@ -18,6 +19,7 @@ import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 final class ApiV2ServerEndpoints(
   authenticationServerEndpoints: AuthenticationServerEndpoints,
   listsV2ServerEndpoints: ListsV2ServerEndpoints,
+  metadataServerEndpoints: MetadataServerEndpoints,
   ontologiesServerEndpoints: OntologiesServerEndpoints,
   resourceInfoServerEndpoints: ResourceInfoServerEndpoints,
   resourcesApiServerEndpoints: ResourcesApiServerEndpoints,
@@ -30,6 +32,7 @@ final class ApiV2ServerEndpoints(
       listsV2ServerEndpoints.serverEndpoints ++
       resourceInfoServerEndpoints.serverEndpoints ++
       valuesServerEndpoints.serverEndpoints ++
+      metadataServerEndpoints.serverEndpoints ++
       resourcesApiServerEndpoints.serverEndpoints ++
       searchServerEndpoints.serverEndpoints ++
       ontologiesServerEndpoints.serverEndpoints)

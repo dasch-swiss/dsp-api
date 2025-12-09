@@ -8,15 +8,13 @@ package org.knora.webapi.slice.resources.api
 import sttp.tapir.ztapir.*
 import zio.*
 
-final case class ResourcesApiServerEndpoints(
-  private val metadataServerEndpoints: MetadataServerEndpoints,
-  private val resourcesServerEndpoints: ResourcesServerEndpoints,
-  private val standoffServerEndpoints: StandoffServerEndpoints,
+final class ResourcesApiServerEndpoints(
+  resourcesServerEndpoints: ResourcesServerEndpoints,
+  standoffServerEndpoints: StandoffServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
     resourcesServerEndpoints.serverEndpoints ++
-      standoffServerEndpoints.serverEndpoints ++
-      metadataServerEndpoints.serverEndpoints
+      standoffServerEndpoints.serverEndpoints
 }
 object ResourcesApiServerEndpoints {
   val layer = ZLayer.derive[ResourcesApiServerEndpoints]

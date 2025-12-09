@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api.service
+package org.knora.webapi.slice.api.v2.metadata
+
 import com.github.tototoshi.csv.CSVFormat
 import com.github.tototoshi.csv.TSVFormat
 import sttp.model.MediaType
@@ -21,19 +22,19 @@ import dsp.errors.BadRequestException
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v2.metadata.ExportFormat
+import org.knora.webapi.slice.api.v2.metadata.ExportFormat.*
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
-import org.knora.webapi.slice.resources.api.ExportFormat
-import org.knora.webapi.slice.resources.api.ExportFormat.*
 import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.service.MetadataService
 
-final case class MetadataRestService(
-  private val auth: AuthorizationRestService,
-  private val iriConverter: IriConverter,
-  private val metadataService: MetadataService,
-  private val csvService: CsvService,
+final class MetadataRestService(
+  auth: AuthorizationRestService,
+  iriConverter: IriConverter,
+  metadataService: MetadataService,
+  csvService: CsvService,
 ) {
 
   private val formatForFilename: Instant => String =
@@ -65,5 +66,5 @@ final case class MetadataRestService(
 }
 
 object MetadataRestService {
-  val layer = ZLayer.derive[MetadataRestService]
+  private[metadata] val layer = ZLayer.derive[MetadataRestService]
 }

@@ -11,6 +11,7 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationServerEndpoints
 import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
+import org.knora.webapi.slice.api.v2.metadata.MetadataServerEndpoints
 import org.knora.webapi.slice.api.v2.ontologies.OntologiesServerEndpoints
 import org.knora.webapi.slice.api.v2.ontologies.OntologyApiModule
 import org.knora.webapi.slice.api.v2.resources.info.ResourceInfoServerEndpoints
@@ -33,6 +34,7 @@ object ApiV2Module {
     IriConverter &
     KnoraResponseRenderer &
     ListsResponder &
+    MetadataServerEndpoints.Dependencies &
     ResourcesApiServerEndpoints &
     ResourceInfoRepo &
     OntologyApiModule.Dependencies &
@@ -47,6 +49,7 @@ object ApiV2Module {
     ListsV2ServerEndpoints.layer >+>
     OntologyApiModule.layer >+>
     ResourceInfoServerEndpoints.layer >+>
+    MetadataServerEndpoints.layer >+>
     SearchServerEndpoints.layer >+>
     ValuesServerEndpoints.layer >>>
     ApiV2ServerEndpoints.layer
