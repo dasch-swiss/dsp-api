@@ -8,7 +8,7 @@ package org.knora.webapi.slice.api.v2.mapping
 import sttp.tapir.*
 import zio.ZLayer
 
-import org.knora.webapi.slice.common.api.ApiV2
+import org.knora.webapi.slice.api.v2.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class CreateStandoffMappingForm(json: String, xml: String)

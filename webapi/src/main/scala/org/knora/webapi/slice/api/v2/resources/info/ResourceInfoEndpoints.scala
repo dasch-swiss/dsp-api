@@ -13,7 +13,7 @@ import zio.ZLayer
 import org.knora.webapi.slice.admin.api.model.Order
 import org.knora.webapi.slice.admin.api.model.OrderBy
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.common.api.ApiV2
+import org.knora.webapi.slice.api.v2.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {

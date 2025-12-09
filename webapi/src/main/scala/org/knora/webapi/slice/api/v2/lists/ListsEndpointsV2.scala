@@ -21,7 +21,7 @@ import org.knora.webapi.messages.v2.responder.listsmessages.ListGetResponseV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
-import org.knora.webapi.slice.common.api.ApiV2
+import org.knora.webapi.slice.api.v2.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.domain.LanguageCode.DE
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
