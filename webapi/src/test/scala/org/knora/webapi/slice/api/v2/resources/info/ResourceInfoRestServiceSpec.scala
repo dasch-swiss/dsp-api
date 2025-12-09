@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api
+package org.knora.webapi.slice.api.v2.resources.info
 
 import zio.Exit
 import zio.ZIO
@@ -21,10 +21,10 @@ import org.knora.webapi.slice.admin.api.model.Order.*
 import org.knora.webapi.slice.admin.api.model.OrderBy
 import org.knora.webapi.slice.admin.api.model.OrderBy.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v2.resources.info.ResourceInfoRestService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.api.model.ListResponseDto
 import org.knora.webapi.slice.resources.api.model.ResourceInfoDto
-import org.knora.webapi.slice.resources.api.service.ResourceInfoRestService
 import org.knora.webapi.slice.resources.domain.ResourceInfo
 import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake
 import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake.knownProjectIRI

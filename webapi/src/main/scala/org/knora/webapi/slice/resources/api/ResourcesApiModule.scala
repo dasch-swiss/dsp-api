@@ -21,11 +21,9 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.resources.api.service.MetadataRestService
-import org.knora.webapi.slice.resources.api.service.ResourceInfoRestService
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
-import org.knora.webapi.slice.resources.repo.ResourceInfoRepoLive
 import org.knora.webapi.slice.resources.service.MetadataService
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
@@ -42,7 +40,6 @@ object ResourcesApiModule { self =>
     KnoraResponseRenderer &
     MetadataService &
     ReadResourcesService &
-    ResourceInfoRepoLive &
     ResourcesResponderV2 &
     SearchResponderV2 &
     StandoffResponderV2 &
@@ -52,8 +49,6 @@ object ResourcesApiModule { self =>
   type Provided =
     // format: off
     MetadataEndpoints &
-    ResourceInfoEndpoints &
-    ResourceInfoServerEndpoints &
     ResourcesApiServerEndpoints &
     ResourcesEndpoints &
     StandoffEndpoints &
@@ -65,9 +60,6 @@ object ResourcesApiModule { self =>
       MetadataEndpoints.layer,
       MetadataRestService.layer,
       MetadataServerEndpoints.layer,
-      ResourceInfoEndpoints.layer,
-      ResourceInfoRestService.layer,
-      ResourceInfoServerEndpoints.layer,
       ResourcesEndpoints.layer,
       ResourcesRestService.layer,
       ResourcesServerEndpoints.layer,

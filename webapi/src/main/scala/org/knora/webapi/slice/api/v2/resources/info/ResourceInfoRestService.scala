@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api.service
+package org.knora.webapi.slice.api.v2.resources.info
 
 import zio.*
 
@@ -62,5 +62,5 @@ final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: I
 }
 
 object ResourceInfoRestService {
-  val layer = ZLayer.derive[ResourceInfoRestService]
+  private[info] val layer = ZLayer.derive[ResourceInfoRestService]
 }

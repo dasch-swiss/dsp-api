@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api
+package org.knora.webapi.slice.api.v2.resources.info
 
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
@@ -29,5 +29,5 @@ final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {
 }
 
 object ResourceInfoEndpoints {
-  val layer = ZLayer.derive[ResourceInfoEndpoints]
+  private[info] val layer = ZLayer.derive[ResourceInfoEndpoints]
 }
