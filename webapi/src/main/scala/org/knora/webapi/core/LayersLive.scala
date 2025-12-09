@@ -55,9 +55,6 @@ import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
-import org.knora.webapi.slice.shacl.ShaclModule
-import org.knora.webapi.slice.shacl.api.ShaclApiModule
-import org.knora.webapi.slice.shacl.api.ShaclEndpoints
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -108,9 +105,6 @@ object LayersLive { self =>
     SearchResponderV2Module.Provided &
     SearchServerEndpoints &
     SecurityModule.Provided &
-    ShaclApiModule.Provided &
-    ShaclEndpoints &
-    ShaclModule.Provided &
     SipiService &
     StandoffResponderV2 &
     StandoffTagUtilV2 &
@@ -172,8 +166,6 @@ object LayersLive { self =>
       SearchResponderV2Module.layer,
       SearchServerEndpoints.layer,
       SecurityModule.layer,
-      ShaclApiModule.layer,
-      ShaclModule.layer,
       SipiServiceLive.layer,
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
