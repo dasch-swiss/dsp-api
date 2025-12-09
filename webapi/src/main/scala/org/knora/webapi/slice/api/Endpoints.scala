@@ -13,21 +13,18 @@ import org.knora.webapi.slice.admin.api.AdminApiServerEndpoints
 import org.knora.webapi.slice.api.management.ManagementServerEndpoints
 import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
 import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
-import org.knora.webapi.slice.shacl.api.ShaclServerEndpoints
 
 final class Endpoints(
   adminApi: AdminApiServerEndpoints,
   apiV2: ApiV2ServerEndpoints,
   apiV3: ApiV3ServerEndpoints,
-  shacl: ShaclServerEndpoints,
   management: ManagementServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
     adminApi.serverEndpoints ++
       apiV2.serverEndpoints ++
       apiV3.serverEndpoints ++
-      management.serverEndpoints ++
-      shacl.serverEndpoints
+      management.serverEndpoints
 }
 
 object Endpoints {
