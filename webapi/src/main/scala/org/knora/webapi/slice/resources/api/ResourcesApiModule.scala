@@ -11,36 +11,30 @@ import zio.ZLayer
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
-import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 object ResourcesApiModule { self =>
   type Dependencies =
     //format: off
     ApiComplexV2JsonLdRequestParser &
-    AuthorizationRestService &
     BaseEndpoints &
     GraphRoute &
     IriConverter &
     KnoraResponseRenderer &
     ReadResourcesService &
     ResourcesResponderV2 &
-    SearchResponderV2 &
-    StandoffResponderV2
+    SearchResponderV2
     //format: on
 
   type Provided =
     // format: off
     ResourcesApiServerEndpoints &
-    ResourcesEndpoints &
-    StandoffEndpoints
+    ResourcesEndpoints
     //format: on
 
   def layer: URLayer[self.Dependencies, self.Provided] =
@@ -49,8 +43,5 @@ object ResourcesApiModule { self =>
       ResourcesRestService.layer,
       ResourcesServerEndpoints.layer,
       ResourcesApiServerEndpoints.layer,
-      StandoffEndpoints.layer,
-      StandoffRestService.layer,
-      StandoffServerEndpoints.layer,
     )
 }

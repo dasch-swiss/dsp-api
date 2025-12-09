@@ -39,6 +39,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.api.v2.mapping.CreateStandoffMappingForm
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
@@ -46,7 +47,6 @@ import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.resources.api.CreateStandoffMappingForm
 import org.knora.webapi.store.iiif.api.SipiService
 
 case class CreateMappingRequestV2(label: String, projectIri: ProjectIri, mappingName: String, xml: String)

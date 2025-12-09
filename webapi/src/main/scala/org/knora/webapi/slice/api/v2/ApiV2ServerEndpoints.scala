@@ -9,6 +9,7 @@ import zio.ZLayer
 
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationServerEndpoints
 import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
+import org.knora.webapi.slice.api.v2.mapping.StandoffServerEndpoints
 import org.knora.webapi.slice.api.v2.metadata.MetadataServerEndpoints
 import org.knora.webapi.slice.api.v2.ontologies.OntologiesServerEndpoints
 import org.knora.webapi.slice.api.v2.resources.info.ResourceInfoServerEndpoints
@@ -24,6 +25,7 @@ final class ApiV2ServerEndpoints(
   resourceInfoServerEndpoints: ResourceInfoServerEndpoints,
   resourcesApiServerEndpoints: ResourcesApiServerEndpoints,
   searchServerEndpoints: SearchServerEndpoints,
+  standoffServerEndpoints: StandoffServerEndpoints,
   valuesServerEndpoints: ValuesServerEndpoints,
 ) {
 
@@ -35,6 +37,7 @@ final class ApiV2ServerEndpoints(
       metadataServerEndpoints.serverEndpoints ++
       resourcesApiServerEndpoints.serverEndpoints ++
       searchServerEndpoints.serverEndpoints ++
+      standoffServerEndpoints.serverEndpoints ++
       ontologiesServerEndpoints.serverEndpoints)
       .map(_.tag("API v2"))
 }

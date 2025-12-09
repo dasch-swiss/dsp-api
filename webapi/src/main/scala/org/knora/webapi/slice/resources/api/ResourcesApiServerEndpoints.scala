@@ -10,11 +10,9 @@ import zio.*
 
 final class ResourcesApiServerEndpoints(
   resourcesServerEndpoints: ResourcesServerEndpoints,
-  standoffServerEndpoints: StandoffServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
-    resourcesServerEndpoints.serverEndpoints ++
-      standoffServerEndpoints.serverEndpoints
+    resourcesServerEndpoints.serverEndpoints
 }
 object ResourcesApiServerEndpoints {
   val layer = ZLayer.derive[ResourcesApiServerEndpoints]

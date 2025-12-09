@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api.service
+package org.knora.webapi.slice.api.v2.mapping
 
 import sttp.model.MediaType
 import zio.*
@@ -18,11 +18,11 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 
-case class StandoffRestService(
-  private val auth: AuthorizationRestService,
-  private val renderer: KnoraResponseRenderer,
-  private val requestParser: ApiComplexV2JsonLdRequestParser,
-  private val standoffResponder: StandoffResponderV2,
+final class StandoffRestService(
+  auth: AuthorizationRestService,
+  renderer: KnoraResponseRenderer,
+  requestParser: ApiComplexV2JsonLdRequestParser,
+  standoffResponder: StandoffResponderV2,
 ) {
   def createMapping(
     user: User,
@@ -39,5 +39,5 @@ case class StandoffRestService(
 }
 
 object StandoffRestService {
-  val layer = ZLayer.derive[StandoffRestService]
+  private[mapping] val layer = ZLayer.derive[StandoffRestService]
 }

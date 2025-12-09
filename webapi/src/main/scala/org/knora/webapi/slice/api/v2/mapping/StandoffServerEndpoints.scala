@@ -3,21 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api
+package org.knora.webapi.slice.api.v2.mapping
 
 import sttp.tapir.ztapir.*
 import zio.*
 
-import org.knora.webapi.slice.resources.api.service.StandoffRestService
+import org.knora.webapi.responders.v2.StandoffResponderV2
+import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
-final case class StandoffServerEndpoints(
-  private val endpoints: StandoffEndpoints,
-  private val restService: StandoffRestService,
-) {
+final class StandoffServerEndpoints(endpoints: StandoffEndpoints, restService: StandoffRestService) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.postMapping.serverLogic(restService.createMapping),
   )
 }
 object StandoffServerEndpoints {
-  val layer = ZLayer.derive[StandoffServerEndpoints]
+
+  type Dependencies =
+    AuthorizationRestService & BaseEndpoints & KnoraResponseRenderer & ApiComplexV2JsonLdRequestParser &
+      StandoffResponderV2
+
+  type Provided = StandoffServerEndpoints
+
+  val layer: URLayer[Dependencies, Provided] = StandoffEndpoints.layer >+>
+    StandoffRestService.layer >>>
+    ZLayer.derive[StandoffServerEndpoints]
 }

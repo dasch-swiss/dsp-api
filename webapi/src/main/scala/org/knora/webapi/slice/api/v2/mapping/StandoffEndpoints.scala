@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.api
+package org.knora.webapi.slice.api.v2.mapping
 
 import sttp.tapir.*
 import zio.ZLayer
@@ -15,7 +15,8 @@ final case class CreateStandoffMappingForm(json: String, xml: String)
 object CreateStandoffMappingForm {
   given Schema[CreateStandoffMappingForm] = Schema.derived[CreateStandoffMappingForm]
 }
-final case class StandoffEndpoints(baseEndpoints: BaseEndpoints) {
+
+final class StandoffEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base: EndpointInput[Unit] = "v2" / "mapping"
 
@@ -29,5 +30,5 @@ final case class StandoffEndpoints(baseEndpoints: BaseEndpoints) {
 }
 
 object StandoffEndpoints {
-  val layer = ZLayer.derive[StandoffEndpoints]
+  private[mapping] val layer = ZLayer.derive[StandoffEndpoints]
 }

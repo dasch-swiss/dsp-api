@@ -11,6 +11,7 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationServerEndpoints
 import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
+import org.knora.webapi.slice.api.v2.mapping.StandoffServerEndpoints
 import org.knora.webapi.slice.api.v2.metadata.MetadataServerEndpoints
 import org.knora.webapi.slice.api.v2.ontologies.OntologiesServerEndpoints
 import org.knora.webapi.slice.api.v2.ontologies.OntologyApiModule
@@ -38,6 +39,7 @@ object ApiV2Module {
     ResourcesApiServerEndpoints &
     ResourceInfoRepo &
     OntologyApiModule.Dependencies &
+    StandoffServerEndpoints.Dependencies &
     SearchResponderV2 &
     Tracing &
     ValuesServerEndpoints.Dependencies
@@ -51,6 +53,7 @@ object ApiV2Module {
     ResourceInfoServerEndpoints.layer >+>
     MetadataServerEndpoints.layer >+>
     SearchServerEndpoints.layer >+>
+    StandoffServerEndpoints.layer >+>
     ValuesServerEndpoints.layer >>>
     ApiV2ServerEndpoints.layer
 }
