@@ -463,16 +463,13 @@ object TriplestoreServiceLive {
   import scala.concurrent.duration.*
   import sttp.client4.opentelemetry.zio.OpenTelemetryTracingZioBackend
 
-  private val httpClientLayer: URLayer[Tracing, WebSocketStreamBackend[Task, ZioStreams]] = ZLayer
-    .fromZIO(
-      for {
-        otel        <- ZIO.service[Tracing]
-        sttpBackend <- HttpClientZioBackend.apply(BackendOptions.Default.connectionTimeout(2.hours))
-        client       = OpenTelemetryTracingZioBackend.apply(sttpBackend, otel)
-      } yield client,
-    )
+  private val httpClient = ZLayer
+    .fromZIO(for {
+      tracing    <- ZIO.service[Tracing]
+      zioBackend <- HttpClientZioBackend(options = BackendOptions.Default.connectionTimeout(2.hours))
+    } yield OpenTelemetryTracingZioBackend(zioBackend, tracing))
     .orDie
 
-  val layer: URLayer[Tracing & Triplestore, TriplestoreService] =
-    httpClientLayer >>> ZLayer.derive[TriplestoreServiceLive]
+  val layer: URLayer[Triplestore & Tracing, TriplestoreService] =
+    httpClient >>> ZLayer.derive[TriplestoreServiceLive]
 }

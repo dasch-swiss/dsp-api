@@ -34,7 +34,6 @@ import org.knora.webapi.slice.common.CommonModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
-import org.knora.webapi.slice.infrastructure.OpenTelemetry
 import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
@@ -120,7 +119,6 @@ object LayersLive { self =>
       MessageRelayLive.layer,
       OntologyModule.layer,
       OntologyResponderV2.layer,
-      OpenTelemetry.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,

@@ -57,11 +57,14 @@ object DspApiServer {
   private val serverLayer = ZLayer
     .service[KnoraApi]
     .flatMap(cfg =>
-      Server
-        .defaultWith(
-          _.binding(cfg.get.internalHost, cfg.get.internalPort).enableRequestStreaming
-            .responseCompression(ResponseCompressionConfig.default),
-        ),
+      val host = cfg.get.internalHost
+      val port = cfg.get.internalPort
+      ZLayer.fromZIO(ZIO.logInfo(s"Binding DSP API server to $host:$port")) >>>
+        Server
+          .defaultWith(
+            _.binding(cfg.get.internalHost, cfg.get.internalPort).enableRequestStreaming
+              .responseCompression(ResponseCompressionConfig.default),
+          ),
     )
     .orDie
 

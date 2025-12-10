@@ -17,7 +17,7 @@ import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 
 object CommonModule { self =>
 
-  type Dependencies = AppConfig & Triplestore & Tracing
+  type Dependencies = AppConfig & Tracing & Triplestore
 
   type Provided = IriConverter & StringFormatter & TriplestoreService
 

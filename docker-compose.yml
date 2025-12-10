@@ -9,7 +9,7 @@ services:
   db:
     # should be the same version as in Dependencies.scala,
     # make sure to use the same version in ops-deploy repository when deploying new DSP releases!
-    image: daschswiss/apache-jena-fuseki:5.5.0-1
+    image: daschswiss/apache-jena-fuseki:5.5.0-3
     ports:
       - "3030:3030"
     volumes:
@@ -21,6 +21,17 @@ services:
       - TZ=Europe/Zurich
       - ADMIN_PASSWORD=test
       - JVM_ARGS=-Xmx3G
+      - 'JAVA_TOOL_OPTIONS=-javaagent:/usr/local/lib/opentelemetry-javaagent.jar'
+      - 'PYROSCOPE_SERVER_ADDRESS=http://alloy:4040'
+      - 'PYROSCOPE_APPLICATION_NAME=DSP_db_db'
+      - 'PYROSCOPE_FORMAT=jfr'
+      - 'PYROSCOPE_PROFILER_ALLOC=512k'
+      - 'OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318'
+      - 'OTEL_SERVICE_NAME=DSP_db_db'
+      - 'OTEL_JAVAAGENT_EXTENSIONS=/usr/local/lib/pyroscope-otel.jar'
+      - 'OTEL_PYROSCOPE_ADD_PROFILE_URL=false'
+      - 'OTEL_PYROSCOPE_ADD_PROFILE_BASELINE_URL=false'
+      - 'OTEL_PYROSCOPE_START_PROFILING=true'
     deploy:
       resources:
         limits:
@@ -92,6 +103,10 @@ services:
 
   api:
     image: daschswiss/knora-api:latest
+    depends_on:
+      - alloy
+      - db
+      - sipi
     ports:
       - "3333:3333"
       - "5555:5555"
@@ -117,12 +132,40 @@ services:
       - KNORA_WEBAPI_DSP_INGEST_AUDIENCE=http://localhost:3340
       - KNORA_WEBAPI_DSP_INGEST_BASE_URL=http://ingest:3340
       - DSP_API_LOG_LEVEL=INFO
+      - DSP_API_LOG_APPENDER=JSON
       - ALLOW_ERASE_PROJECTS=true
       # - DSP_API_LOG_APPENDER=JSON # if this variable is set, JSON logs are activated locally
+      - 'JAVA_TOOL_OPTIONS="-javaagent:/usr/local/lib/opentelemetry-javaagent.jar"'
+      - 'PYROSCOPE_SERVER_ADDRESS=http://alloy:4040'
+      - 'PYROSCOPE_APPLICATION_NAME=DSP_svc_api'
+      - 'PYROSCOPE_FORMAT=jfr'
+      - 'PYROSCOPE_PROFILER_ALLOC=512k'
+      - 'OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318'
+      - 'OTEL_SERVICE_NAME=DSP_svc_api'
+      - 'OTEL_JAVAAGENT_EXTENSIONS=/usr/local/lib/pyroscope-otel.jar'
+      - 'OTEL_PYROSCOPE_ADD_PROFILE_URL=false'
+      - 'OTEL_PYROSCOPE_ADD_PROFILE_BASELINE_URL=false'
+      - 'OTEL_PYROSCOPE_START_PROFILING=true'
     deploy:
       resources:
         limits:
           memory: 6G
+
+  alloy:
+    container_name: alloy
+    image: grafana/otel-lgtm:latest
+    ports:
+      - "3001:3000"   # Grafana web UI (login: admin/admin) - mapped to 3001 to avoid conflict
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "4040:4040"   # Pyroscope endpoint
+    networks:
+      - knora-net
+    environment:
+      # Enable anonymous authentication for local development (no password needed)
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    restart: unless-stopped
 
 networks:
   knora-net:
