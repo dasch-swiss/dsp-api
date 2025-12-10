@@ -11,8 +11,8 @@ import zio.ZLayer
 import java.time.Instant
 
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
 import org.knora.webapi.slice.api.v2.ApiV2
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.common.Value

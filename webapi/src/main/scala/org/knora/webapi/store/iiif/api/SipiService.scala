@@ -11,10 +11,10 @@ import zio.json.JsonDecoder
 import zio.nio.file.Path
 
 import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.Asset
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.store.iiif.errors.SipiException
 
 /**

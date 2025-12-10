@@ -7,8 +7,6 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.*
 
-import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
-import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -18,6 +16,8 @@ import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
 
 final case class GroupService(
   private val knoraGroupService: KnoraGroupService,
