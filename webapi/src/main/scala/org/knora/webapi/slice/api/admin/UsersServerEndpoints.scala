@@ -20,11 +20,7 @@ import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.SystemAdminChang
 import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.api.admin.service.UserRestService
 
-case class UsersServerEndpoints(
-  private val usersEndpoints: UsersEndpoints,
-  private val restService: UserRestService,
-) {
-
+final class UsersServerEndpoints(usersEndpoints: UsersEndpoints, restService: UserRestService) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     usersEndpoints.get.usersByIriProjectMemberShips.zServerLogic(restService.getProjectMemberShipsByUserIri),
     usersEndpoints.get.usersByIriProjectAdminMemberShips.zServerLogic(restService.getProjectAdminMemberShipsByUserIri),

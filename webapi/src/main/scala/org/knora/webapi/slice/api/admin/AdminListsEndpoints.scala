@@ -25,7 +25,7 @@ import org.knora.webapi.slice.api.admin.Requests.ListCreateRootNodeRequest
 import org.knora.webapi.slice.api.admin.model.AdminQueryVariables
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
-case class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
+final class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "admin" / "lists"
 

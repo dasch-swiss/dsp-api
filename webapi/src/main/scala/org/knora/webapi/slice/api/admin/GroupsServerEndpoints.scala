@@ -13,9 +13,9 @@ import org.knora.webapi.slice.api.admin.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.api.admin.service.GroupRestService
 
-case class GroupsServerEndpoints(
-  private val endpoints: GroupsEndpoints,
-  private val restService: GroupRestService,
+final class GroupsServerEndpoints(
+  endpoints: GroupsEndpoints,
+  restService: GroupRestService,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getGroups.zServerLogic(_ => restService.getGroups),

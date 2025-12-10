@@ -16,7 +16,7 @@ import zio.json.ast.*
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
-final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
+final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val maintenanceBase = "admin" / "maintenance"
 

@@ -22,7 +22,7 @@ import org.knora.webapi.slice.api.admin.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
-final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
+final class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "admin" / "groups"
 

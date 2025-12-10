@@ -13,9 +13,9 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
-final case class FilesServerEndpoints(
-  private val filesEndpoints: FilesEndpoints,
-  private val assetPermissionsResponder: AssetPermissionsResponder,
+final class FilesServerEndpoints(
+  filesEndpoints: FilesEndpoints,
+  assetPermissionsResponder: AssetPermissionsResponder,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     filesEndpoints.getAdminFilesShortcodeFileIri.serverLogic(

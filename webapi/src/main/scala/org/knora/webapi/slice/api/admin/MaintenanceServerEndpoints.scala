@@ -11,9 +11,9 @@ import zio.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService
 
-final case class MaintenanceServerEndpoints(
-  private val endpoints: MaintenanceEndpoints,
-  private val restService: MaintenanceRestService,
+final class MaintenanceServerEndpoints(
+  endpoints: MaintenanceEndpoints,
+  restService: MaintenanceRestService,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.postMaintenance.serverLogic(restService.executeMaintenanceAction),

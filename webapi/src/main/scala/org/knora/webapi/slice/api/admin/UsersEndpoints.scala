@@ -52,7 +52,7 @@ object PathVars {
       .example(Username.unsafeFrom("JaneDoe"))
 }
 
-final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
+final class UsersEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "admin" / "users"
 

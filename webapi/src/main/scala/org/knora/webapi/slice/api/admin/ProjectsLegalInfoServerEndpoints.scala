@@ -10,8 +10,8 @@ import zio.*
 import org.knora.webapi.slice.api.admin.service.ProjectsLegalInfoRestService
 
 final class ProjectsLegalInfoServerEndpoints(
-  private val endpoints: ProjectsLegalInfoEndpoints,
-  private val restService: ProjectsLegalInfoRestService,
+  endpoints: ProjectsLegalInfoEndpoints,
+  restService: ProjectsLegalInfoRestService,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getProjectLicenses.zServerLogic(restService.findLicenses),

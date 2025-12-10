@@ -44,7 +44,7 @@ object PermissionEndpointsRequests {
   }
 }
 
-final case class PermissionsEndpoints(base: BaseEndpoints) {
+final class PermissionsEndpoints(base: BaseEndpoints) {
 
   private val permissionsBase = "admin" / "permissions"
 

@@ -22,7 +22,7 @@ object FilesPathVar {
   val filename: PathCapture[SparqlEncodedString] = path[SparqlEncodedString]("filename")
 }
 
-final case class FilesEndpoints(base: BaseEndpoints) {
+final class FilesEndpoints(base: BaseEndpoints) {
   val getAdminFilesShortcodeFileIri = base.withUserEndpoint.get
     .in("admin" / "files" / projectShortcode / filename)
     .out(jsonBody[PermissionCodeAndProjectRestrictedViewSettings])

@@ -20,9 +20,9 @@ import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.api.admin.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.api.admin.service.PermissionRestService
 
-final case class PermissionsServerEndpoints(
-  private val permissionsEndpoints: PermissionsEndpoints,
-  private val restService: PermissionRestService,
+final class PermissionsServerEndpoints(
+  permissionsEndpoints: PermissionsEndpoints,
+  restService: PermissionRestService,
 ) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(

@@ -21,7 +21,7 @@ object MessageResponse {
   implicit val jsonCodec: JsonCodec[MessageResponse] = DeriveJsonCodec.gen[MessageResponse]
 }
 
-final case class StoreEndpoints(baseEndpoints: BaseEndpoints) {
+final class StoreEndpoints(baseEndpoints: BaseEndpoints) {
 
   val postStoreResetTriplestoreContent =
     baseEndpoints.publicEndpoint

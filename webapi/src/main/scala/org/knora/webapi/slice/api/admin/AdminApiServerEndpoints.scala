@@ -9,16 +9,16 @@ import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir.*
 import zio.*
 
-final case class AdminApiServerEndpoints(
-  private val adminListsServerEndpoints: AdminListsServerEndpoints,
-  private val filesServerEndpoints: FilesServerEndpoints,
-  private val groupsServerEndpoints: GroupsServerEndpoints,
-  private val maintenanceServerEndpoints: MaintenanceServerEndpoints,
-  private val permissionsServerEndpoints: PermissionsServerEndpoints,
-  private val projectsServerEndpoints: ProjectsServerEndpoints,
-  private val projectsLegalInfoServerEndpoints: ProjectsLegalInfoServerEndpoints,
-  private val storeServerEndpoints: StoreServerEndpoints,
-  private val usersServerEndpoints: UsersServerEndpoints,
+final class AdminApiServerEndpoints(
+  adminListsServerEndpoints: AdminListsServerEndpoints,
+  filesServerEndpoints: FilesServerEndpoints,
+  groupsServerEndpoints: GroupsServerEndpoints,
+  maintenanceServerEndpoints: MaintenanceServerEndpoints,
+  permissionsServerEndpoints: PermissionsServerEndpoints,
+  projectsServerEndpoints: ProjectsServerEndpoints,
+  projectsLegalInfoServerEndpoints: ProjectsLegalInfoServerEndpoints,
+  storeServerEndpoints: StoreServerEndpoints,
+  usersServerEndpoints: UsersServerEndpoints,
 ) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =

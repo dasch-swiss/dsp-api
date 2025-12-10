@@ -11,11 +11,7 @@ import zio.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.api.admin.service.StoreRestService
 
-final case class StoreServerEndpoints(
-  private val appConfig: AppConfig,
-  private val endpoints: StoreEndpoints,
-  private val restService: StoreRestService,
-) {
+final class StoreServerEndpoints(appConfig: AppConfig, endpoints: StoreEndpoints, restService: StoreRestService) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
     if (appConfig.allowReloadOverHttp)

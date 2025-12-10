@@ -18,9 +18,9 @@ import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
 import org.knora.webapi.slice.api.admin.service.ProjectRestService
 
-final case class ProjectsServerEndpoints(
-  private val projectsEndpoints: ProjectsEndpoints,
-  private val restService: ProjectRestService,
+final class ProjectsServerEndpoints(
+  projectsEndpoints: ProjectsEndpoints,
+  restService: ProjectRestService,
 ) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(

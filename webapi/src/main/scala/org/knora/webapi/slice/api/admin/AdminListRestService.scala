@@ -31,10 +31,10 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.admin.Requests.*
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 
-final case class AdminListRestService(
-  private val auth: AuthorizationRestService,
-  private val knoraProjectService: KnoraProjectService,
-  private val listsResponder: ListsResponder,
+final class AdminListRestService(
+  auth: AuthorizationRestService,
+  listsResponder: ListsResponder,
+  projectService: KnoraProjectService,
 ) {
 
   def getLists(projectIriOpt: Option[Either[ProjectIri, Shortcode]]): Task[ListsGetResponseADM] =
@@ -47,7 +47,7 @@ final case class AdminListRestService(
 
   def listChange(user: User)(iri: ListIri, request: ListChangeRequest): Task[NodeInfoGetResponseADM] = for {
     _       <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
-    project <- knoraProjectService
+    project <- projectService
                  .findById(request.projectIri)
                  .someOrFail(BadRequestException("Project not found"))
     _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
@@ -90,7 +90,7 @@ final case class AdminListRestService(
   } yield response
 
   def listCreateRootNode(user: User)(req: ListCreateRootNodeRequest): Task[ListGetResponseADM] = for {
-    project <- knoraProjectService
+    project <- projectService
                  .findById(req.projectIri)
                  .someOrFail(BadRequestException("Project not found"))
     _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
@@ -102,7 +102,7 @@ final case class AdminListRestService(
     user: User,
   )(iri: ListIri, req: ListCreateChildNodeRequest): Task[ChildNodeInfoGetResponseADM] = for {
     _       <- ZIO.fail(BadRequestException("Route and payload parentNodeIri mismatch.")).when(iri != req.parentNodeIri)
-    project <- knoraProjectService
+    project <- projectService
                  .findById(req.projectIri)
                  .someOrFail(BadRequestException("Project not found"))
     _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)

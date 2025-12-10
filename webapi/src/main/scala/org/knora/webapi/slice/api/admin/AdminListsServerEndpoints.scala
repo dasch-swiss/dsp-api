@@ -12,9 +12,9 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.admin.Requests.*
 
-final case class AdminListsServerEndpoints(
-  private val adminListsEndpoints: AdminListsEndpoints,
-  private val restService: AdminListRestService,
+final class AdminListsServerEndpoints(
+  adminListsEndpoints: AdminListsEndpoints,
+  restService: AdminListRestService,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     adminListsEndpoints.getListsQueryByProjectIriOption.zServerLogic(restService.getLists),

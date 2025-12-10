@@ -24,9 +24,7 @@ import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
-final case class ProjectsEndpoints(
-  baseEndpoints: BaseEndpoints,
-) {
+final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val projectsBase        = "admin" / "projects"
   private val projectsByIri       = projectsBase / "iri" / projectIri

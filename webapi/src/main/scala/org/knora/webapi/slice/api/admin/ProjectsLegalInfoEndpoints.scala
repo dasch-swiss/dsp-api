@@ -48,7 +48,7 @@ object CopyrightHolderReplaceRequest {
   given JsonCodec[CopyrightHolderReplaceRequest] = DeriveJsonCodec.gen[CopyrightHolderReplaceRequest]
 }
 
-final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
+final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   private final val base = "admin" / "projects" / "shortcode" / projectShortcode / "legal-info"
 
