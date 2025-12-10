@@ -27,7 +27,6 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 import org.knora.webapi.slice.`export`.api.ExportApiModule
 import org.knora.webapi.slice.admin.AdminModule
-import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.api.ApiModule
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
@@ -58,7 +57,6 @@ object LayersLive { self =>
   type Environment =
     // format: off
     ApiModule.Dependencies &
-    AdminApiModule.Provided &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
     AssetPermissionsResponder &
@@ -103,7 +101,6 @@ object LayersLive { self =>
       self.Environment,
     ](
       // ZLayer.Debug.mermaid,
-      AdminApiModule.layer,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
       AssetPermissionsResponder.layer,

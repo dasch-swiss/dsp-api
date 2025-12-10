@@ -14,7 +14,7 @@ import zio.prelude.Validation
 import java.net.URI
 
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec
+import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.AI_GENERATED
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.BORIS
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_0_1_0

@@ -42,7 +42,7 @@ import zio.test.assertTrue
 
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.dspIngestConfigLayer

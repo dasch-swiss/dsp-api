@@ -26,8 +26,8 @@ import scala.util.Try
 
 import dsp.valueobjects.UuidUtil
 import org.knora.sipi.MockDspApiServer.verify.*
-import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer

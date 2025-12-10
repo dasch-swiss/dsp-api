@@ -9,10 +9,10 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.slice.admin.api.model.Project
-import org.knora.webapi.slice.admin.api.model.UserDto
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.api.admin.model.UserDto
 
 /**
  * Represents an answer to a request for a list of all projects the user is member of.

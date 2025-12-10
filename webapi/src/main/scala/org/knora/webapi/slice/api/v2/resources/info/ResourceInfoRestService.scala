@@ -11,9 +11,9 @@ import java.time.Instant
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.admin.api.model.Order
-import org.knora.webapi.slice.admin.api.model.OrderBy
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.admin.model.Order
+import org.knora.webapi.slice.api.admin.model.OrderBy
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 

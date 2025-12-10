@@ -10,7 +10,7 @@ import zio.*
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.`export`.api.ExportServerEndpoints
-import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
+import org.knora.webapi.slice.api.admin.AdminPathVariables.projectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.ontology.OntologyRestServiceV3

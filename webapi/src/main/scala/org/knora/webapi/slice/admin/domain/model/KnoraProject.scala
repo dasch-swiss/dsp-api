@@ -14,7 +14,7 @@ import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
+import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
 import org.knora.webapi.slice.common.StringValueCompanion

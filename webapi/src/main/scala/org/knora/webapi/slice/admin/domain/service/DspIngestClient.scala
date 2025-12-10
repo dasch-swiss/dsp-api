@@ -30,7 +30,7 @@ import java.io.IOException
 import scala.concurrent.duration.DurationInt
 
 import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.infrastructure.JwtService
 

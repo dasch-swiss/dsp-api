@@ -25,7 +25,7 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapRequest
+import org.knora.webapi.slice.api.admin.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat

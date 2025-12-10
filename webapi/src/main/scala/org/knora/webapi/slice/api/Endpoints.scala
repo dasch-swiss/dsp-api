@@ -9,7 +9,7 @@ import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir.*
 import zio.*
 
-import org.knora.webapi.slice.admin.api.AdminApiServerEndpoints
+import org.knora.webapi.slice.api.admin.AdminApiServerEndpoints
 import org.knora.webapi.slice.api.management.ManagementServerEndpoints
 import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
 import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints

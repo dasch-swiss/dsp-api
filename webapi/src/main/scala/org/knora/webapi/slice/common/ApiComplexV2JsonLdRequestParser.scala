@@ -32,13 +32,13 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseReso
 import org.knora.webapi.messages.v2.responder.resourcemessages.UpdateResourceMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
-import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.mapping.CreateStandoffMappingForm
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.jena.JenaConversions.given
