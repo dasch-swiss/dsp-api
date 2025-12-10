@@ -16,6 +16,7 @@ import zio.json.ast.Json
 import zio.json.ast.JsonCursor
 import zio.metrics.Metric
 import zio.nio.file.Path as NioPath
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -460,9 +461,18 @@ case class TriplestoreServiceLive(
 
 object TriplestoreServiceLive {
   import scala.concurrent.duration.*
+  import sttp.client4.opentelemetry.zio.OpenTelemetryTracingZioBackend
 
-  val layer: URLayer[Triplestore, TriplestoreService] =
-    HttpClientZioBackend
-      .layer(options = BackendOptions.Default.connectionTimeout(2.hours))
-      .orDie >+> ZLayer.derive[TriplestoreServiceLive]
+  private val httpClientLayer: URLayer[Tracing, WebSocketStreamBackend[Task, ZioStreams]] = ZLayer
+    .fromZIO(
+      for {
+        otel        <- ZIO.service[Tracing]
+        sttpBackend <- HttpClientZioBackend.apply(BackendOptions.Default.connectionTimeout(2.hours))
+        client       = OpenTelemetryTracingZioBackend.apply(sttpBackend, otel)
+      } yield client,
+    )
+    .orDie
+
+  val layer: URLayer[Tracing & Triplestore, TriplestoreService] =
+    httpClientLayer >>> ZLayer.derive[TriplestoreServiceLive]
 }

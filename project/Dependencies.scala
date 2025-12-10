@@ -152,10 +152,11 @@ object Dependencies {
   )
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"                     %% "zio-opentelemetry"           % "3.1.12",
-    "io.opentelemetry"             % "opentelemetry-sdk"           % "1.56.0",
-    "io.opentelemetry.semconv"     % "opentelemetry-semconv"       % "1.37.0",
-    "com.softwaremill.sttp.tapir" %% "tapir-opentelemetry-tracing" % tapirVersion,
+    "dev.zio"                       %% "zio-opentelemetry"                 % "3.1.12",
+    "io.opentelemetry"               % "opentelemetry-sdk"                 % "1.56.0",
+    "io.opentelemetry.semconv"       % "opentelemetry-semconv"             % "1.37.0",
+    "com.softwaremill.sttp.tapir"   %% "tapir-opentelemetry-tracing"       % tapirVersion,
+    "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend" % SttpClientVersion,
   )
 
   val integrationTestDependencies = Seq(

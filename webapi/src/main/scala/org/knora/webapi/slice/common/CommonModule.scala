@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.common
 import zio.URLayer
 import zio.ZLayer
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Triplestore
@@ -16,7 +17,7 @@ import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 
 object CommonModule { self =>
 
-  type Dependencies = AppConfig & Triplestore
+  type Dependencies = AppConfig & Triplestore & Tracing
 
   type Provided = IriConverter & StringFormatter & TriplestoreService
 
