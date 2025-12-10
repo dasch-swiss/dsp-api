@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.api.v3.export_
+package org.knora.webapi.slice.api.v3.`export`
 
 import sttp.model.MediaType
 import zio.*
@@ -14,15 +14,13 @@ import org.knora.webapi.slice.api.v3.*
 import org.knora.webapi.slice.api.v3.NotFound
 import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
-final case class ExportRestService(
-  private val iriConverter: IriConverter,
-  private val exportService: ExportService,
-  private val csvService: CsvService,
-  private val projectService: KnoraProjectService,
-  private val ontologyService: OntologyRepo,
+final class ExportRestService(
+  iriConverter: IriConverter,
+  exportService: ExportService,
+  projectService: KnoraProjectService,
+  ontologyService: OntologyRepo,
 ) {
   def exportResources(
     user: User,
@@ -52,5 +50,5 @@ final case class ExportRestService(
 }
 
 object ExportRestService {
-  val layer = ZLayer.derive[ExportRestService]
+  private[`export`] val layer = ZLayer.derive[ExportRestService]
 }

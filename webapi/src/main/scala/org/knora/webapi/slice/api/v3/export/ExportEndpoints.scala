@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.`export`.api
+package org.knora.webapi.slice.api.v3.`export`
 
 import sttp.model.HeaderNames
 import sttp.model.MediaType
@@ -19,11 +19,9 @@ import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.EndpointHelper
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 import org.knora.webapi.slice.api.v3.V3ErrorCode.*
-import org.knora.webapi.slice.api.v3.export_.ExportRequest
 
-final case class ExportEndpoints(
-  baseEndpoints: V3BaseEndpoint,
-) extends EndpointHelper {
+final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends EndpointHelper {
+
   val postExportResources = baseEndpoints
     .withUser(
       oneOf(
@@ -54,7 +52,7 @@ final case class ExportEndpoints(
 }
 
 object ExportEndpoints {
-  val layer = ZLayer.derive[ExportEndpoints]
+  private[`export`] val layer = ZLayer.derive[ExportEndpoints]
 
   private case class Csv() extends CodecFormat {
     override val mediaType: MediaType = new MediaTypes {}.TextCsv

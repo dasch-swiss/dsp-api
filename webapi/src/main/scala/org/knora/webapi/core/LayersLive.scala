@@ -25,7 +25,7 @@ import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
-import org.knora.webapi.slice.`export`.api.ExportApiModule
+import org.knora.webapi.slice.`export`.api.ExportModule
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.api.ApiModule
@@ -111,7 +111,7 @@ object LayersLive { self =>
       CommonModule.layer,
       ConstructResponseUtilV2.layer,
       DspIngestClient.layer,
-      ExportApiModule.layer,
+      ExportModule.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
       IriService.layer,

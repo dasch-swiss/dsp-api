@@ -11,21 +11,17 @@ import zio.ZLayer
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.api.v3.V3BaseEndpoint
-import org.knora.webapi.slice.api.v3.export_.ExportRestService
 import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.api.v3.export_.FindResourcesService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
-import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object ExportApiModule { self =>
+object ExportModule { self =>
   type Dependencies =
     // format: off
-    Authenticator &
     ConstructResponseUtilV2 &
     CsvService &
     IriConverter &
@@ -38,16 +34,12 @@ object ExportApiModule { self =>
 
   type Provided =
     // format: off
-    ExportServerEndpoints
+    ExportService
     // format: on
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
-      ExportEndpoints.layer,
-      ExportRestService.layer,
-      ExportServerEndpoints.layer,
       ExportService.layer,
       FindResourcesService.layer,
-      V3BaseEndpoint.layer,
     )
 }
