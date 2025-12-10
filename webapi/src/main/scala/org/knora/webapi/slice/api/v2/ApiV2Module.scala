@@ -11,13 +11,18 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationServerEndpoints
 import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
+import org.knora.webapi.slice.api.v2.mapping.StandoffServerEndpoints
+import org.knora.webapi.slice.api.v2.metadata.MetadataServerEndpoints
+import org.knora.webapi.slice.api.v2.ontologies.OntologiesServerEndpoints
+import org.knora.webapi.slice.api.v2.ontologies.OntologyApiModule
+import org.knora.webapi.slice.api.v2.resources.ResourcesServerEndpoints
+import org.knora.webapi.slice.api.v2.resources.info.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
+import org.knora.webapi.slice.api.v2.values.ValuesServerEndpoints
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.ontology.api.OntologiesServerEndpoints
-import org.knora.webapi.slice.resources.api.ResourceInfoServerEndpoints
-import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
+import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 import org.knora.webapi.slice.security.Authenticator
 
 object ApiV2Module {
@@ -30,17 +35,26 @@ object ApiV2Module {
     IriConverter &
     KnoraResponseRenderer &
     ListsResponder &
-    OntologiesServerEndpoints &
-    ResourceInfoServerEndpoints &
-    ResourcesApiServerEndpoints &
+    MetadataServerEndpoints.Dependencies &
+    ResourcesServerEndpoints.Dependencies &
+    ResourceInfoRepo &
+    OntologyApiModule.Dependencies &
+    StandoffServerEndpoints.Dependencies &
     SearchResponderV2 &
-    Tracing
+    Tracing &
+    ValuesServerEndpoints.Dependencies
     // format: on
 
   type Provided = ApiV2ServerEndpoints
 
   val layer = AuthenticationServerEndpoints.layer >+>
     ListsV2ServerEndpoints.layer >+>
-    SearchServerEndpoints.layer >>>
+    OntologyApiModule.layer >+>
+    ResourceInfoServerEndpoints.layer >+>
+    ResourcesServerEndpoints.layer >+>
+    MetadataServerEndpoints.layer >+>
+    SearchServerEndpoints.layer >+>
+    StandoffServerEndpoints.layer >+>
+    ValuesServerEndpoints.layer >>>
     ApiV2ServerEndpoints.layer
 }

@@ -14,7 +14,7 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.resources.api.model.VersionDate
+import org.knora.webapi.slice.api.v2.VersionDate
 
 final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) extends ReadResourcesService {
   def readResourcesSequence(

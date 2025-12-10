@@ -15,10 +15,10 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import zio.*
 
 import dsp.errors.SparqlGenerationException
+import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
-import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**

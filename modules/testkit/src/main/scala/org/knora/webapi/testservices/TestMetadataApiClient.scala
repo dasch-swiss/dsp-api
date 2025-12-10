@@ -10,8 +10,8 @@ import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.resources.api.ExportFormat
-import org.knora.webapi.slice.resources.api.ResourceMetadataDto
+import org.knora.webapi.slice.api.v2.metadata.ExportFormat
+import org.knora.webapi.slice.api.v2.metadata.ResourceMetadataDto
 
 final case class TestMetadataApiClient(private val apiClient: TestApiClient) {
 

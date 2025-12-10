@@ -37,9 +37,7 @@ import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OpenTelemetry
 import org.knora.webapi.slice.ontology.OntologyModule
-import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.resources.ResourcesModule
-import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
@@ -75,7 +73,6 @@ object LayersLive { self =>
     IriService &
     ListsResponder &
     MessageRelay &
-    OntologyApiModule.Provided &
     OntologyInferencer &
     OntologyModule.Provided &
     OntologyResponderV2 &
@@ -124,7 +121,6 @@ object LayersLive { self =>
       KnoraResponseRenderer.layer,
       ListsResponder.layer,
       MessageRelayLive.layer,
-      OntologyApiModule.layer,
       OntologyModule.layer,
       OntologyResponderV2.layer,
       OpenTelemetry.layer,
@@ -137,7 +133,6 @@ object LayersLive { self =>
       RepositoryUpdater.layer,
       ReadResourcesServiceLive.layer,
       ResourceUtilV2.layer,
-      ResourcesApiModule.layer,
       ResourcesModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,

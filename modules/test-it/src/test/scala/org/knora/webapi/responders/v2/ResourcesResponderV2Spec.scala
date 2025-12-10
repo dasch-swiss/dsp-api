@@ -40,13 +40,13 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v2.GraphDirection
+import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
-import org.knora.webapi.slice.resources.api.model.GraphDirection
-import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.*

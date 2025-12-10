@@ -19,7 +19,7 @@ import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.resources.api.model.VersionDate
+import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 

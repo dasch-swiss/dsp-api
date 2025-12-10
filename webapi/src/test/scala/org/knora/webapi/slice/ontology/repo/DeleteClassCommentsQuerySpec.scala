@@ -12,8 +12,8 @@ import java.time.Instant
 
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.ontology.api.LastModificationDate
 
 object DeleteClassCommentsQuerySpec extends ZIOSpecDefault {
 
