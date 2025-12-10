@@ -12,13 +12,13 @@ import zio.ZLayer
 
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
-import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
 
 case class KnoraGroupService(
   knoraGroupRepo: KnoraGroupRepo,

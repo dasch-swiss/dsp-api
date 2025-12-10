@@ -75,7 +75,7 @@ object AuthenticationEndpointsV2 {
     case UsernamePassword(username: Username, password: String) extends LoginPayload
   }
   object LoginPayload {
-    import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
+    import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec.*
 
     private val iriPasswordCodec: JsonCodec[IriPassword]           = DeriveJsonCodec.gen[IriPassword]
     private val emailPasswordCodec: JsonCodec[EmailPassword]       = DeriveJsonCodec.gen[EmailPassword]

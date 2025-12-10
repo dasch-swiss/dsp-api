@@ -14,7 +14,7 @@ import scala.util.Try
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.slice.admin.api.Codecs.*
+import org.knora.webapi.slice.api.admin.Codecs.*
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.StringValue

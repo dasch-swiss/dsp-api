@@ -11,7 +11,7 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 /**

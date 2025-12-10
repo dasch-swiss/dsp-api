@@ -25,11 +25,11 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.sharedtestdata.*
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.api.admin.service.PermissionRestService
 
 /**
  * This spec is used to test the [[PermissionsResponder]] actor.

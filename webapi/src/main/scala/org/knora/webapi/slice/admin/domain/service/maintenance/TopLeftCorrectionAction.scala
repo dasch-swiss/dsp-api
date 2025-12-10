@@ -10,15 +10,15 @@ import zio.Task
 import zio.ZIO
 import zio.stream.ZStream
 
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.Dimensions
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ProjectWithBakFiles
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ProjectsWithBakfilesReport
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ReportAsset
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.MaintenanceAction
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.Dimensions
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.ProjectWithBakFiles
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.ProjectsWithBakfilesReport
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.ReportAsset
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select

@@ -11,10 +11,10 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 
 object ProjectServiceSpec extends ZIOSpecDefault {

@@ -25,16 +25,16 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
-import org.knora.webapi.slice.admin.api.model.Project
-import org.knora.webapi.slice.admin.api.model.ProjectAdminMembersGetResponseADM
-import org.knora.webapi.slice.admin.api.model.ProjectGetResponse
-import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
-import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
-import org.knora.webapi.slice.admin.api.model.ProjectsGetResponse
-import org.knora.webapi.slice.admin.api.model.UserDto
-import org.knora.webapi.slice.admin.api.service.UserRestService.UserResponse
-import org.knora.webapi.slice.admin.api.service.UserRestService.UsersResponse
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.api.admin.model.ProjectAdminMembersGetResponseADM
+import org.knora.webapi.slice.api.admin.model.ProjectGetResponse
+import org.knora.webapi.slice.api.admin.model.ProjectMembersGetResponseADM
+import org.knora.webapi.slice.api.admin.model.ProjectOperationResponseADM
+import org.knora.webapi.slice.api.admin.model.ProjectsGetResponse
+import org.knora.webapi.slice.api.admin.model.UserDto
+import org.knora.webapi.slice.api.admin.service.UserRestService.UserResponse
+import org.knora.webapi.slice.api.admin.service.UserRestService.UsersResponse
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 

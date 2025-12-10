@@ -9,14 +9,16 @@ import sttp.tapir.*
 import zio.*
 
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.`export`.api.ExportServerEndpoints
-import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.api.admin.AdminPathVariables.projectIri
+import org.knora.webapi.slice.api.v3.`export`.ExportServerEndpoints
+import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.api.v3.ontology.OntologyRestServiceV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesEndpointsV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesRestServiceV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpointsV3
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.security.Authenticator
@@ -26,7 +28,8 @@ object ApiV3Module {
   type Dependencies =
     // format: off
     Authenticator &
-    ExportServerEndpoints &
+    ExportService &
+    IriConverter &
     KnoraProjectService &
     OntologyRepo &
     ResourcesRepo &
@@ -38,6 +41,7 @@ object ApiV3Module {
   val layer: URLayer[Dependencies, ApiV3ServerEndpoints] =
     ZLayer.makeSome[Dependencies, ApiV3ServerEndpoints](
       ApiV3ServerEndpoints.layer,
+      ExportServerEndpoints.layer,
       OntologyRestServiceV3.layer,
       ResourcesEndpointsV3.layer,
       ResourcesRestServiceV3.layer,

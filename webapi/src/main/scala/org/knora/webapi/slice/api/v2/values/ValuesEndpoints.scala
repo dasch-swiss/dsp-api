@@ -8,9 +8,9 @@ package org.knora.webapi.slice.api.v2.values
 import sttp.tapir.*
 import zio.ZLayer
 
+import org.knora.webapi.slice.api.v2.ApiV2
 import org.knora.webapi.slice.api.v2.ValueUuid
 import org.knora.webapi.slice.api.v2.VersionDate
-import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {

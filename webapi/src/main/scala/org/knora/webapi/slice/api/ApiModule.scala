@@ -4,10 +4,9 @@
  */
 
 package org.knora.webapi.slice.api
-
 import zio.*
 
-import org.knora.webapi.slice.admin.api.AdminApiServerEndpoints
+import org.knora.webapi.slice.api.admin.AdminApiModule
 import org.knora.webapi.slice.api.management.ManagementServerEndpoints
 import org.knora.webapi.slice.api.v2.ApiV2Module
 import org.knora.webapi.slice.api.v3.ApiV3Module
@@ -17,14 +16,20 @@ object ApiModule {
 
   type Dependencies =
     // format: off
-    AdminApiServerEndpoints &
+    AdminApiModule.Dependencies &
     ApiV2Module.Dependencies &
     ApiV3Module.Dependencies &
     ManagementServerEndpoints.Dependencies
     // format: on
 
-  type Provided = Endpoints
+  type Provided = Endpoints & AdminApiModule.Provided
 
   val layer: URLayer[Dependencies, Provided] =
-    (ManagementServerEndpoints.layer <*> ApiV2Module.layer <*> ApiV3Module.layer) >>> Endpoints.layer
+    ZLayer.makeSome[Dependencies, Provided](
+      AdminApiModule.layer,
+      ManagementServerEndpoints.layer,
+      ApiV2Module.layer,
+      ApiV3Module.layer,
+      Endpoints.layer,
+    )
 }

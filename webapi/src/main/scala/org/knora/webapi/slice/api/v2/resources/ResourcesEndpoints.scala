@@ -10,10 +10,10 @@ import zio.ZLayer
 
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v2.ApiV2
 import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v2.VersionDate
-import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphRoute) {
