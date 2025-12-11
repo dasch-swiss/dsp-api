@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.v3.export_
 
+import cats.*
 import cats.implicits.*
 import zio.*
 import zio.ZLayer
@@ -35,7 +36,16 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
+import org.knora.webapi.util.WithAsIs
 
+import ExportService.Internals.*
+
+/* ExportService gathers data from IRIs and converts them to CSV rows.
+ *
+ * Design notes:
+ * - hidden invariant: if `includeIris`, then both rowHeaders and exportSingleRow must duplicate the IRI rows
+ * - when deciding to duplicate rows for `includeIris`, make sure to duplicate only depending on column-, not value-level data
+ */
 final case class ExportService(
   private val iriConverter: IriConverter,
   private val ontologyRepo: OntologyRepo,
@@ -93,7 +103,6 @@ final case class ExportService(
       .foreach(propertyIris)(i => ontologyRepo.findProperty(i).map(_.map(i -> _)))
       .map(_.foldMapK(_.toMap))
 
-  // NOTE: hidden invariant: if `includeIris`, then both rowHeaders and exportSingleRow must duplicate the IRI rows
   private def rowHeaders(
     propsWithInfo: List[(PropertyIri, Option[ReadPropertyInfoV2])],
     labelSmartIri: SmartIri,
@@ -124,52 +133,47 @@ final case class ExportService(
         ListMap("Label" -> resource.label) ++
         ListMap.from(
           propsWithInfo.flatMap { (propertyIri: PropertyIri, info: Option[ReadPropertyInfoV2]) =>
-            valueColumns(
-              propertyIri,
-              info,
-              resource.values.get(propertyIri.smartIri.toInternalSchema).foldK.map(_.valueContent),
-              includeIris,
-              resources,
-              vocabularies,
-            ).map { case (k, vs) =>
-              (k, vs.mkString(" :: "))
+            val valueContents = resource.values.get(propertyIri.smartIri.toInternalSchema).foldK.map(_.valueContent)
+            val values        = valueColumns(valueContents, includeIris, resources, vocabularies)
+
+            val columnKey = propertyIri.smartIri.toString
+
+            info.exists(_.isLinkValueProp) match {
+              case true =>
+                val linkValue = values.asOpt[LinkValue]
+                val labels    = ListMap(columnKey -> linkValue.foldMapK(_.labels).mkString(ValueSep))
+                val iris      = ListMap(s"${columnKey}_IRI" -> linkValue.foldMapK(_.labelIris).mkString(ValueSep))
+
+                labels ++ iris.filter(_ => includeIris)
+              case false =>
+                ListMap(columnKey -> values.mkString)
             }
           },
         ),
     )
 
+  // ValueContents are rightfully expected to have the same type, which is not guaranteed in the code
   private def valueColumns(
-    property: PropertyIri,
-    info: Option[ReadPropertyInfoV2],
     vcs: Seq[ValueContentV2],
     includeIris: Boolean,
     resources: Map[IRI, ReadResourceV2],
     vocabularies: Map[String, String],
-  ): ListMap[String, List[String]] = {
-    val propertyIri = property.smartIri.toString
-    vcs.map { vc =>
+  ): IntermediateValue =
+    vcs.foldMap { vc =>
       vc match
-        case gvc: GeonameValueContentV2 =>
-          ListMap(propertyIri -> List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
-        case lvc: HierarchicalListValueContentV2 =>
-          ListMap(propertyIri -> List(vocabularies.get(lvc.valueHasString).getOrElse("")))
         case lvc: LinkValueContentV2 =>
           val resource = lvc.nestedResource.orElse(resources.get(lvc.referredResourceIri))
-          List(
-            ListMap(propertyIri -> List(resource.map(_.label).getOrElse(""))),
-            ListMap(s"${propertyIri}_IRI" -> List(stringFormat(vc.valueHasString))).filter(_ => includeIris),
-          ).fold(ListMap.empty)(_ ++ _)
+          LinkValue(
+            List(resource.map(_.label).getOrElse("")),
+            List(stringFormat(vc.valueHasString)).filter(_ => includeIris),
+          )
+        case gvc: GeonameValueContentV2 =>
+          RegularValue(List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
+        case lvc: HierarchicalListValueContentV2 =>
+          RegularValue(List(vocabularies.get(lvc.valueHasString).getOrElse("")))
         case vc =>
-          ListMap(propertyIri -> List(stringFormat(vc.valueHasString)))
-    }.fold(ListMap.empty)(_ ++ _) match {
-      case listMap if listMap.nonEmpty =>
-        listMap
-      case _ if info.exists(_.isLinkValueProp) =>
-        ListMap(propertyIri -> List(), s"${propertyIri}_IRI" -> List())
-      case _ =>
-        ListMap(propertyIri -> List())
+          RegularValue(List(stringFormat(vc.valueHasString)))
     }
-  }
 
   private def stringFormat(s: String): String =
     s.replaceAll("\n", "\\\\n").replaceAll("\u001e", " ")
@@ -177,4 +181,31 @@ final case class ExportService(
 
 object ExportService {
   val layer = ZLayer.derive[ExportService]
+
+  object Internals {
+    val ValueSep = " :: "
+
+    sealed trait IntermediateValue extends WithAsIs[IntermediateValue] {
+      def mkString = (this match
+        case RegularValue(ls) => ls
+        case LinkValue(ls, _) => ls
+        case NullValue        => List()
+      ).mkString(ValueSep)
+    }
+
+    case object NullValue                                                     extends IntermediateValue
+    final case class RegularValue(values: List[String])                       extends IntermediateValue
+    final case class LinkValue(labels: List[String], labelIris: List[String]) extends IntermediateValue
+
+    given Monoid[IntermediateValue] = new Monoid[IntermediateValue] {
+      def empty = NullValue
+
+      def combine(a: IntermediateValue, b: IntermediateValue): IntermediateValue =
+        (a, b) match
+          case (RegularValue(vs1), RegularValue(vs2))     => RegularValue(vs1 ++ vs2)
+          case (LinkValue(ls1, li1), LinkValue(ls2, li2)) => LinkValue(ls1 ++ ls2, li1 ++ li2) // should never happen
+          case (NullValue, a)                             => a
+          case (a, _)                                     => a                                 // should never happen
+    }
+  }
 }
