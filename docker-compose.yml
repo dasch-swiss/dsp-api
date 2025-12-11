@@ -132,9 +132,8 @@ services:
       - KNORA_WEBAPI_DSP_INGEST_AUDIENCE=http://localhost:3340
       - KNORA_WEBAPI_DSP_INGEST_BASE_URL=http://ingest:3340
       - DSP_API_LOG_LEVEL=INFO
-      - DSP_API_LOG_APPENDER=JSON
       - ALLOW_ERASE_PROJECTS=true
-      # - DSP_API_LOG_APPENDER=JSON # if this variable is set, JSON logs are activated locally
+      - DSP_API_LOG_APPENDER=JSON # if this variable is set, JSON logs are activated locally
       - 'JAVA_TOOL_OPTIONS="-javaagent:/usr/local/lib/opentelemetry-javaagent.jar"'
       - 'PYROSCOPE_SERVER_ADDRESS=http://alloy:4040'
       - 'PYROSCOPE_APPLICATION_NAME=DSP_svc_api'
