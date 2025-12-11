@@ -39,7 +39,6 @@ services:
 
   sipi:
     image: daschswiss/knora-sipi:latest
-
     ports:
       - "1024:1024"
     volumes:
