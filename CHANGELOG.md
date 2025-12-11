@@ -1,5 +1,28 @@
 # Changelog
 
+## [34.0.0](https://github.com/dasch-swiss/dsp-api/compare/v33.2.0...v34.0.0) (2025-12-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* **dsp-api:** Remove /shacl endpoint ([#3904](https://github.com/dasch-swiss/dsp-api/issues/3904))
+
+### Maintenances
+
+* Move more api components to correct api package ([#3905](https://github.com/dasch-swiss/dsp-api/issues/3905)) ([10beee3](https://github.com/dasch-swiss/dsp-api/commit/10beee3acd10856f095eee2a7c647699ed6f4364))
+* Move more components into slice.api subpackages ([#3901](https://github.com/dasch-swiss/dsp-api/issues/3901)) ([9b7e653](https://github.com/dasch-swiss/dsp-api/commit/9b7e653a03030eaa11c8aafdd0fba6cc8af68a72))
+* Move some api related components to slice.api packages ([#3900](https://github.com/dasch-swiss/dsp-api/issues/3900)) ([ec72c9e](https://github.com/dasch-swiss/dsp-api/commit/ec72c9e8fc59e0446b5afd2e15a4240f7cd9e580))
+
+
+### Enhancements
+
+* **dsp-api:** Remove /shacl endpoint ([#3904](https://github.com/dasch-swiss/dsp-api/issues/3904)) ([96cb6a3](https://github.com/dasch-swiss/dsp-api/commit/96cb6a368d7e5f9d0d069d29984158b82bc185ae))
+
+
+### Bug Fixes
+
+* ExportService: more precision in handling columns with links and multiple values ([#3906](https://github.com/dasch-swiss/dsp-api/issues/3906)) ([ee2e0f9](https://github.com/dasch-swiss/dsp-api/commit/ee2e0f994a17fe2fe9b905bd3c3dc8c096c6b33b))
+
 ## [33.2.0](https://github.com/dasch-swiss/dsp-api/compare/v33.1.1...v33.2.0) (2025-12-06)
 
 
