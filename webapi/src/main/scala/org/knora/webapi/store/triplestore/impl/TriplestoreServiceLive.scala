@@ -9,7 +9,6 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.http.HttpHost
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
-import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
@@ -24,6 +23,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption.*
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.FiniteDuration
 import scala.io.Source
 
 import dsp.errors.*
@@ -34,6 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol.fu
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.infrastructure.TracingHttpClient
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
@@ -460,16 +462,7 @@ case class TriplestoreServiceLive(
 }
 
 object TriplestoreServiceLive {
-  import scala.concurrent.duration.*
-  import sttp.client4.opentelemetry.zio.OpenTelemetryTracingZioBackend
-
-  private val httpClient = ZLayer
-    .fromZIO(for {
-      tracing    <- ZIO.service[Tracing]
-      zioBackend <- HttpClientZioBackend(options = BackendOptions.Default.connectionTimeout(2.hours))
-    } yield OpenTelemetryTracingZioBackend(zioBackend, tracing))
-    .orDie
 
   val layer: URLayer[Triplestore & Tracing, TriplestoreService] =
-    httpClient >>> ZLayer.derive[TriplestoreServiceLive]
+    TracingHttpClient.layer(FiniteDuration(2, TimeUnit.HOURS)) >>> ZLayer.derive[TriplestoreServiceLive]
 }
