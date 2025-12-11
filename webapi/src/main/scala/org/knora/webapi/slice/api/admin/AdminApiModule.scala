@@ -7,7 +7,6 @@ package org.knora.webapi.slice.api.admin
 
 import zio.URLayer
 import zio.ZLayer
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Features
 import org.knora.webapi.responders.admin.AssetPermissionsResponder
@@ -38,6 +37,7 @@ import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 object AdminApiModule { self =>
 
@@ -67,6 +67,7 @@ object AdminApiModule { self =>
       ProjectImportService &
       ProjectService &
       TriplestoreService &
+      Tracing &
       UserService
       // format: on
 

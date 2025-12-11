@@ -7,7 +7,6 @@ package org.knora.webapi.slice.infrastructure
 
 import zio.URLayer
 import zio.ZLayer
-import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
@@ -21,9 +20,7 @@ object InfrastructureModule { self =>
     CacheManager &
     CsvService &
     InvalidTokenCache &
-    JwtService &
-    Tracing &
-    io.opentelemetry.api.OpenTelemetry
+    JwtService
     // format: on
 
   val layer: URLayer[self.Dependencies, self.Provided] =
@@ -32,6 +29,5 @@ object InfrastructureModule { self =>
       InvalidTokenCache.layer,
       JwtServiceLive.layer,
       CsvService.layer,
-      OpenTelemetry.layer,
     )
 }

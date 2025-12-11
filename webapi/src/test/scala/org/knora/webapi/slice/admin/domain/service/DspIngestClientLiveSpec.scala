@@ -39,7 +39,6 @@ import zio.test.TestAspect
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
-
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -50,7 +49,7 @@ import org.knora.webapi.slice.admin.domain.service.HttpMockServer.TestPort
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.OpenTelemetry
+import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 
 object DspIngestClientSpec extends ZIOSpecDefault {
@@ -127,7 +126,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
       TestPort.random,
       dspIngestConfigLayer,
       jwtServiceMockLayer,
-      OpenTelemetry.layer,
+      OtelSetup.layer,
     ) @@ TestAspect.sequential
 }
 

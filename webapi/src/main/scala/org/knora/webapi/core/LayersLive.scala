@@ -7,7 +7,6 @@ package org.knora.webapi.core
 
 import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.DspIngestConfig
@@ -34,6 +33,7 @@ import org.knora.webapi.slice.common.CommonModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
+import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
@@ -47,6 +47,7 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.util.Logger
+import zio.telemetry.opentelemetry.context.ContextStorage
 
 object LayersLive { self =>
 
@@ -61,6 +62,8 @@ object LayersLive { self =>
     AssetPermissionsResponder &
     AuthorizationRestService &
     CardinalityHandler &
+    ContextStorage &
+    Tracing &
     CommonModule.Provided &
     ConstructResponseUtilV2 &
     CreateResourceV2Handler &
@@ -100,6 +103,7 @@ object LayersLive { self =>
       self.Environment,
     ](
       // ZLayer.Debug.mermaid,
+      OtelSetup.layer,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
       AssetPermissionsResponder.layer,
