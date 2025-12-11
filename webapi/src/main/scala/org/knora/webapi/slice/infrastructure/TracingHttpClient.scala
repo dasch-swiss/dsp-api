@@ -16,12 +16,12 @@ import scala.concurrent.duration.FiniteDuration
 
 object TracingHttpClient {
 
-  val layer: URLayer[Tracing, WebSocketStreamBackend[Task, ZioStreams]] = build(BackendOptions.Default)
+  val layer: URLayer[Tracing, StreamBackend[Task, ZioStreams]] = build(BackendOptions.Default)
 
-  def layer(connectionTimeout: FiniteDuration): URLayer[Tracing, WebSocketStreamBackend[Task, ZioStreams]] =
+  def layer(connectionTimeout: FiniteDuration): URLayer[Tracing, StreamBackend[Task, ZioStreams]] =
     build(options = BackendOptions.Default.connectionTimeout(connectionTimeout))
 
-  private def build(options: BackendOptions): URLayer[Tracing, WebSocketStreamBackend[Task, ZioStreams]] = ZLayer
+  private def build(options: BackendOptions): URLayer[Tracing, StreamBackend[Task, ZioStreams]] = ZLayer
     .fromZIO(for {
       tracing    <- ZIO.service[Tracing]
       zioBackend <- HttpClientZioBackend(options = options)
