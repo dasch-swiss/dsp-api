@@ -7,7 +7,6 @@ package org.knora.webapi.slice.admin.domain.service
 
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
-import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.Scope
 import zio.Task
 import zio.ZIO
@@ -33,6 +32,7 @@ import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.TracingHttpClient
 
 final case class AssetInfoResponse(
   internalFilename: String,
@@ -117,5 +117,5 @@ final case class DspIngestClient(
 }
 
 object DspIngestClient {
-  val layer = HttpClientZioBackend.layer().orDie >+> ZLayer.derive[DspIngestClient]
+  val layer = TracingHttpClient.layer >>> ZLayer.derive[DspIngestClient]
 }

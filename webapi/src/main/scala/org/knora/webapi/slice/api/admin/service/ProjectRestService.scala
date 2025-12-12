@@ -10,7 +10,6 @@ import zio.nio.file.Files
 import zio.stream.ZStream
 
 import scala.annotation.unused
-
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
@@ -38,20 +37,22 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import zio.telemetry.opentelemetry.tracing.Tracing
 
-final case class ProjectRestService(
-  private val format: KnoraResponseRenderer,
-  private val projectService: ProjectService,
-  private val knoraProjectService: KnoraProjectService,
-  private val permissionResponder: PermissionsResponder,
-  private val projectEraseService: ProjectEraseService,
-  private val projectExportService: ProjectExportService,
-  private val projectImportService: ProjectImportService,
-  private val ontologyCache: OntologyCache,
-  private val userService: UserService,
-  private val auth: AuthorizationRestService,
-  private val features: Features,
-  private val triplestore: TriplestoreService,
+final class ProjectRestService(
+  format: KnoraResponseRenderer,
+  projectService: ProjectService,
+  knoraProjectService: KnoraProjectService,
+  permissionResponder: PermissionsResponder,
+  projectEraseService: ProjectEraseService,
+  projectExportService: ProjectExportService,
+  projectImportService: ProjectImportService,
+  ontologyCache: OntologyCache,
+  userService: UserService,
+  auth: AuthorizationRestService,
+  features: Features,
+  triplestore: TriplestoreService,
+  tracing: Tracing,
 ) {
 
   /**
@@ -71,8 +72,11 @@ final case class ProjectRestService(
   def findById(id: ProjectIri): Task[ProjectGetResponse] =
     toExternalProjectGetResponse(projectService.findById(id), id)
 
-  def findByShortcode(shortcode: Shortcode): Task[ProjectGetResponse] =
-    toExternalProjectGetResponse(projectService.findByShortcode(shortcode), shortcode)
+  def findByShortcode(shortcode: Shortcode): Task[ProjectGetResponse] = {
+    val byShortCode = projectService.findByShortcode(shortcode)
+    tracing.getCurrentSpanContextUnsafe.debug("Finding project by shortcode: " + shortcode.value) *>
+      toExternalProjectGetResponse(byShortCode, shortcode)
+  }
 
   def findByShortname(shortname: Shortname): Task[ProjectGetResponse] =
     toExternalProjectGetResponse(projectService.findByShortname(shortname), shortname)

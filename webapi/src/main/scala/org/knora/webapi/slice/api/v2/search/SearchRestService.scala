@@ -5,10 +5,8 @@
 
 package org.knora.webapi.slice.api.v2.search
 
-import io.opentelemetry.api.common.Attributes
 import sttp.model.MediaType
 import zio.*
-import zio.telemetry.opentelemetry.tracing.Tracing
 
 import scala.annotation.unused
 
@@ -27,7 +25,6 @@ final class SearchRestService(
   searchResponderV2: SearchResponderV2,
   renderer: KnoraResponseRenderer,
   iriConverter: IriConverter,
-  tracing: Tracing,
 ) {
 
   def searchResourcesByLabelV2(user: User)(
@@ -64,19 +61,10 @@ final class SearchRestService(
     opts: FormatOptions,
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
-    (for {
+    for {
       searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, limitToProject)
       response     <- renderer.render(searchResult, opts)
-    } yield response) @@ tracing.aspects.span(
-      spanName = "gravsearch",
-      attributes = Attributes
-        .builder()
-        .put("user", user.id)
-        .put("query", query)
-        .put("opts", opts.toString)
-        .put("limitToProject", limitToProject.toString)
-        .build,
-    )
+    } yield response
 
   def gravsearchCount(user: User)(
     query: String,
@@ -93,7 +81,7 @@ final class SearchRestService(
     opts: FormatOptions,
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
-    (for {
+    for {
       searchResult <-
         searchResponderV2.searchIncomingLinksV2(
           resourceIri.value,
@@ -101,17 +89,9 @@ final class SearchRestService(
           opts.schemaRendering,
           user,
           limitToProject,
-        ) @@ tracing.aspects.span("query")
-      response <- renderer.render(searchResult, opts) @@ tracing.aspects.span("render")
-    } yield response) @@ tracing.aspects.span(
-      spanName = "searchIncomingLinks",
-      attributes = Attributes
-        .builder()
-        .put("resourceIri", resourceIri.value)
-        .put("offset", offset.value)
-        .put("limitToProject", limitToProject.map(_.value).getOrElse("None"))
-        .build(),
-    )
+        )
+      response <- renderer.render(searchResult, opts)
+    } yield response
 
   def getSearchStillImageRepresentations(user: User)(
     resourceIri: InputIri,
@@ -120,20 +100,14 @@ final class SearchRestService(
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     for {
-      response <-
-        tracing.span("searchStillImageRepresentations") {
-          for {
-            result <-
-              searchResponderV2.searchStillImageRepresentationsV2(
-                resourceIri.value,
-                offset.value,
-                opts.schemaRendering,
-                user,
-                limitToProject,
-              )
-            rr <- renderer.render(result, opts)
-          } yield rr
-        }
+      result <- searchResponderV2.searchStillImageRepresentationsV2(
+                  resourceIri.value,
+                  offset.value,
+                  opts.schemaRendering,
+                  user,
+                  limitToProject,
+                )
+      response <- renderer.render(result, opts)
     } yield response
 
   def getSearchStillImageRepresentationsCount(user: User)(
@@ -142,18 +116,12 @@ final class SearchRestService(
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     for {
-      response <-
-        tracing.span("searchStillImageRepresentationsCount") {
-          for {
-            result <-
-              searchResponderV2.searchStillImageRepresentationsCountV2(
-                resourceIri.value,
-                user,
-                limitToProject,
-              )
-            rr <- renderer.render(result, opts)
-          } yield rr
-        }
+      result <- searchResponderV2.searchStillImageRepresentationsCountV2(
+                  resourceIri.value,
+                  user,
+                  limitToProject,
+                )
+      response <- renderer.render(result, opts)
     } yield response
 
   def searchIncomingRegions(user: User)(
@@ -163,20 +131,14 @@ final class SearchRestService(
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     for {
-      response <-
-        tracing.span("searchIncomingRegions") {
-          for {
-            searchResult <-
-              searchResponderV2.searchIncomingRegionsV2(
-                resourceIri.value,
-                offset.value,
-                opts.schemaRendering,
-                user,
-                limitToProject,
-              )
-            response <- renderer.render(searchResult, opts)
-          } yield response
-        }
+      searchResult <- searchResponderV2.searchIncomingRegionsV2(
+                        resourceIri.value,
+                        offset.value,
+                        opts.schemaRendering,
+                        user,
+                        limitToProject,
+                      )
+      response <- renderer.render(searchResult, opts)
     } yield response
 
   def fullTextSearch(user: User)(

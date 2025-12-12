@@ -7,9 +7,9 @@ package org.knora.webapi.store.iiif.impl
 
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
-import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.*
 import zio.nio.file.Path
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import java.net.URI
 
@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.TracingHttpClient
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -148,6 +149,6 @@ final case class SipiServiceLive(
 }
 
 object SipiServiceLive {
-  val layer: URLayer[Sipi & DspIngestClient & JwtService & ScopeResolver, SipiServiceLive] =
-    HttpClientZioBackend.layer().orDie >>> ZLayer.derive[SipiServiceLive]
+  val layer: URLayer[DspIngestClient & JwtService & ScopeResolver & Sipi & Tracing, SipiServiceLive] =
+    TracingHttpClient.layer >>> ZLayer.derive[SipiServiceLive]
 }

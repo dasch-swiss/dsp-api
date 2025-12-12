@@ -12,8 +12,17 @@ import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
 
 object InfrastructureModule { self =>
+
   type Dependencies = DspIngestConfig & JwtConfig
-  type Provided     = CacheManager & CsvService & InvalidTokenCache & JwtService
+
+  type Provided =
+    // format: off
+    CacheManager &
+    CsvService &
+    InvalidTokenCache &
+    JwtService
+    // format: on
+
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       CacheManager.layer,
