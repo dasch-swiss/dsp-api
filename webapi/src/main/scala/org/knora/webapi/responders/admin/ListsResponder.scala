@@ -34,13 +34,14 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.Requests.*
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resources.repo.AskListNameInProjectExistsQuery
 import org.knora.webapi.slice.resources.repo.ChangeParentNodeQuery
 import org.knora.webapi.slice.resources.repo.CreateListNodeQuery
+import org.knora.webapi.slice.resources.repo.DeleteListNodeCommentsQuery
+import org.knora.webapi.slice.resources.repo.DeleteNodeQuery
 import org.knora.webapi.slice.resources.repo.IsListInUseQuery
 import org.knora.webapi.slice.resources.repo.ListNodeExistsQuery
 import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
@@ -49,12 +50,11 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.util.ZioHelper
 
 final case class ListsResponder(
   auth: AuthorizationRestService,
   iriService: IriService,
-  knoraProjectService: KnoraProjectService,
+  projectService: KnoraProjectService,
   mapper: PredicateObjectMapper,
   triplestore: TriplestoreService,
 )(implicit val stringFormatter: StringFormatter) {
@@ -75,12 +75,12 @@ final case class ListsResponder(
     for {
       project <- iriShortcode match {
                    case Some(Left(iri)) =>
-                     knoraProjectService
+                     projectService
                        .findById(iri)
                        .someOrFail(NotFoundException(s"Project with IRI '$iri' not found"))
                        .asSome
                    case Some(Right(code)) =>
-                     knoraProjectService
+                     projectService
                        .findByShortcode(code)
                        .someOrFail(NotFoundException(s"Project with shortcode '$code' not found"))
                        .asSome
@@ -583,7 +583,7 @@ final case class ListsResponder(
 
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
-      project <- knoraProjectService
+      project <- projectService
                    .findById(projectIri)
                    .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
 
@@ -661,7 +661,7 @@ final case class ListsResponder(
     /* Verify that the node with Iri exists. */
     _ <- listNodeGetADM(request.listIri.value, shallow = true)
            .someOrFail(BadRequestException(s"List item with '${request.listIri}' not found."))
-    project <- knoraProjectService
+    project <- projectService
                  .findById(request.projectIri)
                  .someOrFail(NotFoundException.notFound(request.projectIri))
     _ <- request.name.map(ensureListNameInProjectDoesNotExist(_, project)).getOrElse(ZIO.unit)
@@ -731,10 +731,7 @@ final case class ListsResponder(
   }
 
   private def ensureUserIsAdminOrProjectOwner(listIri: ListIri, user: User): Task[KnoraProject] =
-    getProjectIriFromNode(listIri.value)
-      .flatMap(knoraProjectService.findById)
-      .someOrFail(BadRequestException(s"Project not found for node $listIri"))
-      .tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
+    getProjectFromNode(listIri.value).tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
 
   /**
    * Changes name of the node (root or child)
@@ -1059,9 +1056,8 @@ final case class ListsResponder(
       _ <- ZIO
              .fail(BadRequestException(s"Nothing to delete. Node ${nodeIri.value} does not have comments."))
              .when(!node.hasComments)
-      projectIri <- getProjectIriFromNode(nodeIri.value)
-      namedGraph <- getDataNamedGraph(projectIri)
-      _          <- triplestore.query(Update(sparql.admin.txt.deleteListNodeComments(namedGraph, nodeIri.value)))
+      project <- getProjectFromNode(nodeIri.value)
+      _       <- triplestore.query(DeleteListNodeCommentsQuery.build(nodeIri, project))
     } yield ListNodeCommentsDeleteResponseADM(nodeIri.value, commentsDeleted = true)
 
   /**
@@ -1097,37 +1093,6 @@ final case class ListsResponder(
         }
       }
     }
-
-    /**
-     * Delete a list (root node) or a child node after verifying that neither the node itself nor any of its children
-     * are used. If not used, delete the children of the node first, then delete the node itself.
-     *
-     * @param nodeIri    the node's IRI.
-     * @param projectIri the feature factory configuration.
-     * @param children   the children of the node.
-     * @param isRootNode the flag to determine the type of the node, root or child.
-     * @return a [[IRI]]
-     * @throws UpdateNotPerformedException in case a node is in use.
-     */
-    def deleteListItem(
-      nodeIri: IRI,
-      projectIri: ProjectIri,
-      children: Seq[ListChildNodeADM],
-      isRootNode: Boolean,
-    ): Task[IRI] =
-      for {
-        // get the data graph of the project.
-        dataNamedGraph <- getDataNamedGraph(projectIri)
-
-        // delete the children
-        errorCheckFutures: Seq[Task[Unit]] =
-          children.map(child => deleteNode(dataNamedGraph, child.id, isRootNode = false))
-        _ <- ZioHelper.sequence(errorCheckFutures)
-
-        // delete the node itself
-        _ <- deleteNode(dataNamedGraph, nodeIri, isRootNode)
-
-      } yield dataNamedGraph
 
     /**
      * Update the parent node of the deleted node by updating its remaining children.
@@ -1204,21 +1169,25 @@ final case class ListsResponder(
 
     val nodeDeleteTask = for {
       project   <- ensureUserIsAdminOrProjectOwner(nodeIri, requestingUser)
-      projectIri = project.id
       maybeNode <- listNodeGetADM(nodeIri.value, shallow = false)
 
       response <- maybeNode match {
                     case Some(rootNode: ListRootNodeADM) =>
                       for {
                         _ <- isNodeOrItsChildrenUsed(rootNode.id, rootNode.children)
-                        _ <- deleteListItem(rootNode.id, projectIri, rootNode.children, isRootNode = true)
+                        _ <- ZIO.foreachDiscard(rootNode.children.map(_.listIri)) { childIri =>
+                               triplestore.query(DeleteNodeQuery.buildForChildNode(childIri, project))
+                             }
+                        _ <- triplestore.query(DeleteNodeQuery.buildForRootNode(rootNode.listIri, project))
                       } yield ListDeleteResponseADM(rootNode.id, deleted = true)
 
                     case Some(childNode: ListChildNodeADM) =>
                       for {
-                        _                 <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
-                        parentNodeIri     <- getParentNodeIRI(nodeIri.value)
-                        _                 <- deleteListItem(childNode.id, projectIri, childNode.children, isRootNode = false)
+                        _             <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
+                        parentNodeIri <- getParentNodeIRI(nodeIri.value)
+                        _             <- ZIO.foreachDiscard(childNode.children.map(_.listIri) :+ childNode.listIri) { childIri =>
+                               triplestore.query(DeleteNodeQuery.buildForChildNode(childIri, project))
+                             }
                         updatedParentNode <- updateParentNode(nodeIri.value, childNode.position, parentNodeIri, project)
                       } yield ChildNodeDeleteResponseADM(updatedParentNode)
 
@@ -1246,14 +1215,6 @@ final case class ListsResponder(
   private def rootNodeExists(iri: ListIri): Task[Boolean] = triplestore.query(ListNodeExistsQuery.rootNodeExists(iri))
 
   /**
-   * Helper method for checking if a node exists.
-   *
-   * @param iri The [[ListIri]] of the node.
-   * @return a [[Boolean]].
-   */
-  private def nodeExists(iri: ListIri): Task[Boolean] = triplestore.query(ListNodeExistsQuery.anyNodeExists(iri))
-
-  /**
    * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
    * name is NOT used inside any list of this project.
    *
@@ -1277,9 +1238,9 @@ final case class ListsResponder(
    * Helper method to get projectIri of a node.
    *
    * @param nodeIri              the IRI of the node.
-   * @return a [[ProjectIri]].
+   * @return a [[KnoraProject]].
    */
-  private def getProjectIriFromNode(nodeIri: IRI): Task[ProjectIri] =
+  private def getProjectFromNode(nodeIri: IRI): Task[KnoraProject] =
     for {
       maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true)
 
@@ -1302,19 +1263,9 @@ final case class ListsResponder(
                            ZIO.fail(BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI."))
                        }
       projectIri <- ZIO.fromEither(ProjectIri.from(projectIriStr)).mapError(BadRequestException.apply)
-    } yield projectIri
-
-  /**
-   * Helper method to get the data named graph of a project.
-   *
-   * @param projectIri           the IRI of the project.
-   * @return an [[IRI]].
-   */
-  private def getDataNamedGraph(projectIri: ProjectIri): Task[IRI] =
-    knoraProjectService
-      .findById(projectIri)
-      .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
-      .map(ProjectService.projectDataNamedGraphV2(_).value)
+      project    <-
+        projectService.findById(projectIri).someOrFail(BadRequestException(s"Project '$projectIri' not found."))
+    } yield project
 
   /**
    * Helper method to get parent of a node.
@@ -1328,25 +1279,6 @@ final case class ListsResponder(
       .map(_.statements.keys.headOption)
       .some
       .orElseFail(BadRequestException(s"The parent node for $nodeIri not found, report this as a bug."))
-
-  /**
-   * Helper method to delete a node.
-   *
-   * @param dataNamedGraph the data named graph of the project.
-   * @param nodeIri        the IRI of the node.
-   * @param isRootNode     is the node to be deleted a root node?
-   * @return A [[ListNodeADM]].
-   *
-   *         Fails with a [[UpdateNotPerformedException]] if the node could not be deleted.
-   */
-  private def deleteNode(dataNamedGraph: IRI, nodeIri: IRI, isRootNode: Boolean): Task[Unit] =
-    for {
-      _ <- triplestore.query(Update(sparql.admin.txt.deleteNode(dataNamedGraph, nodeIri, isRootNode)))
-      _ <- // Verify that the node was deleted correctly.
-        ZIO
-          .fail(UpdateNotPerformedException(s"Node <$nodeIri> was not erased. Please report this as a possible bug."))
-          .whenZIO(nodeExists(ListIri.unsafeFrom(nodeIri)))
-    } yield ()
 
   /**
    * Helper method to update position of a node without changing its parent.

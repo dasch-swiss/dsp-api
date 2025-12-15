@@ -450,6 +450,7 @@ final case class ListRootNodeADM(
   children: Seq[ListChildNodeADM],
   isRootNode: Boolean = true,
 ) extends ListNodeADM {
+  def listIri: ListIri = ListIri.unsafeFrom(id)
 
   /**
    * Sorts the whole hierarchy.
