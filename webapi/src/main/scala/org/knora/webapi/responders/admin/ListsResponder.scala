@@ -42,6 +42,8 @@ import org.knora.webapi.slice.resources.repo.ChangeParentNodeQuery
 import org.knora.webapi.slice.resources.repo.CreateListNodeQuery
 import org.knora.webapi.slice.resources.repo.DeleteListNodeCommentsQuery
 import org.knora.webapi.slice.resources.repo.DeleteNodeQuery
+import org.knora.webapi.slice.resources.repo.GetListNodeQuery
+import org.knora.webapi.slice.resources.repo.GetListNodeWithChildrenQuery
 import org.knora.webapi.slice.resources.repo.IsListInUseQuery
 import org.knora.webapi.slice.resources.repo.ListNodeExistsQuery
 import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
@@ -187,7 +189,7 @@ final case class ListsResponder(
   private def listNodeInfoGetADM(nodeIri: IRI) = {
     for {
       statements <- triplestore
-                      .query(Construct(sparql.admin.txt.getListNode(nodeIri)))
+                      .query(GetListNodeQuery.build(ListIri.unsafeFrom(nodeIri)))
                       .flatMap(_.asExtended)
                       .map(_.statements)
 
@@ -327,7 +329,7 @@ final case class ListsResponder(
     for {
       // this query will give us only the information about the root node.
       statements <- triplestore
-                      .query(Construct(sparql.admin.txt.getListNode(nodeIri)))
+                      .query(GetListNodeQuery.build(ListIri.unsafeFrom(nodeIri)))
                       .flatMap(_.asExtended)
                       .map(_.statements)
 
@@ -515,7 +517,7 @@ final case class ListsResponder(
 
     for {
       statements <- triplestore
-                      .query(Construct(sparql.admin.txt.getListNodeWithChildren(ofNodeIri)))
+                      .query(GetListNodeWithChildrenQuery.build(ListIri.unsafeFrom(ofNodeIri)))
                       .flatMap(_.asExtended)
                       .map(_.statements.toList)
 
