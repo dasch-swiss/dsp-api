@@ -205,7 +205,7 @@ object Dependencies {
   val otelPyroscopeVersion = "v1.0.4"
   val hikariVersion        = "7.0.2"
   val quillVersion         = "4.8.6"
-  val sqliteVersion        = "3.51.0.0"
+  val sqliteVersion        = "3.51.1.0"
 
   val db = Seq(
     "org.xerial"   % "sqlite-jdbc"    % sqliteVersion,
