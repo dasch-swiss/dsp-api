@@ -44,6 +44,7 @@ import org.knora.webapi.slice.resources.repo.DeleteListNodeCommentsQuery
 import org.knora.webapi.slice.resources.repo.DeleteNodeQuery
 import org.knora.webapi.slice.resources.repo.GetListNodeQuery
 import org.knora.webapi.slice.resources.repo.GetListNodeWithChildrenQuery
+import org.knora.webapi.slice.resources.repo.GetParentNodeQuery
 import org.knora.webapi.slice.resources.repo.IsListInUseQuery
 import org.knora.webapi.slice.resources.repo.ListNodeExistsQuery
 import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
@@ -1015,7 +1016,7 @@ final case class ListsResponder(
                   .someOrFail(BadRequestException(s"Update of position is only allowed for child nodes!"))
 
         // get node's current parent
-        currentParentNodeIri <- getParentNodeIRI(nodeIri.value)
+        currentParentNodeIri <- getParentNodeIRI(nodeIri)
         newPosition          <-
           if (currentParentNodeIri == changeNodePositionRequest.parentNodeIri.value) {
             updatePositionWithinSameParent(
@@ -1186,7 +1187,7 @@ final case class ListsResponder(
                     case Some(childNode: ListChildNodeADM) =>
                       for {
                         _             <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
-                        parentNodeIri <- getParentNodeIRI(nodeIri.value)
+                        parentNodeIri <- getParentNodeIRI(nodeIri)
                         _             <- ZIO.foreachDiscard(childNode.children.map(_.listIri) :+ childNode.listIri) { childIri =>
                                triplestore.query(DeleteNodeQuery.buildForChildNode(childIri, project))
                              }
@@ -1275,12 +1276,11 @@ final case class ListsResponder(
    * @param nodeIri              the IRI of the node.
    * @return a [[ListNodeADM]].
    */
-  private def getParentNodeIRI(nodeIri: IRI): Task[IRI] =
+  private def getParentNodeIRI(nodeIri: ListIri): Task[IRI] =
     triplestore
-      .query(Construct(sparql.admin.txt.getParentNode(nodeIri)))
+      .query(GetParentNodeQuery.build(nodeIri))
       .map(_.statements.keys.headOption)
-      .some
-      .orElseFail(BadRequestException(s"The parent node for $nodeIri not found, report this as a bug."))
+      .someOrFail(BadRequestException(s"The parent node for $nodeIri not found, report this as a bug."))
 
   /**
    * Helper method to update position of a node without changing its parent.
