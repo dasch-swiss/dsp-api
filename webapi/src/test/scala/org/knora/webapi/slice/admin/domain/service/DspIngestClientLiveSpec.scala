@@ -50,6 +50,7 @@ import org.knora.webapi.slice.admin.domain.service.HttpMockServer.TestPort
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 
 object DspIngestClientSpec extends ZIOSpecDefault {
@@ -126,6 +127,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
       TestPort.random,
       dspIngestConfigLayer,
       jwtServiceMockLayer,
+      OtelSetup.stdOut,
     ) @@ TestAspect.sequential
 }
 

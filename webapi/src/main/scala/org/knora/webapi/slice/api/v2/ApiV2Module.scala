@@ -4,7 +4,6 @@
  */
 
 package org.knora.webapi.slice.api.v2
-import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.admin.ListsResponder
@@ -41,7 +40,6 @@ object ApiV2Module {
     OntologyApiModule.Dependencies &
     StandoffServerEndpoints.Dependencies &
     SearchResponderV2 &
-    Tracing &
     ValuesServerEndpoints.Dependencies
     // format: on
 

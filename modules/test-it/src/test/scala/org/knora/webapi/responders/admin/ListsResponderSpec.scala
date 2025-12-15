@@ -84,17 +84,17 @@ object ListsResponderSpec extends E2EZSpec {
           .map(actual => assertTrue(actual.lists.size == 4))
       },
       test("return basic list information (anything list)") {
-        listsResponder(_.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/treeList"))
+        listsResponder(_.listNodeInfoGetRequestADM(ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")))
           .flatMap(expectType[RootNodeInfoGetResponseADM])
           .map(actual => assertTrue(actual.listinfo.sorted == treeListInfo.sorted))
       },
       test("return basic list information (anything other list)") {
-        listsResponder(_.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/otherTreeList"))
+        listsResponder(_.listNodeInfoGetRequestADM(ListIri.unsafeFrom("http://rdfh.ch/lists/0001/otherTreeList")))
           .flatMap(expectType[RootNodeInfoGetResponseADM])
           .map(actual => assertTrue(actual.listinfo.sorted == otherTreeListInfo.sorted))
       },
       test("return basic node information (images list - sommer)") {
-        listsResponder(_.listNodeInfoGetRequestADM("http://rdfh.ch/lists/00FF/526f26ed04"))
+        listsResponder(_.listNodeInfoGetRequestADM(ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/526f26ed04")))
           .flatMap(expectType[ChildNodeInfoGetResponseADM])
           .map(actual => assertTrue(actual.nodeinfo.sorted == summerNodeInfo.sorted))
       },
