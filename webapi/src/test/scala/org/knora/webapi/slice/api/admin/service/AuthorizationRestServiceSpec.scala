@@ -9,6 +9,7 @@ import zio.Exit
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.failsWithA
+
 import dsp.errors.ForbiddenException
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
@@ -153,6 +154,6 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
     PasswordService.layer,
     StringFormatter.live,
     TriplestoreServiceLive.layer,
-    OtelSetup.layer,
+    OtelSetup.stdOut,
   )
 }

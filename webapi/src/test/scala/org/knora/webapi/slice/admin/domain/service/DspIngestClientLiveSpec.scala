@@ -39,6 +39,7 @@ import zio.test.TestAspect
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -126,7 +127,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
       TestPort.random,
       dspIngestConfigLayer,
       jwtServiceMockLayer,
-      OtelSetup.layer,
+      OtelSetup.stdOut,
     ) @@ TestAspect.sequential
 }
 

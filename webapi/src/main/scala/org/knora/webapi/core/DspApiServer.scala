@@ -13,17 +13,18 @@ import sttp.model.Method.*
 import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.metrics.zio.ZioMetrics
+import sttp.tapir.server.tracing.opentelemetry.OpenTelemetryTracing
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import zio.*
 import zio.http.*
 import zio.http.Server.Config.ResponseCompressionConfig
-import org.knora.webapi.config.KnoraApi
-import org.knora.webapi.slice.api.Endpoints
-import sttp.tapir.server.tracing.opentelemetry.OpenTelemetryTracing
 import zio.telemetry.opentelemetry.context.ContextStorage
 
 import scala.jdk.CollectionConverters.IterableHasAsJava
+
+import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.slice.api.Endpoints
 
 final class DspApiServer(
   server: Server,

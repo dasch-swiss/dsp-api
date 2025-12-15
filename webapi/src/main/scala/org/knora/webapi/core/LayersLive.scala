@@ -6,7 +6,9 @@
 package org.knora.webapi.core
 
 import zio.*
+import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.telemetry.opentelemetry.tracing.Tracing
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.DspIngestConfig
@@ -47,7 +49,6 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.util.Logger
-import zio.telemetry.opentelemetry.context.ContextStorage
 
 object LayersLive { self =>
 

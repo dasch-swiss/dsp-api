@@ -10,6 +10,7 @@ import zio.nio.file.Files
 import zio.stream.ZStream
 
 import scala.annotation.unused
+
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
@@ -37,7 +38,6 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import zio.telemetry.opentelemetry.tracing.Tracing
 
 final class ProjectRestService(
   format: KnoraResponseRenderer,
@@ -52,7 +52,6 @@ final class ProjectRestService(
   auth: AuthorizationRestService,
   features: Features,
   triplestore: TriplestoreService,
-  tracing: Tracing,
 ) {
 
   /**
@@ -72,11 +71,8 @@ final class ProjectRestService(
   def findById(id: ProjectIri): Task[ProjectGetResponse] =
     toExternalProjectGetResponse(projectService.findById(id), id)
 
-  def findByShortcode(shortcode: Shortcode): Task[ProjectGetResponse] = {
-    val byShortCode = projectService.findByShortcode(shortcode)
-    tracing.getCurrentSpanContextUnsafe.debug("Finding project by shortcode: " + shortcode.value) *>
-      toExternalProjectGetResponse(byShortCode, shortcode)
-  }
+  def findByShortcode(shortcode: Shortcode): Task[ProjectGetResponse] =
+    toExternalProjectGetResponse(projectService.findByShortcode(shortcode), shortcode)
 
   def findByShortname(shortname: Shortname): Task[ProjectGetResponse] =
     toExternalProjectGetResponse(projectService.findByShortname(shortname), shortname)

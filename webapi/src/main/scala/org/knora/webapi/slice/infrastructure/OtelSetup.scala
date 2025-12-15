@@ -4,11 +4,11 @@ import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.context.propagation.TextMapPropagator
+import io.opentelemetry.exporter.logging.otlp.OtlpJsonLoggingSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.resources.Resource
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.`export`.SimpleSpanProcessor
-import io.opentelemetry.exporter.logging.otlp.OtlpJsonLoggingSpanExporter
 import io.opentelemetry.semconv.ServiceAttributes
 import zio.*
 import zio.telemetry.opentelemetry.OpenTelemetry
@@ -59,5 +59,5 @@ object OtelSetup {
     (OpenTelemetry.global <*> OpenTelemetry.contextZIO >+> OpenTelemetry.tracing("global")).orDie
 
   val stdOut: ULayer[api.OpenTelemetry & Tracing & ContextStorage] =
-    (custom("dsp-api") <*> OpenTelemetry.contextZIO >+> OpenTelemetry.tracing("test")).orDie
+    (custom("dsp-api") <*> OpenTelemetry.contextZIO >+> OpenTelemetry.tracing("dsp-api")).orDie
 }
