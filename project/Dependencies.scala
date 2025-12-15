@@ -18,7 +18,7 @@ object Dependencies {
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion = "5.2.0"
+  val Rdf4jVersion = "5.2.1"
   val JenaVersion  = "5.2.0"
 
   val ZioConfigVersion            = "4.0.6"
@@ -60,7 +60,7 @@ object Dependencies {
     "dev.zio"      %% "zio-test-junit"         % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-magnolia"      % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-sbt"           % ZioVersion     % Test,
-    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.2"        % Test,
+    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.3"        % Test,
   )
 
   val SttpClientVersion = "4.0.13"
@@ -130,7 +130,7 @@ object Dependencies {
 
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.0"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.2"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.13.2"
 
