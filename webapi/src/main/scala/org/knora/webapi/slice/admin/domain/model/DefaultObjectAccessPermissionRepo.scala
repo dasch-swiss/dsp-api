@@ -89,8 +89,9 @@ object DefaultObjectAccessPermission {
                     for {
                       perm1 <- Permission.ObjectAccess.from(code)
                       perm2 <- Permission.ObjectAccess.fromToken(name)
-                      p     <- if perm1 == perm2 then Right(perm1)
-                           else Left(s"Given permission code '$code' and permission name '$name' are not consistent.")
+                      p     <-
+                        if perm1 == perm2 then Right(perm1)
+                        else Left(s"Given permission code '$code' and permission name '$name' are not consistent.")
                     } yield p
                   case (Some(code), _) => Permission.ObjectAccess.from(code)
 

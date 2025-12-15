@@ -422,7 +422,6 @@ object ListsResponderSpec extends E2EZSpec {
         val actual = listsResponder(_.listGetRequestADM(oldParentIri)).flatMap(expectType[ListNodeGetResponseADM])
 
         (parentNode <*> actual).map { (parentNode: ListNodeADM, actual: ListNodeGetResponseADM) =>
-
           /* check children of new parent node */
           // node must be in children of new parent
           val isNodeAdd = parentNode.children.exists(child => child.id == nodeIri.value && child.position == 2)
