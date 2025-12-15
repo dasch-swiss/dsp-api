@@ -7,9 +7,9 @@ package org.knora.webapi.store.iiif.impl
 
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
-import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.*
 import zio.nio.file.Path
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import java.net.URI
 
@@ -17,13 +17,14 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.TracingHttpClient
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -39,9 +40,9 @@ final case class SipiServiceLive(
 ) extends SipiService {
 
   private object SipiRoutes {
-    def file(asset: Asset): UIO[URI]           = makeUri(s"${assetBase(asset)}/file")
-    def knoraJson(asset: Asset): UIO[URI]      = makeUri(s"${assetBase(asset)}/knora.json")
-    private def makeUri(uri: String): UIO[URI] = ZIO.attempt(URI.create(uri)).logError.orDie
+    def file(asset: Asset): UIO[URI]            = makeUri(s"${assetBase(asset)}/file")
+    def knoraJson(asset: Asset): UIO[URI]       = makeUri(s"${assetBase(asset)}/knora.json")
+    private def makeUri(uri: String): UIO[URI]  = ZIO.attempt(URI.create(uri)).logError.orDie
     private def assetBase(asset: Asset): String =
       s"${sipiConfig.internalBaseUrl}/${asset.belongsToProject.value}/${asset.internalFilename}"
   }
@@ -148,6 +149,6 @@ final case class SipiServiceLive(
 }
 
 object SipiServiceLive {
-  val layer: URLayer[Sipi & DspIngestClient & JwtService & ScopeResolver, SipiServiceLive] =
-    HttpClientZioBackend.layer().orDie >>> ZLayer.derive[SipiServiceLive]
+  val layer: URLayer[DspIngestClient & JwtService & ScopeResolver & Sipi & Tracing, SipiServiceLive] =
+    TracingHttpClient.layer >>> ZLayer.derive[SipiServiceLive]
 }

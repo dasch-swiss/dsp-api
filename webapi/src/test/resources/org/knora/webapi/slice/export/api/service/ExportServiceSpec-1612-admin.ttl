@@ -1,0 +1,22 @@
+@prefix xml:         <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:         <http://www.w3.org/2002/07/owl#> .
+@prefix foaf:        <http://xmlns.com/foaf/0.1/> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+
+<http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>
+        rdf:type                        knora-admin:knoraProject;
+        knora-admin:hasAllowedCopyrightHolder
+                "Public Domain - Not Protected by Copyright" , "AI-Generated Content - Not Protected by Copyright";
+        knora-admin:hasEnabledLicense   <http://rdfh.ch/licenses/ai-generated> , <http://rdfh.ch/licenses/cc-by-nd-4.0> , <http://rdfh.ch/licenses/cc-by-nc-sa-4.0> , <http://rdfh.ch/licenses/cc-by-nc-4.0> , <http://rdfh.ch/licenses/cc-by-sa-4.0> , <http://rdfh.ch/licenses/public-domain> , <http://rdfh.ch/licenses/unknown> , <http://rdfh.ch/licenses/cc-by-nc-nd-4.0> , <http://rdfh.ch/licenses/cc-by-4.0>;
+        knora-admin:hasSelfJoinEnabled  true;
+        knora-admin:projectDescription  "The code to my heart."@en;
+        knora-admin:projectKeyword      "star" , "aquarium" , "ford" , "taurus";
+        knora-admin:projectLongname     "Funky Project";
+        knora-admin:projectRestrictedViewSize
+                "!128,128";
+        knora-admin:projectShortcode    "1612";
+        knora-admin:projectShortname    "funk";
+        knora-admin:status              true .

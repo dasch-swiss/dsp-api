@@ -13,10 +13,10 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import zio.*
 
+import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
-import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
@@ -48,7 +48,7 @@ object DeleteOntologyCommentQuery extends QueryBuilderHelper {
 
     for {
       insertPatterns <- buildInsertPatterns(ontology)
-      query = Queries
+      query           = Queries
                 .MODIFY()
                 .prefix(KB.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS)
                 .from(ontology)

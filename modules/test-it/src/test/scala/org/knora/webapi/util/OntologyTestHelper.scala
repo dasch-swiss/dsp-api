@@ -15,7 +15,7 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 object OntologyTestHelper {
-  private val ontologyRepo = ZIO.serviceWithZIO[OntologyRepo]
+  private val ontologyRepo                                                       = ZIO.serviceWithZIO[OntologyRepo]
   def lastModificationDate(ontologyIri: OntologyIri): RIO[OntologyRepo, Instant] =
     ontologyRepo(
       _.findById(ontologyIri)

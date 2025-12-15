@@ -8,7 +8,7 @@ package org.knora.webapi
 import zio.json.JsonCodec
 
 import org.knora.webapi.JsonLdRendering.Flat
-import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
+import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
 
 /**
  * Indicates the schema that a Knora ontology or ontology entity conforms to

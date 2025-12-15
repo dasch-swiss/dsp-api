@@ -11,8 +11,8 @@ import zio.test.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.slice.admin.api.model.ProjectRestrictedViewSettingsADM
+import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
+import org.knora.webapi.slice.api.admin.model.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 object AssetPermissionsResponderSpec extends E2EZSpec {

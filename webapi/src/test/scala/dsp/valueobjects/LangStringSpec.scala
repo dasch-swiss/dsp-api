@@ -45,7 +45,7 @@ object LangStringSpec extends ZIOSpecDefault {
     suite("`makeFromStrings()` smart constructor")(
       test("pass an invalid language value and return an error") {
         val invalidLanguageCode = "english"
-        val expected =
+        val expected            =
           Validation.fail(
             ValidationException("Unsupported language code: english, supported codes are: de, en, fr, it, rm"),
           )
@@ -102,7 +102,7 @@ object LangStringSpec extends ZIOSpecDefault {
         )
         val nonUniqueLanguages = Set(LanguageCode.EN, LanguageCode.DE)
         val res                = MultiLangString.make(langStrings)
-        val expected =
+        val expected           =
           Validation.fail(ValidationException(MultiLangStringErrorMessages.LanguageNotUnique(nonUniqueLanguages)))
         assertTrue(res == expected)
       },

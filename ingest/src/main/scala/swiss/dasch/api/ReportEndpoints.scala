@@ -19,6 +19,9 @@ final case class ReportEndpoints(baseEndpoints: BaseEndpoints) {
       .out(stringBody)
       .out(statusCode(StatusCode.Accepted))
       .tag(maintenance)
+      .description(
+        "Generate asset overview reports for all projects. Authorization: admin scope required (SystemAdmins only).",
+      )
 
   val endpoints = List(postAssetOverviewReport)
 }

@@ -1,20 +1,20 @@
 Resource IRI,Label,Title,Publisher,Creator
-http://rdfh.ch/0803/861b5644b302,Quadragesimale de filio prodigo,Quadragesimale de filio prodigo,Michael Furter,Johannes Meder
-http://rdfh.ch/0803/b6b5ff1eb703,[Das] Narrenschiff (lat.),[Das] Narrenschiff (lat.) :: Stultifera navis (...),Johann Bergmann de Olpe,Sebastian Brant
-http://rdfh.ch/0803/3341c4984004,Die wunderbare Meerfahrt des hl. Brandan,Die wunderbare Meerfahrt des hl. Brandan,Jakob Wolff,Brendanus Sanctus
 http://rdfh.ch/0803/9311a421b501,Bereitung zu dem Heiligen Sakrament,Bereitung zu dem Heiligen Sakrament,Johann Amerbach :: Johann Petri de Langendorff,Ludwig Moser
-http://rdfh.ch/0803/8be1b7cf7103,[Das] Narrenschiff (lat.),[Das] Narrenschiff (lat.) :: Stultifera navis (...),Johann Bergmann de Olpe,Sebastian Brant
-http://rdfh.ch/0803/ff17e5ef9601,Zeitglöcklein des Lebens und Leidens Christi,Zeitglöcklein des Lebens und Leidens Christi :: Horologium devotionis circa vitam Christi,Johann Amerbach,"Berthold, der Bruder"
-http://rdfh.ch/0803/5e77e98d2603,[Das] Narrenschiff (dt.),[Das] Narrenschiff (dt.),Johann Bergmann de Olpe,Sebastian Brant
-http://rdfh.ch/0803/1967a9933401,Itinerarius sive peregrinarius Beatissime Virginis Marie,Itinerarius sive peregrinarius Beatissime Virginis Marie,Lienhart Ysenhut,
-http://rdfh.ch/0803/939baf3f2a02,Postilla super epistolas et evangelia,Postilla super epistolas et evangelia,Michael Furter,Guillelmus Parisiensis
-http://rdfh.ch/0803/c5058f3a,Zeitglöcklein des Lebens und Leidens Christi,Zeitglöcklein des Lebens und Leidens Christi,Johann Amerbach,"Berthold, der Bruder"
-http://rdfh.ch/0803/41d01bd9fb,walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens,walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens,Lienhart Ysenhut,
-http://rdfh.ch/0803/cf0892760104,Geschichte von der schönen Melusine,Geschichte von der schönen Melusine,,Thüring von Ringoltingen (1415-1483)
-http://rdfh.ch/0803/9935159f67,Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...),Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...),Michael Furter,Olympius Methodius
-http://rdfh.ch/0803/2a6221216701,Reise ins Heilige Land,Reise ins Heilige Land :: Reysen und wanderschafften durch das Gelobte Land :: Itinerarius,Bernhard Richel,Jean Mandeville
-http://rdfh.ch/0803/de6d83112e04,Itinerarius seu peregrinatio beatae virginis Mariae,Itinerarius seu peregrinatio beatae virginis Mariae,,
 http://rdfh.ch/0803/c3f913666f,De generatione Christi,De generatione Christi :: Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae,Lienhart Ysenhut,Franciscus de Retza
+http://rdfh.ch/0803/3341c4984004,Die wunderbare Meerfahrt des hl. Brandan,Die wunderbare Meerfahrt des hl. Brandan,Jakob Wolff,Brendanus Sanctus
+http://rdfh.ch/0803/9935159f67,Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...),Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...),Michael Furter,Olympius Methodius
+http://rdfh.ch/0803/cf0892760104,Geschichte von der schönen Melusine,Geschichte von der schönen Melusine,,Thüring von Ringoltingen (1415-1483)
+http://rdfh.ch/0803/de6d83112e04,Itinerarius seu peregrinatio beatae virginis Mariae,Itinerarius seu peregrinatio beatae virginis Mariae,,
+http://rdfh.ch/0803/1967a9933401,Itinerarius sive peregrinarius Beatissime Virginis Marie,Itinerarius sive peregrinarius Beatissime Virginis Marie,Lienhart Ysenhut,
+http://rdfh.ch/0803/21abac2162,Lob der Glieder Mariens,Lob der Glieder Mariens,Johann Amerbach,Kein Wert
 http://rdfh.ch/0803/e41ab5695c,Orationes,Orationes :: Sant Brigitten gebettly,Johann Amerbach,"Birgitta, Hl."
 http://rdfh.ch/0803/6fad5b8c1e03,Passio sancti Meynrhadi martyris et heremite,Passio sancti Meynrhadi martyris et heremite,Michael Furter,Meynradus Sanctus :: Albrecht von Bonstetten :: sss
-http://rdfh.ch/0803/21abac2162,Lob der Glieder Mariens,Lob der Glieder Mariens,Johann Amerbach,Kein Wert
+http://rdfh.ch/0803/939baf3f2a02,Postilla super epistolas et evangelia,Postilla super epistolas et evangelia,Michael Furter,Guillelmus Parisiensis
+http://rdfh.ch/0803/861b5644b302,Quadragesimale de filio prodigo,Quadragesimale de filio prodigo,Michael Furter,Johannes Meder
+http://rdfh.ch/0803/2a6221216701,Reise ins Heilige Land,Reise ins Heilige Land :: Reysen und wanderschafften durch das Gelobte Land :: Itinerarius,Bernhard Richel,Jean Mandeville
+http://rdfh.ch/0803/ff17e5ef9601,Zeitglöcklein des Lebens und Leidens Christi,Zeitglöcklein des Lebens und Leidens Christi :: Horologium devotionis circa vitam Christi,Johann Amerbach,"Berthold, der Bruder"
+http://rdfh.ch/0803/c5058f3a,Zeitglöcklein des Lebens und Leidens Christi,Zeitglöcklein des Lebens und Leidens Christi,Johann Amerbach,"Berthold, der Bruder"
+http://rdfh.ch/0803/5e77e98d2603,[Das] Narrenschiff (dt.),[Das] Narrenschiff (dt.),Johann Bergmann de Olpe,Sebastian Brant
+http://rdfh.ch/0803/b6b5ff1eb703,[Das] Narrenschiff (lat.),[Das] Narrenschiff (lat.) :: Stultifera navis (...),Johann Bergmann de Olpe,Sebastian Brant
+http://rdfh.ch/0803/8be1b7cf7103,[Das] Narrenschiff (lat.),[Das] Narrenschiff (lat.) :: Stultifera navis (...),Johann Bergmann de Olpe,Sebastian Brant
+http://rdfh.ch/0803/41d01bd9fb,walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens,walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens,Lienhart Ysenhut,

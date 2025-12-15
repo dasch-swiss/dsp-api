@@ -15,7 +15,7 @@ final case class AggregatedHealth(status: Status, components: Option[Map[HealthI
 }
 
 object AggregatedHealth {
-  given codec: JsonCodec[AggregatedHealth] = DeriveJsonCodec.gen[AggregatedHealth]
+  given codec: JsonCodec[AggregatedHealth]                              = DeriveJsonCodec.gen[AggregatedHealth]
   def from(all: Chunk[(HealthIndicatorName, Health)]): AggregatedHealth = {
     val status = all.map(_._2).reduce(_ aggregate _).status
     if (status == Status.UP) AggregatedHealth(status, None) else AggregatedHealth(status, Some(all.toMap))

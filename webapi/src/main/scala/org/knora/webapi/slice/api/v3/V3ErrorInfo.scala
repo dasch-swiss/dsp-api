@@ -9,44 +9,49 @@ import zio.Chunk
 import zio.json.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v3.V3ErrorCode.invalid_resourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.slice.resources.api.model.IriDto
 
 sealed trait V3ErrorInfo {
   def message: String
   def errors: Chunk[ErrorDetail]
 }
 
-case class NotFound(message: String = "Not Found", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
-object NotFound {
+final case class NotFound private (message: String, errors: Chunk[ErrorDetail]) extends V3ErrorInfo
+object NotFound:
+  given JsonCodec[NotFound] = DeriveJsonCodec.gen[NotFound]
+
+  def apply(code: V3ErrorCode.NotFounds, message: String, details: Map[String, String]): NotFound =
+    NotFound(message, Chunk(ErrorDetail(code, message, details)))
 
   def apply(resourceClassIri: ResourceClassIri): NotFound =
-    singleError(
+    apply(
       V3ErrorCode.resourceClass_not_found,
       s"The resource class with IRI $resourceClassIri was not found.",
       Map.empty,
     )
-  def apply(ontologyIri: OntologyIri): NotFound =
-    singleError(V3ErrorCode.ontology_not_found, s"The ontology with IRI $ontologyIri was not found.", Map.empty)
-  def apply(projectIri: ProjectIri): NotFound =
-    singleError(V3ErrorCode.project_not_found, s"The project with IRI $projectIri was not found.", Map.empty)
 
-  private def singleError(code: V3ErrorCode, message: String, details: Map[String, String]): NotFound =
-    NotFound(message, Chunk(ErrorDetail(code, message, details)))
+  def apply(ontologyIri: OntologyIri): NotFound =
+    apply(V3ErrorCode.ontology_not_found, s"The ontology with IRI $ontologyIri was not found.", Map.empty)
+
+  def apply(projectIri: ProjectIri): NotFound =
+    apply(V3ErrorCode.project_not_found, s"The project with IRI $projectIri was not found.", Map.empty)
 
   def from(resourceIri: ResourceIri): NotFound =
-    singleError(
+    apply(
       V3ErrorCode.resource_not_found,
       s"The resource with IRI '$resourceIri' was not found.",
       Map("resourceIri" -> resourceIri.toString),
     )
-}
 
 case class BadRequest(message: String = "Bad Request", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
 object BadRequest {
+
+  given JsonCodec[BadRequest] = DeriveJsonCodec.gen[BadRequest]
+
   def invalidResourceClassIri(iri: IriDto, reason: String): BadRequest = {
     val msg = s"$iri is not a valid resource class IRI"
     BadRequest(msg, Chunk(ErrorDetail(invalid_resourceClassIri, msg, Map("iri" -> iri.value, "reason" -> reason))))
@@ -67,8 +72,6 @@ object ErrorDetail {
 }
 
 object V3ErrorInfo {
-  given notFoundEncoder: JsonCodec[NotFound]         = DeriveJsonCodec.gen[NotFound]
-  given badRequestEncoder: JsonCodec[BadRequest]     = DeriveJsonCodec.gen[BadRequest]
   given unauthorizedEncoder: JsonCodec[Unauthorized] = DeriveJsonCodec.gen[Unauthorized]
   given forbiddenEncoder: JsonCodec[Forbidden]       = DeriveJsonCodec.gen[Forbidden]
 }

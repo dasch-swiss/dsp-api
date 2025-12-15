@@ -4,32 +4,40 @@
  */
 
 package org.knora.webapi.slice.api.v2
-
 import sttp.tapir.ztapir.ZServerEndpoint
 import zio.ZLayer
 
-import org.knora.webapi.slice.lists.api.ListsV2ServerEndpoints
-import org.knora.webapi.slice.ontology.api.OntologiesServerEndpoints
-import org.knora.webapi.slice.resources.api.ResourceInfoServerEndpoints
-import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
-import org.knora.webapi.slice.search.api.SearchServerEndpoints
-import org.knora.webapi.slice.security.api.AuthenticationServerEndpoints
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationServerEndpoints
+import org.knora.webapi.slice.api.v2.lists.ListsV2ServerEndpoints
+import org.knora.webapi.slice.api.v2.mapping.StandoffServerEndpoints
+import org.knora.webapi.slice.api.v2.metadata.MetadataServerEndpoints
+import org.knora.webapi.slice.api.v2.ontologies.OntologiesServerEndpoints
+import org.knora.webapi.slice.api.v2.resources.ResourcesServerEndpoints
+import org.knora.webapi.slice.api.v2.resources.info.ResourceInfoServerEndpoints
+import org.knora.webapi.slice.api.v2.search.SearchServerEndpoints
+import org.knora.webapi.slice.api.v2.values.ValuesServerEndpoints
 
-class ApiV2ServerEndpoints(
-  private val authenticationServerEndpoints: AuthenticationServerEndpoints,
-  private val listsV2ServerEndpoints: ListsV2ServerEndpoints,
-  private val ontologiesServerEndpoints: OntologiesServerEndpoints,
-  private val resourceInfoServerEndpoints: ResourceInfoServerEndpoints,
-  private val resourcesApiServerEndpoints: ResourcesApiServerEndpoints,
-  private val searchServerEndpoints: SearchServerEndpoints,
+final class ApiV2ServerEndpoints(
+  authenticationServerEndpoints: AuthenticationServerEndpoints,
+  listsV2ServerEndpoints: ListsV2ServerEndpoints,
+  metadataServerEndpoints: MetadataServerEndpoints,
+  ontologiesServerEndpoints: OntologiesServerEndpoints,
+  resourceInfoServerEndpoints: ResourceInfoServerEndpoints,
+  resourcesServerEndpoints: ResourcesServerEndpoints,
+  searchServerEndpoints: SearchServerEndpoints,
+  standoffServerEndpoints: StandoffServerEndpoints,
+  valuesServerEndpoints: ValuesServerEndpoints,
 ) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
     (authenticationServerEndpoints.serverEndpoints ++
       listsV2ServerEndpoints.serverEndpoints ++
       resourceInfoServerEndpoints.serverEndpoints ++
-      resourcesApiServerEndpoints.serverEndpoints ++
+      valuesServerEndpoints.serverEndpoints ++
+      metadataServerEndpoints.serverEndpoints ++
+      resourcesServerEndpoints.serverEndpoints ++
       searchServerEndpoints.serverEndpoints ++
+      standoffServerEndpoints.serverEndpoints ++
       ontologiesServerEndpoints.serverEndpoints)
       .map(_.tag("API v2"))
 }

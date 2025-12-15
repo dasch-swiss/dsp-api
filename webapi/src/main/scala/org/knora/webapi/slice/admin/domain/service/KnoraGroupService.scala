@@ -12,13 +12,13 @@ import zio.ZLayer
 
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
-import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
 
 case class KnoraGroupService(
   knoraGroupRepo: KnoraGroupRepo,
@@ -43,7 +43,7 @@ case class KnoraGroupService(
     for {
       _        <- ensureGroupNameIsUnique(request.name)
       groupIri <- iriService.checkOrCreateNewGroupIri(request.id, project.shortcode)
-      group =
+      group     =
         KnoraGroup(
           id = groupIri,
           groupName = request.name,
@@ -73,7 +73,7 @@ case class KnoraGroupService(
   def updateGroupStatus(groupToUpdate: KnoraGroup, status: GroupStatus): Task[KnoraGroup] =
     for {
       group <- knoraGroupRepo.save(groupToUpdate.copy(status = status))
-      _ <- ZIO.unless(group.status.value)(knoraUserService.findByGroupMembership(group.id).flatMap { members =>
+      _     <- ZIO.unless(group.status.value)(knoraUserService.findByGroupMembership(group.id).flatMap { members =>
              ZIO.foreachDiscard(members)(user => knoraUserService.removeUserFromKnoraGroup(user, group.id))
            })
     } yield group

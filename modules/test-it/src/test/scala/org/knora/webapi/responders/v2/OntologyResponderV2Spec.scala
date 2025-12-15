@@ -38,14 +38,15 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.api.v2.ontologies.AddCardinalitiesToClassRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.ChangeGuiOrderRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.ChangePropertyLabelsOrCommentsRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.CreateClassRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
+import org.knora.webapi.slice.api.v2.ontologies.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.domain.LanguageCode.*
-import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
-import org.knora.webapi.slice.ontology.api.ChangeGuiOrderRequestV2
-import org.knora.webapi.slice.ontology.api.ChangePropertyLabelsOrCommentsRequestV2
-import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
-import org.knora.webapi.slice.ontology.api.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -321,7 +322,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("create an empty ontology called 'bar' with a comment") {
-      val comment = NonEmptyString.unsafeFrom("some comment")
+      val comment   = NonEmptyString.unsafeFrom("some comment")
       val createReq = CreateOntologyRequestV2(
         "bar",
         imagesProjectIri,
@@ -495,7 +496,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("not allow a user to create a property if they are not a sysadmin or an admin in the ontology's project") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("hasName")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("hasName")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -533,15 +534,15 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       for {
         metadataResponse <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
         (_, _)            = self.anythingLastModDate.updateFrom(metadataResponse, anythingOntologyIri)
-        exit <-
+        exit             <-
           ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingUser1)).exit
       } yield assertTrue(metadataResponse.ontologies.size == 3) && assert(exit)(failsWithA[ForbiddenException])
     },
     test("create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name") {
       for {
-        metadataResponse <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
-        (_, _)            = self.anythingLastModDate.updateFrom(metadataResponse, anythingOntologyIri)
-        propertyIri       = anythingOntologyIri.makeEntityIri("hasName")
+        metadataResponse   <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
+        (_, _)              = self.anythingLastModDate.updateFrom(metadataResponse, anythingOntologyIri)
+        propertyIri         = anythingOntologyIri.makeEntityIri("hasName")
         propertyInfoContent = PropertyInfoContentV2(
                                 propertyIri = propertyIri,
                                 predicates = Map(
@@ -581,7 +582,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         actualProperty                                   = propertyCreatedOntology.properties(propertyIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(propertyCreatedResponse)
         _                                               <- ontologyCache(_.refreshCache())
-        ontologyResponseAfterRefresh <- ontologyResponder(
+        ontologyResponseAfterRefresh                    <- ontologyResponder(
                                           _.getPropertiesFromOntologyV2(
                                             Set(PropertyIri.unsafeFrom(propertyIri)),
                                             allLanguages = true,
@@ -642,7 +643,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(createPropertyResponse)
 
         // Check that the link value property was created.
-        linkValuePropIri = propertyIri.fromLinkPropToLinkValueProp
+        linkValuePropIri       = propertyIri.fromLinkPropToLinkValueProp
         getPropertiesResponse <- ontologyResponder(
                                    _.getPropertiesFromOntologyV2(
                                      propertyIris = Set(PropertyIri.unsafeFrom(linkValuePropIri)),
@@ -654,7 +655,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         readPropertyInfoFromGetProperties = ontologyFromGetProperties.properties.values.head
 
         // Reload the ontology cache and see if we get the same result.
-        _ <- ontologyCache(_.refreshCache())
+        _                                      <- ontologyCache(_.refreshCache())
         getPropertiesResponseAfterCacheRefresh <- ontologyResponder(
                                                     _.getPropertiesFromOntologyV2(
                                                       propertyIris = Set(PropertyIri.unsafeFrom(propertyIri)),
@@ -702,7 +703,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         metadataResponse <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
         _                 = self.freetestLastModDate.updateFrom(metadataResponse)
         // Create class freetest:ComicBook which is a subclass of freetest:Book
-        comicBookClassIri = freeTestOntologyIri.makeEntityIri("ComicBook")
+        comicBookClassIri         = freeTestOntologyIri.makeEntityIri("ComicBook")
         comicBookClassInfoContent = ClassInfoContentV2(
                                       classIri = comicBookClassIri,
                                       predicates = Map(
@@ -728,7 +729,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         createClassResponse                             <- ontologyResponder(_.createClass(createReq))
         (oldFreetestLastModDate, newFreetestLastModDate) = freetestLastModDate.updateFrom(createClassResponse)
         // Create class freetest:ComicAuthor which is a subclass of freetest:Author
-        comicAuthorClassIri = freeTestOntologyIri.makeEntityIri("ComicAuthor")
+        comicAuthorClassIri         = freeTestOntologyIri.makeEntityIri("ComicAuthor")
         comicAuthorClassInfoContent = ClassInfoContentV2(
                                         classIri = comicAuthorClassIri,
                                         predicates = Map(
@@ -751,11 +752,11 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                       )
         createSubClassReq =
           CreateClassRequestV2(comicAuthorClassInfoContent, self.freetestLastModDate, randomUUID, anythingAdminUser)
-        createSubclassResponse <- ontologyResponder(_.createClass(createSubClassReq))
+        createSubclassResponse                                                          <- ontologyResponder(_.createClass(createSubClassReq))
         (oldLastModDateFromSubclassCreation, newFreetestLastModDateFromSubclassCreation) =
           freetestLastModDate.updateFrom(createSubclassResponse)
         // Create property freetest:hasComicBookAuthor which is a subproperty of freetest:hasAuthor and links freetest:ComicBook and freetest:ComicAuthor
-        comicAuthorPropertyIri = freeTestOntologyIri.makeEntityIri("hasComicAuthor")
+        comicAuthorPropertyIri         = freeTestOntologyIri.makeEntityIri("hasComicAuthor")
         comicAuthorPropertyInfoContent = PropertyInfoContentV2(
                                            propertyIri = comicAuthorPropertyIri,
                                            predicates = Map(
@@ -794,8 +795,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ontologyResponder(
             _.createProperty(comicAuthorPropertyInfoContent, freetestLastModDate, randomUUID, anythingAdminUser),
           )
-        createPropertyOntology = createPropertyResponse.toOntologySchema(ApiV2Complex)
-        comicAuthorProperty    = createPropertyOntology.properties(comicAuthorPropertyIri)
+        createPropertyOntology                                            = createPropertyResponse.toOntologySchema(ApiV2Complex)
+        comicAuthorProperty                                               = createPropertyOntology.properties(comicAuthorPropertyIri)
         (lastModDateBeforePropertyCreate, lastModDateAfterPropertyCreate) =
           freetestLastModDate.updateFrom(createPropertyResponse)
 
@@ -879,7 +880,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("not create a property without an rdf:type") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -911,7 +912,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property with the wrong rdf:type") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -947,7 +948,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property that already exists") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("hasInteger")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("hasInteger")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -983,7 +984,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property with a nonexistent Knora superproperty") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1019,7 +1020,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property that is not a subproperty of knora-api:hasValue or knora-api:hasLinkTo") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1055,7 +1056,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property that is a subproperty of both knora-api:hasValue and knora-api:hasLinkTo") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1094,7 +1095,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property with a knora-base:subjectType that refers to a nonexistent class") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1130,7 +1131,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property with a knora-base:objectType that refers to a nonexistent class") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1170,7 +1171,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a subproperty of anything:hasInteger with a knora-base:subjectType of knora-api:Representation") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1206,7 +1207,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a file value property") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1242,7 +1243,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not directly create a link value property") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1278,7 +1279,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not directly create a property with a knora-api:objectType of knora-api:LinkValue") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1314,7 +1315,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property with a knora-api:objectType of xsd:string") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1350,7 +1351,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property whose object type is knora-api:StillImageFileValue") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1388,7 +1389,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "not create a property whose object type is a Knora resource class if the property isn't a subproperty of knora-api:hasLinkValue",
     ) {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1424,7 +1425,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a link property whose object type is knora-api:TextValue") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1460,7 +1461,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a subproperty of anything:hasText with a knora-api:objectType of knora-api:IntegerValue") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1496,7 +1497,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a subproperty of anything:hasBlueThing with a knora-api:objectType of anything:Thing") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("wrongProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("wrongProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -1535,7 +1536,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       "not allow a user to change the labels of a property if they are not a sysadmin or an admin in the ontology's project",
     ) {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
-      val newObjects = Seq(
+      val newObjects  = Seq(
         StringLiteralV2.from("has name", EN),
         StringLiteralV2.from("a nom", FR),
         StringLiteralV2.from("hat Namen", DE),
@@ -1556,7 +1557,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("change the labels of a property") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
-      val newObjects = Seq(
+      val newObjects  = Seq(
         StringLiteralV2.from("has name", EN),
         StringLiteralV2.from("hat Namen", DE),
         StringLiteralV2.from("a nom", FR),
@@ -1584,7 +1585,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("change the labels of a property, submitting the same labels again") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
-      val newObjects = Seq(
+      val newObjects  = Seq(
         StringLiteralV2.from("has name", EN),
         StringLiteralV2.from("hat Namen", DE),
         StringLiteralV2.from("a nom", FR),
@@ -1613,7 +1614,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       "not allow a user to change the comments of a property if they are not a sysadmin or an admin in the ontology's project",
     ) {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
-      val newObjects = Seq(
+      val newObjects  = Seq(
         StringLiteralV2.from("The name of a Thing", EN),
         StringLiteralV2.from(
           "Le nom d\\'une chose",
@@ -1636,7 +1637,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("change the comments of a property") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
-      val newObjects = Seq(
+      val newObjects  = Seq(
         StringLiteralV2.from("The name of a Thing", EN),
         StringLiteralV2.from("Der Name eines Dinges", DE),
         StringLiteralV2.from("Le nom d'une chose", FR),
@@ -1667,7 +1668,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("change the comments of a property, submitting the same comments again") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
-      val newObjects = Seq(
+      val newObjects  = Seq(
         StringLiteralV2.from("The name of a Thing", EN),
         StringLiteralV2.from("Der Name eines Dinges", DE),
         StringLiteralV2.from("Le nom d'une chose", FR),
@@ -1778,7 +1779,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("not allow a user to create a class if they are not a sysadmin or an admin in the ontology's project") {
-      val classIri = anythingOntologyIri.makeEntityIri("WildThing")
+      val classIri         = anythingOntologyIri.makeEntityIri("WildThing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -1796,7 +1797,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
         ),
         directCardinalities = Map(
-          anythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne),
+          anythingOntologyIri.makeEntityIri("hasName")    -> KnoraCardinalityInfo(ZeroOrOne),
           anythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
             guiOrder = Some(20),
@@ -1811,7 +1812,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ).exit.map(actual => assert(actual)(failsWithA[ForbiddenException]))
     },
     test("not allow a user to create a class with cardinalities both on property P and on a subproperty of P") {
-      val classIri = anythingOntologyIri.makeEntityIri("InvalidThing")
+      val classIri         = anythingOntologyIri.makeEntityIri("InvalidThing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -1830,7 +1831,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         ),
         directCardinalities = Map(
           anythingOntologyIri.makeEntityIri("hasOtherThing") -> KnoraCardinalityInfo(ExactlyOne),
-          anythingOntologyIri.makeEntityIri("hasBlueThing") -> KnoraCardinalityInfo(
+          anythingOntologyIri.makeEntityIri("hasBlueThing")  -> KnoraCardinalityInfo(
             cardinality = ExactlyOne,
           ),
         ),
@@ -1843,7 +1844,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not allow the user to submit a direct cardinality on anything:hasInterestingThingValue") {
-      val classIri = anythingOntologyIri.makeEntityIri("WildThing")
+      val classIri         = anythingOntologyIri.makeEntityIri("WildThing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -1922,7 +1923,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "create a class anything:CardinalityThing with cardinalities on anything:hasInterestingThing and anything:hasInterestingThingValue",
     ) {
-      val classIri = anythingOntologyIri.makeEntityIri("CardinalityThing")
+      val classIri         = anythingOntologyIri.makeEntityIri("CardinalityThing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -1965,7 +1966,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     ) {
       // Create class partThing
       val partThingClassIri = anythingOntologyIri.makeEntityIri("partThing")
-      val partThing = ClassInfoContentV2(
+      val partThing         = ClassInfoContentV2(
         classIri = partThingClassIri,
         predicates = Map(
           Rdf.Type.toSmartIri -> PredicateInfoV2(
@@ -1990,7 +1991,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         msg   <- ontologyResponder(_.createClass(createPartThingClassReq))
         (_, _) = self.anythingLastModDate.updateFrom(msg)
         // Create class wholeThing
-        wholeThingClassIri = anythingOntologyIri.makeEntityIri("wholeThing")
+        wholeThingClassIri         = anythingOntologyIri.makeEntityIri("wholeThing")
         wholeThingClassInfoContent = ClassInfoContentV2(
                                        classIri = wholeThingClassIri,
                                        predicates = Map(
@@ -2016,7 +2017,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         (_, _)                         = self.anythingLastModDate.updateFrom(createWholeThingClassResponse)
 
         // Create property partOf with subject partThing and object wholeThing
-        partOfPropertyIri = anythingOntologyIri.makeEntityIri("partOf")
+        partOfPropertyIri         = anythingOntologyIri.makeEntityIri("partOf")
         partOfPropertyInfoContent = PropertyInfoContentV2(
                                       propertyIri = partOfPropertyIri,
                                       predicates = Map(
@@ -2072,7 +2073,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Check that the corresponding partOfValue was created
         partOfValuePropertyIri = anythingOntologyIri.makeProperty("partOfValue")
-        propertyReadResponse <-
+        propertyReadResponse  <-
           ontologyResponder(_.getPropertiesFromOntologyV2(Set(partOfValuePropertyIri), true, anythingAdminUser))
         ontologyFromPropertyRead = propertyReadResponse.toOntologySchema(ApiV2Complex)
         propertyFromPropertyRead = ontologyFromPropertyRead.properties(partOfValuePropertyIri.toComplexSchema)
@@ -2125,7 +2126,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "create a class anything:WildThing that is a subclass of anything:Thing, with a direct cardinality for anything:hasName, overriding the cardinality for anything:hasInteger",
     ) {
-      val classIri = anythingOntologyIri.makeEntityIri("WildThing")
+      val classIri         = anythingOntologyIri.makeEntityIri("WildThing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2143,7 +2144,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           ),
         ),
         directCardinalities = Map(
-          anythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne),
+          anythingOntologyIri.makeEntityIri("hasName")    -> KnoraCardinalityInfo(ZeroOrOne),
           anythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
             guiOrder = Some(20),
@@ -2201,7 +2202,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("not allow inherited property to be deleted on subclass") {
-      val classIri = anythingOntologyIri.makeEntityIri("SubThing")
+      val classIri         = anythingOntologyIri.makeEntityIri("SubThing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2305,7 +2306,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("allow direct property to be deleted on subclass") {
-      val classIri = anythingOntologyIri.makeEntityIri("OtherSubThing")
+      val classIri         = anythingOntologyIri.makeEntityIri("OtherSubThing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2411,7 +2412,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("create a class anything:Nothing with no properties") {
-      val classIri = anythingOntologyIri.makeEntityIri("Nothing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2458,7 +2459,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "not allow a user to change the labels of a class if they are not a sysadmin or an admin in the ontology's project",
     ) {
-      val classIri = anythingOntologyIri.makeClass("Nothing")
+      val classIri   = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
         StringLiteralV2.from("nothing", EN),
         StringLiteralV2.from("rien", FR),
@@ -2476,7 +2477,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("change the labels of a class") {
-      val classIri = anythingOntologyIri.makeClass("Nothing")
+      val classIri   = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
         StringLiteralV2.from("nothing", EN),
         StringLiteralV2.from("rien", FR),
@@ -2502,7 +2503,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("change the labels of a class, submitting the same labels again") {
-      val classIri = anythingOntologyIri.makeClass("Nothing")
+      val classIri   = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
         StringLiteralV2.from("nothing", EN),
         StringLiteralV2.from("rien", FR),
@@ -2530,7 +2531,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "not allow a user to change the comments of a class if they are not a sysadmin or an admin in the ontology's project",
     ) {
-      val classIri = anythingOntologyIri.makeClass("Nothing")
+      val classIri   = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
         StringLiteralV2.from("Represents nothing", EN),
         StringLiteralV2.from("ne représente rien", FR),
@@ -2548,7 +2549,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("change the comments of a class") {
-      val classIri = anythingOntologyIri.makeClass("Nothing")
+      val classIri   = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
         StringLiteralV2.from("Represents nothing", EN),
         StringLiteralV2.from("ne représente rien", FR),
@@ -2578,7 +2579,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("change the comments of a class, submitting the same comments again") {
-      val classIri = anythingOntologyIri.makeClass("Nothing")
+      val classIri   = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
         StringLiteralV2.from("Represents nothing", EN),
         StringLiteralV2.from("ne représente rien", FR),
@@ -2608,7 +2609,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("not create a class with the wrong rdf:type") {
-      val classIri = anythingOntologyIri.makeEntityIri("WrongClass")
+      val classIri         = anythingOntologyIri.makeEntityIri("WrongClass")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2638,7 +2639,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class that already exists") {
-      val classIri = anythingOntologyIri.makeEntityIri("Thing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Thing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2668,7 +2669,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class with a nonexistent base class") {
-      val classIri = anythingOntologyIri.makeEntityIri("WrongClass")
+      val classIri         = anythingOntologyIri.makeEntityIri("WrongClass")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2698,7 +2699,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class that is not a subclass of knora-api:Resource") {
-      val classIri = anythingOntologyIri.makeEntityIri("WrongClass")
+      val classIri         = anythingOntologyIri.makeEntityIri("WrongClass")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2728,7 +2729,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class with a cardinality for a Knora property that doesn't exist") {
-      val classIri = anythingOntologyIri.makeEntityIri("WrongClass")
+      val classIri         = anythingOntologyIri.makeEntityIri("WrongClass")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2760,7 +2761,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ).exit.map(actual => assert(actual)(failsWithA[NotFoundException]))
     },
     test("not create a class that has a cardinality for anything:hasInteger but is not a subclass of anything:Thing") {
-      val classIri = anythingOntologyIri.makeEntityIri("WrongClass")
+      val classIri         = anythingOntologyIri.makeEntityIri("WrongClass")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2791,7 +2792,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("create a subclass of anything:Thing that has cardinality 1 for anything:hasBoolean") {
-      val classIri = anythingOntologyIri.makeEntityIri("RestrictiveThing")
+      val classIri         = anythingOntologyIri.makeEntityIri("RestrictiveThing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2831,7 +2832,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("not create a subclass of anything:Thing that has cardinality 0-n for anything:hasBoolean") {
-      val classIri = anythingOntologyIri.makeEntityIri("WrongClass")
+      val classIri         = anythingOntologyIri.makeEntityIri("WrongClass")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -2929,7 +2930,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("create a property anything:hasNothingness with knora-api:subjectType anything:Nothing") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("hasNothingness")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("hasNothingness")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -2982,7 +2983,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("change the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness") {
       val propertyIri = anythingOntologyIri.makeProperty("hasNothingness")
-      val guiElement =
+      val guiElement  =
         Schema.GuiElement
           .make("http://www.knora.org/ontology/salsah-gui#SimpleText")
           .fold(e => throw e.head, v => Some(v))
@@ -3012,7 +3013,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                             ),
                                           ),
                                         )
-        guiAttributeComplex = property.entityInfoContent.predicates(SalsahGui.External.GuiAttribute.toSmartIri)
+        guiAttributeComplex         = property.entityInfoContent.predicates(SalsahGui.External.GuiAttribute.toSmartIri)
         guiAttributeComplexExpected = PredicateInfoV2(
                                         predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
                                         objects = Seq(StringLiteralV2.from("size=80")),
@@ -3037,7 +3038,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       val guiElement                              = None
       val guiAttributes: Set[Schema.GuiAttribute] = Set.empty
       val guiObject                               = Schema.GuiObject.unsafeFrom(guiAttributes, guiElement)
-      val changeReq = ChangePropertyGuiElementRequest(
+      val changeReq                               = ChangePropertyGuiElementRequest(
         propertyIri = propertyIri,
         newGuiObject = guiObject,
         lastModificationDate = anythingLastModDate,
@@ -3058,7 +3059,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("not create a property called anything:Thing, because that IRI is already used for a class") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("Thing")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("Thing")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -3095,7 +3096,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class called anything:hasNothingness, because that IRI is already used for a property") {
-      val classIri = anythingOntologyIri.makeEntityIri("hasNothingness")
+      val classIri         = anythingOntologyIri.makeEntityIri("hasNothingness")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3125,7 +3126,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("create a class anything:Void as a subclass of anything:Nothing") {
-      val classIri = anythingOntologyIri.makeEntityIri("Void")
+      val classIri         = anythingOntologyIri.makeEntityIri("Void")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3159,7 +3160,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("add a cardinality=1 to the class anything:Nothing which has a subclass") {
-      val classIri = anythingOntologyIri.makeEntityIri("Nothing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3187,7 +3188,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                       apiRequestID = randomUUID,
                       requestingUser = anythingAdminUser,
                     )
-        deleteCardinalitiesResponse <- ontologyResponder(_.deleteCardinalitiesFromClass(deleteReq))
+        deleteCardinalitiesResponse                                      <- ontologyResponder(_.deleteCardinalitiesFromClass(deleteReq))
         (anythingLastModDateBeforeDelete, anythingLastModDateAfterDelete) =
           self.anythingLastModDate.updateFrom(deleteCardinalitiesResponse)
       } yield assertTrue(
@@ -3211,7 +3212,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "not allow a user to add a cardinality to a class if they are not a sysadmin or an admin in the user's project",
     ) {
-      val classIri = anythingOntologyIri.makeEntityIri("Nothing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3238,8 +3239,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "create a link property, anything:hasOtherNothing, and add a cardinality for it to the class anything:Nothing",
     ) {
-      val classIri    = anythingOntologyIri.makeEntityIri("Nothing")
-      val propertyIri = anythingOntologyIri.makeEntityIri("hasOtherNothing")
+      val classIri            = anythingOntologyIri.makeEntityIri("Nothing")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("hasOtherNothing")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -3276,7 +3277,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         msg <-
           ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
-        classInfoContent = ClassInfoContentV2(
+        classInfoContent                                 = ClassInfoContentV2(
                              classIri = classIri,
                              predicates = Map(
                                Rdf.Type.toSmartIri -> PredicateInfoV2(
@@ -3320,8 +3321,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                                         ),
                                       ),
                                     )
-        ontologyFromAddCardinalities = addCardinalitiesResponse.toOntologySchema(ApiV2Complex)
-        classInfoFromAddCardinalties = ontologyFromAddCardinalities.classes(classIri)
+        ontologyFromAddCardinalities                                                     = addCardinalitiesResponse.toOntologySchema(ApiV2Complex)
+        classInfoFromAddCardinalties                                                     = ontologyFromAddCardinalities.classes(classIri)
         (lastModDateBeforeAddCardinalities, newAnythingLastModDateAfterAddCardinalities) =
           self.anythingLastModDate.updateFrom(addCardinalitiesResponse)
       } yield assertTrue(
@@ -3334,7 +3335,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("not add an 0-n cardinality for a boolean property") {
-      val classIri = anythingOntologyIri.makeEntityIri("Nothing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3359,7 +3360,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("add a cardinality for the property anything:hasNothingness to the class anything:Nothing") {
-      val classIri = anythingOntologyIri.makeEntityIri("Nothing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3422,7 +3423,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "not add a minCardinality>0 for property anything:hasName to class anything:BlueThing, because the class is used in data",
     ) {
-      val classIri = anythingOntologyIri.makeEntityIri("BlueThing")
+      val classIri         = anythingOntologyIri.makeEntityIri("BlueThing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3446,7 +3447,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "add a maxCardinality=1 for property anything:hasName to class anything:BlueThing even though the class is used in data",
     ) {
-      val classIri = anythingOntologyIri.makeEntityIri("BlueThing")
+      val classIri         = anythingOntologyIri.makeEntityIri("BlueThing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3470,7 +3471,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(externalOntology.classes.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
     test("create a property anything:hasEmptiness with knora-api:subjectType anything:Nothing") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("hasEmptiness")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("hasEmptiness")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -3518,7 +3519,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("add a cardinality for the property anything:hasEmptiness to the class anything:Nothing") {
-      val classIri = anythingOntologyIri.makeEntityIri("Nothing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3583,7 +3584,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "not allow a user to change the cardinalities of a class if they are not a sysadmin or an admin in the user's project",
     ) {
-      val classIri = anythingOntologyIri.makeEntityIri("Nothing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3608,7 +3609,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("change the GUI order of the cardinalities of the class anything:Nothing") {
-      val classIri = anythingOntologyIri.makeEntityIri("Nothing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3667,7 +3668,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "change the cardinalities of the class anything:Nothing, removing anything:hasOtherNothing and anything:hasNothingness and leaving anything:hasEmptiness",
     ) {
-      val classIri = anythingOntologyIri.makeEntityIri("Nothing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3732,7 +3733,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     test(
       "not allow a user to remove all cardinalities from a class if they are not a sysadmin or an admin in the user's project",
     ) {
-      val classIri = anythingOntologyIri.makeEntityIri("Nothing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
         classIri,
         Map(Rdf.Type.toSmartIri -> PredicateInfoV2(Rdf.Type.toSmartIri, Seq(SmartIriLiteralV2(Owl.Class.toSmartIri)))),
@@ -3745,7 +3746,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("remove all cardinalities from the class anything:Nothing") {
-      val classIri = anythingOntologyIri.makeEntityIri("Nothing")
+      val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3821,7 +3822,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(response.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
     test("not create a class whose base class is in a non-shared ontology in another project") {
-      val classIri = anythingOntologyIri.makeEntityIri("InvalidClass")
+      val classIri         = anythingOntologyIri.makeEntityIri("InvalidClass")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3846,7 +3847,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ontologyResponder(_.createClass(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class with a cardinality on a property defined in a non-shared ontology in another project") {
-      val classIri = anythingOntologyIri.makeEntityIri("InvalidClass")
+      val classIri         = anythingOntologyIri.makeEntityIri("InvalidClass")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -3873,7 +3874,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       ontologyResponder(_.createClass(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a subproperty of a property defined in a non-shared ontology in another project") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("invalidProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("invalidProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -3906,7 +3907,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create property with a subject type defined in a non-shared ontology in another project") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("invalidProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("invalidProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -3943,7 +3944,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create property with an object type defined in a non-shared ontology in another project") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("invalidProperty")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("invalidProperty")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -3976,7 +3977,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("create a class anything:AnyBox1 as a subclass of example-box:Box") {
-      val classIri = anythingOntologyIri.makeEntityIri("AnyBox1")
+      val classIri         = anythingOntologyIri.makeEntityIri("AnyBox1")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -4017,7 +4018,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(response.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
     test("create a class anything:AnyBox2 with a cardinality on example-box:hasName") {
-      val classIri = anythingOntologyIri.makeEntityIri("AnyBox2")
+      val classIri         = anythingOntologyIri.makeEntityIri("AnyBox2")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -4058,7 +4059,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(response.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
     test("create a property anything:hasAnyName with base property example-box:hasName") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("hasAnyName")
+      val propertyIri         = anythingOntologyIri.makeEntityIri("hasAnyName")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -4103,7 +4104,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(msg.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
     test("create a property anything:BoxHasBoolean with subject type example-box:Box") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("BoxHasBoolean")
+      val propertyIri  = anythingOntologyIri.makeEntityIri("BoxHasBoolean")
       val propertyInfo = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -4151,7 +4152,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(msg.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
     test("create a property anything:hasBox with object type example-box:Box") {
-      val propertyIri = anythingOntologyIri.makeEntityIri("hasBox")
+      val propertyIri  = anythingOntologyIri.makeEntityIri("hasBox")
       val propertyInfo = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
@@ -4231,7 +4232,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         requestingUser = anythingAdminUser,
       )
       for {
-        createClassResponse <- ontologyResponder(_.createClass(createReq))
+        createClassResponse                                        <- ontologyResponder(_.createClass(createReq))
         (lastModDateBeforeCreateClass, lastModDateAfterCreateClass) =
           self.anythingLastModDate.updateFrom(createClassResponse)
 
@@ -4795,7 +4796,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("create a class anything:FoafPerson as a subclass of foaf:Person") {
       // create the class anything:FoafPerson
-      val classIri: SmartIri = anythingOntologyIri.makeEntityIri("FoafPerson")
+      val classIri: SmartIri                   = anythingOntologyIri.makeEntityIri("FoafPerson")
       val classInfoContent: ClassInfoContentV2 = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -4841,7 +4842,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingLastModDate = OntologyTestHelper.lastModificationDate(metadataResponse, anythingOntologyIri)
 
         // create the property anything:hasFoafName
-        propertyIri: SmartIri = anythingOntologyIri.makeEntityIri("hasFoafName")
+        propertyIri: SmartIri                      = anythingOntologyIri.makeEntityIri("hasFoafName")
         propertyInfoContent: PropertyInfoContentV2 = PropertyInfoContentV2(
                                                        propertyIri = propertyIri,
                                                        predicates = Map(
@@ -4886,8 +4887,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
 
         createPropertyResponse <-
           ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
-        ontologyFromCreateProperty = createPropertyResponse.toOntologySchema(ApiV2Complex)
-        property                   = ontologyFromCreateProperty.properties(propertyIri)
+        ontologyFromCreateProperty                                        = createPropertyResponse.toOntologySchema(ApiV2Complex)
+        property                                                          = ontologyFromCreateProperty.properties(propertyIri)
         (lastModDateBeforeCreateProperty, lastModDateAfterCreateProperty) =
           self.anythingLastModDate.updateFrom(createPropertyResponse)
       } yield assertTrue(
@@ -5021,8 +5022,8 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test("change the GUI order of a cardinality in a base class, and update its subclass in the ontology cache") {
-      val classIri       = anythingOntologyIri.makeEntityIri("Thing")
-      val newCardinality = KnoraCardinalityInfo(cardinality = Unbounded, guiOrder = Some(100))
+      val classIri         = anythingOntologyIri.makeEntityIri("Thing")
+      val newCardinality   = KnoraCardinalityInfo(cardinality = Unbounded, guiOrder = Some(100))
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
@@ -5039,10 +5040,10 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
 
       val changeReq = ChangeGuiOrderRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
       for {
-        response        <- ontologyResponder(_.changeGuiOrder(changeReq))
-        externalOntology = response.toOntologySchema(ApiV2Complex)
-        readClassInfo    = externalOntology.classes(classIri)
-        metadata         = externalOntology.ontologyMetadata
+        response              <- ontologyResponder(_.changeGuiOrder(changeReq))
+        externalOntology       = response.toOntologySchema(ApiV2Complex)
+        readClassInfo          = externalOntology.classes(classIri)
+        metadata               = externalOntology.ontologyMetadata
         newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
                                    throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
                                  )
@@ -5078,7 +5079,7 @@ case class LastModRef(private var value: Instant) {
   private def updateFrom(r: ReadOntologyMetadataV2, ontologyIri: Option[OntologyIri]): (Instant, Instant) = {
     val oldValue = value
     // Find the specified ontology in the response. If no ontology is specified, use the first one of the response.
-    val onto = ontologyIri.map(_.smartIri).getOrElse(r.ontologies.head.ontologyIri).toComplexSchema
+    val onto     = ontologyIri.map(_.smartIri).getOrElse(r.ontologies.head.ontologyIri).toComplexSchema
     val newValue = r
       .toOntologySchema(ApiV2Complex)
       .ontologies
@@ -5089,7 +5090,8 @@ case class LastModRef(private var value: Instant) {
   }
 }
 object LastModRef {
-  given Conversion[LastModRef, Instant]        = _.value
-  def make: LastModRef                         = LastModRef(Instant.now)
-  def unsafeFrom(dateTime: String): LastModRef = LastModRef(Instant.parse(dateTime))
+  given Conversion[LastModRef, Instant]              = _.value
+  given Conversion[LastModRef, LastModificationDate] = value => LastModificationDate.from(value.value)
+  def make: LastModRef                               = LastModRef(Instant.now)
+  def unsafeFrom(dateTime: String): LastModRef       = LastModRef(Instant.parse(dateTime))
 }

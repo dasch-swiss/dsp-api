@@ -206,7 +206,7 @@ private object ReorderPatternsByDependency {
         val cyclicEdge: graph.EdgeT        = cyclicNode.edges.last
         val originNodeOfCyclicEdge: String = cyclicEdge.node1.outer
         val TargetNodeOfCyclicEdge: String = cyclicEdge.node2.outer
-        val graphComponentsWithOutCycle =
+        val graphComponentsWithOutCycle    =
           graphComponents.filterNot(edgeDef => edgeDef.equals((originNodeOfCyclicEdge, TargetNodeOfCyclicEdge)))
 
         makeGraphWithoutCycles(graphComponentsWithOutCycle)

@@ -11,10 +11,10 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 
 object ProjectServiceSpec extends ZIOSpecDefault {
@@ -24,7 +24,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
       test("a ProjectADM") {
         val shortname = Shortname.unsafeFrom("someProject")
         val shortcode = Shortcode.unsafeFrom("0001")
-        val p = Project(
+        val p         = Project(
           id = IriTestConstants.Project.TestProject,
           shortname = shortname,
           shortcode = shortcode,
@@ -43,8 +43,8 @@ object ProjectServiceSpec extends ZIOSpecDefault {
         )
       },
       test("a KnoraProject") {
-        val shortcode = "0002"
-        val shortname = "someOtherProject"
+        val shortcode       = "0002"
+        val shortname       = "someOtherProject"
         val p: KnoraProject = KnoraProject(
           id = IriTestConstants.Project.TestProject,
           shortname = Shortname.unsafeFrom(shortname),

@@ -35,7 +35,7 @@ object SparqlPermissionFilterSpec extends ZIOSpecDefault {
   override def spec = suite("PermissionFilterSpec")(
     suite("built-in Groups")(
       test("Should match permission token and group for built-in groups") {
-        val regex = SparqlPermissionFilter.buildRegEx(View, SystemAdmin)
+        val regex       = SparqlPermissionFilter.buildRegEx(View, SystemAdmin)
         val testStrings = Seq(
           s"V knora-admin:SystemAdmin",
           s"V knora-admin:SystemAdmin|RV knora-admin:Creator",
@@ -50,7 +50,7 @@ object SparqlPermissionFilterSpec extends ZIOSpecDefault {
         }
       },
       test("Should not match permission token and group for regular groups") {
-        val regex = SparqlPermissionFilter.buildRegEx(View, SystemAdmin)
+        val regex       = SparqlPermissionFilter.buildRegEx(View, SystemAdmin)
         val testStrings = Seq(
           "V knora-admin:ProjectMember",
           "RV knora-admin:Creator|V knora-admin:KnownUser",
@@ -72,7 +72,7 @@ object SparqlPermissionFilterSpec extends ZIOSpecDefault {
     ),
     suite("regular Groups")(
       test("Should match permission token and group for regular groups") {
-        val regex = SparqlPermissionFilter.buildRegEx(View, testGroup)
+        val regex       = SparqlPermissionFilter.buildRegEx(View, testGroup)
         val testStrings = Seq(
           s"V ${testGroup.id}",
           s"V ${testGroup.id}|RV knora-admin:Creator",
@@ -86,7 +86,7 @@ object SparqlPermissionFilterSpec extends ZIOSpecDefault {
         }
       },
       test("Should not match permission token and group for regular groups") {
-        val regex = SparqlPermissionFilter.buildRegEx(View, testGroup)
+        val regex       = SparqlPermissionFilter.buildRegEx(View, testGroup)
         val testStrings = Seq(
           "V knora-admin:ProjectMember",
           "RV knora-admin:Creator|V knora-admin:KnownUser",

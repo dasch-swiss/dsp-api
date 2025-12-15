@@ -20,9 +20,9 @@ import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.api.v2.metadata.ResourceMetadataDto
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
-import org.knora.webapi.slice.resources.api.ResourceMetadataDto
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
@@ -68,8 +68,8 @@ final case class MetadataService(
         .from(Rdf.iri(projectGraph.value))
 
     val classConstraintPattern = classIris.map(_.toInternalSchema.toIri).map(Rdf.iri) match {
-      case Nil         => variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
-      case head :: Nil => variable(resourceIriVar).isA(head)
+      case Nil          => variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
+      case head :: Nil  => variable(resourceIriVar).isA(head)
       case head :: tail =>
         val pat = variable(resourceIriVar).isA(head)
         pat.union(tail.map(c => variable(resourceIriVar).isA(c)): _*)
@@ -92,7 +92,7 @@ final case class MetadataService(
           .flatMap((d, s) =>
             ZIO.logInfo(s"Query took ${d.toMillis} ms and returned ${s.size} rows:\n${query.getQueryString}").as(s),
           )
-      now <- Clock.instant
+      now  <- Clock.instant
       meta <- ZIO
                 .attempt(rows.map { row =>
                   val classIri =
@@ -101,7 +101,7 @@ final case class MetadataService(
                   val arkUrl              = resourceIri.toSmartIri.fromResourceIriToArkUrl(None)
                   val arkUrlWithTimestamp = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(now))
                   val label               = row.rowMap.getOrElse(labelVar, throwEx(labelVar))
-                  val creatorIri =
+                  val creatorIri          =
                     row.rowMap.getOrElse(creatorIriVar, throwEx(creatorIriVar)).toSmartIri.toComplexSchema.toIri
                   val createdAt = row.rowMap.get(creationDateVar).map(Instant.parse).getOrElse(throwEx(creationDateVar))
                   val deletedAt = row.rowMap.get(deleteDateVar).map(Instant.parse)

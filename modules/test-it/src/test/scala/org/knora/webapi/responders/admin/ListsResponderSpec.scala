@@ -16,17 +16,16 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.errors.UpdateNotPerformedException
-import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
+import org.knora.webapi.slice.api.admin.Requests.*
 import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.util.MutableTestIri
 
@@ -128,21 +127,19 @@ object ListsResponderSpec extends E2EZSpec {
             assertTrue(
               list.children.isEmpty,
               list.listinfo.id == newListIri.get,
-              list.listinfo.name == Some("neuelistename"),
               list.listinfo.projectIri == imagesProjectIri.value,
-              list.listinfo.name == Some("neuelistename"),
+              list.listinfo.name.contains("neuelistename"),
               list.listinfo.labels.stringLiterals.size == 1,
-              list.listinfo.labels.stringLiterals.head == StringLiteralV2
-                .from(value = "Neue Liste", DE),
-              !list.listinfo.comments.stringLiterals.isEmpty,
+              list.listinfo.labels.stringLiterals.head == StringLiteralV2.from(value = "Neue Liste", DE),
+              list.listinfo.comments.stringLiterals.nonEmpty,
             )
           }
       },
       test("create a list with special characters in its labels") {
-        val labelWithSpecialCharacter   = "Neue \\\"Liste\\\""
-        val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
-        val nameWithSpecialCharacter    = "a new \\\"name\\\""
-        val createReq = ListCreateRootNodeRequest(
+        val labelWithSpecialCharacter   = """Neue "Liste""""
+        val commentWithSpecialCharacter = """Neue "Kommentar""""
+        val nameWithSpecialCharacter    = """a new "name""""
+        val createReq                   = ListCreateRootNodeRequest(
           None,
           Comments.unsafeFrom(Seq(StringLiteralV2.from(commentWithSpecialCharacter, DE))),
           Labels.unsafeFrom(Seq(StringLiteralV2.from(labelWithSpecialCharacter, DE))),
@@ -152,31 +149,30 @@ object ListsResponderSpec extends E2EZSpec {
         listsResponder(_.listCreateRootNode(createReq, UUID.randomUUID)).map { actual =>
           assertTrue(
             actual.list.listinfo.projectIri == imagesProjectIri.value,
-            actual.list.listinfo.name == Some(Iri.fromSparqlEncodedString(nameWithSpecialCharacter)),
+            actual.list.listinfo.name.contains(nameWithSpecialCharacter),
             actual.list.listinfo.labels.stringLiterals.size == 1,
-            actual.list.listinfo.labels.stringLiterals.head.value ==
-              Iri.fromSparqlEncodedString(labelWithSpecialCharacter),
+            actual.list.listinfo.labels.stringLiterals.head.value == labelWithSpecialCharacter,
             actual.list.listinfo.labels.stringLiterals.head.languageOption.contains(DE),
             actual.list.listinfo.comments.stringLiterals.head.languageOption.contains(DE),
-            actual.list.listinfo.comments.stringLiterals.head.value ==
-              Iri.fromSparqlEncodedString(commentWithSpecialCharacter),
-            actual.list.children.size == 0,
+            actual.list.listinfo.comments.stringLiterals.head.value == commentWithSpecialCharacter,
+            actual.list.children.isEmpty,
           )
         }
       },
       test("update basic list information") {
+        val newName        = """updated "name""""
         val newLabelValues = Seq(
-          StringLiteralV2.from("Neue geänderte Liste", DE),
+          StringLiteralV2.from("""Neue geänderte "Liste"""", DE),
           StringLiteralV2.from("Changed List", EN),
         )
         val newCommentValues = Seq(
-          StringLiteralV2.from("Neuer Kommentar", DE),
+          StringLiteralV2.from("""Neuer "Kommentar"""", DE),
           StringLiteralV2.from("New Comment", EN),
         )
         val changeReq = ListChangeRequest(
           newListIri.asListIri,
           imagesProjectIri,
-          name = Some(ListName.unsafeFrom("updated name")),
+          name = Some(ListName.unsafeFrom(newName)),
           labels = Some(Labels.unsafeFrom(newLabelValues)),
           comments = Some(Comments.unsafeFrom(newCommentValues)),
         )
@@ -186,7 +182,7 @@ object ListsResponderSpec extends E2EZSpec {
           .map(listInfo =>
             assertTrue(
               listInfo.projectIri == imagesProjectIri.value,
-              listInfo.name == Some("updated name"),
+              listInfo.name.contains(newName),
               listInfo.labels.stringLiterals.sorted == newLabelValues.sorted,
               listInfo.comments.stringLiterals.sorted == newCommentValues.sorted,
             ),
@@ -201,7 +197,7 @@ object ListsResponderSpec extends E2EZSpec {
         listsResponder(_.nodeInfoChangeRequest(changeReq, UUID.randomUUID())).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[DuplicateValueException](
-              s"The name ${Some(ListName.unsafeFrom("sommer")).value} is already used by a list inside the project ${imagesProjectIri}.",
+              s"The name 'sommer' is already used by a list in project $imagesProjectIri.",
             ),
           ),
         )
@@ -233,7 +229,7 @@ object ListsResponderSpec extends E2EZSpec {
       test("add second child to list in first position - to the root node") {
         val commentValues = Seq(StringLiteralV2.from("New Second Child List Node Comment", EN))
         val labelValues   = Seq(StringLiteralV2.from("New Second Child List Node Value", EN))
-        val createReq = ListCreateChildNodeRequest(
+        val createReq     = ListCreateChildNodeRequest(
           None,
           Some(Comments.unsafeFrom(commentValues)),
           Labels.unsafeFrom(labelValues),
@@ -257,7 +253,7 @@ object ListsResponderSpec extends E2EZSpec {
       test("add child to second child node") {
         val commentValues = Seq(StringLiteralV2.from("New Third Child List Node Comment", EN))
         val labelValues   = Seq(StringLiteralV2.from("New Third Child List Node Value", EN))
-        val createReq = ListCreateChildNodeRequest(
+        val createReq     = ListCreateChildNodeRequest(
           None,
           Some(Comments.unsafeFrom(commentValues)),
           Labels.unsafeFrom(labelValues),
@@ -415,7 +411,7 @@ object ListsResponderSpec extends E2EZSpec {
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
         val newPosition  = Position.unsafeFrom(2)
         val oldParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
-        val parentNode = listsResponder(
+        val parentNode   = listsResponder(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
@@ -687,35 +683,35 @@ object ListsResponderSpec extends E2EZSpec {
     suite("used to query if list can be deleted")(
       test("return FALSE for a node that is in use") {
         val nodeInUseIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
-        listsResponder(_.canDeleteListRequestADM(nodeInUseIri))
-          .map(response => assertTrue(response.listIri == nodeInUseIri.value, !response.canDeleteList))
+        listsResponder(_.canDeleteList(nodeInUseIri))
+          .map(response => assertTrue(response.listIri == nodeInUseIri, !response.canDeleteList))
       },
       test("return FALSE for a node that is unused but has a child which is used") {
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
-        listsResponder(_.canDeleteListRequestADM(nodeIri))
-          .map(response => assertTrue(response.listIri == nodeIri.value, !response.canDeleteList))
+        listsResponder(_.canDeleteList(nodeIri))
+          .map(response => assertTrue(response.listIri == nodeIri, !response.canDeleteList))
       },
       test(
         "return FALSE for a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode",
       ) {
         val nodeInUseInOntologyIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
-        listsResponder(_.canDeleteListRequestADM(nodeInUseInOntologyIri))
-          .map(response => assertTrue(response.listIri == nodeInUseInOntologyIri.value, !response.canDeleteList))
+        listsResponder(_.canDeleteList(nodeInUseInOntologyIri))
+          .map(response => assertTrue(response.listIri == nodeInUseInOntologyIri, !response.canDeleteList))
       },
       test("return TRUE for a middle child node that is not in use") {
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList012")
-        listsResponder(_.canDeleteListRequestADM(nodeIri))
-          .map(response => assertTrue(response.listIri == nodeIri.value, response.canDeleteList))
+        listsResponder(_.canDeleteList(nodeIri))
+          .map(response => assertTrue(response.listIri == nodeIri, response.canDeleteList))
       },
       test("return TRUE for a child node that is not in use") {
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList02")
-        listsResponder(_.canDeleteListRequestADM(nodeIri))
-          .map(response => assertTrue(response.listIri == nodeIri.value, response.canDeleteList))
+        listsResponder(_.canDeleteList(nodeIri))
+          .map(response => assertTrue(response.listIri == nodeIri, response.canDeleteList))
       },
       test("delete a list (i.e. root node) that is not in use in ontology") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
-        listsResponder(_.canDeleteListRequestADM(listIri))
-          .map(response => assertTrue(response.canDeleteList, response.listIri == listIri.value))
+        listsResponder(_.canDeleteList(listIri))
+          .map(response => assertTrue(response.listIri == listIri, response.canDeleteList))
       },
     ),
     suite("used to delete list node comments")(

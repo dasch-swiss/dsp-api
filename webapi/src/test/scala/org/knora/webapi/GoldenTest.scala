@@ -31,22 +31,22 @@ trait GoldenTest {
     suffix: String, // NOTE: as of right now, adding a default breaks the macros, so no default
     rewrite: Boolean = false,
   ): TestResult = {
-    val (name, store) = GoldenTest.goldenPath(suffix)
-    val path          = Paths.get(store)
+    val (name, store)            = GoldenTest.goldenPath(suffix)
+    val path                     = Paths.get(store)
     val expected: Option[String] = Option.when(Files.exists(path)) {
       new String(Files.readAllBytes(path), "UTF-8")
     }
 
     if (rewrite || rewriteAll) {
       // NOTE: this should prevent infinite loops, if the output is stable
-      if (!expected.contains(actual)) Files.write(path, actual.getBytes("UTF-8")): Unit
+      if (expected != Some(actual)) Files.write(path, actual.getBytes("UTF-8")): Unit
 
       assertNever(s"[GoldenTest] Rewritten: $path")
     } else {
       if (expected.isEmpty) {
         assertNever(s"[GoldenTest] File not found: $path (to create, set rewrite = true)")
       } else {
-        assertTrue(expected.contains(actual)).label(s"[GoldenTest] Failed for $name (to override, set rewrite = true)")
+        assertTrue(expected == Some(actual)).label(s"[GoldenTest] Failed for $name (to override, set rewrite = true)")
       }
     }
   }
@@ -67,7 +67,7 @@ object GoldenTest {
 
     val baseName = absPath.map(_.getFileName.toString).getOrElse("").stripSuffix(".scala") // Demo
     val name     = s"${baseName}${suffixDefaulted}"
-    val outPath =
+    val outPath  =
       s"${absPath.map(_.getParent).getOrElse("")}/$name.txt"
         .pipe(_.replace("/src/test/scala/", "/src/test/resources/"))
 

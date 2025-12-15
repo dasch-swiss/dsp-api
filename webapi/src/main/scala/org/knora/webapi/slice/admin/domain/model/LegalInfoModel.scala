@@ -14,7 +14,6 @@ import zio.prelude.Validation
 import java.net.URI
 
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.AI_GENERATED
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.BORIS
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_0_1_0
@@ -29,6 +28,7 @@ import org.knora.webapi.slice.admin.domain.model.LicenseIri.NOC_NC_1_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.OPEN_LICENCE_2_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.PUBLIC_DOMAIN
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.UNKNOWN
+import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.Value.StringValue
@@ -47,7 +47,7 @@ object LegalInfo {
 }
 
 final case class CopyrightHolder private (override val value: String) extends StringValue
-object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
+object CopyrightHolder                                                extends StringValueCompanion[CopyrightHolder] {
   given JsonCodec[CopyrightHolder] = ZioJsonCodec.stringCodec(CopyrightHolder.from)
   given Schema[CopyrightHolder]    = Schema.string
   given Ordering[CopyrightHolder]  = Ordering.by(_.value)
@@ -66,15 +66,15 @@ object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
 }
 
 final case class Authorship private (override val value: String) extends StringValue
-object Authorship extends StringValueCompanion[Authorship] {
-  given JsonCodec[Authorship] = ZioJsonCodec.stringCodec(Authorship.from)
-  given Schema[Authorship]    = Schema.string
+object Authorship                                                extends StringValueCompanion[Authorship] {
+  given JsonCodec[Authorship]                       = ZioJsonCodec.stringCodec(Authorship.from)
+  given Schema[Authorship]                          = Schema.string
   def from(str: String): Either[String, Authorship] =
     fromValidations("Authorship", Authorship.apply, List(nonEmpty, noLineBreaks, maxLength(1_000)))(str)
 }
 
 final case class LicenseIri private (override val value: String) extends StringValue
-object LicenseIri extends StringValueCompanion[LicenseIri] {
+object LicenseIri                                                extends StringValueCompanion[LicenseIri] {
   given JsonCodec[LicenseIri] = ZioJsonCodec.stringCodec(LicenseIri.from)
   given Schema[LicenseIri]    = Schema.string
 
@@ -240,7 +240,7 @@ object License {
     val byUri   = BUILT_IN.find(_.uri == license.uri)
     val byLabel = BUILT_IN.find(_.labelEn == license.labelEn)
     (license, Set(byId, byUri, byLabel).flatten) match {
-      case (l, found) if found.isEmpty => Validation.succeed(l)
+      case (l, found) if found.isEmpty      => Validation.succeed(l)
       case (l, found) if !found.contains(l) =>
         Validation.fail(s"Found predefined license expected one of '${found.toList.mkString(", ")}'")
       case (l, _) => Validation.succeed(l)

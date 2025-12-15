@@ -309,7 +309,7 @@ object GravsearchParser {
 
           rightWherePatterns.head match {
             case rightUnionPattern: UnionPattern => rightUnionPattern.blocks
-            case other =>
+            case other                           =>
               throw GravsearchException(s"Right argument of UNION is not a UnionPattern as expected: $other")
           }
 
@@ -365,7 +365,7 @@ object GravsearchParser {
               case "subject"   => subj = Some(sourceName)
               case "predicate" => pred = Some(sourceName)
               case "object"    => obj = Some(sourceName)
-              case _ =>
+              case _           =>
                 GravsearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
             }
           case None =>
@@ -640,7 +640,7 @@ object GravsearchParser {
             case objVar: algebra.Var =>
               makeEntityFromVar(objVar) match {
                 case queryVar: QueryVariable => queryVar
-                case _ =>
+                case _                       =>
                   throw GravsearchException(
                     s"Entity $objVar not allowed in regex function as the first argument, a variable is required",
                   )
@@ -668,7 +668,7 @@ object GravsearchParser {
           val modifier: Option[String] = Option(regex.getFlagsArg) match {
             case Some(valConstant: algebra.ValueConstant) => Some(valConstant.getValue.stringValue())
             case None                                     => None
-            case other =>
+            case other                                    =>
               throw GravsearchException(
                 s"$other not allowed in regex function as the third argument, a string is expected",
               )
@@ -686,7 +686,7 @@ object GravsearchParser {
             case objVar: algebra.Var =>
               makeEntityFromVar(objVar) match {
                 case queryVar: QueryVariable => queryVar
-                case _ =>
+                case _                       =>
                   throw GravsearchException(
                     s"Entity $objVar not allowed in lang function as an argument, a variable is required",
                   )

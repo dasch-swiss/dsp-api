@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.common
 
+import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.PropertyPath
+import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.From
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as builderVar
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatternNotTriples
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
@@ -33,13 +35,15 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
-import org.knora.webapi.slice.ontology.api.LastModificationDate
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
 trait QueryBuilderHelper {
 
@@ -61,13 +65,14 @@ trait QueryBuilderHelper {
   def toRdfLiteral(lmd: LastModificationDate): RdfLiteral.StringLiteral = toRdfLiteral(lmd.value)
   def toRdfLiteral(instant: Instant): RdfLiteral.StringLiteral          = Rdf.literalOfType(instant.toString, XSD.DATETIME)
 
-  def toRdfLiteral(int: Int): RdfLiteral.StringLiteral = Rdf.literalOfType(int.toString, XSD.INT)
+  def toRdfLiteral(int: Int): RdfLiteral.StringLiteral            = Rdf.literalOfType(int.toString, XSD.INT)
   def toRdfLiteralNonNegative(int: Int): RdfLiteral.StringLiteral =
     Rdf.literalOfType(int.toString, XSD.NON_NEGATIVE_INTEGER)
 
   def toRdfIri(iri: KnoraIri): Iri    = toRdfIri(iri.smartIri)
   def toRdfIri(iri: SmartIri): Iri    = Rdf.iri(iri.toInternalSchema.toIri)
   def toRdfIri(iri: InternalIri): Iri = Rdf.iri(iri.value)
+  def toRdfIri(iri: StringValue): Iri = Rdf.iri(iri.value)
 
   def toRdfIri(labelOrComment: LabelOrComment): Iri = Rdf.iri(labelOrComment.toString)
 
@@ -84,10 +89,28 @@ trait QueryBuilderHelper {
   def toPropertyPatterns(iri: Iri, values: Iterable[PredicateInfoV2]): List[TriplePattern] =
     values.flatMap(pred => pred.objects.map(obj => iri.has(toRdfIri(pred.predicateIri), toRdfValue(obj)))).toList
 
-  def variable(name: String): Variable = builderVar(name)
-
   def fromDataGraph(prj: KnoraProject): From = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(prj)))
 
   def filterNotExistsIsDeleted(sub: RdfSubject): GraphPatternNotTriples =
     GraphPatterns.filterNotExists(sub.has(KnoraBase.isDeleted, true))
+
+  def graphIri(knoraProject: KnoraProject): Iri = Rdf.iri(ProjectService.projectDataNamedGraphV2(knoraProject).value)
+
+  def variable(name: String): Variable = SparqlBuilder.`var`(name)
+
+  def zeroOrMore(pred: Iri): PropertyPath             = PropertyPathBuilder.of(pred).zeroOrMore().build()
+  def zeroOrMore(pred: rdf4j.model.IRI): PropertyPath = PropertyPathBuilder.of(pred).zeroOrMore().build()
+
+  def askWhere(triplePattern: TriplePattern): Ask =
+    Ask(s"""
+           |ASK
+           |WHERE {
+           | ${triplePattern.getQueryString}
+           |}
+           |""".stripMargin)
+
+  def spo: (Variable, Variable, Variable) = (variable("s"), variable("p"), variable("o"))
+
+  def NS(ontologyIri: OntologyIri): SimpleNamespace =
+    SimpleNamespace(ontologyIri.ontologyName.value, ontologyIri.toInternalSchema.toString + "#")
 }

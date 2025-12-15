@@ -16,11 +16,11 @@ import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.slice.admin.api.model.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
+import org.knora.webapi.slice.api.admin.model.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -47,7 +47,7 @@ final case class AssetPermissionsResponder(
   private def queryForFileValue(filename: String): Task[SparqlExtendedConstructResponse] =
     for {
       response <- triplestoreService.query(Construct(sparql.admin.txt.getFileValue(filename))).flatMap(_.asExtended)
-      _ <- ZIO
+      _        <- ZIO
              .fail(NotFoundException(s"No file value was found for filename $filename"))
              .when(response.statements.isEmpty)
     } yield response
@@ -60,7 +60,7 @@ final case class AssetPermissionsResponder(
     ZIO.attempt {
       val fileValueIriSubject = queryResponse.statements.keys.head match {
         case iriSubject: IriSubjectV2 => iriSubject
-        case _ =>
+        case _                        =>
           throw InconsistentRepositoryDataException(
             s"The subject of the file value with filename $filename is not an IRI",
           )

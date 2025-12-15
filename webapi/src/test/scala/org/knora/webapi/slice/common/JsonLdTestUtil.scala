@@ -33,7 +33,7 @@ object JsonLdTestUtil {
     }
 
     val compact: String => String = (jsonLd: String) => {
-      val d: JsonDocument = jsonLdDocumentFrom(jsonLd)
+      val d: JsonDocument    = jsonLdDocumentFrom(jsonLd)
       val api: CompactionApi =
         JsonLd.compact(
           d,

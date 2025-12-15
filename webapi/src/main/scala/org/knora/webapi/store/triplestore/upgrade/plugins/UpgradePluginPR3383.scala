@@ -5,7 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 
@@ -25,9 +24,9 @@ class UpgradePluginPR3383 extends AbstractSparqlUpdatePlugin {
     MigrateSpecificGraphs.from(AdminConstants.permissionsDataNamedGraph)
 
   private val removeSystemProjectDefaultObjectAccessPermissions: ModifyQuery = {
-    val s = variable("permissionIri")
-    val p = variable("p")
-    val o = variable("o")
+    val s                            = variable("permissionIri")
+    val p                            = variable("p")
+    val o                            = variable("o")
     val deletePattern: TriplePattern = s
       .isA(KA.DefaultObjectAccessPermission)
       .andHas(KA.forProject, KA.SystemProject)
@@ -40,9 +39,9 @@ class UpgradePluginPR3383 extends AbstractSparqlUpdatePlugin {
   }
 
   private val removeKnownUserDefaultObjectAccessPermissions: ModifyQuery = {
-    val s = variable("permissionIri")
-    val p = variable("p")
-    val o = variable("o")
+    val s                            = variable("permissionIri")
+    val p                            = variable("p")
+    val o                            = variable("o")
     val deletePattern: TriplePattern = s
       .isA(KA.DefaultObjectAccessPermission)
       .andHas(KA.forGroup, KA.KnownUser)

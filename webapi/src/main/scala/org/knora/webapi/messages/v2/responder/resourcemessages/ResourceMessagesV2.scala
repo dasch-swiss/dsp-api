@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
 import zio.IO
-import zio.Task
 import zio.ZIO
 
 import java.time.Instant
@@ -28,11 +27,11 @@ import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.resources.api.model.VersionDate
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -384,7 +383,7 @@ case class ReadResourceV2(
         KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
         KnoraApiV2Complex.HasPermissions    -> JsonLDString(permissions),
         KnoraApiV2Complex.UserHasPermission -> JsonLDString(userPermission.toString),
-        KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+        KnoraApiV2Complex.CreationDate      -> JsonLDUtil.datatypeValueToJsonLDObject(
           value = creationDate.toString,
           datatype = Xsd.DateTimeStamp.toSmartIri,
         ),
@@ -735,6 +734,13 @@ case class ReadResourcesSequenceV2(
       resources = resources.map(_.toOntologySchema(targetSchema)),
     )
 
+  def ++(that: ReadResourcesSequenceV2): ReadResourcesSequenceV2 =
+    ReadResourcesSequenceV2(
+      this.resources ++ that.resources,
+      this.hiddenResourceIris ++ that.hiddenResourceIris,
+      this.mayHaveMoreResults || that.mayHaveMoreResults,
+    )
+
   private def getOntologiesFromResource(resource: ReadResourceV2): Set[SmartIri] = {
     val propertyIriOntologies: Set[SmartIri] = resource.values.keySet.map(_.getOntologyFromEntity)
 
@@ -846,23 +852,27 @@ case class ReadResourcesSequenceV2(
 
   /**
    * Checks that requested resources were found and that the user has permission to see them. If not:
-   * Fails with a [[NotFoundException]]  if the requested resources are not found.
-   * Fails with a [[ForbiddenException]] if the user does not have permission to see the requested resources.
+   * Returns with a Some of [[NotFoundException]] if the requested resources are not found.
+   * Returns with a Some of [[ForbiddenException]] if the user does not have permission to see the requested resources.
+   * Otherwise None is returned.
    *
    * @param targetResourceIris the IRIs to be checked.
    * @param resourcesSequence  the result of requesting those IRIs.
    */
-  def checkResourceIris(targetResourceIris: Set[IRI], resourcesSequence: ReadResourcesSequenceV2): Task[Unit] =
+  def checkResourceIris(
+    targetResourceIris: Set[IRI],
+    resourcesSequence: ReadResourcesSequenceV2,
+  ): Option[Throwable] =
     targetResourceIris.intersect(resourcesSequence.hiddenResourceIris) match
       case hiddenTargetResourceIris if hiddenTargetResourceIris.nonEmpty =>
         lazy val msg =
           s"You do not have permission to see one or more resources: ${hiddenTargetResourceIris.map(iri => s"<$iri>").mkString(", ")}"
-        ZIO.fail(ForbiddenException(msg))
+        Some(ForbiddenException(msg))
       case _ => {
         val missingResourceIris = targetResourceIris -- resourcesSequence.resources.map(_.resourceIri).toSet
-        lazy val msg =
+        lazy val msg            =
           s"One or more resources were not found:  ${missingResourceIris.map(iri => s"<$iri>").mkString(", ")}"
-        ZIO.when(missingResourceIris.nonEmpty)(ZIO.fail(NotFoundException(msg))).unit
+        Option.when(missingResourceIris.nonEmpty)(NotFoundException(msg))
       }
 
   /**
@@ -884,6 +894,8 @@ case class ReadResourcesSequenceV2(
 
     allProjects.head
   }
+
+  def resourcesMap: Map[IRI, ReadResourceV2] = resources.map(r => (r.resourceIri, r)).toMap
 }
 
 /**
@@ -1133,8 +1145,8 @@ case class ResourceMetadataEventBody(
 
     JsonLDObject(
       Map(
-        KnoraApiV2Complex.ResourceIri      -> JsonLDString(resourceIri),
-        KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
+        KnoraApiV2Complex.ResourceIri          -> JsonLDString(resourceIri),
+        KnoraApiV2Complex.ResourceClassIri     -> JsonLDString(resourceClassIri.toString),
         KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
           value = lastModificationDate.toString,
           datatype = Xsd.DateTimeStamp.toSmartIri,
@@ -1266,7 +1278,7 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
     val historyEventsAsJsonLD: Seq[JsonLDObject] = historyEvents.map { (historyEntry: ResourceAndValueHistoryEvent) =>
       // convert event body to JsonLD object
       val eventBodyAsJsonLD: JsonLDObject = historyEntry.eventBody match {
-        case valueEventBody: ValueEventBody => valueEventBody.toJsonLD(targetSchema, appConfig, schemaOptions)
+        case valueEventBody: ValueEventBody       => valueEventBody.toJsonLD(targetSchema, appConfig, schemaOptions)
         case resourceEventBody: ResourceEventBody =>
           resourceEventBody.toJsonLD(targetSchema, appConfig, schemaOptions)
         case resourceMetadataEventBody: ResourceMetadataEventBody =>
@@ -1276,7 +1288,7 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
 
       JsonLDObject(
         Map(
-          KnoraApiV2Complex.EventType -> JsonLDString(historyEntry.eventType),
+          KnoraApiV2Complex.EventType   -> JsonLDString(historyEntry.eventType),
           KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = historyEntry.versionDate.toString,
             datatype = Xsd.DateTimeStamp.toSmartIri,

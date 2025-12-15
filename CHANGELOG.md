@@ -1,5 +1,94 @@
 # Changelog
 
+## [34.0.0](https://github.com/dasch-swiss/dsp-api/compare/v33.2.0...v34.0.0) (2025-12-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **dsp-api:** Remove /shacl endpoint ([#3904](https://github.com/dasch-swiss/dsp-api/issues/3904))
+
+### Maintenances
+
+* Dependency updates ([#3911](https://github.com/dasch-swiss/dsp-api/issues/3911)) ([6800921](https://github.com/dasch-swiss/dsp-api/commit/68009219e07e5500da85bdfa8bd78ced2cfa410d))
+* Major dependency updates ([#3910](https://github.com/dasch-swiss/dsp-api/issues/3910)) ([5162c43](https://github.com/dasch-swiss/dsp-api/commit/5162c437c680e14e0bc298ff9b47a723fdeacc7e))
+* Move more api components to correct api package ([#3905](https://github.com/dasch-swiss/dsp-api/issues/3905)) ([10beee3](https://github.com/dasch-swiss/dsp-api/commit/10beee3acd10856f095eee2a7c647699ed6f4364))
+* Move more components into slice.api subpackages ([#3901](https://github.com/dasch-swiss/dsp-api/issues/3901)) ([9b7e653](https://github.com/dasch-swiss/dsp-api/commit/9b7e653a03030eaa11c8aafdd0fba6cc8af68a72))
+* Move some api related components to slice.api packages ([#3900](https://github.com/dasch-swiss/dsp-api/issues/3900)) ([ec72c9e](https://github.com/dasch-swiss/dsp-api/commit/ec72c9e8fc59e0446b5afd2e15a4240f7cd9e580))
+
+
+### Enhancements
+
+* **dsp-api:** Remove /shacl endpoint ([#3904](https://github.com/dasch-swiss/dsp-api/issues/3904)) ([96cb6a3](https://github.com/dasch-swiss/dsp-api/commit/96cb6a368d7e5f9d0d069d29984158b82bc185ae))
+
+
+### Bug Fixes
+
+* ExportService: more precision in handling columns with links and multiple values ([#3906](https://github.com/dasch-swiss/dsp-api/issues/3906)) ([ee2e0f9](https://github.com/dasch-swiss/dsp-api/commit/ee2e0f994a17fe2fe9b905bd3c3dc8c096c6b33b))
+
+## [33.2.0](https://github.com/dasch-swiss/dsp-api/compare/v33.1.1...v33.2.0) (2025-12-06)
+
+
+### Maintenances
+
+* Migrate canDeleteList query to rdf4j (DEV-5651) ([#3878](https://github.com/dasch-swiss/dsp-api/issues/3878)) ([0d55646](https://github.com/dasch-swiss/dsp-api/commit/0d55646e4bb2f9a12e4e45ea07cef634124a9f23))
+* Migrate changeParentNode query to rdf4j (DEV-5661) ([#3887](https://github.com/dasch-swiss/dsp-api/issues/3887)) ([8cd69f0](https://github.com/dasch-swiss/dsp-api/commit/8cd69f0cb98e462e9472d94a51a71388b40b4564))
+* Migrate check ListNode exists queries to rdf4j (DEV-5666) ([#3890](https://github.com/dasch-swiss/dsp-api/issues/3890)) ([5437868](https://github.com/dasch-swiss/dsp-api/commit/54378686540a364c63f26dc53a1a156a952e21ab))
+* Migrate DeletePropertyComment & DeleteClassCommentsQuery queries to rdf4j ([#3898](https://github.com/dasch-swiss/dsp-api/issues/3898)) ([a7bf62e](https://github.com/dasch-swiss/dsp-api/commit/a7bf62e95030fdf49037a4b9c314b552185e9435))
+* Migrate DeletePropertyQuery to rdf4j ([#3897](https://github.com/dasch-swiss/dsp-api/issues/3897)) ([b97edd8](https://github.com/dasch-swiss/dsp-api/commit/b97edd8cec215be7ffb8677575de005ba26725f1))
+* Migrate getAllOntologyMetadata to rdf4j (DEV-5668) ([#3891](https://github.com/dasch-swiss/dsp-api/issues/3891)) ([aced342](https://github.com/dasch-swiss/dsp-api/commit/aced3421bb290c6a1f8f6058885045370caed19d))
+* Migrate GetOntologyGraphQuery and DeleteOntologyQuery to rdf4j (DEV-5673) ([#3894](https://github.com/dasch-swiss/dsp-api/issues/3894)) ([bfb840c](https://github.com/dasch-swiss/dsp-api/commit/bfb840c5be624868fc2058e5d213da3dbf56309b))
+* Migrate isPropertyUsed query to rdf4j (DEV-5658) ([#3886](https://github.com/dasch-swiss/dsp-api/issues/3886)) ([3039ed2](https://github.com/dasch-swiss/dsp-api/commit/3039ed2880b9dace2117196164fb5dc0bbeaf253))
+* Migrate updateNodePosition query to rdf4j (DEV-5670) ([#3893](https://github.com/dasch-swiss/dsp-api/issues/3893)) ([04d9ddb](https://github.com/dasch-swiss/dsp-api/commit/04d9ddb4894d9669854c7857273968f16162bd24))
+* Remove Sentry dependencies (DEV-5672) ([#3895](https://github.com/dasch-swiss/dsp-api/issues/3895)) ([2dd5357](https://github.com/dasch-swiss/dsp-api/commit/2dd5357c00465322a3b11580df7f3ee5350bfb53))
+* Turn root spans into normal spans ([#3896](https://github.com/dasch-swiss/dsp-api/issues/3896)) ([4eeee75](https://github.com/dasch-swiss/dsp-api/commit/4eeee758aea7c58886160718a07924a012d833bf))
+
+
+### Documentation
+
+* Add permissions of endpoints to OpenAPI Swagger docs (DEV-5663) ([#3888](https://github.com/dasch-swiss/dsp-api/issues/3888)) ([3869cc9](https://github.com/dasch-swiss/dsp-api/commit/3869cc9fec3f798f309970cf4b4b42325e85dee6))
+
+
+### Enhancements
+
+* ExportService: fixes to enable exporting EKWS resource classes (DEV-5650) ([#3884](https://github.com/dasch-swiss/dsp-api/issues/3884)) ([d99289b](https://github.com/dasch-swiss/dsp-api/commit/d99289bab1bda136ad5a55d1a64d56131bb5c999))
+* Propagate trace id from http request OpenTelemetry (DEV-5672) ([#3889](https://github.com/dasch-swiss/dsp-api/issues/3889)) ([a7753d2](https://github.com/dasch-swiss/dsp-api/commit/a7753d2696e10862295945015c05dc719986d076))
+
+
+### Bug Fixes
+
+* CSV export skipping columns fix (DEV-5671) ([#3899](https://github.com/dasch-swiss/dsp-api/issues/3899)) ([30fd3c8](https://github.com/dasch-swiss/dsp-api/commit/30fd3c86dd0711305ad389db07dcb765011134f7))
+
+## [33.1.1](https://github.com/dasch-swiss/dsp-api/compare/v33.1.0...v33.1.1) (2025-12-01)
+
+
+### Bug Fixes
+
+* Prevent an exception when no comment is given when creating a child node ([#3882](https://github.com/dasch-swiss/dsp-api/issues/3882)) ([3c5df3b](https://github.com/dasch-swiss/dsp-api/commit/3c5df3b86b0515a28a38274eea7e401f2dc5ad11))
+
+## [33.1.0](https://github.com/dasch-swiss/dsp-api/compare/v33.0.0...v33.1.0) (2025-12-01)
+
+
+### Maintenances
+
+* Dependency updates ([#3881](https://github.com/dasch-swiss/dsp-api/issues/3881)) ([7338aac](https://github.com/dasch-swiss/dsp-api/commit/7338aac04a52ecf0d83d190f76c8bd754c485a0e))
+* Minor dependency updates ([#3880](https://github.com/dasch-swiss/dsp-api/issues/3880)) ([737faa1](https://github.com/dasch-swiss/dsp-api/commit/737faa1845e7cf0f098149370ca00c26570ff047))
+* Patch dependency updates ([#3879](https://github.com/dasch-swiss/dsp-api/issues/3879)) ([b0f2104](https://github.com/dasch-swiss/dsp-api/commit/b0f2104e7fab64bbe958dfa602046320a3d0fdc8))
+* Remove manual sparql encoding list properties (DEV-5645) ([#3871](https://github.com/dasch-swiss/dsp-api/issues/3871)) ([63ca5bc](https://github.com/dasch-swiss/dsp-api/commit/63ca5bc078fc5b44ecbc4ace4e1e578973849642))
+
+
+### Enhancements
+
+* CSV export backend improvements (DEV-5630) ([#3868](https://github.com/dasch-swiss/dsp-api/issues/3868)) ([c825f29](https://github.com/dasch-swiss/dsp-api/commit/c825f29ffd0d1d95e7cfd3c22053e5395633f274))
+* ExportService: load vocabularies (DEV-3630) ([#3876](https://github.com/dasch-swiss/dsp-api/issues/3876)) ([126a181](https://github.com/dasch-swiss/dsp-api/commit/126a181ebe0baa09bec4b7814db1262ca46f15ea))
+* Improve OpenAPI documentation and refine enum types v3 ([#3875](https://github.com/dasch-swiss/dsp-api/issues/3875)) ([762ae7f](https://github.com/dasch-swiss/dsp-api/commit/762ae7fc92ee632789c4bfd0e0efa4217cd75bb0))
+
+
+### Bug Fixes
+
+* Allow to limit to class and project searchbylabel (DEV-5580) ([#3877](https://github.com/dasch-swiss/dsp-api/issues/3877)) ([db3e78b](https://github.com/dasch-swiss/dsp-api/commit/db3e78b7f648f6dad96c486a837b387649a997a2))
+* Do not die if ReadResourceV2 cannot be transformed to single Resource but fail with a RequestRejectedException ([#3872](https://github.com/dasch-swiss/dsp-api/issues/3872)) ([eb4eb18](https://github.com/dasch-swiss/dsp-api/commit/eb4eb18fd14d978fd05eedfaf6bade6b7c339614))
+* Remove custom permission logic in Sipi (DEV-5484) ([#3874](https://github.com/dasch-swiss/dsp-api/issues/3874)) ([b173593](https://github.com/dasch-swiss/dsp-api/commit/b17359322f182c5c60f5217febce4b75e87d2e01))
+
 ## [33.0.0](https://github.com/dasch-swiss/dsp-api/compare/v32.7.0...v33.0.0) (2025-11-21)
 
 

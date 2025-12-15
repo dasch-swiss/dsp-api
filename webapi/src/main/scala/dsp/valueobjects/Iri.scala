@@ -125,7 +125,7 @@ object Iri {
      */
     private val roleIriRegEx = """^http://rdfh\.ch/roles/[a-zA-Z0-9_-]{4,40}$""".r
 
-    private def isRoleIriValid(iri: IRI): Boolean = isIri(iri) && roleIriRegEx.matches(iri)
+    private def isRoleIriValid(iri: IRI): Boolean    = isIri(iri) && roleIriRegEx.matches(iri)
     def from(value: String): Either[String, RoleIri] = value match {
       case _ if value.isEmpty         => Left("Role IRI cannot be empty.")
       case _ if isRoleIriValid(value) => Right(RoleIri(value))

@@ -46,6 +46,7 @@ trait TriplestoreService {
    * @return a [[SparqlConstructResponse]]
    */
   def query(sparql: Construct): Task[SparqlConstructResponse]
+  final def query(sparql: ConstructQuery): Task[SparqlConstructResponse] = query(Construct(sparql))
 
   def queryRdf(sparql: Construct): Task[String]
 
@@ -59,7 +60,7 @@ trait TriplestoreService {
    * @return A [[SparqlSelectResult]].
    */
   def query(sparql: Select): Task[SparqlSelectResult]
-  final def select(sparql: SelectQuery): Task[SparqlSelectResult] = query(Select(sparql))
+  final def select(sparql: SelectQuery): Task[SparqlSelectResult]                                    = query(Select(sparql))
   final def selectWithTimeout(sparql: SelectQuery, timeout: SparqlTimeout): Task[SparqlSelectResult] =
     query(Select(sparql, timeout))
 
@@ -70,6 +71,7 @@ trait TriplestoreService {
    * @return a [[Unit]].
    */
   def query(sparql: Update): Task[Unit]
+  final def query(q: ModifyQuery): Task[Unit]      = query(Update(q))
   final def insert(q: InsertDataQuery): Task[Unit] = query(Update(q))
 
   /**

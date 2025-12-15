@@ -18,7 +18,6 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI
-import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
@@ -31,6 +30,7 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 
@@ -554,8 +554,8 @@ object SharedTestDataADM {
    * Anything Admin Data             *
    * *********************************
    */
-  val anythingProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-  val anythingShortcode: Shortcode   = Shortcode.unsafeFrom("0001")
+  val anythingProjectIri: ProjectIri   = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  val anythingShortcode: Shortcode     = Shortcode.unsafeFrom("0001")
   val anythingOntologyIri: OntologyIri =
     OntologyIri.unsafeFrom(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI.toSmartIri)
 
@@ -569,8 +569,8 @@ object SharedTestDataADM {
   )
   val anythingRdfOntologyAndData: List[RdfDataObject] = List(anythingRdfData, anythingRdfOntology)
 
-  val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
-  val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
+  val customResourceIRI: IRI                                     = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
+  val customResourceIRI_resourceWithValues: IRI                  = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
   val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI =
     "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/fdqCOaqT6dP19pWI84X1XQ"
   val customValueUUID                     = "fdqCOaqT6dP19pWI84X1XQ"

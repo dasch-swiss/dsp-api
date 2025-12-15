@@ -17,7 +17,6 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.OntologyUtil
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
@@ -26,10 +25,11 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.ontology.repo.GetAllOntologiesMetadataQuery
+import org.knora.webapi.slice.ontology.repo.GetOntologyGraphQuery
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 object OntologyCache {
   // The global ontology cache lock. This is needed because every ontology update replaces the whole ontology cache
@@ -438,7 +438,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
     for {
       // Get all ontology metadata.
       _                           <- ZIO.logDebug(s"Loading ontologies into cache")
-      allOntologyMetadataResponse <- triplestore.query(Select(sparql.v2.txt.getAllOntologyMetadata()))
+      allOntologyMetadataResponse <- triplestore.select(GetAllOntologiesMetadataQuery.build)
       allOntologyMetadata          = OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
 
       knoraBaseOntologyMetadata =
@@ -484,7 +484,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
           }
 
           triplestore
-            .query(Construct(sparql.v2.txt.getOntologyGraph(ontologyIri)))
+            .query(GetOntologyGraphQuery.build(OntologyIri.unsafeFrom(ontologyIri)))
             .flatMap(_.asExtended)
             .map(OntologyGraph(ontologyIri, _))
         }

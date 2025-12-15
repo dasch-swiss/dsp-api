@@ -12,11 +12,11 @@ import org.knora.webapi.TestDataFactory.Project.systemProjectIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.domain.LanguageCode
 
 /**
@@ -118,6 +118,21 @@ object TestDataFactory {
     Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
+    Set.empty,
+    Set.empty,
+  )
+
+  val someProjectADM = org.knora.webapi.slice.api.admin.model.Project(
+    ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
+    Shortname.unsafeFrom("shortname"),
+    Shortcode.unsafeFrom("0001"),
+    None,
+    Seq(StringLiteralV2.from("Some description")),
+    List.empty,
+    None,
+    Seq.empty,
+    Status.Active,
+    SelfJoin.CannotJoin,
     Set.empty,
     Set.empty,
   )

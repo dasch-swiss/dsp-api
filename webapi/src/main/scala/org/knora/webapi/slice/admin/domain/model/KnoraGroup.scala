@@ -16,10 +16,10 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
+import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
@@ -162,11 +162,11 @@ object GroupSelfJoin {
 
 object KnoraGroup {
   object Conversions {
-    implicit val groupIriConverter: String => Either[String, GroupIri]   = GroupIri.from
-    implicit val groupNameConverter: String => Either[String, GroupName] = GroupName.from
+    implicit val groupIriConverter: String => Either[String, GroupIri]                     = GroupIri.from
+    implicit val groupNameConverter: String => Either[String, GroupName]                   = GroupName.from
     implicit val groupDescriptionsConverter: LangString => Either[String, StringLiteralV2] = langString =>
       GroupDescriptions.fromOne(StringLiteralV2.unsafeFrom(langString.value, langString.lang))
-    implicit val groupStatusConverter: Boolean => Either[String, GroupStatus] = value => Right(GroupStatus.from(value))
+    implicit val groupStatusConverter: Boolean => Either[String, GroupStatus]               = value => Right(GroupStatus.from(value))
     implicit val groupHasSelfJoinEnabledConverter: Boolean => Either[String, GroupSelfJoin] = value =>
       Right(GroupSelfJoin.from(value))
   }

@@ -9,13 +9,13 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.http.HttpHost
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
-import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.JsonCursor
 import zio.metrics.Metric
 import zio.nio.file.Path as NioPath
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -23,6 +23,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption.*
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.FiniteDuration
 import scala.io.Source
 
 import dsp.errors.*
@@ -33,6 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol.fu
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.infrastructure.TracingHttpClient
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
@@ -75,7 +78,7 @@ case class TriplestoreServiceLive(
       ZIO.logError(msg) *> ZIO.fail(TriplestoreTimeoutException(msg))
     } else {
       val delimiter: String = "\n" + StringUtils.repeat('=', 80) + "\n"
-      val msg =
+      val msg               =
         s"Couldn't parse response from triplestore:$delimiter$response${delimiter}in response to SPARQL query:$delimiter$sparql"
       ZIO.logError(msg) *> ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
     }
@@ -102,7 +105,7 @@ case class TriplestoreServiceLive(
   override def query(query: Construct): Task[SparqlConstructResponse] =
     for {
       turtleStr <- executeSparqlQuery(query, mimeTypeTextTurtle)
-      rdfModel <- ZIO
+      rdfModel  <- ZIO
                     .attempt(RdfModel.fromTurtle(turtleStr))
                     .orElse(processError(query.sparql, turtleStr))
     } yield SparqlConstructResponse.make(rdfModel)
@@ -153,7 +156,7 @@ case class TriplestoreServiceLive(
     for {
       resultString <- executeSparqlQuery(query)
       _            <- ZIO.logTrace(s"sparqlHttpAsk - resultString: $resultString")
-      result <-
+      result       <-
         ZIO
           .fromEither(for {
             obj     <- resultString.fromJson[Json.Obj]
@@ -328,7 +331,7 @@ case class TriplestoreServiceLive(
         )
       response <- doHttpRequest(request)
       rdfBody  <- ensuringBody(response.body).map(RdfStringSource(_))
-      _ <- ZIO.attemptBlocking {
+      _        <- ZIO.attemptBlocking {
              RdfFormatUtil.turtleToQuadsFile(rdfBody, graphIri.value, outputFile.toFile.toPath, outputFormat, APPEND)
            }
     } yield ()
@@ -459,10 +462,7 @@ case class TriplestoreServiceLive(
 }
 
 object TriplestoreServiceLive {
-  import scala.concurrent.duration.*
 
-  val layer: URLayer[Triplestore, TriplestoreService] =
-    HttpClientZioBackend
-      .layer(options = BackendOptions.Default.connectionTimeout(2.hours))
-      .orDie >+> ZLayer.derive[TriplestoreServiceLive]
+  val layer: URLayer[Triplestore & Tracing, TriplestoreService] =
+    TracingHttpClient.layer(FiniteDuration(2, TimeUnit.HOURS)) >>> ZLayer.derive[TriplestoreServiceLive]
 }

@@ -51,7 +51,7 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
 
   private def extractWithFfprobe(derivative: MovingImageDerivativeFile) = for {
     absPath <- derivative.path.toAbsolutePath
-    cmd <-
+    cmd     <-
       executor.buildCommand(
         "ffprobe",
         s"-v",
@@ -65,7 +65,7 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
         "-i",
         absPath.toString,
       )
-    outStr <- executor.executeOrFail(cmd).map(_.stdout)
+    outStr     <- executor.executeOrFail(cmd).map(_.stdout)
     ffprobeOut <- ZIO
                     .succeed(outStr.fromJson[FfprobeOut].toOption.flatMap(extractDimDurFps))
                     .someOrFail(new RuntimeException(s"Failed parsing metadata: $outStr"))
@@ -98,7 +98,7 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
   }
 
   final case class FfprobeOut(streams: Array[FfprobeStream]) {}
-  object FfprobeOut {
+  object FfprobeOut                                          {
     implicit val decoder: JsonDecoder[FfprobeOut] = DeriveJsonDecoder.gen[FfprobeOut]
   }
 

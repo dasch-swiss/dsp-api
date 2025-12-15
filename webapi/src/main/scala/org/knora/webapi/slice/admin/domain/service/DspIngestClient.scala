@@ -7,7 +7,6 @@ package org.knora.webapi.slice.admin.domain.service
 
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
-import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.Scope
 import zio.Task
 import zio.ZIO
@@ -30,9 +29,10 @@ import java.io.IOException
 import scala.concurrent.duration.DurationInt
 
 import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.TracingHttpClient
 
 final case class AssetInfoResponse(
   internalFilename: String,
@@ -72,7 +72,7 @@ final case class DspIngestClient(
       _        <- ZIO.logInfo(s"asset info for $shortcode/$assetId")
       _        <- ZIO.logDebug(s"Response from ingest: ${response.code}")
       _        <- ZIO.logDebug(s"Response from ingest body: ${response.body.fold(identity, identity)}")
-      result <- ZIO
+      result   <- ZIO
                   .fromEither(response.body.flatMap(str => str.fromJson[AssetInfoResponse]))
                   .mapError(err => new IOException(s"Error parsing response: $err"))
     } yield result
@@ -81,7 +81,7 @@ final case class DspIngestClient(
     for {
       tempDir   <- Files.createTempDirectoryScoped(Some("export"), List.empty)
       exportFile = tempDir / "export.zip"
-      request <- authenticatedRequest.map {
+      request   <- authenticatedRequest.map {
                    _.post(uri"${projectsPath(shortcode)}/export")
                      .readTimeout(30.minutes)
                      .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(exportFile.toFile))))
@@ -101,7 +101,7 @@ final case class DspIngestClient(
       importUrl <- ZIO.fromEither(URL.decode(s"${projectsPath(shortcode)}/import"))
       token     <- jwtService.createJwtForDspIngest()
       body      <- Body.fromFile(fileToImport.toFile)
-      request = Request
+      request    = Request
                   .post(importUrl, body)
                   .addHeaders(
                     Headers(
@@ -117,5 +117,5 @@ final case class DspIngestClient(
 }
 
 object DspIngestClient {
-  val layer = HttpClientZioBackend.layer().orDie >+> ZLayer.derive[DspIngestClient]
+  val layer = TracingHttpClient.layer >>> ZLayer.derive[DspIngestClient]
 }

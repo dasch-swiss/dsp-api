@@ -20,7 +20,7 @@ import org.knora.webapi.config.InstrumentationServerConfig
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.core.State
 import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.routing.Endpoints
+import org.knora.webapi.slice.api.Endpoints
 import org.knora.webapi.slice.infrastructure.api.PrometheusRoutes
 
 object MetricsServer {
@@ -44,7 +44,7 @@ object MetricsServer {
       port            = config.port
       interval        = config.interval
       metricsConfig   = MetricsConfig(interval)
-      _ <-
+      _              <-
         ZIO.logInfo(
           s"Docs and metrics available at " +
             s"${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:$port/docs & " +
@@ -70,7 +70,7 @@ object DocsServer {
     for {
       config       <- ZIO.service[KnoraApi]
       allEndpoints <- ZIO.serviceWith[Endpoints](_.serverEndpoints)
-      info = Info(
+      info          = Info(
                title = "DSP-API",
                version = BuildInfo.version,
                summary = Some(

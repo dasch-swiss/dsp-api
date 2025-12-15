@@ -16,11 +16,11 @@ import swiss.dasch.version.BuildInfo
 import zio.Task
 import zio.ZLayer
 
-final case class Endpoints(
-  private val monitoring: MonitoringEndpointsHandler,
-  private val projects: ProjectsEndpointsHandler,
-  private val maintenance: MaintenanceEndpointsHandler,
-  private val reports: ReportEndpointsHandler,
+final class Endpoints(
+  monitoring: MonitoringEndpointsHandler,
+  projects: ProjectsEndpointsHandler,
+  maintenance: MaintenanceEndpointsHandler,
+  reports: ReportEndpointsHandler,
 ) {
   val api: List[ZServerEndpoint[Any, ZioStreams]] =
     monitoring.endpoints ++ projects.endpoints ++ maintenance.endpoints ++ reports.endpoints

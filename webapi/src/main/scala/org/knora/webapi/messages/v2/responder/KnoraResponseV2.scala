@@ -11,7 +11,7 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 /**
@@ -185,7 +185,7 @@ final case class CanDoResponseV2(
     if (targetSchema != ApiV2Complex) {
       throw BadRequestException(s"Response is available only in the complex schema")
     }
-    val bodyMap: Map[IRI, JsonLDValue] = Map(OntologyConstants.KnoraApiV2Complex.CanDo -> canDo)
+    val bodyMap: Map[IRI, JsonLDValue]   = Map(OntologyConstants.KnoraApiV2Complex.CanDo -> canDo)
     val reasonMap: Map[IRI, JsonLDValue] = cannotDoReason
       .filter(_.value.nonEmpty)
       .map(reason => Map(OntologyConstants.KnoraApiV2Complex.CannotDoReason -> reason))
@@ -194,7 +194,7 @@ final case class CanDoResponseV2(
       .map(context => Map(OntologyConstants.KnoraApiV2Complex.CannotDoContext -> context))
       .getOrElse(Map.empty)
 
-    val body = JsonLDObject(bodyMap ++ reasonMap ++ cannotDoContextMap)
+    val body    = JsonLDObject(bodyMap ++ reasonMap ++ cannotDoContextMap)
     val context = JsonLDObject(
       Map(
         OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
@@ -211,8 +211,8 @@ final case class CanDoResponseV2(
 }
 
 object CanDoResponseV2 {
-  val yes: CanDoResponseV2 = CanDoResponseV2(JsonLDBoolean.TRUE)
-  val no: CanDoResponseV2  = CanDoResponseV2(JsonLDBoolean.FALSE)
+  val yes: CanDoResponseV2                  = CanDoResponseV2(JsonLDBoolean.TRUE)
+  val no: CanDoResponseV2                   = CanDoResponseV2(JsonLDBoolean.FALSE)
   def of(boolean: Boolean): CanDoResponseV2 = boolean match {
     case true  => yes
     case false => no

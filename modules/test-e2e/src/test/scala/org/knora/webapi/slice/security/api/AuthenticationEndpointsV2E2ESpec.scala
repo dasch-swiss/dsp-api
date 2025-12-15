@@ -14,10 +14,10 @@ import zio.test.*
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.*
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.CheckResponse
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LogoutResponse
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.TokenResponse
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 object AuthenticationEndpointsV2E2ESpec extends E2EZSpec {
@@ -80,7 +80,7 @@ object AuthenticationEndpointsV2E2ESpec extends E2EZSpec {
       test("logout with token should invalidate the token") {
         for {
           token <- TestApiClient.getRootToken
-          _ <-
+          _     <-
             TestApiClient.deleteJson[LogoutResponse](uri"/v2/authentication", _.auth.bearer(token)).flatMap(_.assert200)
           checkAfterLogout <- TestApiClient.getJson[CheckResponse](uri"/v2/authentication", _.auth.bearer(token))
         } yield assertTrue(

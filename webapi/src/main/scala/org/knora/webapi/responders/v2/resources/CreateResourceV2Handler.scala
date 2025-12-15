@@ -32,7 +32,6 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
-import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -40,6 +39,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.api.admin.model.*
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -105,7 +105,7 @@ final case class CreateResourceV2Handler(
       .ignore
 
   private def ensureClassBelongsToProjectOntology(createResourceRequestV2: CreateResourceRequestV2): Task[Unit] = for {
-    projectIri <- ZIO.succeed(createResourceRequestV2.createResource.projectADM.id)
+    projectIri             <- ZIO.succeed(createResourceRequestV2.createResource.projectADM.id)
     isSystemOrSharedProject =
       projectIri == KnoraProjectRepo.builtIn.SystemProject.id ||
         projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
@@ -327,7 +327,7 @@ final case class CreateResourceV2Handler(
       propsWithoutValues =
         internalCreateResource.values.collect { case (key, values) if values.nonEmpty => key }.toSet
       missingProps = requiredProps -- propsWithoutValues
-      _ <- ZIO.fail {
+      _           <- ZIO.fail {
              val externalResourceClassIri =
                s"<${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}>"
              val externalMissingPropIris =
@@ -525,7 +525,7 @@ final case class CreateResourceV2Handler(
           val v = attr match
             case StandoffTagIriAttributeV2(_, value, _) =>
               StandoffAttributeValue.IriAttribute(InternalIri(value))
-            case StandoffTagUriAttributeV2(_, value) => StandoffAttributeValue.UriAttribute(value)
+            case StandoffTagUriAttributeV2(_, value)               => StandoffAttributeValue.UriAttribute(value)
             case StandoffTagInternalReferenceAttributeV2(_, value) =>
               StandoffAttributeValue.InternalReferenceAttribute(InternalIri(value))
             case StandoffTagStringAttributeV2(_, value)  => StandoffAttributeValue.StringAttribute(value)
@@ -559,7 +559,7 @@ final case class CreateResourceV2Handler(
   ): IO[StandoffInternalException, TypeSpecificValueInfo] =
     ZIO
       .whenCase(textType) {
-        case TextValueType.FormattedText => ZIO.succeed(FormattedTextValueType.StandardMapping)
+        case TextValueType.FormattedText                   => ZIO.succeed(FormattedTextValueType.StandardMapping)
         case TextValueType.CustomFormattedText(mappingIri) =>
           ZIO.succeed(FormattedTextValueType.CustomMapping(mappingIri))
       }
@@ -686,7 +686,7 @@ final case class CreateResourceV2Handler(
         listNodesThatShouldExist.map { listNodeIri =>
           for {
             checkNode <- resourceUtilV2.checkListNodeExistsAndIsRootNode(listNodeIri)
-            _ <-
+            _         <-
               checkNode match {
                 // it doesn't have isRootNode property - it's a child node
                 case Right(false) => ZIO.unit

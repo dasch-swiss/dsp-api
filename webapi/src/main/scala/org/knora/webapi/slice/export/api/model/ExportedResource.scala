@@ -7,16 +7,6 @@ package org.knora.webapi.slice.api.v3.export_
 
 import scala.collection.immutable.ListMap
 
-import org.knora.webapi.slice.infrastructure.CsvRowBuilder
-
 final case class ExportedResource(
   properties: ListMap[String, String],
 )
-
-object ExportedResource {
-  def rowBuilder(headers: List[String]): CsvRowBuilder[ExportedResource] =
-    new CsvRowBuilder[ExportedResource] {
-      def header: Seq[String]                     = headers
-      def values(row: ExportedResource): Seq[Any] = row.properties.values.toList
-    }
-}

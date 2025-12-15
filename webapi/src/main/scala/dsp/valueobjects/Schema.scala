@@ -280,7 +280,7 @@ object Schema {
       case Some(valueType) if valueType.toString() == "integer" => value.toIntOption
       case Some(valueType) if valueType.toString() == "percent" => value.split("%").head.trim.toIntOption
       case Some(valueType) if valueType.toString() == "decimal" => value.toDoubleOption
-      case Some(valueType) if valueType.toString() == "string" =>
+      case Some(valueType) if valueType.toString() == "string"  =>
         if (value.trim() == "soft" || value.trim() == "hard") Some(value.trim()) else None
       case Some(valueType) if valueType.toString() == "iri" => {
         val iriWithoutBrackets: Option[String] =
@@ -304,7 +304,7 @@ object SchemaErrorMessages {
   val GuiAttributeMissing  = "Gui attribute cannot be empty."
   val GuiAttributeNotEmpty = "No gui attributes allowed."
   val GuiElementMissing    = "Gui element cannot be empty."
-  val GuiAttributeUnknown = (guiAttribute: String) =>
+  val GuiAttributeUnknown  = (guiAttribute: String) =>
     s"Gui attribute '$guiAttribute' is unknown. Needs to be one of: ${Schema.guiAttributeToType.keys.mkString(", ")}"
   val GuiAttributeWrongValueType = (key: String, value: String) =>
     s"Value '$value' of gui attribute '$key' has the wrong attribute type."

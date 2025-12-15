@@ -164,7 +164,7 @@ final case class ReportService(
       assetFolder    <- storageService.getAssetFolder(info.assetRef)
       sizeOrig       <- storageService.calculateSizeInBytes(assetFolder / info.original.file.filename)
       sizeDerivative <- storageService.calculateSizeInBytes(assetFolder / info.derivative.file.filename)
-      sizeKeyframes <-
+      sizeKeyframes  <-
         fileType match {
           case MovingImage => storageService.calculateSizeInBytes(assetFolder / info.assetRef.id.toString)
           case _           => ZIO.succeed(FileSize.zero)

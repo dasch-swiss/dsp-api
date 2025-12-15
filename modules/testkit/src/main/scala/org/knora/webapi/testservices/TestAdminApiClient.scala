@@ -27,12 +27,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
-import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.*
-import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
-import org.knora.webapi.slice.admin.api.model.ProjectsGetResponse
-import org.knora.webapi.slice.admin.api.service.UserRestService.UserResponse
-import org.knora.webapi.slice.admin.api.service.UserRestService.UsersResponse
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -41,6 +35,12 @@ import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.*
+import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
+import org.knora.webapi.slice.api.admin.model.ProjectOperationResponseADM
+import org.knora.webapi.slice.api.admin.model.ProjectsGetResponse
+import org.knora.webapi.slice.api.admin.service.UserRestService.UserResponse
+import org.knora.webapi.slice.api.admin.service.UserRestService.UsersResponse
 
 case class TestAdminApiClient(private val apiClient: TestApiClient) {
   def getProject(shortcode: Shortcode, user: User): Task[Response[Either[String, ProjectsGetResponse]]] =

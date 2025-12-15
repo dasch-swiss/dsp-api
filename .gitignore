@@ -45,6 +45,7 @@ dependencies.txt
 .idea/
 .metals/
 **/metals.sbt
+.sdkmanrc
 
 .tmp/
 

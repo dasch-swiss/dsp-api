@@ -21,9 +21,6 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
-import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
-import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Group
@@ -53,6 +50,9 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.UserCreateRequest
+import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -106,7 +106,7 @@ object ProjectEraseIT extends E2EZSpec {
     ),
   )
 
-  private val groupNr: AtomicInteger = new AtomicInteger()
+  private val groupNr: AtomicInteger             = new AtomicInteger()
   private def createGroup(project: KnoraProject) = {
     val nr = groupNr.getAndIncrement()
     groups(
@@ -186,7 +186,7 @@ object ProjectEraseIT extends E2EZSpec {
             // given
             project  <- getProject
             graphName = ProjectService.projectDataNamedGraphV2(project)
-            _ <- // insert something into the project graph, otherwise it does not exist
+            _        <- // insert something into the project graph, otherwise it does not exist
               db(_.query(Update(s"""
                                    |INSERT DATA {
                                    |  GRAPH <${graphName.value}> {
@@ -209,7 +209,7 @@ object ProjectEraseIT extends E2EZSpec {
         test("when called as root then it should delete the ontology graph") {
           for {
             project <- getProject
-            req = CreateOntologyRequestV2(
+            req      = CreateOntologyRequestV2(
                     "test",
                     project.id,
                     false,
@@ -233,7 +233,7 @@ object ProjectEraseIT extends E2EZSpec {
           for {
             project <- getProject
             group   <- createGroup(project)
-            perms = Chunk(
+            perms    = Chunk(
                       AdministrativePermissionPart.Simple
                         .from(ProjectResourceCreateAll)
                         .getOrElse(throw Exception("should not happen")),
@@ -252,7 +252,7 @@ object ProjectEraseIT extends E2EZSpec {
           for {
             project <- getProject
             group   <- createGroup(project)
-            perms = Chunk(
+            perms    = Chunk(
                       DefaultObjectAccessPermissionPart(Permission.ObjectAccess.View, NonEmptyChunk(group.id)),
                       DefaultObjectAccessPermissionPart(Permission.ObjectAccess.Modify, NonEmptyChunk(group.id)),
                     )

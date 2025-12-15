@@ -78,16 +78,16 @@ object ValuesEraseSpec extends E2EZSpec {
           ontologyIri          <- ZIO.serviceWith[TestHelper](_.ontologyIri)
           hasRequiredIntegerIri = ontologyIri.makeProperty("hasRequiredInteger").toComplexSchema
           integerValue          = IntegerValueContentV2(ApiV2Complex, 765)
-          resourceWVals <-
+          resourceWVals        <-
             TestHelper.createResourceWithClass(
               "ThingWithRequiredInt",
               Map(hasRequiredIntegerIri -> Seq(CreateValueInNewResourceV2(integerValue))),
             )
           requiredIntIri <-
             ZIO.serviceWith[TestHelper](_.toSmartIri("http://www.knora.org/ontology/0001/anything#hasRequiredInteger"))
-          val1  = resourceWVals.values(requiredIntIri).head
-          res1  = resourceWVals.resource
-          val2 <- TestHelper.updateIntegerValue(val1, res1, 567, Some("hasRequiredInteger"))
+          val1    = resourceWVals.values(requiredIntIri).head
+          res1    = resourceWVals.resource
+          val2   <- TestHelper.updateIntegerValue(val1, res1, 567, Some("hasRequiredInteger"))
           result <-
             (if (onlyHistory)
                TestHelper.eraseIntegerValueHistory(val2, res1, Some("hasRequiredInteger"))
@@ -225,7 +225,7 @@ final case class TestHelper(
       }
       """,
   ): Task[SortedSet[TestHelper.Triple]] = for {
-    prj <- projectService.findByShortcode(shortcode).someOrFail(IllegalStateException("Project not found"))
+    prj  <- projectService.findByShortcode(shortcode).someOrFail(IllegalStateException("Project not found"))
     query = s"""
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -278,7 +278,7 @@ final case class TestHelper(
   ): ZIO[Any, Throwable, ActiveValue] =
     val propertyIri = left.ontologyIri.makeProperty("hasOtherThingValue")
     for {
-      uuid <- Random.nextUUID
+      uuid     <- Random.nextUUID
       createVal = CreateValueV2(
                     left.iri.toString,
                     left.resourceClassIri.toComplexSchema,
@@ -298,7 +298,7 @@ final case class TestHelper(
     newComment: String,
   ): ZIO[Any, Throwable, ActiveValue] =
     val hasOtherThingValue = resource.ontologyIri.makeProperty("hasOtherThingValue")
-    val update = UpdateValueContentV2(
+    val update             = UpdateValueContentV2(
       resource.iri.toString,
       resource.resourceClassIri.toComplexSchema,
       hasOtherThingValue.toComplexSchema,
@@ -307,7 +307,7 @@ final case class TestHelper(
     )
     for {
       response <- valuesResponder.updateValueV2(update, rootUser, UUID.randomUUID())
-      updated <- valueRepo
+      updated  <- valueRepo
                    .findActiveById(ValueIri.unsafeFrom(response.valueIri.toSmartIri))
                    .someOrFail(IllegalStateException("Value not found"))
     } yield updated
@@ -315,7 +315,7 @@ final case class TestHelper(
   def createIntegerValue(resource: ActiveResource): Task[ActiveValue] =
     val hasInteger = resource.ontologyIri.makeProperty("hasInteger")
     for {
-      uuid <- Random.nextUUID
+      uuid     <- Random.nextUUID
       createVal = CreateValueV2(
                     resource.iri.toString,
                     resource.resourceClassIri.toComplexSchema,
@@ -331,7 +331,7 @@ final case class TestHelper(
   def createRequiredIntegerValue(resource: ActiveResource): Task[ActiveValue] =
     val hasInteger = resource.ontologyIri.makeProperty("hasRequiredInteger")
     for {
-      uuid <- Random.nextUUID
+      uuid     <- Random.nextUUID
       createVal = CreateValueV2(
                     resource.iri.toString,
                     resource.resourceClassIri.toComplexSchema,
@@ -351,7 +351,7 @@ final case class TestHelper(
     propName: Option[String] = None,
   ): ZIO[Any, Throwable, ActiveValue] =
     val hasInteger = resource.ontologyIri.makeProperty(propName.getOrElse("hasInteger"))
-    val update = UpdateValueContentV2(
+    val update     = UpdateValueContentV2(
       resource.iri.toString,
       resource.resourceClassIri.toComplexSchema,
       hasInteger.toComplexSchema,
@@ -360,7 +360,7 @@ final case class TestHelper(
     )
     for {
       response <- valuesResponder.updateValueV2(update, rootUser, UUID.randomUUID())
-      updated <- valueRepo
+      updated  <- valueRepo
                    .findActiveById(ValueIri.unsafeFrom(response.valueIri.toSmartIri))
                    .someOrFail(IllegalStateException("Value not found"))
     } yield updated
@@ -402,11 +402,11 @@ final case class TestHelper(
 
   def createTextValueWithStandoff(resource: ActiveResource, textValueAsXml: String): Task[ActiveValue] =
     val jsonLd = Json.Obj(
-      "@id"   -> Json.Str(resource.iri.toString),
-      "@type" -> Json.Str(ontologyIri.makeClass("Thing").toComplexSchema.toIri),
+      "@id"              -> Json.Str(resource.iri.toString),
+      "@type"            -> Json.Str(ontologyIri.makeClass("Thing").toComplexSchema.toIri),
       "anything:hasText" -> Json.Obj(
-        "@type"                    -> Json.Str("knora-api:TextValue"),
-        "knora-api:textValueAsXml" -> Json.Str(textValueAsXml),
+        "@type"                         -> Json.Str("knora-api:TextValue"),
+        "knora-api:textValueAsXml"      -> Json.Str(textValueAsXml),
         "knora-api:textValueHasMapping" -> Json.Obj(
           "@id" -> Json.Str("http://rdfh.ch/standoff/mappings/StandardMapping"),
         ),
@@ -421,7 +421,7 @@ final case class TestHelper(
       createVal <- requestParser.createValueV2FromJsonLd(jsonLd).mapError(Throwable(_))
       uuid      <- Random.nextUUID
       value     <- valuesResponder.createValueV2(createVal, rootUser, uuid)
-      value <- valueRepo
+      value     <- valueRepo
                  .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
@@ -432,12 +432,12 @@ final case class TestHelper(
     textValueAsXml: String,
   ): Task[ActiveValue] =
     val jsonLd = Json.Obj(
-      "@id"   -> Json.Str(resource.iri.toString),
-      "@type" -> Json.Str(ontologyIri.makeClass("Thing").toComplexSchema.toIri),
+      "@id"              -> Json.Str(resource.iri.toString),
+      "@type"            -> Json.Str(ontologyIri.makeClass("Thing").toComplexSchema.toIri),
       "anything:hasText" -> Json.Obj(
-        "@id"                      -> Json.Str(value.iri.toComplexSchema.toIri),
-        "@type"                    -> Json.Str("knora-api:TextValue"),
-        "knora-api:textValueAsXml" -> Json.Str(textValueAsXml),
+        "@id"                           -> Json.Str(value.iri.toComplexSchema.toIri),
+        "@type"                         -> Json.Str("knora-api:TextValue"),
+        "knora-api:textValueAsXml"      -> Json.Str(textValueAsXml),
         "knora-api:textValueHasMapping" -> Json.Obj(
           "@id" -> Json.Str("http://rdfh.ch/standoff/mappings/StandardMapping"),
         ),
@@ -451,7 +451,7 @@ final case class TestHelper(
       updateVal <- requestParser.updateValueV2fromJsonLd(jsonLd).mapError(Throwable(_))
       uuid      <- Random.nextUUID
       value     <- valuesResponder.updateValueV2(updateVal, rootUser, uuid)
-      value <- valueRepo
+      value     <- valueRepo
                  .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
@@ -547,7 +547,7 @@ final case class TestHelper(
     createRes = CreateResourceV2(None, ontologyIri.makeClass("Thing").smartIri, "label", Map.empty, prj, None, None)
     createReq = CreateResourceRequestV2(createRes, rootUser, uuid)
     res      <- resourcesResponderV2.createResource(createReq)
-    created <- resourceRepo
+    created  <- resourceRepo
                  .findActiveById(ResourceIri.unsafeFrom(res.resources.head.resourceIri.toSmartIri))
                  .someOrFail(IllegalStateException("Resource not found"))
   } yield created
@@ -561,7 +561,7 @@ final case class TestHelper(
     createRes = CreateResourceV2(None, ontologyIri.makeClass(className).smartIri, "label", values, prj, None, None)
     createReq = CreateResourceRequestV2(createRes, rootUser, uuid)
     resource <- resourcesResponderV2.createResource(createReq).map(_.resources.head)
-    created <- resourceRepo
+    created  <- resourceRepo
                  .findActiveById(ResourceIri.unsafeFrom(resource.resourceIri.toSmartIri))
                  .someOrFail(IllegalStateException("Resource not found"))
     values <- ZIO
@@ -584,7 +584,7 @@ final case class TestHelper(
   } yield resource
 
   def deleteResource(resource: ActiveResource): Task[Unit] = for {
-    uuid <- Random.nextUUID
+    uuid     <- Random.nextUUID
     deleteReq = DeleteOrEraseResourceRequestV2(
                   resourceIri = resource.iri.toString,
                   resourceClassIri = resource.resourceClassIri.toComplexSchema,

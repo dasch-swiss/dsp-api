@@ -26,8 +26,8 @@ import scala.util.Try
 
 import dsp.valueobjects.UuidUtil
 import org.knora.sipi.MockDspApiServer.verify.*
-import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
@@ -81,8 +81,8 @@ object SipiIT extends ZIOSpecDefault {
           "then Sipi should resolve the permission only from the token and respond with Ok",
       ) {
         for {
-          _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
-          jwt <- createJwt(AuthScope.write(Shortcode.unsafeFrom(prefix)))
+          _        <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
+          jwt      <- createJwt(AuthScope.write(Shortcode.unsafeFrom(prefix)))
           response <- requestGet(
                         Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jpg",
                         Header.Authorization.Bearer(jwt),
@@ -197,7 +197,7 @@ object SipiIT extends ZIOSpecDefault {
             "then Sipi responds with Not Found",
         ) {
           for {
-            server <- MockDspApiServer.resetAndGetWireMockServer
+            server   <- MockDspApiServer.resetAndGetWireMockServer
             response <-
               requestGet(Path.root / prefix / "doesnotexist.jp2" / "full" / "max" / "0" / "default.jp2")
           } yield assertTrue(response.status == Status.NotFound, verifyNoInteractionWith(server))

@@ -123,7 +123,7 @@ object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
         parsedQuery              = GravsearchParser.parseQuery(queryRdfTypeRule)
         result                  <- typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause)
         (usageIndex, entityInfo) = result
-        inconsistentTypes = IntermediateTypeInspectionResult(
+        inconsistentTypes        = IntermediateTypeInspectionResult(
                               entities = Map(
                                 TypeableVariable(variableName = "letter") -> Set(
                                   NonPropertyTypeInfo(
@@ -199,7 +199,7 @@ object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
         parsedQuery              = GravsearchParser.parseQuery(queryWithInconsistentTypes3)
         result                  <- typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause)
         (usageIndex, entityInfo) = result
-        inconsistentTypes = IntermediateTypeInspectionResult(
+        inconsistentTypes        = IntermediateTypeInspectionResult(
                               entities = Map(
                                 TypeableVariable(variableName = "document") -> Set(
                                   NonPropertyTypeInfo(

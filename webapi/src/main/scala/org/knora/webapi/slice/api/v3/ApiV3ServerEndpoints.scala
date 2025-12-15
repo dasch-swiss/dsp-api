@@ -4,19 +4,18 @@
  */
 
 package org.knora.webapi.slice.api.v3
-
 import sttp.tapir.ztapir.*
 import zio.*
 
-import org.knora.webapi.slice.api.v3.export_.ExportServerEndpoints
+import org.knora.webapi.slice.api.v3.`export`.ExportServerEndpoints
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpointsV3
 
-class ApiV3ServerEndpoints(
-  private val resourcesServerEndpoints: ResourcesServerEndpointsV3,
-  private val exportServerEndpoints: ExportServerEndpoints,
+final class ApiV3ServerEndpoints(
+  resourcesServerEndpoints: ResourcesServerEndpointsV3,
+  exportServerEndpoints: ExportServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
-    (resourcesServerEndpoints.endpoints ++ exportServerEndpoints.endpoints)
+    (resourcesServerEndpoints.serverEndpoints ++ exportServerEndpoints.serverEndpoints)
       .map(_.tag("API v3"))
 }
 object ApiV3ServerEndpoints {

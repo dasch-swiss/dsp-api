@@ -46,7 +46,7 @@ object DatasetOps { self =>
   def from(str: String, lang: Lang): ZIO[Scope, String, Dataset] =
     for {
       ds <- createDataset
-      _ <- ZIO
+      _  <- ZIO
              .attempt(RDFDataMgr.read(ds, ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8)), lang))
              .mapError(_.getMessage)
     } yield ds

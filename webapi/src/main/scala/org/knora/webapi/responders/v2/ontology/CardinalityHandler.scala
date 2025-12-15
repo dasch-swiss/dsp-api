@@ -20,13 +20,12 @@ import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
+import org.knora.webapi.slice.ontology.repo.IsPropertyUsedInResourcesQuery
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
@@ -66,7 +65,7 @@ final case class CardinalityHandler(
 
       // Check that the submitted cardinality to delete is defined on this class
       cardinalitiesToDelete: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] = internalClassInfo.directCardinalities
-      isDefinedOnClassList <- ZIO.foreach(cardinalitiesToDelete.toList) { case (k, v) =>
+      isDefinedOnClassList                                                     <- ZIO.foreach(cardinalitiesToDelete.toList) { case (k, v) =>
                                 isCardinalityDefinedOnClass(cacheData, k, v, internalClassIri, internalOntologyIri)
                               }
       atLeastOneCardinalityNotDefinedOnClass: Boolean = isDefinedOnClassList.contains(false)
@@ -74,9 +73,9 @@ final case class CardinalityHandler(
       // Check if property is used in resources of this class
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
-      propertyIsUsed <- isPropertyUsedInResources(
-                          internalClassIri.toInternalIri,
-                          submittedPropertyToDelete.toInternalIri,
+      propertyIsUsed                     <- isPropertyUsedInResources(
+                          ResourceClassIri.unsafeFrom(internalClassIri),
+                          PropertyIri.unsafeFrom(submittedPropertyToDelete),
                         )
 
       // Make an update class definition in which the cardinality to delete is removed
@@ -204,7 +203,7 @@ final case class CardinalityHandler(
 
       // Check that the submitted cardinality to delete is defined on this class
       cardinalitiesToDelete: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] = internalClassInfo.directCardinalities
-      isDefinedOnClassList <- ZIO.foreach(cardinalitiesToDelete.toList) { case (k, v) =>
+      isDefinedOnClassList                                                     <- ZIO.foreach(cardinalitiesToDelete.toList) { case (k, v) =>
                                 isCardinalityDefinedOnClass(cacheData, k, v, internalClassIri, internalOntologyIri)
                               }
       _ <- ZIO
@@ -214,8 +213,10 @@ final case class CardinalityHandler(
       // Check if property is used in resources of this class
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
-      propertyIsUsed <-
-        isPropertyUsedInResources(internalClassIri.toInternalIri, submittedPropertyToDelete.toInternalIri)
+      propertyIsUsed                     <- isPropertyUsedInResources(
+                          ResourceClassIri.unsafeFrom(internalClassIri),
+                          PropertyIri.unsafeFrom(submittedPropertyToDelete),
+                        )
       _ <- ZIO
              .fail(BadRequestException("Property is used in data. The cardinality cannot be deleted."))
              .when(propertyIsUsed)
@@ -278,7 +279,7 @@ final case class CardinalityHandler(
 
       // Add the cardinalities to the class definition in the triplestore.
       currentTime: Instant = Instant.now
-      updateSparql = sparql.v2.txt.replaceClassCardinalities(
+      updateSparql         = sparql.v2.txt.replaceClassCardinalities(
                        ontologyNamedGraphIri = internalOntologyIri,
                        ontologyIri = internalOntologyIri,
                        classIri = internalClassIri,
@@ -307,20 +308,8 @@ final case class CardinalityHandler(
    *
    * @return a [[Boolean]] denoting if the property entity is used.
    */
-  def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean] =
-    triplestoreService.query(Ask(sparql.v2.txt.isPropertyUsed(propertyIri, classIri)))
-
-  /**
-   * Check if a property entity is used in resource instances. Returns `true` if
-   * it is used, and `false` if it is not used.
-   *
-   * @param classIri the IRI of the class that is being checked for usage.
-   * @param propertyIri the IRI of the entity that is being checked for usage.
-   *
-   * @return a [[Boolean]] denoting if the property entity is used.
-   */
   def isPropertyUsedInResources(classIri: ResourceClassIri, propertyIri: PropertyIri): Task[Boolean] =
-    isPropertyUsedInResources(classIri.toInternalIri, propertyIri.toInternalIri)
+    triplestoreService.query(IsPropertyUsedInResourcesQuery.build(propertyIri, classIri))
 
   /**
    * Checks if the class is defined inside the ontology found in the cache.

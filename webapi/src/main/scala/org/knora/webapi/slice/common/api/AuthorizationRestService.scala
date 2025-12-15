@@ -116,9 +116,9 @@ final case class AuthorizationRestService(
 }
 
 object AuthorizationRestService {
-  def isActive(userADM: User): Boolean                           = userADM.status
-  def isSystemAdminOrUser(user: User): Boolean                   = user.isSystemAdmin || user.isSystemUser
-  def isProjectAdmin(user: User, project: KnoraProject): Boolean = user.isProjectAdmin(project.id)
+  def isActive(userADM: User): Boolean                                      = userADM.status
+  def isSystemAdminOrUser(user: User): Boolean                              = user.isSystemAdmin || user.isSystemUser
+  def isProjectAdmin(user: User, project: KnoraProject): Boolean            = user.isProjectAdmin(project.id)
   def isSystemOrProjectAdmin(project: KnoraProject)(userADM: User): Boolean =
     isSystemAdminOrUser(userADM) || isProjectAdmin(userADM, project)
   def isSystemAdminOrProjectAdminInAnyProject(user: User): Boolean =

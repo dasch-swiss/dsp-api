@@ -92,7 +92,7 @@ final case class ConstructResponseUtilV2(
     // Make sure all the subjects are IRIs, because blank nodes are not used in resources.
     val resultsWithIriSubjects: Statements = constructQueryResults.statements.map {
       case (iriSubject: IriSubjectV2, statements: ConstructPredicateObjects) => iriSubject.value -> statements
-      case (otherSubject: SubjectV2, _: ConstructPredicateObjects) =>
+      case (otherSubject: SubjectV2, _: ConstructPredicateObjects)           =>
         throw InconsistentRepositoryDataException(s"Unexpected subject: $otherSubject")
     }
 
@@ -138,7 +138,7 @@ final case class ConstructResponseUtilV2(
           case (pred: SmartIri, objs: Seq[LiteralV2]) if pred.toString == OntologyConstants.KnoraBase.HasValue =>
             objs.map {
               case IriLiteralV2(iri) => iri
-              case other =>
+              case other             =>
                 throw InconsistentRepositoryDataException(
                   s"Unexpected object for $resourceIri knora-base:hasValue: $other",
                 )
@@ -501,7 +501,7 @@ final case class ConstructResponseUtilV2(
             (linkValue: ValueRdfData) =>
               // get the source of the link value (it points to the resource that is currently processed)
               val sourceIri: IRI = linkValue.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
-              val source = Some(
+              val source         = Some(
                 nestResources(
                   depth = depth + 1,
                   resourceIri = sourceIri,
@@ -646,7 +646,7 @@ final case class ConstructResponseUtilV2(
       valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri)
 
     if (valueObject.standoff.nonEmpty) {
-      val mappingIri: Option[IRI] = valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
+      val mappingIri: Option[IRI]                                           = valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
       val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] =
         mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
 
@@ -662,8 +662,8 @@ final case class ConstructResponseUtilV2(
         textType = valueObject
                      .maybeIriObject(OntologyConstants.KnoraBase.HasTextValueType.toSmartIri)
                      .flatMap {
-                       case OntologyConstants.KnoraBase.UnformattedText => Some(TextValueType.UnformattedText)
-                       case OntologyConstants.KnoraBase.FormattedText   => Some(TextValueType.FormattedText)
+                       case OntologyConstants.KnoraBase.UnformattedText     => Some(TextValueType.UnformattedText)
+                       case OntologyConstants.KnoraBase.FormattedText       => Some(TextValueType.FormattedText)
                        case OntologyConstants.KnoraBase.CustomFormattedText =>
                          mappingIri.map(iri => TextValueType.CustomFormattedText(InternalIri(iri)))
                        case OntologyConstants.KnoraBase.UndefinedTextType => None
@@ -1104,7 +1104,7 @@ final case class ConstructResponseUtilV2(
 
     val resourceLabel: String = resourceWithValueRdfData.requireStringObject(OntologyConstants.Rdfs.Label.toSmartIri)
     val resourceClassStr: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.Rdf.Type.toSmartIri)
-    val resourceClass = resourceClassStr.toSmartIriWithErr(
+    val resourceClass         = resourceClassStr.toSmartIriWithErr(
       throw InconsistentRepositoryDataException(
         s"Couldn't parse rdf:type of resource <$resourceIri>: <$resourceClassStr>",
       ),
@@ -1142,12 +1142,12 @@ final case class ConstructResponseUtilV2(
                   requestingUser = requestingUser,
                 )
 
-              attachedToUser = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
-              permissions    = valObj.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
+              attachedToUser             = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
+              permissions                = valObj.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
               valueCreationDate: Instant = valObj.requireDateTimeObject(
                                              OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri,
                                            )
-              valueDeletionInfo = getDeletionInfo(valObj)
+              valueDeletionInfo  = getDeletionInfo(valObj)
               valueHasUUID: UUID = UuidUtil.decode(
                                      valObj.requireStringObject(OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri),
                                    )
@@ -1210,7 +1210,7 @@ final case class ConstructResponseUtilV2(
 
     for {
       projectIri <- ZIO.fromEither(ProjectIri.from(resourceAttachedToProject)).mapError(BadRequestException.apply)
-      project <-
+      project    <-
         projectService.findById(projectIri).someOrFail(NotFoundException(s"Project '${projectIri.value}' not found"))
 
       valueObjects <- ZioHelper.sequence(valueObjectFutures.map { case (k, v) => k -> ZIO.collectAll(v) })

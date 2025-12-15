@@ -9,8 +9,8 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class MaintenanceService(

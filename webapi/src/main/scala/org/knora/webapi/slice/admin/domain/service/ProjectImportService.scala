@@ -83,7 +83,7 @@ final case class ProjectImportService(
     for {
       trigFileAbsolutePath <- trigFile.toAbsolutePath
       _                    <- ZIO.logInfo(s"Importing triples for $shortcode from $trigFileAbsolutePath")
-      _ <- ZIO
+      _                    <- ZIO
              .fail(new IllegalStateException(s"trig file does not exist in export ${path.toAbsolutePath}"))
              .whenZIO(Files.notExists(trigFile))
       _ <- importTrigFile(trigFile)
@@ -99,7 +99,7 @@ final case class ProjectImportService(
       tempDir         <- Files.createTempDirectoryScoped(Some("assets-import"), fileAttributes = Nil)
       zipFile         <- ZipUtility.zipFolder(assetsDir, tempDir)
       _               <- ZIO.logInfo(s"Sending asset data for ${project.value} to ingest service")
-      _ <- dspIngestClient
+      _               <- dspIngestClient
              .importProject(project, zipFile)
              .tapError(err => ZIO.logError(s"Error importing assets: ${err.getMessage}"))
       _ <- ZIO.logInfo(s"Imported assets for ${project.value}")

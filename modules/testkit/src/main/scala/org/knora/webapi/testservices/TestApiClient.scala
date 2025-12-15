@@ -18,10 +18,10 @@ import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload
+import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.TokenResponse
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.security.ScopeResolver
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
 import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
 import org.knora.webapi.testservices.ResponseOps.assert200
 

@@ -81,6 +81,14 @@ object Vocabulary {
     val linkValue: Iri     = iri(kb + "LinkValue")
     val previousValue: Iri = iri(kb + "previousValue")
 
+    // list properties
+    val ListNode: Iri         = iri(kb + "ListNode")
+    val hasRootNode: Iri      = iri(kb + "hasRootNode")
+    val hasSubListNode: Iri   = iri(kb + "hasSubListNode")
+    val isRootNode: Iri       = iri(kb + "isRootNode")
+    val listNodeName: Iri     = iri(kb + "listNodeName")
+    val listNodePosition: Iri = iri(kb + "listNodePosition")
+
     val isDeleted: Iri              = iri(kb + "isDeleted")
     val attachedToUser: Iri         = iri(kb + "attachedToUser")
     val attachedToProject: Iri      = iri(kb + "attachedToProject")

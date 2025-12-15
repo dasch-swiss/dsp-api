@@ -17,9 +17,9 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
@@ -41,7 +41,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
     Set.empty,
   )
 
-  private val testResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing".toSmartIri)
+  private val testResourceIri      = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing".toSmartIri)
   private val testResourceClassIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
   private val testLastModificationDate = LastModificationDate.from(Instant.parse("2023-08-01T10:30:00Z"))

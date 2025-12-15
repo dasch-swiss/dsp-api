@@ -97,7 +97,7 @@ trait ResourcesRepo {
   final def findDeletedById(id: ResourceIri): Task[Option[DeletedResource]] =
     findById(id).map(_.collect { case r: DeletedResource => r })
 
-  def countByResourceClass(resourceClassIri: ResourceClassIri, project: KnoraProject, user: User): Task[Int]
+  def countByResourceClass(resourceClassIri: ResourceClassIri, project: KnoraProject): Task[Int]
 
   def findResourcesByResourceClassIri(
     resourceClassIri: ResourceClassIri,
@@ -240,7 +240,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val s                = iri(id.toString)
     val clazz            = variable("clazz")
     val resourceSubclass = clazz.has(RDFS.SUBCLASSOF, KB.Resource)
-    val whereClause = s
+    val whereClause      = s
       .isA(clazz)
       .andHas(RDFS.LABEL, variable("label"))
       .andHas(KB.isDeleted, variable("isDeleted"))
@@ -269,7 +269,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val attachedToUser         = row.getRequired("attachedToUser", UserIri.from)
     val creationDate           = row.getRequired("creationDate", s => Try(Instant.parse(s)).toEither.left.map(_.getMessage))
     val attachedToProject      = row.getRequired("attachedToProject", ProjectIri.from)
-    val lastModificationDate =
+    val lastModificationDate   =
       row.get("lastModificationDate", s => Try(Instant.parse(s)).toEither.left.map(_.getMessage))
     val hasPermissions = PermissionUtilADM
       .parsePermissions(row.getRequired("hasPermissions"))
@@ -308,19 +308,13 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
       )
   }
 
-  override def countByResourceClass(iri: ResourceClassIri, project: KnoraProject, user: User): Task[Int] = {
+  override def countByResourceClass(iri: ResourceClassIri, project: KnoraProject): Task[Int] = {
     val s                = variable("s")
-    val permVar          = variable("permissions")
-    val select           = SparqlBuilder.select(Expressions.count(s).as(variable("count")))
+    val graph            = graphIri(project)
     val resourceClassIri = toRdfIri(iri)
-    val resourcePattern  = s.isA(resourceClassIri).andHas(KB.hasPermissions, permVar)
-    val where = buildPermissionPattern(user, permVar, project)
-      .map(_.and(resourcePattern))
-      .getOrElse(resourcePattern)
-    val query = Queries
-      .SELECT(select)
-      .from(fromDataGraph(project))
-      .where(where, filterNotExistsIsDeleted(resourceClassIri))
+    val count            = SparqlBuilder.select(Expressions.count(s).as(variable("count")))
+    val where            = s.isA(resourceClassIri).and(filterNotExistsIsDeleted(s))
+    val query            = Queries.SELECT(count).where(where.from(graph))
     triplestore.select(query).map(_.getFirst("count").map(_.toInt).getOrElse(0))
   }
 
@@ -370,7 +364,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
       totalCountFork  <- triplestore.select(countQuery).fork
       resourcesResult <- triplestore.select(selectQuery)
       totalCount      <- totalCountFork.join.map(_.getFirstInt("totalCount").getOrElse(0))
-      result = resourcesResult.map(row =>
+      result           = resourcesResult.map(row =>
                  ResourceIriAndLabel(
                    ResourceIri.unsafeFrom(row.getRequired("resourceIri").toSmartIri),
                    row.getRequired("resourceLabel"),
@@ -639,7 +633,7 @@ object ResourcesRepoLive {
         case _: OtherFileValueInfo              => result
         case v: StillImageFileValueInfo         => result.andHas(KB.dimX, literalOf(v.dimX)).andHas(KB.dimY, literalOf(v.dimY))
         case v: StillImageExternalFileValueInfo => result.andHas(KB.externalUrl, literalOf(v.externalUrl))
-        case v: DocumentFileValueInfo =>
+        case v: DocumentFileValueInfo           =>
           result
             .andHasOptional(KB.dimX, v.dimX.map(i => literalOf(i)))
             .andHasOptional(KB.dimY, v.dimY.map(i => literalOf(i)))

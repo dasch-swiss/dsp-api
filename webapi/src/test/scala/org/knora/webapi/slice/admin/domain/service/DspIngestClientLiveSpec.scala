@@ -42,14 +42,15 @@ import zio.test.assertTrue
 
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.dspIngestConfigLayer
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.jwtServiceMockLayer
 import org.knora.webapi.slice.admin.domain.service.HttpMockServer.TestPort
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 
 object DspIngestClientSpec extends ZIOSpecDefault {
@@ -79,7 +80,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
 
       // then
       mockJwt <- getTokenForDspIngest
-      _ <- HttpMockServer.verify.request(
+      _       <- HttpMockServer.verify.request(
              postRequestedFor(urlPathEqualTo(expectedUrl))
                .withHeader("Authorization", equalTo(s"Bearer $mockJwt")),
            )
@@ -91,7 +92,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
     implicit val encoder: JsonEncoder[AssetInfoResponse] = DeriveJsonEncoder.gen[AssetInfoResponse]
     val assetId                                          = AssetId.unsafeFrom("4sAf4AmPeeg-ZjDn3Tot1Zt")
     val expectedUrl                                      = s"/projects/$testShortcodeStr/assets/$assetId"
-    val expected = AssetInfoResponse(
+    val expected                                         = AssetInfoResponse(
       internalFilename = s"$assetId.txt",
       originalInternalFilename = s"$assetId.txt.orig",
       originalFilename = "test.txt",
@@ -109,7 +110,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
 
       // then
       mockJwt <- getTokenForDspIngest
-      _ <- HttpMockServer.verify.request(
+      _       <- HttpMockServer.verify.request(
              getRequestedFor(urlPathEqualTo(expectedUrl))
                .withHeader("Authorization", equalTo(s"Bearer $mockJwt")),
            )
@@ -126,6 +127,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
       TestPort.random,
       dspIngestConfigLayer,
       jwtServiceMockLayer,
+      OtelSetup.stdOut,
     ) @@ TestAspect.sequential
 }
 

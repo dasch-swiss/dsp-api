@@ -14,8 +14,6 @@ import zio.ZLayer
 
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
-import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
@@ -39,6 +37,8 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.NotGr
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.NotProjectAdminMember
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.NotProjectMember
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.UserChangeRequest
+import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.UserCreateRequest
+import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.LanguageCode
 
@@ -47,10 +47,10 @@ case class KnoraUserService(
   private val iriService: IriService,
   private val passwordService: PasswordService,
 ) {
-  def findById(userIri: UserIri): Task[Option[KnoraUser]]         = userRepo.findById(userIri)
-  def findByEmail(email: Email): Task[Option[KnoraUser]]          = userRepo.findByEmail(email)
-  def findByUsername(username: Username): Task[Option[KnoraUser]] = userRepo.findByUsername(username)
-  def findAllRegularUsers(): Task[Seq[KnoraUser]]                 = userRepo.findAll().map(_.filter(_.id.isRegularUser))
+  def findById(userIri: UserIri): Task[Option[KnoraUser]]                    = userRepo.findById(userIri)
+  def findByEmail(email: Email): Task[Option[KnoraUser]]                     = userRepo.findByEmail(email)
+  def findByUsername(username: Username): Task[Option[KnoraUser]]            = userRepo.findByUsername(username)
+  def findAllRegularUsers(): Task[Seq[KnoraUser]]                            = userRepo.findAll().map(_.filter(_.id.isRegularUser))
   def findByProjectMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
     userRepo.findByProjectMembership(project.id)
   def findByProjectAdminMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
@@ -118,7 +118,7 @@ case class KnoraUserService(
       _           <- ensureEmailDoesNotExist(req.email)
       userIri     <- iriService.checkOrCreateNewUserIri(req.id)
       passwordHash = passwordService.hashPassword(req.password)
-      newUser = KnoraUser(
+      newUser      = KnoraUser(
                   userIri,
                   req.username,
                   req.email,

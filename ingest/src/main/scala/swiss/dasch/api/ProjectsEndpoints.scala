@@ -94,7 +94,7 @@ object ProjectsEndpointsResponses {
     def from(report: ChecksumReport): AssetCheckResultResponse = {
       val reportResults = report.results
       val results       = reportResults.map { case (info, checksum) => AssetCheckResultEntry.from(info, checksum) }.toList
-      val summary = AssetCheckResultSummary(
+      val summary       = AssetCheckResultSummary(
         reportResults.keys.size,
         reportResults.values.map(_.size).sum,
         reportResults.values.map(_.count(_.checksumMatches)).sum,
@@ -214,6 +214,11 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .in(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
     .out(jsonBody[AssetInfoResponse])
     .tag("assets")
+    .description(
+      "Ingest a single asset file to the project. " +
+        "Authorization: write:project:1234 scope required " +
+        "(SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
+    )
 
   val postBulkIngest = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "bulk-ingest")
