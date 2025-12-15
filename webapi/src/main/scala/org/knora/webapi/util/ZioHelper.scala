@@ -5,18 +5,12 @@
 
 package org.knora.webapi.util
 
-import zio.LogLevel
-import zio.Task
-import zio.ZIO
+import zio.*
 
 object ZioHelper {
 
   def sequence[K, R, A](x: Map[K, ZIO[R, Throwable, A]]): ZIO[R, Throwable, Map[K, A]] =
     ZIO.foreach(x) { case (k, v) => v.map(k -> _) }.map(_.toMap)
-
-  def sequence[A](x: Seq[Task[A]]): Task[List[A]] =
-    x.map(_.map(x => List[A](x)))
-      .fold(ZIO.succeed(List.empty[A]))((x, y) => x.flatMap(a => y.map(b => a ++ b)))
 
   def addLogTiming[R, E, A](msg: String, logLevel: LogLevel = LogLevel.Debug)(zio: ZIO[R, E, A]): ZIO[R, E, A] =
     ZIO.logLevel(logLevel) {
