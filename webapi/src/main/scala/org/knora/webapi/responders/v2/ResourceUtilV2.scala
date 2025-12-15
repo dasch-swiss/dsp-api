@@ -12,15 +12,15 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.resources.repo.GetListNodeQuery
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 /**
  * Utility functions for working with Knora resources and their values.
@@ -100,10 +100,10 @@ final case class ResourceUtilV2(triplestore: TriplestoreService, sipiService: Si
   def checkListNodeExistsAndIsRootNode(nodeIri: IRI): Task[Either[Option[Nothing], Boolean]] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val query = Construct(sparql.admin.txt.getListNode(nodeIri))
     for {
-      statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements)
-      maybeList   =
+      statements <-
+        triplestore.query(GetListNodeQuery.build(ListIri.unsafeFrom(nodeIri))).flatMap(_.asExtended).map(_.statements)
+      maybeList =
         if (statements.nonEmpty) {
           val propToCheck: SmartIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsRootNode)
           val isRootNode: Boolean   = statements.map(_._2.contains(propToCheck)).head

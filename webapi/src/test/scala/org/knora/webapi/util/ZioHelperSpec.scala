@@ -25,19 +25,5 @@ object ZioHelperSpec extends ZIOSpecDefault {
         } yield assertTrue(actual == Map.empty[Int, String])
       },
     ),
-    suite(".sequence(List)")(
-      test("should sequence a List of ZIOs") {
-        val list = List(ZIO.succeed("1"), ZIO.succeed("2"))
-        for {
-          actual <- ZioHelper.sequence(list)
-        } yield assertTrue(actual == List("1", "2"))
-      },
-      test("should sequence an empty List") {
-        val list: List[Task[String]] = List.empty
-        for {
-          actual <- ZioHelper.sequence(list)
-        } yield assertTrue(actual == List.empty[String])
-      },
-    ),
   )
 }

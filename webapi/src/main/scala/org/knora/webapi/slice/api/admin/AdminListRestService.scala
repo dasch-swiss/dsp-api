@@ -43,7 +43,7 @@ final class AdminListRestService(
   def listGetRequestADM(iri: ListIri): Task[ListItemGetResponseADM] = listsResponder.listGetRequestADM(iri)
 
   def listNodeInfoGetRequestADM(iri: ListIri): Task[NodeInfoGetResponseADM] =
-    listsResponder.listNodeInfoGetRequestADM(iri.value)
+    listsResponder.listNodeInfoGetRequestADM(iri)
 
   def listChange(user: User)(iri: ListIri, request: ListChangeRequest): Task[NodeInfoGetResponseADM] = for {
     _       <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)

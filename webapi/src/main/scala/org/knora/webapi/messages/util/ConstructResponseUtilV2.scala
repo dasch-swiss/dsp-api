@@ -54,6 +54,7 @@ import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
@@ -1004,7 +1005,7 @@ final case class ConstructResponseUtilV2(
             for {
               listNodeLabel <-
                 listsResponder
-                  .listNodeInfoGetRequestADM(listNodeIri)
+                  .listNodeInfoGetRequestADM(ListIri.unsafeFrom(listNodeIri))
                   .flatMap(r =>
                     ZIO
                       .fromOption(r.asOpt[ChildNodeInfoGetResponseADM])

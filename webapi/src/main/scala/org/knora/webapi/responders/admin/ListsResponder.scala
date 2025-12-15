@@ -42,6 +42,9 @@ import org.knora.webapi.slice.resources.repo.ChangeParentNodeQuery
 import org.knora.webapi.slice.resources.repo.CreateListNodeQuery
 import org.knora.webapi.slice.resources.repo.DeleteListNodeCommentsQuery
 import org.knora.webapi.slice.resources.repo.DeleteNodeQuery
+import org.knora.webapi.slice.resources.repo.GetListNodeQuery
+import org.knora.webapi.slice.resources.repo.GetListNodeWithChildrenQuery
+import org.knora.webapi.slice.resources.repo.GetParentNodeQuery
 import org.knora.webapi.slice.resources.repo.IsListInUseQuery
 import org.knora.webapi.slice.resources.repo.ListNodeExistsQuery
 import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
@@ -107,20 +110,17 @@ final case class ListsResponder(
    * @param rootNodeIri          the Iri if the root node of the list to be queried.
    * @return a optional [[ListADM]].
    */
-  private def listGetADM(rootNodeIri: IRI) =
+  private def listGetADM(rootNodeIri: ListIri) =
     for {
       // this query will give us only the information about the root node.
-      exists <- rootNodeExists(ListIri.unsafeFrom(rootNodeIri))
+      exists <- rootNodeExists(rootNodeIri)
 
       maybeList <-
         if (exists) {
           for {
             // here we know that the list exists and it is fine if children is an empty list
-            children <-
-              getChildren(ofNodeIri = rootNodeIri, shallow = false)
-
-            maybeRootNodeInfo <-
-              listNodeInfoGetADM(nodeIri = rootNodeIri)
+            children          <- getChildren(rootNodeIri, shallow = false)
+            maybeRootNodeInfo <- listNodeInfoGetADM(rootNodeIri)
 
             rootNodeInfo = maybeRootNodeInfo match {
                              case Some(info: ListRootNodeInfoADM) => info
@@ -154,7 +154,7 @@ final case class ListsResponder(
 
     def getNodeADM(childNode: ListChildNodeADM): Task[ListNodeGetResponseADM] =
       for {
-        maybeNodeInfo <- listNodeInfoGetADM(nodeIri.value)
+        maybeNodeInfo <- listNodeInfoGetADM(nodeIri)
         nodeInfo      <- maybeNodeInfo match {
                       case Some(childNodeInfo: ListChildNodeInfoADM) => ZIO.succeed(childNodeInfo)
                       case _                                         => ZIO.fail(NotFoundException(s"Information not found for node '$nodeIri'"))
@@ -162,11 +162,11 @@ final case class ListsResponder(
       } yield ListNodeGetResponseADM(NodeADM(nodeInfo, childNode.children))
 
     ZIO.ifZIO(rootNodeExists(nodeIri))(
-      listGetADM(nodeIri.value)
+      listGetADM(nodeIri)
         .someOrFail(NotFoundException(s"List '$nodeIri' not found"))
         .map(ListGetResponseADM.apply),
       for {
-        maybeNode <- listNodeGetADM(nodeIri.value, shallow = true)
+        maybeNode <- listNodeGetADM(nodeIri, shallow = true)
 
         entireNode <- maybeNode match {
                         // make sure that it is a child node
@@ -184,10 +184,10 @@ final case class ListsResponder(
    * @param nodeIri              the Iri if the list node to be queried.
    * @return a optional [[ListNodeInfoADM]].
    */
-  private def listNodeInfoGetADM(nodeIri: IRI) = {
+  private def listNodeInfoGetADM(nodeIri: ListIri) = {
     for {
       statements <- triplestore
-                      .query(Construct(sparql.admin.txt.getListNode(nodeIri)))
+                      .query(GetListNodeQuery.build(nodeIri))
                       .flatMap(_.asExtended)
                       .map(_.statements)
 
@@ -300,8 +300,8 @@ final case class ListsResponder(
    * @param nodeIri              the IRI of the list node to be queried.
    * @return a [[ChildNodeInfoGetResponseADM]].
    */
-  def listNodeInfoGetRequestADM(nodeIri: IRI): Task[NodeInfoGetResponseADM] =
-    listNodeInfoGetADM(nodeIri = nodeIri).flatMap {
+  def listNodeInfoGetRequestADM(nodeIri: ListIri): Task[NodeInfoGetResponseADM] =
+    listNodeInfoGetADM(nodeIri).flatMap {
       case Some(childInfo: ListChildNodeInfoADM) => ZIO.succeed(ChildNodeInfoGetResponseADM(childInfo))
       case Some(rootInfo: ListRootNodeInfoADM)   => ZIO.succeed(RootNodeInfoGetResponseADM(rootInfo))
       case _                                     => ZIO.fail(NotFoundException(s"List node '$nodeIri' not found"))
@@ -314,7 +314,7 @@ final case class ListsResponder(
    * @return a optional [[ListNodeADM]]
    */
   private def findNode(nodeIri: ListIri): IO[Option[Throwable], ListNodeADM] =
-    listNodeGetADM(nodeIri.value, true).some
+    listNodeGetADM(nodeIri, true).some
 
   /**
    * Retrieves a complete node including children. The node can be the lists root node or child node.
@@ -323,11 +323,11 @@ final case class ListsResponder(
    * @param shallow              denotes if all children or only the immediate children will be returned.
    * @return a optional [[ListNodeADM]]
    */
-  private def listNodeGetADM(nodeIri: IRI, shallow: Boolean): Task[Option[ListNodeADM]] = {
+  private def listNodeGetADM(nodeIri: ListIri, shallow: Boolean): Task[Option[ListNodeADM]] = {
     for {
       // this query will give us only the information about the root node.
       statements <- triplestore
-                      .query(Construct(sparql.admin.txt.getListNode(nodeIri)))
+                      .query(GetListNodeQuery.build(nodeIri))
                       .flatMap(_.asExtended)
                       .map(_.statements)
 
@@ -448,7 +448,7 @@ final case class ListsResponder(
    * @param shallow              denotes if all children or only the immediate children will be returned.
    * @return a sequence of [[ListChildNodeADM]].
    */
-  private def getChildren(ofNodeIri: IRI, shallow: Boolean) = {
+  private def getChildren(ofNodeIri: ListIri, shallow: Boolean) = {
 
     /**
      * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListChildNodeADM]].
@@ -515,11 +515,11 @@ final case class ListsResponder(
 
     for {
       statements <- triplestore
-                      .query(Construct(sparql.admin.txt.getListNodeWithChildren(ofNodeIri)))
+                      .query(GetListNodeWithChildrenQuery.build(ofNodeIri))
                       .flatMap(_.asExtended)
                       .map(_.statements.toList)
 
-      startNodePropsMap = statements.filter(_._1 == IriSubjectV2(ofNodeIri)).head._2
+      startNodePropsMap = statements.filter(_._1 == IriSubjectV2(ofNodeIri.value)).head._2
 
       children = startNodePropsMap.get(KnoraBase.HasSubListNode.toSmartIri) match {
                    case Some(iris: Seq[LiteralV2]) =>
@@ -541,9 +541,7 @@ final case class ListsResponder(
    * @param createNodeRequest    the new node's information.
    * @return a [newListNodeIri]
    */
-  private def createNode(
-    createNodeRequest: ListCreateRequest,
-  ): Task[IRI] = {
+  private def createNode(createNodeRequest: ListCreateRequest): Task[ListIri] = {
     val parentNode: Option[ListIri] = createNodeRequest match {
       case _: ListCreateRootNodeRequest      => None
       case child: ListCreateChildNodeRequest => Some(child.parentNodeIri)
@@ -554,16 +552,16 @@ final case class ListsResponder(
       case child: ListCreateChildNodeRequest => (child.id, child.projectIri, child.name, child.position)
     }
 
-    def getRootNodeIri(parentListNode: ListNodeADM): IRI =
+    def getRootNodeIri(parentListNode: ListNodeADM): ListIri =
       parentListNode match {
-        case root: ListRootNodeADM   => root.id
-        case child: ListChildNodeADM => child.hasRootNode
+        case root: ListRootNodeADM   => root.listIri
+        case child: ListChildNodeADM => child.rootNodeIri
       }
 
     def getRootNodeAndPositionOfNewChild(
-      parentNodeIri: IRI,
+      parentNodeIri: ListIri,
       project: KnoraProject,
-    ): Task[(Some[Int], Some[IRI])] =
+    ): Task[(Some[Int], Some[ListIri])] =
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
         parentListNode <- listNodeGetADM(parentNodeIri, shallow = true)
@@ -591,25 +589,25 @@ final case class ListsResponder(
       _ <- name.map(ensureListNameInProjectDoesNotExist(_, project)).getOrElse(ZIO.unit)
 
       // if parent node is known, find the root node of the list and the position of the new child node
-      positionAndNode <-
-        if (parentNode.nonEmpty) {
-          getRootNodeAndPositionOfNewChild(parentNode.get.value, project)
-        } else {
-          ZIO.attempt((None, None))
-        }
-      newPosition: Option[Int] = positionAndNode._1
-      rootNodeIri: Option[IRI] = positionAndNode._2
+      positionAndNode <- parentNode match {
+                           case Some(parentIri) => getRootNodeAndPositionOfNewChild(parentIri, project)
+                           case None            => ZIO.attempt((None, None))
+                         }
+
+      (newPosition, rootNodeIri) = positionAndNode
 
       // check the custom IRI; if not given, create an unused IRI
       customListIri   = id.map(_.value).map(_.toSmartIri)
-      newListNodeIri <- iriService.checkOrCreateEntityIri(customListIri, ListIri.makeNew(project).value)
+      newListNodeIri <- iriService
+                          .checkOrCreateEntityIri(customListIri, ListIri.makeNew(project).value)
+                          .map(ListIri.unsafeFrom)
 
       // Create the new list node depending on type
       query = createNodeRequest match {
                 case r: ListCreateRootNodeRequest =>
                   CreateListNodeQuery.createRootNode(
                     project,
-                    ListIri.unsafeFrom(newListNodeIri),
+                    newListNodeIri,
                     r.name,
                     r.labels,
                     r.comments,
@@ -617,8 +615,8 @@ final case class ListsResponder(
                 case c: ListCreateChildNodeRequest =>
                   CreateListNodeQuery.createChildNode(
                     project,
-                    ListIri.unsafeFrom(newListNodeIri),
-                    (c.parentNodeIri, ListIri.unsafeFrom(rootNodeIri.get), Position.unsafeFrom(newPosition.get)),
+                    newListNodeIri,
+                    (c.parentNodeIri, rootNodeIri.get, Position.unsafeFrom(newPosition.get)),
                     c.name,
                     c.labels,
                     c.comments,
@@ -659,7 +657,7 @@ final case class ListsResponder(
     apiRequestID: UUID,
   ): Task[NodeInfoGetResponseADM] = IriLocker.runWithIriLock(apiRequestID, request.listIri)(for {
     /* Verify that the node with Iri exists. */
-    _ <- listNodeGetADM(request.listIri.value, shallow = true)
+    _ <- listNodeGetADM(request.listIri, shallow = true)
            .someOrFail(BadRequestException(s"List item with '${request.listIri}' not found."))
     project <- projectService
                  .findById(request.projectIri)
@@ -671,7 +669,7 @@ final case class ListsResponder(
                UpdateListInfoQuery.build(project, request.listIri, request.name, request.labels, request.comments),
              )
     _            <- triplestore.query(update)
-    maybeNodeADM <- listNodeInfoGetADM(request.listIri.value)
+    maybeNodeADM <- listNodeInfoGetADM(request.listIri)
     updated      <-
       maybeNodeADM match {
         case Some(rootNode: ListRootNodeInfoADM)   => ZIO.succeed(RootNodeInfoGetResponseADM(rootNode))
@@ -706,7 +704,7 @@ final case class ListsResponder(
       for {
         newListNodeIri <- createNode(createChildNodeRequest)
         // Verify that the list node was created.
-        maybeNewListNode <- listNodeInfoGetADM(nodeIri = newListNodeIri)
+        maybeNewListNode <- listNodeInfoGetADM(newListNodeIri)
         newListNode      <- maybeNewListNode match {
                          case Some(childNode: ListChildNodeInfoADM) => ZIO.succeed(childNode)
                          case Some(_: ListRootNodeInfoADM)          =>
@@ -731,7 +729,7 @@ final case class ListsResponder(
   }
 
   private def ensureUserIsAdminOrProjectOwner(listIri: ListIri, user: User): Task[KnoraProject] =
-    getProjectFromNode(listIri.value).tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
+    getProjectFromNode(listIri).tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
 
   /**
    * Changes name of the node (root or child)
@@ -870,7 +868,7 @@ final case class ListsResponder(
      */
     def verifyParentChildrenUpdate(newPosition: Int): Task[ListNodeADM] =
       for {
-        maybeParentNode                 <- listNodeGetADM(changeNodePositionRequest.parentNodeIri.value, shallow = false)
+        maybeParentNode                 <- listNodeGetADM(changeNodePositionRequest.parentNodeIri, shallow = false)
         updatedParent                    = maybeParentNode.get
         updatedChildren                  = updatedParent.children
         (siblingsPositionedBefore, rest) = updatedChildren.partition(_.position < newPosition)
@@ -916,14 +914,14 @@ final case class ListsResponder(
      */
     def updatePositionWithinSameParent(
       node: ListChildNodeADM,
-      parentIri: IRI,
+      parentIri: ListIri,
       givenPosition: Int,
       project: KnoraProject,
     ): Task[Int] =
       for {
         // get parent node with its immediate children
         parentNode <-
-          listNodeGetADM(nodeIri = parentIri, shallow = true)
+          listNodeGetADM(parentIri, shallow = true)
             .someOrFail(BadRequestException(s"The parent node $parentIri could node be found, report this as a bug."))
         _             <- isNewPositionValid(parentNode, isNewParent = false)
         parentChildren = parentNode.children
@@ -936,7 +934,7 @@ final case class ListsResponder(
           } else givenPosition
 
         // update the position of the node itself
-        _ <- updatePositionOfNode(node.id, newPosition, project)
+        _ <- updatePositionOfNode(node.listIri, newPosition, project)
 
         _ <- // update position of siblings
           if (currPosition < newPosition) {
@@ -962,17 +960,17 @@ final case class ListsResponder(
      */
     def updateParentAndPosition(
       node: ListChildNodeADM,
-      newParentIri: IRI,
-      currParentIri: IRI,
+      newParentIri: ListIri,
+      currParentIri: ListIri,
       givenPosition: Int,
       project: KnoraProject,
     ): Task[Int] =
       for {
         // get current parent node with its immediate children
-        maybeCurrentParentNode <- listNodeGetADM(nodeIri = currParentIri, shallow = true)
+        maybeCurrentParentNode <- listNodeGetADM(currParentIri, shallow = true)
         currentSiblings         = maybeCurrentParentNode.get.children
         // get new parent node with its immediate children
-        maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri, shallow = true)
+        maybeNewParentNode <- listNodeGetADM(newParentIri, shallow = true)
         newParent           = maybeNewParentNode.get
         _                  <- isNewPositionValid(newParent, isNewParent = true)
         newSiblings         = newParent.children
@@ -982,7 +980,7 @@ final case class ListsResponder(
         // if givenPosition is -1, append the child to the end of the list of children
         newPosition = if (givenPosition == -1) { newSiblings.size }
                       else givenPosition
-        _ <- updatePositionOfNode(node.id, newPosition, project)
+        _ <- updatePositionOfNode(node.listIri, newPosition, project)
 
         // shift current siblings with a higher position to left as if the node is deleted
         _ <-
@@ -1000,22 +998,21 @@ final case class ListsResponder(
           }
 
         /* update the sublists of parent nodes */
-        _ <-
-          changeParentNode(project, node.listIri, ListIri.unsafeFrom(currParentIri), ListIri.unsafeFrom(newParentIri))
+        _ <- changeParentNode(project, node.listIri, currParentIri, newParentIri)
       } yield newPosition
 
     val updateTask =
       for {
         project <- ensureUserIsAdminOrProjectOwner(nodeIri, requestingUser)
         // get node in its current position
-        node <- listNodeGetADM(nodeIri.value, shallow = true)
+        node <- listNodeGetADM(nodeIri, shallow = true)
                   .map(_.collect { case child: ListChildNodeADM => child })
                   .someOrFail(BadRequestException(s"Update of position is only allowed for child nodes!"))
 
         // get node's current parent
-        currentParentNodeIri <- getParentNodeIRI(nodeIri.value)
+        currentParentNodeIri <- getParentNodeIRI(nodeIri)
         newPosition          <-
-          if (currentParentNodeIri == changeNodePositionRequest.parentNodeIri.value) {
+          if (currentParentNodeIri == changeNodePositionRequest.parentNodeIri) {
             updatePositionWithinSameParent(
               node = node,
               parentIri = currentParentNodeIri,
@@ -1025,7 +1022,7 @@ final case class ListsResponder(
           } else {
             updateParentAndPosition(
               node = node,
-              newParentIri = changeNodePositionRequest.parentNodeIri.value,
+              newParentIri = changeNodePositionRequest.parentNodeIri,
               currParentIri = currentParentNodeIri,
               givenPosition = changeNodePositionRequest.position.value,
               project,
@@ -1049,14 +1046,14 @@ final case class ListsResponder(
    */
   def deleteListNodeCommentsADM(nodeIri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
     for {
-      node <- listNodeInfoGetADM(nodeIri.value).someOrFail(NotFoundException(s"Node ${nodeIri.value} not found."))
+      node <- listNodeInfoGetADM(nodeIri).someOrFail(NotFoundException(s"Node $nodeIri not found."))
       _    <- ZIO
              .fail(BadRequestException("Root node comments cannot be deleted."))
              .when(!node.isInstanceOf[ListChildNodeInfoADM])
       _ <- ZIO
-             .fail(BadRequestException(s"Nothing to delete. Node ${nodeIri.value} does not have comments."))
+             .fail(BadRequestException(s"Nothing to delete. Node $nodeIri does not have comments."))
              .when(!node.hasComments)
-      project <- getProjectFromNode(nodeIri.value)
+      project <- getProjectFromNode(nodeIri)
       _       <- triplestore.query(DeleteListNodeCommentsQuery.build(nodeIri, project))
     } yield ListNodeCommentsDeleteResponseADM(nodeIri.value, commentsDeleted = true)
 
@@ -1106,9 +1103,9 @@ final case class ListsResponder(
      * @throws UpdateNotPerformedException if the node that had to be deleted is still in the list of parent's children.
      */
     def updateParentNode(
-      deletedNodeIri: IRI,
+      deletedNodeIri: ListIri,
       positionOfDeletedNode: Int,
-      parentNodeIri: IRI,
+      parentNodeIri: ListIri,
       project: KnoraProject,
     ): Task[ListNodeADM] =
       for {
@@ -1118,7 +1115,7 @@ final case class ListsResponder(
 
         remainingChildren = parentNode.children
 
-        _ <- ZIO.when(remainingChildren.exists(child => child.id == deletedNodeIri)) {
+        _ <- ZIO.when(remainingChildren.exists(child => child.listIri == deletedNodeIri)) {
                ZIO.fail(
                  UpdateNotPerformedException(
                    s"Node $deletedNodeIri is not deleted properly, report this as a bug.",
@@ -1169,7 +1166,7 @@ final case class ListsResponder(
 
     val nodeDeleteTask = for {
       project   <- ensureUserIsAdminOrProjectOwner(nodeIri, requestingUser)
-      maybeNode <- listNodeGetADM(nodeIri.value, shallow = false)
+      maybeNode <- listNodeGetADM(nodeIri, shallow = false)
 
       response <- maybeNode match {
                     case Some(rootNode: ListRootNodeADM) =>
@@ -1184,11 +1181,11 @@ final case class ListsResponder(
                     case Some(childNode: ListChildNodeADM) =>
                       for {
                         _             <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
-                        parentNodeIri <- getParentNodeIRI(nodeIri.value)
+                        parentNodeIri <- getParentNodeIRI(nodeIri)
                         _             <- ZIO.foreachDiscard(childNode.children.map(_.listIri) :+ childNode.listIri) { childIri =>
                                triplestore.query(DeleteNodeQuery.buildForChildNode(childIri, project))
                              }
-                        updatedParentNode <- updateParentNode(nodeIri.value, childNode.position, parentNodeIri, project)
+                        updatedParentNode <- updateParentNode(nodeIri, childNode.position, parentNodeIri, project)
                       } yield ChildNodeDeleteResponseADM(updatedParentNode)
 
                     case _ =>
@@ -1240,16 +1237,16 @@ final case class ListsResponder(
    * @param nodeIri              the IRI of the node.
    * @return a [[KnoraProject]].
    */
-  private def getProjectFromNode(nodeIri: IRI): Task[KnoraProject] =
+  private def getProjectFromNode(nodeIri: ListIri): Task[KnoraProject] =
     for {
-      maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true)
+      maybeNode <- listNodeGetADM(nodeIri, shallow = true)
 
       projectIriStr <- maybeNode match {
                          case Some(rootNode: ListRootNodeADM) => ZIO.succeed(rootNode.projectIri)
 
                          case Some(childNode: ListChildNodeADM) =>
                            for {
-                             maybeRoot <- listNodeGetADM(childNode.hasRootNode, shallow = true)
+                             maybeRoot <- listNodeGetADM(childNode.rootNodeIri, shallow = true)
                              iriStr    <- maybeRoot.collect { case it: ListRootNodeADM => it }
                                          .map(rootNode => ZIO.succeed(rootNode.projectIri))
                                          .getOrElse(ZIO.fail {
@@ -1273,12 +1270,11 @@ final case class ListsResponder(
    * @param nodeIri              the IRI of the node.
    * @return a [[ListNodeADM]].
    */
-  private def getParentNodeIRI(nodeIri: IRI): Task[IRI] =
+  private def getParentNodeIRI(nodeIri: ListIri): Task[ListIri] =
     triplestore
-      .query(Construct(sparql.admin.txt.getParentNode(nodeIri)))
-      .map(_.statements.keys.headOption)
-      .some
-      .orElseFail(BadRequestException(s"The parent node for $nodeIri not found, report this as a bug."))
+      .query(GetParentNodeQuery.build(nodeIri))
+      .map(_.statements.keys.headOption.map(ListIri.unsafeFrom))
+      .someOrFail(BadRequestException(s"The parent node for $nodeIri not found, report this as a bug."))
 
   /**
    * Helper method to update position of a node without changing its parent.
@@ -1289,16 +1285,14 @@ final case class ListsResponder(
    * @return a [[ListChildNodeADM]].
    */
   private def updatePositionOfNode(
-    nodeIri: IRI,
+    nodeIri: ListIri,
     newPosition: Int,
     project: KnoraProject,
   ): Task[ListChildNodeADM] =
     for {
-      _ <- triplestore.query(
-             UpdateNodePositionQuery.build(project, ListIri.unsafeFrom(nodeIri), Position.unsafeFrom(newPosition)),
-           )
+      _ <- triplestore.query(UpdateNodePositionQuery.build(project, nodeIri, Position.unsafeFrom(newPosition)))
       /* Verify that the node info was updated */
-      childNode <- listNodeGetADM(nodeIri = nodeIri, shallow = false)
+      childNode <- listNodeGetADM(nodeIri, shallow = false)
                      .someOrFail(BadRequestException(s"Node with $nodeIri could not be found to update its position."))
                      .map(_.asInstanceOf[ListChildNodeADM])
       _ <- ZIO
@@ -1321,7 +1315,6 @@ final case class ListsResponder(
    * @param endPos               the position of last node in range that must be shifted.
    * @param nodes                the list of all nodes.
    * @param shift                the [[ShiftDir]] direction to shift
-   * @param namedGraph           the data named graph of the project.
    * @return a sequence of [[ListChildNodeADM]].
    */
   private def shiftNodes(
@@ -1334,7 +1327,7 @@ final case class ListsResponder(
     val (start, rest)     = nodes.partition(_.position < startPos)
     val (needUpdate, end) = rest.partition(_.position <= endPos)
     ZIO
-      .foreach(needUpdate)(node => updatePositionOfNode(node.id, shift(node.position), project))
+      .foreach(needUpdate)(node => updatePositionOfNode(node.listIri, shift(node.position), project))
       .map(start ++ _ ++ end)
   }
 

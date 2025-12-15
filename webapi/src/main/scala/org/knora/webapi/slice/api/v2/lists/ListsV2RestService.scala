@@ -50,7 +50,7 @@ final class ListsV2RestService(appConfig: AppConfig, listsResponder: ListsRespon
    */
   def getNode(user: User)(nodeIri: ListIri, opts: FormatOptions): Task[(RenderedResponse, MediaType)] =
     listsResponder
-      .listNodeInfoGetRequestADM(nodeIri.value)
+      .listNodeInfoGetRequestADM(nodeIri)
       .flatMap(r =>
         ZIO.getOrFailWith(NotFoundException(s"Node $nodeIri not found."))(r.asOpt[ChildNodeInfoGetResponseADM]),
       )
