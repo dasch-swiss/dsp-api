@@ -70,7 +70,6 @@ final class DspApiServer(
       routes.transform { h =>
         Handler.scoped[Env1] {
           Handler.fromFunctionZIO { (req: Request) =>
-            println(req)
             (req.header[String](traceParentHeaderName).toOption match
               case Some(header) =>
                 ctxStore.set(propagator.extract(Context.current, Map(traceParentHeaderName -> header), getter))
