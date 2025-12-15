@@ -16,5 +16,5 @@ object DeleteListNodeCommentsQuery extends QueryBuilderHelper {
   def build(nodeIri: ListIri, project: KnoraProject): ModifyQuery =
     val graph   = graphIri(project)
     val pattern = toRdfIri(nodeIri).has(RDFS.COMMENT, variable("comments"))
-    Queries.DELETE(pattern).from(graph).where(pattern.from(graph))
+    Queries.DELETE(pattern).prefix(RDFS.NS).from(graph).where(pattern.from(graph))
 }
