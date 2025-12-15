@@ -68,8 +68,8 @@ object DeleteListNodeCommentsQuerySpec extends ZIOSpecDefault {
         Set.empty,
         Set.empty,
       )
-      val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0803/book-list-node")
-      val actual       = DeleteListNodeCommentsQuery.build(nodeIri, otherProject).getQueryString
+      val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0803/book-list-node")
+      val actual  = DeleteListNodeCommentsQuery.build(nodeIri, otherProject).getQueryString
       assertTrue(
         actual ==
           """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

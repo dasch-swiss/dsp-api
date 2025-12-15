@@ -79,8 +79,8 @@ object DeleteNodeQuerySpec extends ZIOSpecDefault {
           Set.empty,
           Set.empty,
         )
-        val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0803/book-list-node")
-        val actual       = DeleteNodeQuery.buildForChildNode(nodeIri, otherProject).getQueryString
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0803/book-list-node")
+        val actual  = DeleteNodeQuery.buildForChildNode(nodeIri, otherProject).getQueryString
         assertTrue(
           actual ==
             """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -133,8 +133,8 @@ object DeleteNodeQuerySpec extends ZIOSpecDefault {
           Set.empty,
           Set.empty,
         )
-        val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0803/root-book-list")
-        val actual       = DeleteNodeQuery.buildForRootNode(nodeIri, otherProject).getQueryString
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0803/root-book-list")
+        val actual  = DeleteNodeQuery.buildForRootNode(nodeIri, otherProject).getQueryString
         assertTrue(
           actual ==
             """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
