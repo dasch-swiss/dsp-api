@@ -541,9 +541,7 @@ final case class ListsResponder(
    * @param createNodeRequest    the new node's information.
    * @return a [newListNodeIri]
    */
-  private def createNode(
-    createNodeRequest: ListCreateRequest,
-  ): Task[IRI] = {
+  private def createNode(createNodeRequest: ListCreateRequest): Task[ListIri] = {
     val parentNode: Option[ListIri] = createNodeRequest match {
       case _: ListCreateRootNodeRequest      => None
       case child: ListCreateChildNodeRequest => Some(child.parentNodeIri)
@@ -554,16 +552,16 @@ final case class ListsResponder(
       case child: ListCreateChildNodeRequest => (child.id, child.projectIri, child.name, child.position)
     }
 
-    def getRootNodeIri(parentListNode: ListNodeADM): IRI =
+    def getRootNodeIri(parentListNode: ListNodeADM): ListIri =
       parentListNode match {
-        case root: ListRootNodeADM   => root.id
-        case child: ListChildNodeADM => child.hasRootNode
+        case root: ListRootNodeADM   => root.listIri
+        case child: ListChildNodeADM => child.rootNodeIri
       }
 
     def getRootNodeAndPositionOfNewChild(
       parentNodeIri: ListIri,
       project: KnoraProject,
-    ): Task[(Some[Int], Some[IRI])] =
+    ): Task[(Some[Int], Some[ListIri])] =
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
         parentListNode <- listNodeGetADM(parentNodeIri, shallow = true)
@@ -596,19 +594,20 @@ final case class ListsResponder(
                            case None            => ZIO.attempt((None, None))
                          }
 
-      newPosition: Option[Int] = positionAndNode._1
-      rootNodeIri: Option[IRI] = positionAndNode._2
+      (newPosition, rootNodeIri) = positionAndNode
 
       // check the custom IRI; if not given, create an unused IRI
       customListIri   = id.map(_.value).map(_.toSmartIri)
-      newListNodeIri <- iriService.checkOrCreateEntityIri(customListIri, ListIri.makeNew(project).value)
+      newListNodeIri <- iriService
+                          .checkOrCreateEntityIri(customListIri, ListIri.makeNew(project).value)
+                          .map(ListIri.unsafeFrom)
 
       // Create the new list node depending on type
       query = createNodeRequest match {
                 case r: ListCreateRootNodeRequest =>
                   CreateListNodeQuery.createRootNode(
                     project,
-                    ListIri.unsafeFrom(newListNodeIri),
+                    newListNodeIri,
                     r.name,
                     r.labels,
                     r.comments,
@@ -616,8 +615,8 @@ final case class ListsResponder(
                 case c: ListCreateChildNodeRequest =>
                   CreateListNodeQuery.createChildNode(
                     project,
-                    ListIri.unsafeFrom(newListNodeIri),
-                    (c.parentNodeIri, ListIri.unsafeFrom(rootNodeIri.get), Position.unsafeFrom(newPosition.get)),
+                    newListNodeIri,
+                    (c.parentNodeIri, rootNodeIri.get, Position.unsafeFrom(newPosition.get)),
                     c.name,
                     c.labels,
                     c.comments,
@@ -637,7 +636,7 @@ final case class ListsResponder(
   def listCreateRootNode(req: ListCreateRootNodeRequest, apiRequestID: UUID): Task[ListGetResponseADM] = {
     val createTask = createNode(req).flatMap { createdIri =>
       val errMsg = s"List $createdIri was not created. Please report this as a possible bug."
-      listGetADM(ListIri.unsafeFrom(createdIri))
+      listGetADM(createdIri)
         .someOrFail(UpdateNotPerformedException(errMsg))
         .map(ListGetResponseADM.apply)
     }
@@ -705,7 +704,7 @@ final case class ListsResponder(
       for {
         newListNodeIri <- createNode(createChildNodeRequest)
         // Verify that the list node was created.
-        maybeNewListNode <- listNodeInfoGetADM(ListIri.unsafeFrom(newListNodeIri))
+        maybeNewListNode <- listNodeInfoGetADM(newListNodeIri)
         newListNode      <- maybeNewListNode match {
                          case Some(childNode: ListChildNodeInfoADM) => ZIO.succeed(childNode)
                          case Some(_: ListRootNodeInfoADM)          =>
@@ -915,14 +914,14 @@ final case class ListsResponder(
      */
     def updatePositionWithinSameParent(
       node: ListChildNodeADM,
-      parentIri: IRI,
+      parentIri: ListIri,
       givenPosition: Int,
       project: KnoraProject,
     ): Task[Int] =
       for {
         // get parent node with its immediate children
         parentNode <-
-          listNodeGetADM(ListIri.unsafeFrom(parentIri), shallow = true)
+          listNodeGetADM(parentIri, shallow = true)
             .someOrFail(BadRequestException(s"The parent node $parentIri could node be found, report this as a bug."))
         _             <- isNewPositionValid(parentNode, isNewParent = false)
         parentChildren = parentNode.children
@@ -961,17 +960,17 @@ final case class ListsResponder(
      */
     def updateParentAndPosition(
       node: ListChildNodeADM,
-      newParentIri: IRI,
-      currParentIri: IRI,
+      newParentIri: ListIri,
+      currParentIri: ListIri,
       givenPosition: Int,
       project: KnoraProject,
     ): Task[Int] =
       for {
         // get current parent node with its immediate children
-        maybeCurrentParentNode <- listNodeGetADM(ListIri.unsafeFrom(currParentIri), shallow = true)
+        maybeCurrentParentNode <- listNodeGetADM(currParentIri, shallow = true)
         currentSiblings         = maybeCurrentParentNode.get.children
         // get new parent node with its immediate children
-        maybeNewParentNode <- listNodeGetADM(ListIri.unsafeFrom(newParentIri), shallow = true)
+        maybeNewParentNode <- listNodeGetADM(newParentIri, shallow = true)
         newParent           = maybeNewParentNode.get
         _                  <- isNewPositionValid(newParent, isNewParent = true)
         newSiblings         = newParent.children
@@ -999,8 +998,7 @@ final case class ListsResponder(
           }
 
         /* update the sublists of parent nodes */
-        _ <-
-          changeParentNode(project, node.listIri, ListIri.unsafeFrom(currParentIri), ListIri.unsafeFrom(newParentIri))
+        _ <- changeParentNode(project, node.listIri, currParentIri, newParentIri)
       } yield newPosition
 
     val updateTask =
@@ -1014,7 +1012,7 @@ final case class ListsResponder(
         // get node's current parent
         currentParentNodeIri <- getParentNodeIRI(nodeIri)
         newPosition          <-
-          if (currentParentNodeIri == changeNodePositionRequest.parentNodeIri.value) {
+          if (currentParentNodeIri == changeNodePositionRequest.parentNodeIri) {
             updatePositionWithinSameParent(
               node = node,
               parentIri = currentParentNodeIri,
@@ -1024,7 +1022,7 @@ final case class ListsResponder(
           } else {
             updateParentAndPosition(
               node = node,
-              newParentIri = changeNodePositionRequest.parentNodeIri.value,
+              newParentIri = changeNodePositionRequest.parentNodeIri,
               currParentIri = currentParentNodeIri,
               givenPosition = changeNodePositionRequest.position.value,
               project,
@@ -1105,19 +1103,19 @@ final case class ListsResponder(
      * @throws UpdateNotPerformedException if the node that had to be deleted is still in the list of parent's children.
      */
     def updateParentNode(
-      deletedNodeIri: IRI,
+      deletedNodeIri: ListIri,
       positionOfDeletedNode: Int,
-      parentNodeIri: IRI,
+      parentNodeIri: ListIri,
       project: KnoraProject,
     ): Task[ListNodeADM] =
       for {
         parentNode <-
-          listNodeGetADM(ListIri.unsafeFrom(parentNodeIri), shallow = false)
+          listNodeGetADM(parentNodeIri, shallow = false)
             .someOrFail(BadRequestException(s"The parent node of $deletedNodeIri not found, report this as a bug."))
 
         remainingChildren = parentNode.children
 
-        _ <- ZIO.when(remainingChildren.exists(child => child.id == deletedNodeIri)) {
+        _ <- ZIO.when(remainingChildren.exists(child => child.listIri == deletedNodeIri)) {
                ZIO.fail(
                  UpdateNotPerformedException(
                    s"Node $deletedNodeIri is not deleted properly, report this as a bug.",
@@ -1187,7 +1185,7 @@ final case class ListsResponder(
                         _             <- ZIO.foreachDiscard(childNode.children.map(_.listIri) :+ childNode.listIri) { childIri =>
                                triplestore.query(DeleteNodeQuery.buildForChildNode(childIri, project))
                              }
-                        updatedParentNode <- updateParentNode(nodeIri.value, childNode.position, parentNodeIri, project)
+                        updatedParentNode <- updateParentNode(nodeIri, childNode.position, parentNodeIri, project)
                       } yield ChildNodeDeleteResponseADM(updatedParentNode)
 
                     case _ =>
@@ -1248,7 +1246,7 @@ final case class ListsResponder(
 
                          case Some(childNode: ListChildNodeADM) =>
                            for {
-                             maybeRoot <- listNodeGetADM(ListIri.unsafeFrom(childNode.hasRootNode), shallow = true)
+                             maybeRoot <- listNodeGetADM(childNode.rootNodeIri, shallow = true)
                              iriStr    <- maybeRoot.collect { case it: ListRootNodeADM => it }
                                          .map(rootNode => ZIO.succeed(rootNode.projectIri))
                                          .getOrElse(ZIO.fail {
@@ -1272,10 +1270,10 @@ final case class ListsResponder(
    * @param nodeIri              the IRI of the node.
    * @return a [[ListNodeADM]].
    */
-  private def getParentNodeIRI(nodeIri: ListIri): Task[IRI] =
+  private def getParentNodeIRI(nodeIri: ListIri): Task[ListIri] =
     triplestore
       .query(GetParentNodeQuery.build(nodeIri))
-      .map(_.statements.keys.headOption)
+      .map(_.statements.keys.headOption.map(ListIri.unsafeFrom))
       .someOrFail(BadRequestException(s"The parent node for $nodeIri not found, report this as a bug."))
 
   /**
