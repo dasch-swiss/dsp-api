@@ -6,6 +6,7 @@
 package org.knora.webapi.core
 
 import zio.*
+import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.config.AppConfig
@@ -34,7 +35,7 @@ import org.knora.webapi.slice.common.CommonModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
-import org.knora.webapi.slice.infrastructure.OpenTelemetry
+import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
@@ -62,6 +63,8 @@ object LayersLive { self =>
     AssetPermissionsResponder &
     AuthorizationRestService &
     CardinalityHandler &
+    ContextStorage &
+    Tracing &
     CommonModule.Provided &
     ConstructResponseUtilV2 &
     CreateResourceV2Handler &
@@ -107,9 +110,9 @@ object LayersLive { self =>
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CardinalityHandler.layer,
-      CreateResourceV2Handler.layer,
       CommonModule.layer,
       ConstructResponseUtilV2.layer,
+      CreateResourceV2Handler.layer,
       DspIngestClient.layer,
       ExportModule.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -120,15 +123,15 @@ object LayersLive { self =>
       MessageRelayLive.layer,
       OntologyModule.layer,
       OntologyResponderV2.layer,
-      OpenTelemetry.layer,
+      OtelSetup.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,
-      RepositoryUpdater.layer,
       ReadResourcesServiceLive.layer,
+      RepositoryUpdater.layer,
       ResourceUtilV2.layer,
       ResourcesModule.layer,
       ResourcesRepoLive.layer,
