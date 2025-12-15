@@ -54,7 +54,7 @@ object OtelSetup {
                 .builder()
                 .setTracerProvider(tracerProvider)
                 .setPropagators(traceparentPropagator)
-                .buildAndRegisterGlobal,
+                .build,
             ),
           )
       } yield openTelemetry,
