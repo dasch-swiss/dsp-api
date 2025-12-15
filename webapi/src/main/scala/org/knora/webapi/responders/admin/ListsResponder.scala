@@ -41,6 +41,7 @@ import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resources.repo.AskListNameInProjectExistsQuery
 import org.knora.webapi.slice.resources.repo.ChangeParentNodeQuery
 import org.knora.webapi.slice.resources.repo.CreateListNodeQuery
+import org.knora.webapi.slice.resources.repo.DeleteNodeQuery
 import org.knora.webapi.slice.resources.repo.IsListInUseQuery
 import org.knora.webapi.slice.resources.repo.ListNodeExistsQuery
 import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
@@ -49,7 +50,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.util.ZioHelper
 
 final case class ListsResponder(
   auth: AuthorizationRestService,
@@ -1099,37 +1099,6 @@ final case class ListsResponder(
     }
 
     /**
-     * Delete a list (root node) or a child node after verifying that neither the node itself nor any of its children
-     * are used. If not used, delete the children of the node first, then delete the node itself.
-     *
-     * @param nodeIri    the node's IRI.
-     * @param projectIri the feature factory configuration.
-     * @param children   the children of the node.
-     * @param isRootNode the flag to determine the type of the node, root or child.
-     * @return a [[IRI]]
-     * @throws UpdateNotPerformedException in case a node is in use.
-     */
-    def deleteListItem(
-      nodeIri: IRI,
-      projectIri: ProjectIri,
-      children: Seq[ListChildNodeADM],
-      isRootNode: Boolean,
-    ): Task[IRI] =
-      for {
-        // get the data graph of the project.
-        dataNamedGraph <- getDataNamedGraph(projectIri)
-
-        // delete the children
-        errorCheckFutures: Seq[Task[Unit]] =
-          children.map(child => deleteNode(dataNamedGraph, child.id, isRootNode = false))
-        _ <- ZioHelper.sequence(errorCheckFutures)
-
-        // delete the node itself
-        _ <- deleteNode(dataNamedGraph, nodeIri, isRootNode)
-
-      } yield dataNamedGraph
-
-    /**
      * Update the parent node of the deleted node by updating its remaining children.
      * Shift the remaining children of the parent node with respect to the position of the deleted node.
      *
@@ -1204,21 +1173,25 @@ final case class ListsResponder(
 
     val nodeDeleteTask = for {
       project   <- ensureUserIsAdminOrProjectOwner(nodeIri, requestingUser)
-      projectIri = project.id
       maybeNode <- listNodeGetADM(nodeIri.value, shallow = false)
 
       response <- maybeNode match {
                     case Some(rootNode: ListRootNodeADM) =>
                       for {
                         _ <- isNodeOrItsChildrenUsed(rootNode.id, rootNode.children)
-                        _ <- deleteListItem(rootNode.id, projectIri, rootNode.children, isRootNode = true)
+                        _ <- ZIO.foreachDiscard(rootNode.children.map(_.listIri)) { childIri =>
+                               triplestore.query(DeleteNodeQuery.buildForChildNode(childIri, project))
+                             }
+                        _ <- triplestore.query(DeleteNodeQuery.buildForRootNode(rootNode.listIri, project))
                       } yield ListDeleteResponseADM(rootNode.id, deleted = true)
 
                     case Some(childNode: ListChildNodeADM) =>
                       for {
-                        _                 <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
-                        parentNodeIri     <- getParentNodeIRI(nodeIri.value)
-                        _                 <- deleteListItem(childNode.id, projectIri, childNode.children, isRootNode = false)
+                        _             <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
+                        parentNodeIri <- getParentNodeIRI(nodeIri.value)
+                        _             <- ZIO.foreachDiscard(childNode.children.map(_.listIri) :+ childNode.listIri) { childIri =>
+                               triplestore.query(DeleteNodeQuery.buildForChildNode(childIri, project))
+                             }
                         updatedParentNode <- updateParentNode(nodeIri.value, childNode.position, parentNodeIri, project)
                       } yield ChildNodeDeleteResponseADM(updatedParentNode)
 
@@ -1244,14 +1217,6 @@ final case class ListsResponder(
    * @return a [[Boolean]].
    */
   private def rootNodeExists(iri: ListIri): Task[Boolean] = triplestore.query(ListNodeExistsQuery.rootNodeExists(iri))
-
-  /**
-   * Helper method for checking if a node exists.
-   *
-   * @param iri The [[ListIri]] of the node.
-   * @return a [[Boolean]].
-   */
-  private def nodeExists(iri: ListIri): Task[Boolean] = triplestore.query(ListNodeExistsQuery.anyNodeExists(iri))
 
   /**
    * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
@@ -1328,25 +1293,6 @@ final case class ListsResponder(
       .map(_.statements.keys.headOption)
       .some
       .orElseFail(BadRequestException(s"The parent node for $nodeIri not found, report this as a bug."))
-
-  /**
-   * Helper method to delete a node.
-   *
-   * @param dataNamedGraph the data named graph of the project.
-   * @param nodeIri        the IRI of the node.
-   * @param isRootNode     is the node to be deleted a root node?
-   * @return A [[ListNodeADM]].
-   *
-   *         Fails with a [[UpdateNotPerformedException]] if the node could not be deleted.
-   */
-  private def deleteNode(dataNamedGraph: IRI, nodeIri: IRI, isRootNode: Boolean): Task[Unit] =
-    for {
-      _ <- triplestore.query(Update(sparql.admin.txt.deleteNode(dataNamedGraph, nodeIri, isRootNode)))
-      _ <- // Verify that the node was deleted correctly.
-        ZIO
-          .fail(UpdateNotPerformedException(s"Node <$nodeIri> was not erased. Please report this as a possible bug."))
-          .whenZIO(nodeExists(ListIri.unsafeFrom(nodeIri)))
-    } yield ()
 
   /**
    * Helper method to update position of a node without changing its parent.
