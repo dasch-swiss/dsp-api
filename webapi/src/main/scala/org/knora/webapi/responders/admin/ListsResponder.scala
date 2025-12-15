@@ -110,20 +110,17 @@ final case class ListsResponder(
    * @param rootNodeIri          the Iri if the root node of the list to be queried.
    * @return a optional [[ListADM]].
    */
-  private def listGetADM(rootNodeIri: IRI) =
+  private def listGetADM(rootNodeIri: ListIri) =
     for {
       // this query will give us only the information about the root node.
-      exists <- rootNodeExists(ListIri.unsafeFrom(rootNodeIri))
+      exists <- rootNodeExists(rootNodeIri)
 
       maybeList <-
         if (exists) {
           for {
             // here we know that the list exists and it is fine if children is an empty list
-            children <-
-              getChildren(ofNodeIri = rootNodeIri, shallow = false)
-
-            maybeRootNodeInfo <-
-              listNodeInfoGetADM(nodeIri = rootNodeIri)
+            children          <- getChildren(rootNodeIri.value, shallow = false)
+            maybeRootNodeInfo <- listNodeInfoGetADM(rootNodeIri)
 
             rootNodeInfo = maybeRootNodeInfo match {
                              case Some(info: ListRootNodeInfoADM) => info
@@ -157,7 +154,7 @@ final case class ListsResponder(
 
     def getNodeADM(childNode: ListChildNodeADM): Task[ListNodeGetResponseADM] =
       for {
-        maybeNodeInfo <- listNodeInfoGetADM(nodeIri.value)
+        maybeNodeInfo <- listNodeInfoGetADM(nodeIri)
         nodeInfo      <- maybeNodeInfo match {
                       case Some(childNodeInfo: ListChildNodeInfoADM) => ZIO.succeed(childNodeInfo)
                       case _                                         => ZIO.fail(NotFoundException(s"Information not found for node '$nodeIri'"))
@@ -165,7 +162,7 @@ final case class ListsResponder(
       } yield ListNodeGetResponseADM(NodeADM(nodeInfo, childNode.children))
 
     ZIO.ifZIO(rootNodeExists(nodeIri))(
-      listGetADM(nodeIri.value)
+      listGetADM(nodeIri)
         .someOrFail(NotFoundException(s"List '$nodeIri' not found"))
         .map(ListGetResponseADM.apply),
       for {
@@ -187,10 +184,10 @@ final case class ListsResponder(
    * @param nodeIri              the Iri if the list node to be queried.
    * @return a optional [[ListNodeInfoADM]].
    */
-  private def listNodeInfoGetADM(nodeIri: IRI) = {
+  private def listNodeInfoGetADM(nodeIri: ListIri) = {
     for {
       statements <- triplestore
-                      .query(GetListNodeQuery.build(ListIri.unsafeFrom(nodeIri)))
+                      .query(GetListNodeQuery.build(nodeIri))
                       .flatMap(_.asExtended)
                       .map(_.statements)
 
@@ -303,8 +300,8 @@ final case class ListsResponder(
    * @param nodeIri              the IRI of the list node to be queried.
    * @return a [[ChildNodeInfoGetResponseADM]].
    */
-  def listNodeInfoGetRequestADM(nodeIri: IRI): Task[NodeInfoGetResponseADM] =
-    listNodeInfoGetADM(nodeIri = nodeIri).flatMap {
+  def listNodeInfoGetRequestADM(nodeIri: ListIri): Task[NodeInfoGetResponseADM] =
+    listNodeInfoGetADM(nodeIri).flatMap {
       case Some(childInfo: ListChildNodeInfoADM) => ZIO.succeed(ChildNodeInfoGetResponseADM(childInfo))
       case Some(rootInfo: ListRootNodeInfoADM)   => ZIO.succeed(RootNodeInfoGetResponseADM(rootInfo))
       case _                                     => ZIO.fail(NotFoundException(s"List node '$nodeIri' not found"))
@@ -641,7 +638,7 @@ final case class ListsResponder(
   def listCreateRootNode(req: ListCreateRootNodeRequest, apiRequestID: UUID): Task[ListGetResponseADM] = {
     val createTask = createNode(req).flatMap { createdIri =>
       val errMsg = s"List $createdIri was not created. Please report this as a possible bug."
-      listGetADM(createdIri)
+      listGetADM(ListIri.unsafeFrom(createdIri))
         .someOrFail(UpdateNotPerformedException(errMsg))
         .map(ListGetResponseADM.apply)
     }
@@ -674,7 +671,7 @@ final case class ListsResponder(
                UpdateListInfoQuery.build(project, request.listIri, request.name, request.labels, request.comments),
              )
     _            <- triplestore.query(update)
-    maybeNodeADM <- listNodeInfoGetADM(request.listIri.value)
+    maybeNodeADM <- listNodeInfoGetADM(request.listIri)
     updated      <-
       maybeNodeADM match {
         case Some(rootNode: ListRootNodeInfoADM)   => ZIO.succeed(RootNodeInfoGetResponseADM(rootNode))
@@ -709,7 +706,7 @@ final case class ListsResponder(
       for {
         newListNodeIri <- createNode(createChildNodeRequest)
         // Verify that the list node was created.
-        maybeNewListNode <- listNodeInfoGetADM(nodeIri = newListNodeIri)
+        maybeNewListNode <- listNodeInfoGetADM(ListIri.unsafeFrom(newListNodeIri))
         newListNode      <- maybeNewListNode match {
                          case Some(childNode: ListChildNodeInfoADM) => ZIO.succeed(childNode)
                          case Some(_: ListRootNodeInfoADM)          =>
@@ -1052,12 +1049,12 @@ final case class ListsResponder(
    */
   def deleteListNodeCommentsADM(nodeIri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
     for {
-      node <- listNodeInfoGetADM(nodeIri.value).someOrFail(NotFoundException(s"Node ${nodeIri.value} not found."))
+      node <- listNodeInfoGetADM(nodeIri).someOrFail(NotFoundException(s"Node $nodeIri not found."))
       _    <- ZIO
              .fail(BadRequestException("Root node comments cannot be deleted."))
              .when(!node.isInstanceOf[ListChildNodeInfoADM])
       _ <- ZIO
-             .fail(BadRequestException(s"Nothing to delete. Node ${nodeIri.value} does not have comments."))
+             .fail(BadRequestException(s"Nothing to delete. Node $nodeIri does not have comments."))
              .when(!node.hasComments)
       project <- getProjectFromNode(nodeIri.value)
       _       <- triplestore.query(DeleteListNodeCommentsQuery.build(nodeIri, project))
