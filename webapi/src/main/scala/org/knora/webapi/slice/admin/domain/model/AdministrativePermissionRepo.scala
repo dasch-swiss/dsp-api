@@ -58,21 +58,24 @@ object AdministrativePermissionPart {
   }
 
   def from(adm: PermissionADM)(implicit sf: StringFormatter): Either[String, AdministrativePermissionPart] =
-    Permission.Administrative.fromToken(adm.name)
-      .toRight(s"Invalid value for name parameter of hasPermissions: ${adm.name}, it should be one of ${Permission.Administrative.allTokens.mkString(", ")}")
+    Permission.Administrative
+      .fromToken(adm.name)
+      .toRight(
+        s"Invalid value for name parameter of hasPermissions: ${adm.name}, it should be one of ${Permission.Administrative.allTokens.mkString(", ")}",
+      )
       .flatMap { perm =>
-      (perm, adm.additionalInformation) match {
-        case (p, None) if perm.isSimple                                              => Right(Simple.unsafeFrom(p))
-        case (Permission.Administrative.ProjectResourceCreateRestricted, Some(info)) =>
-          for {
-            smartIri      <- Try(info.toSmartIri).toEither.left.map(_.getMessage)
-            resourceClass <- ResourceClassIri.from(smartIri)
-          } yield ResourceCreateRestricted(Chunk(resourceClass))
-        case (Permission.Administrative.ProjectAdminGroupRestricted, Some(info)) =>
-          GroupIri.from(info).map(groupIri => ProjectAdminGroupRestricted(Chunk(groupIri)))
-        case _ => Left(s"Invalid administrative permission data: $adm")
+        (perm, adm.additionalInformation) match {
+          case (p, None) if perm.isSimple                                              => Right(Simple.unsafeFrom(p))
+          case (Permission.Administrative.ProjectResourceCreateRestricted, Some(info)) =>
+            for {
+              smartIri      <- Try(info.toSmartIri).toEither.left.map(_.getMessage)
+              resourceClass <- ResourceClassIri.from(smartIri)
+            } yield ResourceCreateRestricted(Chunk(resourceClass))
+          case (Permission.Administrative.ProjectAdminGroupRestricted, Some(info)) =>
+            GroupIri.from(info).map(groupIri => ProjectAdminGroupRestricted(Chunk(groupIri)))
+          case _ => Left(s"Invalid administrative permission data: $adm")
+        }
       }
-    }
 }
 
 trait AdministrativePermissionRepo extends CrudRepository[AdministrativePermission, PermissionIri] {

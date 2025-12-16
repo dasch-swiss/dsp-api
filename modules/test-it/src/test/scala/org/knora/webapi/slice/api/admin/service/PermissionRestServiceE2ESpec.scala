@@ -59,7 +59,11 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
             ),
           ),
         ).exit
-          .map(assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("Admin Permissions need to be supplied.")))
+          .map(
+            assert(_)(
+              E2EZSpec.failsWithMessageContaining[BadRequestException]("Admin Permissions need to be supplied."),
+            ),
+          )
       },
       test(
         "return 'ForbiddenException' if the user requesting AdministrativePermissionCreateRequestADM is not system or project admin",
