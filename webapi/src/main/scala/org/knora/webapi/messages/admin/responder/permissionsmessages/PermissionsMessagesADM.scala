@@ -17,6 +17,7 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -414,6 +415,16 @@ case class DefaultObjectAccessPermissionADM(
 object DefaultObjectAccessPermissionADM {
   implicit val codec: JsonCodec[DefaultObjectAccessPermissionADM] =
     DeriveJsonCodec.gen[DefaultObjectAccessPermissionADM]
+
+  def from(perm: DefaultObjectAccessPermission) =
+    DefaultObjectAccessPermissionADM(
+      iri = perm.id.value,
+      forProject = perm.forProject.value,
+      forGroup = perm.forWhat.groupOption.map(_.value),
+      forResourceClass = perm.forWhat.resourceClassOption.map(_.value),
+      forProperty = perm.forWhat.propertyOption.map(_.value),
+      hasPermissions = perm.permission.flatMap(PermissionADM.from).toSet,
+    )
 }
 
 /**
@@ -447,6 +458,15 @@ object PermissionADM {
       case AdministrativePermissionPart.ProjectAdminGroupRestricted(groupIris) =>
         groupIris.map(_.value).map(PermissionADM.from(part.permission, _))
     }
+
+  def from(part: DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart): Chunk[PermissionADM] =
+    part.groups.map(group =>
+      PermissionADM(
+        part.permission.token,
+        Some(group.value),
+        codeFrom(part.permission),
+      ),
+    )
 }
 
 /* Creating a resource of a certain class */

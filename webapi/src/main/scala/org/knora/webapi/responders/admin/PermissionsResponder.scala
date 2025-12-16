@@ -21,7 +21,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionT
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.AdminConstants
@@ -168,55 +167,10 @@ final class PermissionsResponder(
   def getPermissionsDaopByProjectIri(
     projectIri: ProjectIri,
   ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
-    for {
-      permissionsQueryResponse <-
-        triplestore.query(Select(sparql.admin.txt.getDefaultObjectAccessPermissionsForProject(projectIri.value)))
-
-      /* extract response rows */
-      permissionsQueryResponseRows = permissionsQueryResponse.results.bindings
-
-      permissionsWithProperties =
-        permissionsQueryResponseRows
-          .groupBy(_.rowMap("s"))
-          .map { case (permissionIri: String, rows: Seq[VariableResultsRow]) =>
-            (permissionIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
-          }
-
-      permissions =
-        permissionsWithProperties.map { case (permissionIri: IRI, propsMap: Map[String, String]) =>
-          /* parse permissions */
-          val hasPermissions: Set[PermissionADM] =
-            PermissionUtilADM.parsePermissionsWithType(
-              propsMap.get(
-                OntologyConstants.KnoraBase.HasPermissions,
-              ),
-              PermissionType.OAP,
-            )
-
-          /* construct permission object */
-          DefaultObjectAccessPermissionADM(
-            iri = permissionIri,
-            forProject = propsMap.getOrElse(
-              OntologyConstants.KnoraAdmin.ForProject,
-              throw InconsistentRepositoryDataException(
-                s"Permission $permissionIri has no project.",
-              ),
-            ),
-            forGroup = propsMap.get(OntologyConstants.KnoraAdmin.ForGroup),
-            forResourceClass = propsMap.get(
-              OntologyConstants.KnoraAdmin.ForResourceClass,
-            ),
-            forProperty = propsMap.get(
-              OntologyConstants.KnoraAdmin.ForProperty,
-            ),
-            hasPermissions = hasPermissions,
-          )
-        }.toSeq
-
-      /* construct response object */
-      response = DefaultObjectAccessPermissionsForProjectGetResponseADM(permissions)
-
-    } yield response
+    doapService
+      .findByProject(projectIri)
+      .map(_.map(DefaultObjectAccessPermissionADM.from))
+      .map(DefaultObjectAccessPermissionsForProjectGetResponseADM(_))
 
   /**
    * Gets a single default object access permission identified by project and either:

@@ -163,10 +163,8 @@ object PermissionsResponderSpec extends E2EZSpec {
       test("return all DefaultObjectAccessPermissions for project") {
         for {
           actual <- permissionResponder(_.getPermissionsDaopByProjectIri(imagesProjectIri))
-        } yield assertTrue(
-          actual == DefaultObjectAccessPermissionsForProjectGetResponseADM(
-            Seq(perm002_d2.p, perm0003_a4.p, perm002_d1.p),
-          ),
+        } yield assert(actual.defaultObjectAccessPermissions)(
+          hasSameElements(Seq(perm002_d2.p, perm0003_a4.p, perm002_d1.p)),
         )
       },
     ),
