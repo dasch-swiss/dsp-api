@@ -19,13 +19,15 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.DOAP
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart.Simple
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
@@ -34,8 +36,11 @@ import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.F
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClass
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClassAndProperty
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectAdminAll
+import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectResourceCreateAll
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
@@ -43,7 +48,6 @@ import org.knora.webapi.slice.admin.domain.service.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.*
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.admin.repo.CreateAdministrativePermissionQuery
 import org.knora.webapi.slice.admin.repo.service.DefaultObjectAccessPermissionRepoLive
 import org.knora.webapi.slice.api.admin.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
@@ -150,11 +154,6 @@ final class PermissionsResponder(
   ): Task[AdministrativePermissionCreateResponseADM] =
     IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI) {
       for {
-        _ <- ZIO.when(createRequest.hasPermissions.isEmpty)(
-               ZIO.fail(BadRequestException("Permissions needs to be supplied.")),
-             )
-        _ <- verifyHasPermissionsAP(createRequest.hasPermissions)
-
         project <-
           knoraProjectService
             .findById(createRequest.forProject)
@@ -162,53 +161,22 @@ final class PermissionsResponder(
         group <- groupService
                    .findById(createRequest.forGroup)
                    .someOrFail(NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
+        newPermissionIri <- iriService
+                              .checkOrCreateEntityIri(
+                                createRequest.id.map(_.value.toSmartIri),
+                                PermissionIri.makeNew(project.shortcode).value,
+                              )
+                              .map(PermissionIri.unsafeFrom)
 
-        _ <- // ensure that no permission already exists for project and group
-          administrativePermissionService
-            .findByGroupAndProject(createRequest.forGroup, createRequest.forProject)
-            .map(_.map(AdministrativePermissionADM.from))
-            .flatMap {
-              case Some(ap: AdministrativePermissionADM) =>
-                ZIO.fail(
-                  DuplicateValueException(
-                    s"An administrative permission for project: '${createRequest.forProject}' and group: '${createRequest.forGroup}' combination already exists. " +
-                      s"This permission currently has the scope '${PermissionUtilADM
-                          .formatPermissionADMs(ap.hasPermissions, PermissionType.AP)}'. " +
-                      s"Use its IRI ${ap.iri} to modify it, if necessary.",
-                  ),
-                )
-              case None => ZIO.unit
-            }
+        parts <- ZIO.foreach(Chunk.fromIterable(createRequest.hasPermissions))(adm =>
+                   ZIO
+                     .fromEither(AdministrativePermissionPart.from(adm))
+                     .mapError(e => BadRequestException(s"Error in hasPermissions entry $adm: $e")),
+                 )
+        _ <- ZIO.fail(BadRequestException("Admin Permissions need to be supplied.")).when(parts.isEmpty)
 
-        newPermissionIri <-
-          iriService
-            .checkOrCreateEntityIri(
-              createRequest.id.map(_.value.toSmartIri),
-              PermissionIri.makeNew(project.shortcode).value,
-            )
-            .map(PermissionIri.unsafeFrom)
-
-        permissions <-
-          ZIO
-            .fail(BadRequestException("Permissions needs to be supplied."))
-            .when(createRequest.hasPermissions.isEmpty) *>
-            ZIO.foreach(createRequest.hasPermissions) { permissionAdm =>
-              ZIO
-                .fromOption(Permission.Administrative.fromToken(permissionAdm.name))
-                .orElseFail {
-                  BadRequestException(
-                    s"Invalid value for name parameter of hasPermissions: ${permissionAdm.name}, it should be one of " +
-                      s"${Permission.Administrative.allTokens.mkString(", ")}",
-                  )
-                }
-            }
-        _ <- triplestore.query(
-               CreateAdministrativePermissionQuery.build(
-                 newPermissionIri,
-                 project.id,
-                 group.id,
-                 permissions,
-               ),
+        _ <- administrativePermissionService.create(
+               AdministrativePermission(newPermissionIri, group.id, project.id, parts),
              )
 
         // try to retrieve the newly created permission
@@ -1056,37 +1024,25 @@ final class PermissionsResponder(
              .whenZIO(iriService.checkIriExists(permissionIri))
     } yield ()
 
-  def createPermissionsForAdminsAndMembersOfNewProject(projectIri: ProjectIri): Task[Unit] =
+  def createPermissionsForAdminsAndMembersOfNewProject(project: KnoraProject): Task[Unit] =
     for {
       // Give the admins of the new project rights for any operation in project level, and rights to create resources.
-      _ <- createAdministrativePermission(
-             CreateAdministrativePermissionAPIRequestADM(
-               forProject = projectIri,
-               forGroup = builtIn.ProjectAdmin.id,
-               hasPermissions = Set(
-                 PermissionADM.from(Permission.Administrative.ProjectAdminAll),
-                 PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
-               ),
-             ),
-             KnoraSystemInstances.Users.SystemUser,
-             UUID.randomUUID(),
+      _ <- administrativePermissionService.create(
+             project,
+             builtIn.ProjectAdmin,
+             Chunk(Simple.unsafeFrom(ProjectAdminAll), Simple.unsafeFrom(ProjectResourceCreateAll)),
            )
-
       // Give the members of the new project rights to create resources.
-      _ <- createAdministrativePermission(
-             CreateAdministrativePermissionAPIRequestADM(
-               forProject = projectIri,
-               forGroup = builtIn.ProjectMember.id,
-               hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
-             ),
-             KnoraSystemInstances.Users.SystemUser,
-             UUID.randomUUID(),
+      _ <- administrativePermissionService.create(
+             project,
+             builtIn.ProjectMember,
+             Chunk(Simple.unsafeFrom(ProjectResourceCreateAll)),
            )
 
       // Create default object access permissions for SystemAdmin of the new project
       _ <- createDefaultObjectAccessPermission(
              CreateDefaultObjectAccessPermissionAPIRequestADM(
-               forProject = projectIri.value,
+               forProject = project.id.value,
                forGroup = Some(builtIn.ProjectAdmin.id.value),
                hasPermissions = Set(
                  PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.ProjectAdmin.id.value),
@@ -1099,7 +1055,7 @@ final class PermissionsResponder(
       // Create default object access permissions for ProjectAdmin of the new project
       _ <- createDefaultObjectAccessPermission(
              CreateDefaultObjectAccessPermissionAPIRequestADM(
-               forProject = projectIri.value,
+               forProject = project.id.value,
                forGroup = Some(builtIn.ProjectMember.id.value),
                hasPermissions = Set(
                  PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.ProjectAdmin.id.value),
