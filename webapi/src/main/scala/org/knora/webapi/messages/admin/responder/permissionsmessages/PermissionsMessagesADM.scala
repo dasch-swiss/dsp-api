@@ -17,8 +17,10 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 
@@ -31,9 +33,9 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
  * @param hasPermissions the set of permissions.
  */
 case class CreateAdministrativePermissionAPIRequestADM(
-  id: Option[IRI] = None,
-  forProject: IRI,
-  forGroup: IRI,
+  id: Option[PermissionIri] = None,
+  forProject: ProjectIri,
+  forGroup: GroupIri,
   hasPermissions: Set[PermissionADM],
 )
 object CreateAdministrativePermissionAPIRequestADM {

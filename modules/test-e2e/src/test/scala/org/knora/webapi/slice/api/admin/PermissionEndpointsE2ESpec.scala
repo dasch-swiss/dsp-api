@@ -63,8 +63,8 @@ object PermissionEndpointsE2ESpec extends E2EZSpec {
           response <- TestAdminApiClient
                         .createAdministrativePermission(
                           CreateAdministrativePermissionAPIRequestADM(
-                            forProject = SharedTestDataADM.anythingProjectIri.value,
-                            forGroup = SharedTestDataADM.thingSearcherGroup.id,
+                            forProject = SharedTestDataADM.anythingProjectIri,
+                            forGroup = SharedTestDataADM.thingSearcherGroup.groupIri,
                             hasPermissions = Set(PermissionADM(name = "ProjectAdminGroupAllPermission")),
                           ),
                           rootUser,

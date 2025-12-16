@@ -506,22 +506,15 @@ object PermissionUtilADM {
         }
       case PermissionType.AP =>
         if (permissions.nonEmpty) {
-
-          val permNames: Set[String] = permissions.map(_.name)
-
-          /* creates the permissions string. something like "ProjectResourceCreateAllPermission|ProjectAdminAllPermission" */
-          permNames.foldLeft("") { (acc, perm: String) =>
-            if (acc.isEmpty) {
-              acc + perm
-            } else {
-              acc + OntologyConstants.KnoraBase.PermissionListDelimiter + perm
-            }
-          }
-
+          formatAdministrativePermissions(permissions.map(_.name).flatMap(Permission.Administrative.fromToken))
         } else {
           throw InconsistentRepositoryDataException("Permissions cannot be empty")
         }
     }
+
+  def formatAdministrativePermissions(permissions: Set[Permission.Administrative]): String =
+    permissions.map(_.token).mkString(OntologyConstants.KnoraBase.PermissionListDelimiter.toString)
+
 }
 
 trait PermissionUtilADM {

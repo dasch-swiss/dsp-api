@@ -79,8 +79,8 @@ object PermissionsResponderSpec extends E2EZSpec {
           permissionResponder(
             _.createAdministrativePermission(
               CreateAdministrativePermissionAPIRequestADM(
-                forProject = imagesProjectIri.value,
-                forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
+                forProject = imagesProjectIri,
+                forGroup = KnoraGroupRepo.builtIn.ProjectMember.id,
                 hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
               ),
               rootUser,
@@ -103,14 +103,14 @@ object PermissionsResponderSpec extends E2EZSpec {
         )
       },
       test("create and return an administrative permission with a custom IRI") {
-        val customIri = "http://rdfh.ch/permissions/0001/24RD7QcoTKqEJKrDBE885Q"
+        val customIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0001/24RD7QcoTKqEJKrDBE885Q")
         for {
           actual <- permissionResponder(
                       _.createAdministrativePermission(
                         CreateAdministrativePermissionAPIRequestADM(
                           id = Some(customIri),
-                          forProject = anythingProjectIri.value,
-                          forGroup = thingSearcherGroup.id,
+                          forProject = anythingProjectIri,
+                          forGroup = thingSearcherGroup.groupIri,
                           hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
                         ),
                         rootUser,
@@ -118,7 +118,7 @@ object PermissionsResponderSpec extends E2EZSpec {
                       ),
                     )
         } yield assertTrue(
-          actual.administrativePermission.iri == customIri,
+          actual.administrativePermission.iri == customIri.value,
           actual.administrativePermission.forProject == anythingProjectIri.value,
           actual.administrativePermission.forGroup == thingSearcherGroup.id,
         )
@@ -126,7 +126,7 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "create and return an administrative permission even if irrelevant values were given for name and code of its permission",
       ) {
-        val customIri      = "http://rdfh.ch/permissions/0001/0pd-VUDeShWNJ2Nq3fGGGQ"
+        val customIri      = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0001/0pd-VUDeShWNJ2Nq3fGGGQ")
         val hasPermissions = Set(
           PermissionADM(
             name = Permission.Administrative.ProjectResourceCreateAll.token,
@@ -140,8 +140,8 @@ object PermissionsResponderSpec extends E2EZSpec {
                       _.createAdministrativePermission(
                         CreateAdministrativePermissionAPIRequestADM(
                           id = Some(customIri),
-                          forProject = anythingProjectIri.value,
-                          forGroup = KnoraGroupRepo.builtIn.KnownUser.id.value,
+                          forProject = anythingProjectIri,
+                          forGroup = KnoraGroupRepo.builtIn.KnownUser.id,
                           hasPermissions = hasPermissions,
                         ),
                         rootUser,
@@ -149,7 +149,7 @@ object PermissionsResponderSpec extends E2EZSpec {
                       ),
                     )
         } yield assertTrue(
-          actual.administrativePermission.iri == customIri,
+          actual.administrativePermission.iri == customIri.value,
           actual.administrativePermission.forGroup == KnoraGroupRepo.builtIn.KnownUser.id.value,
           actual.administrativePermission.forProject == anythingProjectIri.value,
           actual.administrativePermission.hasPermissions == expectedHasPermissions,
