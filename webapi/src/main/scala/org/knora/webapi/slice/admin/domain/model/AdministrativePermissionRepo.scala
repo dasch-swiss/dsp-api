@@ -58,7 +58,9 @@ object AdministrativePermissionPart {
   }
 
   def from(adm: PermissionADM)(implicit sf: StringFormatter): Either[String, AdministrativePermissionPart] =
-    Permission.Administrative.fromToken(adm.name).toRight(s"Invalid Permission name in $adm").flatMap { perm =>
+    Permission.Administrative.fromToken(adm.name)
+      .toRight(s"Invalid value for name parameter of hasPermissions: ${adm.name}, it should be one of ${Permission.Administrative.allTokens.mkString(", ")}")
+      .flatMap { perm =>
       (perm, adm.additionalInformation) match {
         case (p, None) if perm.isSimple                                              => Right(Simple.unsafeFrom(p))
         case (Permission.Administrative.ProjectResourceCreateRestricted, Some(info)) =>
