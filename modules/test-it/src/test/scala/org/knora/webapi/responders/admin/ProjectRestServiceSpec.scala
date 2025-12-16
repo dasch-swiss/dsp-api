@@ -149,7 +149,7 @@ object ProjectRestServiceSpec extends E2EZSpec {
           project <- projectRestService(_.createProject(rootUser)(createReq)).map(_.project)
           _        = newProjectIri.set(project.id.value)
           // Check Administrative Permissions
-          receivedApAdmin <- ZIO.serviceWithZIO[PermissionsResponder](_.getPermissionsApByProjectIri(project.id.value))
+          receivedApAdmin <- ZIO.serviceWithZIO[PermissionsResponder](_.getPermissionsApByProjectIri(project.id))
           // Check Default Object Access permissions
           receivedDoaps <- ZIO.serviceWithZIO[PermissionsResponder](_.getPermissionsDaopByProjectIri(project.id))
         } yield {

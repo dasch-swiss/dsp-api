@@ -78,52 +78,11 @@ final class PermissionsResponder(
     case Property
   }
 
-  def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM] =
-    for {
-      permissionsQueryResponseRows <-
-        triplestore
-          .query(Select(sparql.admin.txt.getAdministrativePermissionsForProject(projectIRI)))
-          .map(_.results.bindings)
-
-      permissionsWithProperties =
-        permissionsQueryResponseRows
-          .groupBy(_.rowMap("s"))
-          .map { case (permissionIri: String, rows: Seq[VariableResultsRow]) =>
-            (permissionIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
-          }
-
-      administrativePermissions =
-        permissionsWithProperties.map { case (permissionIri: IRI, propsMap: Map[String, String]) =>
-          /* parse permissions */
-          val hasPermissions: Set[PermissionADM] =
-            PermissionUtilADM.parsePermissionsWithType(
-              propsMap.get(OntologyConstants.KnoraBase.HasPermissions),
-              PermissionType.AP,
-            )
-
-          /* construct permission object */
-          AdministrativePermissionADM(
-            iri = permissionIri,
-            forProject = propsMap.getOrElse(
-              OntologyConstants.KnoraAdmin.ForProject,
-              throw InconsistentRepositoryDataException(
-                s"Administrative Permission $permissionIri has no project attached.",
-              ),
-            ),
-            forGroup = propsMap.getOrElse(
-              OntologyConstants.KnoraAdmin.ForGroup,
-              throw InconsistentRepositoryDataException(
-                s"Administrative Permission $permissionIri has no group attached.",
-              ),
-            ),
-            hasPermissions = hasPermissions,
-          )
-        }.toSeq
-
-      /* construct response object */
-      response = permissionsmessages.AdministrativePermissionsForProjectGetResponseADM(administrativePermissions)
-
-    } yield response
+  def getPermissionsApByProjectIri(projectIri: ProjectIri): Task[AdministrativePermissionsForProjectGetResponseADM] =
+    administrativePermissionService
+      .findByProject(projectIri)
+      .map(_.map(AdministrativePermissionADM.from))
+      .map(AdministrativePermissionsForProjectGetResponseADM(_))
 
   /**
    * For administrative permission we only need the name parameter of each PermissionADM given in hasPermissions collection.

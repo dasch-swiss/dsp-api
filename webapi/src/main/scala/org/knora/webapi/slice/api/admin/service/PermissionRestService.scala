@@ -76,7 +76,7 @@ final class PermissionRestService(
   )(value: ProjectIri): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(value, user)
-      result <- responder.getPermissionsApByProjectIri(value.value)
+      result <- responder.getPermissionsApByProjectIri(value)
       ext    <- format.toExternal(result)
     } yield ext
 

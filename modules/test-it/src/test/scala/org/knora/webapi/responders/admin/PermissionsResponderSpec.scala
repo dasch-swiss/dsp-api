@@ -52,7 +52,7 @@ object PermissionsResponderSpec extends E2EZSpec {
     suite("ask about administrative permissions")(
       test("return all Permission.Administrative for project") {
         for {
-          result <- permissionResponder(_.getPermissionsApByProjectIri(imagesProjectIri.value))
+          result <- permissionResponder(_.getPermissionsApByProjectIri(imagesProjectIri))
         } yield assertTrue(
           result == AdministrativePermissionsForProjectGetResponseADM(
             Seq(perm002_a1.p, perm002_a3.p, perm002_a2.p),

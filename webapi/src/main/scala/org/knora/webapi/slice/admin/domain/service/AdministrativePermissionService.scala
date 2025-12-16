@@ -21,6 +21,10 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 
 final case class AdministrativePermissionService(repo: AdministrativePermissionRepo) {
+
+  def findByProject(projectIri: ProjectIri): Task[Chunk[AdministrativePermission]] =
+    repo.findByProject(projectIri)
+
   def findByGroupAndProject(groupIri: GroupIri, projectIri: ProjectIri): Task[Option[AdministrativePermission]] =
     repo.findByGroupAndProject(groupIri, projectIri)
 
