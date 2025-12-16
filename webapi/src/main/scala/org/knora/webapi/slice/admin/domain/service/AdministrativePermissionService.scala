@@ -34,7 +34,8 @@ final case class AdministrativePermissionService(repo: AdministrativePermissionR
   def create(adminPermission: AdministrativePermission): Task[AdministrativePermission] =
     findByGroupAndProject(adminPermission.forGroup, adminPermission.forProject).filterOrFail(_.isEmpty)(
       DuplicateValueException(
-        s"An administrative permission for project: '${adminPermission.forProject}' and group: '${adminPermission.forGroup}' combination already exists. ",
+        s"An administrative permission for project: '${adminPermission.forProject}' and " +
+          s"group: '${adminPermission.forGroup}' combination already exists.",
       ),
     ) *> repo.save(adminPermission)
 }

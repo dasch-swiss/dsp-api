@@ -21,7 +21,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.sharedtestdata.*
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -92,10 +91,8 @@ object PermissionsResponderSpec extends E2EZSpec {
             isSubtype[DuplicateValueException](
               hasMessage(
                 equalTo(
-                  s"An administrative permission for project: '$imagesProjectIri' and group: '${KnoraGroupRepo.builtIn.ProjectMember.id.value}' combination already exists. " +
-                    s"This permission currently has the scope '${PermissionUtilADM
-                        .formatPermissionADMs(perm002_a1.p.hasPermissions, PermissionType.AP)}'. " +
-                    s"Use its IRI ${perm002_a1.iri} to modify it, if necessary.",
+                  s"An administrative permission for project: 'http://rdfh.ch/projects/00FF' and " +
+                    s"group: 'http://www.knora.org/ontology/knora-admin#ProjectMember' combination already exists.",
                 ),
               ),
             ),
@@ -124,17 +121,23 @@ object PermissionsResponderSpec extends E2EZSpec {
         )
       },
       test(
-        "create and return an administrative permission even if irrelevant values were given for name and code of its permission",
+        "create and return an administrative permission even if a permission code given",
       ) {
         val customIri      = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0001/0pd-VUDeShWNJ2Nq3fGGGQ")
         val hasPermissions = Set(
           PermissionADM(
-            name = Permission.Administrative.ProjectResourceCreateAll.token,
-            additionalInformation = Some("blabla"),
-            permissionCode = Some(8),
+            name = Permission.Administrative.ProjectResourceCreateRestricted.token,
+            additionalInformation = Some("http://www.knora.org/ontology/0001/anything#Thing"),
+            permissionCode = Some(8), // will be ignored
           ),
         )
-        val expectedHasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll))
+        val expectedHasPermissions = Set(
+          PermissionADM(
+            name = "ProjectResourceCreateRestrictedPermission",
+            additionalInformation = Some("http://www.knora.org/ontology/0001/anything#Thing"),
+            None,
+          ),
+        )
         for {
           actual <- permissionResponder(
                       _.createAdministrativePermission(
