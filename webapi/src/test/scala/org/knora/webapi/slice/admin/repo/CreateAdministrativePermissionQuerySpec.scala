@@ -90,7 +90,7 @@ object CreateAdministrativePermissionQuerySpec extends ZIOSpecDefault {
             |INSERT { GRAPH <http://www.knora.org/data/permissions> { <http://rdfh.ch/permissions/0001/test-permission> a knora-admin:AdministrativePermission ;
             |    knora-admin:forProject <http://rdfh.ch/projects/0001> ;
             |    knora-admin:forGroup <http://rdfh.ch/groups/0001/thing-searcher> ;
-            |    knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectResourceCreateRestrictedPermission|ProjectAdminAllPermission|ProjectAdminGroupAllPermission|ProjectAdminGroupRestrictedPermission|ProjectAdminRightsAllPermission" . } }
+            |    knora-base:hasPermissions "ProjectAdminGroupAllPermission|ProjectResourceCreateRestrictedPermission|ProjectResourceCreateAllPermission|ProjectAdminGroupRestrictedPermission|ProjectAdminAllPermission|ProjectAdminRightsAllPermission" . } }
             |WHERE {}""".stripMargin,
       )
     },
