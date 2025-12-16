@@ -193,14 +193,14 @@ final class PermissionsResponder(
             .fail(BadRequestException("Permissions needs to be supplied."))
             .when(createRequest.hasPermissions.isEmpty) *>
             ZIO.foreach(createRequest.hasPermissions) { permissionAdm =>
-                ZIO
-                  .fromOption(Permission.Administrative.fromToken(permissionAdm.name))
-                  .orElseFail {
-                    BadRequestException(
-                      s"Invalid value for name parameter of hasPermissions: ${permissionAdm.name}, it should be one of " +
-                        s"${Permission.Administrative.allTokens.mkString(", ")}",
-                    )
-                  }
+              ZIO
+                .fromOption(Permission.Administrative.fromToken(permissionAdm.name))
+                .orElseFail {
+                  BadRequestException(
+                    s"Invalid value for name parameter of hasPermissions: ${permissionAdm.name}, it should be one of " +
+                      s"${Permission.Administrative.allTokens.mkString(", ")}",
+                  )
+                }
             }
         _ <- triplestore.query(
                CreateAdministrativePermissionQuery.build(
