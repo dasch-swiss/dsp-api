@@ -8,11 +8,12 @@ package org.knora.webapi.responders.admin
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
-
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
@@ -619,7 +620,7 @@ object PermissionsResponderSpec extends E2EZSpec {
             isSubtype[BadRequestException](
               hasMessage(
                 equalTo(
-                  s"Invalid resource class IRI: ${customResourceIRI}",
+                  s"Invalid resource class IRI: $customResourceIRI",
                 ),
               ),
             ),
@@ -641,7 +642,7 @@ object PermissionsResponderSpec extends E2EZSpec {
         )(
           fails(
             isSubtype[BadRequestException](
-              hasMessage(equalTo(s"Invalid property IRI: ${customValueIRI}")),
+              hasMessage(equalTo(s"Invalid property IRI: $customValueIRI")),
             ),
           ),
         )

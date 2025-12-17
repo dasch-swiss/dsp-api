@@ -6,9 +6,10 @@
 package org.knora.webapi.responders.admin
 
 import zio.*
-import java.util.UUID
-import dsp.errors.*
 
+import java.util.UUID
+
+import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
