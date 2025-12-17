@@ -6,9 +6,10 @@
 package org.knora.webapi.responders.admin
 
 import zio.*
-import java.util.UUID
-import dsp.errors.*
 
+import java.util.UUID
+
+import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
@@ -158,15 +159,15 @@ final class PermissionsResponder(
    * @param groups     the list of groups for which default object access permissions are retrieved and combined.
    * @return a set of [[PermissionADM]].
    */
-  private def getDefaultObjectAccessPermissions(
+  private def findDoapPermissionADM(
     projectIri: ProjectIri,
     groups: Seq[GroupIri],
   ): Task[Set[PermissionADM]] = ZIO
-    .foreach(groups.map(ForWhat(_)))(defaultObjectAccessPermissionsForWhatGetADM(projectIri, _))
+    .foreach(groups.map(ForWhat(_)))(findDoapPermissionADM(projectIri, _))
     .map(_.flatten)
     .map(PermissionUtilADM.removeDuplicatePermissions)
 
-  private def defaultObjectAccessPermissionsForWhatGetADM(
+  private def findDoapPermissionADM(
     projectIri: ProjectIri,
     forWhat: ForWhat,
   ): Task[Set[PermissionADM]] =
@@ -217,7 +218,7 @@ final class PermissionsResponder(
       }
 
     val projectAdmin =
-      getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectAdmin.id))
+      findDoapPermissionADM(projectIri, List(builtIn.ProjectAdmin.id))
         .when(targetUser.isProjectAdmin(projectIri) || targetUser.isSystemAdmin)
 
     val resourceClassProperty = ZIO
@@ -226,7 +227,7 @@ final class PermissionsResponder(
           .fromOption(propertyIri)
           .orElseFail(BadRequestException("Property IRI needs to be supplied."))
           .flatMap(p =>
-            defaultObjectAccessPermissionsForWhatGetADM(
+            findDoapPermissionADM(
               projectIri,
               ForWhat(resourceClassIri, p),
             ),
@@ -235,7 +236,7 @@ final class PermissionsResponder(
 
     val resourceClass = ZIO
       .when(entityType == EntityType.Resource)(
-        defaultObjectAccessPermissionsForWhatGetADM(projectIri, ForWhat(resourceClassIri)),
+        findDoapPermissionADM(projectIri, ForWhat(resourceClassIri)),
       )
 
     val property = ZIO
@@ -243,23 +244,23 @@ final class PermissionsResponder(
         ZIO
           .fromOption(propertyIri)
           .orElseFail(BadRequestException("Property IRI needs to be supplied."))
-          .flatMap(p => defaultObjectAccessPermissionsForWhatGetADM(projectIri, ForWhat(p)))
+          .flatMap(p => findDoapPermissionADM(projectIri, ForWhat(p)))
       }
 
     val customGroups = {
       val otherGroups =
         targetUser.permissions.groupsPerProject.getOrElse(projectIri.value, Seq.empty).map(GroupIri.unsafeFrom) diff
           List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
-      ZIO.when(otherGroups.distinct.nonEmpty)(getDefaultObjectAccessPermissions(projectIri, otherGroups))
+      ZIO.when(otherGroups.distinct.nonEmpty)(findDoapPermissionADM(projectIri, otherGroups))
     }
 
     val projectMembers = ZIO
       .when(targetUser.isProjectMember(projectIri) || targetUser.isSystemAdmin)(
-        getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id)),
+        findDoapPermissionADM(projectIri, List(builtIn.ProjectMember.id)),
       )
 
     val knownUser = ZIO.when(!targetUser.isAnonymousUser)(
-      getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id)),
+      findDoapPermissionADM(projectIri, List(builtIn.KnownUser.id)),
     )
 
     val permissionTasks: List[Task[Option[Set[PermissionADM]]]] =
