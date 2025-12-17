@@ -90,6 +90,13 @@ trait TriplestoreService {
     outputFormat: QuadFormat,
   ): Task[Unit]
 
+  final def queryToFile(
+    sparql: ConstructQuery,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
+    outputFormat: QuadFormat,
+  ): Task[Unit] = queryToFile(Construct(sparql), graphIri, outputFile, outputFormat)
+
   /**
    * Requests the contents of a named graph, saving the response in a file.
    *

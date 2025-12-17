@@ -6,10 +6,9 @@
 package org.knora.webapi.responders.admin
 
 import zio.*
-
 import java.util.UUID
-
 import dsp.errors.*
+
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
@@ -21,6 +20,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionT
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.AdminConstants
@@ -55,7 +55,6 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -536,21 +535,17 @@ final class PermissionsResponder(
    * @return a list of of [[PermissionInfoADM]] objects.
    */
   def getPermissionsByProjectIri(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM] =
-    for {
-      permissionsQueryResponseStatements <-
-        triplestore
-          .query(Construct(sparql.admin.txt.getProjectPermissions(projectIri.value)))
-          .map(_.statements)
-      _ <- ZIO.when(permissionsQueryResponseStatements.isEmpty) {
-             ZIO.fail(NotFoundException(s"No permission could be found for ${projectIri.value}."))
-           }
-      permissionsInfo =
-        permissionsQueryResponseStatements.map { statement =>
-          val permissionIri       = statement._1
-          val (_, permissionType) = statement._2.filter(_._1 == OntologyConstants.Rdf.Type).head
-          PermissionInfoADM(iri = permissionIri, permissionType = permissionType)
-        }.toSet
-    } yield PermissionsForProjectGetResponseADM(permissionsInfo)
+    findAllPermissionsByProjectIri(projectIri).map { case (aps, doaps) =>
+      (
+        aps.map(p => (p.id.value, KnoraAdmin.AdministrativePermission)) ++
+          doaps.map(p => (p.id.value, KnoraAdmin.DefaultObjectAccessPermission))
+      ).map(PermissionInfoADM.apply).toSet
+    }.map(PermissionsForProjectGetResponseADM.apply)
+
+  private def findAllPermissionsByProjectIri(
+    projectIri: ProjectIri,
+  ): Task[(Chunk[AdministrativePermission], Chunk[DefaultObjectAccessPermission])] =
+    administrativePermissionService.findByProject(projectIri) <&> doapService.findByProject(projectIri)
 
   def updateDoap(
     permissionIri: PermissionIri,
@@ -867,7 +862,7 @@ final class PermissionsResponder(
                          forProperty = forProperty,
                          hasPermissions = hasPermissions,
                        )
-                     case Some(OntologyConstants.KnoraAdmin.AdministrativePermission) =>
+                     case Some(KnoraAdmin.AdministrativePermission) =>
                        val forGroup = groupedPermissionsQueryResponse
                          .getOrElse(
                            OntologyConstants.KnoraAdmin.ForGroup,

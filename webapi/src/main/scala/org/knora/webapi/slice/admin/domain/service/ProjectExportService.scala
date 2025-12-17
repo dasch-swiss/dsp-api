@@ -26,7 +26,6 @@ import zio.nio.file.Path
 import java.io.OutputStream
 import scala.collection.mutable
 
-import org.knora.webapi.messages.twirl.queries.*
 import org.knora.webapi.messages.util.rdf.TriG
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
@@ -34,10 +33,10 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.ProjectExportInfoResponse
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.util.ZScopedJavaIoStreams
 
 trait ProjectExportService {
@@ -134,7 +133,8 @@ final case class ProjectExportServiceLive(
   private val triplestore: TriplestoreService,
   private val dspIngestClient: DspIngestClient,
   private val exportStorage: ProjectExportStorageService,
-) extends ProjectExportService {
+) extends ProjectExportService
+    with QueryBuilderHelper {
 
   override def listExports(): Task[Chunk[ProjectExportInfo]]           = exportStorage.listExports()
   private def trigExportFilePath(project: KnoraProject, tempDir: Path) = tempDir / exportStorage.trigFilename(project)
@@ -196,14 +196,18 @@ final case class ProjectExportServiceLive(
       .prefix(KA.NS)
 
     triplestore
-      .queryToFile(Construct(q), adminDataNamedGraph, NamedGraphTrigFile(adminDataNamedGraph, targetDir).dataFile, TriG)
+      .queryToFile(q, adminDataNamedGraph, NamedGraphTrigFile(adminDataNamedGraph, targetDir).dataFile, TriG)
       .as(NamedGraphTrigFile(adminDataNamedGraph, targetDir))
   }
 
   private def downloadPermissionData(project: KnoraProject, tempDir: Path) = {
-    val graphIri = permissionsDataNamedGraph
-    val file     = NamedGraphTrigFile(graphIri, tempDir)
-    val query    = Construct(sparql.admin.txt.getProjectPermissions(project.id.value))
+    val graphIri  = permissionsDataNamedGraph
+    val file      = NamedGraphTrigFile(graphIri, tempDir)
+    val (s, p, o) = spo
+    val query     = Queries
+      .CONSTRUCT(s.has(p, o))
+      .prefix(KA.NS)
+      .where(s.has(KA.forProject, toRdfIri(project.id)).andHas(p, o))
     triplestore.queryToFile(query, graphIri, file.dataFile, TriG).as(file)
   }
 
