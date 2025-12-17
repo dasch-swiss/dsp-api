@@ -6,10 +6,9 @@
 package org.knora.webapi.responders.admin
 
 import zio.*
-
 import java.util.UUID
-
 import dsp.errors.*
+
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
@@ -50,7 +49,6 @@ import org.knora.webapi.slice.admin.repo.service.DefaultObjectAccessPermissionRe
 import org.knora.webapi.slice.api.admin.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -61,7 +59,6 @@ final class PermissionsResponder(
   iriService: IriService,
   knoraProjectService: KnoraProjectService,
   triplestore: TriplestoreService,
-  auth: AuthorizationRestService,
   administrativePermissionService: AdministrativePermissionService,
   iriConverter: IriConverter,
   doapService: DefaultObjectAccessPermissionService,
@@ -492,13 +489,12 @@ final class PermissionsResponder(
   def updatePermissionsGroup(
     permissionIri: PermissionIri,
     groupIri: GroupIri,
-    requestingUser: User,
     apiRequestID: UUID,
   ): Task[PermissionGetResponseADM] = {
     /* verify that the permission group is updated */
     val verifyPermissionGroupUpdate =
       for {
-        updatedPermission <- permissionGetADM(permissionIri.value, requestingUser)
+        updatedPermission <- findPermissionItem(permissionIri)
         _                  = updatedPermission match {
               case ap: AdministrativePermissionADM =>
                 if (ap.forGroup != groupIri.value)
@@ -525,7 +521,7 @@ final class PermissionsResponder(
     val permissionGroupChangeTask: Task[PermissionGetResponseADM] =
       for {
         // get permission
-        permission <- permissionGetADM(permissionIri.value, requestingUser)
+        permission <- findPermissionItem(permissionIri)
         response   <-
           permission match {
             // Is permission an administrative permission?
@@ -551,7 +547,6 @@ final class PermissionsResponder(
    *
    * @param permissionIri               the IRI of the permission.
    * @param newHasPermissions           the request to change hasPermissions.
-   * @param requestingUser              the [[User]] of the requesting user.
    * @param apiRequestID                the API request ID.
    * @return [[PermissionGetResponseADM]].
    *         fails with an UpdateNotPerformedException if something has gone wrong.
@@ -559,27 +554,23 @@ final class PermissionsResponder(
   def updatePermissionHasPermissions(
     permissionIri: PermissionIri,
     newHasPermissions: NonEmptyChunk[PermissionADM],
-    requestingUser: User,
     apiRequestID: UUID,
   ): Task[PermissionGetResponseADM] = {
-    val permissionIriInternal =
-      stringFormatter.toSmartIri(permissionIri.value).toOntologySchema(InternalSchema).toString
-    /*Verify that hasPermissions is updated successfully*/
     def verifyUpdateOfHasPermissions(expectedPermissions: Set[PermissionADM]): Task[PermissionItemADM] =
       for {
-        updatedPermission <- permissionGetADM(permissionIriInternal, requestingUser)
+        updatedPermission <- findPermissionItem(permissionIri)
 
         /*Verify that update was successful*/
         _ = updatedPermission match {
               case ap: AdministrativePermissionADM =>
                 if (!ap.hasPermissions.equals(expectedPermissions))
                   throw UpdateNotPerformedException(
-                    s"The hasPermissions set of permission $permissionIriInternal was not updated. Please report this as a bug.",
+                    s"The hasPermissions set of permission $permissionIri was not updated. Please report this as a bug.",
                   )
               case doap: DefaultObjectAccessPermissionADM =>
                 if (!doap.hasPermissions.equals(expectedPermissions)) {
                   throw UpdateNotPerformedException(
-                    s"The hasPermissions set of permission $permissionIriInternal was not updated. Please report this as a bug.",
+                    s"The hasPermissions set of permission $permissionIri was not updated. Please report this as a bug.",
                   )
                 }
               case _ => None
@@ -592,7 +583,7 @@ final class PermissionsResponder(
     val permissionHasPermissionsChangeTask =
       for {
         // get permission
-        permission <- permissionGetADM(permissionIriInternal, requestingUser)
+        permission <- findPermissionItem(permissionIri)
         response   <- permission match {
                       // Is permission an administrative permission?
                       case ap: AdministrativePermissionADM =>
@@ -651,21 +642,18 @@ final class PermissionsResponder(
 
   def deletePermission(
     permissionIri: PermissionIri,
-    requestingUser: User,
     apiRequestID: UUID,
   ): Task[PermissionDeleteResponseADM] = {
-    val permissionIriInternal =
-      stringFormatter.toSmartIri(permissionIri.value).toOntologySchema(InternalSchema).toString
     val permissionDeleteTask =
       for {
         // check that there is a permission with a given IRI
-        _ <- permissionGetADM(permissionIriInternal, requestingUser)
+        _ <- findPermissionItem(permissionIri)
         // Is permission in use?
         _ <-
           ZIO
-            .fail(UpdateNotPerformedException(s"Permission $permissionIriInternal is in use and cannot be deleted."))
+            .fail(UpdateNotPerformedException(s"Permission $permissionIri is in use and cannot be deleted."))
             .whenZIO(triplestore.query(Ask(sparql.admin.txt.isEntityUsed(permissionIri.value))))
-        _          <- deletePermission(permissionIriInternal)
+        _          <- deletePermission(permissionIri.value)
         sf          = StringFormatter.getGeneralInstance
         iriExternal = sf.toSmartIri(permissionIri.value).toOntologySchema(ApiV2Complex).toString
 
@@ -674,17 +662,9 @@ final class PermissionsResponder(
     IriLocker.runWithIriLock(apiRequestID, permissionIri.value)(permissionDeleteTask)
   }
 
-  /**
-   * Get a permission.
-   *
-   * @param permissionIri  the IRI of the permission.
-   * @param requestingUser the [[User]] of the requesting user.
-   * @return [[PermissionItemADM]].
-   */
-  private def permissionGetADM(permissionIri: IRI, requestingUser: User): Task[PermissionItemADM] = for {
-    admOrDoap <- findPermissionByIri(PermissionIri.unsafeFrom(permissionIri))
-    _         <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, admOrDoap.fold(_.forProject, _.forProject))
-  } yield admOrDoap.fold(AdministrativePermissionADM.from, DefaultObjectAccessPermissionADM.from)
+  private def findPermissionItem(permissionIri: PermissionIri): Task[PermissionItemADM] =
+    findPermissionByIri(permissionIri)
+      .map(_.fold(AdministrativePermissionADM.from, DefaultObjectAccessPermissionADM.from))
 
   /**
    * Update an existing permission with a given parameter.

@@ -11,7 +11,6 @@ import zio.test.Assertion.*
 import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
-import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 
 import org.knora.webapi.*
@@ -685,7 +684,7 @@ object PermissionsResponderSpec extends E2EZSpec {
         val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
         for {
           actual <- permissionResponder(
-                      _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+                      _.updatePermissionsGroup(permissionIri, newGroupIri, UUID.randomUUID()),
                     )
           ap = actual.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission
         } yield assertTrue(
@@ -693,33 +692,12 @@ object PermissionsResponderSpec extends E2EZSpec {
           ap.forGroup == newGroupIri.value,
         )
       },
-      test(
-        "throw ForbiddenException for PermissionChangeGroupRequestADM if requesting user is not system or project Admin",
-      ) {
-        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ")
-        val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
-        assertZIO(
-          permissionResponder(
-            _.updatePermissionsGroup(permissionIri, newGroupIri, imagesUser02, UUID.randomUUID()),
-          ).exit,
-        )(
-          fails(
-            isSubtype[ForbiddenException](
-              hasMessage(
-                equalTo(
-                  s"You are logged in with username 'user02.user', but only a system administrator or project administrator has permissions for this operation.",
-                ),
-              ),
-            ),
-          ),
-        )
-      },
       test("update group of a default object access permission") {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
         val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
         for {
           actual <- permissionResponder(
-                      _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+                      _.updatePermissionsGroup(permissionIri, newGroupIri, UUID.randomUUID()),
                     )
           doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         } yield assertTrue(
@@ -732,7 +710,7 @@ object PermissionsResponderSpec extends E2EZSpec {
         val newGroupIri   = GroupIri.unsafeFrom(KnoraGroupRepo.builtIn.ProjectMember.id.value)
         for {
           actual <- permissionResponder(
-                      _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+                      _.updatePermissionsGroup(permissionIri, newGroupIri, UUID.randomUUID()),
                     )
           doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         } yield assertTrue(
@@ -746,7 +724,7 @@ object PermissionsResponderSpec extends E2EZSpec {
         val newGroupIri   = GroupIri.unsafeFrom(KnoraGroupRepo.builtIn.ProjectMember.id.value)
         for {
           actual <- permissionResponder(
-                      _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+                      _.updatePermissionsGroup(permissionIri, newGroupIri, UUID.randomUUID()),
                     )
           doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         } yield assertTrue(
@@ -757,33 +735,6 @@ object PermissionsResponderSpec extends E2EZSpec {
       },
     ),
     suite("ask to update hasPermissions of a permission")(
-      test(
-        "throw ForbiddenException for PermissionChangeHasPermissionsRequestADM if requesting user is not system or project Admin",
-      ) {
-        val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val hasPermissions = NonEmptyChunk(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll))
-
-        assertZIO(
-          permissionResponder(
-            _.updatePermissionHasPermissions(
-              PermissionIri.unsafeFrom(permissionIri),
-              hasPermissions,
-              imagesUser02,
-              UUID.randomUUID(),
-            ),
-          ).exit,
-        )(
-          fails(
-            isSubtype[ForbiddenException](
-              hasMessage(
-                equalTo(
-                  s"You are logged in with username 'user02.user', but only a system administrator or project administrator has permissions for this operation.",
-                ),
-              ),
-            ),
-          ),
-        )
-      },
       test("update hasPermissions of an administrative permission") {
         val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val hasPermissions = NonEmptyChunk(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll))
@@ -792,7 +743,6 @@ object PermissionsResponderSpec extends E2EZSpec {
                       _.updatePermissionHasPermissions(
                         PermissionIri.unsafeFrom(permissionIri),
                         hasPermissions,
-                        rootUser,
                         UUID.randomUUID(),
                       ),
                     )
@@ -819,7 +769,6 @@ object PermissionsResponderSpec extends E2EZSpec {
                       _.updatePermissionHasPermissions(
                         PermissionIri.unsafeFrom(permissionIri),
                         hasPermissions,
-                        rootUser,
                         UUID.randomUUID(),
                       ),
                     )
@@ -843,7 +792,6 @@ object PermissionsResponderSpec extends E2EZSpec {
                       _.updatePermissionHasPermissions(
                         PermissionIri.unsafeFrom(permissionIri),
                         hasPermissions,
-                        rootUser,
                         UUID.randomUUID(),
                       ),
                     )
@@ -879,7 +827,6 @@ object PermissionsResponderSpec extends E2EZSpec {
                       _.updatePermissionHasPermissions(
                         PermissionIri.unsafeFrom(permissionIri),
                         hasPermissions,
-                        rootUser,
                         UUID.randomUUID(),
                       ),
                     )
@@ -913,7 +860,6 @@ object PermissionsResponderSpec extends E2EZSpec {
                       _.updatePermissionHasPermissions(
                         PermissionIri.unsafeFrom(permissionIri),
                         hasPermissions,
-                        rootUser,
                         UUID.randomUUID(),
                       ),
                     )
@@ -941,7 +887,6 @@ object PermissionsResponderSpec extends E2EZSpec {
             _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
-              rootUser,
               UUID.randomUUID(),
             ),
           ).exit,
@@ -975,7 +920,6 @@ object PermissionsResponderSpec extends E2EZSpec {
             _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
-              rootUser,
               UUID.randomUUID(),
             ),
           ).exit,
@@ -1009,7 +953,6 @@ object PermissionsResponderSpec extends E2EZSpec {
             _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
-              rootUser,
               UUID.randomUUID(),
             ),
           ).exit,
@@ -1042,7 +985,6 @@ object PermissionsResponderSpec extends E2EZSpec {
             _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
-              rootUser,
               UUID.randomUUID(),
             ),
           ).exit,
@@ -1170,25 +1112,9 @@ object PermissionsResponderSpec extends E2EZSpec {
     suite("ask to delete a permission")(
       test("return NotFoundException if given IRI is not a permission IRI") {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/RkVssk8XRVO9hZ3VR5IpLA")
-        assertZIO(permissionResponder(_.deletePermission(permissionIri, rootUser, UUID.randomUUID())).exit)(
+        assertZIO(permissionResponder(_.deletePermission(permissionIri, UUID.randomUUID())).exit)(
           fails(
             isSubtype[NotFoundException](hasMessage(equalTo(s"Permission $permissionIri was not found"))),
-          ),
-        )
-      },
-      test("throw ForbiddenException if user requesting PermissionDeleteResponseADM is not a system or project admin") {
-        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
-        assertZIO(
-          permissionResponder(_.deletePermission(permissionIri, imagesUser02, UUID.randomUUID())).exit,
-        )(
-          fails(
-            isSubtype[ForbiddenException](
-              hasMessage(
-                equalTo(
-                  s"You are logged in with username 'user02.user', but only a system administrator or project administrator has permissions for this operation.",
-                ),
-              ),
-            ),
           ),
         )
       },
@@ -1196,7 +1122,7 @@ object PermissionsResponderSpec extends E2EZSpec {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
         for {
           actual <-
-            permissionResponder(_.deletePermission(permissionIri, rootUser, UUID.randomUUID()))
+            permissionResponder(_.deletePermission(permissionIri, UUID.randomUUID()))
         } yield assertTrue(actual.deleted)
       },
     ),

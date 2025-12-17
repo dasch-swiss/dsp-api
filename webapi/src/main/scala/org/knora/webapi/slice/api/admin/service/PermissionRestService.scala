@@ -91,7 +91,7 @@ final class PermissionRestService(
     for {
       _      <- auth.ensureSystemAdmin(user)
       uuid   <- Random.nextUUID
-      result <- responder.deletePermission(permissionIri, user, uuid)
+      result <- responder.deletePermission(permissionIri, uuid)
       ext    <- format.toExternal(result)
     } yield ext
 
@@ -115,7 +115,7 @@ final class PermissionRestService(
       newHasPermissions <- ZIO
                              .fromOption(NonEmptyChunk.fromIterableOption(request.hasPermissions))
                              .mapBoth(_ => BadRequestException("hasPermissions must not be empty"), identity)
-      result <- responder.updatePermissionHasPermissions(permissionIri, newHasPermissions, user, uuid)
+      result <- responder.updatePermissionHasPermissions(permissionIri, newHasPermissions, uuid)
       ext    <- format.toExternal(result)
     } yield ext
 
@@ -161,7 +161,7 @@ final class PermissionRestService(
       _        <- auth.ensureSystemAdmin(user)
       groupIri <- ZIO.fromEither(GroupIri.from(request.forGroup)).mapError(BadRequestException(_))
       uuid     <- Random.nextUUID
-      result   <- responder.updatePermissionsGroup(permissionIri, groupIri, user, uuid)
+      result   <- responder.updatePermissionsGroup(permissionIri, groupIri, uuid)
       ext      <- format.toExternal(result)
     } yield ext
 
