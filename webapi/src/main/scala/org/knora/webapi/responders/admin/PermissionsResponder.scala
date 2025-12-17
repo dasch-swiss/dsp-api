@@ -106,7 +106,6 @@ final class PermissionsResponder(
 
   def createAdministrativePermission(
     createRequest: CreateAdministrativePermissionAPIRequestADM,
-    requestingUser: User,
     apiRequestID: UUID,
   ): Task[AdministrativePermissionCreateResponseADM] =
     IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI) {
@@ -137,27 +136,11 @@ final class PermissionsResponder(
              )
 
         // try to retrieve the newly created permission
-        created <- administrativePermissionForIriGetRequestADM(newPermissionIri.value, requestingUser)
-      } yield AdministrativePermissionCreateResponseADM(created.administrativePermission)
+        created <- administrativePermissionService
+                     .findById(newPermissionIri)
+                     .someOrFail(NotFoundException(s"Administrative permission $newPermissionIri not found."))
+      } yield AdministrativePermissionCreateResponseADM(AdministrativePermissionADM.from(created))
     }
-
-  /**
-   * Gets a single administrative permission identified by it's IRI.
-   *
-   * @param administrativePermissionIri the IRI of the administrative permission.
-   * @param requestingUser              the requesting user.
-   * @return a single [[AdministrativePermissionADM]] object.
-   */
-  private def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: User) =
-    for {
-      administrativePermission <- permissionGetADM(administrativePermissionIri, requestingUser)
-      result                   <- administrativePermission match {
-                  case ap: AdministrativePermissionADM =>
-                    ZIO.succeed(AdministrativePermissionGetResponseADM(ap))
-                  case _ =>
-                    ZIO.fail(BadRequestException(s"$administrativePermissionIri is not an administrative permission."))
-                }
-    } yield result
 
   ///////////////////////////////////////////////////////////////////////////
   // DEFAULT OBJECT ACCESS PERMISSIONS
@@ -547,6 +530,14 @@ final class PermissionsResponder(
   ): Task[(Chunk[AdministrativePermission], Chunk[DefaultObjectAccessPermission])] =
     administrativePermissionService.findByProject(projectIri) <&> doapService.findByProject(projectIri)
 
+  private def findPermissionByIri(
+    permissionIri: PermissionIri,
+  ): Task[Either[AdministrativePermission, DefaultObjectAccessPermission]] =
+    administrativePermissionService.findById(permissionIri).flatMap {
+      case Some(adminPerm) => ZIO.left(adminPerm)
+      case None            => doapService.findById(permissionIri).someOrFail(NotFoundException.from(permissionIri)).map(Right(_))
+    }
+
   def updateDoap(
     permissionIri: PermissionIri,
     req: ChangeDoapRequest,
@@ -806,84 +797,10 @@ final class PermissionsResponder(
    * @param requestingUser the [[User]] of the requesting user.
    * @return [[PermissionItemADM]].
    */
-  private def permissionGetADM(permissionIri: IRI, requestingUser: User): Task[PermissionItemADM] =
-    for {
-      // SPARQL query statement to get permission by IRI.
-      permissionQueryResponse <- triplestore.query(Select(sparql.admin.txt.getPermissionByIRI(permissionIri)))
-
-      /* extract response rows */
-      permissionQueryResponseRows     = permissionQueryResponse.results.bindings
-      groupedPermissionsQueryResponse = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
-                                          case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-                                        }
-
-      /* check if we have found something */
-      _ <- ZIO.when(groupedPermissionsQueryResponse.isEmpty)(
-             ZIO.fail(NotFoundException(s"Permission with given IRI: $permissionIri not found.")),
-           )
-
-      projectIri <- ZIO.attempt(
-                      groupedPermissionsQueryResponse
-                        .getOrElse(
-                          OntologyConstants.KnoraAdmin.ForProject,
-                          throw InconsistentRepositoryDataException(
-                            s"Permission $permissionIri has no project attached",
-                          ),
-                        )
-                        .head,
-                    )
-
-      // Before returning the permission check that the requesting user has permission to see it
-      _ <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, ProjectIri.unsafeFrom(projectIri))
-
-      permissionType = groupedPermissionsQueryResponse
-                         .getOrElse(
-                           OntologyConstants.Rdf.Type,
-                           throw InconsistentRepositoryDataException(s"RDF type is not returned."),
-                         )
-                         .headOption
-      permission = permissionType match {
-                     case Some(OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission) =>
-                       val hasPermissions = PermissionUtilADM.parsePermissionsWithType(
-                         groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-                         PermissionType.OAP,
-                       )
-                       val forGroup =
-                         groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head)
-                       val forResourceClass =
-                         groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head)
-                       val forProperty =
-                         groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head)
-                       DefaultObjectAccessPermissionADM(
-                         iri = permissionIri,
-                         forProject = projectIri,
-                         forGroup = forGroup,
-                         forResourceClass = forResourceClass,
-                         forProperty = forProperty,
-                         hasPermissions = hasPermissions,
-                       )
-                     case Some(KnoraAdmin.AdministrativePermission) =>
-                       val forGroup = groupedPermissionsQueryResponse
-                         .getOrElse(
-                           OntologyConstants.KnoraAdmin.ForGroup,
-                           throw InconsistentRepositoryDataException(s"Permission $permissionIri has no group attached"),
-                         )
-                         .head
-                       val hasPermissions = PermissionUtilADM.parsePermissionsWithType(
-                         groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-                         PermissionType.AP,
-                       )
-
-                       AdministrativePermissionADM(
-                         iri = permissionIri,
-                         forProject = projectIri,
-                         forGroup = forGroup,
-                         hasPermissions = hasPermissions,
-                       )
-                     case _ =>
-                       throw BadRequestException(s"Invalid permission type returned, please report this as a bug.")
-                   }
-    } yield permission
+  private def permissionGetADM(permissionIri: IRI, requestingUser: User): Task[PermissionItemADM] = for {
+    admOrDoap <- findPermissionByIri(PermissionIri.unsafeFrom(permissionIri))
+    _         <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, admOrDoap.fold(_.forProject, _.forProject))
+  } yield admOrDoap.fold(AdministrativePermissionADM.from, DefaultObjectAccessPermissionADM.from)
 
   /**
    * Update an existing permission with a given parameter.

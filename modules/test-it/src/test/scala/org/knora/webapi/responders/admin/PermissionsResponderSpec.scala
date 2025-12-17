@@ -8,13 +8,12 @@ package org.knora.webapi.responders.admin
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
+
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
@@ -82,7 +81,6 @@ object PermissionsResponderSpec extends E2EZSpec {
                 forGroup = KnoraGroupRepo.builtIn.ProjectMember.id,
                 hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ).exit,
@@ -110,7 +108,6 @@ object PermissionsResponderSpec extends E2EZSpec {
                           forGroup = thingSearcherGroup.groupIri,
                           hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
                         ),
-                        rootUser,
                         UUID.randomUUID(),
                       ),
                     )
@@ -147,7 +144,6 @@ object PermissionsResponderSpec extends E2EZSpec {
                           forGroup = KnoraGroupRepo.builtIn.KnownUser.id,
                           hasPermissions = hasPermissions,
                         ),
-                        rootUser,
                         UUID.randomUUID(),
                       ),
                     )
@@ -1172,17 +1168,11 @@ object PermissionsResponderSpec extends E2EZSpec {
       },
     ),
     suite("ask to delete a permission")(
-      test("throw BadRequestException if given IRI is not a permission IRI") {
+      test("return NotFoundException if given IRI is not a permission IRI") {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/RkVssk8XRVO9hZ3VR5IpLA")
         assertZIO(permissionResponder(_.deletePermission(permissionIri, rootUser, UUID.randomUUID())).exit)(
           fails(
-            isSubtype[NotFoundException](
-              hasMessage(
-                equalTo(
-                  s"Permission with given IRI: ${permissionIri.value} not found.",
-                ),
-              ),
-            ),
+            isSubtype[NotFoundException](hasMessage(equalTo(s"Permission $permissionIri was not found"))),
           ),
         )
       },

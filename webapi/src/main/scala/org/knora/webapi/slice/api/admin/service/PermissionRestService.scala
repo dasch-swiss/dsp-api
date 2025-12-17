@@ -55,7 +55,7 @@ final class PermissionRestService(
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(request.forProject, user)
       uuid   <- Random.nextUUID
-      result <- responder.createAdministrativePermission(request, user, uuid)
+      result <- responder.createAdministrativePermission(request, uuid)
       ext    <- format.toExternal(result)
     } yield ext
 
