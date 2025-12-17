@@ -111,7 +111,7 @@ case class TestAdminApiClient(private val apiClient: TestApiClient) {
     group: GroupIri,
     user: User,
   ): Task[Response[Either[String, PermissionGetResponseADM]]] =
-    val updateReq = ChangePermissionGroupApiRequestADM(group.value)
+    val updateReq = ChangePermissionGroupApiRequestADM(group)
     apiClient.putJson[PermissionGetResponseADM, ChangePermissionGroupApiRequestADM](
       uri"/admin/permissions/$permissionIri/group",
       updateReq,

@@ -253,8 +253,7 @@ final class PermissionsResponder(
     req: CreateDefaultObjectAccessPermissionAPIRequestADM,
   ): IO[String, DefaultObjectAccessPermission] =
     for {
-      projectIri    <- ZIO.fromEither(ProjectIri.from(req.forProject))
-      project       <- knoraProjectService.findById(projectIri).orDie.someOrFail("Project not found")
+      project       <- knoraProjectService.findById(req.forProject).orDie.someOrFail("Project not found")
       permissionIri <-
         ZIO
           .foreach(req.id)(iriConverter.asSmartIri)
@@ -266,7 +265,7 @@ final class PermissionsResponder(
       propertyIri      <- ZIO.foreach(req.forProperty)(checkPropertyIri).mapError(_.getMessage)
       forWhat          <- ZIO.fromEither(ForWhat.fromIris(groupIri, resourceClassIri, propertyIri))
       _                <- ZIO.fail("Permissions needs to be supplied.").when(req.hasPermissions.isEmpty)
-      doap             <- ZIO.fromEither(DefaultObjectAccessPermission.from(permissionIri, projectIri, forWhat, req.hasPermissions))
+      doap             <- ZIO.fromEither(DefaultObjectAccessPermission.from(permissionIri, project.id, forWhat, req.hasPermissions))
     } yield doap
 
   def createDefaultObjectAccessPermission(
@@ -371,8 +370,8 @@ final class PermissionsResponder(
   def getPermissionsByProjectIri(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM] =
     findAllPermissionsByProjectIri(projectIri).map { case (aps, doaps) =>
       (
-        aps.map(p => (p.id.value, KnoraAdmin.AdministrativePermission)) ++
-          doaps.map(p => (p.id.value, KnoraAdmin.DefaultObjectAccessPermission))
+        aps.map(p => (p.id, KnoraAdmin.AdministrativePermission)) ++
+          doaps.map(p => (p.id, KnoraAdmin.DefaultObjectAccessPermission))
       ).map(PermissionInfoADM.apply).toSet
     }.map(PermissionsForProjectGetResponseADM.apply)
 
@@ -416,10 +415,10 @@ final class PermissionsResponder(
       newDoap <- doapService.save(update)
     } yield DefaultObjectAccessPermissionADM.from(newDoap)
 
-  private def checkGroupExists(groupIri: IRI): Task[GroupIri] = for {
-    gIri <- ZIO.fromEither(GroupIri.from(groupIri)).mapError(BadRequestException.apply)
-    _    <- groupService.findById(gIri).someOrFail(BadRequestException(s"Group $groupIri not found."))
-  } yield gIri
+  private def checkGroupExists(groupIri: GroupIri): Task[GroupIri] = groupService
+    .findById(groupIri)
+    .someOrFail(BadRequestException(s"Group $groupIri not found."))
+    .as(groupIri)
 
   private def checkPropertyIri(propertyIri: IRI): Task[PropertyIri] =
     iriConverter
@@ -568,8 +567,8 @@ final class PermissionsResponder(
       // Create default object access permissions for SystemAdmin of the new project
       _ <- createDefaultObjectAccessPermission(
              CreateDefaultObjectAccessPermissionAPIRequestADM(
-               forProject = project.id.value,
-               forGroup = Some(builtIn.ProjectAdmin.id.value),
+               forProject = project.id,
+               forGroup = Some(builtIn.ProjectAdmin.id),
                hasPermissions = Set(
                  PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.ProjectAdmin.id.value),
                  PermissionADM.from(Permission.ObjectAccess.Delete, builtIn.ProjectMember.id.value),
@@ -581,8 +580,8 @@ final class PermissionsResponder(
       // Create default object access permissions for ProjectAdmin of the new project
       _ <- createDefaultObjectAccessPermission(
              CreateDefaultObjectAccessPermissionAPIRequestADM(
-               forProject = project.id.value,
-               forGroup = Some(builtIn.ProjectMember.id.value),
+               forProject = project.id,
+               forGroup = Some(builtIn.ProjectMember.id),
                hasPermissions = Set(
                  PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.ProjectAdmin.id.value),
                  PermissionADM.from(Permission.ObjectAccess.Delete, builtIn.ProjectMember.id.value),

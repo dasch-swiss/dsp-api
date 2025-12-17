@@ -18,14 +18,13 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.sharedtestdata.*
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.*
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 
 object PermissionRestServiceE2ESpec extends E2EZSpec {
   private val permissionRestService = ZIO.serviceWithZIO[PermissionRestService]
-
-  val e2eSpec = suite("PermissionResponder")(
+  val e2eSpec                       = suite("PermissionResponder")(
     suite("Administrative Permission Create Requests")(
       test("return 'BadRequest' if the no permissions supplied for AdministrativePermissionCreateRequestADM") {
         val invalidName    = "Delete"
@@ -87,63 +86,12 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
       },
     ),
     suite("Default Object Access Permission Create Requests")(
-      test(
-        "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid",
-      ) {
-        permissionRestService(
-          _.createDefaultObjectAccessPermission(SharedTestDataADM.imagesUser01)(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = "invalid-project-IRI",
-              forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
-              hasPermissions = Set(
-                PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
-              ),
-            ),
-          ),
-        ).exit.map(assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("Project IRI is invalid.")))
-      },
-      test(
-        "return 'BadRequest' if the supplied group IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid",
-      ) {
-        val groupIri = "invalid-group-iri"
-        permissionRestService(
-          _.createDefaultObjectAccessPermission(SharedTestDataADM.imagesUser01)(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = SharedTestDataADM.imagesProjectIri.value,
-              forGroup = Some(groupIri),
-              hasPermissions = Set(
-                PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
-              ),
-            ),
-          ),
-        ).exit
-          .map(assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException](s"Group IRI is invalid: $groupIri")))
-      },
-      test(
-        "return 'BadRequest' if the supplied custom permission IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid",
-      ) {
-        val permissionIri = "invalid-permission-IRI"
-        permissionRestService(
-          _.createDefaultObjectAccessPermission(SharedTestDataADM.imagesUser01)(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              id = Some(permissionIri),
-              forProject = SharedTestDataADM.imagesProjectIri.value,
-              forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
-              hasPermissions = Set(
-                PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
-              ),
-            ),
-          ),
-        ).exit.map(
-          assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException](s"Couldn't parse IRI: $permissionIri")),
-        )
-      },
       test("return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM") {
         permissionRestService(
           _.createDefaultObjectAccessPermission(SharedTestDataADM.imagesUser01)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = SharedTestDataADM.imagesProjectIri.value,
-              forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
+              forProject = SharedTestDataADM.imagesProjectIri,
+              forGroup = Some(SharedTestDataADM.thingSearcherGroup.groupIri),
               hasPermissions = Set.empty[PermissionADM],
             ),
           ),
@@ -264,8 +212,8 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         permissionRestService(
           _.createDefaultObjectAccessPermission(SharedTestDataADM.anythingUser2)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = SharedTestDataADM.anythingProjectIri.value,
-              forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
+              forProject = SharedTestDataADM.anythingProjectIri,
+              forGroup = Some(SharedTestDataADM.thingSearcherGroup.groupIri),
               hasPermissions =
                 Set(PermissionADM.from(Permission.ObjectAccess.RestrictedView, SharedTestDataADM.thingSearcherGroup.id)),
             ),
@@ -285,7 +233,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
           _.createDefaultObjectAccessPermission(SharedTestDataADM.rootUser)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = anythingProjectIri,
-              forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+              forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id),
               forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
               hasPermissions = Set(
                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -308,7 +256,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
           _.createDefaultObjectAccessPermission(SharedTestDataADM.rootUser)(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = anythingProjectIri,
-              forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+              forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id),
               forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost),
               hasPermissions = Set(
                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -372,7 +320,8 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         val projectIri       = incunabulaProjectIri
         val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
         assertTrue(
-          SharedTestDataADM.rootUser.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri),
+          SharedTestDataADM.rootUser.permissions
+            .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri.value),
         )
       },
       test("return true if the user is allowed to create a resource (project admin user)") {
@@ -380,7 +329,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
         assertTrue(
           SharedTestDataADM.incunabulaProjectAdminUser.permissions
-            .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri),
+            .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri.value),
         )
       },
       test("return true if the user is allowed to create a resource (project member user)") {
@@ -388,7 +337,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
         assertTrue(
           SharedTestDataADM.incunabulaMemberUser.permissions
-            .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri),
+            .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri.value),
         )
       },
       test("return false if the user is not allowed to create a resource") {
@@ -396,7 +345,7 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
         assertTrue(
           !SharedTestDataADM.normalUser.permissions
-            .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri),
+            .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri.value),
         )
       },
       test("return true if the user is allowed to create a resource (ProjectResourceCreateRestrictedPermission)") {
@@ -404,9 +353,9 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         val allowedResourceClassIri01 = s"$IMAGES_ONTOLOGY_IRI#bild"
         val allowedResourceClassIri02 = s"$IMAGES_ONTOLOGY_IRI#bildformat"
         val result1                   = SharedTestDataADM.imagesReviewerUser.permissions
-          .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri)
+          .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri.value)
         val result2 = SharedTestDataADM.imagesReviewerUser.permissions
-          .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri02), projectIri)
+          .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri02), projectIri.value)
         assertTrue(result1, result2)
       },
       test("return false if the user is not allowed to create a resource (ProjectResourceCreateRestrictedPermission)") {
@@ -414,18 +363,22 @@ object PermissionRestServiceE2ESpec extends E2EZSpec {
         val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
         assertTrue(
           !SharedTestDataADM.imagesReviewerUser.permissions
-            .hasPermissionFor(ResourceCreateOperation(notAllowedResourceClassIri), projectIri),
+            .hasPermissionFor(ResourceCreateOperation(notAllowedResourceClassIri), projectIri.value),
         )
       },
     ),
     suite("querying the user's 'PermissionsProfileV1' with 'hasProjectAdminAllPermissionFor'")(
       test("return true if the user has the 'ProjectAdminAllPermission' (incunabula project admin user)") {
         val projectIri = incunabulaProjectIri
-        assertTrue(SharedTestDataADM.incunabulaProjectAdminUser.permissions.hasProjectAdminAllPermissionFor(projectIri))
+        assertTrue(
+          SharedTestDataADM.incunabulaProjectAdminUser.permissions.hasProjectAdminAllPermissionFor(projectIri.value),
+        )
       },
       test("return false if the user has the 'ProjectAdminAllPermission' (incunabula member user)") {
         val projectIri = incunabulaProjectIri
-        assertTrue(!SharedTestDataADM.incunabulaMemberUser.permissions.hasProjectAdminAllPermissionFor(projectIri))
+        assertTrue(
+          !SharedTestDataADM.incunabulaMemberUser.permissions.hasProjectAdminAllPermissionFor(projectIri.value),
+        )
       },
     ),
   )

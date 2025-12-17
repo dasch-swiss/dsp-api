@@ -155,7 +155,7 @@ object ProjectRestServiceSpec extends E2EZSpec {
         } yield {
           val hasAPForProjectAdmin =
             receivedApAdmin.administrativePermissions.filter { (ap: AdministrativePermissionADM) =>
-              ap.forProject == project.id.value && ap.forGroup == KnoraGroupRepo.builtIn.ProjectAdmin.id.value &&
+              ap.forProject == project.id && ap.forGroup == KnoraGroupRepo.builtIn.ProjectAdmin.id &&
               ap.hasPermissions.equals(
                 Set(
                   PermissionADM.from(Permission.Administrative.ProjectAdminAll),
@@ -166,16 +166,14 @@ object ProjectRestServiceSpec extends E2EZSpec {
           // Check Administrative Permission of ProjectMember
           val hasAPForProjectMember =
             receivedApAdmin.administrativePermissions.filter { (ap: AdministrativePermissionADM) =>
-              ap.forProject == project.id.value && ap.forGroup == KnoraGroupRepo.builtIn.ProjectMember.id.value &&
+              ap.forProject == project.id && ap.forGroup == KnoraGroupRepo.builtIn.ProjectMember.id &&
               ap.hasPermissions.equals(Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)))
             }
 
           // Check Default Object Access permission of ProjectAdmin
           val hasDOAPForProjectAdmin =
             receivedDoaps.defaultObjectAccessPermissions.filter { (doap: DefaultObjectAccessPermissionADM) =>
-              doap.forProject == project.id.value && doap.forGroup.contains(
-                KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
-              ) &&
+              doap.forProject == project.id && doap.forGroup.contains(KnoraGroupRepo.builtIn.ProjectAdmin.id) &&
               doap.hasPermissions.equals(
                 Set(
                   PermissionADM
@@ -188,9 +186,7 @@ object ProjectRestServiceSpec extends E2EZSpec {
           // Check Default Object Access permission of ProjectMember
           val hasDOAPForProjectMember =
             receivedDoaps.defaultObjectAccessPermissions.filter { (doap: DefaultObjectAccessPermissionADM) =>
-              doap.forProject == project.id.value && doap.forGroup.contains(
-                KnoraGroupRepo.builtIn.ProjectMember.id.value,
-              ) &&
+              doap.forProject == project.id && doap.forGroup.contains(KnoraGroupRepo.builtIn.ProjectMember.id) &&
               doap.hasPermissions.equals(
                 Set(
                   PermissionADM

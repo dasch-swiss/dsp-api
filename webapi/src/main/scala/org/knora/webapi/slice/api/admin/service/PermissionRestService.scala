@@ -59,12 +59,6 @@ final class PermissionRestService(
       ext    <- format.toExternal(result)
     } yield ext
 
-  private def ensureProjectIriStrExistsAndUserHasAccess(projectIri: String, user: User): Task[KnoraProject] =
-    for {
-      projectIri <- ZIO.fromEither(ProjectIri.from(projectIri)).mapError(BadRequestException.apply)
-      project    <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-    } yield project
-
   private def ensureProjectIriExistsAndUserHasAccess(projectIri: ProjectIri, user: User): Task[KnoraProject] =
     knoraProjectService
       .findById(projectIri)
@@ -99,7 +93,7 @@ final class PermissionRestService(
     request: CreateDefaultObjectAccessPermissionAPIRequestADM,
   ): Task[DefaultObjectAccessPermissionCreateResponseADM] =
     for {
-      _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
+      _      <- ensureProjectIriExistsAndUserHasAccess(request.forProject, user)
       uuid   <- Random.nextUUID
       result <- responder.createDefaultObjectAccessPermission(request, uuid)
       ext    <- format.toExternal(result)
@@ -158,11 +152,10 @@ final class PermissionRestService(
     request: ChangePermissionGroupApiRequestADM,
   ): Task[PermissionGetResponseADM] =
     for {
-      _        <- auth.ensureSystemAdmin(user)
-      groupIri <- ZIO.fromEither(GroupIri.from(request.forGroup)).mapError(BadRequestException(_))
-      uuid     <- Random.nextUUID
-      result   <- responder.updatePermissionsGroup(permissionIri, groupIri, uuid)
-      ext      <- format.toExternal(result)
+      _      <- auth.ensureSystemAdmin(user)
+      uuid   <- Random.nextUUID
+      result <- responder.updatePermissionsGroup(permissionIri, request.forGroup, uuid)
+      ext    <- format.toExternal(result)
     } yield ext
 
   def getPermissionsDaopByProjectIri(

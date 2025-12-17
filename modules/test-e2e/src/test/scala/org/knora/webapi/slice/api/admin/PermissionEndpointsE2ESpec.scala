@@ -32,7 +32,7 @@ object PermissionEndpointsE2ESpec extends E2EZSpec {
                         .getAdministrativePermissions(imageProjectIri, ProjectMember.id, rootUser)
                         .flatMap(_.assert200)
         } yield assertTrue(
-          response.administrativePermission.iri == "http://rdfh.ch/permissions/00FF/QYdrY7O6QD2VR30oaAt3Yg",
+          response.administrativePermission.iri.value == "http://rdfh.ch/permissions/00FF/QYdrY7O6QD2VR30oaAt3Yg",
         )
       },
       test("return a project's administrative permissions") {
@@ -72,8 +72,8 @@ object PermissionEndpointsE2ESpec extends E2EZSpec {
                         .flatMap(_.assert200)
           actual = response.administrativePermission
         } yield assertTrue(
-          actual.forGroup == "http://rdfh.ch/groups/0001/thing-searcher",
-          actual.forProject == "http://rdfh.ch/projects/0001",
+          actual.forGroup.value == "http://rdfh.ch/groups/0001/thing-searcher",
+          actual.forProject.value == "http://rdfh.ch/projects/0001",
           actual.hasPermissions.map(_.name).contains("ProjectAdminGroupAllPermission"),
         )
       },
@@ -83,8 +83,8 @@ object PermissionEndpointsE2ESpec extends E2EZSpec {
             TestAdminApiClient
               .createDefaultObjectAccessPermission(
                 CreateDefaultObjectAccessPermissionAPIRequestADM(
-                  forProject = anythingProjectIri.value,
-                  forGroup = Some(thingSearcherGroup.id),
+                  forProject = anythingProjectIri,
+                  forGroup = Some(thingSearcherGroup.groupIri),
                   hasPermissions = Set(
                     PermissionADM(
                       name = "D",
@@ -98,8 +98,8 @@ object PermissionEndpointsE2ESpec extends E2EZSpec {
               .flatMap(_.assert200)
           actual = response.defaultObjectAccessPermission
         } yield assertTrue(
-          actual.forGroup.contains("http://rdfh.ch/groups/0001/thing-searcher"),
-          actual.forProject == "http://rdfh.ch/projects/0001",
+          actual.forGroup.map(_.value).contains("http://rdfh.ch/groups/0001/thing-searcher"),
+          actual.forProject.value == "http://rdfh.ch/projects/0001",
           actual.hasPermissions
             .flatMap(_.additionalInformation)
             .contains("http://www.knora.org/ontology/knora-admin#ProjectMember"),
@@ -111,8 +111,8 @@ object PermissionEndpointsE2ESpec extends E2EZSpec {
             TestAdminApiClient
               .createDefaultObjectAccessPermission(
                 CreateDefaultObjectAccessPermissionAPIRequestADM(
-                  id = Some(customDOAPIri.value),
-                  forProject = imagesProjectIri.value,
+                  id = Some(customDOAPIri),
+                  forProject = imagesProjectIri,
                   forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
                   hasPermissions = Set(
                     PermissionADM(
@@ -127,9 +127,9 @@ object PermissionEndpointsE2ESpec extends E2EZSpec {
               .flatMap(_.assert200)
           actual = response.defaultObjectAccessPermission
         } yield assertTrue(
-          actual.iri == customDOAPIri.value,
+          actual.iri == customDOAPIri,
           actual.forResourceClass.contains(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
-          actual.forProject == "http://rdfh.ch/projects/00FF",
+          actual.forProject.value == "http://rdfh.ch/projects/00FF",
           actual.hasPermissions
             .flatMap(_.additionalInformation)
             .contains("http://www.knora.org/ontology/knora-admin#ProjectMember"),
@@ -149,7 +149,7 @@ object PermissionEndpointsE2ESpec extends E2EZSpec {
           response
             .asInstanceOf[AdministrativePermissionGetResponseADM]
             .administrativePermission
-            .forGroup == newGroupIri.value,
+            .forGroup == newGroupIri,
         )
       },
       test("change the group of a default object access permission") {
@@ -160,7 +160,7 @@ object PermissionEndpointsE2ESpec extends E2EZSpec {
                         .updatePermissionGroup(permissionIri, newGroupIri, rootUser)
                         .flatMap(_.assert200)
           actual = response.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM]
-        } yield assertTrue(actual.defaultObjectAccessPermission.forGroup.contains(newGroupIri.value))
+        } yield assertTrue(actual.defaultObjectAccessPermission.forGroup.contains(newGroupIri))
       },
       test("change the set of hasPermissions of an administrative permission") {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ")

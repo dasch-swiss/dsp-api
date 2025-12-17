@@ -15,6 +15,7 @@ import zio.json.JsonCodec
 import zio.json.JsonDecoder
 
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.api.admin.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.api.admin.AdminPathVariables.permissionIri
@@ -24,7 +25,7 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 
 object PermissionEndpointsRequests {
   final case class ChangeDoapRequest(
-    forGroup: Option[String] = None,
+    forGroup: Option[GroupIri] = None,
     forResourceClass: Option[String] = None,
     forProperty: Option[String] = None,
     hasPermissions: Option[Set[PermissionADM]] = None,
@@ -112,7 +113,7 @@ final class PermissionsEndpoints(base: BaseEndpoints) {
         .examples(
           List(
             Example(
-              ChangeDoapRequest(Some(KnoraGroupRepo.builtIn.ProjectMember.id.value), None, None, None),
+              ChangeDoapRequest(Some(KnoraGroupRepo.builtIn.ProjectMember.id), None, None, None),
               name = Some("For a group"),
               summary = None,
               description = None,
