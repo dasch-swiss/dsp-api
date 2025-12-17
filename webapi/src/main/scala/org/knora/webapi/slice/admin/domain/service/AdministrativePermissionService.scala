@@ -55,6 +55,15 @@ final class AdministrativePermissionService(repo: AdministrativePermissionRepo, 
            .whenZIO(triplestore.isIriInObjectPosition(Rdf.iri(entity.id.value)))
     _ <- repo.delete(entity)
   } yield ()
+
+  def setForGroup(entity: AdministrativePermission, newGroupIri: GroupIri): Task[AdministrativePermission] =
+    repo.save(entity.copy(forGroup = newGroupIri))
+
+  def setParts(
+    entity: AdministrativePermission,
+    newParts: Chunk[AdministrativePermissionPart],
+  ): Task[AdministrativePermission] =
+    repo.save(entity.copy(permissions = newParts))
 }
 
 object AdministrativePermissionService {

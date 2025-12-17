@@ -11,8 +11,6 @@ import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.UpdateNotPerformedException
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
@@ -45,33 +43,24 @@ final class DefaultObjectAccessPermissionService(
   def findByProjectAndForWhat(projectIri: ProjectIri, forWhat: ForWhat): Task[Option[DefaultObjectAccessPermission]] =
     repo.findByProjectAndForWhat(projectIri, forWhat)
 
-  def asDefaultObjectAccessPermissionADM(doap: DefaultObjectAccessPermission): DefaultObjectAccessPermissionADM =
-    DefaultObjectAccessPermissionADM(
-      doap.id.value,
-      doap.forProject.value,
-      doap.forWhat.groupOption.map(_.value),
-      doap.forWhat.resourceClassOption.map(_.value),
-      doap.forWhat.propertyOption.map(_.value),
-      asPermissionADM(doap.permission).toSet,
-    )
-
-  def asPermissionADM(parts: Chunk[DefaultObjectAccessPermissionPart]): Chunk[PermissionADM] =
-    parts.flatMap { part =>
-      part.groups.map(group =>
-        PermissionADM(
-          part.permission.token,
-          Some(group.value),
-          Some(part.permission.code),
-        ),
-      )
-    }
-
   def delete(entity: DefaultObjectAccessPermission): Task[Unit] = for {
     _ <- ZIO
            .fail(UpdateNotPerformedException(s"Permission ${entity.id} is in use and cannot be deleted."))
            .whenZIO(triplestore.isIriInObjectPosition(Rdf.iri(entity.id.value)))
     _ <- repo.delete(entity)
   } yield ()
+
+  def setForWhat(
+    entity: DefaultObjectAccessPermission,
+    newForWhat: ForWhat,
+  ): Task[DefaultObjectAccessPermission] =
+    repo.save(entity.copy(forWhat = newForWhat))
+
+  def setParts(
+    entity: DefaultObjectAccessPermission,
+    newParts: Chunk[DefaultObjectAccessPermissionPart],
+  ): Task[DefaultObjectAccessPermission] =
+    repo.save(entity.copy(permission = newParts))
 }
 
 object DefaultObjectAccessPermissionService {

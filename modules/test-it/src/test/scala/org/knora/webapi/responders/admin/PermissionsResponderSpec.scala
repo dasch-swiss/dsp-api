@@ -761,8 +761,8 @@ object PermissionsResponderSpec extends E2EZSpec {
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = Permission.Administrative.ProjectAdminAll.token,
-            additionalInformation = Some("aIRI"),
-            permissionCode = Some(1),
+            additionalInformation = None,
+            permissionCode = Some(1), // will be ignored
           ),
         )
         for {
