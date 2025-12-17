@@ -9,14 +9,15 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import play.twirl.api.TxtFormat
 import zio.*
-
 import java.nio.file.Path
 
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.RdfModel
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -29,7 +30,16 @@ import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 
-trait TriplestoreService {
+trait TriplestoreService extends QueryBuilderHelper {
+
+  def isIriInObjectPosition(iri: Iri): Task[Boolean] = query(
+    Ask(s"""
+           |ASK
+           |WHERE
+           |{
+           | ${variable("s").has(variable("p"), iri).getQueryString}
+           |}""".stripMargin),
+  )
 
   /**
    * Performs a SPARQL ASK query.

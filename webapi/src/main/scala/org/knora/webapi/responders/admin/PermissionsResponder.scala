@@ -52,7 +52,6 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final class PermissionsResponder(
@@ -412,14 +411,6 @@ final class PermissionsResponder(
   ): Task[(Chunk[AdministrativePermission], Chunk[DefaultObjectAccessPermission])] =
     administrativePermissionService.findByProject(projectIri) <&> doapService.findByProject(projectIri)
 
-  private def findPermissionByIri(
-    permissionIri: PermissionIri,
-  ): Task[Either[AdministrativePermission, DefaultObjectAccessPermission]] =
-    administrativePermissionService.findById(permissionIri).flatMap {
-      case Some(adminPerm) => ZIO.left(adminPerm)
-      case None            => doapService.findById(permissionIri).someOrFail(NotFoundException.from(permissionIri)).map(Right(_))
-    }
-
   def updateDoap(
     permissionIri: PermissionIri,
     req: ChangeDoapRequest,
@@ -543,6 +534,18 @@ final class PermissionsResponder(
     IriLocker.runWithIriLock(apiRequestID, permissionIri.value)(permissionGroupChangeTask)
   }
 
+  private def findPermissionItem(permissionIri: PermissionIri): Task[PermissionItemADM] =
+    findPermissionByIri(permissionIri)
+      .map(_.fold(AdministrativePermissionADM.from, DefaultObjectAccessPermissionADM.from))
+
+  private def findPermissionByIri(
+    permissionIri: PermissionIri,
+  ): Task[Either[AdministrativePermission, DefaultObjectAccessPermission]] =
+    administrativePermissionService.findById(permissionIri).flatMap {
+      case Some(adminPerm) => ZIO.left(adminPerm)
+      case None            => doapService.findById(permissionIri).someOrFail(NotFoundException.from(permissionIri)).map(Right(_))
+    }
+
   /**
    * Update a permission's set of hasPermissions.
    *
@@ -636,7 +639,7 @@ final class PermissionsResponder(
     permission: PermissionIri,
     changeRequest: ChangePermissionPropertyApiRequestADM,
     apiRequestID: UUID,
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] = IriLocker.runWithIriLock(apiRequestID, permission.value)(
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] = IriLocker.runWithIriLock(apiRequestID, permission)(
     updateDoapInternal(permission, ChangeDoapRequest(forProperty = Some(changeRequest.forProperty)))
       .map(DefaultObjectAccessPermissionGetResponseADM.apply),
   )
@@ -644,28 +647,13 @@ final class PermissionsResponder(
   def deletePermission(
     permissionIri: PermissionIri,
     apiRequestID: UUID,
-  ): Task[PermissionDeleteResponseADM] = {
-    val permissionDeleteTask =
-      for {
-        // check that there is a permission with a given IRI
-        _ <- findPermissionItem(permissionIri)
-        // Is permission in use?
-        _ <-
-          ZIO
-            .fail(UpdateNotPerformedException(s"Permission $permissionIri is in use and cannot be deleted."))
-            .whenZIO(triplestore.query(Ask(sparql.admin.txt.isEntityUsed(permissionIri.value))))
-        _          <- deletePermission(permissionIri.value)
-        sf          = StringFormatter.getGeneralInstance
-        iriExternal = sf.toSmartIri(permissionIri.value).toOntologySchema(ApiV2Complex).toString
-
-      } yield PermissionDeleteResponseADM(iriExternal, deleted = true)
-
-    IriLocker.runWithIriLock(apiRequestID, permissionIri.value)(permissionDeleteTask)
-  }
-
-  private def findPermissionItem(permissionIri: PermissionIri): Task[PermissionItemADM] =
-    findPermissionByIri(permissionIri)
-      .map(_.fold(AdministrativePermissionADM.from, DefaultObjectAccessPermissionADM.from))
+  ): Task[PermissionDeleteResponseADM] = IriLocker.runWithIriLock(apiRequestID, permissionIri)(for {
+    apOrDoap <- findPermissionByIri(permissionIri)
+    _        <- apOrDoap match {
+           case Left(ap)    => administrativePermissionService.delete(ap)
+           case Right(doap) => doapService.delete(doap)
+         }
+  } yield PermissionDeleteResponseADM(permissionIri))
 
   /**
    * Update an existing permission with a given parameter.
@@ -694,25 +682,6 @@ final class PermissionsResponder(
     )
     triplestore.query(Update(sparqlChangePermission))
   }
-
-  /**
-   * Delete an existing permission with a given IRI.
-   *
-   * @param permissionIri       the IRI of the permission.
-   */
-  def deletePermission(permissionIri: IRI): Task[Unit] =
-    for {
-      _ <- triplestore.query(
-             Update(sparql.admin.txt.deletePermission(AdminConstants.permissionsDataNamedGraph.value, permissionIri)),
-           )
-      _ <- ZIO
-             .die(
-               UpdateNotPerformedException(
-                 s"Permission <$permissionIri> was not erased. Please report this as a possible bug.",
-               ),
-             )
-             .whenZIO(iriService.checkIriExists(permissionIri))
-    } yield ()
 
   def createPermissionsForAdminsAndMembersOfNewProject(project: KnoraProject): Task[Unit] =
     for {

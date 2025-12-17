@@ -234,7 +234,8 @@ object DefaultObjectAccessPermissionsStringResponseADM {
  * @param permissionIri the IRI of the permission that is deleted.
  * @param deleted       status of delete operation.
  */
-case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean) extends AdminKnoraResponseADM
+case class PermissionDeleteResponseADM(permissionIri: PermissionIri, deleted: Boolean = true)
+    extends AdminKnoraResponseADM
 object PermissionDeleteResponseADM {
   implicit val codec: JsonCodec[PermissionDeleteResponseADM] = DeriveJsonCodec.gen[PermissionDeleteResponseADM]
 }
