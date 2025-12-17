@@ -41,19 +41,19 @@ import org.knora.webapi.slice.api.admin.PermissionEndpointsRequests.ChangeDoapRe
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
-final case class PermissionRestService(
-  private val responder: PermissionsResponder,
-  private val knoraProjectService: KnoraProjectService,
-  private val auth: AuthorizationRestService,
-  private val format: KnoraResponseRenderer,
-  private val administrativePermissionService: AdministrativePermissionService,
+final class PermissionRestService(
+  responder: PermissionsResponder,
+  knoraProjectService: KnoraProjectService,
+  auth: AuthorizationRestService,
+  format: KnoraResponseRenderer,
+  administrativePermissionService: AdministrativePermissionService,
 ) {
 
   def createAdministrativePermission(
     user: User,
   )(request: CreateAdministrativePermissionAPIRequestADM): Task[AdministrativePermissionCreateResponseADM] =
     for {
-      _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
+      _      <- ensureProjectIriExistsAndUserHasAccess(request.forProject, user)
       uuid   <- Random.nextUUID
       result <- responder.createAdministrativePermission(request, user, uuid)
       ext    <- format.toExternal(result)

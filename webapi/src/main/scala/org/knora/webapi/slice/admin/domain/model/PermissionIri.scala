@@ -7,11 +7,14 @@ package org.knora.webapi.slice.admin.domain.model
 
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
+import zio.json.JsonCodec
 
 import dsp.valueobjects.Iri.isIri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.DefaultPermissionProperties
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
+import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 
@@ -19,8 +22,8 @@ final case class PermissionIri private (value: String) extends StringValue
 
 object PermissionIri extends StringValueCompanion[PermissionIri] {
 
-  implicit val tapirCodec: Codec[String, PermissionIri, CodecFormat.TextPlain] =
-    Codec.string.mapEither(PermissionIri.from)(_.value)
+  given JsonCodec[PermissionIri]                            = ZioJsonCodec.stringCodec[PermissionIri](from)
+  given Codec[String, PermissionIri, CodecFormat.TextPlain] = TapirCodec.stringCodec[PermissionIri](from)
 
   /**
    * Explanation of the permission IRI regex:

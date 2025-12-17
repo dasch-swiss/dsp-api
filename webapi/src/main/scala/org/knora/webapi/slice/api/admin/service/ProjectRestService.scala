@@ -108,8 +108,13 @@ final class ProjectRestService(
                case None     => ZIO.succeed(false)
              },
            )
-    internal <- projectService.createProject(createReq).map(ProjectOperationResponseADM.apply)
-    _        <- permissionResponder.createPermissionsForAdminsAndMembersOfNewProject(internal.project.id)
+    internal     <- projectService.createProject(createReq).map(ProjectOperationResponseADM.apply)
+    knoraProject <- knoraProjectService
+                      .findById(internal.project.id)
+                      .someOrFail(
+                        NotFoundException(s"Project '${internal.project.id.value}' not found after creation."),
+                      )
+    _        <- permissionResponder.createPermissionsForAdminsAndMembersOfNewProject(knoraProject)
     external <- format.toExternal(internal)
   } yield external
 

@@ -7,8 +7,10 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.Chunk
 import zio.Task
+import zio.ZIO
 import zio.ZLayer
 
+import dsp.errors.DuplicateValueException
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
@@ -27,14 +29,15 @@ final case class AdministrativePermissionService(repo: AdministrativePermissionR
     group: KnoraGroup,
     permissions: Chunk[AdministrativePermissionPart],
   ): Task[AdministrativePermission] =
-    repo.save(
-      AdministrativePermission(
-        PermissionIri.makeNew(project.shortcode),
-        group.id,
-        project.id,
-        permissions,
+    create(AdministrativePermission(PermissionIri.makeNew(project.shortcode), group.id, project.id, permissions))
+
+  def create(adminPermission: AdministrativePermission): Task[AdministrativePermission] =
+    findByGroupAndProject(adminPermission.forGroup, adminPermission.forProject).filterOrFail(_.isEmpty)(
+      DuplicateValueException(
+        s"An administrative permission for project: '${adminPermission.forProject}' and " +
+          s"group: '${adminPermission.forGroup}' combination already exists.",
       ),
-    )
+    ) *> repo.save(adminPermission)
 }
 
 object AdministrativePermissionService {

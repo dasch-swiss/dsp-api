@@ -5,7 +5,10 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import sttp.tapir.Codec
+import sttp.tapir.CodecFormat
 import zio.NonEmptyChunk
+import zio.json.JsonCodec
 
 import scala.util.matching.Regex
 
@@ -17,6 +20,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
 import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
+import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
@@ -47,7 +51,8 @@ object KnoraProject {
 
   object ProjectIri extends StringValueCompanion[ProjectIri] {
 
-    given TapirCodec.StringCodec[ProjectIri] = TapirCodec.stringCodec(ProjectIri.from)
+    given JsonCodec[ProjectIri]                            = ZioJsonCodec.stringCodec[ProjectIri](from)
+    given Codec[String, ProjectIri, CodecFormat.TextPlain] = TapirCodec.stringCodec(from)
 
     private val BuiltInProjects: Seq[String] =
       Seq(

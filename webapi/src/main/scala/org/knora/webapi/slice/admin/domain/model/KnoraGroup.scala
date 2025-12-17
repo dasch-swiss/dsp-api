@@ -19,6 +19,8 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
+import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
+import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
@@ -72,12 +74,11 @@ object Group {
 final case class GroupIri private (override val value: String) extends StringValue {
   def isBuiltInGroupIri: Boolean = GroupIri.isBuiltInGroupIri(value)
   def isRegularGroupIri: Boolean = !isBuiltInGroupIri
-
 }
 
 object GroupIri extends StringValueCompanion[GroupIri] {
-  implicit val tapirCodec: Codec[String, GroupIri, CodecFormat.TextPlain] =
-    Codec.string.mapEither(GroupIri.from)(_.value)
+  given JsonCodec[GroupIri]                            = ZioJsonCodec.stringCodec(from)
+  given Codec[String, GroupIri, CodecFormat.TextPlain] = TapirCodec.stringCodec(from)
 
   private val BuiltInGroups =
     Chunk("UnknownUser", "KnownUser", "Creator", "ProjectMember", "ProjectAdmin", "SystemAdmin")
