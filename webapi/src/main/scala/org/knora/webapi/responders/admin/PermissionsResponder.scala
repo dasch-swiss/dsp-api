@@ -6,12 +6,13 @@
 package org.knora.webapi.responders.admin
 
 import zio.*
-import java.util.UUID
-import dsp.errors.*
 
+import java.util.UUID
+
+import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
-import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages
@@ -19,8 +20,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.DOAP
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.AdminConstants
@@ -52,10 +51,10 @@ import org.knora.webapi.slice.api.admin.PermissionEndpointsRequests.ChangeDoapRe
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final class PermissionsResponder(
@@ -154,80 +153,23 @@ final class PermissionsResponder(
       .map(_.map(DefaultObjectAccessPermissionADM.from))
       .map(DefaultObjectAccessPermissionsForProjectGetResponseADM(_))
 
-  /**
-   * Gets a single default object access permission identified by project and either:
-   * - group
-   * - resource class
-   * - resource class and property
-   * - property
-   *
-   * @param projectIri       the project's IRI.
-   * @param groupIri         the group's IRI.
-   * @param resourceClassIri the resource's class IRI
-   * @param propertyIri      the property's IRI.
-   * @return an optional [[DefaultObjectAccessPermissionADM]]
-   */
   private def defaultObjectAccessPermissionGetADM(
     projectIri: ProjectIri,
     groupIri: Option[IRI],
     resourceClassIri: Option[IRI],
     propertyIri: Option[IRI],
   ): Task[Option[DefaultObjectAccessPermissionADM]] =
-    triplestore
-      .query(
-        Select(
-          sparql.admin.txt.getDefaultObjectAccessPermission(projectIri.value, groupIri, resourceClassIri, propertyIri),
+    ZIO
+      .fromEither(
+        ForWhat.from(
+          groupIri.map(GroupIri.unsafeFrom),
+          resourceClassIri.map(InternalIri.apply),
+          propertyIri.map(InternalIri.apply),
         ),
       )
-      .flatMap(toDefaultObjectAccessPermission(_, projectIri, groupIri, resourceClassIri, propertyIri))
-
-  private def toDefaultObjectAccessPermission(
-    result: SparqlSelectResult,
-    projectIri: ProjectIri,
-    groupIri: Option[IRI],
-    resourceClassIri: Option[IRI],
-    propertyIri: Option[IRI],
-  ): Task[Option[DefaultObjectAccessPermissionADM]] =
-    ZIO.attempt {
-      val rows = result.results.bindings
-      if (rows.isEmpty) {
-        None
-      } else {
-        /* check if we only got one default object access permission back */
-        val doapCount: Int = rows.groupBy(_.rowMap("s")).size
-        if (doapCount > 1)
-          throw InconsistentRepositoryDataException(
-            s"Only one default object permission instance allowed for project: ${projectIri.value} and combination of group: $groupIri, resourceClass: $resourceClassIri, property: $propertyIri combination, but found: $doapCount.",
-          )
-
-        /* get the iri of the retrieved permission */
-        val permissionIri = result.getFirstRowOrThrow.rowMap("s")
-
-        val groupedPermissionsQueryResponse: Map[IRI, Seq[IRI]] =
-          rows.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
-            predicate -> rows.map(_.rowMap("o"))
-          }
-        val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(
-          groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-          PermissionType.OAP,
-        )
-        val doap: DefaultObjectAccessPermissionADM = DefaultObjectAccessPermissionADM(
-          iri = permissionIri,
-          forProject = groupedPermissionsQueryResponse
-            .getOrElse(
-              OntologyConstants.KnoraAdmin.ForProject,
-              throw InconsistentRepositoryDataException(s"Permission has no project."),
-            )
-            .head,
-          forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head),
-          forResourceClass =
-            groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head),
-          forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head),
-          hasPermissions = hasPermissions,
-        )
-        Some(doap)
-      }
-    }
+      .mapError(BadRequestException(_))
+      .flatMap(w => doapService.findByProjectAndForWhat(projectIri, w))
+      .map(_.map(DefaultObjectAccessPermissionADM.from))
 
   /**
    * Convenience method returning a set with combined max default object access permissions.
