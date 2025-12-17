@@ -50,6 +50,12 @@ object DefaultObjectAccessPermission {
   }
   object ForWhat {
 
+    def apply(groupIri: GroupIri): ForWhat                                           = ForWhat.Group(groupIri)
+    def apply(resourceClassIri: ResourceClassIri): ForWhat                           = ForWhat.ResourceClass(resourceClassIri.toInternalIri)
+    def apply(propertyIri: PropertyIri): ForWhat                                     = ForWhat.Property(propertyIri.toInternalIri)
+    def apply(resourceClassIri: ResourceClassIri, propertyIri: PropertyIri): ForWhat =
+      ForWhat.ResourceClassAndProperty(resourceClassIri.toInternalIri, propertyIri.toInternalIri)
+
     def fromIris(
       group: Option[GroupIri],
       resourceClass: Option[ResourceClassIri],
