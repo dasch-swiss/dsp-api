@@ -6,10 +6,9 @@
 package org.knora.webapi.responders.admin
 
 import zio.*
-
 import java.util.UUID
-
 import dsp.errors.*
+
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
@@ -152,12 +151,6 @@ final class PermissionsResponder(
       .map(_.map(DefaultObjectAccessPermissionADM.from))
       .map(DefaultObjectAccessPermissionsForProjectGetResponseADM(_))
 
-  private def defaultObjectAccessPermissionGetADM(
-    projectIri: ProjectIri,
-    forWhat: ForWhat,
-  ): Task[Option[DefaultObjectAccessPermissionADM]] =
-    doapService.findByProjectAndForWhat(projectIri, forWhat).map(_.map(DefaultObjectAccessPermissionADM.from))
-
   /**
    * Convenience method returning a set with combined max default object access permissions.
    *
@@ -165,24 +158,21 @@ final class PermissionsResponder(
    * @param groups     the list of groups for which default object access permissions are retrieved and combined.
    * @return a set of [[PermissionADM]].
    */
-  private def getDefaultObjectAccessPermissions(projectIri: ProjectIri, groups: Seq[IRI]): Task[Set[PermissionADM]] =
-    ZIO
-      .foreach(groups) { groupIri =>
-        defaultObjectAccessPermissionGetADM(projectIri, ForWhat(GroupIri.unsafeFrom(groupIri))).map {
-          _.map(_.hasPermissions).getOrElse(Set.empty[PermissionADM])
-        }
-      }
-      .map(_.flatten)
-      .map(PermissionUtilADM.removeDuplicatePermissions)
+  private def getDefaultObjectAccessPermissions(
+    projectIri: ProjectIri,
+    groups: Seq[GroupIri],
+  ): Task[Set[PermissionADM]] = ZIO
+    .foreach(groups.map(ForWhat(_)))(defaultObjectAccessPermissionsForWhatGetADM(projectIri, _))
+    .map(_.flatten)
+    .map(PermissionUtilADM.removeDuplicatePermissions)
 
   private def defaultObjectAccessPermissionsForWhatGetADM(
     projectIri: ProjectIri,
     forWhat: ForWhat,
   ): Task[Set[PermissionADM]] =
-    defaultObjectAccessPermissionGetADM(projectIri, forWhat).map {
-      case Some(doap) => doap.hasPermissions
-      case None       => Set.empty
-    }
+    doapService
+      .findByProjectAndForWhat(projectIri, forWhat)
+      .map(_.map(DefaultObjectAccessPermissionADM.from).toSet.flatMap(_.hasPermissions))
 
   /**
    * Returns a string containing default object permissions statements ready for usage during creation of a new resource.
@@ -227,7 +217,7 @@ final class PermissionsResponder(
       }
 
     val projectAdmin =
-      getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectAdmin.id.value))
+      getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectAdmin.id))
         .when(targetUser.isProjectAdmin(projectIri) || targetUser.isSystemAdmin)
 
     val resourceClassProperty = ZIO
@@ -257,19 +247,19 @@ final class PermissionsResponder(
       }
 
     val customGroups = {
-      val otherGroups = targetUser.permissions.groupsPerProject.getOrElse(projectIri.value, Seq.empty) diff
-        List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
-          .map(_.value)
+      val otherGroups =
+        targetUser.permissions.groupsPerProject.getOrElse(projectIri.value, Seq.empty).map(GroupIri.unsafeFrom) diff
+          List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
       ZIO.when(otherGroups.distinct.nonEmpty)(getDefaultObjectAccessPermissions(projectIri, otherGroups))
     }
 
     val projectMembers = ZIO
       .when(targetUser.isProjectMember(projectIri) || targetUser.isSystemAdmin)(
-        getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id.value)),
+        getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id)),
       )
 
     val knownUser = ZIO.when(!targetUser.isAnonymousUser)(
-      getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value)),
+      getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id)),
     )
 
     val permissionTasks: List[Task[Option[Set[PermissionADM]]]] =
