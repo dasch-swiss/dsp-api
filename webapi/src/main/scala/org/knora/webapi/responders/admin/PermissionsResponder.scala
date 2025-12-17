@@ -405,7 +405,11 @@ final class PermissionsResponder(
                       .when(req.hasForWhat)
                       .mapError(BadRequestException.apply)
 
-      newPermissions <- ZIO.foreach(req.hasPermissions)(asDefaultObjectAccessPermissionParts)
+      newPermissions <- ZIO.foreach(req.hasPermissions)(permissions =>
+                          ZIO
+                            .fromEither(DefaultObjectAccessPermissionPart.from(permissions.toSeq))
+                            .mapBoth(BadRequestException.apply, Chunk.fromIterable),
+                        )
 
       update = doap.copy(
                  forWhat = newForWhat.getOrElse(doap.forWhat),
@@ -430,17 +434,6 @@ final class PermissionsResponder(
     smartIri <- iriConverter.asSmartIri(resourceClassIri).mapError(BadRequestException.apply)
     rcIri    <- ZIO.fromEither(ResourceClassIri.from(smartIri)).mapError(BadRequestException.apply)
   } yield rcIri
-
-  private def asDefaultObjectAccessPermissionParts(
-    permissions: Set[PermissionADM],
-  ): IO[BadRequestException, Chunk[DefaultObjectAccessPermissionPart]] =
-    ZIO
-      .foreach(permissions)(p =>
-        ZIO
-          .fromEither(DefaultObjectAccessPermissionPart.from(p))
-          .mapError(BadRequestException.apply),
-      )
-      .map(Chunk.fromIterable)
 
   private def makeExternal(doap: DefaultObjectAccessPermissionADM): Task[DefaultObjectAccessPermissionADM] = for {
     forResourceClass <- ZIO.foreach(doap.forResourceClass)(iriConverter.asExternalIri)
@@ -503,10 +496,9 @@ final class PermissionsResponder(
                   } yield AdministrativePermissionGetResponseADM(AdministrativePermissionADM.from(saved))
                 case Right(doap) =>
                   for {
-                    parts <-
-                      ZIO.foreach(newHasPermissions)(p =>
-                        ZIO.fromEither(DefaultObjectAccessPermissionPart.from(p)).mapError(BadRequestException(_)),
-                      )
+                    parts <- ZIO
+                               .fromEither(DefaultObjectAccessPermissionPart.from(newHasPermissions))
+                               .mapBoth(BadRequestException(_), Chunk.fromIterable)
                     saved <- doapService.setParts(doap, parts)
                   } yield DefaultObjectAccessPermissionGetResponseADM(DefaultObjectAccessPermissionADM.from(saved))
               }
