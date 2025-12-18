@@ -50,13 +50,13 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.service.IriConverter
 
 final class PermissionsResponder(
-  groupService: KnoraGroupService,
-  iriService: IriService,
-  knoraProjectService: KnoraProjectService,
-  administrativePermissionService: AdministrativePermissionService,
-  iriConverter: IriConverter,
+  apService: AdministrativePermissionService,
   doapService: DefaultObjectAccessPermissionService,
-)(implicit val stringFormatter: StringFormatter) {
+  groupService: KnoraGroupService,
+  iriConverter: IriConverter,
+  iriService: IriService,
+  projectService: KnoraProjectService,
+)(implicit val sf: StringFormatter) {
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
 
@@ -66,7 +66,7 @@ final class PermissionsResponder(
   }
 
   def getPermissionsApByProjectIri(projectIri: ProjectIri): Task[AdministrativePermissionsForProjectGetResponseADM] =
-    administrativePermissionService
+    apService
       .findByProject(projectIri)
       .map(_.map(AdministrativePermissionADM.from))
       .map(AdministrativePermissionsForProjectGetResponseADM(_))
@@ -78,7 +78,7 @@ final class PermissionsResponder(
     IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI) {
       for {
         project <-
-          knoraProjectService
+          projectService
             .findById(createRequest.forProject)
             .someOrFail(NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."))
         group <- groupService
@@ -96,12 +96,12 @@ final class PermissionsResponder(
                  )
         _ <- ZIO.fail(BadRequestException("Admin Permissions need to be supplied.")).when(parts.isEmpty)
 
-        _ <- administrativePermissionService.create(
+        _ <- apService.create(
                AdministrativePermission(newPermissionIri, group.id, project.id, parts),
              )
 
         // try to retrieve the newly created permission
-        created <- administrativePermissionService
+        created <- apService
                      .findById(newPermissionIri)
                      .someOrFail(NotFoundException(s"Administrative permission $newPermissionIri not found."))
       } yield AdministrativePermissionCreateResponseADM(AdministrativePermissionADM.from(created))
@@ -253,7 +253,7 @@ final class PermissionsResponder(
     req: CreateDefaultObjectAccessPermissionAPIRequestADM,
   ): IO[String, DefaultObjectAccessPermission] =
     for {
-      project       <- knoraProjectService.findById(req.forProject).orDie.someOrFail("Project not found")
+      project       <- projectService.findById(req.forProject).orDie.someOrFail("Project not found")
       permissionIri <-
         ZIO
           .foreach(req.id)(iriConverter.asSmartIri)
@@ -378,7 +378,7 @@ final class PermissionsResponder(
   private def findAllPermissionsByProjectIri(
     projectIri: ProjectIri,
   ): Task[(Chunk[AdministrativePermission], Chunk[DefaultObjectAccessPermission])] =
-    administrativePermissionService.findByProject(projectIri) <&> doapService.findByProject(projectIri)
+    apService.findByProject(projectIri) <&> doapService.findByProject(projectIri)
 
   def updateDoap(
     permissionIri: PermissionIri,
@@ -450,7 +450,7 @@ final class PermissionsResponder(
       perm   <- findPermissionByIri(permissionIri)
       result <- perm match {
                   case Left(ap: AdministrativePermission) =>
-                    administrativePermissionService
+                    apService
                       .setForGroup(ap, groupIri)
                       .map(AdministrativePermissionADM.from)
                       .map(AdministrativePermissionGetResponseADM(_))
@@ -466,7 +466,7 @@ final class PermissionsResponder(
   private def findPermissionByIri(
     permissionIri: PermissionIri,
   ): Task[Either[AdministrativePermission, DefaultObjectAccessPermission]] =
-    administrativePermissionService.findById(permissionIri).flatMap {
+    apService.findById(permissionIri).flatMap {
       case Some(adminPerm) => ZIO.left(adminPerm)
       case None            => doapService.findById(permissionIri).someOrFail(NotFoundException.from(permissionIri)).map(Right(_))
     }
@@ -492,7 +492,7 @@ final class PermissionsResponder(
                     parts <- ZIO.foreach(newHasPermissions)(p =>
                                ZIO.fromEither(AdministrativePermissionPart.from(p)).mapError(BadRequestException(_)),
                              )
-                    saved <- administrativePermissionService.setParts(ap, parts)
+                    saved <- apService.setParts(ap, parts)
                   } yield AdministrativePermissionGetResponseADM(AdministrativePermissionADM.from(saved))
                 case Right(doap) =>
                   for {
@@ -536,7 +536,7 @@ final class PermissionsResponder(
   ): Task[PermissionDeleteResponseADM] = IriLocker.runWithIriLock(apiRequestID, permissionIri)(for {
     apOrDoap <- findPermissionByIri(permissionIri)
     _        <- apOrDoap match {
-           case Left(ap)    => administrativePermissionService.delete(ap)
+           case Left(ap)    => apService.delete(ap)
            case Right(doap) => doapService.delete(doap)
          }
   } yield PermissionDeleteResponseADM(permissionIri))
@@ -544,13 +544,13 @@ final class PermissionsResponder(
   def createPermissionsForAdminsAndMembersOfNewProject(project: KnoraProject): Task[Unit] =
     for {
       // Give the admins of the new project rights for any operation in project level, and rights to create resources.
-      _ <- administrativePermissionService.create(
+      _ <- apService.create(
              project,
              builtIn.ProjectAdmin,
              Chunk(Simple.unsafeFrom(ProjectAdminAll), Simple.unsafeFrom(ProjectResourceCreateAll)),
            )
       // Give the members of the new project rights to create resources.
-      _ <- administrativePermissionService.create(
+      _ <- apService.create(
              project,
              builtIn.ProjectMember,
              Chunk(Simple.unsafeFrom(ProjectResourceCreateAll)),
