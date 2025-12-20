@@ -461,7 +461,7 @@ object DateUtil {
       case KnoraCalendarType.JULIAN    => new Date(java.lang.Long.MAX_VALUE) // for Julian: if calendar given in Julian cal
       case KnoraCalendarType.GREGORIAN =>
         new Date(java.lang.Long.MIN_VALUE) // for Gregorian: if calendar given in Gregorian cal
-      case _ => throw BadRequestException(s"Invalid calendar name: $calendarType")
+      case _                           => throw BadRequestException(s"Invalid calendar name: $calendarType")
     }
 
   /**
