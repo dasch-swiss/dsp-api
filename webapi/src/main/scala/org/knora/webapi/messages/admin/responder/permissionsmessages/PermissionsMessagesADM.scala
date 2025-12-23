@@ -11,12 +11,11 @@ import zio.json.JsonCodec
 import zio.json.jsonDiscriminator
 import zio.json.jsonField
 
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -54,9 +53,9 @@ object CreateAdministrativePermissionAPIRequestADM {
  * @param hasPermissions   the permissions
  */
 case class CreateDefaultObjectAccessPermissionAPIRequestADM(
-  id: Option[IRI] = None,
-  forProject: IRI,
-  forGroup: Option[IRI] = None,
+  id: Option[PermissionIri] = None,
+  forProject: ProjectIri,
+  forGroup: Option[GroupIri] = None,
   forResourceClass: Option[IRI] = None,
   forProperty: Option[IRI] = None,
   hasPermissions: Set[PermissionADM],
@@ -71,15 +70,7 @@ object CreateDefaultObjectAccessPermissionAPIRequestADM {
  *
  * @param forGroup the new group IRI.
  */
-case class ChangePermissionGroupApiRequestADM(forGroup: IRI) {
-
-  if (forGroup.isEmpty) {
-    throw BadRequestException(s"IRI of new group cannot be empty.")
-  }
-  Iri
-    .validateAndEscapeIri(forGroup)
-    .getOrElse(throw BadRequestException(s"Invalid IRI $forGroup is given."))
-}
+case class ChangePermissionGroupApiRequestADM(forGroup: GroupIri)
 object ChangePermissionGroupApiRequestADM {
   implicit val codec: JsonCodec[ChangePermissionGroupApiRequestADM] =
     DeriveJsonCodec.gen[ChangePermissionGroupApiRequestADM]
@@ -233,7 +224,8 @@ object DefaultObjectAccessPermissionsStringResponseADM {
  * @param permissionIri the IRI of the permission that is deleted.
  * @param deleted       status of delete operation.
  */
-case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean) extends AdminKnoraResponseADM
+case class PermissionDeleteResponseADM(permissionIri: PermissionIri, deleted: Boolean = true)
+    extends AdminKnoraResponseADM
 object PermissionDeleteResponseADM {
   implicit val codec: JsonCodec[PermissionDeleteResponseADM] = DeriveJsonCodec.gen[PermissionDeleteResponseADM]
 }
@@ -347,29 +339,12 @@ object PermissionsDataADM {
  * @param iri            the IRI of the permission.
  * @param permissionType the type of the permission.
  */
-case class PermissionInfoADM(iri: IRI, permissionType: IRI)
+case class PermissionInfoADM(iri: PermissionIri, permissionType: String)
 object PermissionInfoADM {
   implicit val codec: JsonCodec[PermissionInfoADM] = DeriveJsonCodec.gen[PermissionInfoADM]
 }
 
 abstract class PermissionItemADM
-
-/**
- * Represents object access permissions attached to a resource OR value via the
- * 'knora-base:hasPermission' property.
- *
- * @param forResource    the IRI of the resource.
- * @param forValue       the IRI of the value.
- * @param hasPermissions the permissions.
- */
-case class ObjectAccessPermissionADM(
-  forResource: Option[IRI] = None,
-  forValue: Option[IRI] = None,
-  hasPermissions: Set[PermissionADM],
-) extends PermissionItemADM
-object ObjectAccessPermissionADM {
-  implicit val codec: JsonCodec[ObjectAccessPermissionADM] = DeriveJsonCodec.gen[ObjectAccessPermissionADM]
-}
 
 /**
  * Represents 'knora-base:AdministrativePermission'
@@ -379,16 +354,20 @@ object ObjectAccessPermissionADM {
  * @param forGroup       the group this permission applies to.
  * @param hasPermissions the administrative permissions.
  */
-case class AdministrativePermissionADM(iri: IRI, forProject: IRI, forGroup: IRI, hasPermissions: Set[PermissionADM])
-    extends PermissionItemADM
+case class AdministrativePermissionADM(
+  iri: PermissionIri,
+  forProject: ProjectIri,
+  forGroup: GroupIri,
+  hasPermissions: Set[PermissionADM],
+) extends PermissionItemADM
 
 object AdministrativePermissionADM {
   implicit val codec: JsonCodec[AdministrativePermissionADM]                  = DeriveJsonCodec.gen[AdministrativePermissionADM]
   def from(permission: AdministrativePermission): AdministrativePermissionADM =
     AdministrativePermissionADM(
-      iri = permission.id.value,
-      forProject = permission.forProject.value,
-      forGroup = permission.forGroup.value,
+      iri = permission.id,
+      forProject = permission.forProject,
+      forGroup = permission.forGroup,
       hasPermissions = permission.permissions.flatMap(PermissionADM.from).toSet,
     )
 }
@@ -404,9 +383,9 @@ object AdministrativePermissionADM {
  * @param hasPermissions   the permissions.
  */
 case class DefaultObjectAccessPermissionADM(
-  iri: IRI,
-  forProject: IRI,
-  forGroup: Option[IRI] = None,
+  iri: PermissionIri,
+  forProject: ProjectIri,
+  forGroup: Option[GroupIri] = None,
   forResourceClass: Option[IRI] = None,
   forProperty: Option[IRI] = None,
   hasPermissions: Set[PermissionADM],
@@ -414,6 +393,16 @@ case class DefaultObjectAccessPermissionADM(
 object DefaultObjectAccessPermissionADM {
   implicit val codec: JsonCodec[DefaultObjectAccessPermissionADM] =
     DeriveJsonCodec.gen[DefaultObjectAccessPermissionADM]
+
+  def from(perm: DefaultObjectAccessPermission) =
+    DefaultObjectAccessPermissionADM(
+      iri = perm.id,
+      forProject = perm.forProject,
+      forGroup = perm.forWhat.groupOption,
+      forResourceClass = perm.forWhat.resourceClassOption.map(_.value),
+      forProperty = perm.forWhat.propertyOption.map(_.value),
+      hasPermissions = perm.permission.flatMap(PermissionADM.from).toSet,
+    )
 }
 
 /**
@@ -447,6 +436,15 @@ object PermissionADM {
       case AdministrativePermissionPart.ProjectAdminGroupRestricted(groupIris) =>
         groupIris.map(_.value).map(PermissionADM.from(part.permission, _))
     }
+
+  def from(part: DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart): Chunk[PermissionADM] =
+    part.groups.map(group =>
+      PermissionADM(
+        part.permission.token,
+        Some(group.value),
+        codeFrom(part.permission),
+      ),
+    )
 }
 
 /* Creating a resource of a certain class */
