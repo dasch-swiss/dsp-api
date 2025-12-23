@@ -1,5 +1,16 @@
 # Changelog
 
+## [34.0.1](https://github.com/dasch-swiss/dsp-api/compare/v34.0.0...v34.0.1) (2025-12-23)
+
+
+### Maintenances
+
+* Migrate getListNodeQuery, getListNodeWithChildren and getParentNodeQuery to rdf4j (DEV-5744) ([#3914](https://github.com/dasch-swiss/dsp-api/issues/3914)) ([c2b7338](https://github.com/dasch-swiss/dsp-api/commit/c2b7338140f63738c85e4a3647ab338eeed66c1c))
+* Migrate queries to rdf4j (DEV-5742) ([#3912](https://github.com/dasch-swiss/dsp-api/issues/3912)) ([f83738f](https://github.com/dasch-swiss/dsp-api/commit/f83738f5b7ac403a5f2ab767e59658fcf484f9e0))
+* Remove queries and replace with using service ([#3916](https://github.com/dasch-swiss/dsp-api/issues/3916)) ([77e3876](https://github.com/dasch-swiss/dsp-api/commit/77e3876093ac58313659e16e9863a851bd02cc6b))
+* Replace createAdministrativePermissions query with using service (DEV-5752) ([#3915](https://github.com/dasch-swiss/dsp-api/issues/3915)) ([f2567e6](https://github.com/dasch-swiss/dsp-api/commit/f2567e6d17d9e75b8e276ebe5574cba59528dfd3))
+* Tracing (DEV-5672) ([#3907](https://github.com/dasch-swiss/dsp-api/issues/3907)) ([b686b38](https://github.com/dasch-swiss/dsp-api/commit/b686b38e44019114cf71320d9af68ae192936bda))
+
 ## [34.0.0](https://github.com/dasch-swiss/dsp-api/compare/v33.2.0...v34.0.0) (2025-12-15)
 
 
