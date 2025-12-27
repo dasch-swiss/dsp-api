@@ -9,6 +9,8 @@ import zio.Chunk
 import zio.json.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v2.IriDto
+import org.knora.webapi.slice.api.v3.V3ErrorCode.invalid_resourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
@@ -47,7 +49,13 @@ object NotFound:
 
 case class BadRequest(message: String = "Bad Request", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
 object BadRequest {
+
   given JsonCodec[BadRequest] = DeriveJsonCodec.gen[BadRequest]
+
+  def invalidResourceClassIri(iri: IriDto, reason: String): BadRequest = {
+    val msg = s"$iri is not a valid resource class IRI"
+    BadRequest(msg, Chunk(ErrorDetail(invalid_resourceClassIri, msg, Map("iri" -> iri.value, "reason" -> reason))))
+  }
 }
 
 final case class Unauthorized(message: String = "Unauthorized", errors: Chunk[ErrorDetail] = Chunk.empty)

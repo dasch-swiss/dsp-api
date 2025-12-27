@@ -11,6 +11,7 @@ import zio.*
 class ResourcesServerEndpointsV3(endpoints: ResourcesEndpointsV3, restService: ResourcesRestServiceV3) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
+    endpoints.getResources.serverLogic(restService.getResources),
     endpoints.getResourcesResourcesPerOntology.zServerLogic(restService.resourcesPerOntology),
   )
 }
