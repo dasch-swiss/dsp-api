@@ -130,7 +130,7 @@ object Dependencies {
 
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.0"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.3"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.13.2"
 
