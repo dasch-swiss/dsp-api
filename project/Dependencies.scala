@@ -18,7 +18,7 @@ object Dependencies {
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion = "5.2.0"
+  val Rdf4jVersion = "5.2.2"
   val JenaVersion  = "5.2.0"
 
   val ZioConfigVersion            = "4.0.6"
