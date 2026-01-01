@@ -154,7 +154,7 @@ object Dependencies {
   val otelVersion = "1.56.0"
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.12",
+    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.13",
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
