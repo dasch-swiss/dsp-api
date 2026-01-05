@@ -5,8 +5,10 @@
 
 package org.knora.webapi.slice.api.v2.authentication
 
+import sttp.model.headers.CookieValueWithMeta
 import zio.*
 
+import java.time.Instant
 import scala.annotation.unused
 
 import dsp.errors.BadCredentialsException
@@ -19,10 +21,14 @@ import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.Lo
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload.UsernamePassword
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LogoutResponse
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.TokenResponse
+import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
 
-final class AuthenticationRestService(authenticator: Authenticator, appConfig: AppConfig) {
+final case class AuthenticationRestService(
+  private val authenticator: Authenticator,
+  private val appConfig: AppConfig,
+) {
 
   def loginForm(@unused ignored: Unit): UIO[String] =
     val apiUrl = appConfig.knoraApi.externalKnoraApiBaseUrl
@@ -42,7 +48,7 @@ final class AuthenticationRestService(authenticator: Authenticator, appConfig: A
          |        </div>
          |      </section>
          |      <section class="about">
-         |        <p class="about-author">&copy; 2015&ndash;2024 <a href="https://dasch.swiss" target="_blank">dasch.swiss</a></p>
+         |        <p class="about-author">&copy; 2015&ndash;2026 <a href="https://dasch.swiss" target="_blank">dasch.swiss</a></p>
          |      </section>
          |    </div>
          |  </body>
@@ -50,25 +56,51 @@ final class AuthenticationRestService(authenticator: Authenticator, appConfig: A
             """.stripMargin
     ZIO.succeed(form)
 
-  def authenticate(login: LoginForm): IO[BadCredentialsException, TokenResponse] =
+  def authenticate(login: LoginForm): IO[BadCredentialsException, (CookieValueWithMeta, TokenResponse)] =
     (for {
       username <- ZIO.fromEither(Username.from(login.username))
-      userJwt  <- authenticator.authenticate(username, login.password)
-      (_, jwt)  = userJwt
-    } yield TokenResponse(jwt))
+      token    <- authenticator.authenticate(username, login.password)
+    } yield setCookieAndResponse(token._2))
       .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
-  def authenticate(login: LoginPayload): IO[BadCredentialsException, TokenResponse] =
+  def authenticate(login: LoginPayload): IO[BadCredentialsException, (CookieValueWithMeta, TokenResponse)] =
     (login match {
       case IriPassword(iri, password)           => authenticator.authenticate(iri, password)
       case UsernamePassword(username, password) => authenticator.authenticate(username, password)
       case EmailPassword(email, password)       => authenticator.authenticate(email, password)
-    }).mapBoth(_ => BadCredentialsException(BAD_CRED_NOT_VALID), (_, jwt) => TokenResponse(jwt))
+    }).mapBoth(_ => BadCredentialsException(BAD_CRED_NOT_VALID), (_, token) => setCookieAndResponse(token))
 
-  def logout(tokenFromBearer: Option[String]) =
-    ZIO.foreachDiscard(tokenFromBearer)(authenticator.invalidateToken).ignore.as(LogoutResponse(0, "Logout OK"))
+  private def setCookieAndResponse(token: Jwt) =
+    (
+      CookieValueWithMeta.unsafeApply(
+        domain = Some(appConfig.cookieDomain),
+        httpOnly = true,
+        path = Some("/"),
+        value = token.jwtString,
+      ),
+      TokenResponse(token.jwtString),
+    )
+
+  def logout(tokenFromBearer: Option[String], tokenFromCookie: Option[String]) =
+    ZIO
+      .foreachDiscard(Set(tokenFromBearer, tokenFromCookie).flatten)(authenticator.invalidateToken)
+      .ignore
+      .as {
+        (
+          CookieValueWithMeta.unsafeApply(
+            domain = Some(appConfig.cookieDomain),
+            expires = Some(Instant.EPOCH),
+            httpOnly = true,
+            maxAge = Some(0),
+            path = Some("/"),
+            value = "",
+          ),
+          LogoutResponse(0, "Logout OK"),
+        )
+      }
+
 }
 
 object AuthenticationRestService {
-  private[authentication] val layer = zio.ZLayer.derive[AuthenticationRestService]
+  val layer = zio.ZLayer.derive[AuthenticationRestService]
 }
