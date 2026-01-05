@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -60,7 +60,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
             _    <- ZIO.serviceWithZIO[TriplestoreService](_.dropDataGraphByGraph())
             query = s"""
                        |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                       |                          
+                       |
                        |ASK WHERE {
                        |  <http://anArticle> a <${Biblio.Class.Article.value}> .
                        |}
@@ -149,7 +149,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
         test("should return true if anArticle exists") {
           val query = s"""
                          |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                         |                          
+                         |
                          |ASK WHERE {
                          |  <http://anArticle> a <${Biblio.Class.Article.value}> .
                          |}
