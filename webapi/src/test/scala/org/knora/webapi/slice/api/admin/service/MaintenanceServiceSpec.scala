@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -44,9 +44,9 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
   private def saveStillImageFileValueWithDimensions(width: Int, height: Int) = TestTripleStore
     .setDatasetFromTriG(s"""
                            | @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
-                           | @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> . 
+                           | @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
                            | @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-                           | 
+                           |
                            | <$projectDataNamedGraphIri> {
                            |   <$testValueIri> a knora-base:StillImageFileValue;
                            |     knora-base:dimX "$width"^^xsd:integer;
