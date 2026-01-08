@@ -9,12 +9,9 @@ import sttp.model.headers.CookieValueWithMeta
 import zio.*
 
 import java.time.Instant
-import scala.annotation.unused
 
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginForm
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload.EmailPassword
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload.IriPassword
@@ -29,39 +26,6 @@ final case class AuthenticationRestService(
   private val authenticator: Authenticator,
   private val appConfig: AppConfig,
 ) {
-
-  def loginForm(@unused ignored: Unit): UIO[String] =
-    val apiUrl = appConfig.knoraApi.externalKnoraApiBaseUrl
-    val form   =
-      s"""
-         |<html lang="en">
-         |  <body>
-         |    <div align="center">
-         |      <section class="container">
-         |        <div class="login">
-         |          <h1>DSP-API Login</h1>
-         |          <form name="myform" action="$apiUrl/v2/login" method="post">
-         |            <p><input type="text" name="username" value="" placeholder="Username"></p>
-         |            <p><input type="password" name="password" value="" placeholder="Password"></p>
-         |            <p class="submit"><input type="submit" name="submit" value="Login"></p>
-         |          </form>
-         |        </div>
-         |      </section>
-         |      <section class="about">
-         |        <p class="about-author">&copy; 2015&ndash;2026 <a href="https://dasch.swiss" target="_blank">dasch.swiss</a></p>
-         |      </section>
-         |    </div>
-         |  </body>
-         |</html>
-            """.stripMargin
-    ZIO.succeed(form)
-
-  def authenticate(login: LoginForm): IO[BadCredentialsException, (CookieValueWithMeta, TokenResponse)] =
-    (for {
-      username <- ZIO.fromEither(Username.from(login.username))
-      token    <- authenticator.authenticate(username, login.password)
-    } yield setCookieAndResponse(token._2))
-      .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   def authenticate(login: LoginPayload): IO[BadCredentialsException, (CookieValueWithMeta, TokenResponse)] =
     (login match {

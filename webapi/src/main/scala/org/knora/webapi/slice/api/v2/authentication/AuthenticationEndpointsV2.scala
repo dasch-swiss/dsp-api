@@ -45,16 +45,6 @@ case class AuthenticationEndpointsV2(
     .in(cookie[Option[String]](cookieName))
     .out(setCookie(cookieName))
     .out(jsonBody[LogoutResponse])
-
-  val getV2Login = baseEndpoints.publicEndpoint.get
-    .in("v2" / "login")
-    .out(htmlBodyUtf8)
-
-  val postV2Login = baseEndpoints.publicEndpoint.post
-    .in("v2" / "login")
-    .in(formBody[LoginForm])
-    .out(setCookie(cookieName))
-    .out(jsonBody[TokenResponse])
 }
 
 object AuthenticationEndpointsV2 {
@@ -106,6 +96,4 @@ object AuthenticationEndpointsV2 {
 
     given loginPayloadCodec: JsonCodec[LoginPayload] = JsonCodec(loginPayloadEncoder, loginPayloadDecoder)
   }
-
-  final case class LoginForm(username: String, password: String)
 }
