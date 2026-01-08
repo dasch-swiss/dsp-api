@@ -1,5 +1,12 @@
 # Changelog
 
+## [34.1.1](https://github.com/dasch-swiss/dsp-api/compare/v34.1.0...v34.1.1) (2026-01-08)
+
+
+### Maintenances
+
+* Partially re-revert over-reverted cookie removal ([#3920](https://github.com/dasch-swiss/dsp-api/issues/3920)) ([91df139](https://github.com/dasch-swiss/dsp-api/commit/91df139c26ddd1f14fbe9c6d51cac4a56610c186))
+
 ## [34.1.0](https://github.com/dasch-swiss/dsp-api/compare/v34.0.0...v34.1.0) (2026-01-05)
 
 
