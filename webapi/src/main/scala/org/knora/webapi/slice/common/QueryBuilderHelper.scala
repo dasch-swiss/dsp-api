@@ -10,12 +10,16 @@ import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.PropertyPath
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
+import org.eclipse.rdf4j.sparqlbuilder.core.From
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatternNotTriples
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfSubject
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfValue
 
 import java.time.Instant
@@ -38,6 +42,7 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
 trait QueryBuilderHelper {
@@ -83,6 +88,11 @@ trait QueryBuilderHelper {
 
   def toPropertyPatterns(iri: Iri, values: Iterable[PredicateInfoV2]): List[TriplePattern] =
     values.flatMap(pred => pred.objects.map(obj => iri.has(toRdfIri(pred.predicateIri), toRdfValue(obj)))).toList
+
+  def fromDataGraph(prj: KnoraProject): From = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(prj)))
+
+  def filterNotExistsIsDeleted(sub: RdfSubject): GraphPatternNotTriples =
+    GraphPatterns.filterNotExists(sub.has(KnoraBase.isDeleted, true))
 
   def graphIri(knoraProject: KnoraProject): Iri = Rdf.iri(ProjectService.projectDataNamedGraphV2(knoraProject).value)
 
