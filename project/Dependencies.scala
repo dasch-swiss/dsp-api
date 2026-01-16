@@ -25,7 +25,7 @@ object Dependencies {
   val ZioLoggingVersion           = "2.5.2"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.5.4"
-  val ZioPreludeVersion           = "1.0.0-RC44"
+  val ZioPreludeVersion           = "1.0.0-RC45"
   val ZioSchemaVersion            = "1.7.5"
   val ZioMockVersion              = "1.0.0-RC12"
   val ZioVersion                  = "2.1.23"
@@ -117,7 +117,7 @@ object Dependencies {
 
   // other
   val gwtServlet     = "com.google.gwt"        % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"           % "icu4j"            % "78.1"
+  val icu4j          = "com.ibm.icu"           % "icu4j"            % "78.2"
   val jakartaJSON    = "org.glassfish"         % "jakarta.json"     % "2.0.1"
   val saxonHE        = "net.sf.saxon"          % "Saxon-HE"         % "12.9"
   val scalaGraph     = "org.scala-graph"      %% "graph-core"       % "2.0.2"

@@ -1,10 +1,11 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.slice.admin.domain.model
 
+import cats.implicits.*
 import zio.Chunk
 import zio.NonEmptyChunk
 import zio.Task
@@ -13,6 +14,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionA
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -50,6 +52,12 @@ object DefaultObjectAccessPermission {
   }
   object ForWhat {
 
+    def apply(groupIri: GroupIri): ForWhat                                           = ForWhat.Group(groupIri)
+    def apply(resourceClassIri: ResourceClassIri): ForWhat                           = ForWhat.ResourceClass(resourceClassIri.toInternalIri)
+    def apply(propertyIri: PropertyIri): ForWhat                                     = ForWhat.Property(propertyIri.toInternalIri)
+    def apply(resourceClassIri: ResourceClassIri, propertyIri: PropertyIri): ForWhat =
+      ForWhat.ResourceClassAndProperty(resourceClassIri.toInternalIri, propertyIri.toInternalIri)
+
     def fromIris(
       group: Option[GroupIri],
       resourceClass: Option[ResourceClassIri],
@@ -80,22 +88,35 @@ object DefaultObjectAccessPermission {
     groups: NonEmptyChunk[GroupIri],
   )
   object DefaultObjectAccessPermissionPart {
-    def from(adm: PermissionADM): Either[String, DefaultObjectAccessPermissionPart] =
-      for {
-        group <- adm.additionalInformation.toRight("No object access group present").flatMap(GroupIri.from)
-        perm  <- (adm.permissionCode, adm.name) match
-                  case (None, name)                        => Permission.ObjectAccess.fromToken(name)
-                  case (Some(code), name) if name.nonEmpty =>
-                    for {
-                      perm1 <- Permission.ObjectAccess.from(code)
-                      perm2 <- Permission.ObjectAccess.fromToken(name)
-                      p     <-
-                        if perm1 == perm2 then Right(perm1)
-                        else Left(s"Given permission code '$code' and permission name '$name' are not consistent.")
-                    } yield p
-                  case (Some(code), _) => Permission.ObjectAccess.from(code)
+    def from(permissions: Seq[PermissionADM]): Either[String, Seq[DefaultObjectAccessPermissionPart]] =
+      permissions.traverse(extractObjectAccessPermissionAndGroupIri).flatMap { permsAndGroups =>
+        permsAndGroups.groupMap { case (perm, _) => perm } { case (_, group) => group }.toSeq.traverse(makePart)
+      }
 
-      } yield DefaultObjectAccessPermissionPart(perm, NonEmptyChunk(group))
+    private def extractObjectAccessPermissionAndGroupIri(adm: PermissionADM): Either[String, (ObjectAccess, GroupIri)] =
+      for {
+        permFromName <- Option.when(adm.name != "")(adm.name).traverse(ObjectAccess.fromToken)
+        permFromCode <- adm.permissionCode.traverse(ObjectAccess.from)
+        perm         <- (permFromName, permFromCode) match {
+                  case (Some(p), None)      => Right(p)
+                  case (None, Some(p))      => Right(p)
+                  case (Some(p1), Some(p2)) =>
+                    if (p1 == p2) Right(p1)
+                    else
+                      Left(
+                        s"Given permission code '${adm.permissionCode.get}' and permission name '${adm.name}' are not consistent.",
+                      )
+                  case (None, None) =>
+                    Left(s"Invalid permission token '', it should be one of ${ObjectAccess.allTokens.mkString(", ")}")
+                }
+        group <- adm.additionalInformation.toRight("No object access group present").flatMap(GroupIri.from)
+      } yield (perm, group)
+
+    private def makePart(perm: ObjectAccess, groups: Seq[GroupIri]): Either[String, DefaultObjectAccessPermissionPart] =
+      NonEmptyChunk
+        .fromIterableOption(groups)
+        .toRight("No groups found for permission")
+        .map(DefaultObjectAccessPermissionPart(perm, _))
   }
 
   def from(
@@ -104,11 +125,9 @@ object DefaultObjectAccessPermission {
     forWhat: ForWhat,
     perms: Set[PermissionADM],
   ): Either[String, DefaultObjectAccessPermission] =
-    perms
-      .map(DefaultObjectAccessPermissionPart.from)
-      .map(_.map(Chunk(_)))
-      .fold(Right(Chunk.empty))((a, b) => a.flatMap(aa => b.map(bb => aa ++ bb)))
-      .flatMap(NonEmptyChunk.fromChunk(_).toRight("No permissions found"))
+    DefaultObjectAccessPermissionPart
+      .from(perms.toSeq)
+      .flatMap(NonEmptyChunk.fromIterableOption(_).toRight("No permissions found"))
       .map(DefaultObjectAccessPermission(id, forProject, forWhat, _))
 }
 

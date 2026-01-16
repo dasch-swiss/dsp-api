@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -66,31 +66,40 @@ object Permission {
     val codeByToken: Map[String, Int] = all.map(p => p.token -> p.code).toMap
   }
 
-  sealed trait Administrative extends Permission
+  sealed trait Administrative extends Permission {
+    def isSimple: Boolean
+    def isRestricted: Boolean = !isSimple
+  }
 
   object Administrative {
     case object ProjectResourceCreateAll extends Administrative {
-      override val token: String = "ProjectResourceCreateAllPermission"
+      override val token: String     = "ProjectResourceCreateAllPermission"
+      override val isSimple: Boolean = true
     }
 
     case object ProjectResourceCreateRestricted extends Administrative {
-      override val token: String = "ProjectResourceCreateRestrictedPermission"
+      override val token: String     = "ProjectResourceCreateRestrictedPermission"
+      override val isSimple: Boolean = true
     }
 
     case object ProjectAdminAll extends Administrative {
-      override val token: String = "ProjectAdminAllPermission"
+      override val token: String     = "ProjectAdminAllPermission"
+      override val isSimple: Boolean = true
     }
 
     case object ProjectAdminGroupAll extends Administrative {
-      override val token: String = "ProjectAdminGroupAllPermission"
+      override val token: String     = "ProjectAdminGroupAllPermission"
+      override val isSimple: Boolean = true
     }
 
     case object ProjectAdminGroupRestricted extends Administrative {
-      override val token: String = "ProjectAdminGroupRestrictedPermission"
+      override val token: String     = "ProjectAdminGroupRestrictedPermission"
+      override val isSimple: Boolean = false
     }
 
     case object ProjectAdminRightsAll extends Administrative {
-      override val token: String = "ProjectAdminRightsAllPermission"
+      override val token: String     = "ProjectAdminRightsAllPermission"
+      override val isSimple: Boolean = true
     }
 
     def fromToken(token: String): Option[Administrative] = all.find(_.token == token)

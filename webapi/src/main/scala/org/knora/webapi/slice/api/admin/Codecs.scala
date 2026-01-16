@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -84,7 +84,6 @@ object Codecs {
     implicit val keyword: StringCodec[Keyword]                                  = stringCodec(Keyword.from)
     implicit val logo: StringCodec[Logo]                                        = stringCodec(Logo.from)
     implicit val longname: StringCodec[Longname]                                = stringCodec(Longname.from)
-    implicit val projectIri: StringCodec[ProjectIri]                            = stringCodec(ProjectIri.from)
     implicit val restrictedViewSize: StringCodec[RestrictedView.Size]           = stringCodec(RestrictedView.Size.from)
     implicit val restrictedViewWatermark: StringCodec[RestrictedView.Watermark] = booleanCodec(
       RestrictedView.Watermark.from,
@@ -105,7 +104,6 @@ object Codecs {
     implicit val systemAdmin: StringCodec[SystemAdmin] = booleanCodec(SystemAdmin.from)
 
     // group
-    implicit val groupIri: StringCodec[GroupIri]                   = stringCodec(GroupIri.from)
     implicit val groupName: StringCodec[GroupName]                 = stringCodec(GroupName.from)
     implicit val groupDescriptions: StringCodec[GroupDescriptions] =
       JsonCodec[Seq[StringLiteralV2]].transformOrFail(GroupDescriptions.from, _.value)

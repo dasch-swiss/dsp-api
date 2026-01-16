@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,7 +13,6 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
-import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
@@ -21,7 +20,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.sharedtestdata.*
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -53,10 +51,10 @@ object PermissionsResponderSpec extends E2EZSpec {
     suite("ask about administrative permissions")(
       test("return all Permission.Administrative for project") {
         for {
-          result <- permissionResponder(_.getPermissionsApByProjectIri(imagesProjectIri.value))
+          result <- permissionResponder(_.getPermissionsApByProjectIri(imagesProjectIri))
         } yield assertTrue(
           result == AdministrativePermissionsForProjectGetResponseADM(
-            Seq(perm002_a1.p, perm002_a3.p, perm002_a2.p),
+            Seq(perm002_a1, perm002_a3, perm002_a2),
           ),
         )
       },
@@ -68,7 +66,7 @@ object PermissionsResponderSpec extends E2EZSpec {
                         KnoraGroupRepo.builtIn.ProjectMember.id,
                       ),
                     )
-        } yield assertTrue(result == AdministrativePermissionGetResponseADM(perm002_a1.p))
+        } yield assertTrue(result == AdministrativePermissionGetResponseADM(perm002_a1))
       },
     ),
     suite("asked to create an administrative permission")(
@@ -79,11 +77,10 @@ object PermissionsResponderSpec extends E2EZSpec {
           permissionResponder(
             _.createAdministrativePermission(
               CreateAdministrativePermissionAPIRequestADM(
-                forProject = imagesProjectIri.value,
-                forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
+                forProject = imagesProjectIri,
+                forGroup = KnoraGroupRepo.builtIn.ProjectMember.id,
                 hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ).exit,
@@ -92,10 +89,8 @@ object PermissionsResponderSpec extends E2EZSpec {
             isSubtype[DuplicateValueException](
               hasMessage(
                 equalTo(
-                  s"An administrative permission for project: '$imagesProjectIri' and group: '${KnoraGroupRepo.builtIn.ProjectMember.id.value}' combination already exists. " +
-                    s"This permission currently has the scope '${PermissionUtilADM
-                        .formatPermissionADMs(perm002_a1.p.hasPermissions, PermissionType.AP)}'. " +
-                    s"Use its IRI ${perm002_a1.iri} to modify it, if necessary.",
+                  s"An administrative permission for project: 'http://rdfh.ch/projects/00FF' and " +
+                    s"group: 'http://www.knora.org/ontology/knora-admin#ProjectMember' combination already exists.",
                 ),
               ),
             ),
@@ -103,55 +98,59 @@ object PermissionsResponderSpec extends E2EZSpec {
         )
       },
       test("create and return an administrative permission with a custom IRI") {
-        val customIri = "http://rdfh.ch/permissions/0001/24RD7QcoTKqEJKrDBE885Q"
+        val customIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0001/24RD7QcoTKqEJKrDBE885Q")
         for {
           actual <- permissionResponder(
                       _.createAdministrativePermission(
                         CreateAdministrativePermissionAPIRequestADM(
                           id = Some(customIri),
-                          forProject = anythingProjectIri.value,
-                          forGroup = thingSearcherGroup.id,
+                          forProject = anythingProjectIri,
+                          forGroup = thingSearcherGroup.groupIri,
                           hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
                         ),
-                        rootUser,
                         UUID.randomUUID(),
                       ),
                     )
         } yield assertTrue(
           actual.administrativePermission.iri == customIri,
-          actual.administrativePermission.forProject == anythingProjectIri.value,
-          actual.administrativePermission.forGroup == thingSearcherGroup.id,
+          actual.administrativePermission.forProject == anythingProjectIri,
+          actual.administrativePermission.forGroup == thingSearcherGroup.groupIri,
         )
       },
       test(
-        "create and return an administrative permission even if irrelevant values were given for name and code of its permission",
+        "create and return an administrative permission even if a permission code given",
       ) {
-        val customIri      = "http://rdfh.ch/permissions/0001/0pd-VUDeShWNJ2Nq3fGGGQ"
+        val customIri      = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0001/0pd-VUDeShWNJ2Nq3fGGGQ")
         val hasPermissions = Set(
           PermissionADM(
-            name = Permission.Administrative.ProjectResourceCreateAll.token,
-            additionalInformation = Some("blabla"),
-            permissionCode = Some(8),
+            name = Permission.Administrative.ProjectResourceCreateRestricted.token,
+            additionalInformation = Some("http://www.knora.org/ontology/0001/anything#Thing"),
+            permissionCode = Some(8), // will be ignored
           ),
         )
-        val expectedHasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll))
+        val expectedHasPermissions = Set(
+          PermissionADM(
+            name = "ProjectResourceCreateRestrictedPermission",
+            additionalInformation = Some("http://www.knora.org/ontology/0001/anything#Thing"),
+            None,
+          ),
+        )
         for {
           actual <- permissionResponder(
                       _.createAdministrativePermission(
                         CreateAdministrativePermissionAPIRequestADM(
                           id = Some(customIri),
-                          forProject = anythingProjectIri.value,
-                          forGroup = KnoraGroupRepo.builtIn.KnownUser.id.value,
+                          forProject = anythingProjectIri,
+                          forGroup = KnoraGroupRepo.builtIn.KnownUser.id,
                           hasPermissions = hasPermissions,
                         ),
-                        rootUser,
                         UUID.randomUUID(),
                       ),
                     )
         } yield assertTrue(
           actual.administrativePermission.iri == customIri,
-          actual.administrativePermission.forGroup == KnoraGroupRepo.builtIn.KnownUser.id.value,
-          actual.administrativePermission.forProject == anythingProjectIri.value,
+          actual.administrativePermission.forGroup == KnoraGroupRepo.builtIn.KnownUser.id,
+          actual.administrativePermission.forProject == anythingProjectIri,
           actual.administrativePermission.hasPermissions == expectedHasPermissions,
         )
       },
@@ -160,10 +159,8 @@ object PermissionsResponderSpec extends E2EZSpec {
       test("return all DefaultObjectAccessPermissions for project") {
         for {
           actual <- permissionResponder(_.getPermissionsDaopByProjectIri(imagesProjectIri))
-        } yield assertTrue(
-          actual == DefaultObjectAccessPermissionsForProjectGetResponseADM(
-            Seq(perm002_d2.p, perm0003_a4.p, perm002_d1.p),
-          ),
+        } yield assert(actual.defaultObjectAccessPermissions)(
+          hasSameElements(Seq(perm002_d2, perm0003_a4, perm002_d1)),
         )
       },
     ),
@@ -173,8 +170,8 @@ object PermissionsResponderSpec extends E2EZSpec {
           actual <- permissionResponder(
                       _.createDefaultObjectAccessPermission(
                         CreateDefaultObjectAccessPermissionAPIRequestADM(
-                          forProject = anythingProjectIri.value,
-                          forGroup = Some(thingSearcherGroup.id),
+                          forProject = anythingProjectIri,
+                          forGroup = Some(thingSearcherGroup.groupIri),
                           hasPermissions = Set(
                             PermissionADM
                               .from(Permission.ObjectAccess.RestrictedView, thingSearcherGroup.id),
@@ -184,22 +181,22 @@ object PermissionsResponderSpec extends E2EZSpec {
                       ),
                     )
         } yield assertTrue(
-          actual.defaultObjectAccessPermission.forProject == anythingProjectIri.value,
-          actual.defaultObjectAccessPermission.forGroup.contains(thingSearcherGroup.id),
+          actual.defaultObjectAccessPermission.forProject == anythingProjectIri,
+          actual.defaultObjectAccessPermission.forGroup.contains(thingSearcherGroup.groupIri),
           actual.defaultObjectAccessPermission.hasPermissions.contains(
             PermissionADM.from(Permission.ObjectAccess.RestrictedView, thingSearcherGroup.id),
           ),
         )
       },
       test("create a DefaultObjectAccessPermission for project and group with custom IRI") {
-        val customIri = "http://rdfh.ch/permissions/0001/4PnSvolsTEa86KJ2EG76SQ"
+        val customIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0001/4PnSvolsTEa86KJ2EG76SQ")
         for {
           received <- permissionResponder(
                         _.createDefaultObjectAccessPermission(
                           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
                             id = Some(customIri),
-                            forProject = anythingProjectIri.value,
-                            forGroup = Some(KnoraGroupRepo.builtIn.UnknownUser.id.value),
+                            forProject = anythingProjectIri,
+                            forGroup = Some(KnoraGroupRepo.builtIn.UnknownUser.id),
                             hasPermissions = Set(
                               PermissionADM
                                 .from(
@@ -213,8 +210,8 @@ object PermissionsResponderSpec extends E2EZSpec {
                       )
         } yield assertTrue(
           received.defaultObjectAccessPermission.iri == customIri,
-          received.defaultObjectAccessPermission.forGroup.contains(KnoraGroupRepo.builtIn.UnknownUser.id.value),
-          received.defaultObjectAccessPermission.forProject == anythingProjectIri.value,
+          received.defaultObjectAccessPermission.forGroup.contains(KnoraGroupRepo.builtIn.UnknownUser.id),
+          received.defaultObjectAccessPermission.forProject == anythingProjectIri,
           received.defaultObjectAccessPermission.hasPermissions
             .contains(
               PermissionADM.from(Permission.ObjectAccess.RestrictedView, KnoraGroupRepo.builtIn.UnknownUser.id.value),
@@ -226,7 +223,7 @@ object PermissionsResponderSpec extends E2EZSpec {
           actual <- permissionResponder(
                       _.createDefaultObjectAccessPermission(
                         CreateDefaultObjectAccessPermissionAPIRequestADM(
-                          forProject = imagesProjectIri.value,
+                          forProject = imagesProjectIri,
                           forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
                           hasPermissions = Set(
                             PermissionADM
@@ -237,7 +234,7 @@ object PermissionsResponderSpec extends E2EZSpec {
                       ),
                     )
         } yield assertTrue(
-          actual.defaultObjectAccessPermission.forProject == imagesProjectIri.value,
+          actual.defaultObjectAccessPermission.forProject == imagesProjectIri,
           actual.defaultObjectAccessPermission.forResourceClass
             .contains(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
           actual.defaultObjectAccessPermission.hasPermissions
@@ -249,7 +246,7 @@ object PermissionsResponderSpec extends E2EZSpec {
           actual <- permissionResponder(
                       _.createDefaultObjectAccessPermission(
                         CreateDefaultObjectAccessPermissionAPIRequestADM(
-                          forProject = imagesProjectIri.value,
+                          forProject = imagesProjectIri,
                           forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
                           hasPermissions = Set(
                             PermissionADM
@@ -260,7 +257,7 @@ object PermissionsResponderSpec extends E2EZSpec {
                       ),
                     )
         } yield assertTrue(
-          actual.defaultObjectAccessPermission.forProject == imagesProjectIri.value,
+          actual.defaultObjectAccessPermission.forProject == imagesProjectIri,
           actual.defaultObjectAccessPermission.forProperty.contains(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
           actual.defaultObjectAccessPermission.hasPermissions.contains(
             PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
@@ -274,8 +271,8 @@ object PermissionsResponderSpec extends E2EZSpec {
           permissionResponder(
             _.createDefaultObjectAccessPermission(
               CreateDefaultObjectAccessPermissionAPIRequestADM(
-                forProject = incunabulaProjectIri.value,
-                forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+                forProject = incunabulaProjectIri,
+                forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id),
                 hasPermissions = Set(
                   PermissionADM
                     .from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -307,7 +304,7 @@ object PermissionsResponderSpec extends E2EZSpec {
           permissionResponder(
             _.createDefaultObjectAccessPermission(
               CreateDefaultObjectAccessPermissionAPIRequestADM(
-                forProject = incunabulaProjectIri.value,
+                forProject = incunabulaProjectIri,
                 forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
                 hasPermissions = Set(
                   PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
@@ -340,7 +337,7 @@ object PermissionsResponderSpec extends E2EZSpec {
           permissionResponder(
             _.createDefaultObjectAccessPermission(
               CreateDefaultObjectAccessPermissionAPIRequestADM(
-                forProject = incunabulaProjectIri.value,
+                forProject = incunabulaProjectIri,
                 forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
                 hasPermissions = Set(
                   PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.KnownUser.id.value),
@@ -371,7 +368,7 @@ object PermissionsResponderSpec extends E2EZSpec {
           permissionResponder(
             _.createDefaultObjectAccessPermission(
               CreateDefaultObjectAccessPermissionAPIRequestADM(
-                forProject = incunabulaProjectIri.value,
+                forProject = incunabulaProjectIri,
                 forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS),
                 forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
                 hasPermissions = Set(
@@ -410,16 +407,16 @@ object PermissionsResponderSpec extends E2EZSpec {
           actual <- permissionResponder(
                       _.createDefaultObjectAccessPermission(
                         CreateDefaultObjectAccessPermissionAPIRequestADM(
-                          forProject = imagesProjectIri.value,
-                          forGroup = Some(KnoraGroupRepo.builtIn.UnknownUser.id.value),
+                          forProject = imagesProjectIri,
+                          forGroup = Some(KnoraGroupRepo.builtIn.UnknownUser.id),
                           hasPermissions = hasPermissions,
                         ),
                         UUID.randomUUID(),
                       ),
                     )
         } yield assertTrue(
-          actual.defaultObjectAccessPermission.forProject == imagesProjectIri.value,
-          actual.defaultObjectAccessPermission.forGroup.contains(KnoraGroupRepo.builtIn.UnknownUser.id.value),
+          actual.defaultObjectAccessPermission.forProject == imagesProjectIri,
+          actual.defaultObjectAccessPermission.forGroup.contains(KnoraGroupRepo.builtIn.UnknownUser.id),
           actual.defaultObjectAccessPermission.hasPermissions.contains(
             PermissionADM.from(Permission.ObjectAccess.RestrictedView, KnoraGroupRepo.builtIn.UnknownUser.id.value),
           ),
@@ -446,16 +443,16 @@ object PermissionsResponderSpec extends E2EZSpec {
           actual <- permissionResponder(
                       _.createDefaultObjectAccessPermission(
                         CreateDefaultObjectAccessPermissionAPIRequestADM(
-                          forProject = imagesProjectIri.value,
-                          forGroup = Some(KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
+                          forProject = imagesProjectIri,
+                          forGroup = Some(KnoraGroupRepo.builtIn.ProjectAdmin.id),
                           hasPermissions = hasPermissions,
                         ),
                         UUID.randomUUID(),
                       ),
                     )
         } yield assertTrue(
-          actual.defaultObjectAccessPermission.forProject == imagesProjectIri.value,
-          actual.defaultObjectAccessPermission.forGroup.contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
+          actual.defaultObjectAccessPermission.forProject == imagesProjectIri,
+          actual.defaultObjectAccessPermission.forGroup.contains(KnoraGroupRepo.builtIn.ProjectAdmin.id),
           actual.defaultObjectAccessPermission.hasPermissions == expectedPermissions,
         )
       },
@@ -623,7 +620,7 @@ object PermissionsResponderSpec extends E2EZSpec {
             isSubtype[BadRequestException](
               hasMessage(
                 equalTo(
-                  s"Invalid resource class IRI: ${customResourceIRI}",
+                  s"Invalid resource class IRI: $customResourceIRI",
                 ),
               ),
             ),
@@ -645,7 +642,7 @@ object PermissionsResponderSpec extends E2EZSpec {
         )(
           fails(
             isSubtype[BadRequestException](
-              hasMessage(equalTo(s"Invalid property IRI: ${customValueIRI}")),
+              hasMessage(equalTo(s"Invalid property IRI: $customValueIRI")),
             ),
           ),
         )
@@ -688,33 +685,12 @@ object PermissionsResponderSpec extends E2EZSpec {
         val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
         for {
           actual <- permissionResponder(
-                      _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+                      _.updatePermissionsGroup(permissionIri, newGroupIri, UUID.randomUUID()),
                     )
           ap = actual.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission
         } yield assertTrue(
-          ap.iri == permissionIri.value,
-          ap.forGroup == newGroupIri.value,
-        )
-      },
-      test(
-        "throw ForbiddenException for PermissionChangeGroupRequestADM if requesting user is not system or project Admin",
-      ) {
-        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ")
-        val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
-        assertZIO(
-          permissionResponder(
-            _.updatePermissionsGroup(permissionIri, newGroupIri, imagesUser02, UUID.randomUUID()),
-          ).exit,
-        )(
-          fails(
-            isSubtype[ForbiddenException](
-              hasMessage(
-                equalTo(
-                  s"You are logged in with username 'user02.user', but only a system administrator or project administrator has permissions for this operation.",
-                ),
-              ),
-            ),
-          ),
+          ap.iri == permissionIri,
+          ap.forGroup == newGroupIri,
         )
       },
       test("update group of a default object access permission") {
@@ -722,12 +698,12 @@ object PermissionsResponderSpec extends E2EZSpec {
         val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
         for {
           actual <- permissionResponder(
-                      _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+                      _.updatePermissionsGroup(permissionIri, newGroupIri, UUID.randomUUID()),
                     )
           doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         } yield assertTrue(
-          doap.iri == permissionIri.value,
-          doap.forGroup.contains(newGroupIri.value),
+          doap.iri == permissionIri,
+          doap.forGroup.contains(newGroupIri),
         )
       },
       test("update group of a default object access permission, resource class must be deleted") {
@@ -735,12 +711,12 @@ object PermissionsResponderSpec extends E2EZSpec {
         val newGroupIri   = GroupIri.unsafeFrom(KnoraGroupRepo.builtIn.ProjectMember.id.value)
         for {
           actual <- permissionResponder(
-                      _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+                      _.updatePermissionsGroup(permissionIri, newGroupIri, UUID.randomUUID()),
                     )
           doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         } yield assertTrue(
-          doap.iri == permissionIri.value,
-          doap.forGroup.contains(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+          doap.iri == permissionIri,
+          doap.forGroup.contains(KnoraGroupRepo.builtIn.ProjectMember.id),
           doap.forResourceClass.isEmpty,
         )
       },
@@ -749,56 +725,23 @@ object PermissionsResponderSpec extends E2EZSpec {
         val newGroupIri   = GroupIri.unsafeFrom(KnoraGroupRepo.builtIn.ProjectMember.id.value)
         for {
           actual <- permissionResponder(
-                      _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+                      _.updatePermissionsGroup(permissionIri, newGroupIri, UUID.randomUUID()),
                     )
           doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         } yield assertTrue(
-          doap.iri == permissionIri.value,
-          doap.forGroup.contains(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+          doap.iri == permissionIri,
+          doap.forGroup.contains(KnoraGroupRepo.builtIn.ProjectMember.id),
           doap.forProperty.isEmpty,
         )
       },
     ),
     suite("ask to update hasPermissions of a permission")(
-      test(
-        "throw ForbiddenException for PermissionChangeHasPermissionsRequestADM if requesting user is not system or project Admin",
-      ) {
-        val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val hasPermissions = NonEmptyChunk(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll))
-
-        assertZIO(
-          permissionResponder(
-            _.updatePermissionHasPermissions(
-              PermissionIri.unsafeFrom(permissionIri),
-              hasPermissions,
-              imagesUser02,
-              UUID.randomUUID(),
-            ),
-          ).exit,
-        )(
-          fails(
-            isSubtype[ForbiddenException](
-              hasMessage(
-                equalTo(
-                  s"You are logged in with username 'user02.user', but only a system administrator or project administrator has permissions for this operation.",
-                ),
-              ),
-            ),
-          ),
-        )
-      },
       test("update hasPermissions of an administrative permission") {
-        val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
+        val permissionIri  = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ")
         val hasPermissions = NonEmptyChunk(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll))
         for {
-          actual <- permissionResponder(
-                      _.updatePermissionHasPermissions(
-                        PermissionIri.unsafeFrom(permissionIri),
-                        hasPermissions,
-                        rootUser,
-                        UUID.randomUUID(),
-                      ),
-                    )
+          actual <-
+            permissionResponder(_.updatePermissionHasPermissions(permissionIri, hasPermissions, UUID.randomUUID()))
           ap = actual.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission
         } yield assertTrue(
           ap.iri == permissionIri,
@@ -809,23 +752,17 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "ignore irrelevant parameters given in ChangePermissionHasPermissionsApiRequestADM for an administrative permission",
       ) {
-        val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
+        val permissionIri  = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ")
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = Permission.Administrative.ProjectAdminAll.token,
-            additionalInformation = Some("aIRI"),
-            permissionCode = Some(1),
+            additionalInformation = None,
+            permissionCode = Some(1), // will be ignored
           ),
         )
         for {
-          actual <- permissionResponder(
-                      _.updatePermissionHasPermissions(
-                        PermissionIri.unsafeFrom(permissionIri),
-                        hasPermissions,
-                        rootUser,
-                        UUID.randomUUID(),
-                      ),
-                    )
+          actual <-
+            permissionResponder(_.updatePermissionHasPermissions(permissionIri, hasPermissions, UUID.randomUUID()))
           ap                       = actual.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission
           expectedSetOfPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll))
         } yield assertTrue(
@@ -835,21 +772,15 @@ object PermissionsResponderSpec extends E2EZSpec {
         )
       },
       test("update hasPermissions of a default object access permission") {
-        val permissionIri  = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
+        val permissionIri  = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ")
         val hasPermissions = NonEmptyChunk(
           PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
           PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
         )
 
         for {
-          actual <- permissionResponder(
-                      _.updatePermissionHasPermissions(
-                        PermissionIri.unsafeFrom(permissionIri),
-                        hasPermissions,
-                        rootUser,
-                        UUID.randomUUID(),
-                      ),
-                    )
+          actual <-
+            permissionResponder(_.updatePermissionHasPermissions(permissionIri, hasPermissions, UUID.randomUUID()))
           doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         } yield assertTrue(
           doap.iri == permissionIri,
@@ -860,7 +791,7 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "add missing name of the permission, if permissionCode of permission was given in hasPermissions of a default object access permission",
       ) {
-        val permissionIri  = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
+        val permissionIri  = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ")
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = "",
@@ -878,14 +809,8 @@ object PermissionsResponderSpec extends E2EZSpec {
         )
 
         for {
-          actual <- permissionResponder(
-                      _.updatePermissionHasPermissions(
-                        PermissionIri.unsafeFrom(permissionIri),
-                        hasPermissions,
-                        rootUser,
-                        UUID.randomUUID(),
-                      ),
-                    )
+          actual <-
+            permissionResponder(_.updatePermissionHasPermissions(permissionIri, hasPermissions, UUID.randomUUID()))
           doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         } yield assertTrue(
           doap.iri == permissionIri,
@@ -895,7 +820,7 @@ object PermissionsResponderSpec extends E2EZSpec {
       test(
         "add missing permissionCode of the permission, if name of permission was given in hasPermissions of a default object access permission",
       ) {
-        val permissionIri  = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
+        val permissionIri  = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ")
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = Permission.ObjectAccess.Delete.token,
@@ -912,14 +837,8 @@ object PermissionsResponderSpec extends E2EZSpec {
           ),
         )
         for {
-          actual <- permissionResponder(
-                      _.updatePermissionHasPermissions(
-                        PermissionIri.unsafeFrom(permissionIri),
-                        hasPermissions,
-                        rootUser,
-                        UUID.randomUUID(),
-                      ),
-                    )
+          actual <-
+            permissionResponder(_.updatePermissionHasPermissions(permissionIri, hasPermissions, UUID.randomUUID()))
           doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         } yield assertTrue(
           doap.iri == permissionIri,
@@ -944,7 +863,6 @@ object PermissionsResponderSpec extends E2EZSpec {
             _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
-              rootUser,
               UUID.randomUUID(),
             ),
           ).exit,
@@ -978,7 +896,6 @@ object PermissionsResponderSpec extends E2EZSpec {
             _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
-              rootUser,
               UUID.randomUUID(),
             ),
           ).exit,
@@ -1012,7 +929,6 @@ object PermissionsResponderSpec extends E2EZSpec {
             _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
-              rootUser,
               UUID.randomUUID(),
             ),
           ).exit,
@@ -1045,7 +961,6 @@ object PermissionsResponderSpec extends E2EZSpec {
             _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
-              rootUser,
               UUID.randomUUID(),
             ),
           ).exit,
@@ -1064,13 +979,13 @@ object PermissionsResponderSpec extends E2EZSpec {
     ),
     suite("ask to update resource class of a permission")(
       test("update resource class of a default object access permission") {
-        val permissionIri    = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
+        val permissionIri    = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA")
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
         for {
           actual <- permissionResponder(
                       _.updatePermissionResourceClass(
-                        PermissionIri.unsafeFrom(permissionIri),
+                        permissionIri,
                         ChangePermissionResourceClassApiRequestADM(resourceClassIri),
                         UUID.randomUUID(),
                       ),
@@ -1082,12 +997,12 @@ object PermissionsResponderSpec extends E2EZSpec {
         )
       },
       test("update resource class of a default object access permission, and delete group") {
-        val permissionIri    = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
+        val permissionIri    = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ")
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
         for {
           actual <- permissionResponder(
                       _.updatePermissionResourceClass(
-                        PermissionIri.unsafeFrom(permissionIri),
+                        permissionIri,
                         ChangePermissionResourceClassApiRequestADM(resourceClassIri),
                         UUID.randomUUID(),
                       ),
@@ -1133,13 +1048,13 @@ object PermissionsResponderSpec extends E2EZSpec {
         )
       },
       test("update property of a default object access permission") {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg"
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg")
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
         for {
           actual <- permissionResponder(
                       _.updatePermissionProperty(
-                        PermissionIri.unsafeFrom(permissionIri),
+                        permissionIri,
                         ChangePermissionPropertyApiRequestADM(propertyIri),
                         UUID.randomUUID(),
                       ),
@@ -1151,13 +1066,13 @@ object PermissionsResponderSpec extends E2EZSpec {
         )
       },
       test("update property of a default object access permission, delete group") {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
         val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
         for {
           actual <- permissionResponder(
                       _.updatePermissionProperty(
-                        PermissionIri.unsafeFrom(permissionIri),
+                        permissionIri,
                         ChangePermissionPropertyApiRequestADM(propertyIri),
                         UUID.randomUUID(),
                       ),
@@ -1171,33 +1086,11 @@ object PermissionsResponderSpec extends E2EZSpec {
       },
     ),
     suite("ask to delete a permission")(
-      test("throw BadRequestException if given IRI is not a permission IRI") {
+      test("return NotFoundException if given IRI is not a permission IRI") {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/RkVssk8XRVO9hZ3VR5IpLA")
-        assertZIO(permissionResponder(_.deletePermission(permissionIri, rootUser, UUID.randomUUID())).exit)(
+        assertZIO(permissionResponder(_.deletePermission(permissionIri, UUID.randomUUID())).exit)(
           fails(
-            isSubtype[NotFoundException](
-              hasMessage(
-                equalTo(
-                  s"Permission with given IRI: ${permissionIri.value} not found.",
-                ),
-              ),
-            ),
-          ),
-        )
-      },
-      test("throw ForbiddenException if user requesting PermissionDeleteResponseADM is not a system or project admin") {
-        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
-        assertZIO(
-          permissionResponder(_.deletePermission(permissionIri, imagesUser02, UUID.randomUUID())).exit,
-        )(
-          fails(
-            isSubtype[ForbiddenException](
-              hasMessage(
-                equalTo(
-                  s"You are logged in with username 'user02.user', but only a system administrator or project administrator has permissions for this operation.",
-                ),
-              ),
-            ),
+            isSubtype[NotFoundException](hasMessage(equalTo(s"Permission $permissionIri was not found"))),
           ),
         )
       },
@@ -1205,7 +1098,7 @@ object PermissionsResponderSpec extends E2EZSpec {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
         for {
           actual <-
-            permissionResponder(_.deletePermission(permissionIri, rootUser, UUID.randomUUID()))
+            permissionResponder(_.deletePermission(permissionIri, UUID.randomUUID()))
         } yield assertTrue(actual.deleted)
       },
     ),

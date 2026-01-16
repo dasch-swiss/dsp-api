@@ -186,8 +186,14 @@ routes = {
         script = 'test_file_info.lua'
     },
     {
+        method = 'GET',
+        route = '/test_knora_session_cookie',
+        script = 'test_knora_session_cookie.lua'
+    },
+    {
         method = 'DELETE',
         route = '/delete_temp_file',
         script = 'delete_temp_file.lua'
     }
+
 }

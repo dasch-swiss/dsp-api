@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -108,8 +108,13 @@ final class ProjectRestService(
                case None     => ZIO.succeed(false)
              },
            )
-    internal <- projectService.createProject(createReq).map(ProjectOperationResponseADM.apply)
-    _        <- permissionResponder.createPermissionsForAdminsAndMembersOfNewProject(internal.project.id)
+    internal     <- projectService.createProject(createReq).map(ProjectOperationResponseADM.apply)
+    knoraProject <- knoraProjectService
+                      .findById(internal.project.id)
+                      .someOrFail(
+                        NotFoundException(s"Project '${internal.project.id.value}' not found after creation."),
+                      )
+    _        <- permissionResponder.createPermissionsForAdminsAndMembersOfNewProject(knoraProject)
     external <- format.toExternal(internal)
   } yield external
 
