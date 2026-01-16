@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -71,7 +71,7 @@ final case class SipiClientMock(
       s"""
          |
          |SipiImage with the following parameters:
-         |nx    = ${dimension.width} 
+         |nx    = ${dimension.width}
          |ny    = ${dimension.height}
          |""".stripMargin,
       "",
