@@ -14,11 +14,13 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final class ManagementServerEndpoints(endpoint: ManagementEndpoints, restService: ManagementRestService) {
-  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
+  private val noTags: List[ZServerEndpoint[Any, Any]] = List(
     endpoint.getVersion.zServerLogic(_ => ZIO.succeed(VersionResponse.current)),
     endpoint.getHealth.zServerLogic(_ => restService.healthCheck),
     endpoint.postStartCompaction.serverLogic(restService.startCompaction),
-  ).map(_.tag("Management API"))
+  )
+
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = noTags.map(_.tag("Management API"))
 }
 
 object ManagementServerEndpoints {

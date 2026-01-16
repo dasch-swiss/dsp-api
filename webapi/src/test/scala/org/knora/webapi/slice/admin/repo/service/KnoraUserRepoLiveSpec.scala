@@ -196,8 +196,8 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
       },
       test("should update an existing user's username find user with new username") {
         for {
-          _       <- KnoraUserRepo(_.save(testUser)) // create the user
-          updated <-
+          _           <- KnoraUserRepo(_.save(testUser)) // create the user
+          updated     <-
             KnoraUserRepo(_.save(testUser.copy(username = Username.unsafeFrom("newUsername")))) // update the username
           updatedUser <- KnoraUserRepo(_.findByUsername(updated.username)).someOrFailException
         } yield assertTrue(updatedUser.username == Username.unsafeFrom("newUsername"))

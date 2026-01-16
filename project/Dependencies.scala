@@ -137,7 +137,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.11.50"
+  val tapirVersion = "1.13.3"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -151,16 +151,16 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % tapirVersion,
   )
 
-  val otelVersion = "1.56.0"
+  val otelVersion = "1.57.0"
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.12",
-    "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
-    "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
-    "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
-    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.37.0",
-    "com.softwaremill.sttp.tapir"   %% "tapir-opentelemetry-tracing"         % tapirVersion,
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
+    "com.softwaremill.sttp.tapir"   %% "tapir-opentelemetry-tracing"         % tapirVersion,
+    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.12",
+    "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
+    "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
+    "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
+    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.37.0",
   )
 
   val integrationTestDependencies = Seq(
@@ -205,7 +205,7 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion        = "11.17.2"
+  val flywayVersion        = "11.19.0"
   val otelAgentVersion     = "v2.18.1"
   val otelPyroscopeVersion = "v1.0.4"
   val hikariVersion        = "7.0.2"
