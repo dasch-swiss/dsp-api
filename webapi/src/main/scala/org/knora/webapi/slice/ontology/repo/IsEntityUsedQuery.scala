@@ -6,36 +6,22 @@
 package org.knora.webapi.slice.ontology.repo
 
 import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
 object IsEntityUsedQuery extends QueryBuilderHelper {
 
-  def buildForInternalIri(
-    entityIri: InternalIri,
-    ignoreKnoraConstraints: Boolean = false,
-    ignoreRdfSubjectAndObject: Boolean = false,
-  ): Ask = build(toRdfIri(entityIri), ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
-
-  def buildForSmartIri(
+  def build(
     entityIri: SmartIri,
     ignoreKnoraConstraints: Boolean = false,
     ignoreRdfSubjectAndObject: Boolean = false,
-  ): Ask = build(toRdfIri(entityIri), ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
-
-  private def build(
-    entity: Iri,
-    ignoreKnoraConstraints: Boolean,
-    ignoreRdfSubjectAndObject: Boolean,
   ): Ask = {
     val s             = variable("s")
     val p             = variable("p")
-    val triplePattern = s.has(p, entity).getQueryString
+    val triplePattern = s.has(p, toRdfIri(entityIri)).getQueryString
     val filters       = buildFilters(ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
     Ask(s"""
            |ASK

@@ -52,8 +52,7 @@ final case class IriService(
     iri: SmartIri,
     ignoreKnoraConstraints: Boolean = false,
     ignoreRdfSubjectAndObject: Boolean = false,
-  ): Task[Boolean] =
-    triplestore.query(IsEntityUsedQuery.buildForSmartIri(iri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject))
+  ): Task[Boolean] = triplestore.query(IsEntityUsedQuery.build(iri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject))
 
   /**
    * Checks whether an instance of a class (or any of its sub-classes) exists.

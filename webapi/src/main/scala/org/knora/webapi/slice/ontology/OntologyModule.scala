@@ -9,6 +9,7 @@ import zio.ZLayer
 
 import org.knora.webapi.config.Features
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
@@ -23,7 +24,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object OntologyModule { self =>
 
-  type Dependencies = Features & IriConverter & StringFormatter & TriplestoreService
+  type Dependencies = Features & IriConverter & IriService & StringFormatter & TriplestoreService
 
   type Provided =
     // format: off

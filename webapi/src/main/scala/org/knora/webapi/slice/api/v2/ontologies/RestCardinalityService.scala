@@ -53,11 +53,12 @@ final class RestCardinalityService(
       case (None, None)                              => canReplaceCardinality(classIri, user)
       case (Some(propertyIri), Some(newCardinality)) => canSetCardinality(classIri, propertyIri, newCardinality, user)
     }
+
   def canReplaceCardinality(classIri: String, user: User): Task[CanDoResponseV2] =
     for {
-      classIri <- iriConverter.asInternalIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
-      _        <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
-      result   <- cardinalityService.canReplaceCardinality(classIri)
+      classIri <- iriConverter.asResourceClassIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
+      _        <- checkUserHasWriteAccessToOntologyOfClass(user, classIri.toInternalIri)
+      result   <- cardinalityService.canReplaceCardinality(classIri.smartIri)
     } yield toCanDoResponseV2(result)
 
   private def toCanDoResponseV2(result: CanReplaceCardinalityCheckResult): CanDoResponseV2 = result match {

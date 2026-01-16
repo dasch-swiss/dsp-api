@@ -12,6 +12,7 @@ import zio.ZLayer
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
@@ -22,7 +23,6 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SubclassCheckFailure
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SuperClassCheckFailure
-import org.knora.webapi.slice.ontology.repo.IsEntityUsedQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.EitherUtil.joinOnLeft
 import org.knora.webapi.util.EitherUtil.joinOnLeftList
@@ -61,7 +61,7 @@ trait CardinalityService {
    *
    * '''error''' a [[Throwable]] indicating that something went wrong.
    */
-  def canReplaceCardinality(classIri: InternalIri): Task[CanReplaceCardinalityCheckResult]
+  def canReplaceCardinality(classIri: SmartIri): Task[CanReplaceCardinalityCheckResult]
 }
 
 object ChangeCardinalityCheckResult {
@@ -136,6 +136,7 @@ final case class CardinalityServiceLive(
   private val predicateRepository: PredicateRepository,
   private val ontologyRepo: OntologyRepo,
   private val iriConverter: IriConverter,
+  private val iriService: IriService,
 ) extends CardinalityService {
 
   private case class CheckCardinalitySubject(
@@ -276,20 +277,16 @@ final case class CardinalityServiceLive(
    *
    * '''error''' a [[Throwable]] indicating that something went wrong,
    */
-  override def canReplaceCardinality(classIri: InternalIri): Task[CanReplaceCardinalityCheckResult] = {
-    val doCheck: Task[CanReplaceCardinalityCheckResult] = {
+  override def canReplaceCardinality(classIri: SmartIri): Task[CanReplaceCardinalityCheckResult] = {
+    val doCheck: Task[CanReplaceCardinalityCheckResult] =
       // ignoreKnoraConstraints: It is OK if a property refers to the class
       // via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
-      val query = IsEntityUsedQuery.buildForInternalIri(classIri, ignoreKnoraConstraints = true)
-      tripleStore
-        .query(query)
-        .map {
-          case true  => IsInUseCheckFailure
-          case false => CanReplaceCardinalityCheckResult.Success
-        }
-    }
+      iriService.isEntityUsed(classIri, ignoreKnoraConstraints = true).map {
+        case true  => IsInUseCheckFailure
+        case false => CanReplaceCardinalityCheckResult.Success
+      }
 
-    ZIO.ifZIO(isPartOfKnoraOntology(classIri))(
+    ZIO.ifZIO(isPartOfKnoraOntology(classIri.toInternalIri))(
       onTrue = ZIO.succeed(CanReplaceCardinalityCheckResult.KnoraOntologyCheckFailure),
       onFalse = doCheck,
     )
