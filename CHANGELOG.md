@@ -1,5 +1,15 @@
 # Changelog
 
+## [34.1.2](https://github.com/dasch-swiss/dsp-api/compare/v34.1.1...v34.1.2) (2026-01-16)
+
+
+### Maintenances
+
+* Dependency updates ([#3922](https://github.com/dasch-swiss/dsp-api/issues/3922)) ([4bc2e57](https://github.com/dasch-swiss/dsp-api/commit/4bc2e57b8ac220195052a723ab3168678293c205))
+* Migrate isNodeUsed, isClassUsedInData and isEntityUsed querie to rdf4j + cleanup (DEV-5781) ([#3924](https://github.com/dasch-swiss/dsp-api/issues/3924)) ([633cb79](https://github.com/dasch-swiss/dsp-api/commit/633cb79533dd481dd2edb7163ec02b92d854f06d))
+* Minor dependency updates ([#3909](https://github.com/dasch-swiss/dsp-api/issues/3909)) ([f3d9ddc](https://github.com/dasch-swiss/dsp-api/commit/f3d9ddc27e9f94c9a1d5e7c06dd116d738f0374d))
+* Patch dependency updates ([#3908](https://github.com/dasch-swiss/dsp-api/issues/3908)) ([7cf6098](https://github.com/dasch-swiss/dsp-api/commit/7cf6098db1c7a3e756524e002fe1e5b259d08e50))
+
 ## [34.1.1](https://github.com/dasch-swiss/dsp-api/compare/v34.1.0...v34.1.1) (2026-01-08)
 
 
