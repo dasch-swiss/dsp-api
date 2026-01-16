@@ -18,11 +18,12 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.CheckIriExistsQuery
+import org.knora.webapi.slice.ontology.repo.IsClassUsedInDataQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 /**
  * This service somewhat handles checking of ontology entities and some creation of entity IRIs.
@@ -61,8 +62,8 @@ final case class IriService(
    * @param classIri  the IRI of the class.
    * @return `true` if the class is used.
    */
-  def isClassUsedInData(classIri: SmartIri): Task[Boolean] =
-    triplestore.query(Select(sparql.v2.txt.isClassUsedInData(classIri))).map(_.nonEmpty)
+  def isClassUsedInData(classIri: ResourceClassIri): Task[Boolean] =
+    triplestore.query(IsClassUsedInDataQuery.build(classIri))
 
   def checkOrCreateNewUserIri(entityIri: Option[UserIri]): Task[UserIri] =
     for {

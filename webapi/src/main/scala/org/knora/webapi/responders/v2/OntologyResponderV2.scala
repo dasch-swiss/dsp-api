@@ -807,7 +807,8 @@ final case class OntologyResponderV2(
     val task = for {
       requestingUser <- ZIO.succeed(addCardinalitiesRequest.requestingUser)
 
-      externalClassIri    = addCardinalitiesRequest.classInfoContent.classIri
+      classInfo           = addCardinalitiesRequest.classInfoContent
+      externalClassIri    = classInfo.classIri
       internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
       externalOntologyIri = externalClassIri.getOntologyFromEntity
       internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -816,7 +817,7 @@ final case class OntologyResponderV2(
         ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
 
       cacheData                           <- ontologyCache.getCacheData
-      internalClassDef: ClassInfoContentV2 = addCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
+      internalClassDef: ClassInfoContentV2 = classInfo.toOntologySchema(InternalSchema)
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
       _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
@@ -844,7 +845,7 @@ final case class OntologyResponderV2(
         ZIO
           .fromOption(ontology.classes.get(internalClassIri))
           .orElseFail(
-            BadRequestException(s"Class ${addCardinalitiesRequest.classInfoContent.classIri} does not exist"),
+            BadRequestException(s"Class ${classInfo.classIri} does not exist"),
           )
 
       existingClassDef: ClassInfoContentV2 = existingReadClassInfo.entityInfoContent
@@ -854,15 +855,15 @@ final case class OntologyResponderV2(
 
       _ <- ZIO.when(redundantCardinalities.nonEmpty) {
              val msg =
-               s"The cardinalities of ${addCardinalitiesRequest.classInfoContent.classIri} already include the following property or properties: ${redundantCardinalities
+               s"The cardinalities of ${classInfo.classIri} already include the following property or properties: ${redundantCardinalities
                    .mkString(", ")}"
              ZIO.fail(BadRequestException(msg))
            }
 
       // Is there any property with minCardinality>0 or Cardinality=1?
       hasCardinality: Option[(SmartIri, KnoraCardinalityInfo)] =
-        addCardinalitiesRequest.classInfoContent.directCardinalities.find {
-          case (_, constraint: KnoraCardinalityInfo) => constraint.cardinality.min > 0
+        classInfo.directCardinalities.find { case (_, constraint: KnoraCardinalityInfo) =>
+          constraint.cardinality.min > 0
         }
 
       _ <- hasCardinality match {
@@ -870,10 +871,10 @@ final case class OntologyResponderV2(
                ZIO
                  .fail(
                    BadRequestException(
-                     s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data",
+                     s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${classInfo.classIri}, because it is used in data",
                    ),
                  )
-                 .whenZIO(iriService.isClassUsedInData(internalClassIri))
+                 .whenZIO(iriService.isClassUsedInData(ResourceClassIri.unsafeFrom(classInfo.classIri)))
              case None => ZIO.unit
            }
 
