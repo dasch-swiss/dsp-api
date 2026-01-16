@@ -178,7 +178,7 @@ object Dependencies {
   val webapiDependencies = monocle ++ refined ++ Seq(
     bouncyCastle,
     commonsLang3,
-    commonsValidator
+    commonsValidator,
     ehcache,
     gwtServlet,
     icu4j,
