@@ -10,6 +10,7 @@ import zio.test.*
 
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.domain.model.User
@@ -199,7 +200,7 @@ object RestCardinalityServiceSpec extends ZIOSpecDefault {
 
     def setReplaceResponseSuccess(): UIO[Unit] = replaceResponse.set(replaceSuccess)
     override def canReplaceCardinality(
-      classIri: InternalIri,
+      classIri: SmartIri,
     ): Task[CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult] = replaceResponse.get
   }
   object StubCardinalitiesService {

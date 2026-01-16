@@ -14,6 +14,7 @@ import zio.test.*
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
@@ -164,6 +165,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], CardinalityService & OntologyCacheFake](
     CardinalityService.layer,
     IriConverter.layer,
+    IriService.layer,
     OntologyCacheFake.emptyCache,
     OntologyRepoLive.layer,
     PredicateRepositoryLive.layer,

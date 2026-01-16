@@ -13,16 +13,16 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.StringFormatter.MAX_IRI_ATTEMPTS
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.CheckIriExistsQuery
+import org.knora.webapi.slice.ontology.repo.IsClassUsedInDataQuery
+import org.knora.webapi.slice.ontology.repo.IsEntityUsedQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 /**
  * This service somewhat handles checking of ontology entities and some creation of entity IRIs.
@@ -52,8 +52,7 @@ final case class IriService(
     iri: SmartIri,
     ignoreKnoraConstraints: Boolean = false,
     ignoreRdfSubjectAndObject: Boolean = false,
-  ): Task[Boolean] = triplestore
-    .query(Ask(sparql.v2.txt.isEntityUsed(iri.toInternalIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)))
+  ): Task[Boolean] = triplestore.query(IsEntityUsedQuery.build(iri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject))
 
   /**
    * Checks whether an instance of a class (or any of its sub-classes) exists.
@@ -61,8 +60,8 @@ final case class IriService(
    * @param classIri  the IRI of the class.
    * @return `true` if the class is used.
    */
-  def isClassUsedInData(classIri: SmartIri): Task[Boolean] =
-    triplestore.query(Select(sparql.v2.txt.isClassUsedInData(classIri))).map(_.nonEmpty)
+  def isClassUsedInData(classIri: ResourceClassIri): Task[Boolean] =
+    triplestore.query(IsClassUsedInDataQuery.build(classIri))
 
   def checkOrCreateNewUserIri(entityIri: Option[UserIri]): Task[UserIri] =
     for {

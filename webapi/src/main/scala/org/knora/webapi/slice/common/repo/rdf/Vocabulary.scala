@@ -156,6 +156,9 @@ object Vocabulary {
     val FormattedText: Iri       = iri(kb + "FormattedText")
     val CustomFormattedText: Iri = iri(kb + "CustomFormattedText")
     val UndefinedTextType: Iri   = iri(kb + "UndefinedTextType")
+
+    val subjectClassConstraint: Iri = iri(kb + "subjectClassConstraint")
+    val objectClassConstraint: Iri  = iri(kb + "objectClassConstraint")
   }
 
   object NamedGraphs {
@@ -167,6 +170,7 @@ object Vocabulary {
     val salsahGuiPrefixExpansion = "http://www.knora.org/ontology/salsah-gui#"
     val NS: Namespace            = new SimpleNamespace("salsah-gui", salsahGuiPrefixExpansion)
 
-    val guiOrder: Iri = Rdf.iri(salsahGuiPrefixExpansion, "guiOrder")
+    val guiOrder: Iri     = Rdf.iri(salsahGuiPrefixExpansion, "guiOrder")
+    val guiAttribute: Iri = Rdf.iri(salsahGuiPrefixExpansion, "guiAttribute")
   }
 }
