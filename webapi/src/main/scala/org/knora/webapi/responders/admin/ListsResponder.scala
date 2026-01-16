@@ -11,7 +11,6 @@ import zio.ZIO
 import zio.ZLayer
 
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri.*
 import org.knora.webapi.messages.IriConversions.*
@@ -22,7 +21,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.ListsResponder.Queries
@@ -46,12 +44,12 @@ import org.knora.webapi.slice.resources.repo.GetListNodeQuery
 import org.knora.webapi.slice.resources.repo.GetListNodeWithChildrenQuery
 import org.knora.webapi.slice.resources.repo.GetParentNodeQuery
 import org.knora.webapi.slice.resources.repo.IsListInUseQuery
+import org.knora.webapi.slice.resources.repo.IsNodeUsedQuery
 import org.knora.webapi.slice.resources.repo.ListNodeExistsQuery
 import org.knora.webapi.slice.resources.repo.UpdateListInfoQuery
 import org.knora.webapi.slice.resources.repo.UpdateNodePositionQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class ListsResponder(
@@ -1083,7 +1081,7 @@ final case class ListsResponder(
     def isNodeOrItsChildrenUsed(nodeIri: IRI, children: Seq[ListChildNodeADM]): Task[Unit] = {
       def failIfInUse(nodeIri: IRI, failReason: String) = ZIO
         .fail(BadRequestException(failReason))
-        .whenZIO(triplestore.query(Select(sparql.admin.txt.isNodeUsed(nodeIri))).map(_.nonEmpty))
+        .whenZIO(triplestore.query(IsNodeUsedQuery.build(ListIri.unsafeFrom(nodeIri))))
       failIfInUse(nodeIri, s"Node $nodeIri cannot be deleted, because it is in use.") *> {
         ZIO.foreachDiscard(children) { child =>
           failIfInUse(child.id, s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use.")
