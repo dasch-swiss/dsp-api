@@ -17,7 +17,6 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -306,21 +305,6 @@ final case class ResourcesResponderV2(
                s"User ${deleteResourceV2.requestingUser.id} is deleting resource ${deleteResourceV2.resourceIri}",
              )
         _ <- triplestore.query(Update(sparqlUpdate))
-
-        // Verify that the resource was deleted correctly.
-        sparqlSelectResponse <-
-          triplestore.query(Select(sparql.v2.txt.checkResourceDeletion(deleteResourceV2.resourceIri)))
-
-        rows = sparqlSelectResponse.results.bindings
-
-        _ <-
-          ZIO.when(
-            rows.isEmpty || !ValuesValidator.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), fallback = false),
-          ) {
-            val msg =
-              s"Resource <${deleteResourceV2.resourceIri}> was not marked as deleted. Please report this as a possible bug."
-            ZIO.fail(UpdateNotPerformedException(msg))
-          }
       } yield SuccessResponseV2("Resource marked as deleted")
     }
 
