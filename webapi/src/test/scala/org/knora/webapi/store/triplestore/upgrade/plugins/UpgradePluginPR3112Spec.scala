@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -36,7 +36,7 @@ object UpgradePluginPR3112Spec extends ZIOSpecDefault with UpgradePluginTestOps 
            |
            | <http://rdfh.ch/projects/0004> a knora-admin:knoraProject ;
            |                              knora-admin:projectRestrictedViewWatermark true.
-           |                              
+           |
            | <http://rdfh.ch/projects/0005> a knora-admin:knoraProject ;
            |                              knora-admin:projectRestrictedViewSize "!555,555"^^xsd:string .
            |}

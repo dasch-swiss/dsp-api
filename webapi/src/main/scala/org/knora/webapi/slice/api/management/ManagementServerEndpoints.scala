@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,11 +14,13 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final class ManagementServerEndpoints(endpoint: ManagementEndpoints, restService: ManagementRestService) {
-  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
+  private val noTags: List[ZServerEndpoint[Any, Any]] = List(
     endpoint.getVersion.zServerLogic(_ => ZIO.succeed(VersionResponse.current)),
     endpoint.getHealth.zServerLogic(_ => restService.healthCheck),
     endpoint.postStartCompaction.serverLogic(restService.startCompaction),
-  ).map(_.tag("Management API"))
+  )
+
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = noTags.map(_.tag("Management API"))
 }
 
 object ManagementServerEndpoints {

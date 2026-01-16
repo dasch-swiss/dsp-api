@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -19,10 +19,15 @@ import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.infrastructure.Jwt
+import org.knora.webapi.slice.security.Authenticator
 
-final class AuthenticationEndpointsV2(baseEndpoints: BaseEndpoints) {
+case class AuthenticationEndpointsV2(
+  private val baseEndpoints: BaseEndpoints,
+  private val authenticator: Authenticator,
+) {
 
   private val basePath: EndpointInput[Unit] = "v2" / "authentication"
+  private val cookieName                    = authenticator.calculateCookieName()
 
   val getV2Authentication = baseEndpoints.securedEndpoint.get
     .in(basePath)
@@ -31,26 +36,20 @@ final class AuthenticationEndpointsV2(baseEndpoints: BaseEndpoints) {
   val postV2Authentication = baseEndpoints.publicEndpoint.post
     .in(basePath)
     .in(jsonBody[LoginPayload])
+    .out(setCookie(cookieName))
     .out(jsonBody[TokenResponse])
 
   val deleteV2Authentication = baseEndpoints.publicEndpoint.delete
     .in(basePath)
     .in(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+    .in(cookie[Option[String]](cookieName))
+    .out(setCookie(cookieName))
     .out(jsonBody[LogoutResponse])
-
-  val getV2Login = baseEndpoints.publicEndpoint.get
-    .in("v2" / "login")
-    .out(htmlBodyUtf8)
-
-  val postV2Login = baseEndpoints.publicEndpoint.post
-    .in("v2" / "login")
-    .in(formBody[LoginForm])
-    .out(jsonBody[TokenResponse])
 }
 
 object AuthenticationEndpointsV2 {
 
-  private[authentication] val layer = ZLayer.derive[AuthenticationEndpointsV2]
+  val layer = ZLayer.derive[AuthenticationEndpointsV2]
 
   final case class CheckResponse(message: String)
   object CheckResponse {
@@ -97,6 +96,4 @@ object AuthenticationEndpointsV2 {
 
     given loginPayloadCodec: JsonCodec[LoginPayload] = JsonCodec(loginPayloadEncoder, loginPayloadDecoder)
   }
-
-  final case class LoginForm(username: String, password: String)
 }

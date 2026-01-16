@@ -25,7 +25,7 @@ object Dependencies {
   val ZioLoggingVersion           = "2.5.2"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.5.4"
-  val ZioPreludeVersion           = "1.0.0-RC44"
+  val ZioPreludeVersion           = "1.0.0-RC45"
   val ZioSchemaVersion            = "1.7.6"
   val ZioMockVersion              = "1.0.0-RC12"
   val ZioVersion                  = "2.1.24"
@@ -117,7 +117,7 @@ object Dependencies {
 
   // other
   val gwtServlet     = "com.google.gwt"        % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"           % "icu4j"            % "78.1"
+  val icu4j          = "com.ibm.icu"           % "icu4j"            % "78.2"
   val jakartaJSON    = "org.glassfish"         % "jakarta.json"     % "2.0.1"
   val saxonHE        = "net.sf.saxon"          % "Saxon-HE"         % "12.9"
   val scalaGraph     = "org.scala-graph"      %% "graph-core"       % "2.0.2"
@@ -137,7 +137,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.11.50"
+  val tapirVersion = "1.13.3"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -151,7 +151,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % tapirVersion,
   )
 
-  val otelVersion = "1.56.0"
+  val otelVersion = "1.57.0"
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.13",
@@ -205,7 +205,7 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion        = "11.17.2"
+  val flywayVersion        = "11.19.0"
   val otelAgentVersion     = "v2.18.1"
   val otelPyroscopeVersion = "v1.0.4"
   val hikariVersion        = "7.0.2"

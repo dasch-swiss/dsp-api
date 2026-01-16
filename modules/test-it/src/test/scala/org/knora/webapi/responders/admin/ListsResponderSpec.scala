@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -422,7 +422,6 @@ object ListsResponderSpec extends E2EZSpec {
         val actual = listsResponder(_.listGetRequestADM(oldParentIri)).flatMap(expectType[ListNodeGetResponseADM])
 
         (parentNode <*> actual).map { (parentNode: ListNodeADM, actual: ListNodeGetResponseADM) =>
-
           /* check children of new parent node */
           // node must be in children of new parent
           val isNodeAdd = parentNode.children.exists(child => child.id == nodeIri.value && child.position == 2)
