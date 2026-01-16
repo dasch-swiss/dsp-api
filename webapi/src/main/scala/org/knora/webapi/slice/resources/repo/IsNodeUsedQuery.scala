@@ -17,13 +17,10 @@ object IsNodeUsedQuery extends QueryBuilderHelper {
 
   def build(nodeIri: ListIri): Ask = {
     val s = variable("s")
-
     // Pattern 1: Check if used in salsah-gui:guiAttribute
     val guiAttributePattern = s.has(SalsahGui.guiAttribute, Rdf.literalOf(s"hlist=<$nodeIri>")).getQueryString
-
     // Pattern 2: Check if used in knora-base:valueHasListNode
     val valueHasListNodePattern = s.has(KnoraBase.valueHasListNode, toRdfIri(nodeIri)).getQueryString
-
     Ask(s"""
            |ASK
            |WHERE {
