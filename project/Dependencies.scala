@@ -154,13 +154,13 @@ object Dependencies {
   val otelVersion = "1.57.0"
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.13",
-    "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
-    "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
-    "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
-    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.37.0",
-    "com.softwaremill.sttp.tapir"   %% "tapir-opentelemetry-tracing"         % tapirVersion,
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
+    "com.softwaremill.sttp.tapir"   %% "tapir-opentelemetry-tracing"         % tapirVersion,
+    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.13",
+    "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
+    "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
+    "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
+    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.37.0",
   )
 
   val integrationTestDependencies = Seq(
@@ -178,7 +178,7 @@ object Dependencies {
   val webapiDependencies = monocle ++ refined ++ Seq(
     bouncyCastle,
     commonsLang3,
-    commonsValidator,
+    commonsValidator
     ehcache,
     gwtServlet,
     icu4j,
