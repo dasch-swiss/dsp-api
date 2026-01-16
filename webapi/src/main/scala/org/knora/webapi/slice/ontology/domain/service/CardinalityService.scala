@@ -22,8 +22,8 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SubclassCheckFailure
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SuperClassCheckFailure
+import org.knora.webapi.slice.ontology.repo.IsEntityUsedQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.util.EitherUtil.joinOnLeft
 import org.knora.webapi.util.EitherUtil.joinOnLeftList
 
@@ -280,9 +280,9 @@ final case class CardinalityServiceLive(
     val doCheck: Task[CanReplaceCardinalityCheckResult] = {
       // ignoreKnoraConstraints: It is OK if a property refers to the class
       // via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
-      val query = twirl.queries.sparql.v2.txt.isEntityUsed(classIri, ignoreKnoraConstraints = true)
+      val query = IsEntityUsedQuery.buildForInternalIri(classIri, ignoreKnoraConstraints = true)
       tripleStore
-        .query(Ask(query))
+        .query(query)
         .map {
           case true  => IsInUseCheckFailure
           case false => CanReplaceCardinalityCheckResult.Success

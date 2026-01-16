@@ -156,6 +156,9 @@ object Vocabulary {
     val FormattedText: Iri       = iri(kb + "FormattedText")
     val CustomFormattedText: Iri = iri(kb + "CustomFormattedText")
     val UndefinedTextType: Iri   = iri(kb + "UndefinedTextType")
+
+    val subjectClassConstraint: Iri = iri(kb + "subjectClassConstraint")
+    val objectClassConstraint: Iri  = iri(kb + "objectClassConstraint")
   }
 
   object NamedGraphs {
