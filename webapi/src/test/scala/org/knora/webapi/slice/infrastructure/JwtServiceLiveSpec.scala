@@ -179,7 +179,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
         for {
           secret <- ZIO.serviceWith[JwtConfig](_.secret)
           token   = JwtZIOJson.encode("""{"typ":"JWT","alg":"HS256"}""", claim.toJson, secret, JwtAlgorithm.HS256)
-          exit   <- ZIO.serviceWith[JwtService](_.parseToken(token)).exit
+          exit   <- ZIO.serviceWithZIO[JwtService](_.parseToken(token).exit)
         } yield assertTrue(exit.isFailure)
       }
     },
