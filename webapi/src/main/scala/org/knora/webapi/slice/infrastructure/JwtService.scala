@@ -5,13 +5,13 @@
 
 package org.knora.webapi.slice.infrastructure
 
-import dsp.errors.BadCredentialsException
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
 import pdi.jwt.JwtZIOJson
 import zio.Clock
 import zio.Duration
+import zio.IO
 import zio.Random
 import zio.Task
 import zio.UIO
@@ -21,13 +21,14 @@ import zio.durationInt
 import zio.json.ast.Json
 
 import scala.util.Success
+
+import dsp.errors.BadCredentialsException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import zio.IO
 
 case class Jwt(jwtString: String, expiration: Long)
 

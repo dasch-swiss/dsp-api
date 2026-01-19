@@ -22,12 +22,14 @@ import zio.test.Spec
 import zio.test.TestAspect
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
+import zio.test.assertCompletes
 import zio.test.assertTrue
 import zio.test.check
 
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
@@ -36,7 +38,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
-import zio.test.assertCompletes
 
 final case class ScopeJs(scope: String)
 object ScopeJs {

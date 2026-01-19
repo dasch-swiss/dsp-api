@@ -20,8 +20,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
-import dsp.errors.BadCredentialsException
 import zio.Console
+import zio.IO
 import zio.Random
 import zio.Scope
 import zio.Task
@@ -40,6 +40,8 @@ import zio.test.TestAspect
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+
+import dsp.errors.BadCredentialsException
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -52,7 +54,6 @@ import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
-import zio.IO
 
 object DspIngestClientSpec extends ZIOSpecDefault {
 
