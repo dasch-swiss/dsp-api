@@ -17,10 +17,6 @@ import java.time.Duration
  * Represents the configuration as defined in application.conf.
  */
 final case class AppConfig(
-  printExtendedConfig: Boolean,
-  defaultTimeout: Duration,
-  dumpMessages: Boolean,
-  showInternalErrors: Boolean,
   bcryptPasswordStrength: Int,
   cookieDomain: String,
   allowReloadOverHttp: Boolean,
@@ -28,13 +24,8 @@ final case class AppConfig(
   knoraApi: KnoraApi,
   sipi: Sipi,
   ark: Ark,
-  salsah1: Salsah1,
   tmpDatadir: String,
-  datadir: String,
-  maxResultsPerSearchResultPage: Int,
   v2: V2,
-  gui: Gui,
-  routesToReject: List[String],
   triplestore: Triplestore,
   instrumentationServerConfig: InstrumentationServerConfig,
   jwt: JwtConfig,
@@ -43,6 +34,7 @@ final case class AppConfig(
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
 }
+
 final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String]) {
   def issuerAsString(): String = issuer.getOrElse(
     throw new IllegalStateException(
@@ -50,6 +42,7 @@ final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[
     ),
   )
 }
+
 final case class DspIngestConfig(baseUrl: String, audience: String)
 
 final case class KnoraApi(
@@ -113,11 +106,6 @@ final case class Ark(
   assignedNumber: Int,
 )
 
-final case class Salsah1(
-  baseUrl: String,
-  projectIconsBasepath: String,
-)
-
 final case class V2(
   resourcesSequence: ResourcesSequence,
   fulltextSearch: FulltextSearch,
@@ -136,15 +124,6 @@ final case class GraphRoute(
   defaultGraphDepth: Int,
   maxGraphDepth: Int,
   maxGraphBreadth: Int,
-)
-
-final case class Gui(
-  defaultIconSize: DefaultIconSize,
-)
-
-final case class DefaultIconSize(
-  dimX: Int,
-  dimY: Int,
 )
 
 final case class Triplestore(

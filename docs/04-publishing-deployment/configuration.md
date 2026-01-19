@@ -16,7 +16,6 @@ A number of core settings is additionally configurable through system environmen
 
 | key in application.conf                | environment variable                            | default value           |
 |----------------------------------------|-------------------------------------------------|-------------------------|
-| app.print-extended-config              | KNORA_WEBAPI_PRINT_EXTENDED_CONFIG              | false                   |
 | app.bcrypt-password-strength           | KNORA_WEBAPI_BCRYPT_PASSWORD_STRENGTH           | 12                      |
 | app.jwt.secret                         | KNORA_WEBAPI_JWT_SECRET_KEY                     | super-secret-key        |
 | app.jwt.expiration                     | KNORA_WEBAPI_JWT_LONGEVITY                      | 30 days                 |
@@ -39,7 +38,6 @@ A number of core settings is additionally configurable through system environmen
 | app.sipi.external-port                 | KNORA_WEBAPI_SIPI_EXTERNAL_PORT                 | 443                     |
 | app.ark.resolver                       | KNORA_WEBAPI_ARK_RESOLVER_URL                   | <http://0.0.0.0:3336>   |
 | app.ark.assigned-number                | KNORA_WEBAPI_ARK_NAAN                           | 72163                   |
-| app.salsah1.base-url                   | KNORA_WEBAPI_SALSAH1_BASE_URL                   | <http://localhost:3335> |
 | app.triplestore.dbtype                 | KNORA_WEBAPI_TRIPLESTORE_DBTYPE                 | fuseki                  |
 | app.triplestore.use-https              | KNORA_WEBAPI_TRIPLESTORE_USE_HTTPS              | false                   |
 | app.triplestore.host                   | KNORA_WEBAPI_TRIPLESTORE_HOST                   | localhost               |
@@ -47,14 +45,6 @@ A number of core settings is additionally configurable through system environmen
 | app.triplestore.fuseki.repository-name | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME | dsp-repo                |
 | app.triplestore.fuseki.username        | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME        | admin                   |
 | app.triplestore.fuseki.password        | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD        | test                    |
-
-## Selectively Disabling Routes
-
-In `application.conf` the setting `app.routes-to-reject` contains a list
-of strings, representing routes which should be rejected.
-
-For Example, the string `"v2/users"` would lead to rejection of any
-route which contains this string.
 
 ## Startup Flags
 
