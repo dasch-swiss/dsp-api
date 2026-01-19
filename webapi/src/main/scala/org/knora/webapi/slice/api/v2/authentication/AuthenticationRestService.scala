@@ -41,7 +41,7 @@ final class AuthenticationRestService(
             _ => BadCredentialsException(BAD_CRED_NOT_VALID),
             _ => (Some(setCookie(jwtString)), CheckResponse("credentials are OK")),
           )
-      case (_, Some(usernamePassword)) =>
+      case (None, Some(usernamePassword)) =>
         for {
           email <- ZIO
                      .fromEither(Email.from(usernamePassword.username))
@@ -56,6 +56,8 @@ final class AuthenticationRestService(
                       _ => (None, CheckResponse("credentials are OK")),
                     )
         } yield resp
+      case (Some(_), Some(_)) =>
+        ZIO.fail(BadCredentialsException("Provide either a JWT token or basic auth credentials, not both."))
     }
 
   private def setCookie(jwtString: String) =
