@@ -12,6 +12,7 @@ import java.time.Instant
 
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.CheckResponse
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload.EmailPassword
@@ -22,21 +23,39 @@ import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.To
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
 
-final case class AuthenticationRestService(
-  private val authenticator: Authenticator,
-  private val appConfig: AppConfig,
+final class AuthenticationRestService(
+  authenticator: Authenticator,
+  appConfig: AppConfig,
 ) {
 
-  def checkAuthentication(token: Option[String]): IO[BadCredentialsException, (CookieValueWithMeta, CheckResponse)] =
-    token match {
-      case None            => ZIO.fail(BadCredentialsException(BAD_CRED_NOT_VALID))
-      case Some(jwtString) =>
+  def checkAuthentication(
+    token: Option[String],
+    usernamePassword: Option[sttp.tapir.model.UsernamePassword],
+  ): IO[BadCredentialsException, (Option[CookieValueWithMeta], CheckResponse)] =
+    (token, usernamePassword) match {
+      case (None, None)            => ZIO.fail(BadCredentialsException(BAD_CRED_NOT_VALID))
+      case (Some(jwtString), None) =>
         authenticator
           .isTokenValid(jwtString)
           .mapBoth(
             _ => BadCredentialsException(BAD_CRED_NOT_VALID),
-            _ => (setCookie(jwtString), CheckResponse("credentials are OK")),
+            _ => (Some(setCookie(jwtString)), CheckResponse("credentials are OK")),
           )
+      case (_, Some(usernamePassword)) =>
+        for {
+          email <- ZIO
+                     .fromEither(Email.from(usernamePassword.username))
+                     .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+          password <- ZIO
+                        .fromOption(usernamePassword.password)
+                        .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+          resp <- authenticator
+                    .authenticate(email, password)
+                    .mapBoth(
+                      _ => BadCredentialsException(BAD_CRED_NOT_VALID),
+                      _ => (None, CheckResponse("credentials are OK")),
+                    )
+        } yield resp
     }
 
   private def setCookie(jwtString: String) =

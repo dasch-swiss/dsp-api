@@ -10,6 +10,8 @@ import sttp.tapir.*
 import sttp.tapir.codec.refined.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.model.UsernamePassword
+import sttp.tapir.ztapir.auth
 import zio.*
 import zio.json.*
 import zio.json.internal.Write
@@ -32,7 +34,8 @@ final class AuthenticationEndpointsV2(
   val getV2Authentication = baseEndpoints.publicEndpoint.get
     .in(basePath)
     .in(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
-    .out(setCookie(cookieName))
+    .in(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
+    .out(setCookieOpt(cookieName))
     .out(jsonBody[CheckResponse])
 
   val postV2Authentication = baseEndpoints.publicEndpoint.post
