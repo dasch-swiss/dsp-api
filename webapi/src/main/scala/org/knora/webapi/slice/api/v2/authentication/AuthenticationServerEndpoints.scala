@@ -8,14 +8,12 @@ package org.knora.webapi.slice.api.v2.authentication
 import sttp.tapir.ztapir.*
 import zio.*
 
-import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.CheckResponse
-
 final class AuthenticationServerEndpoints(
   restService: AuthenticationRestService,
   endpoints: AuthenticationEndpointsV2,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
-    endpoints.getV2Authentication.serverLogic(_ => _ => ZIO.succeed(CheckResponse("credentials are OK"))),
+    endpoints.getV2Authentication.zServerLogic(restService.checkAuthentication),
     endpoints.postV2Authentication.zServerLogic(restService.authenticate),
     endpoints.deleteV2Authentication.zServerLogic(restService.logout),
   )

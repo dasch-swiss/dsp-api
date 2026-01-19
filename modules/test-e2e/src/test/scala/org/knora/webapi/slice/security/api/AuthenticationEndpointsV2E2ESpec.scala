@@ -20,6 +20,7 @@ import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.Lo
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.TokenResponse
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
+
 object AuthenticationEndpointsV2E2ESpec extends E2EZSpec {
 
   private val validPassword = "test"
@@ -85,7 +86,7 @@ object AuthenticationEndpointsV2E2ESpec extends E2EZSpec {
           checkAfterLogout <- TestApiClient.getJson[CheckResponse](uri"/v2/authentication", _.auth.bearer(token))
         } yield assertTrue(
           checkAfterLogout.code == StatusCode.Unauthorized,
-          checkAfterLogout.body == Right(CheckResponse("Invalid credentials.")),
+          checkAfterLogout.body == Right(CheckResponse("bad credentials: not valid")),
         )
       },
     ),

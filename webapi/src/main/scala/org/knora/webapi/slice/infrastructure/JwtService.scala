@@ -11,6 +11,7 @@ import pdi.jwt.JwtHeader
 import pdi.jwt.JwtZIOJson
 import zio.Clock
 import zio.Duration
+import zio.IO
 import zio.Random
 import zio.Task
 import zio.UIO
@@ -21,6 +22,7 @@ import zio.json.ast.Json
 
 import scala.util.Success
 
+import dsp.errors.BadCredentialsException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
@@ -54,7 +56,7 @@ trait JwtService {
    * @param token  the JWT.
    * @return a [[Boolean]].
    */
-  def isTokenValid(token: String): Boolean
+  def parseToken(token: String): IO[BadCredentialsException, Jwt]
 
   /**
    * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
@@ -115,9 +117,19 @@ final case class JwtServiceLive(
    * present.
    *
    * @param token  the JWT.
-   * @return a [[Boolean]].
+   * @return the Jwt or fails with BadCredentialsException.
    */
-  override def isTokenValid(token: String): Boolean = !cache.contains(token) && decodeToken(token).isDefined
+  override def parseToken(str: String): IO[BadCredentialsException, Jwt] =
+    if (cache.contains(str)) {
+      ZIO.fail(BadCredentialsException("Invalid JWT token"))
+    } else {
+      decodeToken(str) match {
+        case Some((_, claim)) =>
+          ZIO.succeed(Jwt(str, claim.expiration.getOrElse(0L)))
+        case None =>
+          ZIO.fail(BadCredentialsException("Invalid JWT token"))
+      }
+    }
 
   /**
    * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.

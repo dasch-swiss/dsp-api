@@ -22,6 +22,7 @@ import zio.test.Spec
 import zio.test.TestAspect
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
+import zio.test.assertCompletes
 import zio.test.assertTrue
 import zio.test.check
 
@@ -146,9 +147,9 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     },
     test("validate a self issued token") {
       for {
-        token   <- JwtService(_.createJwt(user.userIri, AuthScope.empty))
-        isValid <- ZIO.serviceWith[JwtService](_.isTokenValid(token.jwtString))
-      } yield assertTrue(isValid)
+        token <- JwtService(_.createJwt(user.userIri, AuthScope.empty))
+        _     <- ZIO.serviceWith[JwtService](_.parseToken(token.jwtString))
+      } yield assertCompletes
     },
     test("fail to validate an invalid token") {
       def createClaim(
@@ -176,10 +177,10 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
         Gen.fromIterable(Seq(issuerMissing, invalidSubject, missingAudience, missingIat, expired, missingJwtId)),
       ) { claim =>
         for {
-          secret  <- ZIO.serviceWith[JwtConfig](_.secret)
-          token    = JwtZIOJson.encode("""{"typ":"JWT","alg":"HS256"}""", claim.toJson, secret, JwtAlgorithm.HS256)
-          isValid <- ZIO.serviceWith[JwtService](_.isTokenValid(token))
-        } yield assertTrue(!isValid)
+          secret <- ZIO.serviceWith[JwtConfig](_.secret)
+          token   = JwtZIOJson.encode("""{"typ":"JWT","alg":"HS256"}""", claim.toJson, secret, JwtAlgorithm.HS256)
+          exit   <- ZIO.serviceWithZIO[JwtService](_.parseToken(token).exit)
+        } yield assertTrue(exit.isFailure)
       }
     },
   ) @@ TestAspect.withLiveEnvironment @@ TestAspect.beforeAll(ZIO.serviceWith[CacheManager](_.clearAll())))

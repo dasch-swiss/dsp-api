@@ -10,6 +10,8 @@ import sttp.tapir.*
 import sttp.tapir.codec.refined.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.model.UsernamePassword
+import sttp.tapir.ztapir.auth
 import zio.*
 import zio.json.*
 import zio.json.internal.Write
@@ -21,16 +23,19 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
 
-case class AuthenticationEndpointsV2(
-  private val baseEndpoints: BaseEndpoints,
-  private val authenticator: Authenticator,
+final class AuthenticationEndpointsV2(
+  baseEndpoints: BaseEndpoints,
+  authenticator: Authenticator,
 ) {
 
   private val basePath: EndpointInput[Unit] = "v2" / "authentication"
   private val cookieName                    = authenticator.calculateCookieName()
 
-  val getV2Authentication = baseEndpoints.securedEndpoint.get
+  val getV2Authentication = baseEndpoints.publicEndpoint.get
     .in(basePath)
+    .in(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+    .in(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
+    .out(setCookieOpt(cookieName))
     .out(jsonBody[CheckResponse])
 
   val postV2Authentication = baseEndpoints.publicEndpoint.post
@@ -53,6 +58,7 @@ object AuthenticationEndpointsV2 {
 
   final case class CheckResponse(message: String)
   object CheckResponse {
+    val OK                         = CheckResponse("credentials are OK")
     given JsonCodec[CheckResponse] = DeriveJsonCodec.gen[CheckResponse]
   }
 

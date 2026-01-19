@@ -45,6 +45,7 @@ trait Authenticator {
   def calculateCookieName(): String
 
   def invalidateToken(jwt: String): IO[AuthenticatorError, Unit]
+  def parseToken(jwt: String): IO[AuthenticatorError, Jwt]
   def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)]
   def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)]
   def authenticate(email: Email, password: String): IO[AuthenticatorError, (User, Jwt)]
@@ -63,6 +64,11 @@ final case class AuthenticatorLive(
   private val passwordService: PasswordService,
   private val invalidTokens: InvalidTokenCache,
 ) extends Authenticator {
+
+  override def parseToken(jwt: String): IO[AuthenticatorError, Jwt] = for {
+    _   <- ZIO.fail(BadCredentials).when(invalidTokens.contains(jwt))
+    jwt <- jwtService.parseToken(jwt).orElseFail(AuthenticatorError.BadCredentials)
+  } yield jwt
 
   override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)] = for {
     user <- getUserByIri(userIri)
