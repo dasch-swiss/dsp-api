@@ -39,7 +39,7 @@ final class AuthenticationRestService(
           .isTokenValid(jwtString)
           .mapBoth(
             _ => BadCredentialsException(BAD_CRED_NOT_VALID),
-            _ => (Some(setCookie(jwtString)), CheckResponse("credentials are OK")),
+            _ => (Some(setCookie(jwtString)), CheckResponse.OK),
           )
       case (None, Some(usernamePassword)) =>
         for {
@@ -53,7 +53,7 @@ final class AuthenticationRestService(
                     .authenticate(email, password)
                     .mapBoth(
                       _ => BadCredentialsException(BAD_CRED_NOT_VALID),
-                      _ => (None, CheckResponse("credentials are OK")),
+                      _ => (None, CheckResponse.OK),
                     )
         } yield resp
       case (Some(_), Some(_)) =>

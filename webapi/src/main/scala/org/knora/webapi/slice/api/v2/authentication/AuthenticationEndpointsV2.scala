@@ -58,6 +58,7 @@ object AuthenticationEndpointsV2 {
 
   final case class CheckResponse(message: String)
   object CheckResponse {
+    val OK                         = CheckResponse("credentials are OK")
     given JsonCodec[CheckResponse] = DeriveJsonCodec.gen[CheckResponse]
   }
 
