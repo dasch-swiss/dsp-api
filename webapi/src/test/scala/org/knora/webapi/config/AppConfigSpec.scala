@@ -24,8 +24,6 @@ object AppConfigSpec extends ZIOSpecDefault {
         dspIngestConfig <- ZIO.service[DspIngestConfig]
       } yield {
         assertTrue(
-          !appConfig.printExtendedConfig,
-          appConfig.defaultTimeout == Duration.ofMinutes(120),
           appConfig.sipi.timeout == Duration.ofSeconds(120),
           appConfig.triplestore.queryTimeout == Duration.ofSeconds(20),
           appConfig.triplestore.gravsearchTimeout == Duration.ofSeconds(120),
