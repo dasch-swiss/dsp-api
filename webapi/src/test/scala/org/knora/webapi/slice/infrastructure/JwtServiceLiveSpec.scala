@@ -28,7 +28,6 @@ import zio.test.check
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
@@ -37,6 +36,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
+import zio.test.assertCompletes
 
 final case class ScopeJs(scope: String)
 object ScopeJs {
@@ -146,9 +146,9 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     },
     test("validate a self issued token") {
       for {
-        token   <- JwtService(_.createJwt(user.userIri, AuthScope.empty))
-        isValid <- ZIO.serviceWith[JwtService](_.isTokenValid(token.jwtString))
-      } yield assertTrue(isValid)
+        token <- JwtService(_.createJwt(user.userIri, AuthScope.empty))
+        _     <- ZIO.serviceWith[JwtService](_.parseToken(token.jwtString))
+      } yield assertCompletes
     },
     test("fail to validate an invalid token") {
       def createClaim(
@@ -176,10 +176,10 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
         Gen.fromIterable(Seq(issuerMissing, invalidSubject, missingAudience, missingIat, expired, missingJwtId)),
       ) { claim =>
         for {
-          secret  <- ZIO.serviceWith[JwtConfig](_.secret)
-          token    = JwtZIOJson.encode("""{"typ":"JWT","alg":"HS256"}""", claim.toJson, secret, JwtAlgorithm.HS256)
-          isValid <- ZIO.serviceWith[JwtService](_.isTokenValid(token))
-        } yield assertTrue(!isValid)
+          secret <- ZIO.serviceWith[JwtConfig](_.secret)
+          token   = JwtZIOJson.encode("""{"typ":"JWT","alg":"HS256"}""", claim.toJson, secret, JwtAlgorithm.HS256)
+          exit   <- ZIO.serviceWith[JwtService](_.parseToken(token)).exit
+        } yield assertTrue(exit.isFailure)
       }
     },
   ) @@ TestAspect.withLiveEnvironment @@ TestAspect.beforeAll(ZIO.serviceWith[CacheManager](_.clearAll())))

@@ -9,7 +9,6 @@ import sttp.model.headers.CookieValueWithMeta
 import zio.*
 
 import java.time.Instant
-
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -20,6 +19,7 @@ import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.Lo
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload.UsernamePassword
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LogoutResponse
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.TokenResponse
+import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
 
@@ -36,10 +36,10 @@ final class AuthenticationRestService(
       case (None, None)            => ZIO.fail(BadCredentialsException(BAD_CRED_NOT_VALID))
       case (Some(jwtString), None) =>
         authenticator
-          .isTokenValid(jwtString)
+          .parseToken(jwtString)
           .mapBoth(
             _ => BadCredentialsException(BAD_CRED_NOT_VALID),
-            _ => (Some(setCookie(jwtString)), CheckResponse.OK),
+            jwt => (Some(setCookie(jwt)), CheckResponse.OK),
           )
       case (None, Some(usernamePassword)) =>
         for {
@@ -60,13 +60,18 @@ final class AuthenticationRestService(
         ZIO.fail(BadCredentialsException("Provide either a JWT token or basic auth credentials, not both."))
     }
 
-  private def setCookie(jwtString: String) =
+  private def setCookie(jwt: Jwt) = {
+    val expiresAt     = Instant.ofEpochSecond(jwt.expiration)
+    val maxAgeSeconds = jwt.expiration - Instant.now().getEpochSecond
     CookieValueWithMeta.unsafeApply(
       domain = Some(appConfig.cookieDomain),
+      expires = Some(expiresAt),
+      maxAge = Some(maxAgeSeconds),
       httpOnly = true,
       path = Some("/"),
-      value = jwtString,
+      value = jwt.jwtString,
     )
+  }
 
   private val removeCookie = CookieValueWithMeta.unsafeApply(
     domain = Some(appConfig.cookieDomain),
@@ -84,7 +89,7 @@ final class AuthenticationRestService(
       case EmailPassword(email, password)       => authenticator.authenticate(email, password)
     }).mapBoth(
       _ => BadCredentialsException(BAD_CRED_NOT_VALID),
-      (_, token) => (setCookie(token.jwtString), TokenResponse(token)),
+      (_, jwt) => (setCookie(jwt), TokenResponse(jwt)),
     )
 
   def logout(

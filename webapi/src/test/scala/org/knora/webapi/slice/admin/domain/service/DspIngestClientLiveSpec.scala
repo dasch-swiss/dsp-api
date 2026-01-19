@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import dsp.errors.BadCredentialsException
 import zio.Console
 import zio.Random
 import zio.Scope
@@ -39,7 +40,6 @@ import zio.test.TestAspect
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
-
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -52,6 +52,7 @@ import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
+import zio.IO
 
 object DspIngestClientSpec extends ZIOSpecDefault {
 
@@ -137,7 +138,7 @@ object DspIngestClientLiveSpecLayers {
     new JwtService {
       override def createJwtForDspIngest(): UIO[Jwt]                                                = ZIO.succeed(Jwt("mock-jwt-string-value", Long.MaxValue))
       override def createJwt(user: UserIri, scope: AuthScope, content: Map[String, Json]): UIO[Jwt] = unsupported
-      override def isTokenValid(token: String): Boolean                                             = throw new UnsupportedOperationException("not implemented")
+      override def parseToken(token: String): IO[BadCredentialsException, Jwt]                      = unsupported
       override def extractUserIriFromToken(token: String): Task[Option[IRI]]                        = unsupported
     }
   }
