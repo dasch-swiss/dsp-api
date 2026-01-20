@@ -20,8 +20,8 @@ case class SparqlSelectResult(head: SparqlSelectResultHeader, results: SparqlSel
   def getFirstRow: Option[VariableResultsRow] =
     results.bindings.headOption
 
-  def getFirst(v: String): Option[String] =
-    results.bindings.headOption.flatMap(_.rowMap.get(v))
+  def getFirst(v: String): Option[String] = results.bindings.headOption.flatMap(_.rowMap.get(v))
+  def getFirstInt(v: String): Option[Int] = getFirst(v).map(_.toInt)
 
   def getFirstOrThrow(v: String): String =
     results.bindings.head.rowMap(v)
