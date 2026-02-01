@@ -60,7 +60,7 @@ object Dependencies {
     "dev.zio"      %% "zio-test-junit"         % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-magnolia"      % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-sbt"           % ZioVersion     % Test,
-    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.3"        % Test,
+    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.4"        % Test,
   )
 
   val SttpClientVersion = "4.0.15"
