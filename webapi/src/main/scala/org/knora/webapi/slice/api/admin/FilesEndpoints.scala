@@ -12,14 +12,12 @@ import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
 
 import org.knora.webapi.slice.api.admin.AdminPathVariables.projectShortcode
-import org.knora.webapi.slice.api.admin.Codecs.TapirCodec.sparqlEncodedString
 import org.knora.webapi.slice.api.admin.FilesPathVar.filename
 import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 object FilesPathVar {
-  val filename: PathCapture[SparqlEncodedString] = path[SparqlEncodedString]("filename")
+  val filename: PathCapture[String] = path[String]("filename")
 }
 
 final class FilesEndpoints(base: BaseEndpoints) {

@@ -13,12 +13,11 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.api.admin.model.ProjectRestrictedViewSettingsADM
-import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 object AssetPermissionsResponderSpec extends E2EZSpec {
 
   private val assetPermissionResponder = ZIO.serviceWithZIO[AssetPermissionsResponder]
-  private val asset                    = SparqlEncodedString.unsafeFrom("incunabula_0000003328.jp2")
+  private val asset                    = "incunabula_0000003328.jp2"
 
   override val rdfDataObjects: List[RdfDataObject] = List(incunabulaRdfData)
 
