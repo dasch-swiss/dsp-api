@@ -22,9 +22,9 @@ object Dependencies {
   val JenaVersion  = "5.2.0"
 
   val ZioConfigVersion            = "4.0.6"
-  val ZioLoggingVersion           = "2.5.2"
+  val ZioLoggingVersion           = "2.5.3"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.5.4"
+  val ZioMetricsConnectorsVersion = "2.5.5"
   val ZioPreludeVersion           = "1.0.0-RC45"
   val ZioSchemaVersion            = "1.7.6"
   val ZioMockVersion              = "1.0.0-RC12"
@@ -60,10 +60,10 @@ object Dependencies {
     "dev.zio"      %% "zio-test-junit"         % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-magnolia"      % ZioVersion     % Test,
     "dev.zio"      %% "zio-test-sbt"           % ZioVersion     % Test,
-    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.3"        % Test,
+    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.4"        % Test,
   )
 
-  val SttpClientVersion = "4.0.13"
+  val SttpClientVersion = "4.0.15"
   val zioSttpClient     = Seq(
     "com.softwaremill.sttp.client4" %% "zio"      % SttpClientVersion,
     "com.softwaremill.sttp.client4" %% "zio-json" % SttpClientVersion,
@@ -137,7 +137,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.13.3"
+  val tapirVersion = "1.13.6"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -156,7 +156,7 @@ object Dependencies {
   val openTelemetryWithSentry = Seq(
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
     "com.softwaremill.sttp.tapir"   %% "tapir-opentelemetry-tracing"         % tapirVersion,
-    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.13",
+    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.14",
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
@@ -205,7 +205,7 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion        = "11.19.0"
+  val flywayVersion        = "11.19.1"
   val otelAgentVersion     = "v2.18.1"
   val otelPyroscopeVersion = "v1.0.4"
   val hikariVersion        = "7.0.2"
