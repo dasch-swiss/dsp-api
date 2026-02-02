@@ -151,7 +151,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % tapirVersion,
   )
 
-  val otelVersion = "1.57.0"
+  val otelVersion = "1.58.0"
 
   val openTelemetryWithSentry = Seq(
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
@@ -160,7 +160,7 @@ object Dependencies {
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
-    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.37.0",
+    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.39.0",
   )
 
   val integrationTestDependencies = Seq(
