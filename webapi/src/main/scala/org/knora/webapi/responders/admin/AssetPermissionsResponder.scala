@@ -14,8 +14,9 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.slice.admin.domain.model.InternalFilename
+import org.knora.webapi.slice.admin.repo.GetFileValueQuery
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -23,7 +24,6 @@ import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestricted
 import org.knora.webapi.slice.api.admin.model.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -46,10 +46,10 @@ final case class AssetPermissionsResponder(
 
   private def queryForFileValue(filename: String): Task[SparqlExtendedConstructResponse] =
     for {
-      response <- triplestoreService.query(Construct(sparql.admin.txt.getFileValue(filename))).flatMap(_.asExtended)
-      _        <- ZIO
-             .fail(NotFoundException(s"No file value was found for filename $filename"))
-             .when(response.statements.isEmpty)
+      internalFilename <- ZIO.fromEither(InternalFilename.from(filename)).mapError(e => NotFoundException(e))
+      response         <- triplestoreService.query(GetFileValueQuery.build(internalFilename)).flatMap(_.asExtended)
+                            .fail(NotFoundException(s"No file value was found for filename $filename"))
+                            .when(response.statements.isEmpty)
     } yield response
 
   private def getPermissionCode(
