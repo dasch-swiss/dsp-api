@@ -30,12 +30,11 @@ final class AssetPermissionsResponder(
 
   def getPermissionCodeAndProjectRestrictedViewSettings(user: User)(
     shortcode: Shortcode,
-    filename: String,
+    filename: InternalFilename,
   ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     for {
-      internalFilename <- ZIO.fromEither(InternalFilename.from(filename)).mapError(e => NotFoundException(e))
-      result           <- triplestoreService.query(Select(FileValuePermissionsQuery.build(internalFilename)))
-      row              <- ZIO
+      result <- triplestoreService.query(Select(FileValuePermissionsQuery.build(filename)))
+      row    <- ZIO
                .fromOption(result.getFirstRow)
                .orElseFail(NotFoundException(s"No file value was found for filename $filename"))
       permissionCode = PermissionUtilADM

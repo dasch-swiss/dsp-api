@@ -11,13 +11,14 @@ import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
 
+import org.knora.webapi.slice.admin.domain.model.InternalFilename
 import org.knora.webapi.slice.api.admin.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.api.admin.FilesPathVar.filename
 import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 object FilesPathVar {
-  val filename: PathCapture[String] = path[String]("filename")
+  val filename: PathCapture[InternalFilename] = path[InternalFilename]("filename")
 }
 
 final class FilesEndpoints(base: BaseEndpoints) {
