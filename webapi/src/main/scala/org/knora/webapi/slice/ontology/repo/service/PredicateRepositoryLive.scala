@@ -9,11 +9,10 @@ import zio.Task
 import zio.URLayer
 import zio.ZLayer
 
-import org.knora.webapi.messages.twirl.queries.sparql.v2.txt.countPropertyUsedWithClass
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.service.PredicateRepository
+import org.knora.webapi.slice.ontology.repo.CountPropertyUsedWithClassQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 final case class PredicateRepositoryLive(private val tripleStore: TriplestoreService) extends PredicateRepository {
 
@@ -30,7 +29,7 @@ final case class PredicateRepositoryLive(private val tripleStore: TriplestoreSer
     classIri: InternalIri,
   ): Task[List[(InternalIri, Int)]] =
     tripleStore
-      .query(Select(countPropertyUsedWithClass(propertyIri, classIri)))
+      .select(CountPropertyUsedWithClassQuery.build(propertyIri, classIri))
       .map(_.map(row => (InternalIri(row.rowMap("subject")), row.rowMap("count").toInt)).toList)
 }
 
