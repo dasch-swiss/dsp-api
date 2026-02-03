@@ -25,7 +25,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
 
-  private implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val usedOnce: String =
     s"""
@@ -91,7 +91,7 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
                 toResourceClassIri(Biblio.Class.Publication),
               ),
             )
-        } yield assertTrue(result == List((InternalIri("http://aPublication"), 1)))
+        } yield assertTrue(result == List(("http://aPublication".toResourceClassIri, 1)))
       },
     ).provide(commonLayers, datasetLayerFromTurtle(usedOnce)),
     suite("getCountForPropertyUseNumberOfTimesWithClass given used twice")(
@@ -107,9 +107,9 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
         } yield assert(result)(
           hasSameElements(
             List(
-              (InternalIri("http://aPublicationWithZero"), 0),
-              (InternalIri("http://aPublicationWithOne"), 1),
-              (InternalIri("http://aPublicationWithTwo"), 2),
+              ("http://aPublicationWithZero".toResourceClassIri, 0),
+              ("http://aPublicationWithOne".toResourceClassIri, 1),
+              ("http://aPublicationWithTwo".toResourceClassIri, 2),
             ),
           ),
         )

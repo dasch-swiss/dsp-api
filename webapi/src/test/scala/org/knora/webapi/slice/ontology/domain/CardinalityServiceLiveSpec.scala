@@ -52,10 +52,10 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
           ),
         ).map((o, c, sc, p) =>
           (
-            OntologyIri.unsafeFrom(o.value.toSmartIri),
-            ResourceClassIri.unsafeFrom(c.value.toSmartIri),
-            ResourceClassIri.unsafeFrom(sc.value.toSmartIri),
-            PropertyIri.unsafeFrom(p.value.toSmartIri),
+            o.value.toOntologyIri,
+            c.value.toResourceClassIri,
+            sc.value.toResourceClassIri,
+            p.value.toPropertyIri,
           ),
         )
         Random
@@ -235,8 +235,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
                               _.canSetCardinality(
-                                toResourceClassIri(d.subclassIri),
-                                toPropertyIri(d.propertyIri),
+                                d.subclassIri.value.toResourceClassIri,
+                                d.propertyIri.value.toPropertyIri,
                                 newCardinality,
                               ),
                             )
@@ -253,7 +253,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](
-                    _.canSetCardinality(toResourceClassIri(d.subclassIri), toPropertyIri(d.propertyIri), ExactlyOne),
+                    _.canSetCardinality(
+                      d.subclassIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      ExactlyOne,
+                    ),
                   )
               } yield assertTrue(actual.isRight)
             },
@@ -271,8 +275,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                   actual <-
                     ZIO.serviceWithZIO[CardinalityService](
                       _.canSetCardinality(
-                        toResourceClassIri(d.subclassIri),
-                        toPropertyIri(d.propertyIri),
+                        d.subclassIri.value.toResourceClassIri,
+                        d.propertyIri.value.toPropertyIri,
                         newCardinality,
                       ),
                     )
@@ -290,8 +294,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
                               _.canSetCardinality(
-                                toResourceClassIri(d.subclassIri),
-                                toPropertyIri(d.propertyIri),
+                                d.subclassIri.value.toResourceClassIri,
+                                d.propertyIri.value.toPropertyIri,
                                 newCardinality,
                               ),
                             )
@@ -311,8 +315,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
                               _.canSetCardinality(
-                                toResourceClassIri(d.subclassIri),
-                                toPropertyIri(d.propertyIri),
+                                d.subclassIri.value.toResourceClassIri,
+                                d.propertyIri.value.toPropertyIri,
                                 newCardinality,
                               ),
                             )
@@ -330,8 +334,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
                               _.canSetCardinality(
-                                toResourceClassIri(d.subclassIri),
-                                toPropertyIri(d.propertyIri),
+                                d.subclassIri.value.toResourceClassIri,
+                                d.propertyIri.value.toPropertyIri,
                                 newCardinality,
                               ),
                             )
@@ -351,7 +355,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](
-                    _.canSetCardinality(toResourceClassIri(d.subclassIri), toPropertyIri(d.propertyIri), newCardinality),
+                    _.canSetCardinality(
+                      d.subclassIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
                   )
               } yield assertTrue(actual.isRight)
             }
@@ -369,7 +377,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               _      <- OntologyCacheFake.set(d.data)
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](
-                  _.canSetCardinality(toResourceClassIri(d.subclassIri), toPropertyIri(d.propertyIri), Unbounded),
+                  _.canSetCardinality(
+                    d.subclassIri.value.toResourceClassIri,
+                    d.propertyIri.value.toPropertyIri,
+                    Unbounded,
+                  ),
                 )
             } yield assertTrue(actual.isRight)
           },
@@ -385,7 +397,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](
-                    _.canSetCardinality(toResourceClassIri(d.subclassIri), toPropertyIri(d.propertyIri), newCardinality),
+                    _.canSetCardinality(
+                      d.classIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
                   )
               } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
             }
@@ -402,7 +418,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](
-                    _.canSetCardinality(toResourceClassIri(d.subclassIri), toPropertyIri(d.propertyIri), newCardinality),
+                    _.canSetCardinality(
+                      d.subclassIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
                   )
               } yield assertTrue(actual.isRight)
             }
@@ -419,7 +439,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](
-                    _.canSetCardinality(toResourceClassIri(d.subclassIri), toPropertyIri(d.propertyIri), newCardinality),
+                    _.canSetCardinality(
+                      d.subclassIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
                   )
               } yield assertTrue(actual.isRight)
             }
@@ -436,7 +460,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](
-                    _.canSetCardinality(toResourceClassIri(d.subclassIri), toPropertyIri(d.propertyIri), newCardinality),
+                    _.canSetCardinality(
+                      d.classIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
                   )
               } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
             }
@@ -453,7 +481,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](
-                    _.canSetCardinality(toResourceClassIri(d.subclassIri), toPropertyIri(d.propertyIri), newCardinality),
+                    _.canSetCardinality(
+                      d.classIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
                   )
               } yield assertTrue(actual.isRight)
             }
@@ -470,7 +502,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
                   ZIO.serviceWithZIO[CardinalityService](
-                    _.canSetCardinality(toResourceClassIri(d.subclassIri), toPropertyIri(d.propertyIri), newCardinality),
+                    _.canSetCardinality(
+                      d.classIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
                   )
               } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
             }
@@ -501,8 +537,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](
                   _.canSetCardinality(
-                    toResourceClassIri(Anything.Class.Thing),
-                    toPropertyIri(Anything.Property.hasOtherThing),
+                    Anything.Class.Thing.value.toResourceClassIri,
+                    Anything.Property.hasOtherThing.value.toPropertyIri,
                     newCardinality,
                   ),
                 )
@@ -557,8 +593,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](
                   _.canSetCardinality(
-                    toResourceClassIri(Anything.Class.Thing),
-                    toPropertyIri(Anything.Property.hasOtherThing),
+                    Anything.Class.Thing.value.toResourceClassIri,
+                    Anything.Property.hasOtherThing.value.toPropertyIri,
                     newCardinality,
                   ),
                 )
@@ -606,8 +642,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](
                   _.canSetCardinality(
-                    toResourceClassIri(Anything.Class.Thing),
-                    toPropertyIri(Anything.Property.hasOtherThing),
+                    Anything.Class.Thing.value.toResourceClassIri,
+                    Anything.Property.hasOtherThing.value.toPropertyIri,
                     newCardinality,
                   ),
                 )
@@ -653,8 +689,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
           _      <- OntologyCacheFake.set(ontologyCacheData)
           result <- ZIO.serviceWithZIO[CardinalityService](
                       _.canSetCardinality(
-                        toResourceClassIri(Biblio.Class.Article),
-                        toPropertyIri(Biblio.Property.hasTitle),
+                        Biblio.Class.Article.value.toResourceClassIri,
+                        Biblio.Property.hasTitle.value.toPropertyIri,
                         AtLeastOne,
                       ),
                     )
@@ -678,9 +714,4 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                                   |""".stripMargin),
       ),
     )
-
-  private def toResourceClassIri(iri: InternalIri): ResourceClassIri = ResourceClassIri.unsafeFrom(iri.value.toSmartIri)
-
-  private def toPropertyIri(iri: InternalIri): PropertyIri = PropertyIri.unsafeFrom(iri.value.toSmartIri)
-
 }

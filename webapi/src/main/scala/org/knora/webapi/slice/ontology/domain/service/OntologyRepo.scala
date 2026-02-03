@@ -39,7 +39,7 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
   def findDirectSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
   final def findAllSuperClassesBy(classIri: ResourceClassIri): Task[List[ReadClassInfoV2]] =
-    findAllSubclassesBy(classIri.toInternalIri)
+    findAllSuperClassesBy(classIri.toInternalIri)
   def findAllSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
   def findAllSuperClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]]
