@@ -11,7 +11,6 @@ import zio.*
 import org.knora.webapi.responders.admin.AssetPermissionsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 final class FilesServerEndpoints(
   filesEndpoints: FilesEndpoints,

@@ -13,14 +13,26 @@ import zio.*
 import scala.util.Try
 import scala.util.matching.Regex
 
+import dsp.valueobjects.Iri
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
-import org.knora.webapi.slice.common.domain.SparqlEncodedString
+import org.knora.webapi.util.FusekiLucenceQuery.SparqlEncodedString
 
 final case class FusekiLucenceQuery private (override val value: String) extends StringValue {
   def getQueryString: String = SparqlEncodedString.unsafeFrom(value).toString
 }
+
 object FusekiLucenceQuery extends StringValueCompanion[FusekiLucenceQuery] {
+  private final case class SparqlEncodedString private (value: String) extends StringValue
+
+  private object SparqlEncodedString extends StringValueCompanion[SparqlEncodedString] {
+    def from(str: String): Either[String, SparqlEncodedString] =
+      Iri
+        .toSparqlEncodedString(str)
+        .map(SparqlEncodedString.apply)
+        .toRight(s"May not be empty or contain a line break: '$str'")
+  }
+
   def from(str: String): Either[String, FusekiLucenceQuery] =
     for {
       _ <- Try(new QueryParser("field", new StandardAnalyzer()).parse(str)).toEither.left.map(_.getMessage)

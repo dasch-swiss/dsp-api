@@ -20,7 +20,6 @@ import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
-import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 object Codecs {
   object TapirCodec {
@@ -36,15 +35,14 @@ object Codecs {
     private def booleanCodec[A](from: Boolean => A, to: A => Boolean): StringCodec[A] =
       Codec.boolean.map(from)(to)
 
-    implicit val assetId: StringCodec[AssetId]                         = stringCodec(AssetId.from, _.value)
-    implicit val keyword: StringCodec[Keyword]                         = stringCodec(Keyword.from)
-    implicit val logo: StringCodec[Logo]                               = stringCodec(Logo.from)
-    implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
-    implicit val selfJoin: StringCodec[SelfJoin]                       = booleanCodec(SelfJoin.from)
-    implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
-    implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
-    implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
-    implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
+    implicit val assetId: StringCodec[AssetId]     = stringCodec(AssetId.from, _.value)
+    implicit val keyword: StringCodec[Keyword]     = stringCodec(Keyword.from)
+    implicit val logo: StringCodec[Logo]           = stringCodec(Logo.from)
+    implicit val longname: StringCodec[Longname]   = stringCodec(Longname.from)
+    implicit val selfJoin: StringCodec[SelfJoin]   = booleanCodec(SelfJoin.from)
+    implicit val shortcode: StringCodec[Shortcode] = stringCodec(Shortcode.from)
+    implicit val shortname: StringCodec[Shortname] = stringCodec(Shortname.from)
+    implicit val status: StringCodec[Status]       = booleanCodec(Status.from)
 
     // user value objects
     implicit val userIri: StringCodec[UserIri]   = stringCodec(UserIri.from)
@@ -88,11 +86,10 @@ object Codecs {
     implicit val restrictedViewWatermark: StringCodec[RestrictedView.Watermark] = booleanCodec(
       RestrictedView.Watermark.from,
     )
-    implicit val selfJoin: StringCodec[SelfJoin]                       = booleanCodec(SelfJoin.from)
-    implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
-    implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
-    implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
-    implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
+    implicit val selfJoin: StringCodec[SelfJoin]   = booleanCodec(SelfJoin.from)
+    implicit val shortcode: StringCodec[Shortcode] = stringCodec(Shortcode.from)
+    implicit val shortname: StringCodec[Shortname] = stringCodec(Shortname.from)
+    implicit val status: StringCodec[Status]       = booleanCodec(Status.from)
 
     // user
     implicit val userIri: StringCodec[UserIri]         = stringCodec(UserIri.from)
