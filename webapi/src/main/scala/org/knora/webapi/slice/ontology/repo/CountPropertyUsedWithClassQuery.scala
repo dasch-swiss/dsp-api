@@ -23,8 +23,8 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 object CountPropertyUsedWithClassQuery extends QueryBuilderHelper {
 
   /**
-   * Build a SELECT query that returns all instances of a class with the count of
-   * how many times they use a specific property.
+   * Build a SELECT query that returns all instances of a class with the count of  how many times they use a specific property.
+   * The query excludes deleted resources and values.
    *
    * @param propertyIri the IRI of the property to check
    * @param classIri    the IRI of the class to check instances of
@@ -37,16 +37,10 @@ object CountPropertyUsedWithClassQuery extends QueryBuilderHelper {
     val propertyVar = toRdfIri(propertyIri)
     val classVar    = toRdfIri(classIri)
 
-    // ?subject a ?classIri .
-    // MINUS { ?subject knora-base:isDeleted true }.
     val subjectPattern = subject
       .isA(classVar)
       .and(GraphPatterns.minus(subject.has(KnoraBase.isDeleted, Rdf.literalOf(true))))
 
-    // OPTIONAL {
-    //   ?subject ?propertyIri ?object .
-    //   MINUS { ?object knora-base:isDeleted true }.
-    // }
     val optionalPattern = subject
       .has(propertyVar, objectVar)
       .and(GraphPatterns.minus(objectVar.has(KnoraBase.isDeleted, Rdf.literalOf(true))))
@@ -56,6 +50,7 @@ object CountPropertyUsedWithClassQuery extends QueryBuilderHelper {
 
     Queries
       .SELECT(subject, Expressions.count(objectVar).as(count))
+      .prefix(KnoraBase.NS)
       .where(whereClause)
       .groupBy(subject)
   }
