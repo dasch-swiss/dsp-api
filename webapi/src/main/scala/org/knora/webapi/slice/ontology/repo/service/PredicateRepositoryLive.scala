@@ -5,16 +5,18 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 
-import zio.Task
-import zio.URLayer
-import zio.ZLayer
+import zio.*
 
-import org.knora.webapi.slice.common.domain.InternalIri
+import dsp.errors.InconsistentRepositoryDataException
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.PredicateRepository
 import org.knora.webapi.slice.ontology.repo.CountPropertyUsedWithClassQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-final case class PredicateRepositoryLive(private val tripleStore: TriplestoreService) extends PredicateRepository {
+final class PredicateRepositoryLive(tripleStore: TriplestoreService, iriConverter: IriConverter)
+    extends PredicateRepository {
 
   /**
    * Checks how many times a property entity is used in resource instances.
@@ -25,14 +27,26 @@ final case class PredicateRepositoryLive(private val tripleStore: TriplestoreSer
    *         how often this instance is using the property as a predicate
    */
   def getCountForPropertyUsedNumberOfTimesWithClass(
-    propertyIri: InternalIri,
-    classIri: InternalIri,
-  ): Task[List[(InternalIri, Int)]] =
+    propertyIri: PropertyIri,
+    classIri: ResourceClassIri,
+  ): Task[List[(ResourceClassIri, Int)]] =
     tripleStore
       .select(CountPropertyUsedWithClassQuery.build(propertyIri, classIri))
-      .map(_.map(row => (InternalIri(row.rowMap("subject")), row.rowMap("count").toInt)).toList)
+      .map(_.map(row => (row.rowMap("subject"), row.rowMap("count").toInt)).toList)
+      .flatMap(row =>
+        ZIO.foreach(row) { case (subjectIri, count) =>
+          for {
+            resourceClassIri <-
+              iriConverter
+                .asResourceClassIri(subjectIri)
+                .mapError(e =>
+                  InconsistentRepositoryDataException(s"Failed to convert IRI $subjectIri to ResourceClassIri: $e"),
+                )
+          } yield (resourceClassIri, count)
+        },
+      )
 }
 
 object PredicateRepositoryLive {
-  val layer: URLayer[TriplestoreService, PredicateRepositoryLive] = ZLayer.fromFunction(PredicateRepositoryLive.apply _)
+  val layer = ZLayer.derive[PredicateRepositoryLive]
 }

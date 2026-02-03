@@ -10,8 +10,10 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 
 /**
@@ -28,7 +30,7 @@ object CountPropertyUsedWithClassQuery extends QueryBuilderHelper {
    * @param classIri    the IRI of the class to check instances of
    * @return a Select query
    */
-  def build(propertyIri: InternalIri, classIri: InternalIri): SelectQuery = {
+  def build(propertyIri: PropertyIri, classIri: ResourceClassIri): SelectQuery = {
     val subject     = variable("subject")
     val count       = variable("count")
     val objectVar   = variable("object")

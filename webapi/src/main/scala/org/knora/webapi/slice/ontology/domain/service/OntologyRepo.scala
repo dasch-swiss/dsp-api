@@ -52,10 +52,17 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
    * @return all the super-classes of all other branches in the class hierarchy
    */
   def findAllSuperClassesBy(classIris: List[InternalIri], upToClass: InternalIri): Task[List[ReadClassInfoV2]]
+  final def findAllSuperClassesBy(
+    classIris: List[ResourceClassIri],
+    upToClass: ResourceClassIri,
+  ): Task[List[ReadClassInfoV2]] =
+    findAllSuperClassesBy(classIris.map(_.toInternalIri), upToClass.toInternalIri)
 
   def findDirectSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
   def findAllSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
+  final def findAllSubclassesBy(classIri: ResourceClassIri): Task[List[ReadClassInfoV2]] =
+    findAllSubclassesBy(classIri.toInternalIri)
 
   def findRepresentationClass(classIri: ResourceClassIri): Task[RepresentationClass]
 

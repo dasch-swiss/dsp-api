@@ -194,7 +194,6 @@ object LabelOrComment {
  *
  * @param classIris      the IRIs of the class entities to be queried.
  * @param propertyIris   the IRIs of the property entities to be queried.
- * @param requestingUser the user making the request.
  */
 case class EntityInfoGetRequestV2(
   classIris: Set[SmartIri] = Set.empty[SmartIri],
@@ -1305,6 +1304,8 @@ case class ReadClassInfoV2(
 ) extends ReadEntityInfoV2
     with KnoraReadV2[ReadClassInfoV2] {
 
+  def resourceClassIri: ResourceClassIri = ResourceClassIri.unsafeFrom(entityInfoContent.classIri)
+
   /**
    * All the class's cardinalities, both direct and indirect.
    */
@@ -1935,6 +1936,9 @@ case class ClassInfoContentV2(
   ontologySchema: OntologySchema,
 ) extends EntityInfoContentV2
     with KnoraContentV2[ClassInfoContentV2] {
+
+  def resourceClassIri: ResourceClassIri = ResourceClassIri.unsafeFrom(classIri)
+
   override def toOntologySchema(targetSchema: OntologySchema): ClassInfoContentV2 = {
     val classIriInTargetSchema = classIri.toOntologySchema(targetSchema)
 

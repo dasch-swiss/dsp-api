@@ -23,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService.classIriKey
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService.newCardinalityKey
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService.propertyIriKey
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
@@ -57,7 +58,7 @@ final class RestCardinalityService(
   def canReplaceCardinality(classIri: String, user: User): Task[CanDoResponseV2] =
     for {
       classIri <- iriConverter.asResourceClassIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
-      _        <- checkUserHasWriteAccessToOntologyOfClass(user, classIri.toInternalIri)
+      _        <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
       result   <- cardinalityService.canReplaceCardinality(classIri.smartIri)
     } yield toCanDoResponseV2(result)
 
@@ -66,9 +67,9 @@ final class RestCardinalityService(
     case failure: CanReplaceCardinalityCheckResult.Failure => CanDoResponseV2.no(failure.reason)
   }
 
-  private def checkUserHasWriteAccessToOntologyOfClass(user: User, classIri: InternalIri): Task[Unit] = {
+  private def checkUserHasWriteAccessToOntologyOfClass(user: User, classIri: ResourceClassIri): Task[Unit] = {
     val hasWriteAccess = for {
-      ontologyIri    <- iriConverter.getOntologyIriFromClassIri(classIri)
+      ontologyIri    <- iriConverter.getOntologyIriFromClassIri(classIri.toInternalIri)
       hasWriteAccess <- permissionService.hasOntologyWriteAccess(user, ontologyIri)
     } yield hasWriteAccess
     ZIO.ifZIO(hasWriteAccess)(
@@ -84,10 +85,10 @@ final class RestCardinalityService(
     user: User,
   ): Task[CanDoResponseV2] =
     for {
-      classIri       <- iriConverter.asInternalIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
+      classIri       <- iriConverter.asResourceClassIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
       _              <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
       newCardinality <- parseCardinality(cardinality).orElseFail(invalidQueryParamValue(newCardinalityKey))
-      propertyIri    <- iriConverter.asInternalIri(propertyIri).orElseFail(invalidQueryParamValue(propertyIriKey))
+      propertyIri    <- iriConverter.asPropertyIri(propertyIri).orElseFail(invalidQueryParamValue(propertyIriKey))
       result         <- cardinalityService.canSetCardinality(classIri, propertyIri, newCardinality)
       response       <- toCanDoResponseV2(result)
     } yield response
