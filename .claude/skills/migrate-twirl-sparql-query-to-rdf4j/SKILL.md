@@ -15,16 +15,19 @@ DSP-API historically used Twirl templates for SPARQL queries. These are being mi
 ## File Structure
 
 ### Original Twirl Template Location
+
 ```
 webapi/src/main/twirl/org/knora/webapi/messages/twirl/queries/sparql/{module}/{queryName}.scala.txt
 ```
 
 ### New Query Object Location
+
 ```
 webapi/src/main/scala/org/knora/webapi/slice/{module}/repo/{QueryName}Query.scala
 ```
 
 ### Test Location
+
 ```
 webapi/src/test/scala/org/knora/webapi/slice/{module}/repo/{QueryName}QuerySpec.scala
 ```
@@ -67,12 +70,14 @@ object {QueryName}Query extends QueryBuilderHelper {
 The `QueryBuilderHelper` trait provides these helper methods:
 
 ### Variable Creation
+
 ```scala
 def variable(name: String): Variable = SparqlBuilder.`var`(name)
 def spo: (Variable, Variable, Variable) = (variable("s"), variable("p"), variable("o"))
 ```
 
 ### IRI Conversion
+
 ```scala
 def toRdfIri(iri: KnoraIri): Iri      // For KnoraIri types
 def toRdfIri(iri: SmartIri): Iri      // For SmartIri
@@ -81,6 +86,7 @@ def toRdfIri(iri: StringValue): Iri   // For StringValue wrappers
 ```
 
 ### Literal Conversion
+
 ```scala
 def toRdfLiteral(instant: Instant): RdfLiteral.StringLiteral
 def toRdfLiteral(lmd: LastModificationDate): RdfLiteral.StringLiteral
@@ -91,17 +97,20 @@ def toRdfLiteral(booleanV2: BooleanLiteralV2): RdfLiteral.StringLiteral
 ```
 
 ### Property Paths
+
 ```scala
 def zeroOrMore(pred: Iri): PropertyPath  // For path* patterns like knora-base:previousValue*
 ```
 
 ### Graph Management
+
 ```scala
 def graphIri(knoraProject: KnoraProject): Iri  // Project data named graph
 def ontologyAndNamespace(ontologyIri: OntologyIri): (Iri, SimpleNamespace)
 ```
 
 ### ASK Query Helper
+
 ```scala
 def askWhere(triplePattern: TriplePattern): Ask
 ```
@@ -118,6 +127,7 @@ def askWhere(triplePattern: TriplePattern): Ask
 ## Pattern Building
 
 ### Basic Triple Pattern
+
 ```scala
 // Twirl: ?s knora-base:isDeleted false .
 val s = variable("s")
@@ -125,12 +135,14 @@ s.has(KnoraBase.isDeleted, Rdf.literalOf(false))
 ```
 
 ### Type Assertion
+
 ```scala
 // Twirl: ?node rdf:type knora-base:ListNode .
 node.isA(KnoraBase.ListNode)
 ```
 
 ### Chaining Patterns
+
 ```scala
 // Twirl: ?s knora-base:prop1 ?o1 ; knora-base:prop2 ?o2 .
 s.has(KnoraBase.prop1, o1).andHas(KnoraBase.prop2, o2)
@@ -140,12 +152,14 @@ s.has(KnoraBase.prop1, o1).and(x.has(KnoraBase.prop2, o2))
 ```
 
 ### Optional Patterns
+
 ```scala
 // Twirl: OPTIONAL { ?s rdfs:label ?label }
 s.has(RDFS.LABEL, label).optional()
 ```
 
 ### Property Paths
+
 ```scala
 // Twirl: ?current knora-base:previousValue* ?old
 val previousValuePath = zeroOrMore(KnoraBase.previousValue)
@@ -153,6 +167,7 @@ current.has(previousValuePath, old)
 ```
 
 ### FILTER NOT EXISTS
+
 ```scala
 // Twirl: FILTER NOT EXISTS { ?s knora-base:lastModificationDate ?date }
 GraphPatterns.filterNotExists(s.has(KnoraBase.lastModificationDate, date))
@@ -163,6 +178,7 @@ GraphPatterns.filterNotExists(s.has(KnoraBase.lastModificationDate, date))
 ### SELECT Query
 
 **Twirl Template:**
+
 ```
 @(filename: String)
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -181,6 +197,7 @@ WHERE {
 ```
 
 **rdf4j Migration:**
+
 ```scala
 object FileValuePermissionsQuery extends QueryBuilderHelper {
   def build(filename: InternalFilename): SelectQuery = {
@@ -221,6 +238,7 @@ object FileValuePermissionsQuery extends QueryBuilderHelper {
 ### ASK Query with UNION
 
 **Twirl Template:**
+
 ```
 @(nodeIri: IRI)
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -269,6 +287,7 @@ object IsNodeUsedQuery extends QueryBuilderHelper {
 ### DELETE Query (ModifyQuery)
 
 **rdf4j Implementation:**
+
 ```scala
 object DeleteNodeQuery extends QueryBuilderHelper {
   def buildForChildNode(nodeIri: ListIri, project: KnoraProject): ModifyQuery =
@@ -291,6 +310,7 @@ object DeleteNodeQuery extends QueryBuilderHelper {
 ### CONSTRUCT Query
 
 **rdf4j Implementation:**
+
 ```scala
 object GetListNodeQuery extends QueryBuilderHelper {
   def build(nodeIri: ListIri): ConstructQuery =
@@ -320,6 +340,7 @@ SalsahGui.guiAttribute       // salsah-gui:guiAttribute
 ```
 
 For standard RDF vocabularies, use rdf4j's built-in:
+
 ```scala
 import org.eclipse.rdf4j.model.vocabulary.{RDF, RDFS, OWL, XSD}
 
