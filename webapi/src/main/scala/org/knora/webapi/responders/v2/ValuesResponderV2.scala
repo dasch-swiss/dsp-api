@@ -52,6 +52,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.repo.DeleteLinkQuery
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
@@ -1358,16 +1359,16 @@ final case class ValuesResponderV2(
           valuePermissions = currentValue.permissions,
         )
 
-      sparqlUpdate = sparql.v2.txt.deleteLink(
-                       dataNamedGraph = dataNamedGraph,
-                       linkSourceIri = resourceInfo.resourceIri,
-                       linkUpdate = sparqlTemplateLinkUpdate,
-                       maybeComment = deleteComment,
-                       currentTime = currentTime,
-                       requestingUser = requestingUser.id,
-                     )
+      query = DeleteLinkQuery.build(
+                dataNamedGraph = dataNamedGraph,
+                linkSourceIri = resourceInfo.resourceIri,
+                linkUpdate = sparqlTemplateLinkUpdate,
+                maybeComment = deleteComment,
+                currentTime = currentTime,
+                requestingUser = requestingUser.id,
+              )
 
-      _ <- triplestoreService.query(Update(sparqlUpdate))
+      _ <- triplestoreService.query(query)
     } yield sparqlTemplateLinkUpdate.newLinkValueIri
 
   /**
