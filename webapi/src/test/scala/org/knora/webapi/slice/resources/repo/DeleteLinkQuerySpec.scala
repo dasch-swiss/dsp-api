@@ -6,8 +6,10 @@
 package org.knora.webapi.slice.resources.repo
 
 import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
+
 import dsp.errors.SparqlGenerationException
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.SmartIri
@@ -55,18 +57,17 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment, Any] = suite("DeleteLinkQuerySpec")(
     suite("build")(
       test("should produce correct query for deleting a link without comment") {
-        val actual = DeleteLinkQuery
-          .build(
-            testDataNamedGraph,
-            testLinkSourceIri,
-            createValidLinkUpdate(),
-            None,
-            testCurrentTime,
-            testRequestingUser,
-          )
-          .getQueryString
-        assertTrue(
-          actual ==
+        for {
+          query <- DeleteLinkQuery.build(
+                     testDataNamedGraph,
+                     testLinkSourceIri,
+                     createValidLinkUpdate(),
+                     None,
+                     testCurrentTime,
+                     testRequestingUser,
+                   )
+        } yield assertTrue(
+          query.getQueryString ==
             """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -107,18 +108,17 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
         )
       },
       test("should produce correct query for deleting a link with a delete comment") {
-        val actual = DeleteLinkQuery
-          .build(
-            testDataNamedGraph,
-            testLinkSourceIri,
-            createValidLinkUpdate(),
-            Some("This link is no longer needed"),
-            testCurrentTime,
-            testRequestingUser,
-          )
-          .getQueryString
-        assertTrue(
-          actual ==
+        for {
+          query <- DeleteLinkQuery.build(
+                     testDataNamedGraph,
+                     testLinkSourceIri,
+                     createValidLinkUpdate(),
+                     Some("This link is no longer needed"),
+                     testCurrentTime,
+                     testRequestingUser,
+                   )
+        } yield assertTrue(
+          query.getQueryString ==
             """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -161,25 +161,24 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
       },
       test("should produce correct query for different link property") {
         val differentLinkProperty = "http://www.knora.org/ontology/0803/incunabula#partOf".toSmartIri
-        val actual                = DeleteLinkQuery
-          .build(
-            "http://www.knora.org/data/0803/incunabula",
-            "http://rdfh.ch/0803/page123",
-            createValidLinkUpdate(
-              linkPropertyIri = differentLinkProperty,
-              linkTargetIri = "http://rdfh.ch/0803/book456",
-              newLinkValueIri = "http://rdfh.ch/0803/page123/values/deletedLink",
-              currentReferenceCount = 1,
-              newLinkValueCreator = "http://rdfh.ch/users/incunabulaUser",
-              newLinkValuePermissions = "CR knora-admin:Creator|V knora-admin:KnownUser",
-            ),
-            None,
-            Instant.parse("2024-02-01T08:00:00Z"),
-            UserIri.unsafeFrom("http://rdfh.ch/users/incunabulaUser"),
-          )
-          .getQueryString
-        assertTrue(
-          actual ==
+        for {
+          query <- DeleteLinkQuery.build(
+                     "http://www.knora.org/data/0803/incunabula",
+                     "http://rdfh.ch/0803/page123",
+                     createValidLinkUpdate(
+                       linkPropertyIri = differentLinkProperty,
+                       linkTargetIri = "http://rdfh.ch/0803/book456",
+                       newLinkValueIri = "http://rdfh.ch/0803/page123/values/deletedLink",
+                       currentReferenceCount = 1,
+                       newLinkValueCreator = "http://rdfh.ch/users/incunabulaUser",
+                       newLinkValuePermissions = "CR knora-admin:Creator|V knora-admin:KnownUser",
+                     ),
+                     None,
+                     Instant.parse("2024-02-01T08:00:00Z"),
+                     UserIri.unsafeFrom("http://rdfh.ch/users/incunabulaUser"),
+                   )
+        } yield assertTrue(
+          query.getQueryString ==
             """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -221,7 +220,7 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
       },
     ),
     suite("validation")(
-      test("should throw SparqlGenerationException when deleteDirectLink is false") {
+      test("should fail with SparqlGenerationException when deleteDirectLink is false") {
         val invalidLinkUpdate = SparqlTemplateLinkUpdate(
           linkPropertyIri = testLinkPropertyIri,
           directLinkExists = true,
@@ -236,23 +235,20 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
           newLinkValueCreator = testNewLinkValueCreator,
           newLinkValuePermissions = testNewLinkValuePerms,
         )
-        val result =
-          try {
-            DeleteLinkQuery.build(
-              testDataNamedGraph,
-              testLinkSourceIri,
-              invalidLinkUpdate,
-              None,
-              testCurrentTime,
-              testRequestingUser,
-            )
-            None
-          } catch {
-            case e: SparqlGenerationException => Some(e.message)
-          }
-        assertTrue(result.contains("linkUpdate.deleteDirectLink must be true in this SPARQL template"))
+        val effect = DeleteLinkQuery.build(
+          testDataNamedGraph,
+          testLinkSourceIri,
+          invalidLinkUpdate,
+          None,
+          testCurrentTime,
+          testRequestingUser,
+        )
+        assertZIO(effect.exit)(
+          failsWithA[SparqlGenerationException] &&
+            fails(hasMessage(containsString("deleteDirectLink must be true"))),
+        )
       },
-      test("should throw SparqlGenerationException when linkValueExists is false") {
+      test("should fail with SparqlGenerationException when linkValueExists is false") {
         val invalidLinkUpdate = SparqlTemplateLinkUpdate(
           linkPropertyIri = testLinkPropertyIri,
           directLinkExists = true,
@@ -267,23 +263,20 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
           newLinkValueCreator = testNewLinkValueCreator,
           newLinkValuePermissions = testNewLinkValuePerms,
         )
-        val result =
-          try {
-            DeleteLinkQuery.build(
-              testDataNamedGraph,
-              testLinkSourceIri,
-              invalidLinkUpdate,
-              None,
-              testCurrentTime,
-              testRequestingUser,
-            )
-            None
-          } catch {
-            case e: SparqlGenerationException => Some(e.message)
-          }
-        assertTrue(result.contains("linkUpdate.linkValueExists must be true in this SPARQL template"))
+        val effect = DeleteLinkQuery.build(
+          testDataNamedGraph,
+          testLinkSourceIri,
+          invalidLinkUpdate,
+          None,
+          testCurrentTime,
+          testRequestingUser,
+        )
+        assertZIO(effect.exit)(
+          failsWithA[SparqlGenerationException] &&
+            fails(hasMessage(containsString("linkValueExists must be true"))),
+        )
       },
-      test("should throw SparqlGenerationException when directLinkExists is false") {
+      test("should fail with SparqlGenerationException when directLinkExists is false") {
         val invalidLinkUpdate = SparqlTemplateLinkUpdate(
           linkPropertyIri = testLinkPropertyIri,
           directLinkExists = false, // Invalid: must be true
@@ -298,23 +291,20 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
           newLinkValueCreator = testNewLinkValueCreator,
           newLinkValuePermissions = testNewLinkValuePerms,
         )
-        val result =
-          try {
-            DeleteLinkQuery.build(
-              testDataNamedGraph,
-              testLinkSourceIri,
-              invalidLinkUpdate,
-              None,
-              testCurrentTime,
-              testRequestingUser,
-            )
-            None
-          } catch {
-            case e: SparqlGenerationException => Some(e.message)
-          }
-        assertTrue(result.contains("linkUpdate.directLinkExists must be true in this SPARQL template"))
+        val effect = DeleteLinkQuery.build(
+          testDataNamedGraph,
+          testLinkSourceIri,
+          invalidLinkUpdate,
+          None,
+          testCurrentTime,
+          testRequestingUser,
+        )
+        assertZIO(effect.exit)(
+          failsWithA[SparqlGenerationException] &&
+            fails(hasMessage(containsString("directLinkExists must be true"))),
+        )
       },
-      test("should throw SparqlGenerationException when newReferenceCount is not 0") {
+      test("should fail with SparqlGenerationException when newReferenceCount is not 0") {
         val invalidLinkUpdate = SparqlTemplateLinkUpdate(
           linkPropertyIri = testLinkPropertyIri,
           directLinkExists = true,
@@ -329,21 +319,18 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
           newLinkValueCreator = testNewLinkValueCreator,
           newLinkValuePermissions = testNewLinkValuePerms,
         )
-        val result =
-          try {
-            DeleteLinkQuery.build(
-              testDataNamedGraph,
-              testLinkSourceIri,
-              invalidLinkUpdate,
-              None,
-              testCurrentTime,
-              testRequestingUser,
-            )
-            None
-          } catch {
-            case e: SparqlGenerationException => Some(e.message)
-          }
-        assertTrue(result.contains("linkUpdate.newReferenceCount must be 0 in this SPARQL template"))
+        val effect = DeleteLinkQuery.build(
+          testDataNamedGraph,
+          testLinkSourceIri,
+          invalidLinkUpdate,
+          None,
+          testCurrentTime,
+          testRequestingUser,
+        )
+        assertZIO(effect.exit)(
+          failsWithA[SparqlGenerationException] &&
+            fails(hasMessage(containsString("newReferenceCount must be 0"))),
+        )
       },
     ),
   )

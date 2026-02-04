@@ -1359,14 +1359,16 @@ final case class ValuesResponderV2(
           valuePermissions = currentValue.permissions,
         )
 
-      query = DeleteLinkQuery.build(
-                dataNamedGraph,
-                resourceInfo.resourceIri,
-                sparqlTemplateLinkUpdate,
-                deleteComment,
-                currentTime,
-                requestingUser.userIri,
-              )
+      query <- DeleteLinkQuery
+                 .build(
+                   dataNamedGraph,
+                   resourceInfo.resourceIri,
+                   sparqlTemplateLinkUpdate,
+                   deleteComment,
+                   currentTime,
+                   requestingUser.userIri,
+                 )
+                 .mapError(e => BadRequestException(e.message))
 
       _ <- triplestoreService.query(query)
     } yield sparqlTemplateLinkUpdate.newLinkValueIri
