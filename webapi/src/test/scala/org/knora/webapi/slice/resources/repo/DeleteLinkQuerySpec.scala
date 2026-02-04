@@ -8,12 +8,12 @@ package org.knora.webapi.slice.resources.repo
 import zio.test.*
 
 import java.time.Instant
-
 import dsp.errors.SparqlGenerationException
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.slice.admin.domain.model.UserIri
 
 object DeleteLinkQuerySpec extends ZIOSpecDefault {
 
@@ -28,7 +28,7 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
   private val testNewLinkValueCreator   = "http://rdfh.ch/users/creator1"
   private val testNewLinkValuePerms     = "CR knora-admin:Creator"
   private val testCurrentTime           = Instant.parse("2024-01-15T10:30:00Z")
-  private val testRequestingUser        = "http://rdfh.ch/users/root"
+  private val testRequestingUser        = UserIri.unsafeFrom("http://rdfh.ch/users/root")
 
   private def createValidLinkUpdate(
     linkPropertyIri: SmartIri = testLinkPropertyIri,
@@ -57,12 +57,12 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
       test("should produce correct query for deleting a link without comment") {
         val actual = DeleteLinkQuery
           .build(
-            dataNamedGraph = testDataNamedGraph,
-            linkSourceIri = testLinkSourceIri,
-            linkUpdate = createValidLinkUpdate(),
-            maybeComment = None,
-            currentTime = testCurrentTime,
-            requestingUser = testRequestingUser,
+            testDataNamedGraph,
+            testLinkSourceIri,
+            createValidLinkUpdate(),
+            None,
+            testCurrentTime,
+            testRequestingUser,
           )
           .getQueryString
         assertTrue(
@@ -109,12 +109,12 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
       test("should produce correct query for deleting a link with a delete comment") {
         val actual = DeleteLinkQuery
           .build(
-            dataNamedGraph = testDataNamedGraph,
-            linkSourceIri = testLinkSourceIri,
-            linkUpdate = createValidLinkUpdate(),
-            maybeComment = Some("This link is no longer needed"),
-            currentTime = testCurrentTime,
-            requestingUser = testRequestingUser,
+            testDataNamedGraph,
+            testLinkSourceIri,
+            createValidLinkUpdate(),
+            Some("This link is no longer needed"),
+            testCurrentTime,
+            testRequestingUser,
           )
           .getQueryString
         assertTrue(
@@ -161,11 +161,11 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
       },
       test("should produce correct query for different link property") {
         val differentLinkProperty = "http://www.knora.org/ontology/0803/incunabula#partOf".toSmartIri
-        val actual = DeleteLinkQuery
+        val actual                = DeleteLinkQuery
           .build(
-            dataNamedGraph = "http://www.knora.org/data/0803/incunabula",
-            linkSourceIri = "http://rdfh.ch/0803/page123",
-            linkUpdate = createValidLinkUpdate(
+            "http://www.knora.org/data/0803/incunabula",
+            "http://rdfh.ch/0803/page123",
+            createValidLinkUpdate(
               linkPropertyIri = differentLinkProperty,
               linkTargetIri = "http://rdfh.ch/0803/book456",
               newLinkValueIri = "http://rdfh.ch/0803/page123/values/deletedLink",
@@ -173,9 +173,9 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
               newLinkValueCreator = "http://rdfh.ch/users/incunabulaUser",
               newLinkValuePermissions = "CR knora-admin:Creator|V knora-admin:KnownUser",
             ),
-            maybeComment = None,
-            currentTime = Instant.parse("2024-02-01T08:00:00Z"),
-            requestingUser = "http://rdfh.ch/users/incunabulaUser",
+            None,
+            Instant.parse("2024-02-01T08:00:00Z"),
+            UserIri.unsafeFrom("http://rdfh.ch/users/incunabulaUser"),
           )
           .getQueryString
         assertTrue(
@@ -239,12 +239,12 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
         val result =
           try {
             DeleteLinkQuery.build(
-              dataNamedGraph = testDataNamedGraph,
-              linkSourceIri = testLinkSourceIri,
-              linkUpdate = invalidLinkUpdate,
-              maybeComment = None,
-              currentTime = testCurrentTime,
-              requestingUser = testRequestingUser,
+              testDataNamedGraph,
+              testLinkSourceIri,
+              invalidLinkUpdate,
+              None,
+              testCurrentTime,
+              testRequestingUser,
             )
             None
           } catch {
@@ -270,12 +270,12 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
         val result =
           try {
             DeleteLinkQuery.build(
-              dataNamedGraph = testDataNamedGraph,
-              linkSourceIri = testLinkSourceIri,
-              linkUpdate = invalidLinkUpdate,
-              maybeComment = None,
-              currentTime = testCurrentTime,
-              requestingUser = testRequestingUser,
+              testDataNamedGraph,
+              testLinkSourceIri,
+              invalidLinkUpdate,
+              None,
+              testCurrentTime,
+              testRequestingUser,
             )
             None
           } catch {
@@ -301,12 +301,12 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
         val result =
           try {
             DeleteLinkQuery.build(
-              dataNamedGraph = testDataNamedGraph,
-              linkSourceIri = testLinkSourceIri,
-              linkUpdate = invalidLinkUpdate,
-              maybeComment = None,
-              currentTime = testCurrentTime,
-              requestingUser = testRequestingUser,
+              testDataNamedGraph,
+              testLinkSourceIri,
+              invalidLinkUpdate,
+              None,
+              testCurrentTime,
+              testRequestingUser,
             )
             None
           } catch {
@@ -332,12 +332,12 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
         val result =
           try {
             DeleteLinkQuery.build(
-              dataNamedGraph = testDataNamedGraph,
-              linkSourceIri = testLinkSourceIri,
-              linkUpdate = invalidLinkUpdate,
-              maybeComment = None,
-              currentTime = testCurrentTime,
-              requestingUser = testRequestingUser,
+              testDataNamedGraph,
+              testLinkSourceIri,
+              invalidLinkUpdate,
+              None,
+              testCurrentTime,
+              testRequestingUser,
             )
             None
           } catch {

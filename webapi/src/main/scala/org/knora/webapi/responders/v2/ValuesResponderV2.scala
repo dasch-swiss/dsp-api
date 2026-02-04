@@ -1360,12 +1360,12 @@ final case class ValuesResponderV2(
         )
 
       query = DeleteLinkQuery.build(
-                dataNamedGraph = dataNamedGraph,
-                linkSourceIri = resourceInfo.resourceIri,
-                linkUpdate = sparqlTemplateLinkUpdate,
-                maybeComment = deleteComment,
-                currentTime = currentTime,
-                requestingUser = requestingUser.id,
+                dataNamedGraph,
+                resourceInfo.resourceIri,
+                sparqlTemplateLinkUpdate,
+                deleteComment,
+                currentTime,
+                requestingUser.userIri,
               )
 
       _ <- triplestoreService.query(query)

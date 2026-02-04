@@ -14,10 +14,10 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 import java.time.Instant
-
 import dsp.errors.SparqlGenerationException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 
@@ -39,16 +39,16 @@ object DeleteLinkQuery extends QueryBuilderHelper {
    * @param linkSourceIri  the resource that is the source of the link
    * @param linkUpdate     a [[SparqlTemplateLinkUpdate]] specifying how to update the link
    * @param maybeComment   an optional comment explaining why the link is being deleted
-   * @param currentTime    an xsd:dateTimeStamp that will be attached to the resources
-   * @param requestingUser the IRI of the user making the request
+   * @param deletedAt    an xsd:dateTimeStamp that will be attached to the resources
+   * @param userIri the IRI of the user making the request
    */
   def build(
     dataNamedGraph: IRI,
     linkSourceIri: IRI,
     linkUpdate: SparqlTemplateLinkUpdate,
     maybeComment: Option[String],
-    currentTime: Instant,
-    requestingUser: IRI,
+    deletedAt: Instant,
+    userIri: UserIri,
   ): ModifyQuery = {
     // Validate preconditions - exactly as in the original Twirl template
     if (!linkUpdate.deleteDirectLink) {
@@ -95,9 +95,9 @@ object DeleteLinkQuery extends QueryBuilderHelper {
       newLinkValue.has(RDF.OBJECT, linkTarget),
       newLinkValue.has(KB.valueHasString, Rdf.literalOfType(linkUpdate.linkTargetIri, XSD.STRING)),
       newLinkValue.has(KB.valueHasRefCount, Rdf.literalOf(linkUpdate.newReferenceCount)),
-      newLinkValue.has(KB.valueCreationDate, toRdfLiteral(currentTime)),
-      newLinkValue.has(KB.deleteDate, toRdfLiteral(currentTime)),
-      newLinkValue.has(KB.deletedBy, Rdf.iri(requestingUser)),
+      newLinkValue.has(KB.valueCreationDate, toRdfLiteral(deletedAt)),
+      newLinkValue.has(KB.deleteDate, toRdfLiteral(deletedAt)),
+      newLinkValue.has(KB.deletedBy, toRdfIri(userIri)),
       newLinkValue.has(KB.previousValue, currentLinkValue),
       newLinkValue.has(KB.valueHasUUID, currentLinkUUID),
       newLinkValue.has(KB.isDeleted, Rdf.literalOf(true)),
@@ -106,7 +106,7 @@ object DeleteLinkQuery extends QueryBuilderHelper {
       // Attach the new LinkValue to its containing resource
       linkSource.has(linkValueProperty, newLinkValue),
       // Update the link source's last modification date
-      linkSource.has(KB.lastModificationDate, toRdfLiteral(currentTime)),
+      linkSource.has(KB.lastModificationDate, toRdfLiteral(deletedAt)),
     )
 
     val commentInsert = maybeComment.map(comment => newLinkValue.has(KB.deleteComment, Rdf.literalOf(comment))).toSeq
