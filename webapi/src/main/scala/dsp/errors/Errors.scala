@@ -329,6 +329,8 @@ case class InconsistentRepositoryDataException(message: String, cause: Option[Th
     extends InternalServerException(message, cause)
 
 object InconsistentRepositoryDataException {
+  def apply(message: String): InconsistentRepositoryDataException =
+    InconsistentRepositoryDataException(message, None)
   def apply(message: String, e: Throwable): InconsistentRepositoryDataException =
     InconsistentRepositoryDataException(message, Some(e))
 }

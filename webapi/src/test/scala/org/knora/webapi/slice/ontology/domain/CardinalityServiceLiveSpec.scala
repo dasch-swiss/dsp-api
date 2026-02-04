@@ -6,15 +6,14 @@
 package org.knora.webapi.slice.ontology.domain
 
 import org.apache.jena.query.Dataset
-import zio.Random
-import zio.Ref
-import zio.ZIO
-import zio.ZLayer
+import zio.*
 import zio.test.*
 
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
@@ -31,14 +30,15 @@ import org.knora.webapi.store.triplestore.TestDatasetBuilder.*
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private object CanSetCardinalityTestData {
     object Gens {
       case class TestIris(
-        ontologyIri: InternalIri,
-        classIri: InternalIri,
-        subClassIri: InternalIri,
-        propertyIri: InternalIri,
+        ontologyIri: OntologyIri,
+        classIri: ResourceClassIri,
+        subClassIri: ResourceClassIri,
+        propertyIri: PropertyIri,
       )
 
       val knoraOntologiesGen: Gen[Any, TestIris] = Gen.fromZIO {
@@ -50,13 +50,18 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             KnoraAdmin.Class.AdministrativePermission,
             KnoraAdmin.Property.belongsToProject,
           ),
+        ).map((o, c, sc, p) =>
+          (
+            o.value.toOntologyIri,
+            c.value.toResourceClassIri,
+            sc.value.toResourceClassIri,
+            p.value.toPropertyIri,
+          ),
         )
         Random
           .nextIntBounded(values.length)
           .map(values(_))
-          .map(iris =>
-            TestIris(ontologyIri = iris._1, classIri = iris._2, subClassIri = iris._3, propertyIri = iris._4),
-          )
+          .map(TestIris.apply)
       }
     }
 
@@ -181,10 +186,10 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             check(cardinalitiesGen()) { cardinality =>
               val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(
                 cardinality,
-                iris.ontologyIri,
-                iris.classIri,
-                iris.subClassIri,
-                iris.propertyIri,
+                iris.ontologyIri.toInternalIri,
+                iris.classIri.toInternalIri,
+                iris.subClassIri.toInternalIri,
+                iris.propertyIri.toInternalIri,
               )
               for {
                 _      <- OntologyCacheFake.set(d.data)
@@ -196,15 +201,15 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
           }
         },
         test("Given no super-class or subclass exists then setting a cardinality is possible") {
-          val classIri    = CanSetCardinalityTestData.thingSmartIri
-          val propertyIri = CanSetCardinalityTestData.hasValueSmartIri
+          val classIri    = ResourceClassIri.unsafeFrom(CanSetCardinalityTestData.thingSmartIri)
+          val propertyIri = PropertyIri.unsafeFrom(CanSetCardinalityTestData.hasValueSmartIri)
           val data        = OntologyCacheDataBuilder.builder
             .addOntology(
               ReadOntologyV2Builder
                 .builder(CanSetCardinalityTestData.anythingOntologySmartIri)
                 .addClassInfo(
                   ReadClassInfoV2Builder
-                    .builder(classIri)
+                    .builder(classIri.smartIri)
                     .addProperty(propertyIri.toInternalIri, ExactlyOne),
                 ),
             )
@@ -213,10 +218,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
           check(cardinalitiesGen()) { cardinality =>
             for {
               _      <- OntologyCacheFake.set(data)
-              actual <-
-                ZIO.serviceWithZIO[CardinalityService](
-                  _.canSetCardinality(classIri.toInternalIri, propertyIri.toInternalIri, cardinality),
-                )
+              actual <- ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(classIri, propertyIri, cardinality))
             } yield assertTrue(actual.isRight)
           }
         },
@@ -232,7 +234,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 for {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
-                              _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
+                              _.canSetCardinality(
+                                d.subclassIri.value.toResourceClassIri,
+                                d.propertyIri.value.toPropertyIri,
+                                newCardinality,
+                              ),
                             )
                 } yield assertTrue(actual == Left(List(SuperClassCheckFailure(List(d.classIri)))))
               }
@@ -246,7 +252,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
-                  ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.subclassIri, d.propertyIri, ExactlyOne))
+                  ZIO.serviceWithZIO[CardinalityService](
+                    _.canSetCardinality(
+                      d.subclassIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      ExactlyOne,
+                    ),
+                  )
               } yield assertTrue(actual.isRight)
             },
           ),
@@ -262,7 +274,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <-
                     ZIO.serviceWithZIO[CardinalityService](
-                      _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
+                      _.canSetCardinality(
+                        d.subclassIri.value.toResourceClassIri,
+                        d.propertyIri.value.toPropertyIri,
+                        newCardinality,
+                      ),
                     )
                 } yield assertTrue(actual == Left(List(SuperClassCheckFailure(superClasses = List(d.classIri)))))
               }
@@ -277,7 +293,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 for {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
-                              _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
+                              _.canSetCardinality(
+                                d.subclassIri.value.toResourceClassIri,
+                                d.propertyIri.value.toPropertyIri,
+                                newCardinality,
+                              ),
                             )
                 } yield assertTrue(actual.isRight)
               }
@@ -294,7 +314,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 for {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
-                              _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
+                              _.canSetCardinality(
+                                d.subclassIri.value.toResourceClassIri,
+                                d.propertyIri.value.toPropertyIri,
+                                newCardinality,
+                              ),
                             )
                 } yield assertTrue(actual == Left(List(SuperClassCheckFailure(List(d.classIri)))))
               }
@@ -309,7 +333,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 for {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- ZIO.serviceWithZIO[CardinalityService](
-                              _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
+                              _.canSetCardinality(
+                                d.subclassIri.value.toResourceClassIri,
+                                d.propertyIri.value.toPropertyIri,
+                                newCardinality,
+                              ),
                             )
                 } yield assertTrue(actual.isRight)
               }
@@ -325,9 +353,14 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(Unbounded)
               for {
                 _      <- OntologyCacheFake.set(d.data)
-                actual <- ZIO.serviceWithZIO[CardinalityService](
-                            _.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality),
-                          )
+                actual <-
+                  ZIO.serviceWithZIO[CardinalityService](
+                    _.canSetCardinality(
+                      d.subclassIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
+                  )
               } yield assertTrue(actual.isRight)
             }
           },
@@ -343,7 +376,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             for {
               _      <- OntologyCacheFake.set(d.data)
               actual <-
-                ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, Unbounded))
+                ZIO.serviceWithZIO[CardinalityService](
+                  _.canSetCardinality(
+                    d.subclassIri.value.toResourceClassIri,
+                    d.propertyIri.value.toPropertyIri,
+                    Unbounded,
+                  ),
+                )
             } yield assertTrue(actual.isRight)
           },
           test(
@@ -357,7 +396,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
-                  ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
+                  ZIO.serviceWithZIO[CardinalityService](
+                    _.canSetCardinality(
+                      d.classIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
+                  )
               } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
             }
           },
@@ -372,7 +417,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
-                  ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
+                  ZIO.serviceWithZIO[CardinalityService](
+                    _.canSetCardinality(
+                      d.subclassIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
+                  )
               } yield assertTrue(actual.isRight)
             }
           },
@@ -387,7 +438,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
-                  ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
+                  ZIO.serviceWithZIO[CardinalityService](
+                    _.canSetCardinality(
+                      d.subclassIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
+                  )
               } yield assertTrue(actual.isRight)
             }
           },
@@ -402,7 +459,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
-                  ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
+                  ZIO.serviceWithZIO[CardinalityService](
+                    _.canSetCardinality(
+                      d.classIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
+                  )
               } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
             }
           },
@@ -417,7 +480,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
-                  ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
+                  ZIO.serviceWithZIO[CardinalityService](
+                    _.canSetCardinality(
+                      d.classIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
+                  )
               } yield assertTrue(actual.isRight)
             }
           },
@@ -432,7 +501,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <-
-                  ZIO.serviceWithZIO[CardinalityService](_.canSetCardinality(d.classIri, d.propertyIri, newCardinality))
+                  ZIO.serviceWithZIO[CardinalityService](
+                    _.canSetCardinality(
+                      d.classIri.value.toResourceClassIri,
+                      d.propertyIri.value.toPropertyIri,
+                      newCardinality,
+                    ),
+                  )
               } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
             }
           },
@@ -462,8 +537,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](
                   _.canSetCardinality(
-                    Anything.Class.Thing,
-                    Anything.Property.hasOtherThing,
+                    Anything.Class.Thing.value.toResourceClassIri,
+                    Anything.Property.hasOtherThing.value.toPropertyIri,
                     newCardinality,
                   ),
                 )
@@ -518,8 +593,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](
                   _.canSetCardinality(
-                    Anything.Class.Thing,
-                    Anything.Property.hasOtherThing,
+                    Anything.Class.Thing.value.toResourceClassIri,
+                    Anything.Property.hasOtherThing.value.toPropertyIri,
                     newCardinality,
                   ),
                 )
@@ -567,8 +642,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               actual <-
                 ZIO.serviceWithZIO[CardinalityService](
                   _.canSetCardinality(
-                    Anything.Class.Thing,
-                    Anything.Property.hasOtherThing,
+                    Anything.Class.Thing.value.toResourceClassIri,
+                    Anything.Property.hasOtherThing.value.toPropertyIri,
                     newCardinality,
                   ),
                 )
@@ -613,7 +688,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
         for {
           _      <- OntologyCacheFake.set(ontologyCacheData)
           result <- ZIO.serviceWithZIO[CardinalityService](
-                      _.canSetCardinality(Biblio.Class.Article, Biblio.Property.hasTitle, AtLeastOne),
+                      _.canSetCardinality(
+                        Biblio.Class.Article.value.toResourceClassIri,
+                        Biblio.Property.hasTitle.value.toPropertyIri,
+                        AtLeastOne,
+                      ),
                     )
         } yield assertTrue(result.isRight)
       }).provide(

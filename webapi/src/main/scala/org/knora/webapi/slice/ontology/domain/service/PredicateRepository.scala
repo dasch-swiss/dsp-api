@@ -8,7 +8,8 @@ package org.knora.webapi.slice.ontology.domain.service
 import zio.Task
 import zio.ZIO
 
-import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 
 trait PredicateRepository {
 
@@ -21,9 +22,9 @@ trait PredicateRepository {
    *         how often this instance is using the property as a predicate
    */
   def getCountForPropertyUsedNumberOfTimesWithClass(
-    propertyIri: InternalIri,
-    classIri: InternalIri,
-  ): Task[List[(InternalIri, Int)]]
+    propertyIri: PropertyIri,
+    classIri: ResourceClassIri,
+  ): Task[List[(ResourceClassIri, Int)]]
 
   /**
    * Checks how many times a property entity is used in resource instances.
@@ -34,9 +35,9 @@ trait PredicateRepository {
    *         how often this instance is using the property as a predicate
    */
   def getCountForPropertyUsedNumberOfTimesWithClasses(
-    propertyIri: InternalIri,
-    classIris: List[InternalIri],
-  ): Task[List[(InternalIri, Int)]] =
+    propertyIri: PropertyIri,
+    classIris: List[ResourceClassIri],
+  ): Task[List[(ResourceClassIri, Int)]] =
     ZIO.foreach(classIris)(getCountForPropertyUsedNumberOfTimesWithClass(propertyIri, _)).map(_.flatten)
 }
 

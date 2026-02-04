@@ -18,6 +18,8 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubCardinalitiesService.replaceSuccess
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubCardinalitiesService.setSuccess
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
@@ -179,7 +181,7 @@ object RestCardinalityServiceSpec extends ZIOSpecDefault {
       AppConfig.layer,
     )
 
-  final case class StubCardinalitiesService(
+  final class StubCardinalitiesService(
     setResponse: Ref[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]],
     replaceResponse: Ref[CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult],
   ) extends CardinalityService {
@@ -189,8 +191,8 @@ object RestCardinalityServiceSpec extends ZIOSpecDefault {
 
     def setSetResponseSuccess(): UIO[Unit] = setResponse.set(setSuccess)
     override def canSetCardinality(
-      classIri: InternalIri,
-      propertyIri: InternalIri,
+      classIri: ResourceClassIri,
+      propertyIri: PropertyIri,
       newCardinality: Cardinality,
     ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
       setResponse.get

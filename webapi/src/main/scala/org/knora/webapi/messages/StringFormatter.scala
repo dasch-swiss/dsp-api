@@ -31,6 +31,8 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.util.Base64UrlCheckDigit
@@ -568,6 +570,15 @@ object IriConversions {
      */
     def toSmartIriWithErr(errorFun: => Nothing)(implicit stringFormatter: StringFormatter): SmartIri =
       stringFormatter.toSmartIriWithErr(self, errorFun)
+
+    def toResourceClassIri(implicit stringFormatter: StringFormatter): ResourceClassIri =
+      ResourceClassIri.unsafeFrom(stringFormatter.toSmartIri(self))
+
+    def toPropertyIri(implicit stringFormatter: StringFormatter): PropertyIri =
+      PropertyIri.unsafeFrom(stringFormatter.toSmartIri(self))
+
+    def toOntologyIri(implicit stringFormatter: StringFormatter): OntologyIri =
+      OntologyIri.unsafeFrom(stringFormatter.toSmartIri(self))
   }
 
 }

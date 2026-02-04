@@ -4,15 +4,18 @@
  */
 
 package org.knora.webapi.slice.ontology.domain.service
+
 import org.apache.jena.query.Dataset
-import zio.Ref
-import zio.ZIO
-import zio.ZLayer
+import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.KnoraBase
@@ -21,6 +24,9 @@ import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
+
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+
   private val usedOnce: String =
     s"""
        |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -55,6 +61,7 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
        |""".stripMargin
 
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], PredicateRepositoryLive](
+    IriConverter.layer,
     PredicateRepositoryLive.layer,
     StringFormatter.test,
     TriplestoreServiceInMemory.layer,
@@ -67,8 +74,8 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
           result <-
             ZIO.serviceWithZIO[PredicateRepository](
               _.getCountForPropertyUsedNumberOfTimesWithClass(
-                Biblio.Property.hasTitle,
-                Biblio.Class.Publication,
+                toPropertyIri(Biblio.Property.hasTitle),
+                toResourceClassIri(Biblio.Class.Publication),
               ),
             )
         } yield assertTrue(result == List.empty)
@@ -80,11 +87,11 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
           result <-
             ZIO.serviceWithZIO[PredicateRepository](
               _.getCountForPropertyUsedNumberOfTimesWithClass(
-                Biblio.Property.hasTitle,
-                Biblio.Class.Publication,
+                toPropertyIri(Biblio.Property.hasTitle),
+                toResourceClassIri(Biblio.Class.Publication),
               ),
             )
-        } yield assertTrue(result == List((InternalIri("http://aPublication"), 1)))
+        } yield assertTrue(result == List(("http://aPublication".toResourceClassIri, 1)))
       },
     ).provide(commonLayers, datasetLayerFromTurtle(usedOnce)),
     suite("getCountForPropertyUseNumberOfTimesWithClass given used twice")(
@@ -93,20 +100,23 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
           result <-
             ZIO.serviceWithZIO[PredicateRepository](
               _.getCountForPropertyUsedNumberOfTimesWithClass(
-                Biblio.Property.hasTitle,
-                Biblio.Class.Publication,
+                toPropertyIri(Biblio.Property.hasTitle),
+                toResourceClassIri(Biblio.Class.Publication),
               ),
             )
         } yield assert(result)(
           hasSameElements(
             List(
-              (InternalIri("http://aPublicationWithZero"), 0),
-              (InternalIri("http://aPublicationWithOne"), 1),
-              (InternalIri("http://aPublicationWithTwo"), 2),
+              ("http://aPublicationWithZero".toResourceClassIri, 0),
+              ("http://aPublicationWithOne".toResourceClassIri, 1),
+              ("http://aPublicationWithTwo".toResourceClassIri, 2),
             ),
           ),
         )
       },
     ).provide(commonLayers, datasetLayerFromTurtle(usedTwice)),
   )
+
+  private def toPropertyIri(iri: InternalIri)      = PropertyIri.unsafeFrom(iri.value.toSmartIri)
+  private def toResourceClassIri(iri: InternalIri) = ResourceClassIri.unsafeFrom(iri.value.toSmartIri)
 }

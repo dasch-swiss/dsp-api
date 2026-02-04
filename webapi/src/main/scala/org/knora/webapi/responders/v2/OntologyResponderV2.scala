@@ -43,7 +43,6 @@ import org.knora.webapi.slice.api.v2.ontologies.ReplaceClassCardinalitiesRequest
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -1063,12 +1062,15 @@ final case class OntologyResponderV2(
   private def checkCanCardinalitiesBeSet(
     newModel: ClassInfoContentV2,
   ): IO[List[CanSetCardinalityCheckResult.Failure], Unit] = {
-    val classIri                                               = newModel.classIri.toInternalIri
-    val cardinalitiesToCheck: List[(InternalIri, Cardinality)] =
-      newModel.directCardinalities.toList.map { case (p, c) => (p.toInternalIri, c.cardinality) }
+    val cardinalitiesToCheck: List[(PropertyIri, Cardinality)] =
+      newModel.directCardinalities.toList.map { case (p, c) => (PropertyIri.unsafeFrom(p), c.cardinality) }
     for {
       resultsForEachCardinalityChecked <-
-        ZIO.foreach(cardinalitiesToCheck) { case (p, c) => cardinalityService.canSetCardinality(classIri, p, c) }.orDie
+        ZIO
+          .foreach(cardinalitiesToCheck) { case (p, c) =>
+            cardinalityService.canSetCardinality(newModel.resourceClassIri, p, c)
+          }
+          .orDie
       errors =
         resultsForEachCardinalityChecked.foldLeft(List.empty)(
           (

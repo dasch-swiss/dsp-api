@@ -1,14 +1,15 @@
-
 ---
+name: write-unit-test-for-query-builder
+description: "Create a unit test for a Scala object that defines an RDF4J query. Triggers on: write unit test for query"
+user-invocable: true
 argument-hint: [object-name]
-description: Create a unit test for a Scala object that defines an RDF4J query.
 ---
 
 # Create Unit Test for RDF4J Query Object
 
 Create a unit test for the Scala object $1.
 The object contains at least one public function producing a query written using the rdf4j library.
-Analyse these functions and create the necessary test cases that verify the generated query strings are correct.
+Analyze these functions and create the necessary test cases that verify the generated query strings are correct.
 Take a look at existing *Query.scala and their corresponding test for reference.
 
 The unit test must be written in zio-test.
