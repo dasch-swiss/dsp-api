@@ -1,5 +1,16 @@
 # Changelog
 
+## [34.2.1](https://github.com/dasch-swiss/dsp-api/compare/v34.2.0...v34.2.1) (2026-02-04)
+
+
+### Maintenances
+
+* Migrate countPropertyUsedWithClass.scala.txt to rdf4j (DEV-5813) ([#3932](https://github.com/dasch-swiss/dsp-api/issues/3932)) ([81d8e7f](https://github.com/dasch-swiss/dsp-api/commit/81d8e7f2cd2a9706372a6a8c73f3b5de9d0c6ae5))
+* Migrate getFileValue twirl template SPARQL query to rdf4j (DEV-5809) ([#3930](https://github.com/dasch-swiss/dsp-api/issues/3930)) ([a88152b](https://github.com/dasch-swiss/dsp-api/commit/a88152bf9f4ba9c3ffbd6c784fe538b205c68222))
+* Minor dependency updates ([#3928](https://github.com/dasch-swiss/dsp-api/issues/3928)) ([eb7f150](https://github.com/dasch-swiss/dsp-api/commit/eb7f1505bad52e3be9e4f68d6c6be05c7fbd75bf))
+* Patch dependency updates ([#3927](https://github.com/dasch-swiss/dsp-api/issues/3927)) ([d144b0e](https://github.com/dasch-swiss/dsp-api/commit/d144b0efbad86f58d1a23eb3511a3fe55d8eda9c))
+* Remove CODEOWNERS file ([#3933](https://github.com/dasch-swiss/dsp-api/issues/3933)) ([5a335bb](https://github.com/dasch-swiss/dsp-api/commit/5a335bbf861d5a6c6e8696f35f6c342df1d999f2))
+
 ## [34.2.0](https://github.com/dasch-swiss/dsp-api/compare/v34.1.1...v34.2.0) (2026-01-19)
 
 
