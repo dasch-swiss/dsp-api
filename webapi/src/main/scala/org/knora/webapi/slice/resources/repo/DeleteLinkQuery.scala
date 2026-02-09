@@ -12,7 +12,6 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
 import zio.IO
 import zio.ZIO
 
