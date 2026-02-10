@@ -54,6 +54,8 @@ trait QueryBuilderHelper {
     case PlainStringLiteralV2(value)                => Rdf.literalOf(value)
   }
 
+  def toRdfLiteral(str: StringValue): RdfLiteral.StringLiteral = Rdf.literalOf(str.value)
+
   def toRdfLiteral(booleanV2: BooleanLiteralV2): RdfLiteral.StringLiteral =
     Rdf.literalOfType(booleanV2.value.toString, XSD.BOOLEAN)
 

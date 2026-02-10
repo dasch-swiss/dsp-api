@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.repo
 
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
@@ -36,26 +37,35 @@ object FileValuePermissionsQuery extends QueryBuilderHelper {
     val creator          = variable("creator")
     val project          = variable("project")
     val permissions      = variable("permissions")
+    val objPred          = variable("objPred")
+    val objObj           = variable("objObj")
 
     // Use property path for previousValue* (zero or more)
     val previousValuePath = zeroOrMore(KnoraBase.previousValue)
 
     // Build the WHERE clause - only fetch the three values needed for permission calculation
     val wherePattern = fileValue
-      .has(KnoraBase.internalFilename, Rdf.literalOf(filename.value))
-      .andHas(KnoraBase.attachedToUser, creator)
+      .has(KnoraBase.internalFilename, toRdfLiteral(filename))
       .and(
         currentFileValue
           .has(previousValuePath, fileValue)
           .andHas(KnoraBase.hasPermissions, permissions)
-          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false)),
+          .andHas(KnoraBase.attachedToUser, creator),
       )
       .and(
         resource
           .has(prop, currentFileValue)
-          .andHas(KnoraBase.attachedToProject, project)
-          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false)),
+          .andHas(KnoraBase.attachedToProject, project),
       )
+      // This pattern is unnecessary for correctness, but it makes Jena run the query faster
+      // by guiding the optimizer to resolve ?fileValue's properties before the expensive previousValue* closure.
+      .and(
+        fileValue
+          .has(objPred, objObj)
+          .filter(Expressions.notEquals(objPred, KnoraBase.previousValue)),
+      )
+      .and(currentFileValue.has(KnoraBase.isDeleted, Rdf.literalOf(false)))
+      .and(resource.has(KnoraBase.isDeleted, Rdf.literalOf(false)))
 
     Queries
       .SELECT(creator, project, permissions)
