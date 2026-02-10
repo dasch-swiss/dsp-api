@@ -1,5 +1,17 @@
 # Changelog
 
+## [34.2.2](https://github.com/dasch-swiss/dsp-api/compare/v34.2.1...v34.2.2) (2026-02-10)
+
+
+### Maintenances
+
+* Migrate deleteLink query to rdf4j (DEV-5820) ([#3934](https://github.com/dasch-swiss/dsp-api/issues/3934)) ([42e1863](https://github.com/dasch-swiss/dsp-api/commit/42e1863ceb4defa4e387ccaec6320263223ae611))
+
+
+### Bug Fixes
+
+* Solve timeout problems with the FileValuePermissionsQuery (DEV-5844) ([#3936](https://github.com/dasch-swiss/dsp-api/issues/3936)) ([4f49494](https://github.com/dasch-swiss/dsp-api/commit/4f494943347f31bd3abdc6132521aa32417fcfd4))
+
 ## [34.2.1](https://github.com/dasch-swiss/dsp-api/compare/v34.2.0...v34.2.1) (2026-02-04)
 
 
