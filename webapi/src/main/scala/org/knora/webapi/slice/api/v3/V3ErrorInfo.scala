@@ -50,6 +50,15 @@ object BadRequest {
   given JsonCodec[BadRequest] = DeriveJsonCodec.gen[BadRequest]
 }
 
+final case class Conflict(message: String = "", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
+object Conflict {
+
+  given JsonCodec[Conflict] = DeriveJsonCodec.gen[Conflict]
+
+  def apply(code: V3ErrorCode.Conflicts, message: String, details: Map[String, String]): Conflict =
+    Conflict(message, Chunk(ErrorDetail(code, message, details)))
+}
+
 final case class Unauthorized(message: String = "Unauthorized", errors: Chunk[ErrorDetail] = Chunk.empty)
     extends V3ErrorInfo
 final case class Forbidden(message: String = "Forbidden", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo

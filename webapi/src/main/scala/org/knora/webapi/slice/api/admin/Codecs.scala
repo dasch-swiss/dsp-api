@@ -45,7 +45,6 @@ object Codecs {
     implicit val status: StringCodec[Status]       = booleanCodec(Status.from)
 
     // user value objects
-    implicit val userIri: StringCodec[UserIri]   = stringCodec(UserIri.from)
     implicit val username: StringCodec[Username] = stringCodec(Username.from)
   }
 
@@ -92,7 +91,6 @@ object Codecs {
     implicit val status: StringCodec[Status]       = booleanCodec(Status.from)
 
     // user
-    implicit val userIri: StringCodec[UserIri]         = stringCodec(UserIri.from)
     implicit val username: StringCodec[Username]       = stringCodec(Username.from)
     implicit val givenName: StringCodec[GivenName]     = stringCodec(GivenName.from)
     implicit val familyName: StringCodec[FamilyName]   = stringCodec(FamilyName.from)

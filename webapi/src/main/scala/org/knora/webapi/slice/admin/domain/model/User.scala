@@ -31,6 +31,9 @@ import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.LanguageCode
+import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
+import org.knora.webapi.slice.api.admin.Codecs.TapirCodec.StringCodec
+import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
 
 /**
  * The user entity as found in the knora-admin ontology.
@@ -147,6 +150,9 @@ object User {
 final case class UserIri private (value: String) extends StringValue
 
 object UserIri extends StringValueCompanion[UserIri] {
+
+  given JsonCodec[UserIri]   = ZioJsonCodec.stringCodec(UserIri.from)
+  given StringCodec[UserIri] = TapirCodec.stringCodec(UserIri.from)
 
   implicit class UserIriOps(val userIri: UserIri) {
     def isBuiltInUser: Boolean = builtInIris.contains(userIri.value)

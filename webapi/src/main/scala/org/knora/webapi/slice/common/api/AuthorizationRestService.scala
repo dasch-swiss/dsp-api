@@ -24,7 +24,7 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminO
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrUser
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemOrProjectAdmin
 
-final case class AuthorizationRestService(
+final class AuthorizationRestService(
   knoraProjectService: KnoraProjectService,
   knoraGroupService: KnoraGroupService,
 ) {

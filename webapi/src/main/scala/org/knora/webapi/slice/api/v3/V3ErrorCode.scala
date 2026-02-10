@@ -11,14 +11,20 @@ enum V3ErrorCode(val template: String):
   // V3ErrorCode.NotFound errors
   case ontology_not_found      extends V3ErrorCode("The ontology with IRI {id} was not found.")
   case project_not_found       extends V3ErrorCode("The project with IRI {id} was not found.")
+  case export_not_found        extends V3ErrorCode("The export with ID {id} was not found.")
   case resourceClass_not_found extends V3ErrorCode("The resource class with IRI {id} was not found.")
   case resource_not_found      extends V3ErrorCode("The resource with IRI {id} was not found.")
+  // V3ErrorCode.Conflict errors
+  case export_in_progress
+      extends V3ErrorCode("An export {exportId} is already in progress for the project {projectIri}.")
   // Other error codes can be added here as needed
 
 object V3ErrorCode:
 
-  type NotFounds = ontology_not_found.type | project_not_found.type | resource_not_found.type |
+  type NotFounds = export_not_found.type | ontology_not_found.type | project_not_found.type | resource_not_found.type |
     resourceClass_not_found.type
+
+  type Conflicts = export_in_progress.type
 
   given Schema[V3ErrorCode] = Schema.derivedEnumeration[V3ErrorCode].defaultStringBased
 

@@ -9,13 +9,17 @@ import zio.*
 
 import org.knora.webapi.slice.api.v3.`export`.ExportServerEndpoints
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpointsV3
+import org.knora.webapi.slice.api.v3.projects.*
 
 final class ApiV3ServerEndpoints(
   resourcesServerEndpoints: ResourcesServerEndpointsV3,
   exportServerEndpoints: ExportServerEndpoints,
+  projectServerEndpoints: V3ProjectsServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
-    (resourcesServerEndpoints.serverEndpoints ++ exportServerEndpoints.serverEndpoints)
+    (resourcesServerEndpoints.serverEndpoints ++
+      exportServerEndpoints.serverEndpoints ++
+      projectServerEndpoints.serverEndpoints)
       .map(_.tag("API v3"))
 }
 object ApiV3ServerEndpoints {
