@@ -7,7 +7,7 @@ package org.knora.webapi.slice.api.v3.projects
 
 import sttp.capabilities.zio.ZioStreams
 import zio.*
-
+import zio.stream.ZStream
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v3.Conflict
@@ -18,9 +18,15 @@ import org.knora.webapi.slice.api.v3.V3ErrorInfo
 import org.knora.webapi.slice.api.v3.projects.domain.DataExportId
 import org.knora.webapi.slice.api.v3.projects.domain.ExportFailedError
 import org.knora.webapi.slice.api.v3.projects.domain.ExportInProgressError
+import org.knora.webapi.slice.api.v3.projects.domain.ImportInProgressError
 import org.knora.webapi.slice.api.v3.projects.domain.ProjectDataExportService
+import org.knora.webapi.slice.api.v3.projects.domain.ProjectDataImportService
 
-final class V3ProjectsRestService(auth: V3Authorizer, exportService: ProjectDataExportService) {
+final class V3ProjectsRestService(
+  auth: V3Authorizer,
+  exportService: ProjectDataExportService,
+  importService: ProjectDataImportService,
+) {
 
   private def conflict(prj: ProjectIri, id: DataExportId): Conflict =
     val code: V3ErrorCode.Conflicts = V3ErrorCode.export_in_progress
@@ -32,8 +38,28 @@ final class V3ProjectsRestService(auth: V3Authorizer, exportService: ProjectData
       Map("id" -> exportId, "projectIri" -> projectIri),
     )
 
+  private def conflictImport(prj: ProjectIri, id: DataExportId): Conflict =
+    val code: V3ErrorCode.Conflicts = V3ErrorCode.import_in_progress
+    val exportId                    = id.value
+    val projectIri                  = prj.value
+    Conflict(
+      code,
+      code.template.replace("{id}", exportId).replace("{projectIri}", projectIri),
+      Map("id" -> exportId, "projectIri" -> projectIri),
+    )
+
   private def notFound(prj: ProjectIri, id: DataExportId): NotFound =
     val code: V3ErrorCode.NotFounds = V3ErrorCode.export_not_found
+    val exportId                    = id.value
+    val projectIri                  = prj.value
+    NotFound(
+      code,
+      code.template.replace("{id}", exportId).replace("{projectIri}", projectIri),
+      Map("id" -> exportId, "projectIri" -> projectIri),
+    )
+
+  private def notFoundImport(prj: ProjectIri, id: DataExportId): NotFound =
+    val code: V3ErrorCode.NotFounds = V3ErrorCode.import_not_found
     val exportId                    = id.value
     val projectIri                  = prj.value
     NotFound(
@@ -96,8 +122,32 @@ final class V3ProjectsRestService(auth: V3Authorizer, exportService: ProjectData
       (filename, stream)            = filenameAndStream
       contentDispositionHeaderValue = s"""attachment; filename="$filename""""
     } yield (contentDispositionHeaderValue, stream)
+
+  def triggerProjectImportCreate(
+    user: User,
+  )(projectIri: ProjectIri, stream: ZStream[Any, Throwable, Byte]): IO[V3ErrorInfo, ImportAcceptedResponse] =
+    for {
+      _   <- auth.ensureSystemAdmin(user)
+      imp <- importService
+               .importDataExport(projectIri, user, stream)
+               .mapError((e: ImportInProgressError) => conflictImport(e.value.projectIri, e.value.id))
+    } yield ImportAcceptedResponse(imp.id)
+
+  def getProjectImportStatus(
+    user: User,
+  )(projectIri: ProjectIri, importId: DataExportId): IO[V3ErrorInfo, ExportStatusResponse] =
+    for {
+      _   <- auth.ensureSystemAdmin(user)
+      imp <- importService.getImportStatus(importId).orElseFail(notFoundImport(projectIri, importId))
+    } yield ExportStatusResponse(
+      imp.id,
+      imp.projectIri,
+      imp.status,
+      imp.createdBy.userIri,
+      imp.createdAt,
+    )
 }
 
 object V3ProjectsRestService {
-  val layer = ProjectDataExportService.layer >>> ZLayer.derive[V3ProjectsRestService]
+  val layer = ProjectDataExportService.layer >+> ProjectDataImportService.layer >>> ZLayer.derive[V3ProjectsRestService]
 }

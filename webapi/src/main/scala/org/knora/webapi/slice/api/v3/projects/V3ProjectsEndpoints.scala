@@ -27,6 +27,11 @@ object ExportAcceptedResponse {
   given JsonCodec[ExportAcceptedResponse] = DeriveJsonCodec.gen[ExportAcceptedResponse]
 }
 
+final case class ImportAcceptedResponse(importId: DataExportId)
+object ImportAcceptedResponse {
+  given JsonCodec[ImportAcceptedResponse] = DeriveJsonCodec.gen[ImportAcceptedResponse]
+}
+
 final case class ExportStatusResponse(
   exportId: DataExportId,
   projectIri: ProjectIri,
@@ -106,6 +111,42 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .out(header[String]("Content-Disposition"))
     .out(streamBinaryBody(ZioStreams)(CodecFormat.Zip()))
     .description("Download an export")
+
+  // import an export
+  val postProjectIriImports = self.base
+    .secured(
+      oneOf(
+        notFoundVariant(V3ErrorCode.project_not_found),
+        conflictVariant(V3ErrorCode.import_in_progress),
+      ),
+    )
+    .post
+    .in(basePath / "imports")
+    .in(streamBinaryBody(ZioStreams)(CodecFormat.Zip()).description("The export zip file to import"))
+    .out(statusCode(StatusCode.Accepted))
+    .out(jsonBody[ImportAcceptedResponse])
+    .description(
+      "Initiates an import of a project from an export zip file. " +
+        "The import will be performed asynchronously, and the response will indicate that the import has been accepted. " +
+        "An import can only be triggered when no other import exists.",
+    )
+
+  // get the status of an import
+  val getProjectIriImportsImportIdStatus = self.base
+    .secured(
+      oneOf(
+        notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.export_not_found),
+        conflictVariant(V3ErrorCode.import_in_progress),
+      ),
+    )
+    .get
+    .in(basePath / "imports" / path[DataExportId]("importId"))
+    .out(statusCode(StatusCode.Ok))
+    .out(jsonBody[ExportStatusResponse])
+    .description(
+      "Checks the status of an import. " +
+        "The response will indicate whether the import is still in progress, has completed successfully, or has failed.",
+    )
 }
 
 object V3ProjectsEndpoints {
