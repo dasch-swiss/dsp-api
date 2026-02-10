@@ -1,100 +1,103 @@
+/*
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.api.v3.projects
 
+import sttp.capabilities.zio.ZioStreams
 import zio.*
-import zio.stream.*
-import sttp.model.MediaType
-import org.knora.webapi.slice.admin.domain.model.User
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v3.Conflict
-import org.knora.webapi.slice.api.v3.Forbidden
 import org.knora.webapi.slice.api.v3.NotFound
+import org.knora.webapi.slice.api.v3.V3Authorizer
 import org.knora.webapi.slice.api.v3.V3ErrorCode
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
-import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.api.v3.projects.domain.DataExportId
+import org.knora.webapi.slice.api.v3.projects.domain.ExportFailedError
+import org.knora.webapi.slice.api.v3.projects.domain.ExportInProgressError
+import org.knora.webapi.slice.api.v3.projects.domain.ProjectDataExportService
 
-import java.time.Instant
+final class V3ProjectsRestService(auth: V3Authorizer, exportService: ProjectDataExportService) {
 
-final case class CurrentExport(
-  exportId: ExportId,
-  projectIri: ProjectIri,
-  status: ExportStatus,
-  createdBy: User,
-  createdAt: Instant,
-) {
-  def complete(): CurrentExport = this.copy(status = ExportStatus.Completed)
-  def fail(): CurrentExport     = this.copy(status = ExportStatus.Failed)
-}
+  private def conflict(prj: ProjectIri, id: DataExportId): Conflict =
+    val code: V3ErrorCode.Conflicts = V3ErrorCode.export_in_progress
+    val exportId                    = id.value
+    val projectIri                  = prj.value
+    Conflict(
+      code,
+      code.template.replace("{id}", exportId).replace("{projectIri}", projectIri),
+      Map("id" -> exportId, "projectIri" -> projectIri),
+    )
 
-object CurrentExport {
-  def createNew(projectIri: ProjectIri, createdBy: User): UIO[CurrentExport] =
-    Clock.instant.map { now =>
-      CurrentExport(
-        ExportId(java.util.UUID.randomUUID().toString),
-        projectIri,
-        ExportStatus.InProgress,
-        createdBy,
-        now,
-      )
-    }
-}
-
-final class V3ProjectsRestService(auth: AuthorizationRestService, runningExport: Ref[Option[CurrentExport]]) {
-
-  private def failConflict(e: CurrentExport): ZIO[Any, Conflict, Nothing] =
-    ZIO.fail(
-      Conflict(
-        V3ErrorCode.export_in_progress,
-        s"An export with id ${e.exportId.value} is already in progress for project ${e.projectIri.value}.",
-        Map("exportId" -> e.exportId.value, "projectIri" -> e.projectIri.value),
-      ),
+  private def notFound(prj: ProjectIri, id: DataExportId): NotFound =
+    val code: V3ErrorCode.NotFounds = V3ErrorCode.export_not_found
+    val exportId                    = id.value
+    val projectIri                  = prj.value
+    NotFound(
+      code,
+      code.template.replace("{id}", exportId).replace("{projectIri}", projectIri),
+      Map("id" -> exportId, "projectIri" -> projectIri),
     )
 
   def triggerProjectExportCreate(user: User)(projectIri: ProjectIri): IO[V3ErrorInfo, ExportAcceptedResponse] =
     for {
-      _ <- auth.ensureSystemAdmin(user).mapError(e => Forbidden(e.message))
-      _ <- runningExport.get.flatMap {
-             case Some(e) => failConflict(e)
-             case None    => ZIO.unit
-           }
-      e <- CurrentExport.createNew(projectIri, user)
-      _ <- runningExport.set(Some(e))
-      // Simulate export processing
-      _ <- runningExport.update(_.map(_.complete())).delay(30.seconds).forkDaemon
-    } yield ExportAcceptedResponse(e.exportId)
+      _     <- auth.ensureSystemAdmin(user)
+      curEx <- exportService
+                 .createExport(projectIri, user)
+                 .mapError((er: ExportInProgressError) => conflict(er.value.projectIri, er.value.id))
+    } yield ExportAcceptedResponse(curEx.id)
 
-  // Return the export status. Kept unimplemented for now but annotated so compilation succeeds.
   def getProjectExportStatus(
     user: User,
-  )(projectIri: ProjectIri, exportId: ExportId): IO[V3ErrorInfo, ExportStatusResponse] = for {
-    _         <- auth.ensureSystemAdmin(user).mapError(e => Forbidden(e.message))
-    exportOpt <- runningExport.get
-    curExp    <- ZIO
-                .fromOption(exportOpt.filter(e => e.exportId == exportId && e.projectIri == projectIri))
-                .orElseFail(
-                  NotFound(
-                    V3ErrorCode.export_not_found,
-                    s"No export with id ${exportId.value} found for project ${projectIri.value}.",
-                    Map("exportId" -> exportId.value, "projectIri" -> projectIri.value),
-                  ),
-                )
+  )(projectIri: ProjectIri, exportId: DataExportId): IO[V3ErrorInfo, ExportStatusResponse] = for {
+    _      <- auth.ensureSystemAdmin(user)
+    curExp <- exportService
+                .getExportStatus(exportId)
+                .orElseFail(notFound(projectIri, exportId))
   } yield ExportStatusResponse(
-    curExp.exportId,
+    curExp.id,
     curExp.projectIri,
     curExp.status,
     curExp.createdBy.userIri,
     curExp.createdAt,
   )
 
+  def deleteProjectExport(
+    user: User,
+  )(projectIri: ProjectIri, exportId: DataExportId): IO[V3ErrorInfo, Unit] = for {
+    _ <- auth.ensureSystemAdmin(user)
+    _ <- exportService
+           .deleteExport(exportId)
+           .mapError {
+             case Some(er: ExportInProgressError) => conflict(er.value.projectIri, er.value.id)
+             case None                            => notFound(projectIri, exportId)
+           }
+  } yield ()
+
   // Download the export as a zip stream. Annotated to match the tapir endpoint (stream + media type + filename).
   def downloadProjectExport(
     user: User,
-  )(projectIri: ProjectIri, exportId: ExportId): IO[V3ErrorInfo, (String, MediaType, ZStream[Any, Throwable, Byte])] =
-    ???
+  )(
+    projectIri: ProjectIri,
+    exportId: DataExportId,
+  ): IO[V3ErrorInfo, (String, ZioStreams.BinaryStream)] =
+    for {
+      _                 <- auth.ensureSystemAdmin(user)
+      filenameAndStream <- exportService.downloadExport(exportId).mapError {
+                             case Some(er: ExportInProgressError) =>
+                               conflict(er.value.projectIri, er.value.id)
+                             case Some(er: ExportFailedError) =>
+                               conflict(er.value.projectIri, er.value.id)
+                             case None => notFound(projectIri, exportId)
+                           }
+      (filename, stream)            = filenameAndStream
+      contentDispositionHeaderValue = s"""attachment; filename="$filename""""
+    } yield (contentDispositionHeaderValue, stream)
 }
 
 object V3ProjectsRestService {
-  // Ref.make returns a ZIO effect, so create a layer from that effect
-  // This layer requires an AuthorizationRestService to be present in the environment.
-  val layer: ZLayer[AuthorizationRestService, Nothing, V3ProjectsRestService] =
-    ZLayer.fromZIO(Ref.make[Option[CurrentExport]](None)) >>> ZLayer.derive[V3ProjectsRestService]
+  val layer = ProjectDataExportService.layer >>> ZLayer.derive[V3ProjectsRestService]
 }

@@ -11,12 +11,12 @@ enum V3ErrorCode(val template: String):
   // V3ErrorCode.NotFound errors
   case ontology_not_found      extends V3ErrorCode("The ontology with IRI {id} was not found.")
   case project_not_found       extends V3ErrorCode("The project with IRI {id} was not found.")
-  case export_not_found        extends V3ErrorCode("The export with ID {id} was not found.")
+  case export_not_found        extends V3ErrorCode("The export with ID {id} in project IRI {projectIri} was not found.")
   case resourceClass_not_found extends V3ErrorCode("The resource class with IRI {id} was not found.")
   case resource_not_found      extends V3ErrorCode("The resource with IRI {id} was not found.")
   // V3ErrorCode.Conflict errors
   case export_in_progress
-      extends V3ErrorCode("An export {exportId} is already in progress for the project {projectIri}.")
+      extends V3ErrorCode("The export ID {id} is currently in progress for the project IRI {projectIri}.")
   // Other error codes can be added here as needed
 
 object V3ErrorCode:

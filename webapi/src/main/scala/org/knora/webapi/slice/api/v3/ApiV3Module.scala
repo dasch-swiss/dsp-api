@@ -7,14 +7,15 @@ package org.knora.webapi.slice.api.v3
 
 import sttp.tapir.*
 import zio.*
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.admin.AdminPathVariables.projectIri
 import org.knora.webapi.slice.api.v3.`export`.ExportServerEndpoints
 import org.knora.webapi.slice.api.v3.export_.ExportService
-import org.knora.webapi.slice.api.v3.projects.*
 import org.knora.webapi.slice.api.v3.ontology.OntologyRestServiceV3
+import org.knora.webapi.slice.api.v3.projects.*
 import org.knora.webapi.slice.api.v3.resources.ResourcesEndpointsV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesRestServiceV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpointsV3
@@ -48,6 +49,7 @@ object ApiV3Module {
       ResourcesEndpointsV3.layer,
       ResourcesRestServiceV3.layer,
       ResourcesServerEndpointsV3.layer,
+      V3Authorizer.layer,
       V3BaseEndpoint.layer,
       V3ProjectsEndpoints.layer,
       V3ProjectsRestService.layer,

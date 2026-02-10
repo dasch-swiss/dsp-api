@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.domain.model
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.string.MatchesRegex
+import sttp.tapir.Schema
 import zio.Chunk
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
@@ -24,6 +25,9 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
+import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
+import org.knora.webapi.slice.api.admin.Codecs.TapirCodec.StringCodec
+import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
@@ -31,9 +35,6 @@ import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.LanguageCode
-import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
-import org.knora.webapi.slice.api.admin.Codecs.TapirCodec.StringCodec
-import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
 
 /**
  * The user entity as found in the knora-admin ontology.
@@ -153,6 +154,7 @@ object UserIri extends StringValueCompanion[UserIri] {
 
   given JsonCodec[UserIri]   = ZioJsonCodec.stringCodec(UserIri.from)
   given StringCodec[UserIri] = TapirCodec.stringCodec(UserIri.from)
+  given Schema[UserIri]      = Schema.string.description("IRI for a user.")
 
   implicit class UserIriOps(val userIri: UserIri) {
     def isBuiltInUser: Boolean = builtInIris.contains(userIri.value)
