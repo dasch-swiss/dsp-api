@@ -14,13 +14,13 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 
 // This error is used to indicate that an export is already in progress
-case class ExportExistsError(value: CurrentDataTask)
+final case class ExportExistsError(value: CurrentDataTask)
 
 // This error is used to indicate that an export is still in progress
-case class ExportInProgressError(value: CurrentDataTask)
+final case class ExportInProgressError(value: CurrentDataTask)
 
-// This error is used to indicate that an export is already in progress
-case class ExportFailedError(value: CurrentDataTask)
+// This error is used to indicate that an export has failed
+final case class ExportFailedError(value: CurrentDataTask)
 
 final class ProjectDataExportService(currentExp: DataTaskState) { self =>
 
@@ -33,13 +33,15 @@ final class ProjectDataExportService(currentExp: DataTaskState) { self =>
         currentExp.complete(curExp.id).delay(10.seconds).ignore.forkDaemon
     } yield curExp
 
-  // Delete the export in question.
-  // Do not delete the export if it is still in progress.
-  // Will delete the export if it has completed or failed.
-  // Return:
-  // * ZIO.fail(None) - if the export was not found
-  // * ZIO.fail(Some(ExportExistsError)) - if the export is still in progress
-  // * ZIO.unit - if the export was successfully deleted,
+  /**
+   * Delete the export task with the given id if it exists and is not in progress.
+   * An export can only be deleted if it is in a completed or failed state. If the export is in progress, an error is returned.
+   *
+   * @param exportId the id of the export task to delete
+   * @return An IO that fails with None if the export task is not found.
+   *         An IO that fails with ExportInProgressError if the export task is found but is still in progress.
+   *         An IO that succeeds with Unit if the export task was successfully deleted.
+   */
   def deleteExport(exportId: DataTaskId): IO[Option[ExportInProgressError], Unit] =
     currentExp
       .deleteIfNotInProgress(exportId)
@@ -51,6 +53,15 @@ final class ProjectDataExportService(currentExp: DataTaskState) { self =>
 
   def getExportStatus(exportId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = currentExp.find(exportId)
 
+  /**
+   * Download the export file for the given export task id if it exists and is completed.
+   * An export can only be downloaded if it is in a completed state.
+   * @param exportId the id of the export task to download
+   * @return An IO that fails with None if the export task is not found.
+   *         An IO that fails with ExportInProgressError if the export task is found but is still in progress.
+   *         An IO that fails with ExportFailedError if the export task is found but has failed.
+   *         An IO that succeeds with a tuple of the file name and a stream of bytes representing the export.
+   */
   def downloadExport(
     exportId: DataTaskId,
   ): IO[Option[ExportInProgressError | ExportFailedError], (String, ZStream[Any, Throwable, Byte])] =

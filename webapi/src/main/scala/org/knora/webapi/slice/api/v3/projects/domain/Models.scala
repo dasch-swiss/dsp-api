@@ -29,7 +29,7 @@ final case class DataTaskId private (value: String) extends StringValue
 object DataTaskId                                   extends StringValueCompanion[DataTaskId] {
   given JsonCodec[DataTaskId]   = ZioJsonCodec.stringCodec(from)
   given StringCodec[DataTaskId] = TapirCodec.stringCodec(from)
-  given Schema[DataTaskId]      = Schema.string.description("A unique identifier for an export.")
+  given Schema[DataTaskId]      = Schema.string.description("A unique identifier.")
 
   def from(str: String): Either[String, DataTaskId] =
     Try(UUID.fromString(str)).toEither.left
@@ -52,7 +52,7 @@ object DataTaskStatus extends WithFrom[String, DataTaskStatus] {
   given JsonCodec[DataTaskStatus]   = JsonCodec.string.transformOrFail(from, _.responseStr)
   given StringCodec[DataTaskStatus] = TapirCodec.stringCodec(from, _.responseStr)
   given Schema[DataTaskStatus]      = Schema.string
-    .description(s"The status of a task . One of $expectedValues expected.")
+    .description(s"The status of a task. One of $expectedValues expected.")
     .validate(Validator.enumeration(values.toList))
 
   def from(str: String): Either[String, DataTaskStatus] =
