@@ -24,8 +24,8 @@ final class ProjectDataImportService(
   ): IO[ImportInProgressError, CurrentDataTask] = for {
     existingImport <- self.currentImport.get
     curExp         <- existingImport match {
-                case Some(exp) => ZIO.fail(ImportInProgressError(exp))
-                case None      =>
+                case Some(exp) if exp.isInProgress => ZIO.fail(ImportInProgressError(exp))
+                case _                             =>
                   CurrentDataTask
                     .makeNew(projectIri, createdBy)
                     .tap(cde => self.currentImport.set(Some(cde)))
