@@ -34,10 +34,10 @@ trait EndpointHelper {
     )
 
   private def mkExampleNotFound(code: V3ErrorCode.NotFounds) =
-    mkExample(NotFound(code, "Not found example message", Map("id" -> "example_id")), code)
+    mkExample(NotFound(code, code.template, code.mkExampleMap), code)
 
   private def mkExampleConflict(code: V3ErrorCode.Conflicts) =
-    mkExample(Conflict(code, "Conflict example message", Map("id" -> "example_id")), code)
+    mkExample(Conflict(code, code.template, code.mkExampleMap), code)
 
   private def mkExample[O <: V3ErrorInfo](example: O, code: V3ErrorCode) =
     Example.of(example).name(code.toString).description(code.description)

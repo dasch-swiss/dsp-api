@@ -9,15 +9,15 @@ import zio.json.JsonCodec
 
 enum V3ErrorCode(val template: String):
   // V3ErrorCode.NotFound errors
-  case ontology_not_found      extends V3ErrorCode("The ontology with IRI {id} was not found.")
-  case project_not_found       extends V3ErrorCode("The project with IRI {id} was not found.")
+  case ontology_not_found      extends V3ErrorCode("The ontology '{id}' was not found.")
+  case project_not_found       extends V3ErrorCode("The project '{id}' was not found.")
   case export_not_found        extends V3ErrorCode("The export '{id}' in project '{projectIri}' was not found.")
   case import_not_found        extends V3ErrorCode("The import '{id}' in project '{projectIri}' was not found.")
-  case resourceClass_not_found extends V3ErrorCode("The resource class with IRI {id} was not found.")
-  case resource_not_found      extends V3ErrorCode("The resource with IRI {id} was not found.")
+  case resourceClass_not_found extends V3ErrorCode("The resource class '{id}' was not found.")
+  case resource_not_found      extends V3ErrorCode("The resource with IRI '{id}' was not found.")
   // V3ErrorCode.Conflict errors
-  case export_exists extends V3ErrorCode("Another export '{id}' exists for project '{projectIri}'.")
-  case import_exists extends V3ErrorCode("Another import '{id}' exists for project '{projectIri}'.")
+  case export_exists extends V3ErrorCode("Export '{id}' exists for project '{projectIri}'.")
+  case import_exists extends V3ErrorCode("Import '{id}' exists for project '{projectIri}'.")
   // Other error codes can be added here as needed
 
 object V3ErrorCode:
@@ -41,4 +41,16 @@ object V3ErrorCode:
          |```
          |${code.template}
          |```""".stripMargin
+
+    def mkExampleMap: Map[String, String] = {
+      // Extract placeholders from the template and create an example map
+      val placeholderPattern = "\\{(\\w+)\\}".r
+      placeholderPattern
+        .findAllMatchIn(code.template)
+        .map { m =>
+          val key = m.group(1)
+          key -> s"example_$key"
+        }
+        .toMap
+    }
   }

@@ -94,7 +94,6 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .out(statusCode(StatusCode.Ok))
     .description(
       "Deletes an export irrevocably. " +
-        "Another export can only be started when the currently existing is not present any more. " +
         "Only exports in state failed or completed can be deleted.",
     )
 
@@ -111,7 +110,11 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .out(statusCode(StatusCode.Ok))
     .out(header[String]("Content-Disposition"))
     .out(streamBinaryBody(ZioStreams)(CodecFormat.Zip()))
-    .description("Download an export")
+    .description(
+      "Download an export " +
+        "An export can only be downloaded when it has completed successfully. " +
+        "If it is still in progress or has failed, the response will be 409 Conflict.",
+    )
 
   // import an export
   val postProjectIriImports = self.base
@@ -162,7 +165,6 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .out(statusCode(StatusCode.Ok))
     .description(
       "Deletes an import. " +
-        "Another import can only be started when the currently existing is not present any more. " +
         "Only imports in state failed or completed can be deleted.",
     )
 }
