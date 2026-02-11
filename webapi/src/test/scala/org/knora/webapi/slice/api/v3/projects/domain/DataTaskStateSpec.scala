@@ -81,6 +81,22 @@ object DataTaskStateSpec extends ZIOSpecDefault {
           saved == completed,
         )
       },
+      test("should be idempotent when task is already completed") {
+        for {
+          state      <- ZIO.service[DataTaskState]
+          task       <- state.makeNew(projectIri, user)
+          completed1 <- state.complete(task.id)
+          completed2 <- state.complete(task.id)
+        } yield assertTrue(completed1 == completed2)
+      },
+      test("should fail with StateFailedError when task is already failed") {
+        for {
+          state  <- ZIO.service[DataTaskState]
+          task   <- state.makeNew(projectIri, user)
+          failed <- state.fail(task.id)
+          result <- state.complete(task.id).either
+        } yield assertTrue(result == Left(Some(StateFailedError(failed))))
+      },
       test("should fail with None when task does not exist") {
         for {
           state  <- ZIO.service[DataTaskState]
@@ -101,6 +117,22 @@ object DataTaskStateSpec extends ZIOSpecDefault {
           failed.isFailed,
           saved == failed,
         )
+      },
+      test("should be idempotent when task is already failed") {
+        for {
+          state   <- ZIO.service[DataTaskState]
+          task    <- state.makeNew(projectIri, user)
+          failed1 <- state.fail(task.id)
+          failed2 <- state.fail(task.id)
+        } yield assertTrue(failed1 == failed2)
+      },
+      test("should fail with StateCompletedError when task is already completed") {
+        for {
+          state     <- ZIO.service[DataTaskState]
+          task      <- state.makeNew(projectIri, user)
+          completed <- state.complete(task.id)
+          result    <- state.fail(task.id).either
+        } yield assertTrue(result == Left(Some(StateCompletedError(completed))))
       },
       test("should fail with None when task does not exist") {
         for {

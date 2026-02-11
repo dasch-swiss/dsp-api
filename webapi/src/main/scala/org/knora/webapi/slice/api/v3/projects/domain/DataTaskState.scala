@@ -12,9 +12,21 @@ import zio.ZLayer
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 
+/// Errors that can occur when managing the state of a data task.
 final case class StatesExistError(t: CurrentDataTask)
 final case class StateInProgressError(t: CurrentDataTask)
+final case class StateFailedError(t: CurrentDataTask)
+final case class StateCompletedError(t: CurrentDataTask)
 
+/**
+ * Manages the state of a single data task (e.g. export or import) .
+ * The state is stored in a Ref, which allows for atomic updates and thread safety.
+ * Only one task can exist at a time for an instance of [[DataTaskState]], and the state transitions are managed through the provided methods.
+ *
+ * The state can be in one of three statuses: InProgress, Failed, or Completed.
+ * The methods allow for creating a new task, finding an existing task by id, deleting a task if it's not in progress,
+ * completing a task, and failing a task. Each method ensures that the state transitions are valid and handles errors appropriately.
+ */
 final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
 
   /**
@@ -61,12 +73,12 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
    * The function takes the current task and returns either an error or an optional new state.
    * If the task is found and the function returns Right, the state will be updated with the new state.
    *
-   * @param taskId   the id of the task to find and update
+   * @param taskId   the id [[DataTaskId]] of the task to find and update
    * @param f        the function to update the task if found, returns either an error or an new state
    * @tparam E       the type of the error that can be returned by the function
-   * @return An IO that fails with a None if the task is not found,
-   *         An IO that fails if the task is found but the function returns an error
-   *         An IO that succeeds with the new state of the task
+   * @return An IO that fails with a [[None]] if the task is not found,
+   *         An IO that fails with an [[E]] if the task is found but the function returns an error
+   *         An IO that succeeds with the new state [[Option[CurrentDataTask]]]
    */
   def atomicFindAndUpdate[E](
     taskId: DataTaskId,
@@ -82,18 +94,42 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
 
   /**
    * Complete the task with the given id if it exists and is in progress.
-   * @param taskId the id of the task to complete
-   * @return An IO that fails with None if the task is not found.
-   *         An IO that succeeds with the new task state.
+   * @param taskId the [[DataTaskId]] of the task to complete
+   * @return An IO that fails with [[None]] if the task is not found.
+   *         An IO that fails with [[StateFailedError]] if the task is found but is already failed.
+   *         An IO that succeeds with the new state [[CurrentDataTask]].
    */
-  def complete(taskId: DataTaskId): IO[Option[Nothing], CurrentDataTask] =
+  def complete(taskId: DataTaskId): IO[Option[StateFailedError], CurrentDataTask] =
     self
-      .atomicFindAndUpdate[Nothing](taskId, t => Right(Some(t.complete())))
+      .atomicFindAndUpdate[StateFailedError](
+        taskId,
+        t =>
+          t.status match {
+            case DataTaskStatus.InProgress => Right(Some(t.complete()))
+            case DataTaskStatus.Failed     => Left(StateFailedError(t))
+            case DataTaskStatus.Completed  => Right(Some(t))
+          },
+      )
       .someOrFail(None)
 
-  def fail(taskId: DataTaskId): IO[Option[Nothing], CurrentDataTask] =
+  /**
+   * Fail the task with the given id if it exists and is in progress.
+   * @param taskId the  [[DataTaskId]] of the task to fail
+   * @return An IO that fails with [[None]] if the task is not found.
+   *         An IO that fails with [[StateCompletedError]] if the task is found but is already completed.
+   *         An IO that succeeds with the new state [[CurrentDataTask]].
+   */
+  def fail(taskId: DataTaskId): IO[Option[StateCompletedError], CurrentDataTask] =
     self
-      .atomicFindAndUpdate[Nothing](taskId, t => Right(Some(t.fail())))
+      .atomicFindAndUpdate[StateCompletedError](
+        taskId,
+        t =>
+          t.status match {
+            case DataTaskStatus.InProgress => Right(Some(t.fail()))
+            case DataTaskStatus.Completed  => Left(StateCompletedError(t))
+            case DataTaskStatus.Failed     => Right(Some(t))
+          },
+      )
       .someOrFail(None)
 }
 
