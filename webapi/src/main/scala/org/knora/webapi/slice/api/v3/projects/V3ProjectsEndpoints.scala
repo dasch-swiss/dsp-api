@@ -137,7 +137,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     )
 
   // get the status of an import
-  val getProjectIriImportsImportIdStatus = self.base
+  val getProjectIriImportsImportId = self.base
     .secured(
       oneOf(
         notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.import_not_found),
@@ -154,7 +154,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     )
 
   // delete an import
-  val deleteProjectIriImportsExportId = self.base
+  val deleteProjectIriImportsImportId = self.base
     .secured(
       oneOf(
         notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.import_not_found),
