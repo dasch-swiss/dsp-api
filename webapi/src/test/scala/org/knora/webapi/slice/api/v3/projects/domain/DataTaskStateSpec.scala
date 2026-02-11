@@ -152,6 +152,16 @@ object DataTaskStateSpec extends ZIOSpecDefault {
         } yield assertTrue(result == Left(None))
       },
     ),
+    suite("concurrent makeNew")(
+      test("only one of two concurrent makeNew calls should succeed") {
+        for {
+          state   <- ZIO.service[DataTaskState]
+          results <- ZIO.collectAllPar(Chunk.fill(2)(state.makeNew(projectIri, user).either))
+          successes = results.collect { case Right(task) => task }
+          failures  = results.collect { case Left(_: StatesExistError) => () }
+        } yield assertTrue(successes.size == 1, failures.size == 1)
+      },
+    ),
     suite("atomicFindAndUpdate")(
       test("should update the task when found and function returns Right") {
         for {
