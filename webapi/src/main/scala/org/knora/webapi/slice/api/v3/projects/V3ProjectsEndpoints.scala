@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.api.v3.projects;
+package org.knora.webapi.slice.api.v3.projects
 
 import sttp.capabilities.zio.ZioStreams
 import sttp.model.*
@@ -15,10 +15,10 @@ import zio.*
 import zio.json.*
 
 import java.time.Instant
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.v3.*
+import org.knora.webapi.slice.api.v3.projects.domain.CurrentDataTask
 import org.knora.webapi.slice.api.v3.projects.domain.DataTaskId
 import org.knora.webapi.slice.api.v3.projects.domain.DataTaskStatus
 
@@ -32,15 +32,24 @@ object ImportAcceptedResponse {
   given JsonCodec[ImportAcceptedResponse] = DeriveJsonCodec.gen[ImportAcceptedResponse]
 }
 
-final case class ExportStatusResponse(
+final case class DataTaskStatusResponse(
   exportId: DataTaskId,
   projectIri: ProjectIri,
   status: DataTaskStatus,
   createdBy: UserIri,
   createdAt: Instant,
 )
-object ExportStatusResponse {
-  given JsonCodec[ExportStatusResponse] = DeriveJsonCodec.gen[ExportStatusResponse]
+object DataTaskStatusResponse {
+  given JsonCodec[DataTaskStatusResponse] = DeriveJsonCodec.gen[DataTaskStatusResponse]
+
+  def from(state: CurrentDataTask): DataTaskStatusResponse =
+    DataTaskStatusResponse(
+      exportId = state.id,
+      projectIri = state.projectIri,
+      status = state.status,
+      createdBy = state.createdBy.userIri,
+      createdAt = state.createdAt,
+    )
 }
 
 class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
@@ -75,7 +84,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .get
     .in(exportsBase / exportIdPathVar)
     .out(statusCode(StatusCode.Ok))
-    .out(jsonBody[ExportStatusResponse])
+    .out(jsonBody[DataTaskStatusResponse])
     .description(
       "Checks the status of an export. " +
         "The response will indicate whether the export is still in progress, has completed successfully, or has failed.",
@@ -139,14 +148,14 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
   val getProjectIriImportsImportIdStatus = self.base
     .secured(
       oneOf(
-        notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.export_not_found),
+        notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.import_not_found),
         conflictVariant(V3ErrorCode.import_exists),
       ),
     )
     .get
     .in(importsBase / path[DataTaskId]("importId"))
     .out(statusCode(StatusCode.Ok))
-    .out(jsonBody[ExportStatusResponse])
+    .out(jsonBody[DataTaskStatusResponse])
     .description(
       "Checks the status of an import. " +
         "The response will indicate whether the import is still in progress, has completed successfully, or has failed.",

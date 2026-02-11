@@ -67,18 +67,10 @@ final class V3ProjectsRestService(
 
   def getProjectExportStatus(
     user: User,
-  )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, ExportStatusResponse] = for {
-    _      <- auth.ensureSystemAdmin(user)
-    curExp <- exportService
-                .getExportStatus(exportId)
-                .orElseFail(notFound(projectIri, exportId))
-  } yield ExportStatusResponse(
-    curExp.id,
-    curExp.projectIri,
-    curExp.status,
-    curExp.createdBy.userIri,
-    curExp.createdAt,
-  )
+  )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] = for {
+    _     <- auth.ensureSystemAdmin(user)
+    state <- exportService.getExportStatus(exportId).orElseFail(notFound(projectIri, exportId))
+  } yield DataTaskStatusResponse.from(state)
 
   def deleteProjectExport(
     user: User,
@@ -124,17 +116,11 @@ final class V3ProjectsRestService(
 
   def getProjectImportStatus(
     user: User,
-  )(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, ExportStatusResponse] =
+  )(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
     for {
-      _   <- auth.ensureSystemAdmin(user)
-      imp <- importService.getImportStatus(importId).orElseFail(notFoundImport(projectIri, importId))
-    } yield ExportStatusResponse(
-      imp.id,
-      imp.projectIri,
-      imp.status,
-      imp.createdBy.userIri,
-      imp.createdAt,
-    )
+      _     <- auth.ensureSystemAdmin(user)
+      state <- importService.getImportStatus(importId).orElseFail(notFoundImport(projectIri, importId))
+    } yield DataTaskStatusResponse.from(state)
 
   def deleteProjectImport(user: User)(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, Unit] =
     for {
