@@ -28,7 +28,7 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
   def makeNew(projectIri: ProjectIri, user: User): IO[StateExist, CurrentDataTask] = for {
     newState <- CurrentDataTask.makeNew(projectIri, user)
     result   <- self.ref.modify {
-                case Some(exp) => (ZIO.fail(StateExist(exp)), None)
+                case Some(exp) => (ZIO.fail(StateExist(exp)), Some(exp))
                 case None      => (ZIO.succeed(newState), Some(newState))
               }.flatten
   } yield result

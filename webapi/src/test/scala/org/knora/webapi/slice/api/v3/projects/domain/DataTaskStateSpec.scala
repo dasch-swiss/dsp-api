@@ -35,6 +35,14 @@ object DataTaskStateSpec extends ZIOSpecDefault {
           result   <- state.makeNew(projectIri, user).either
         } yield assertTrue(result == Left(StateExist(existing)))
       },
+      test("should preserve existing task when makeNew fails") {
+        for {
+          state    <- ZIO.service[DataTaskState]
+          existing <- state.makeNew(projectIri, user)
+          _        <- state.makeNew(projectIri, user).either
+          found    <- state.find(existing.id)
+        } yield assertTrue(found == existing)
+      },
     ),
     suite("find")(
       test("should return the task when it exists and id matches") {
