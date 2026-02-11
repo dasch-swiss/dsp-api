@@ -100,17 +100,7 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
    *         An IO that succeeds with the new state [[CurrentDataTask]].
    */
   def complete(taskId: DataTaskId): IO[Option[StateFailedError], CurrentDataTask] =
-    self
-      .atomicFindAndUpdate[StateFailedError](
-        taskId,
-        t =>
-          t.status match {
-            case DataTaskStatus.InProgress => Right(Some(t.complete()))
-            case DataTaskStatus.Failed     => Left(StateFailedError(t))
-            case DataTaskStatus.Completed  => Right(Some(t))
-          },
-      )
-      .someOrFail(None)
+    self.atomicFindAndUpdate(taskId, _.complete().map(Some(_))).someOrFail(None)
 
   /**
    * Fail the task with the given id if it exists and is in progress.
@@ -120,17 +110,7 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
    *         An IO that succeeds with the new state [[CurrentDataTask]].
    */
   def fail(taskId: DataTaskId): IO[Option[StateCompletedError], CurrentDataTask] =
-    self
-      .atomicFindAndUpdate[StateCompletedError](
-        taskId,
-        t =>
-          t.status match {
-            case DataTaskStatus.InProgress => Right(Some(t.fail()))
-            case DataTaskStatus.Completed  => Left(StateCompletedError(t))
-            case DataTaskStatus.Failed     => Right(Some(t))
-          },
-      )
-      .someOrFail(None)
+    self.atomicFindAndUpdate(taskId, _.fail().map(Some(_))).someOrFail(None)
 }
 
 object DataTaskState {

@@ -199,7 +199,7 @@ object DataTaskStateSpec extends ZIOSpecDefault {
         for {
           state   <- ZIO.service[DataTaskState]
           task    <- state.makeNew(projectIri, user)
-          updated <- state.atomicFindAndUpdate[Nothing](task.id, t => Right(Some(t.complete())))
+          updated <- state.atomicFindAndUpdate(task.id, t => t.complete().map(Some(_)))
           saved   <- state.find(task.id).unsome
         } yield assertTrue(updated.get.isCompleted, updated == saved)
       },
