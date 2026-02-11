@@ -57,13 +57,13 @@ final class V3ProjectsRestService(
       Map("id" -> id.value, "projectIri" -> prj.value),
     )
 
-  def triggerProjectExportCreate(user: User)(projectIri: ProjectIri): IO[V3ErrorInfo, ExportAcceptedResponse] =
+  def triggerProjectExportCreate(user: User)(projectIri: ProjectIri): IO[V3ErrorInfo, DataTaskStatusResponse] =
     for {
       _     <- auth.ensureSystemAdmin(user)
-      curEx <- exportService
+      state <- exportService
                  .createExport(projectIri, user)
                  .mapError((er: ExportExistsError) => conflict(er.value.projectIri, er.value.id))
-    } yield ExportAcceptedResponse(curEx.id)
+    } yield DataTaskStatusResponse.from(state)
 
   def getProjectExportStatus(
     user: User,
@@ -106,13 +106,13 @@ final class V3ProjectsRestService(
 
   def triggerProjectImportCreate(
     user: User,
-  )(projectIri: ProjectIri, stream: ZStream[Any, Throwable, Byte]): IO[V3ErrorInfo, ImportAcceptedResponse] =
+  )(projectIri: ProjectIri, stream: ZStream[Any, Throwable, Byte]): IO[V3ErrorInfo, DataTaskStatusResponse] =
     for {
-      _   <- auth.ensureSystemAdmin(user)
-      imp <- importService
-               .importDataExport(projectIri, user, stream)
-               .mapError((e: ImportInProgressError) => conflictImport(e.value.projectIri, e.value.id))
-    } yield ImportAcceptedResponse(imp.id)
+      _     <- auth.ensureSystemAdmin(user)
+      state <- importService
+                 .importDataExport(projectIri, user, stream)
+                 .mapError((e: ImportInProgressError) => conflictImport(e.value.projectIri, e.value.id))
+    } yield DataTaskStatusResponse.from(state)
 
   def getProjectImportStatus(
     user: User,

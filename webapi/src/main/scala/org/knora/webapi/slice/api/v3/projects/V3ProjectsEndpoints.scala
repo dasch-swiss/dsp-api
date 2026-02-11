@@ -15,6 +15,7 @@ import zio.*
 import zio.json.*
 
 import java.time.Instant
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.v3.*
@@ -22,18 +23,8 @@ import org.knora.webapi.slice.api.v3.projects.domain.CurrentDataTask
 import org.knora.webapi.slice.api.v3.projects.domain.DataTaskId
 import org.knora.webapi.slice.api.v3.projects.domain.DataTaskStatus
 
-final case class ExportAcceptedResponse(exportId: DataTaskId)
-object ExportAcceptedResponse {
-  given JsonCodec[ExportAcceptedResponse] = DeriveJsonCodec.gen[ExportAcceptedResponse]
-}
-
-final case class ImportAcceptedResponse(importId: DataTaskId)
-object ImportAcceptedResponse {
-  given JsonCodec[ImportAcceptedResponse] = DeriveJsonCodec.gen[ImportAcceptedResponse]
-}
-
 final case class DataTaskStatusResponse(
-  exportId: DataTaskId,
+  id: DataTaskId,
   projectIri: ProjectIri,
   status: DataTaskStatus,
   createdBy: UserIri,
@@ -44,11 +35,11 @@ object DataTaskStatusResponse {
 
   def from(state: CurrentDataTask): DataTaskStatusResponse =
     DataTaskStatusResponse(
-      exportId = state.id,
-      projectIri = state.projectIri,
-      status = state.status,
-      createdBy = state.createdBy.userIri,
-      createdAt = state.createdAt,
+      state.id,
+      state.projectIri,
+      state.status,
+      state.createdBy.userIri,
+      state.createdAt,
     )
 }
 
@@ -59,6 +50,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
   private val importsBase = basePath / "imports"
 
   private val exportIdPathVar = path[DataTaskId]("exportId")
+  private val importIdPathVar = path[DataTaskId]("importId")
 
   // trigger an export
   val postProjectIriExports = self.base
@@ -71,7 +63,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .post
     .in(exportsBase)
     .out(statusCode(StatusCode.Accepted))
-    .out(jsonBody[ExportAcceptedResponse])
+    .out(jsonBody[DataTaskStatusResponse])
     .description(
       "Initiates an export of the project. " +
         "The export will be performed asynchronously, and the response will contain an export ID that can be used to check the status of the export. " +
@@ -137,7 +129,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .in(importsBase)
     .in(streamBinaryBody(ZioStreams)(CodecFormat.Zip()).description("The export zip file to import"))
     .out(statusCode(StatusCode.Accepted))
-    .out(jsonBody[ImportAcceptedResponse])
+    .out(jsonBody[DataTaskStatusResponse])
     .description(
       "Initiates an import of a project from an export zip file. " +
         "The import will be performed asynchronously, and the response will indicate that the import has been accepted. " +
@@ -153,7 +145,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       ),
     )
     .get
-    .in(importsBase / path[DataTaskId]("importId"))
+    .in(importsBase / importIdPathVar)
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[DataTaskStatusResponse])
     .description(
@@ -170,12 +162,12 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       ),
     )
     .delete
-    .in(importsBase / exportIdPathVar)
+    .in(importsBase / importIdPathVar)
     .out(statusCode(StatusCode.Ok))
     .description(
       "Deletes an import. " +
         "Only imports in state failed or completed can be deleted." +
-        "If it is still in progress or has failed, the response will be 409 Conflict.",
+        "If it is still in progress, the response will be 409 Conflict.",
     )
 }
 
