@@ -4,10 +4,8 @@
  */
 
 package org.knora.webapi.slice.api.v3.projects.domain
-import zio.IO
-import zio.Ref
-import zio.ZIO
-import zio.ZLayer
+
+import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User

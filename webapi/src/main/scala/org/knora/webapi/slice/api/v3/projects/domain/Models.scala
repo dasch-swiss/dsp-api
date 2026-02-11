@@ -8,8 +8,6 @@ package org.knora.webapi.slice.api.v3.projects.domain
 import sttp.tapir.Schema
 import sttp.tapir.Validator
 import zio.*
-import zio.Clock
-import zio.Random
 import zio.json.JsonCodec
 
 import java.time.Instant

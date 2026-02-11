@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.api.v3.projects.domain
+
 import zio.*
 import zio.stream.ZStream
 
@@ -11,9 +12,9 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 
 // This error is used to indicate that an import already exists.
-final case class ImportExistsError(value: CurrentDataTask)
+final case class ImportExistsError(t: CurrentDataTask)
 // This error is used to indicate that an import is already in progress.
-final case class ImportInProgressError(value: CurrentDataTask)
+final case class ImportInProgressError(t: CurrentDataTask)
 
 final class ProjectDataImportService(
   currentImport: DataTaskState,

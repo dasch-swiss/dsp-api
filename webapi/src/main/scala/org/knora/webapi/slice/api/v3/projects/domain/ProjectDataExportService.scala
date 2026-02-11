@@ -6,21 +6,19 @@
 package org.knora.webapi.slice.api.v3.projects.domain
 
 import zio.*
-import zio.IO
-import zio.ZLayer
 import zio.stream.ZStream
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 
 // This error is used to indicate that an export exists
-final case class ExportExistsError(value: CurrentDataTask)
+final case class ExportExistsError(t: CurrentDataTask)
 
 // This error is used to indicate that an export is still in progress
-final case class ExportInProgressError(value: CurrentDataTask)
+final case class ExportInProgressError(t: CurrentDataTask)
 
 // This error is used to indicate that an export has failed
-final case class ExportFailedError(value: CurrentDataTask)
+final case class ExportFailedError(t: CurrentDataTask)
 
 final class ProjectDataExportService(currentExp: DataTaskState) { self =>
 
