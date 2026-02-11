@@ -32,9 +32,8 @@ object DataTaskId                                   extends StringValueCompanion
   given Schema[DataTaskId]      = Schema.string.description("A unique identifier.")
 
   def from(str: String): Either[String, DataTaskId] =
-    Try(UUID.fromString(str)).toEither.left
-      .map(_ => s"Invalid id: '$str' is not a valid UUID.")
-      .map(_ => DataTaskId(str))
+    Try(UUID.fromString(str)).toEither
+      .fold(_ => Left(s"Invalid id: '$str' is not a valid UUID."), id => Right(DataTaskId(id.toString)))
 
   def makeNew: UIO[DataTaskId] = Random.nextUUID.map(_.toString).map(DataTaskId(_))
 }
