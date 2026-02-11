@@ -34,9 +34,6 @@ final class V3ProjectsRestService(
 ) {
 
   private def conflict(code: V3ErrorCode.Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
-    buildConflict(code, prj, id)
-
-  private def buildConflict(code: Conflicts, prj: ProjectIri, id: DataTaskId) =
     Conflict(
       code,
       code.template.replace("{id}", id.value).replace("{projectIri}", prj.value),
