@@ -28,7 +28,7 @@ final class ProjectDataExportService(currentExp: DataTaskState) { self =>
     for {
       curExp <- currentExp.makeNew(projectIri, createdBy).mapError { case StateExistError(t) => ExportExistsError(t) }
       _      <-
-        /// Simulate a long-running export process by completing the export after a delay.
+        // Simulate a long-running export process by completing the export after a delay.
         // In a real implementation, this would be where the actual export logic goes.
         currentExp.complete(curExp.id).delay(10.seconds).ignore.forkDaemon
     } yield curExp

@@ -112,7 +112,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .out(header[String]("Content-Disposition"))
     .out(streamBinaryBody(ZioStreams)(CodecFormat.Zip()))
     .description(
-      "Download an export " +
+      "Download an export. " +
         "An export can only be downloaded when it has completed successfully. " +
         "If it is still in progress or has failed, the response will be 409 Conflict.",
     )

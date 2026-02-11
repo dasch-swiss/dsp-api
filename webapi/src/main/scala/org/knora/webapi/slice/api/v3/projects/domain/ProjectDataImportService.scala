@@ -29,7 +29,7 @@ final class ProjectDataImportService(
     // In a real implementation, we would process the stream here and update the import status accordingly.
     _ <- stream.runDrain.orDie
     _ <- (
-           /// Simulate a long-running import process by completing the import after a delay.
+           // Simulate a long-running import process by completing the import after a delay.
            // In a real implementation, this would be where the actual import logic goes.
            currentImport.complete(importTask.id).delay(10.seconds).ignore
          ).forkDaemon
