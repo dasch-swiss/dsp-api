@@ -12,7 +12,7 @@ import zio.ZLayer
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 
-final case class StateExistError(t: CurrentDataTask)
+final case class StatesExistError(t: CurrentDataTask)
 final case class StateInProgressError(t: CurrentDataTask)
 
 final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
@@ -21,15 +21,15 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
    * Create a new task for the given project and user.
    * If a task already exists in any state, return an error.
    *
-   * @param projectIri the IRI of the project for which the task is being created
-   * @param user the user who is creating the task
-   * @return An IO that fails with StateExist if a task already exists.
-   *         An IO that succeeds with the new task if it was created successfully.
+   * @param projectIri the [[ProjectIri]] for which the task is being created
+   * @param user the [[User]] who is creating the task
+   * @return An IO that fails with [[StatesExistError]] if a task already exists.
+   *         An IO that succeeds with [[CurrentDataTask]] when created successfully.
    */
-  def makeNew(projectIri: ProjectIri, user: User): IO[StateExistError, CurrentDataTask] = for {
+  def makeNew(projectIri: ProjectIri, user: User): IO[StatesExistError, CurrentDataTask] = for {
     newState <- CurrentDataTask.makeNew(projectIri, user)
     result   <- self.ref.modify {
-                case Some(exp) => (ZIO.fail(StateExistError(exp)), Some(exp))
+                case Some(exp) => (ZIO.fail(StatesExistError(exp)), Some(exp))
                 case None      => (ZIO.succeed(newState), Some(newState))
               }.flatten
   } yield result
@@ -42,7 +42,7 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
 
   /**
    * Delete the task with the given id if it exists and is not in progress.
-   * @param taskId the id of the task to delete
+   * @param taskId the [[DataTaskId]] of the task to delete
    * @return An IO that fails with [[None]] if the task is not found.
    *         An IO that fails with [[StateInProgressError]] if the task is found but is still in progress.
    *         An IO that succeeds with [[Unit]] if the task was successfully deleted.

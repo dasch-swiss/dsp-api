@@ -13,7 +13,7 @@ import zio.stream.ZStream
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 
-// This error is used to indicate that an export is already in progress
+// This error is used to indicate that an export exists
 final case class ExportExistsError(value: CurrentDataTask)
 
 // This error is used to indicate that an export is still in progress
@@ -26,7 +26,7 @@ final class ProjectDataExportService(currentExp: DataTaskState) { self =>
 
   def createExport(projectIri: ProjectIri, createdBy: User): IO[ExportExistsError, CurrentDataTask] =
     for {
-      curExp <- currentExp.makeNew(projectIri, createdBy).mapError { case StateExistError(t) => ExportExistsError(t) }
+      curExp <- currentExp.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) => ExportExistsError(t) }
       _      <-
         // Simulate a long-running export process by completing the export after a delay.
         // In a real implementation, this would be where the actual export logic goes.

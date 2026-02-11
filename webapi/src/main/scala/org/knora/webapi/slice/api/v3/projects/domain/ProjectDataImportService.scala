@@ -25,7 +25,7 @@ final class ProjectDataImportService(
     stream: ZStream[Any, Throwable, Byte],
   ): IO[ImportExistsError, CurrentDataTask] = for {
     importTask <-
-      currentImport.makeNew(projectIri, createdBy).mapError { case StateExistError(t) => ImportExistsError(t) }
+      currentImport.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) => ImportExistsError(t) }
     // In a real implementation, we would process the stream here and update the import status accordingly.
     _ <- stream.runDrain.orDie
     _ <- (

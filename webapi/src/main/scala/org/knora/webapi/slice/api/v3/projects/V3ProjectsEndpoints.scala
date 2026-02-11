@@ -92,7 +92,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     )
     .delete
     .in(exportsBase / exportIdPathVar)
-    .out(statusCode(StatusCode.Ok))
+    .out(statusCode(StatusCode.NoContent))
     .description(
       "Deletes an export irrevocably. " +
         "Only exports in state failed or completed can be deleted.",
@@ -158,7 +158,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     )
     .delete
     .in(importsBase / importIdPathVar)
-    .out(statusCode(StatusCode.Ok))
+    .out(statusCode(StatusCode.NoContent))
     .description(
       "Deletes an import. " +
         "Only imports in state failed or completed can be deleted. " +

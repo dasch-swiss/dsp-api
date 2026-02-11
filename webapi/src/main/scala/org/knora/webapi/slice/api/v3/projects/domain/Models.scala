@@ -78,7 +78,7 @@ final case class CurrentDataTask private (
 object CurrentDataTask {
   def makeNew(projectIri: ProjectIri, createdBy: User): UIO[CurrentDataTask] =
     for {
-      exportId <- DataTaskId.makeNew
-      now      <- Clock.instant
-    } yield CurrentDataTask(exportId, projectIri, DataTaskStatus.InProgress, createdBy, now)
+      id  <- DataTaskId.makeNew
+      now <- Clock.instant
+    } yield CurrentDataTask(id, projectIri, DataTaskStatus.InProgress, createdBy, now)
 }

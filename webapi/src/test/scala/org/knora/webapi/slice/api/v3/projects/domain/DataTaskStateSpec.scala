@@ -28,12 +28,12 @@ object DataTaskStateSpec extends ZIOSpecDefault {
           task.status == DataTaskStatus.InProgress,
         )
       },
-      test("should fail with StateExist when a task already exists") {
+      test("should fail with StatesExistError when a task already exists") {
         for {
           state    <- ZIO.service[DataTaskState]
           existing <- state.makeNew(projectIri, user)
           result   <- state.makeNew(projectIri, user).either
-        } yield assertTrue(result == Left(StateExistError(existing)))
+        } yield assertTrue(result == Left(StatesExistError(existing)))
       },
       test("should preserve existing task when makeNew fails") {
         for {
@@ -129,7 +129,7 @@ object DataTaskStateSpec extends ZIOSpecDefault {
           find  <- state.find(task.id).either
         } yield assertTrue(find == Left(None))
       },
-      test("should fail with StateExist when task is in progress") {
+      test("should fail with StateInProgressError when task is in progress") {
         for {
           state  <- ZIO.service[DataTaskState]
           task   <- state.makeNew(projectIri, user)
