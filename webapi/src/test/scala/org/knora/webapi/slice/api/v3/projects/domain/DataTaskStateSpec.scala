@@ -102,6 +102,48 @@ object DataTaskStateSpec extends ZIOSpecDefault {
         } yield assertTrue(result == Left(None))
       },
     ),
+    suite("deleteIfNotInProgress")(
+      test("should delete a completed task") {
+        for {
+          state <- ZIO.service[DataTaskState]
+          task  <- state.makeNew(projectIri, user)
+          _     <- state.complete(task.id)
+          _     <- state.deleteIfNotInProgress(task.id)
+          find  <- state.find(task.id).either
+        } yield assertTrue(find == Left(None))
+      },
+      test("should delete a failed task") {
+        for {
+          state <- ZIO.service[DataTaskState]
+          task  <- state.makeNew(projectIri, user)
+          _     <- state.fail(task.id)
+          _     <- state.deleteIfNotInProgress(task.id)
+          find  <- state.find(task.id).either
+        } yield assertTrue(find == Left(None))
+      },
+      test("should fail with StateExist when task is in progress") {
+        for {
+          state  <- ZIO.service[DataTaskState]
+          task   <- state.makeNew(projectIri, user)
+          result <- state.deleteIfNotInProgress(task.id).either
+        } yield assertTrue(result == Left(Some(StateExist(task))))
+      },
+      test("should not delete when task is in progress") {
+        for {
+          state <- ZIO.service[DataTaskState]
+          task  <- state.makeNew(projectIri, user)
+          _     <- state.deleteIfNotInProgress(task.id).either
+          found <- state.find(task.id)
+        } yield assertTrue(found == task)
+      },
+      test("should fail with None when task does not exist") {
+        for {
+          state  <- ZIO.service[DataTaskState]
+          taskId <- DataTaskId.makeNew
+          result <- state.deleteIfNotInProgress(taskId).either
+        } yield assertTrue(result == Left(None))
+      },
+    ),
     suite("atomicFindAndUpdate")(
       test("should update the task when found and function returns Right") {
         for {

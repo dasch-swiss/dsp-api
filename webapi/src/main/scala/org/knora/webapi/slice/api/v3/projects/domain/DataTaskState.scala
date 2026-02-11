@@ -40,6 +40,22 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
     }
 
   /**
+   * Delete the task with the given id if it exists and is not in progress.
+   * @param taskId the id of the task to delete
+   * @return An IO that fails with None if the task is not found.
+   *         An IO that fails with StateExist if the task is found but is still in progress.
+   *         An IO that succeeds with Unit if the task was successfully deleted.
+   */
+  def deleteIfNotInProgress(taskId: DataTaskId): IO[Option[StateExist], Unit] =
+    atomicFindAndUpdate[StateExist](
+      taskId,
+      {
+        case exp if exp.isInProgress => Left(StateExist(exp))
+        case _                       => Right(None)
+      },
+    ).unit
+
+  /**
    * Atomically find the task by id and update it using the provided function.
    * The function takes the current task and returns either an error or an optional new state.
    * If the task is found and the function returns Right, the state will be updated with the new state.

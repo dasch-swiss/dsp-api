@@ -41,13 +41,11 @@ final class ProjectDataExportService(currentExp: DataTaskState) { self =>
   // * ZIO.unit - if the export was successfully deleted,
   def deleteExport(exportId: DataTaskId): IO[Option[ExportExistsError], Unit] =
     currentExp
-      .atomicFindAndUpdate[ExportExistsError](
-        exportId,
-        {
-          case exp if exp.isInProgress => Left(ExportExistsError(exp))
-          case _                       => Right(None)
-        },
-      )
+      .deleteIfNotInProgress(exportId)
+      .mapError {
+        case Some(StateExist(s)) => Some(ExportExistsError(s))
+        case None                => None
+      }
       .unit
 
   def getExportStatus(exportId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = currentExp.find(exportId)

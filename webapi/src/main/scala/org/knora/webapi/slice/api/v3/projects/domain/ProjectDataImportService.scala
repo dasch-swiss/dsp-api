@@ -37,13 +37,11 @@ final class ProjectDataImportService(
 
   def deleteImport(importId: DataTaskId): IO[Option[ImportInProgressError], Unit] =
     currentImport
-      .atomicFindAndUpdate[ImportInProgressError](
-        importId,
-        {
-          case imp if imp.isInProgress => Left(ImportInProgressError(imp))
-          case _                       => Right(None)
-        },
-      )
+      .deleteIfNotInProgress(importId)
+      .mapError {
+        case Some(StateExist(s)) => Some(ImportInProgressError(s))
+        case None                => None
+      }
       .unit
 }
 
