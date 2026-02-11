@@ -8,9 +8,9 @@ package org.knora.webapi.slice.api.v3.projects
 import sttp.capabilities.zio.ZioStreams
 import zio.*
 import zio.stream.ZStream
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.Conflict
 import org.knora.webapi.slice.api.v3.NotFound
 import org.knora.webapi.slice.api.v3.V3Authorizer
@@ -31,7 +31,12 @@ final class V3ProjectsRestService(
   auth: V3Authorizer,
   exportService: ProjectDataExportService,
   importService: ProjectDataImportService,
+  projectService: KnoraProjectService,
 ) {
+
+  private def ensureSystemAdminAndProjectExists(user: User, projectIri: ProjectIri) =
+    auth.ensureSystemAdmin(user) *>
+      projectService.findById(projectIri).orElseFail(NotFound.from(projectIri))
 
   private def conflict(code: Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
     Conflict(
@@ -49,7 +54,7 @@ final class V3ProjectsRestService(
 
   def triggerProjectExportCreate(user: User)(projectIri: ProjectIri): IO[V3ErrorInfo, DataTaskStatusResponse] =
     for {
-      _     <- auth.ensureSystemAdmin(user)
+      _     <- ensureSystemAdminAndProjectExists(user, projectIri)
       state <-
         exportService
           .createExport(projectIri, user)
@@ -59,7 +64,7 @@ final class V3ProjectsRestService(
   def getProjectExportStatus(
     user: User,
   )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] = for {
-    _     <- auth.ensureSystemAdmin(user)
+    _     <- ensureSystemAdminAndProjectExists(user, projectIri)
     state <-
       exportService.getExportStatus(exportId).orElseFail(notFound(V3ErrorCode.export_not_found, projectIri, exportId))
   } yield DataTaskStatusResponse.from(state)
@@ -67,7 +72,7 @@ final class V3ProjectsRestService(
   def deleteProjectExport(
     user: User,
   )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, Unit] = for {
-    _ <- auth.ensureSystemAdmin(user)
+    _ <- ensureSystemAdminAndProjectExists(user, projectIri)
     _ <- exportService
            .deleteExport(exportId)
            .mapError {
@@ -85,7 +90,7 @@ final class V3ProjectsRestService(
     exportId: DataTaskId,
   ): IO[V3ErrorInfo, (String, ZioStreams.BinaryStream)] =
     for {
-      _                 <- auth.ensureSystemAdmin(user)
+      _                 <- ensureSystemAdminAndProjectExists(user, projectIri)
       filenameAndStream <- exportService.downloadExport(exportId).mapError {
                              case Some(er: ExportInProgressError) =>
                                conflict(V3ErrorCode.export_in_progress, er.value.projectIri, er.value.id)

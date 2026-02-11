@@ -7,8 +7,8 @@ package org.knora.webapi.slice.api.v3
 
 import zio.Chunk
 import zio.json.*
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v3.V3ErrorCode.NotFounds
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
@@ -44,6 +44,11 @@ object NotFound:
       s"The resource with IRI '$resourceIri' was not found.",
       Map("resourceIri" -> resourceIri.toString),
     )
+
+  def from(projectIri: ProjectIri): NotFound = {
+    val code: NotFounds = V3ErrorCode.project_not_found
+    apply(code, code.template.replace("{id}", projectIri.value), Map("id" -> projectIri.value))
+  }
 
 case class BadRequest(message: String = "Bad Request", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
 object BadRequest {
