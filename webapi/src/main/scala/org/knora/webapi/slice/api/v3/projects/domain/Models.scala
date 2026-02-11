@@ -15,6 +15,7 @@ import zio.json.JsonCodec
 import java.time.Instant
 import java.util.UUID
 import scala.util.Try
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.admin.Codecs.TapirCodec

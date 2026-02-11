@@ -47,6 +47,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
 
   private val basePath    = ApiV3.V3ProjectsProjectIri
   private val exportsBase = basePath / "exports"
+  private val importsBase = basePath / "imports"
 
   private val exportIdPathVar = path[DataTaskId]("exportId")
 
@@ -121,7 +122,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       ),
     )
     .post
-    .in(basePath / "imports")
+    .in(importsBase)
     .in(streamBinaryBody(ZioStreams)(CodecFormat.Zip()).description("The export zip file to import"))
     .out(statusCode(StatusCode.Accepted))
     .out(jsonBody[ImportAcceptedResponse])
@@ -140,12 +141,29 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       ),
     )
     .get
-    .in(basePath / "imports" / path[DataTaskId]("importId"))
+    .in(importsBase / path[DataTaskId]("importId"))
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[ExportStatusResponse])
     .description(
       "Checks the status of an import. " +
         "The response will indicate whether the import is still in progress, has completed successfully, or has failed.",
+    )
+
+  // delete an import
+  val deleteProjectIriImportsExportId = self.base
+    .secured(
+      oneOf(
+        notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.import_not_found),
+        conflictVariant(V3ErrorCode.import_exists),
+      ),
+    )
+    .delete
+    .in(importsBase / exportIdPathVar)
+    .out(statusCode(StatusCode.Ok))
+    .description(
+      "Deletes an import. " +
+        "Another import can only be started when the currently existing is not present any more. " +
+        "Only imports in state failed or completed can be deleted.",
     )
 }
 

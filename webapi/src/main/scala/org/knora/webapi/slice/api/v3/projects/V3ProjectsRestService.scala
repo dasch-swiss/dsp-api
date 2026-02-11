@@ -8,6 +8,7 @@ package org.knora.webapi.slice.api.v3.projects
 import sttp.capabilities.zio.ZioStreams
 import zio.*
 import zio.stream.ZStream
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v3.Conflict
@@ -134,6 +135,17 @@ final class V3ProjectsRestService(
       imp.createdBy.userIri,
       imp.createdAt,
     )
+
+  def deleteProjectImport(user: User)(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, Unit] =
+    for {
+      _ <- auth.ensureSystemAdmin(user)
+      _ <- importService
+             .deleteImport(importId)
+             .mapError {
+               case Some(e: ImportInProgressError) => conflictImport(e.value.projectIri, e.value.id)
+               case None                           => notFoundImport(projectIri, importId)
+             }
+    } yield ()
 }
 
 object V3ProjectsRestService {
