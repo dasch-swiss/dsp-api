@@ -87,7 +87,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .secured(
       oneOf(
         notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.export_not_found),
-        conflictVariant(V3ErrorCode.export_exists),
+        conflictVariant(V3ErrorCode.export_in_progress),
       ),
     )
     .delete

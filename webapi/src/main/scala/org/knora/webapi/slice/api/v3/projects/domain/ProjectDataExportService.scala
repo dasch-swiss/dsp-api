@@ -40,11 +40,11 @@ final class ProjectDataExportService(currentExp: DataTaskState) { self =>
   // * ZIO.fail(None) - if the export was not found
   // * ZIO.fail(Some(ExportExistsError)) - if the export is still in progress
   // * ZIO.unit - if the export was successfully deleted,
-  def deleteExport(exportId: DataTaskId): IO[Option[ExportExistsError], Unit] =
+  def deleteExport(exportId: DataTaskId): IO[Option[ExportInProgressError], Unit] =
     currentExp
       .deleteIfNotInProgress(exportId)
       .mapError {
-        case Some(StateInProgressError(s)) => Some(ExportExistsError(s))
+        case Some(StateInProgressError(s)) => Some(ExportInProgressError(s))
         case None                          => None
       }
       .unit

@@ -79,8 +79,9 @@ final class V3ProjectsRestService(
     _ <- exportService
            .deleteExport(exportId)
            .mapError {
-             case Some(er: ExportExistsError) => conflict(V3ErrorCode.export_exists, er.value.projectIri, er.value.id)
-             case None                        => notFound(projectIri, exportId)
+             case Some(er: ExportInProgressError) =>
+               conflict(V3ErrorCode.export_in_progress, er.value.projectIri, er.value.id)
+             case None => notFound(projectIri, exportId)
            }
   } yield ()
 
