@@ -8,7 +8,6 @@ package org.knora.webapi.slice.api.v3.projects
 import sttp.capabilities.zio.ZioStreams
 import zio.*
 import zio.stream.ZStream
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v3.Conflict
@@ -19,8 +18,8 @@ import org.knora.webapi.slice.api.v3.V3ErrorCode.Conflicts
 import org.knora.webapi.slice.api.v3.V3ErrorCode.NotFounds
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
 import org.knora.webapi.slice.api.v3.projects.domain.DataTaskId
+import org.knora.webapi.slice.api.v3.projects.domain.ExportExistsError
 import org.knora.webapi.slice.api.v3.projects.domain.ExportFailedError
-import org.knora.webapi.slice.api.v3.projects.domain.ExportInProgressError
 import org.knora.webapi.slice.api.v3.projects.domain.ImportInProgressError
 import org.knora.webapi.slice.api.v3.projects.domain.ProjectDataExportService
 import org.knora.webapi.slice.api.v3.projects.domain.ProjectDataImportService
@@ -62,7 +61,7 @@ final class V3ProjectsRestService(
       _     <- auth.ensureSystemAdmin(user)
       curEx <- exportService
                  .createExport(projectIri, user)
-                 .mapError((er: ExportInProgressError) => conflict(er.value.projectIri, er.value.id))
+                 .mapError((er: ExportExistsError) => conflict(er.value.projectIri, er.value.id))
     } yield ExportAcceptedResponse(curEx.id)
 
   def getProjectExportStatus(
@@ -87,8 +86,8 @@ final class V3ProjectsRestService(
     _ <- exportService
            .deleteExport(exportId)
            .mapError {
-             case Some(er: ExportInProgressError) => conflict(er.value.projectIri, er.value.id)
-             case None                            => notFound(projectIri, exportId)
+             case Some(er: ExportExistsError) => conflict(er.value.projectIri, er.value.id)
+             case None                        => notFound(projectIri, exportId)
            }
   } yield ()
 
@@ -102,7 +101,7 @@ final class V3ProjectsRestService(
     for {
       _                 <- auth.ensureSystemAdmin(user)
       filenameAndStream <- exportService.downloadExport(exportId).mapError {
-                             case Some(er: ExportInProgressError) =>
+                             case Some(er: ExportExistsError) =>
                                conflict(er.value.projectIri, er.value.id)
                              case Some(er: ExportFailedError) =>
                                conflict(er.value.projectIri, er.value.id)
