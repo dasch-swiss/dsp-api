@@ -33,7 +33,7 @@ object DataTaskStateSpec extends ZIOSpecDefault {
           state    <- ZIO.service[DataTaskState]
           existing <- state.makeNew(projectIri, user)
           result   <- state.makeNew(projectIri, user).either
-        } yield assertTrue(result == Left(StateExist(existing)))
+        } yield assertTrue(result == Left(StateExistError(existing)))
       },
       test("should preserve existing task when makeNew fails") {
         for {
@@ -134,7 +134,7 @@ object DataTaskStateSpec extends ZIOSpecDefault {
           state  <- ZIO.service[DataTaskState]
           task   <- state.makeNew(projectIri, user)
           result <- state.deleteIfNotInProgress(task.id).either
-        } yield assertTrue(result == Left(Some(StateExist(task))))
+        } yield assertTrue(result == Left(Some(StateInProgressError(task))))
       },
       test("should not delete when task is in progress") {
         for {

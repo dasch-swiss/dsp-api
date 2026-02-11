@@ -12,7 +12,8 @@ import zio.ZLayer
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 
-final case class StateExist(t: CurrentDataTask)
+final case class StateExistError(t: CurrentDataTask)
+final case class StateInProgressError(t: CurrentDataTask)
 
 final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
 
@@ -25,10 +26,10 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
    * @return An IO that fails with StateExist if a task already exists.
    *         An IO that succeeds with the new task if it was created successfully.
    */
-  def makeNew(projectIri: ProjectIri, user: User): IO[StateExist, CurrentDataTask] = for {
+  def makeNew(projectIri: ProjectIri, user: User): IO[StateExistError, CurrentDataTask] = for {
     newState <- CurrentDataTask.makeNew(projectIri, user)
     result   <- self.ref.modify {
-                case Some(exp) => (ZIO.fail(StateExist(exp)), Some(exp))
+                case Some(exp) => (ZIO.fail(StateExistError(exp)), Some(exp))
                 case None      => (ZIO.succeed(newState), Some(newState))
               }.flatten
   } yield result
@@ -46,11 +47,11 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
    *         An IO that fails with StateExist if the task is found but is still in progress.
    *         An IO that succeeds with Unit if the task was successfully deleted.
    */
-  def deleteIfNotInProgress(taskId: DataTaskId): IO[Option[StateExist], Unit] =
-    atomicFindAndUpdate[StateExist](
+  def deleteIfNotInProgress(taskId: DataTaskId): IO[Option[StateInProgressError], Unit] =
+    atomicFindAndUpdate[StateInProgressError](
       taskId,
       {
-        case exp if exp.isInProgress => Left(StateExist(exp))
+        case exp if exp.isInProgress => Left(StateInProgressError(exp))
         case _                       => Right(None)
       },
     ).unit

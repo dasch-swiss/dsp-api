@@ -8,7 +8,6 @@ package org.knora.webapi.slice.api.v3.projects
 import sttp.capabilities.zio.ZioStreams
 import zio.*
 import zio.stream.ZStream
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v3.Conflict
@@ -21,6 +20,8 @@ import org.knora.webapi.slice.api.v3.V3ErrorInfo
 import org.knora.webapi.slice.api.v3.projects.domain.DataTaskId
 import org.knora.webapi.slice.api.v3.projects.domain.ExportExistsError
 import org.knora.webapi.slice.api.v3.projects.domain.ExportFailedError
+import org.knora.webapi.slice.api.v3.projects.domain.ExportInProgressError
+import org.knora.webapi.slice.api.v3.projects.domain.ImportExistsError
 import org.knora.webapi.slice.api.v3.projects.domain.ImportInProgressError
 import org.knora.webapi.slice.api.v3.projects.domain.ProjectDataExportService
 import org.knora.webapi.slice.api.v3.projects.domain.ProjectDataImportService
@@ -31,11 +32,8 @@ final class V3ProjectsRestService(
   importService: ProjectDataImportService,
 ) {
 
-  private def conflict(prj: ProjectIri, id: DataTaskId): Conflict =
-    buildConflict(V3ErrorCode.export_exists, prj, id)
-
-  private def conflictImport(prj: ProjectIri, id: DataTaskId): Conflict =
-    buildConflict(V3ErrorCode.import_exists, prj, id)
+  private def conflict(code: V3ErrorCode.Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
+    buildConflict(code, prj, id)
 
   private def buildConflict(code: Conflicts, prj: ProjectIri, id: DataTaskId) =
     Conflict(
@@ -60,9 +58,10 @@ final class V3ProjectsRestService(
   def triggerProjectExportCreate(user: User)(projectIri: ProjectIri): IO[V3ErrorInfo, DataTaskStatusResponse] =
     for {
       _     <- auth.ensureSystemAdmin(user)
-      state <- exportService
-                 .createExport(projectIri, user)
-                 .mapError((er: ExportExistsError) => conflict(er.value.projectIri, er.value.id))
+      state <-
+        exportService
+          .createExport(projectIri, user)
+          .mapError((er: ExportExistsError) => conflict(V3ErrorCode.export_exists, er.value.projectIri, er.value.id))
     } yield DataTaskStatusResponse.from(state)
 
   def getProjectExportStatus(
@@ -79,7 +78,7 @@ final class V3ProjectsRestService(
     _ <- exportService
            .deleteExport(exportId)
            .mapError {
-             case Some(er: ExportExistsError) => conflict(er.value.projectIri, er.value.id)
+             case Some(er: ExportExistsError) => conflict(V3ErrorCode.export_exists, er.value.projectIri, er.value.id)
              case None                        => notFound(projectIri, exportId)
            }
   } yield ()
@@ -94,10 +93,10 @@ final class V3ProjectsRestService(
     for {
       _                 <- auth.ensureSystemAdmin(user)
       filenameAndStream <- exportService.downloadExport(exportId).mapError {
-                             case Some(er: ExportExistsError) =>
-                               conflict(er.value.projectIri, er.value.id)
+                             case Some(er: ExportInProgressError) =>
+                               conflict(V3ErrorCode.export_in_progress, er.value.projectIri, er.value.id)
                              case Some(er: ExportFailedError) =>
-                               conflict(er.value.projectIri, er.value.id)
+                               conflict(V3ErrorCode.export_failed, er.value.projectIri, er.value.id)
                              case None => notFound(projectIri, exportId)
                            }
       (filename, stream)            = filenameAndStream
@@ -109,9 +108,10 @@ final class V3ProjectsRestService(
   )(projectIri: ProjectIri, stream: ZStream[Any, Throwable, Byte]): IO[V3ErrorInfo, DataTaskStatusResponse] =
     for {
       _     <- auth.ensureSystemAdmin(user)
-      state <- importService
-                 .importDataExport(projectIri, user, stream)
-                 .mapError((e: ImportInProgressError) => conflictImport(e.value.projectIri, e.value.id))
+      state <-
+        importService
+          .importDataExport(projectIri, user, stream)
+          .mapError((e: ImportExistsError) => conflict(V3ErrorCode.import_exists, e.value.projectIri, e.value.id))
     } yield DataTaskStatusResponse.from(state)
 
   def getProjectImportStatus(
@@ -128,8 +128,9 @@ final class V3ProjectsRestService(
       _ <- importService
              .deleteImport(importId)
              .mapError {
-               case Some(e: ImportInProgressError) => conflictImport(e.value.projectIri, e.value.id)
-               case None                           => notFoundImport(projectIri, importId)
+               case Some(e: ImportInProgressError) =>
+                 conflict(V3ErrorCode.import_in_progress, e.value.projectIri, e.value.id)
+               case None => notFoundImport(projectIri, importId)
              }
     } yield ()
 }

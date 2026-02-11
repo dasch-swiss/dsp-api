@@ -14,18 +14,19 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 
 // This error is used to indicate that an export is already in progress
-// when trying to create a new export.
 case class ExportExistsError(value: CurrentDataTask)
 
+// This error is used to indicate that an export is still in progress
+case class ExportInProgressError(value: CurrentDataTask)
+
 // This error is used to indicate that an export is already in progress
-// when trying to create a new export.
 case class ExportFailedError(value: CurrentDataTask)
 
 final class ProjectDataExportService(currentExp: DataTaskState) { self =>
 
   def createExport(projectIri: ProjectIri, createdBy: User): IO[ExportExistsError, CurrentDataTask] =
     for {
-      curExp <- currentExp.makeNew(projectIri, createdBy).mapError { case StateExist(t) => ExportExistsError(t) }
+      curExp <- currentExp.makeNew(projectIri, createdBy).mapError { case StateExistError(t) => ExportExistsError(t) }
       _      <-
         /// Simulate a long-running export process by completing the export after a delay.
         // In a real implementation, this would be where the actual export logic goes.
@@ -43,8 +44,8 @@ final class ProjectDataExportService(currentExp: DataTaskState) { self =>
     currentExp
       .deleteIfNotInProgress(exportId)
       .mapError {
-        case Some(StateExist(s)) => Some(ExportExistsError(s))
-        case None                => None
+        case Some(StateInProgressError(s)) => Some(ExportExistsError(s))
+        case None                          => None
       }
       .unit
 
@@ -52,7 +53,7 @@ final class ProjectDataExportService(currentExp: DataTaskState) { self =>
 
   def downloadExport(
     exportId: DataTaskId,
-  ): IO[Option[ExportExistsError | ExportFailedError], (String, ZStream[Any, Throwable, Byte])] =
+  ): IO[Option[ExportInProgressError | ExportFailedError], (String, ZStream[Any, Throwable, Byte])] =
     for {
       exp <- canDownloadExport(exportId)
       // Simulate a file download by returning a stream of bytes.
@@ -61,9 +62,9 @@ final class ProjectDataExportService(currentExp: DataTaskState) { self =>
       fileContent = ZStream.empty
     } yield (fileName, fileContent)
 
-  def canDownloadExport(exportId: DataTaskId): IO[Option[ExportExistsError | ExportFailedError], CurrentDataTask] =
+  def canDownloadExport(exportId: DataTaskId): IO[Option[ExportInProgressError | ExportFailedError], CurrentDataTask] =
     currentExp.find(exportId).flatMap {
-      case exp if exp.isInProgress => ZIO.fail(Some(ExportExistsError(exp)))
+      case exp if exp.isInProgress => ZIO.fail(Some(ExportInProgressError(exp)))
       case exp if exp.isFailed     => ZIO.fail(Some(ExportFailedError(exp)))
       case exp                     => ZIO.succeed(exp)
     }
