@@ -62,7 +62,9 @@ final class ProjectDataExportService(currentExp: DataTaskState) { self =>
       fileContent = ZStream.empty
     } yield (fileName, fileContent)
 
-  def canDownloadExport(exportId: DataTaskId): IO[Option[ExportInProgressError | ExportFailedError], CurrentDataTask] =
+  private def canDownloadExport(
+    exportId: DataTaskId,
+  ): IO[Option[ExportInProgressError | ExportFailedError], CurrentDataTask] =
     currentExp.find(exportId).flatMap {
       case exp if exp.isInProgress => ZIO.fail(Some(ExportInProgressError(exp)))
       case exp if exp.isFailed     => ZIO.fail(Some(ExportFailedError(exp)))
