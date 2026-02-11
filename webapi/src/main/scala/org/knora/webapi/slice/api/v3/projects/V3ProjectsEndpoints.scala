@@ -161,7 +161,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .out(statusCode(StatusCode.Ok))
     .description(
       "Deletes an import. " +
-        "Only imports in state failed or completed can be deleted." +
+        "Only imports in state failed or completed can be deleted. " +
         "If it is still in progress, the response will be 409 Conflict.",
     )
 }
