@@ -19,23 +19,23 @@ import java.time.Instant
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.v3.*
-import org.knora.webapi.slice.api.v3.projects.domain.DataExportId
-import org.knora.webapi.slice.api.v3.projects.domain.DataExportStatus
+import org.knora.webapi.slice.api.v3.projects.domain.DataTaskId
+import org.knora.webapi.slice.api.v3.projects.domain.DataTaskStatus
 
-final case class ExportAcceptedResponse(exportId: DataExportId)
+final case class ExportAcceptedResponse(exportId: DataTaskId)
 object ExportAcceptedResponse {
   given JsonCodec[ExportAcceptedResponse] = DeriveJsonCodec.gen[ExportAcceptedResponse]
 }
 
-final case class ImportAcceptedResponse(importId: DataExportId)
+final case class ImportAcceptedResponse(importId: DataTaskId)
 object ImportAcceptedResponse {
   given JsonCodec[ImportAcceptedResponse] = DeriveJsonCodec.gen[ImportAcceptedResponse]
 }
 
 final case class ExportStatusResponse(
-  exportId: DataExportId,
+  exportId: DataTaskId,
   projectIri: ProjectIri,
-  status: DataExportStatus,
+  status: DataTaskStatus,
   createdBy: UserIri,
   createdAt: Instant,
 )
@@ -48,7 +48,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
   private val basePath    = ApiV3.V3ProjectsProjectIri
   private val exportsBase = basePath / "exports"
 
-  private val exportIdPathVar = path[DataExportId]("exportId")
+  private val exportIdPathVar = path[DataTaskId]("exportId")
 
   // trigger an export
   val postProjectIriExports = self.base
@@ -140,7 +140,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       ),
     )
     .get
-    .in(basePath / "imports" / path[DataExportId]("importId"))
+    .in(basePath / "imports" / path[DataTaskId]("importId"))
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[ExportStatusResponse])
     .description(

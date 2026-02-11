@@ -8,6 +8,7 @@ package org.knora.webapi.slice.api.v3.projects
 import sttp.capabilities.zio.ZioStreams
 import zio.*
 import zio.stream.ZStream
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v3.Conflict
@@ -15,7 +16,7 @@ import org.knora.webapi.slice.api.v3.NotFound
 import org.knora.webapi.slice.api.v3.V3Authorizer
 import org.knora.webapi.slice.api.v3.V3ErrorCode
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
-import org.knora.webapi.slice.api.v3.projects.domain.DataExportId
+import org.knora.webapi.slice.api.v3.projects.domain.DataTaskId
 import org.knora.webapi.slice.api.v3.projects.domain.ExportFailedError
 import org.knora.webapi.slice.api.v3.projects.domain.ExportInProgressError
 import org.knora.webapi.slice.api.v3.projects.domain.ImportInProgressError
@@ -28,7 +29,7 @@ final class V3ProjectsRestService(
   importService: ProjectDataImportService,
 ) {
 
-  private def conflict(prj: ProjectIri, id: DataExportId): Conflict =
+  private def conflict(prj: ProjectIri, id: DataTaskId): Conflict =
     val code: V3ErrorCode.Conflicts = V3ErrorCode.export_in_progress
     val exportId                    = id.value
     val projectIri                  = prj.value
@@ -38,7 +39,7 @@ final class V3ProjectsRestService(
       Map("id" -> exportId, "projectIri" -> projectIri),
     )
 
-  private def conflictImport(prj: ProjectIri, id: DataExportId): Conflict =
+  private def conflictImport(prj: ProjectIri, id: DataTaskId): Conflict =
     val code: V3ErrorCode.Conflicts = V3ErrorCode.import_in_progress
     val exportId                    = id.value
     val projectIri                  = prj.value
@@ -48,7 +49,7 @@ final class V3ProjectsRestService(
       Map("id" -> exportId, "projectIri" -> projectIri),
     )
 
-  private def notFound(prj: ProjectIri, id: DataExportId): NotFound =
+  private def notFound(prj: ProjectIri, id: DataTaskId): NotFound =
     val code: V3ErrorCode.NotFounds = V3ErrorCode.export_not_found
     val exportId                    = id.value
     val projectIri                  = prj.value
@@ -58,7 +59,7 @@ final class V3ProjectsRestService(
       Map("id" -> exportId, "projectIri" -> projectIri),
     )
 
-  private def notFoundImport(prj: ProjectIri, id: DataExportId): NotFound =
+  private def notFoundImport(prj: ProjectIri, id: DataTaskId): NotFound =
     val code: V3ErrorCode.NotFounds = V3ErrorCode.import_not_found
     val exportId                    = id.value
     val projectIri                  = prj.value
@@ -78,7 +79,7 @@ final class V3ProjectsRestService(
 
   def getProjectExportStatus(
     user: User,
-  )(projectIri: ProjectIri, exportId: DataExportId): IO[V3ErrorInfo, ExportStatusResponse] = for {
+  )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, ExportStatusResponse] = for {
     _      <- auth.ensureSystemAdmin(user)
     curExp <- exportService
                 .getExportStatus(exportId)
@@ -93,7 +94,7 @@ final class V3ProjectsRestService(
 
   def deleteProjectExport(
     user: User,
-  )(projectIri: ProjectIri, exportId: DataExportId): IO[V3ErrorInfo, Unit] = for {
+  )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, Unit] = for {
     _ <- auth.ensureSystemAdmin(user)
     _ <- exportService
            .deleteExport(exportId)
@@ -108,7 +109,7 @@ final class V3ProjectsRestService(
     user: User,
   )(
     projectIri: ProjectIri,
-    exportId: DataExportId,
+    exportId: DataTaskId,
   ): IO[V3ErrorInfo, (String, ZioStreams.BinaryStream)] =
     for {
       _                 <- auth.ensureSystemAdmin(user)
@@ -135,7 +136,7 @@ final class V3ProjectsRestService(
 
   def getProjectImportStatus(
     user: User,
-  )(projectIri: ProjectIri, importId: DataExportId): IO[V3ErrorInfo, ExportStatusResponse] =
+  )(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, ExportStatusResponse] =
     for {
       _   <- auth.ensureSystemAdmin(user)
       imp <- importService.getImportStatus(importId).orElseFail(notFoundImport(projectIri, importId))

@@ -5,103 +5,32 @@
 
 package org.knora.webapi.slice.api.v3.projects.domain
 
-import sttp.tapir.Schema
-import sttp.tapir.Validator
 import zio.*
-import zio.Clock
 import zio.IO
-import zio.Random
 import zio.Ref
 import zio.ZLayer
-import zio.json.JsonCodec
 import zio.stream.ZStream
-
-import java.time.Instant
-import java.util.UUID
-import scala.util.Try
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
-import org.knora.webapi.slice.api.admin.Codecs.TapirCodec.StringCodec
-import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
-import org.knora.webapi.slice.common.StringValueCompanion
-import org.knora.webapi.slice.common.Value.StringValue
-import org.knora.webapi.slice.common.WithFrom
-
-final case class DataExportId private (value: String) extends StringValue
-object DataExportId                                   extends StringValueCompanion[DataExportId] {
-  given JsonCodec[DataExportId]   = ZioJsonCodec.stringCodec(from)
-  given StringCodec[DataExportId] = TapirCodec.stringCodec(from)
-  given Schema[DataExportId]      = Schema.string.description("A unique identifier for an export.")
-
-  def from(str: String): Either[String, DataExportId] =
-    Try(UUID.fromString(str)).toEither.left
-      .map(_ => s"Invalid DataExportId: $str is not a valid UUID.")
-      .map(_ => DataExportId(str))
-
-  def makeNew: UIO[DataExportId] = Random.nextUUID.map(uuid => DataExportId(uuid.toString))
-}
-
-enum DataExportStatus(val responseStr: String) {
-  case InProgress extends DataExportStatus("in_progress")
-  case Completed  extends DataExportStatus("completed")
-  case Failed     extends DataExportStatus("failed")
-}
-
-object DataExportStatus extends WithFrom[String, DataExportStatus] {
-
-  private val expectedValues = s"'${values.map(_.responseStr).mkString(",")}'"
-
-  given JsonCodec[DataExportStatus]   = JsonCodec.string.transformOrFail(from, _.responseStr)
-  given StringCodec[DataExportStatus] = TapirCodec.stringCodec(from, _.responseStr)
-  given Schema[DataExportStatus]      = Schema.string
-    .description(s"The status of an export. One of $expectedValues expected.")
-    .validate(Validator.enumeration(values.toList))
-
-  def from(str: String): Either[String, DataExportStatus] =
-    DataExportStatus.values
-      .find(_.responseStr == str.toLowerCase)
-      .toRight(s"Unknown export status $str, expected one of $expectedValues.")
-}
-
-final case class CurrentDataExport private (
-  id: DataExportId,
-  projectIri: ProjectIri,
-  status: DataExportStatus,
-  createdBy: User,
-  createdAt: Instant,
-) {
-  def complete(): CurrentDataExport = this.copy(status = DataExportStatus.Completed)
-  def fail(): CurrentDataExport     = this.copy(status = DataExportStatus.Failed)
-  def isInProgess: Boolean          = status == DataExportStatus.InProgress
-}
-
-object CurrentDataExport {
-  def makeNew(projectIri: ProjectIri, createdBy: User): UIO[CurrentDataExport] =
-    for {
-      exportId <- DataExportId.makeNew
-      now      <- Clock.instant
-    } yield CurrentDataExport(exportId, projectIri, DataExportStatus.InProgress, createdBy, now)
-}
 
 // This error is used to indicate that an export is already in progress
 // when trying to create a new export.
-case class ExportInProgressError(value: CurrentDataExport)
+case class ExportInProgressError(value: CurrentDataTask)
 
 // This error is used to indicate that an export is already in progress
 // when trying to create a new export.
-case class ExportFailedError(value: CurrentDataExport)
+case class ExportFailedError(value: CurrentDataTask)
 
-final class ProjectDataExportService(currentExp: Ref[Option[CurrentDataExport]]) { self =>
+final class ProjectDataExportService(currentExp: Ref[Option[CurrentDataTask]]) { self =>
 
-  def createExport(projectIri: ProjectIri, createdBy: User): IO[ExportInProgressError, CurrentDataExport] =
+  def createExport(projectIri: ProjectIri, createdBy: User): IO[ExportInProgressError, CurrentDataTask] =
     for {
       existingExport <- self.currentExp.get
       curExp         <- existingExport match {
                   case Some(exp) => ZIO.fail(ExportInProgressError(exp))
                   case None      =>
-                    CurrentDataExport
+                    CurrentDataTask
                       .makeNew(projectIri, createdBy)
                       .tap(cde => self.currentExp.set(Some(cde)))
                 }
@@ -119,34 +48,34 @@ final class ProjectDataExportService(currentExp: Ref[Option[CurrentDataExport]])
   // * ZIO.fail(None) - if the export was not found
   // * ZIO.fail(Some(ExportInProgressError)) - if the export is still in progress
   // * ZIO.unit - if the export was successfully deleted,
-  def deleteExport(exportId: DataExportId): IO[Option[ExportInProgressError], Unit] =
+  def deleteExport(exportId: DataTaskId): IO[Option[ExportInProgressError], Unit] =
     for {
       existingExport <- self.currentExp.get
       _              <- existingExport match {
              case Some(exp) => {
                exp match {
-                 case exp if exp.id == exportId && exp.isInProgess => ZIO.fail(Some(ExportInProgressError(exp)))
-                 case exp if exp.id == exportId                    => self.currentExp.set(None)
-                 case _                                            => ZIO.fail(None)
+                 case exp if exp.id == exportId && exp.isInProgress => ZIO.fail(Some(ExportInProgressError(exp)))
+                 case exp if exp.id == exportId                     => self.currentExp.set(None)
+                 case _                                             => ZIO.fail(None)
                }
              }
              case _ => ZIO.fail(None)
            }
     } yield ()
 
-  def getExportStatus(exportId: DataExportId): IO[Option[Nothing], CurrentDataExport] =
+  def getExportStatus(exportId: DataTaskId): IO[Option[Nothing], CurrentDataTask] =
     currentExp.get.filterOrFail(_.exists(_.id == exportId))(None).flatMap(ZIO.fromOption)
 
   def downloadExport(
-    exportId: DataExportId,
+    exportId: DataTaskId,
   ): IO[Option[ExportInProgressError | ExportFailedError], (String, ZStream[Any, Throwable, Byte])] =
     for {
       existingExport <- self.currentExp.get
       exp            <- existingExport match {
                case Some(exp) =>
                  exp match {
-                   case exp if exp.id == exportId && exp.isInProgess                       => ZIO.fail(Some(ExportInProgressError(exp)))
-                   case exp if exp.id == exportId && exp.status == DataExportStatus.Failed =>
+                   case exp if exp.id == exportId && exp.isInProgress                    => ZIO.fail(Some(ExportInProgressError(exp)))
+                   case exp if exp.id == exportId && exp.status == DataTaskStatus.Failed =>
                      ZIO.fail(Some(ExportFailedError(exp)))
                    case exp if exp.id == exportId => ZIO.succeed(exp)
                    case _                         => ZIO.fail(None)
@@ -162,5 +91,5 @@ final class ProjectDataExportService(currentExp: Ref[Option[CurrentDataExport]])
 
 object ProjectDataExportService {
   val layer: ZLayer[Any, Nothing, ProjectDataExportService] =
-    ZLayer.fromZIO(Ref.make[Option[CurrentDataExport]](None)) >>> ZLayer.derive[ProjectDataExportService]
+    ZLayer.fromZIO(Ref.make[Option[CurrentDataTask]](None)) >>> ZLayer.derive[ProjectDataExportService]
 }

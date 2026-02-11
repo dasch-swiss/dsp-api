@@ -1,47 +1,32 @@
+/*
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.api.v3.projects.domain
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
 import zio.*
 import zio.stream.ZStream
 
-import java.time.Instant
-
-final case class CurrentDataImport private (
-  id: DataExportId,
-  projectIri: ProjectIri,
-  status: DataExportStatus,
-  createdBy: User,
-  createdAt: Instant,
-) {
-  def complete(): CurrentDataImport = this.copy(status = DataExportStatus.Completed)
-  def fail(): CurrentDataImport     = this.copy(status = DataExportStatus.Failed)
-  def isInProgess: Boolean          = status == DataExportStatus.InProgress
-}
-object CurrentDataImport {
-  def makeNew(projectIri: ProjectIri, createdBy: User): UIO[CurrentDataImport] =
-    for {
-      exportId <- DataExportId.makeNew
-      now      <- Clock.instant
-    } yield CurrentDataImport(exportId, projectIri, DataExportStatus.InProgress, createdBy, now)
-}
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.User
 
 // This error is used to indicate that an import is already in progress for a project when a new import request is made.
-final case class ImportInProgressError(value: CurrentDataImport)
+final case class ImportInProgressError(value: CurrentDataTask)
 
 final class ProjectDataImportService(
-  currentImport: Ref[Option[CurrentDataImport]],
+  currentImport: Ref[Option[CurrentDataTask]],
 ) { self =>
 
   def importDataExport(
     projectIri: ProjectIri,
     createdBy: User,
     stream: ZStream[Any, Throwable, Byte],
-  ): IO[ImportInProgressError, CurrentDataImport] = for {
+  ): IO[ImportInProgressError, CurrentDataTask] = for {
     existingImport <- self.currentImport.get
     curExp         <- existingImport match {
                 case Some(exp) => ZIO.fail(ImportInProgressError(exp))
                 case None      =>
-                  CurrentDataImport
+                  CurrentDataTask
                     .makeNew(projectIri, createdBy)
                     .tap(cde => self.currentImport.set(Some(cde)))
               }
@@ -54,10 +39,10 @@ final class ProjectDataImportService(
          ).forkDaemon
   } yield curExp
 
-  def getImportStatus(importId: DataExportId): IO[Option[Nothing], CurrentDataImport] =
+  def getImportStatus(importId: DataTaskId): IO[Option[Nothing], CurrentDataTask] =
     self.currentImport.get.flatMap(ZIO.fromOption).filterOrFail(_.id == importId)(None)
 }
 
 object ProjectDataImportService {
-  val layer = ZLayer.fromZIO(Ref.make[Option[CurrentDataImport]](None)) >>> ZLayer.derive[ProjectDataImportService]
+  val layer = ZLayer.fromZIO(Ref.make[Option[CurrentDataTask]](None)) >>> ZLayer.derive[ProjectDataImportService]
 }
