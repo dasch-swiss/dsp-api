@@ -121,7 +121,6 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
   val postProjectIriImports = self.base
     .secured(
       oneOf(
-        notFoundVariant(V3ErrorCode.project_not_found),
         conflictVariant(V3ErrorCode.import_exists),
       ),
     )
@@ -138,7 +137,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
 
   // get the status of an import
   val getProjectIriImportsImportId = self.base
-    .secured(oneOf(notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.import_not_found)))
+    .secured(oneOf(notFoundVariant(V3ErrorCode.import_not_found)))
     .get
     .in(importsBase / importIdPathVar)
     .out(statusCode(StatusCode.Ok))
@@ -152,7 +151,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
   val deleteProjectIriImportsImportId = self.base
     .secured(
       oneOf(
-        notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.import_not_found),
+        notFoundVariant(V3ErrorCode.import_not_found),
         conflictVariant(V3ErrorCode.import_in_progress),
       ),
     )
