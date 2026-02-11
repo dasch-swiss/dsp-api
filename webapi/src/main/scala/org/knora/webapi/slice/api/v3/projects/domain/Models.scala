@@ -15,7 +15,6 @@ import zio.json.JsonCodec
 import java.time.Instant
 import java.util.UUID
 import scala.util.Try
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
@@ -33,10 +32,10 @@ object DataTaskId                                   extends StringValueCompanion
 
   def from(str: String): Either[String, DataTaskId] =
     Try(UUID.fromString(str)).toEither.left
-      .map(_ => s"Invalid id: $str is not a valid UUID.")
+      .map(_ => s"Invalid id: '$str' is not a valid UUID.")
       .map(_ => DataTaskId(str))
 
-  def makeNew: UIO[DataTaskId] = Random.nextUUID.map(uuid => DataTaskId(uuid.toString))
+  def makeNew: UIO[DataTaskId] = Random.nextUUID.map(_.toString).map(DataTaskId(_))
 }
 
 enum DataTaskStatus(val responseStr: String) {

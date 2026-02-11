@@ -15,6 +15,8 @@ import org.knora.webapi.slice.api.v3.Conflict
 import org.knora.webapi.slice.api.v3.NotFound
 import org.knora.webapi.slice.api.v3.V3Authorizer
 import org.knora.webapi.slice.api.v3.V3ErrorCode
+import org.knora.webapi.slice.api.v3.V3ErrorCode.Conflicts
+import org.knora.webapi.slice.api.v3.V3ErrorCode.NotFounds
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
 import org.knora.webapi.slice.api.v3.projects.domain.DataTaskId
 import org.knora.webapi.slice.api.v3.projects.domain.ExportFailedError
@@ -30,43 +32,29 @@ final class V3ProjectsRestService(
 ) {
 
   private def conflict(prj: ProjectIri, id: DataTaskId): Conflict =
-    val code: V3ErrorCode.Conflicts = V3ErrorCode.export_in_progress
-    val exportId                    = id.value
-    val projectIri                  = prj.value
-    Conflict(
-      code,
-      code.template.replace("{id}", exportId).replace("{projectIri}", projectIri),
-      Map("id" -> exportId, "projectIri" -> projectIri),
-    )
+    buildConflict(V3ErrorCode.export_exists, prj, id)
 
   private def conflictImport(prj: ProjectIri, id: DataTaskId): Conflict =
-    val code: V3ErrorCode.Conflicts = V3ErrorCode.import_in_progress
-    val exportId                    = id.value
-    val projectIri                  = prj.value
+    buildConflict(V3ErrorCode.import_exists, prj, id)
+
+  private def buildConflict(code: Conflicts, prj: ProjectIri, id: DataTaskId) =
     Conflict(
       code,
-      code.template.replace("{id}", exportId).replace("{projectIri}", projectIri),
-      Map("id" -> exportId, "projectIri" -> projectIri),
+      code.template.replace("{id}", id.value).replace("{projectIri}", prj.value),
+      Map("id" -> id.value, "projectIri" -> prj.value),
     )
 
   private def notFound(prj: ProjectIri, id: DataTaskId): NotFound =
-    val code: V3ErrorCode.NotFounds = V3ErrorCode.export_not_found
-    val exportId                    = id.value
-    val projectIri                  = prj.value
-    NotFound(
-      code,
-      code.template.replace("{id}", exportId).replace("{projectIri}", projectIri),
-      Map("id" -> exportId, "projectIri" -> projectIri),
-    )
+    buildNotFound(V3ErrorCode.export_not_found, prj, id)
 
   private def notFoundImport(prj: ProjectIri, id: DataTaskId): NotFound =
-    val code: V3ErrorCode.NotFounds = V3ErrorCode.import_not_found
-    val exportId                    = id.value
-    val projectIri                  = prj.value
+    buildNotFound(V3ErrorCode.import_not_found, prj, id)
+
+  private def buildNotFound(code: NotFounds, prj: ProjectIri, id: DataTaskId) =
     NotFound(
       code,
-      code.template.replace("{id}", exportId).replace("{projectIri}", projectIri),
-      Map("id" -> exportId, "projectIri" -> projectIri),
+      code.template.replace("{id}", id.value).replace("{projectIri}", prj.value),
+      Map("id" -> id.value, "projectIri" -> prj.value),
     )
 
   def triggerProjectExportCreate(user: User)(projectIri: ProjectIri): IO[V3ErrorInfo, ExportAcceptedResponse] =

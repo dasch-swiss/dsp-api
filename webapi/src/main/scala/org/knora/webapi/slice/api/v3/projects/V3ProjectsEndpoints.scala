@@ -55,7 +55,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .secured(
       oneOf(
         notFoundVariant(V3ErrorCode.project_not_found),
-        conflictVariant(V3ErrorCode.export_in_progress),
+        conflictVariant(V3ErrorCode.export_exists),
       ),
     )
     .post
@@ -85,7 +85,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .secured(
       oneOf(
         notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.export_not_found),
-        conflictVariant(V3ErrorCode.export_in_progress),
+        conflictVariant(V3ErrorCode.export_exists),
       ),
     )
     .delete
@@ -102,7 +102,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .secured(
       oneOf(
         notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.export_not_found),
-        conflictVariant(V3ErrorCode.export_in_progress),
+        conflictVariant(V3ErrorCode.export_exists),
       ),
     )
     .get
@@ -117,7 +117,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .secured(
       oneOf(
         notFoundVariant(V3ErrorCode.project_not_found),
-        conflictVariant(V3ErrorCode.import_in_progress),
+        conflictVariant(V3ErrorCode.import_exists),
       ),
     )
     .post
@@ -136,7 +136,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .secured(
       oneOf(
         notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.export_not_found),
-        conflictVariant(V3ErrorCode.import_in_progress),
+        conflictVariant(V3ErrorCode.import_exists),
       ),
     )
     .get
