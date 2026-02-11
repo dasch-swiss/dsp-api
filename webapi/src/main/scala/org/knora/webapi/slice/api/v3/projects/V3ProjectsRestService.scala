@@ -33,20 +33,14 @@ final class V3ProjectsRestService(
   importService: ProjectDataImportService,
 ) {
 
-  private def conflict(code: V3ErrorCode.Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
+  private def conflict(code: Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
     Conflict(
       code,
       code.template.replace("{id}", id.value).replace("{projectIri}", prj.value),
       Map("id" -> id.value, "projectIri" -> prj.value),
     )
 
-  private def notFound(prj: ProjectIri, id: DataTaskId): NotFound =
-    buildNotFound(V3ErrorCode.export_not_found, prj, id)
-
-  private def notFoundImport(prj: ProjectIri, id: DataTaskId): NotFound =
-    buildNotFound(V3ErrorCode.import_not_found, prj, id)
-
-  private def buildNotFound(code: NotFounds, prj: ProjectIri, id: DataTaskId) =
+  private def notFound(code: NotFounds, prj: ProjectIri, id: DataTaskId) =
     NotFound(
       code,
       code.template.replace("{id}", id.value).replace("{projectIri}", prj.value),
@@ -66,7 +60,8 @@ final class V3ProjectsRestService(
     user: User,
   )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] = for {
     _     <- auth.ensureSystemAdmin(user)
-    state <- exportService.getExportStatus(exportId).orElseFail(notFound(projectIri, exportId))
+    state <-
+      exportService.getExportStatus(exportId).orElseFail(notFound(V3ErrorCode.export_not_found, projectIri, exportId))
   } yield DataTaskStatusResponse.from(state)
 
   def deleteProjectExport(
@@ -78,7 +73,7 @@ final class V3ProjectsRestService(
            .mapError {
              case Some(er: ExportInProgressError) =>
                conflict(V3ErrorCode.export_in_progress, er.value.projectIri, er.value.id)
-             case None => notFound(projectIri, exportId)
+             case None => notFound(V3ErrorCode.export_not_found, projectIri, exportId)
            }
   } yield ()
 
@@ -96,7 +91,7 @@ final class V3ProjectsRestService(
                                conflict(V3ErrorCode.export_in_progress, er.value.projectIri, er.value.id)
                              case Some(er: ExportFailedError) =>
                                conflict(V3ErrorCode.export_failed, er.value.projectIri, er.value.id)
-                             case None => notFound(projectIri, exportId)
+                             case None => notFound(V3ErrorCode.export_not_found, projectIri, exportId)
                            }
       (filename, stream)            = filenameAndStream
       contentDispositionHeaderValue = s"""attachment; filename="$filename""""
@@ -118,7 +113,8 @@ final class V3ProjectsRestService(
   )(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
     for {
       _     <- auth.ensureSystemAdmin(user)
-      state <- importService.getImportStatus(importId).orElseFail(notFoundImport(projectIri, importId))
+      state <-
+        importService.getImportStatus(importId).orElseFail(notFound(V3ErrorCode.import_not_found, projectIri, importId))
     } yield DataTaskStatusResponse.from(state)
 
   def deleteProjectImport(user: User)(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, Unit] =
@@ -129,7 +125,7 @@ final class V3ProjectsRestService(
              .mapError {
                case Some(e: ImportInProgressError) =>
                  conflict(V3ErrorCode.import_in_progress, e.value.projectIri, e.value.id)
-               case None => notFoundImport(projectIri, importId)
+               case None => notFound(V3ErrorCode.import_not_found, projectIri, importId)
              }
     } yield ()
 }
