@@ -459,7 +459,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
   def spec: Spec[Environment & (TestEnvironment & Scope), Any] =
     suite("ResourcesRepoLiveSpec")(
       tests.provide(StringFormatter.test),
-      countByResourceClassSuite,
+      countByResourceClassesSuite,
     )
 
   private val createResourceWithoutValuesTest = test("Create a new resource query without values") {
@@ -1310,23 +1310,28 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     }
 
-  private val countByResourceClassSuite = {
+  private val countByResourceClassesSuite = {
     val project      = TestDataFactory.someProject
     val dataGraphIri = ProjectService.projectDataNamedGraphV2(project).value
-    val classIri     = "http://www.knora.org/ontology/0001/anything#Thing"
 
-    suite("countByResourceClass")(
-      test("should return 0 when no resources exist") {
+    def classIri(iri: String)(implicit sf: StringFormatter): ResourceClassIri = ResourceClassIri.unsafeFrom(iri)
+
+    suite("countByResourceClasses")(
+      test("should return zero counts when no resources exist") {
         for {
-          _     <- TestTripleStore.setEmptyDataset()
-          sf    <- ZIO.service[StringFormatter]
-          repo  <- ZIO.service[ResourcesRepoLive]
-          count <- repo.countByResourceClass(ResourceClassIri.unsafeFrom(classIri)(using sf), project)
-        } yield assertTrue(count == 0)
+          sf     <- ZIO.service[StringFormatter]
+          _      <- TestTripleStore.setEmptyDataset()
+          repo   <- ZIO.service[ResourcesRepoLive]
+          counts <- repo.countByResourceClasses(
+                      List(classIri("http://www.knora.org/ontology/0001/anything#Thing")(sf)),
+                      project,
+                    )
+        } yield assertTrue(counts == Map(classIri("http://www.knora.org/ontology/0001/anything#Thing")(sf) -> 0))
       },
       test("should not count deleted resources") {
         for {
-          _ <- TestTripleStore.setDatasetFromTriG(
+          sf <- ZIO.service[StringFormatter]
+          _  <- TestTripleStore.setDatasetFromTriG(
                  s"""
                     | @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
                     | @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -1349,10 +1354,52 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                     | }
                     |""".stripMargin,
                )
-          sf    <- ZIO.service[StringFormatter]
-          repo  <- ZIO.service[ResourcesRepoLive]
-          count <- repo.countByResourceClass(ResourceClassIri.unsafeFrom(classIri)(using sf), project)
-        } yield assertTrue(count == 2)
+          repo   <- ZIO.service[ResourcesRepoLive]
+          thing   = classIri("http://www.knora.org/ontology/0001/anything#Thing")(sf)
+          counts <- repo.countByResourceClasses(List(thing), project)
+        } yield assertTrue(counts.getOrElse(thing, 0) == 2)
+      },
+      test("should count resources grouped by type") {
+        for {
+          sf <- ZIO.service[StringFormatter]
+          _  <- TestTripleStore.setDatasetFromTriG(
+                 s"""
+                    | @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                    | @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                    | @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+                    | @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+                    | @prefix anything: <http://www.knora.org/ontology/0001/anything#> .
+                    |
+                    | <$dataGraphIri> {
+                    |   <http://rdfh.ch/0001/thing-1> rdf:type anything:Thing ;
+                    |     rdfs:label "Thing 1" ;
+                    |     knora-base:isDeleted false .
+                    |
+                    |   <http://rdfh.ch/0001/subthing-1> rdf:type anything:SubThing ;
+                    |     rdfs:label "SubThing 1" ;
+                    |     knora-base:isDeleted false .
+                    |
+                    |   <http://rdfh.ch/0001/subthing-2> rdf:type anything:SubThing ;
+                    |     rdfs:label "SubThing 2" ;
+                    |     knora-base:isDeleted false .
+                    | }
+                    |""".stripMargin,
+               )
+          repo    <- ZIO.service[ResourcesRepoLive]
+          thing    = classIri("http://www.knora.org/ontology/0001/anything#Thing")(sf)
+          subThing = classIri("http://www.knora.org/ontology/0001/anything#SubThing")(sf)
+          counts  <- repo.countByResourceClasses(List(thing, subThing), project)
+        } yield assertTrue(
+          counts.getOrElse(thing, 0) == 1,
+          counts.getOrElse(subThing, 0) == 2,
+        )
+      },
+      test("should return empty map for empty class list") {
+        for {
+          _      <- TestTripleStore.setEmptyDataset()
+          repo   <- ZIO.service[ResourcesRepoLive]
+          counts <- repo.countByResourceClasses(List.empty, project)
+        } yield assertTrue(counts.isEmpty)
       },
     ).provide(
       StringFormatter.test,
