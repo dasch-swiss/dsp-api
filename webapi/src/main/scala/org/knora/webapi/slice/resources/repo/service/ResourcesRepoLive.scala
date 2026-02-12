@@ -14,7 +14,6 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.core.From
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
@@ -288,8 +287,8 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val s      = variable("s")
     val select = SparqlBuilder.select(Expressions.count(s).as(variable("count")))
     val from   = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(project)))
-    val where  = List(s.isA(toRdfIri(iri)), GraphPatterns.filterNotExists(toRdfIri(iri).has(KB.isDeleted, true)))
-    val query  = Queries.SELECT(select).from(from).where(where: _*)
+    val where  = s.isA(toRdfIri(iri)).andHas(KB.isDeleted, false)
+    val query  = Queries.SELECT(select).from(from).where(where)
     triplestore.select(query).map(_.getFirst("count").map(_.toInt).getOrElse(0))
   }
 }
