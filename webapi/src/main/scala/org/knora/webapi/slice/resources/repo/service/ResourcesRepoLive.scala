@@ -14,7 +14,6 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.core.From
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
@@ -38,7 +37,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -284,13 +282,14 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
       )
   }
 
-  def countByResourceClass(iri: ResourceClassIri, project: KnoraProject): Task[Int] = {
-    val s      = variable("s")
-    val select = SparqlBuilder.select(Expressions.count(s).as(variable("count")))
-    val from   = SparqlBuilder.from(toRdfIri(ProjectService.projectDataNamedGraphV2(project)))
-    val where  = List(s.isA(toRdfIri(iri)), GraphPatterns.filterNotExists(toRdfIri(iri).has(KB.isDeleted, true)))
-    val query  = Queries.SELECT(select).from(from).where(where: _*)
-    triplestore.select(query).map(_.getFirst("count").map(_.toInt).getOrElse(0))
+  def countByResourceClass(classIri: ResourceClassIri, project: KnoraProject): Task[Int] = {
+    val countAs = "count"
+    val s       = variable("s")
+    val select  = Expressions.count(s).as(variable(countAs))
+    val from    = SparqlBuilder.from(graphIri(project))
+    val where   = s.isA(toRdfIri(classIri)).andHas(KB.isDeleted, false)
+    val query   = Queries.SELECT(select).from(from).where(where)
+    triplestore.select(query).map(_.getFirst(countAs).map(_.toInt).getOrElse(0))
   }
 }
 

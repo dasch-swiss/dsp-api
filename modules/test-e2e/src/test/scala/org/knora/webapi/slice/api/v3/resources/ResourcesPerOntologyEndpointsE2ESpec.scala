@@ -160,7 +160,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                           ),
                         ),
                       ),
-                      itemCount = 4,
+                      itemCount = 3,
                     ),
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
@@ -311,7 +311,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                           ),
                         ),
                       ),
-                      itemCount = 53,
+                      itemCount = 51,
                     ),
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
