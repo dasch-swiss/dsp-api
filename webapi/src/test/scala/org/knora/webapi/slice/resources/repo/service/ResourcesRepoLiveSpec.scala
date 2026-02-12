@@ -13,11 +13,14 @@ import java.time.Instant
 import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
+import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
@@ -27,7 +30,9 @@ import org.knora.webapi.slice.resources.repo.model.StandoffLinkValueInfo
 import org.knora.webapi.slice.resources.repo.model.StandoffTagInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
+import org.knora.webapi.store.triplestore.api.TestTripleStore
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object TestData {
 
@@ -451,7 +456,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     }
   }
 
-  def spec: Spec[Environment & (TestEnvironment & Scope), Any] = tests.provide(StringFormatter.test)
+  def spec: Spec[Environment & (TestEnvironment & Scope), Any] =
+    suite("ResourcesRepoLiveSpec")(
+      tests.provide(StringFormatter.test),
+      countByResourceClassSuite,
+    )
 
   private val createResourceWithoutValuesTest = test("Create a new resource query without values") {
     val expected =
@@ -1300,6 +1309,58 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
       assertUpdateQueriesEqual(expected, result)
     }
+
+  private val countByResourceClassSuite = {
+    val project      = TestDataFactory.someProject
+    val dataGraphIri = ProjectService.projectDataNamedGraphV2(project).value
+    val classIri     = "http://www.knora.org/ontology/0001/anything#Thing"
+
+    suite("countByResourceClass")(
+      test("should return 0 when no resources exist") {
+        for {
+          _     <- TestTripleStore.setEmptyDataset()
+          sf    <- ZIO.service[StringFormatter]
+          repo  <- ZIO.service[ResourcesRepoLive]
+          count <- repo.countByResourceClass(ResourceClassIri.unsafeFrom(classIri)(using sf), project)
+        } yield assertTrue(count == 0)
+      },
+      test("should not count deleted resources") {
+        for {
+          _ <- TestTripleStore.setDatasetFromTriG(
+                 s"""
+                    | @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                    | @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                    | @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+                    | @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+                    | @prefix anything: <http://www.knora.org/ontology/0001/anything#> .
+                    |
+                    | <$dataGraphIri> {
+                    |   <http://rdfh.ch/0001/active-resource-1> rdf:type anything:Thing ;
+                    |     rdfs:label "Active resource 1" ;
+                    |     knora-base:isDeleted false .
+                    |
+                    |   <http://rdfh.ch/0001/active-resource-2> rdf:type anything:Thing ;
+                    |     rdfs:label "Active resource 2" ;
+                    |     knora-base:isDeleted false .
+                    |
+                    |   <http://rdfh.ch/0001/deleted-resource> rdf:type anything:Thing ;
+                    |     rdfs:label "Deleted resource" ;
+                    |     knora-base:isDeleted true .
+                    | }
+                    |""".stripMargin,
+               )
+          sf    <- ZIO.service[StringFormatter]
+          repo  <- ZIO.service[ResourcesRepoLive]
+          count <- repo.countByResourceClass(ResourceClassIri.unsafeFrom(classIri)(using sf), project)
+        } yield assertTrue(count == 2)
+      },
+    ).provide(
+      StringFormatter.test,
+      TriplestoreServiceInMemory.emptyDatasetRefLayer,
+      TriplestoreServiceInMemory.layer,
+      ResourcesRepoLive.layer,
+    )
+  }
 
   val tests: Spec[StringFormatter, Nothing] =
     suite("ResourcesRepoLiveSpec")(
