@@ -3715,9 +3715,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                             .flatMap(_.assert200)
         resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
 
-        resIri      <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
-        resource    <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
-        valuesArray <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+        valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
         valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
         valueTexts    = valuesInOrder.flatMap(_.getRequiredString(KA.ValueAsString).toOption)
       } yield assertTrue(
