@@ -6,6 +6,8 @@
 package org.knora.webapi.slice.api.v2.values
 
 import sttp.tapir.*
+import sttp.tapir.generic.auto.*
+import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
 
 import org.knora.webapi.slice.api.v2.ApiV2
@@ -45,6 +47,23 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
       s"Create a new value for a resource. Requires appropriate object access permissions on the resource. $linkToValuesDocumentation",
+    )
+
+  val putValuesOrder = baseEndpoint.withUserEndpoint.put
+    .in(base / "order")
+    .in(
+      jsonBody[ReorderValuesRequest].example(
+        ReorderValuesRequest(
+          resourceIri = "http://rdfh.ch/0001/resource-1",
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
+          orderedValueIris =
+            List("http://rdfh.ch/0001/value-3", "http://rdfh.ch/0001/value-1", "http://rdfh.ch/0001/value-2"),
+        ),
+      ),
+    )
+    .out(jsonBody[ReorderValuesResponse])
+    .description(
+      s"Reorder values of a property on a resource. Requires modify permission on the resource. $linkToValuesDocumentation",
     )
 
   val putValues = baseEndpoint.withUserEndpoint.put

@@ -8,6 +8,8 @@ package org.knora.webapi.slice.api.v2.values
 import sttp.tapir.ztapir.*
 import zio.*
 
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v2.ValueUuid
@@ -16,12 +18,14 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
+import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final class ValuesServerEndpoints(endpoints: ValuesEndpoints, restService: ValuesRestService) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getValue.serverLogic(restService.getValue),
     endpoints.postValues.serverLogic(restService.createValue),
+    endpoints.putValuesOrder.serverLogic(restService.reorderValues),
     endpoints.putValues.serverLogic(restService.updateValue),
     endpoints.deleteValues.serverLogic(restService.deleteValue),
     endpoints.postValuesErase.serverLogic(restService.eraseValue),
@@ -31,7 +35,7 @@ final class ValuesServerEndpoints(endpoints: ValuesEndpoints, restService: Value
 object ValuesServerEndpoints {
   type Dependencies =
     ApiComplexV2JsonLdRequestParser & AuthorizationRestService & BaseEndpoints & KnoraProjectService &
-      KnoraResponseRenderer & ReadResourcesService & ValuesResponderV2
+      KnoraResponseRenderer & ReadResourcesService & ResourceUtilV2 & StringFormatter & ValueRepo & ValuesResponderV2
 
   type Provided = ValuesServerEndpoints
 
