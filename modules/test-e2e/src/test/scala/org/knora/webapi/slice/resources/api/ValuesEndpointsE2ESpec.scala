@@ -3584,5 +3584,106 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                         })
       } yield assertTrue(savedComment == commentWithLinebreaks)
     },
+    test("editing a value preserves its position among sibling values (DEV-5859)") {
+      // Create a fresh resource, add 3 text values, edit the middle one,
+      // and verify the edited value is still at position 1 (not moved to the end).
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+      def createResourceJson =
+        s"""{
+           |  "@type" : "anything:Thing",
+           |  "anything:hasText" : {
+           |    "@type" : "knora-api:TextValue",
+           |    "knora-api:valueAsString" : "Order A"
+           |  },
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "order preservation test resource",
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+           |  }
+           |}""".stripMargin
+
+      def addTextValueJson(resourceIri: String, text: String) =
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasText" : {
+           |    "@type" : "knora-api:TextValue",
+           |    "knora-api:valueAsString" : "$text"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+
+      def updateTextValueJson(resourceIri: String, valueIri: String, newText: String) =
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasText" : {
+           |    "@id" : "$valueIri",
+           |    "@type" : "knora-api:TextValue",
+           |    "knora-api:valueAsString" : "$newText"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+
+      for {
+        // 1. Create a resource with first text value ("Order A" at position 0)
+        createResponse <- TestApiClient
+                            .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                            .flatMap(_.assert200)
+        resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+        // 2. Add second and third text values ("Order B" at position 1, "Order C" at position 2)
+        _ <- TestApiClient
+               .postJsonLdDocument(uri"/v2/values", addTextValueJson(resourceIri, "Order B"), anythingUser1)
+               .flatMap(_.assert200)
+        _ <- TestApiClient
+               .postJsonLdDocument(uri"/v2/values", addTextValueJson(resourceIri, "Order C"), anythingUser1)
+               .flatMap(_.assert200)
+
+        // 3. Read the resource and extract the value IRIs in their current order
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+        valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+        valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+        valueTexts    = valuesInOrder.flatMap(_.getRequiredString(KA.ValueAsString).toOption)
+
+        // Values should be in order: Order A, Order B, Order C
+        _ <- ZIO.when(valueTexts != Seq("Order A", "Order B", "Order C")) {
+               ZIO.fail(s"Unexpected initial value order: $valueTexts")
+             }
+
+        // 4. Get the IRI of the middle value ("Order B" at index 1) and edit it
+        middleValueIri <- ZIO.fromEither(valuesInOrder(1).getRequiredString(JsonLDKeywords.ID))
+        updateResponse <- TestApiClient
+                            .putJsonLdDocument(
+                              uri"/v2/values",
+                              updateTextValueJson(resourceIri, middleValueIri, "Order B updated"),
+                              anythingUser1,
+                            )
+                            .flatMap(_.assert200)
+        updatedValueIri <- ZIO.fromEither(updateResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+        // 5. Read the resource again and verify the edited value is still at position 1
+        resource2     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+        valuesArray2  <- ZIO.fromEither(resource2.body.getRequiredArray(propertyIri.toString))
+        valuesInOrder2 = valuesArray2.value.collect { case obj: JsonLDObject => obj }
+        valueTexts2    = valuesInOrder2.flatMap(_.getRequiredString(KA.ValueAsString).toOption)
+        middleIri2    <- ZIO.fromEither(valuesInOrder2(1).getRequiredString(JsonLDKeywords.ID))
+      } yield assertTrue(
+        valueTexts2 == Seq("Order A", "Order B updated", "Order C"),
+        middleIri2 == updatedValueIri,
+      )
+    },
   )
 }
