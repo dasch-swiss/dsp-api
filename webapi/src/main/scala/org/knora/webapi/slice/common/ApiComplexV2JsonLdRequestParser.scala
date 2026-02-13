@@ -70,6 +70,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     resource: Resource,
     resourceIri: Option[ResourceIri],
     resourceClassIri: ResourceClassIri,
+    valueOrder: Map[String, Seq[String]] = Map.empty,
   ) {
     def resourceIriOrFail: IO[String, ResourceIri] =
       ZIO.fromOption(resourceIri).orElseFail("The resource IRI is required")
@@ -101,7 +102,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                 .flatMap(iri => ZIO.fromEither(KnoraIris.ResourceIri.from(iri))),
             )
         resourceClassIri <- resourceClassIri(resource)
-      } yield RootResource(resource, resourceIriOption, resourceClassIri)
+      } yield RootResource(resource, resourceIriOption, resourceClassIri, extractJsonArrayOrder(str))
 
     private def resourceClassIri(r: Resource): IO[String, ResourceClassIri] = ZIO
       .fromOption(r.rdfType)
@@ -294,7 +295,7 @@ final case class ApiComplexV2JsonLdRequestParser(
              .fail("Resource IRI and project IRI must reference the same project")
              .when(r.resourceIri.exists(_.shortcode != project.shortcode))
       attachedToUser <- attachedToUser(r.resource, requestingUser, project.id)
-      values         <- extractValues(r.resource, project.shortcode)
+      values         <- extractValues(r.resource, project.shortcode, r.valueOrder)
       createResource  = CreateResourceV2(
                          r.resourceIri.map(_.smartIri),
                          r.resourceClassSmartIri,
@@ -347,6 +348,7 @@ final case class ApiComplexV2JsonLdRequestParser(
   private def extractValues(
     r: Resource,
     shortcode: Shortcode,
+    valueOrder: Map[String, Seq[String]],
   ): IO[String, Map[SmartIri, Seq[CreateValueInNewResourceV2]]] =
     val filteredProperties = Seq(
       RDF.`type`.toString,
@@ -364,6 +366,73 @@ final case class ApiComplexV2JsonLdRequestParser(
     ZIO
       .foreach(valueStatements)(valueStatementAsContent(_, shortcode))
       .map(_.groupMap(_._1.smartIri)(_._2))
+      .map(reorderByJsonArrayOrder(_, valueOrder))
+
+  /**
+   * Extract the original JSON array order for property values from the raw JSON-LD string.
+   * Returns a map from expanded property IRI to ordered Seq of valueAsString values.
+   */
+  private def extractJsonArrayOrder(rawJson: String): Map[String, Seq[String]] =
+    rawJson
+      .fromJson[Json.Obj]
+      .toOption
+      .map { obj =>
+        val context: Map[String, String] = obj
+          .get("@context")
+          .flatMap {
+            case Json.Obj(fields) => Some(fields.collect { case (k, Json.Str(v)) => (k, v) }.toMap)
+            case _                => None
+          }
+          .getOrElse(Map.empty)
+
+        obj.fields.collect {
+          case (key, Json.Arr(values)) if !key.startsWith("@") =>
+            val expandedKey    = expandCompactIri(key, context)
+            val orderedStrings = values.collect { case Json.Obj(fields) =>
+              fields.collectFirst {
+                case (k, Json.Str(v)) if expandCompactIri(k, context) == ValueAsString => v
+              }
+            }.flatten
+            (expandedKey, orderedStrings)
+        }.toMap
+      }
+      .getOrElse(Map.empty)
+
+  private def expandCompactIri(compactIri: String, context: Map[String, String]): String =
+    compactIri.indexOf(':') match {
+      case -1 => compactIri
+      case i  =>
+        val prefix = compactIri.substring(0, i)
+        context.get(prefix) match {
+          case Some(expansion) => expansion + compactIri.substring(i + 1)
+          case None            => compactIri
+        }
+    }
+
+  /**
+   * Reorder each property's values to match the original JSON array order.
+   * Uses greedy matching by valueHasString to handle duplicates correctly.
+   * Values without a match in the JSON order are appended at the end.
+   */
+  private def reorderByJsonArrayOrder(
+    grouped: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
+    jsonOrder: Map[String, Seq[String]],
+  ): Map[SmartIri, Seq[CreateValueInNewResourceV2]] =
+    grouped.map { case (propertyIri, values) =>
+      jsonOrder.get(propertyIri.toString) match {
+        case Some(orderedStrings) if orderedStrings.nonEmpty =>
+          val (reordered, remaining) = orderedStrings.foldLeft((Seq.empty[CreateValueInNewResourceV2], values)) {
+            case ((matched, unmatched), expectedStr) =>
+              val idx = unmatched.indexWhere(_.valueContent.unescape.valueHasString == expectedStr)
+              if (idx >= 0) {
+                val (before, after) = unmatched.splitAt(idx)
+                (matched :+ after.head, before ++ after.tail)
+              } else (matched, unmatched)
+          }
+          (propertyIri, reordered ++ remaining)
+        case _ => (propertyIri, values)
+      }
+    }
 
   private def valueStatementAsContent(
     statement: Statement,

@@ -62,8 +62,5 @@ MINUS { ?resource <http://www.knora.org/ontology/0001/anything#hasOtherThingValu
     rdf:predicate <http://www.knora.org/ontology/0001/anything#hasOtherThing> ;
     rdf:object <http://0.0.0.0:3333/0001/thing/linkedResource> ;
     knora-base:isDeleted false . }
-{ SELECT ( MAX( ?order ) AS ?maxOrder ) ( IF( BOUND( ?maxOrder ), ( ?maxOrder + 1 ), 0 ) AS ?nextOrder )
-WHERE { <http://0.0.0.0:3333/0001/thing/resource> <http://www.knora.org/ontology/0001/anything#hasText> ?otherValue .
-?otherValue knora-base:valueHasOrder ?order ;
-    knora-base:isDeleted false . }
- } }
+OPTIONAL { ?currentValue knora-base:valueHasOrder ?existingOrder . }
+BIND( IF( BOUND( ?existingOrder ), ?existingOrder, 0 ) AS ?nextOrder ) }

@@ -1093,5 +1093,33 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
         } yield assertGolden(replaceUuidPatterns(builderQuery), "currentValue__withLinkUpdatesDeleted")
       },
     ),
+    suite("Order preservation")(
+      test("Update query reads order from current value instead of MAX + 1") {
+        for {
+          testValue       <- ZIO.succeed(TestDataFactory.createTextValue())
+          currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
+          builderQuery    <- ZIO.attempt(
+                            TestDataFactory.createBuilderQuery(
+                              testValue,
+                              newUuidOrCurrentIri = Right(currentValueIri),
+                            ),
+                          )
+        } yield assertTrue(
+          builderQuery.contains("OPTIONAL { ?currentValue knora-base:valueHasOrder ?existingOrder"),
+          builderQuery.contains("BIND( IF( BOUND( ?existingOrder ), ?existingOrder, 0 ) AS ?nextOrder )"),
+          !builderQuery.contains("MAX( ?order )"),
+        )
+      },
+      test("Create query still uses MAX + 1 for order calculation") {
+        for {
+          testValue    <- ZIO.succeed(TestDataFactory.createTextValue())
+          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
+        } yield assertTrue(
+          builderQuery.contains("MAX( ?order )"),
+          builderQuery.contains("?maxOrder + 1"),
+          !builderQuery.contains("?existingOrder"),
+        )
+      },
+    ),
   ).provide(IriConverter.layer, StringFormatter.test)
 }
