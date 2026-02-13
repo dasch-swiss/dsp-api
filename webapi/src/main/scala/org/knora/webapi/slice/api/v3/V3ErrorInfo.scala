@@ -9,6 +9,7 @@ import zio.Chunk
 import zio.json.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.api.v3.V3ErrorCode.NotFounds
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
@@ -45,9 +46,23 @@ object NotFound:
       Map("resourceIri" -> resourceIri.toString),
     )
 
+  def from(projectIri: ProjectIri): NotFound = {
+    val code: NotFounds = V3ErrorCode.project_not_found
+    apply(code, code.template.replace("{id}", projectIri.value), Map("id" -> projectIri.value))
+  }
+
 case class BadRequest(message: String = "Bad Request", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
 object BadRequest {
   given JsonCodec[BadRequest] = DeriveJsonCodec.gen[BadRequest]
+}
+
+final case class Conflict(message: String = "", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
+object Conflict {
+
+  given JsonCodec[Conflict] = DeriveJsonCodec.gen[Conflict]
+
+  def apply(code: V3ErrorCode.Conflicts, message: String, details: Map[String, String]): Conflict =
+    Conflict(message, Chunk(ErrorDetail(code, message, details)))
 }
 
 final case class Unauthorized(message: String = "Unauthorized", errors: Chunk[ErrorDetail] = Chunk.empty)

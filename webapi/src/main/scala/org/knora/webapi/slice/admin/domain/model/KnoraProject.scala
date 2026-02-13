@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.model
 
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
+import sttp.tapir.Schema
 import zio.NonEmptyChunk
 import zio.json.JsonCodec
 
@@ -53,6 +54,7 @@ object KnoraProject {
 
     given JsonCodec[ProjectIri]                            = ZioJsonCodec.stringCodec[ProjectIri](from)
     given Codec[String, ProjectIri, CodecFormat.TextPlain] = TapirCodec.stringCodec(from)
+    given Schema[ProjectIri]                               = Schema.string.description("IRI for a project.")
 
     private val BuiltInProjects: Seq[String] =
       Seq(

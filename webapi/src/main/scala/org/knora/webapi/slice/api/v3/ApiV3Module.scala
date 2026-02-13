@@ -15,9 +15,11 @@ import org.knora.webapi.slice.api.admin.AdminPathVariables.projectIri
 import org.knora.webapi.slice.api.v3.`export`.ExportServerEndpoints
 import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.api.v3.ontology.OntologyRestServiceV3
+import org.knora.webapi.slice.api.v3.projects.*
 import org.knora.webapi.slice.api.v3.resources.ResourcesEndpointsV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesRestServiceV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpointsV3
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
@@ -28,6 +30,7 @@ object ApiV3Module {
   type Dependencies =
     // format: off
     Authenticator &
+    AuthorizationRestService &
     ExportService &
     IriConverter &
     KnoraProjectService &
@@ -46,7 +49,11 @@ object ApiV3Module {
       ResourcesEndpointsV3.layer,
       ResourcesRestServiceV3.layer,
       ResourcesServerEndpointsV3.layer,
+      V3Authorizer.layer,
       V3BaseEndpoint.layer,
+      V3ProjectsEndpoints.layer,
+      V3ProjectsRestService.layer,
+      V3ProjectsServerEndpoints.layer,
     )
 }
 

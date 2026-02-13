@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.v3
 
+import sttp.capabilities.zio.ZioStreams
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.tapir.EndpointOutput
@@ -62,5 +63,5 @@ final case class V3BaseEndpoint(private val authenticator: Authenticator) {
 object V3BaseEndpoint {
   val layer = ZLayer.derive[V3BaseEndpoint]
 
-  type EndpointT = ZServerEndpoint[Any, Any]
+  type EndpointT = ZServerEndpoint[Any, ZioStreams]
 }
