@@ -70,6 +70,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     resource: Resource,
     resourceIri: Option[ResourceIri],
     resourceClassIri: ResourceClassIri,
+    valueOrder: Map[String, Seq[String]] = Map.empty,
   ) {
     def resourceIriOrFail: IO[String, ResourceIri] =
       ZIO.fromOption(resourceIri).orElseFail("The resource IRI is required")
@@ -101,7 +102,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                 .flatMap(iri => ZIO.fromEither(KnoraIris.ResourceIri.from(iri))),
             )
         resourceClassIri <- resourceClassIri(resource)
-      } yield RootResource(resource, resourceIriOption, resourceClassIri)
+      } yield RootResource(resource, resourceIriOption, resourceClassIri, extractJsonArrayOrder(str))
 
     private def resourceClassIri(r: Resource): IO[String, ResourceClassIri] = ZIO
       .fromOption(r.rdfType)
@@ -294,7 +295,7 @@ final case class ApiComplexV2JsonLdRequestParser(
              .fail("Resource IRI and project IRI must reference the same project")
              .when(r.resourceIri.exists(_.shortcode != project.shortcode))
       attachedToUser <- attachedToUser(r.resource, requestingUser, project.id)
-      values         <- extractValues(r.resource, project.shortcode, str)
+      values         <- extractValues(r.resource, project.shortcode, r.valueOrder)
       createResource  = CreateResourceV2(
                          r.resourceIri.map(_.smartIri),
                          r.resourceClassSmartIri,
@@ -347,7 +348,7 @@ final case class ApiComplexV2JsonLdRequestParser(
   private def extractValues(
     r: Resource,
     shortcode: Shortcode,
-    rawJson: String,
+    valueOrder: Map[String, Seq[String]],
   ): IO[String, Map[SmartIri, Seq[CreateValueInNewResourceV2]]] =
     val filteredProperties = Seq(
       RDF.`type`.toString,
@@ -365,7 +366,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     ZIO
       .foreach(valueStatements)(valueStatementAsContent(_, shortcode))
       .map(_.groupMap(_._1.smartIri)(_._2))
-      .map(reorderByJsonArrayOrder(_, extractJsonArrayOrder(rawJson)))
+      .map(reorderByJsonArrayOrder(_, valueOrder))
 
   /**
    * Extract the original JSON array order for property values from the raw JSON-LD string.
