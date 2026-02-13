@@ -82,6 +82,17 @@ use `/v2/ontologies/canreplacecardinalities/{classIRI}?propertyIri={propertyIRI}
 
 For more information, see [the api documentation](../03-endpoints/api-v2/ontology-information.md#pre-update-checks).
 
+### Admin Project Export/Import
+
+The following admin endpoints for project export and import are deprecated and will be removed in a future version:
+
+- `GET /admin/projects/export`
+- `POST /admin/projects/shortcode/{projectShortcode}/export`
+- `POST /admin/projects/shortcode/{projectShortcode}/export-await`
+- `POST /admin/projects/shortcode/{projectShortcode}/import`
+
+These endpoints are not in use and a similar functionality will be implemented the new v3 project data export/import API.
+
 ### `fileValueHasExternalUrl`
 
 For still image file values, the property `knora-base:fileValueHasExternalUrl` is deprecated.
