@@ -3685,5 +3685,44 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         middleIri2 == updatedValueIri,
       )
     },
+    test("creating a resource with multiple values preserves their JSON array order (DEV-5859)") {
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+      def createResourceJson =
+        s"""{
+           |  "@type" : "anything:Thing",
+           |  "anything:hasText" : [
+           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Alpha" },
+           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Bravo" },
+           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Charlie" },
+           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Delta" },
+           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Echo" }
+           |  ],
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "batch value ordering test resource",
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+           |  }
+           |}""".stripMargin
+
+      for {
+        createResponse <- TestApiClient
+                            .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                            .flatMap(_.assert200)
+        resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+        resIri      <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resource    <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+        valuesArray <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+        valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+        valueTexts    = valuesInOrder.flatMap(_.getRequiredString(KA.ValueAsString).toOption)
+      } yield assertTrue(
+        valueTexts == Seq("Alpha", "Bravo", "Charlie", "Delta", "Echo"),
+      )
+    },
   )
 }
