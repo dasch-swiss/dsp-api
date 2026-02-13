@@ -186,25 +186,39 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
     val getAdminProjectsExports = baseEndpoints.securedEndpoint.get
       .in(projectsBase / `export`)
       .out(jsonBody[Chunk[ProjectExportInfoResponse]])
-      .description("Lists existing exports of all projects. Requires SystemAdmin permissions.")
+      .description(
+        "**This endpoint is deprecated and will be removed in a future version.** " +
+          "Lists existing exports of all projects. Requires SystemAdmin permissions.",
+      )
+      .deprecated()
 
     val postAdminProjectsByShortcodeExport = baseEndpoints.securedEndpoint.post
       .in(projectsByShortcode / `export`)
       .out(statusCode(StatusCode.Accepted))
-      .description("Trigger an export of a project identified by the shortcode. Requires SystemAdmin permissions.")
+      .description(
+        "**This endpoint is deprecated and will be removed in a future version.** " +
+          "Trigger an export of a project identified by the shortcode. Requires SystemAdmin permissions.",
+      )
+      .deprecated()
 
     val postAdminProjectsByShortcodeExportAwaiting = baseEndpoints.securedEndpoint.post
       .in(projectsByShortcode / "export-await")
       .out(jsonBody[ProjectExportInfoResponse])
       .description(
-        "Trigger an export of a project identified by the shortcode. " +
+        "**This endpoint is deprecated and will be removed in a future version.** " +
+          "Trigger an export of a project identified by the shortcode. " +
           "Returns the shortcode and the export location when the process has finished successfully. Requires SystemAdmin permissions.",
       )
+      .deprecated()
 
     val postAdminProjectsByShortcodeImport = baseEndpoints.securedEndpoint.post
       .in(projectsByShortcode / "import")
       .out(jsonBody[ProjectImportResponse])
-      .description("Trigger an import of a project identified by the shortcode. Requires SystemAdmin permissions.")
+      .description(
+        "**This endpoint is deprecated and will be removed in a future version.** " +
+          "Trigger an import of a project identified by the shortcode. Requires SystemAdmin permissions.",
+      )
+      .deprecated()
 
     val postAdminProjects = baseEndpoints.securedEndpoint.post
       .in(projectsBase)
