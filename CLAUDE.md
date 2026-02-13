@@ -48,6 +48,7 @@ The codebase is organized into several key modules:
 
 **Core Modules:**
 - `webapi/` - Main API application
+- `modules/bagit/` - BagIt library for creating, reading, and validating BagIt packages (RFC 8493, https://www.rfc-editor.org/rfc/rfc8493)
 - `modules/testkit/` - Shared test utilities and base classes
 - `modules/test-it/` - Integration tests (service/repo/Sipi tests)
 - `modules/test-e2e/` - End-to-end HTTP API tests

@@ -1,0 +1,53 @@
+## Codebase Patterns
+- BagValidator uses `IO[BagItError, Unit]` for fail-fast validation; use `ZIO.foreachDiscard` for iteration with early-exit
+- Checksum computation via `ChecksumAlgorithm.computeDigest` returns `Task[String]` (IO[Throwable, String]); use `.orDie` to convert IO errors to defects before `.flatMap` with BagItError failures
+- BagIt module compiles standalone with `sbt bagit/compile` (main only); use `sbt bagit/Test/compile` for test sources
+- ZIO test assertions for fail-fast: use `.exit` then `assert(exit)(fails(isSubtype[ErrorType](anything)))` or `hasField` for specific field checks
+- BagItSpec and BagValidatorSpec share a compilation unit — both must compile together
+- Commit messages follow pattern: `feat: US-XXX - Title`
+
+---
+
+## 2026-02-16 - US-032
+- Rewrote BagValidator from error-collecting to fail-fast: `validateCollectingErrors` -> `validate` with `IO[BagItError, Unit]`
+- Each `check*` method now returns `IO[BagItError, Unit]` instead of `UIO[List[BagItError]]`
+- Used `ZIO.foreachDiscard` for iteration with early-exit semantics
+- Chained phases with `*>`: checkStructural *> checkCompleteness *> checkChecksums *> checkTagManifests
+- Also updated BagIt.scala call sites to use new `validate` method (needed for compilation)
+- Files changed:
+  - `modules/bagit/src/main/scala/org/knora/bagit/internal/BagValidator.scala`
+  - `modules/bagit/src/main/scala/org/knora/bagit/BagIt.scala`
+- **Learnings for future iterations:**
+  - `ChecksumAlgorithm.computeDigest` returns `Task[String]` — use `.orDie` before `.flatMap` with `BagItError` to keep the error channel clean
+  - `ZIO.when(cond)(ZIO.fail(err))` is the idiomatic way to conditionally fail in ZIO
+  - The `walkFiles` helper is pure Scala (no ZIO) and doesn't need changes
+---
+
+## 2026-02-16 - US-033
+- Deleted `validateZipCollectingErrors` method entirely from `BagIt.scala`
+- `readAndValidateZip` already called `BagValidator.validate` directly (done in US-032)
+- BagIt object now has exactly two public methods: `create` and `readAndValidateZip`
+- Files changed:
+  - `modules/bagit/src/main/scala/org/knora/bagit/BagIt.scala`
+- **Learnings for future iterations:**
+  - `sbt bagit/compile` only compiles main sources, not test sources — test compilation issues from removing public API won't surface until test stories (US-034, US-035) are addressed
+  - BagItSpec.scala still references `validateZipCollectingErrors` in 4 tests — US-035 must update those
+---
+
+## 2026-02-16 - US-034 (+ US-035)
+- Updated all BagValidatorSpec tests from `validateCollectingErrors` (error-list API) to `validate` (fail-fast API)
+- Valid-bag test: asserts `BagValidator.validate` succeeds via `assertCompletes`
+- Error tests: use `.exit` + `assert(exit)(fails(isSubtype[...](anything)))` pattern
+- Field-specific assertions use `hasField("path", _.path, equalTo("bag-info.txt"))` for path checks
+- Also updated BagItSpec (US-035) since both files share a compilation unit and BagItSpec referenced removed `validateZipCollectingErrors`
+- BagItSpec now uses `BagIt.readAndValidateZip` for all tests; happy-path tests assert success, corruption test uses `.exit` + `fails`
+- All 11 BagValidatorSpec tests pass, all 6 BagItSpec tests pass
+- Files changed:
+  - `modules/bagit/src/test/scala/org/knora/bagit/internal/BagValidatorSpec.scala`
+  - `modules/bagit/src/test/scala/org/knora/bagit/BagItSpec.scala`
+- **Learnings for future iterations:**
+  - ZIO Test `assert(effect.exit)(fails(...))` is the standard pattern for asserting ZIO failures
+  - `isSubtype[T](hasField(...))` combines type matching with field extraction cleanly
+  - `assertCompletes` is the idiomatic way to assert a ZIO effect succeeds when you don't care about the value
+  - When tests share a compilation unit, you may need to fix both test files even if they're separate stories
+---
