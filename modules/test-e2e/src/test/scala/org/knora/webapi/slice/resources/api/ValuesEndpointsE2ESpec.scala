@@ -3685,18 +3685,18 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         middleIri2 == updatedValueIri,
       )
     },
-    test("creating a resource with multiple values preserves their JSON array order (DEV-5859)") {
+    test("creating a resource with multiple values preserves their non-alphabetical JSON array order (DEV-5869)") {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
 
       def createResourceJson =
         s"""{
            |  "@type" : "anything:Thing",
            |  "anything:hasText" : [
+           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Echo" },
            |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Alpha" },
-           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Bravo" },
-           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Charlie" },
            |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Delta" },
-           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Echo" }
+           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Bravo" },
+           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "Charlie" }
            |  ],
            |  "knora-api:attachedToProject" : {
            |    "@id" : "http://rdfh.ch/projects/0001"
@@ -3721,7 +3721,121 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
         valueTexts    = valuesInOrder.flatMap(_.getRequiredString(KA.ValueAsString).toOption)
       } yield assertTrue(
-        valueTexts == Seq("Alpha", "Bravo", "Charlie", "Delta", "Echo"),
+        valueTexts == Seq("Echo", "Alpha", "Delta", "Bravo", "Charlie"),
+      )
+    },
+    test("creating a resource with multiple integer values preserves their JSON array order (DEV-5869)") {
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+
+      def createResourceJson =
+        s"""{
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : [
+           |    { "@type" : "knora-api:IntValue", "knora-api:intValueAsInt" : 5 },
+           |    { "@type" : "knora-api:IntValue", "knora-api:intValueAsInt" : 3 },
+           |    { "@type" : "knora-api:IntValue", "knora-api:intValueAsInt" : 1 },
+           |    { "@type" : "knora-api:IntValue", "knora-api:intValueAsInt" : 4 },
+           |    { "@type" : "knora-api:IntValue", "knora-api:intValueAsInt" : 2 }
+           |  ],
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "integer value ordering test resource",
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+           |  }
+           |}""".stripMargin
+
+      for {
+        createResponse <- TestApiClient
+                            .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                            .flatMap(_.assert200)
+        resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+        valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+        valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+        valueInts     = valuesInOrder.flatMap(_.getRequiredInt(KA.IntValueAsInt).toOption)
+      } yield assertTrue(
+        valueInts == Seq(5, 3, 1, 4, 2),
+      )
+    },
+    test("creating a resource with duplicate text values preserves their order (DEV-5869)") {
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+      def createResourceJson =
+        s"""{
+           |  "@type" : "anything:Thing",
+           |  "anything:hasText" : [
+           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "same" },
+           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "same" },
+           |    { "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "different" }
+           |  ],
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "duplicate value ordering test resource",
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+           |  }
+           |}""".stripMargin
+
+      for {
+        createResponse <- TestApiClient
+                            .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                            .flatMap(_.assert200)
+        resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+        valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+        valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+        valueTexts    = valuesInOrder.flatMap(_.getRequiredString(KA.ValueAsString).toOption)
+      } yield assertTrue(
+        valueTexts == Seq("same", "same", "different"),
+      )
+    },
+    test("creating a resource with 10 text values preserves their order (DEV-5869)") {
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+      val tenValues             = Seq("J", "E", "H", "B", "I", "D", "G", "A", "F", "C")
+
+      def createResourceJson =
+        s"""{
+           |  "@type" : "anything:Thing",
+           |  "anything:hasText" : [
+           |    ${tenValues
+            .map(v => s"""{ "@type" : "knora-api:TextValue", "knora-api:valueAsString" : "$v" }""")
+            .mkString(",\n           |    ")}
+           |  ],
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "ten value ordering stress test resource",
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+           |  }
+           |}""".stripMargin
+
+      for {
+        createResponse <- TestApiClient
+                            .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                            .flatMap(_.assert200)
+        resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+        valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+        valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+        valueTexts    = valuesInOrder.flatMap(_.getRequiredString(KA.ValueAsString).toOption)
+      } yield assertTrue(
+        valueTexts == tenValues,
       )
     },
   )
