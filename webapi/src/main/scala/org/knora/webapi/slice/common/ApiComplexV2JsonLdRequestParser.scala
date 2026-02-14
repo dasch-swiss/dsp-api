@@ -478,9 +478,12 @@ final case class ApiComplexV2JsonLdRequestParser(
                       s"for property <${propertyIri.toString}> to any parsed value",
                   )
               }
+            val withHints = (reordered ++ remaining).zipWithIndex.map { case (v, idx) =>
+              v.copy(orderHint = Some(idx))
+            }
             countMismatchWarning *>
               ZIO.foreach(unmatchedWarnings)(ZIO.logWarning(_)) *>
-              ZIO.succeed((propertyIri, reordered ++ remaining))
+              ZIO.succeed((propertyIri, withHints))
           case _ =>
             ZIO.logWarning(
               s"reorderByJsonArrayOrder: property <${propertyIri.toString}> not found in jsonOrder",
