@@ -97,9 +97,8 @@ final class ValuesRestService(
 
   def reorderValues(user: User)(request: ReorderValuesRequest): Task[ReorderValuesResponse] =
     for {
-      validated         <- validateReorderRequest(request)
-      propertySmartIri   = validated._1
-      requestedValueIris = validated._2
+      validated <- validateReorderRequest(request)
+      (propertySmartIri, requestedValueIris) = validated
 
       // Fetch resource as system user to see all values regardless of permissions
       resourcesSeq <- readResources.getResources(

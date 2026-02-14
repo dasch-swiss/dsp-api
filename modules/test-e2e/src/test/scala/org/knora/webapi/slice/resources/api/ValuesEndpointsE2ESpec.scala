@@ -3972,6 +3972,104 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           )
           .map(response => assertTrue(response.code == StatusCode.NotFound))
       },
+      test("reject reorder when user lacks modify permission") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+        def createResourceJson =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "Permission test"
+             |  },
+             |  "knora-api:attachedToProject" : {
+             |    "@id" : "http://rdfh.ch/projects/0001"
+             |  },
+             |  "rdfs:label" : "reorder permission test resource",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          // Create resource as anythingUser1 (who has permission)
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          // Read the value IRIs
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+          valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+
+          // Attempt reorder as incunabulaMemberUser (no modify permission on anything project resources)
+          reorderRequest = ReorderValuesRequest(
+                             resourceIri = resourceIri,
+                             propertyIri = propertyIri.toString,
+                             orderedValueIris = valueIris.toList,
+                           )
+          response <- TestApiClient
+                        .putJson[ReorderValuesResponse, ReorderValuesRequest](
+                          uri"/v2/values/order",
+                          reorderRequest,
+                          incunabulaMemberUser,
+                        )
+        } yield assertTrue(response.code == StatusCode.Forbidden)
+      },
+      test("reject reorder with wrong property IRI") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+        val wrongPropertyIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"
+
+        def createResourceJson =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "Wrong property test"
+             |  },
+             |  "knora-api:attachedToProject" : {
+             |    "@id" : "http://rdfh.ch/projects/0001"
+             |  },
+             |  "rdfs:label" : "reorder wrong property test resource",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          // Get the value IRIs (they belong to hasText, not hasInteger)
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+          valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+
+          // Send the hasText value IRIs but claim they belong to hasInteger
+          reorderRequest = ReorderValuesRequest(
+                             resourceIri = resourceIri,
+                             propertyIri = wrongPropertyIri,
+                             orderedValueIris = valueIris.toList,
+                           )
+          response <- TestApiClient
+                        .putJson[ReorderValuesResponse, ReorderValuesRequest](
+                          uri"/v2/values/order",
+                          reorderRequest,
+                          anythingUser1,
+                        )
+        } yield assertTrue(response.code == StatusCode.BadRequest)
+      },
       test("single value (no-op) succeeds") {
         val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
 
