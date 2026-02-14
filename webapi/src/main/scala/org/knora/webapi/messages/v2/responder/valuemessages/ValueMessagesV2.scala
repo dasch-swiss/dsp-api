@@ -205,6 +205,7 @@ case class GenerateSparqlForValueInNewResourceV2(
   customValueUUID: Option[UUID],
   customValueCreationDate: Option[Instant],
   permissions: String,
+  orderHint: Option[Int] = None,
 )
 
 /**

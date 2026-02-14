@@ -401,10 +401,12 @@ final case class CreateResourceV2Handler(
 
       valuesWithIndex = valuesWithValidatedPermissions.flatMap {
                           case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
-                            valuesToCreate.zipWithIndex.map {
-                              case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
+                            valuesToCreate
+                              .sortBy(_.orderHint.getOrElse(Int.MaxValue))
+                              .zipWithIndex
+                              .map { case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
                                 (propertyIri, valueToCreate, valueHasOrder)
-                            }
+                              }
                         }.toList
 
       newValueInfos <-
@@ -764,6 +766,7 @@ final case class CreateResourceV2Handler(
                   customValueUUID = valueToCreate.customValueUUID,
                   customValueCreationDate = valueToCreate.customValueCreationDate,
                   permissions = validatedCustomPermissions,
+                  orderHint = valueToCreate.orderHint,
                 )
 
               case None =>
@@ -775,6 +778,7 @@ final case class CreateResourceV2Handler(
                     customValueUUID = valueToCreate.customValueUUID,
                     customValueCreationDate = valueToCreate.customValueCreationDate,
                     permissions = defaultPropertyPermissions(propertyIri),
+                    orderHint = valueToCreate.orderHint,
                   )
                 }
             }
