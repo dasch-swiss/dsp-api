@@ -533,6 +533,7 @@ case class CreateValueInNewResourceV2(
   customValueUUID: Option[UUID] = None,
   customValueCreationDate: Option[Instant] = None,
   permissions: Option[String] = None,
+  orderHint: Option[Int] = None,
 )
 
 /**

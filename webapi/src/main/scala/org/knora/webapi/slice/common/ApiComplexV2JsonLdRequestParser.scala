@@ -345,7 +345,31 @@ final case class ApiComplexV2JsonLdRequestParser(
       .unit
   }
 
-  private def extractValues(
+  // Field sets for extractMatchingString — grouped by JSON value shape.
+  // These are class-level vals to avoid re-allocation on every call.
+
+  // Fields whose JSON value is a direct Json.Str
+  private val strFields: Set[String] = Set(
+    ValueAsString,
+    ColorValueAsColor,
+    GeonameValueAsGeonameCode,
+    GeometryValueAsGeometry,
+    DateValueHasCalendar,
+  )
+
+  // Fields whose JSON value is a Json.Num
+  private val numFields: Set[String] = Set(IntValueAsInt, DecimalValueAsDecimal)
+
+  // Fields whose JSON value is a Json.Bool
+  private val boolFields: Set[String] = Set(BooleanValueAsBoolean)
+
+  // Fields whose JSON value is a Json.Obj with @value (typed literals)
+  private val typedLiteralFields: Set[String] = Set(UriValueAsUri, TimeValueAsTimeStamp, IntervalValueHasStart)
+
+  // Fields whose JSON value is a Json.Obj with @id (IRI references)
+  private val iriRefFields: Set[String] = Set(LinkValueHasTargetIri, ListValueAsListNode)
+
+  private[common] def extractValues(
     r: Resource,
     shortcode: Shortcode,
     valueOrder: Map[String, Seq[String]],
@@ -366,13 +390,32 @@ final case class ApiComplexV2JsonLdRequestParser(
     ZIO
       .foreach(valueStatements)(valueStatementAsContent(_, shortcode))
       .map(_.groupMap(_._1.smartIri)(_._2))
-      .map(reorderByJsonArrayOrder(_, valueOrder))
+      .flatMap(reorderByJsonArrayOrder(_, valueOrder))
+
+  /**
+   * Extract a matching string from a JSON-LD value object's fields for use in order-preserving matching.
+   * Handles all 15 value types by checking field names against known categories.
+   * Pre-expands all field keys once before matching to avoid redundant IRI expansion.
+   */
+  private[common] def extractMatchingString(fields: Chunk[(String, Json)], context: Map[String, String]): Option[String] = {
+    val expanded = fields.map { case (k, v) => (expandCompactIri(k, context), v) }
+    expanded.collectFirst {
+      case (k, Json.Str(v)) if strFields.contains(k)          => Some(v)
+      case (k, Json.Num(v)) if numFields.contains(k)          => Some(v.toString)
+      case (k, Json.Bool(v)) if boolFields.contains(k)        => Some(v.toString)
+      case (k, Json.Obj(inner)) if typedLiteralFields(k)      =>
+        inner.collectFirst { case ("@value", Json.Str(v)) => v }
+      case (k, Json.Obj(inner)) if iriRefFields(k) =>
+        inner.collectFirst { case ("@id", Json.Str(v)) => v }
+    }.flatten
+  }
 
   /**
    * Extract the original JSON array order for property values from the raw JSON-LD string.
-   * Returns a map from expanded property IRI to ordered Seq of valueAsString values.
+   * Returns a map from expanded property IRI to ordered Seq of matching string values.
+   * Uses per-type field extraction to support all 15 value types.
    */
-  private def extractJsonArrayOrder(rawJson: String): Map[String, Seq[String]] =
+  private[common] def extractJsonArrayOrder(rawJson: String): Map[String, Seq[String]] =
     rawJson
       .fromJson[Json.Obj]
       .toOption
@@ -389,16 +432,14 @@ final case class ApiComplexV2JsonLdRequestParser(
           case (key, Json.Arr(values)) if !key.startsWith("@") =>
             val expandedKey    = expandCompactIri(key, context)
             val orderedStrings = values.collect { case Json.Obj(fields) =>
-              fields.collectFirst {
-                case (k, Json.Str(v)) if expandCompactIri(k, context) == ValueAsString => v
-              }
+              extractMatchingString(fields, context)
             }.flatten
             (expandedKey, orderedStrings)
         }.toMap
       }
       .getOrElse(Map.empty)
 
-  private def expandCompactIri(compactIri: String, context: Map[String, String]): String =
+  private[common] def expandCompactIri(compactIri: String, context: Map[String, String]): String =
     compactIri.indexOf(':') match {
       case -1 => compactIri
       case i  =>
@@ -410,29 +451,89 @@ final case class ApiComplexV2JsonLdRequestParser(
     }
 
   /**
-   * Reorder each property's values to match the original JSON array order.
+   * Extract the path and fragment from an IRI string, stripping scheme and authority.
+   * E.g. "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText" -> "/ontology/0001/anything/v2#hasText"
+   * Used for fallback matching when the host differs between JSON-LD context expansion and SmartIri.
+   */
+  private[common] def iriPath(iri: String): String =
+    try {
+      val uri      = new java.net.URI(iri)
+      val path     = Option(uri.getPath).getOrElse("")
+      val fragment = Option(uri.getFragment).map("#" + _).getOrElse("")
+      path + fragment
+    } catch { case _: Exception => iri }
+
+  /**
+   * Reorder each property's values to match the original JSON array order and assign orderHint.
    * Uses greedy matching by valueHasString to handle duplicates correctly.
    * Values without a match in the JSON order are appended at the end.
+   *
+   * Matching strategy:
+   * 1. Exact IRI match (fast path)
+   * 2. Path-based fallback (strips scheme+authority to handle host differences between
+   *    zio-json context expansion and Jena/SmartIri, e.g. 0.0.0.0 vs localhost)
+   * 3. Final fallback: no ordering info found, sets orderHint by current position
    */
-  private def reorderByJsonArrayOrder(
+  private[common] def reorderByJsonArrayOrder(
     grouped: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
     jsonOrder: Map[String, Seq[String]],
-  ): Map[SmartIri, Seq[CreateValueInNewResourceV2]] =
-    grouped.map { case (propertyIri, values) =>
-      jsonOrder.get(propertyIri.toString) match {
-        case Some(orderedStrings) if orderedStrings.nonEmpty =>
-          val (reordered, remaining) = orderedStrings.foldLeft((Seq.empty[CreateValueInNewResourceV2], values)) {
-            case ((matched, unmatched), expectedStr) =>
-              val idx = unmatched.indexWhere(_.valueContent.unescape.valueHasString == expectedStr)
-              if (idx >= 0) {
-                val (before, after) = unmatched.splitAt(idx)
-                (matched :+ after.head, before ++ after.tail)
-              } else (matched, unmatched)
-          }
-          (propertyIri, reordered ++ remaining)
-        case _ => (propertyIri, values)
+  ): UIO[Map[SmartIri, Seq[CreateValueInNewResourceV2]]] =
+    ZIO
+      .foreach(grouped.toSeq) { case (propertyIri, values) =>
+        val propertyIriStr = propertyIri.toString
+        val orderedStringsOpt = jsonOrder.get(propertyIriStr).orElse {
+          // Fallback: match by path portion only (handles host mismatches)
+          val propertyPath = iriPath(propertyIriStr)
+          jsonOrder.collectFirst { case (k, v) if iriPath(k) == propertyPath => v }
+        }
+        orderedStringsOpt match {
+          case Some(orderedStrings) if orderedStrings.nonEmpty =>
+            reorderValues(propertyIri, values, orderedStrings)
+          case _ =>
+            val withHints = values.zipWithIndex.map { case (v, idx) => v.copy(orderHint = Some(idx)) }
+            ZIO.logWarning(
+              s"reorderByJsonArrayOrder: property <$propertyIriStr> not found in jsonOrder, " +
+                s"assigning orderHint by current position",
+            ) *> ZIO.succeed((propertyIri, withHints))
+        }
       }
+      .map(_.toMap)
+
+  private def reorderValues(
+    propertyIri: SmartIri,
+    values: Seq[CreateValueInNewResourceV2],
+    orderedStrings: Seq[String],
+  ): UIO[(SmartIri, Seq[CreateValueInNewResourceV2])] = {
+    val countMismatchWarning =
+      ZIO
+        .logWarning(
+          s"reorderByJsonArrayOrder: count mismatch for property <${propertyIri.toString}>: " +
+            s"jsonOrder has ${orderedStrings.size} entries but grouped has ${values.size} values",
+        )
+        .when(orderedStrings.size != values.size)
+    val (reordered, remaining, unmatchedWarnings) =
+      orderedStrings.foldLeft(
+        (Seq.empty[CreateValueInNewResourceV2], values, Seq.empty[String]),
+      ) { case ((matched, unmatched, warnings), expectedStr) =>
+        val idx = unmatched.indexWhere(_.valueContent.unescape.valueHasString == expectedStr)
+        if (idx >= 0) {
+          val (before, after) = unmatched.splitAt(idx)
+          (matched :+ after.head, before ++ after.tail, warnings)
+        } else
+          (
+            matched,
+            unmatched,
+            warnings :+ s"reorderByJsonArrayOrder: could not match value '$expectedStr' " +
+              s"for property <${propertyIri.toString}> to any parsed value",
+          )
+      }
+    val withHints = (reordered ++ remaining).zipWithIndex.map { case (v, idx) =>
+      v.copy(orderHint = Some(idx))
     }
+    countMismatchWarning *>
+      ZIO.foreach(unmatchedWarnings)(ZIO.logWarning(_)) *>
+      ZIO.succeed((propertyIri, withHints))
+  }
 
   private def valueStatementAsContent(
     statement: Statement,
