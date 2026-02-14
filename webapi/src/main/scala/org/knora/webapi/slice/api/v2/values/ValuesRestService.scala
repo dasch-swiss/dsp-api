@@ -17,9 +17,11 @@ import dsp.errors.*
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -95,7 +97,39 @@ final class ValuesRestService(
 
   def reorderValues(user: User)(request: ReorderValuesRequest): Task[ReorderValuesResponse] =
     for {
-      // Parse and validate IRIs
+      validated         <- validateReorderRequest(request)
+      propertySmartIri   = validated._1
+      requestedValueIris = validated._2
+
+      // Fetch resource as system user to see all values regardless of permissions
+      resourcesSeq <- readResources.getResources(
+                        Seq(request.resourceIri),
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = Set.empty,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser,
+                      )
+      resourceInfo <- ZIO
+                        .fromOption(resourcesSeq.resources.headOption)
+                        .orElseFail(NotFoundException(s"Resource <${request.resourceIri}> not found."))
+
+      // Check that the user has modify permission on the resource
+      _ <- resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.Modify, user)
+
+      // Verify requested value IRIs match the canonical non-deleted values for this property
+      _ <- verifyCanonicalValues(request, propertySmartIri, requestedValueIris, resourceInfo)
+
+      // Derive project data graph and execute the reorder
+      projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM)
+      now             <- ZIO.succeed(Instant.now)
+      _               <- valueRepo.reorderValues(projectDataGraph, InternalIri(request.resourceIri), requestedValueIris, now)
+    } yield ReorderValuesResponse(
+      resourceIri = request.resourceIri,
+      propertyIri = request.propertyIri,
+      valuesReordered = requestedValueIris.size,
+    )
+
+  private def validateReorderRequest(request: ReorderValuesRequest) =
+    for {
       _ <- ZIO
              .attempt(request.resourceIri.toSmartIri)
              .mapError(_ => BadRequestException(s"Invalid resource IRI: <${request.resourceIri}>"))
@@ -113,50 +147,32 @@ final class ValuesRestService(
                                 .fromEither(ValueIri.from(iriStr.toSmartIri))
                                 .mapError(e => BadRequestException(s"Invalid value IRI: $e"))
                             }
+    } yield (propertySmartIri, requestedValueIris)
 
-      // Fetch resource as system user to see all values regardless of permissions
-      resourcesSeq <- readResources.getResources(
-                        Seq(request.resourceIri),
-                        targetSchema = ApiV2Complex,
-                        schemaOptions = Set.empty,
-                        requestingUser = KnoraSystemInstances.Users.SystemUser,
-                      )
-      resourceInfo <- ZIO
-                        .fromOption(resourcesSeq.resources.headOption)
-                        .orElseFail(NotFoundException(s"Resource <${request.resourceIri}> not found."))
-
-      // Check that the user has modify permission on the resource
-      _ <- resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.Modify, user)
-
-      // Get the canonical set of value IRIs for this property (non-deleted only)
-      // ReadResourceV2.values uses internal ontology IRIs as keys
-      propertyInternalIri = propertySmartIri.toOntologySchema(InternalSchema)
-      canonicalValues     = resourceInfo.values
-                          .getOrElse(propertyInternalIri, Seq.empty)
-                          .filter(_.deletionInfo.isEmpty)
-      canonicalIris = canonicalValues.map(_.valueIri).toSet
-      requestedIris = requestedValueIris.map(_.toString).toSet
-      _            <-
-        ZIO.when(canonicalIris != requestedIris)(
-          ZIO.fail(
-            BadRequestException(
-              s"The provided value IRIs do not match the existing values for property <${request.propertyIri}> on resource <${request.resourceIri}>. " +
-                s"Expected ${canonicalIris.size} value(s), got ${requestedIris.size}. " +
-                s"Missing: ${(canonicalIris -- requestedIris).mkString(", ")}. " +
-                s"Extra: ${(requestedIris -- canonicalIris).mkString(", ")}.",
-            ),
+  private def verifyCanonicalValues(
+    request: ReorderValuesRequest,
+    propertySmartIri: SmartIri,
+    requestedValueIris: List[ValueIri],
+    resourceInfo: ReadResourceV2,
+  ): Task[Unit] = {
+    // ReadResourceV2.values uses internal ontology IRIs as keys
+    val propertyInternalIri = propertySmartIri.toOntologySchema(InternalSchema)
+    val canonicalValues     = resourceInfo.values.getOrElse(propertyInternalIri, Seq.empty).filter(_.deletionInfo.isEmpty)
+    val canonicalIris       = canonicalValues.map(_.valueIri).toSet
+    val requestedIris       = requestedValueIris.map(_.toString).toSet
+    ZIO
+      .when(canonicalIris != requestedIris)(
+        ZIO.fail(
+          BadRequestException(
+            s"The provided value IRIs do not match the existing values for property <${request.propertyIri}> on resource <${request.resourceIri}>. " +
+              s"Expected ${canonicalIris.size} value(s), got ${requestedIris.size}. " +
+              s"Missing: ${(canonicalIris -- requestedIris).mkString(", ")}. " +
+              s"Extra: ${(requestedIris -- canonicalIris).mkString(", ")}.",
           ),
-        )
-
-      // Derive project data graph and execute the reorder
-      projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM)
-      now             <- ZIO.succeed(Instant.now)
-      _               <- valueRepo.reorderValues(projectDataGraph, InternalIri(request.resourceIri), requestedValueIris, now)
-    } yield ReorderValuesResponse(
-      resourceIri = request.resourceIri,
-      propertyIri = request.propertyIri,
-      valuesReordered = requestedValueIris.size,
-    )
+        ),
+      )
+      .unit
+  }
 
   private def render(task: Task[KnoraResponseV2], formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
     task.flatMap(renderer.render(_, formatOptions))
