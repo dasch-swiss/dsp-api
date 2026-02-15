@@ -126,7 +126,7 @@ object Dependencies {
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
-  val dataFaker = "net.datafaker" % "datafaker" % "2.5.3"
+  val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
 
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
