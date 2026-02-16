@@ -37,8 +37,5 @@ BIND( IRI( "http://www.knora.org/ontology/knora-base#TextValue" ) AS ?valueType 
 ?currentValue knora-base:isDeleted false .
 ?currentValue knora-base:valueHasUUID ?currentValueUuid .
 ?currentValue knora-base:hasPermissions ?currentValuePermissions .
-{ SELECT ( MAX( ?order ) AS ?maxOrder ) ( IF( BOUND( ?maxOrder ), ( ?maxOrder + 1 ), 0 ) AS ?nextOrder )
-WHERE { <http://0.0.0.0:3333/0001/thing/resource> <http://www.knora.org/ontology/0001/anything#hasText> ?otherValue .
-?otherValue knora-base:valueHasOrder ?order ;
-    knora-base:isDeleted false . }
- } }
+OPTIONAL { ?currentValue knora-base:valueHasOrder ?existingOrder . }
+BIND( IF( BOUND( ?existingOrder ), ?existingOrder, 0 ) AS ?nextOrder ) }

@@ -625,31 +625,42 @@ object InsertValueQueryBuilder {
       } else List.empty
     }.toList
 
-    // Follow Twirl template lines 521-528: Order calculation with MAX aggregation subquery
-    // We need to create a proper subquery that matches the Twirl template exactly:
-    // SELECT ((MAX(?order)) AS ?maxOrder) (IF(BOUND(?maxOrder), ?maxOrder + 1, 0) AS ?nextOrder)
-    // WHERE { <resourceIri> <propertyIri> ?otherValue . ?otherValue knora-base:valueHasOrder ?order ; knora-base:isDeleted false . }
-    val orderSubquery = {
-      val maxOrder   = variable("maxOrder")
-      val order      = variable("order")
-      val otherValue = variable("otherValue")
-
-      // Create the subquery using GraphPatterns.select() with proper aggregation
-      GraphPatterns
-        .select()
-        .select(
-          Expressions.max(order).as(maxOrder),
-          Expressions
-            .iff(
-              Expressions.bound(maxOrder),
-              Expressions.add(maxOrder, literalOf(1)),
-              literalOf(0),
-            )
-            .as(nextOrder),
+    // Order calculation: different strategy for creates vs updates
+    val orderPatterns: List[GraphPattern] = currentValue match {
+      case Some(_) =>
+        // Update case: preserve the existing order from the current value.
+        // Uses OPTIONAL to handle values that may not have valueHasOrder (e.g. file values),
+        // falling back to 0 (matching the old Twirl template behavior).
+        val existingOrder = variable("existingOrder")
+        List(
+          GraphPatterns.optional(currentVar.has(KB.valueHasOrder, existingOrder)),
+          Expressions.bind(
+            Expressions.iff(Expressions.bound(existingOrder), existingOrder, literalOf(0)),
+            nextOrder,
+          ),
         )
-        .where(
-          iri(resourceIri.value).has(iri(propertyIri.toString), otherValue),
-          otherValue.has(KB.valueHasOrder, order).andHas(KB.isDeleted, literalOf(false)),
+      case None =>
+        // Create case: append at end using MAX(order) + 1
+        val maxOrder   = variable("maxOrder")
+        val order      = variable("order")
+        val otherValue = variable("otherValue")
+        List(
+          GraphPatterns
+            .select()
+            .select(
+              Expressions.max(order).as(maxOrder),
+              Expressions
+                .iff(
+                  Expressions.bound(maxOrder),
+                  Expressions.add(maxOrder, literalOf(1)),
+                  literalOf(0),
+                )
+                .as(nextOrder),
+            )
+            .where(
+              iri(resourceIri.value).has(iri(propertyIri.toString), otherValue),
+              otherValue.has(KB.valueHasOrder, order).andHas(KB.isDeleted, literalOf(false)),
+            ),
         )
     }
 
@@ -659,7 +670,7 @@ object InsertValueQueryBuilder {
       currentValuePatterns,
       listNodeValidation,
       linkValidations,
-      List(orderSubquery),
+      orderPatterns,
     ).fold(List[GraphPattern]())(_ ::: _)
   }
 }
