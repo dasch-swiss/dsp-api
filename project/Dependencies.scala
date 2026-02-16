@@ -108,7 +108,7 @@ object Dependencies {
   // authentication
   val jwtZioJson         = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.3"
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "7.0.2" exclude (
+    "org.springframework.security" % "spring-security-core" % "7.0.3" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -128,7 +128,7 @@ object Dependencies {
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
-  val dataFaker = "net.datafaker" % "datafaker" % "2.5.3"
+  val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
 
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
@@ -139,7 +139,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.13.6"
+  val tapirVersion = "1.13.7"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
