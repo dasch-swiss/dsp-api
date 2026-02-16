@@ -203,6 +203,42 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     triplestore.query(Update(query))
   }
 
+  def reorderValues(
+    projectDataGraph: InternalIri,
+    resourceIri: InternalIri,
+    orderedValueIris: List[ValueIri],
+    currentTime: Instant,
+  ): Task[Unit] = {
+    val valuesClause = orderedValueIris.zipWithIndex.map { case (valueIri, idx) =>
+      s"    (<${valueIri.toString}> $idx)"
+    }
+      .mkString("\n")
+
+    val valueHasOrder        = KnoraBase.ValueHasOrder
+    val lastModificationDate = KnoraBase.LastModificationDate
+
+    val query = s"""
+                   |WITH <${projectDataGraph.value}>
+                   |DELETE {
+                   |  ?item <$valueHasOrder> ?oldOrder .
+                   |  <${resourceIri.value}> <$lastModificationDate> ?resourceLastModDate .
+                   |}
+                   |INSERT {
+                   |  ?item <$valueHasOrder> ?newOrder .
+                   |  <${resourceIri.value}> <$lastModificationDate> "${currentTime.toString}"^^<${XSD.DATETIME}> .
+                   |}
+                   |WHERE {
+                   |  VALUES (?item ?newOrder) {
+                   |$valuesClause
+                   |  }
+                   |  OPTIONAL { ?item <$valueHasOrder> ?oldOrder }
+                   |  OPTIONAL { <${resourceIri.value}> <$lastModificationDate> ?resourceLastModDate }
+                   |}
+                   |""".stripMargin
+
+    triplestore.query(Update(query))
+  }
+
   def createValue(
     dataNamedGraph: InternalIri,
     resourceIri: InternalIri,
