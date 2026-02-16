@@ -11,8 +11,6 @@ import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.core.From
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
@@ -78,7 +76,7 @@ trait ResourcesRepo {
   final def findDeletedById(id: ResourceIri): Task[Option[DeletedResource]] =
     findById(id).map(_.collect { case r: DeletedResource => r })
 
-  def countByResourceClass(resourceClassIri: ResourceClassIri, project: KnoraProject): Task[Int]
+  def countByResourceClasses(classIris: List[ResourceClassIri], project: KnoraProject): Task[Map[ResourceClassIri, Int]]
 }
 
 sealed trait ResourceModel {
@@ -282,15 +280,25 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
       )
   }
 
-  def countByResourceClass(classIri: ResourceClassIri, project: KnoraProject): Task[Int] = {
-    val countAs = "count"
-    val s       = variable("s")
-    val select  = Expressions.count(s).as(variable(countAs))
-    val from    = SparqlBuilder.from(graphIri(project))
-    val where   = s.isA(toRdfIri(classIri)).andHas(KB.isDeleted, false)
-    val query   = Queries.SELECT(select).from(from).where(where)
-    triplestore.select(query).map(_.getFirst(countAs).map(_.toInt).getOrElse(0))
-  }
+  def countByResourceClasses(
+    classIris: List[ResourceClassIri],
+    project: KnoraProject,
+  ): Task[Map[ResourceClassIri, Int]] =
+    if (classIris.isEmpty) ZIO.succeed(Map.empty)
+    else
+      val countAs = "count"
+      val graph   = graphIri(project)
+      val s       = variable("s")
+      val select  = Expressions.count(s).as(variable(countAs))
+
+      ZIO // Run one count query per class in parallel and collect results into a Map
+        .foreachPar(classIris) { c =>
+          val where = s.isA(toRdfIri(c)).andHas(KB.isDeleted, false).from(graph)
+          val query = Queries.SELECT(select).where(where)
+          triplestore.select(query).map(_.getFirst(countAs).map(_.toInt).getOrElse(0)).map(c -> _)
+        }
+        .withParallelism(4)
+        .map(_.toMap)
 }
 
 object ResourcesRepoLive {
