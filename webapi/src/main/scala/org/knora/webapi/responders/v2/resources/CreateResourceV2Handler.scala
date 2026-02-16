@@ -404,10 +404,9 @@ final case class CreateResourceV2Handler(
                             valuesToCreate
                               .sortBy(_.orderHint.getOrElse(Int.MaxValue))
                               .zipWithIndex
-                              .map {
-                              case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
+                              .map { case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
                                 (propertyIri, valueToCreate, valueHasOrder)
-                            }
+                              }
                         }.toList
 
       newValueInfos <-

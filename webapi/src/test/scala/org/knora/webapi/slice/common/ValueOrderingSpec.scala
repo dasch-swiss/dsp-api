@@ -5,18 +5,18 @@
 
 package org.knora.webapi.slice.common
 
-import scala.jdk.CollectionConverters.*
-import scala.language.implicitConversions
-
+import org.apache.jena.vocabulary.RDF
 import zio.*
 import zio.json.ast.Json
 import zio.test.*
 
-import org.apache.jena.vocabulary.RDF
+import scala.jdk.CollectionConverters.*
+import scala.language.implicitConversions
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelayLive
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueAsString
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
@@ -24,12 +24,11 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType.UnformattedText
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepoInMemory
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.repo.*
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.service.*
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueAsString
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
@@ -251,7 +250,7 @@ object ValueOrderingSpec extends ZIOSpecDefault {
     },
     test("handles duplicate text values preserving order") {
       parser { p =>
-        val grouped  = Map(hasTextIri -> Seq(mkTextValue("same"), mkTextValue("same"), mkTextValue("different")))
+        val grouped   = Map(hasTextIri -> Seq(mkTextValue("same"), mkTextValue("same"), mkTextValue("different")))
         val jsonOrder = Map(hasTextFull -> Seq("same", "different", "same"))
 
         for {
@@ -267,7 +266,7 @@ object ValueOrderingSpec extends ZIOSpecDefault {
     },
     test("preserves original order and sets orderHint when property not in jsonOrder") {
       parser { p =>
-        val grouped  = Map(hasTextIri -> Seq(mkTextValue("A"), mkTextValue("B")))
+        val grouped   = Map(hasTextIri -> Seq(mkTextValue("A"), mkTextValue("B")))
         val jsonOrder = Map.empty[String, Seq[String]]
 
         for {
@@ -284,7 +283,7 @@ object ValueOrderingSpec extends ZIOSpecDefault {
     },
     test("sets orderHint even when all matching fails (values in remaining)") {
       parser { p =>
-        val grouped  = Map(hasTextIri -> Seq(mkTextValue("X"), mkTextValue("Y")))
+        val grouped   = Map(hasTextIri -> Seq(mkTextValue("X"), mkTextValue("Y")))
         val jsonOrder = Map(hasTextFull -> Seq("nonexistent1", "nonexistent2"))
 
         for {
@@ -325,7 +324,8 @@ object ValueOrderingSpec extends ZIOSpecDefault {
         // jsonOrder key has a DIFFERENT HOST but the SAME PATH as hasTextIri
         // hasTextIri.toString = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText"
         // This simulates what happens on a dev server where SmartIri uses one host and the JSON-LD context uses another
-        val jsonOrder = Map("http://localhost:3333/ontology/0001/anything/v2#hasText" -> Seq("Charlie", "Bravo", "Alpha"))
+        val jsonOrder =
+          Map("http://localhost:3333/ontology/0001/anything/v2#hasText" -> Seq("Charlie", "Bravo", "Alpha"))
 
         for {
           result <- p.reorderByJsonArrayOrder(grouped, jsonOrder)
@@ -394,8 +394,8 @@ object ValueOrderingSpec extends ZIOSpecDefault {
         val jsonOrder = p.extractJsonArrayOrder(integerJsonLd)
         ZIO.scoped {
           for {
-            model    <- ModelOps.fromJsonLd(integerJsonLd)
-            resource <- ZIO.fromEither(model.singleRootResource)
+            model           <- ModelOps.fromJsonLd(integerJsonLd)
+            resource        <- ZIO.fromEither(model.singleRootResource)
             jenaPropertyUris = resource
                                  .listProperties()
                                  .asScala
@@ -424,10 +424,10 @@ object ValueOrderingSpec extends ZIOSpecDefault {
         val jsonOrder = p.extractJsonArrayOrder(integerJsonLd)
         ZIO.scoped {
           for {
-            model    <- ModelOps.fromJsonLd(integerJsonLd)
-            resource <- ZIO.fromEither(model.singleRootResource)
+            model     <- ModelOps.fromJsonLd(integerJsonLd)
+            resource  <- ZIO.fromEither(model.singleRootResource)
             converter <- ZIO.service[IriConverter]
-            jenaStmts = resource
+            jenaStmts  = resource
                           .listProperties()
                           .asScala
                           .filter(s =>
@@ -455,8 +455,8 @@ object ValueOrderingSpec extends ZIOSpecDefault {
         val jsonOrder = p.extractJsonArrayOrder(integerJsonLd)
         ZIO.scoped {
           for {
-            model    <- ModelOps.fromJsonLd(integerJsonLd)
-            resource <- ZIO.fromEither(model.singleRootResource)
+            model     <- ModelOps.fromJsonLd(integerJsonLd)
+            resource  <- ZIO.fromEither(model.singleRootResource)
             converter <- ZIO.service[IriConverter]
             // Get value statements (same filter as extractValues)
             valueStmts = resource
@@ -473,9 +473,9 @@ object ValueOrderingSpec extends ZIOSpecDefault {
             // Create SmartIri for property and extract integer value for each statement
             parsed <- ZIO.foreach(valueStmts) { stmt =>
                         for {
-                          smartIri <- converter.asSmartIri(stmt.predicateUri)
+                          smartIri     <- converter.asSmartIri(stmt.predicateUri)
                           valueResource = stmt.getObject.asResource()
-                          intContent <- ZIO.fromEither(IntegerValueContentV2.from(valueResource))
+                          intContent   <- ZIO.fromEither(IntegerValueContentV2.from(valueResource))
                         } yield (smartIri, CreateValueInNewResourceV2(valueContent = intContent))
                       }
             grouped = parsed.groupMap(_._1)(_._2)
@@ -514,8 +514,8 @@ object ValueOrderingSpec extends ZIOSpecDefault {
         val jsonOrder = p.extractJsonArrayOrder(textJsonLd)
         ZIO.scoped {
           for {
-            model    <- ModelOps.fromJsonLd(textJsonLd)
-            resource <- ZIO.fromEither(model.singleRootResource)
+            model     <- ModelOps.fromJsonLd(textJsonLd)
+            resource  <- ZIO.fromEither(model.singleRootResource)
             converter <- ZIO.service[IriConverter]
             valueStmts = resource
                            .listProperties()
@@ -530,9 +530,9 @@ object ValueOrderingSpec extends ZIOSpecDefault {
                            .toSeq
             parsed <- ZIO.foreach(valueStmts) { stmt =>
                         for {
-                          smartIri <- converter.asSmartIri(stmt.predicateUri)
+                          smartIri     <- converter.asSmartIri(stmt.predicateUri)
                           valueResource = stmt.getObject.asResource()
-                          text <- ZIO.fromEither(valueResource.objectString(ValueAsString))
+                          text         <- ZIO.fromEither(valueResource.objectString(ValueAsString))
                         } yield (
                           smartIri,
                           CreateValueInNewResourceV2(valueContent =

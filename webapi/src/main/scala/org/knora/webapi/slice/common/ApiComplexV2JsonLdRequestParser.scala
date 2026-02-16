@@ -397,13 +397,16 @@ final case class ApiComplexV2JsonLdRequestParser(
    * Handles all 15 value types by checking field names against known categories.
    * Pre-expands all field keys once before matching to avoid redundant IRI expansion.
    */
-  private[common] def extractMatchingString(fields: Chunk[(String, Json)], context: Map[String, String]): Option[String] = {
+  private[common] def extractMatchingString(
+    fields: Chunk[(String, Json)],
+    context: Map[String, String],
+  ): Option[String] = {
     val expanded = fields.map { case (k, v) => (expandCompactIri(k, context), v) }
     expanded.collectFirst {
-      case (k, Json.Str(v)) if strFields.contains(k)          => Some(v)
-      case (k, Json.Num(v)) if numFields.contains(k)          => Some(v.toString)
-      case (k, Json.Bool(v)) if boolFields.contains(k)        => Some(v.toString)
-      case (k, Json.Obj(inner)) if typedLiteralFields(k)      =>
+      case (k, Json.Str(v)) if strFields.contains(k)     => Some(v)
+      case (k, Json.Num(v)) if numFields.contains(k)     => Some(v.toString)
+      case (k, Json.Bool(v)) if boolFields.contains(k)   => Some(v.toString)
+      case (k, Json.Obj(inner)) if typedLiteralFields(k) =>
         inner.collectFirst { case ("@value", Json.Str(v)) => v }
       case (k, Json.Obj(inner)) if iriRefFields(k) =>
         inner.collectFirst { case ("@id", Json.Str(v)) => v }
@@ -480,7 +483,7 @@ final case class ApiComplexV2JsonLdRequestParser(
   ): UIO[Map[SmartIri, Seq[CreateValueInNewResourceV2]]] =
     ZIO
       .foreach(grouped.toSeq) { case (propertyIri, values) =>
-        val propertyIriStr = propertyIri.toString
+        val propertyIriStr    = propertyIri.toString
         val orderedStringsOpt = jsonOrder.get(propertyIriStr).orElse {
           // Fallback: match by path portion only (handles host mismatches)
           val propertyPath = iriPath(propertyIriStr)
