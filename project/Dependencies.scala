@@ -26,7 +26,7 @@ object Dependencies {
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.5.5"
   val ZioPreludeVersion           = "1.0.0-RC45"
-  val ZioSchemaVersion            = "1.7.6"
+  val ZioSchemaVersion            = "1.8.0"
   val ZioMockVersion              = "1.0.0-RC12"
   val ZioVersion                  = "2.1.24"
 
@@ -151,7 +151,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % tapirVersion,
   )
 
-  val otelVersion = "1.58.0"
+  val otelVersion = "1.59.0"
 
   val openTelemetryWithSentry = Seq(
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
@@ -205,7 +205,7 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion        = "11.19.1"
+  val flywayVersion        = "11.20.3"
   val otelAgentVersion     = "v2.18.1"
   val otelPyroscopeVersion = "v1.0.4"
   val hikariVersion        = "7.0.2"

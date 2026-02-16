@@ -8,6 +8,7 @@ import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import sttp.client4.*
+import sttp.model.StatusCode
 import zio.*
 import zio.json.*
 import zio.json.ast.*
@@ -33,6 +34,8 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.api.v2.values.ReorderValuesRequest
+import org.knora.webapi.slice.api.v2.values.ReorderValuesResponse
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
@@ -3724,5 +3727,399 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         valueTexts == Seq("Alpha", "Bravo", "Charlie", "Delta", "Echo"),
       )
     },
+    suite("PUT /v2/values/order")(
+      test("successfully reorder 3 values (reverse order)") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+        def createResourceJson =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "First"
+             |  },
+             |  "knora-api:attachedToProject" : {
+             |    "@id" : "http://rdfh.ch/projects/0001"
+             |  },
+             |  "rdfs:label" : "reorder test resource",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+             |  }
+             |}""".stripMargin
+
+        def addTextValueJson(resourceIri: String, text: String) =
+          s"""{
+             |  "@id" : "$resourceIri",
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "$text"
+             |  },
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          // Create resource with first text value
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          // Add second and third text values
+          _ <- TestApiClient
+                 .postJsonLdDocument(uri"/v2/values", addTextValueJson(resourceIri, "Second"), anythingUser1)
+                 .flatMap(_.assert200)
+          _ <- TestApiClient
+                 .postJsonLdDocument(uri"/v2/values", addTextValueJson(resourceIri, "Third"), anythingUser1)
+                 .flatMap(_.assert200)
+
+          // Get the resource to read value IRIs
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+          valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+          _            <- ZIO.when(valueIris.size != 3)(ZIO.fail(s"Expected 3 values, got ${valueIris.size}"))
+
+          // Reverse the order
+          reorderRequest = ReorderValuesRequest(
+                             resourceIri = resourceIri,
+                             propertyIri = propertyIri.toString,
+                             orderedValueIris = valueIris.reverse.toList,
+                           )
+          reorderResponse <- TestApiClient
+                               .putJson[ReorderValuesResponse, ReorderValuesRequest](
+                                 uri"/v2/values/order",
+                                 reorderRequest,
+                                 anythingUser1,
+                               )
+                               .flatMap(_.assert200)
+
+          // Verify the response
+          _ <- ZIO.when(reorderResponse.valuesReordered != 3)(
+                 ZIO.fail(s"Expected 3 values reordered, got ${reorderResponse.valuesReordered}"),
+               )
+
+          // Get the resource again and verify the new order
+          resource2     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray2  <- ZIO.fromEither(resource2.body.getRequiredArray(propertyIri.toString))
+          valuesInOrder2 = valuesArray2.value.collect { case obj: JsonLDObject => obj }
+          valueTexts2    = valuesInOrder2.flatMap(_.getRequiredString(KA.ValueAsString).toOption)
+        } yield assertTrue(
+          valueTexts2 == Seq("Third", "Second", "First"),
+        )
+      },
+      test("reject incomplete list (missing value)") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+        def createResourceJson =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "Value A"
+             |  },
+             |  "knora-api:attachedToProject" : {
+             |    "@id" : "http://rdfh.ch/projects/0001"
+             |  },
+             |  "rdfs:label" : "reorder incomplete list test",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+             |  }
+             |}""".stripMargin
+
+        def addTextValueJson(resourceIri: String, text: String) =
+          s"""{
+             |  "@id" : "$resourceIri",
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "$text"
+             |  },
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+          _           <- TestApiClient
+                 .postJsonLdDocument(uri"/v2/values", addTextValueJson(resourceIri, "Value B"), anythingUser1)
+                 .flatMap(_.assert200)
+
+          // Get the value IRIs
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+          valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+
+          // Send only the first value IRI (missing the second)
+          reorderRequest = ReorderValuesRequest(
+                             resourceIri = resourceIri,
+                             propertyIri = propertyIri.toString,
+                             orderedValueIris = valueIris.take(1).toList,
+                           )
+          response <- TestApiClient
+                        .putJson[ReorderValuesResponse, ReorderValuesRequest](
+                          uri"/v2/values/order",
+                          reorderRequest,
+                          anythingUser1,
+                        )
+        } yield assertTrue(response.code == StatusCode.BadRequest)
+      },
+      test("reject extra IRI (non-existent value)") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+        def createResourceJson =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "Extra IRI test"
+             |  },
+             |  "knora-api:attachedToProject" : {
+             |    "@id" : "http://rdfh.ch/projects/0001"
+             |  },
+             |  "rdfs:label" : "reject extra IRI test resource",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          // Get the value IRIs
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+          valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+
+          // Add a fake extra IRI alongside the real one
+          reorderRequest = ReorderValuesRequest(
+                             resourceIri = resourceIri,
+                             propertyIri = propertyIri.toString,
+                             orderedValueIris = valueIris.toList :+ "http://rdfh.ch/0001/a-thing/values/nonexistent",
+                           )
+          response <- TestApiClient
+                        .putJson[ReorderValuesResponse, ReorderValuesRequest](
+                          uri"/v2/values/order",
+                          reorderRequest,
+                          anythingUser1,
+                        )
+        } yield assertTrue(response.code == StatusCode.BadRequest)
+      },
+      test("reject duplicate IRIs") {
+        val reorderRequest = ReorderValuesRequest(
+          resourceIri = AThing.iri,
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
+          orderedValueIris = List(
+            "http://rdfh.ch/0001/a-thing/values/someValue",
+            "http://rdfh.ch/0001/a-thing/values/someValue",
+          ),
+        )
+        TestApiClient
+          .putJson[ReorderValuesResponse, ReorderValuesRequest](
+            uri"/v2/values/order",
+            reorderRequest,
+            anythingUser1,
+          )
+          .map(response => assertTrue(response.code == StatusCode.BadRequest))
+      },
+      test("reject empty list") {
+        val reorderRequest = ReorderValuesRequest(
+          resourceIri = AThing.iri,
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
+          orderedValueIris = List.empty,
+        )
+        TestApiClient
+          .putJson[ReorderValuesResponse, ReorderValuesRequest](
+            uri"/v2/values/order",
+            reorderRequest,
+            anythingUser1,
+          )
+          .map(response => assertTrue(response.code == StatusCode.BadRequest))
+      },
+      test("reject non-existent resource") {
+        val reorderRequest = ReorderValuesRequest(
+          resourceIri = "http://rdfh.ch/0001/nonexistent-resource",
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
+          orderedValueIris = List("http://rdfh.ch/0001/nonexistent-resource/values/someValue"),
+        )
+        TestApiClient
+          .putJson[ReorderValuesResponse, ReorderValuesRequest](
+            uri"/v2/values/order",
+            reorderRequest,
+            anythingUser1,
+          )
+          .map(response => assertTrue(response.code == StatusCode.NotFound))
+      },
+      test("reject reorder when user lacks modify permission") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+        def createResourceJson =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "Permission test"
+             |  },
+             |  "knora-api:attachedToProject" : {
+             |    "@id" : "http://rdfh.ch/projects/0001"
+             |  },
+             |  "rdfs:label" : "reorder permission test resource",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          // Create resource as anythingUser1 (who has permission)
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          // Read the value IRIs
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+          valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+
+          // Attempt reorder as incunabulaMemberUser (no modify permission on anything project resources)
+          reorderRequest = ReorderValuesRequest(
+                             resourceIri = resourceIri,
+                             propertyIri = propertyIri.toString,
+                             orderedValueIris = valueIris.toList,
+                           )
+          response <- TestApiClient
+                        .putJson[ReorderValuesResponse, ReorderValuesRequest](
+                          uri"/v2/values/order",
+                          reorderRequest,
+                          incunabulaMemberUser,
+                        )
+        } yield assertTrue(response.code == StatusCode.Forbidden)
+      },
+      test("reject reorder with wrong property IRI") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+        val wrongPropertyIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"
+
+        def createResourceJson =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "Wrong property test"
+             |  },
+             |  "knora-api:attachedToProject" : {
+             |    "@id" : "http://rdfh.ch/projects/0001"
+             |  },
+             |  "rdfs:label" : "reorder wrong property test resource",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          // Get the value IRIs (they belong to hasText, not hasInteger)
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+          valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+
+          // Send the hasText value IRIs but claim they belong to hasInteger
+          reorderRequest = ReorderValuesRequest(
+                             resourceIri = resourceIri,
+                             propertyIri = wrongPropertyIri,
+                             orderedValueIris = valueIris.toList,
+                           )
+          response <- TestApiClient
+                        .putJson[ReorderValuesResponse, ReorderValuesRequest](
+                          uri"/v2/values/order",
+                          reorderRequest,
+                          anythingUser1,
+                        )
+        } yield assertTrue(response.code == StatusCode.BadRequest)
+      },
+      test("single value (no-op) succeeds") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+        def createResourceJson =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "Only value"
+             |  },
+             |  "knora-api:attachedToProject" : {
+             |    "@id" : "http://rdfh.ch/projects/0001"
+             |  },
+             |  "rdfs:label" : "reorder single value test",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          // Get the single value IRI
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+          valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+          _            <- ZIO.when(valueIris.size != 1)(ZIO.fail(s"Expected 1 value, got ${valueIris.size}"))
+
+          // Reorder with the single value
+          reorderRequest = ReorderValuesRequest(
+                             resourceIri = resourceIri,
+                             propertyIri = propertyIri.toString,
+                             orderedValueIris = valueIris.toList,
+                           )
+          reorderResponse <- TestApiClient
+                               .putJson[ReorderValuesResponse, ReorderValuesRequest](
+                                 uri"/v2/values/order",
+                                 reorderRequest,
+                                 anythingUser1,
+                               )
+                               .flatMap(_.assert200)
+        } yield assertTrue(reorderResponse.valuesReordered == 1)
+      },
+    ),
   )
 }
