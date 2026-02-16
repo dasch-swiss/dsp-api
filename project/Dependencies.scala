@@ -25,10 +25,12 @@ object Dependencies {
   val ZioLoggingVersion           = "2.5.3"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.5.5"
-  val ZioPreludeVersion           = "1.0.0-RC45"
-  val ZioSchemaVersion            = "1.8.0"
-  val ZioMockVersion              = "1.0.0-RC12"
-  val ZioVersion                  = "2.1.24"
+
+  val ZioPreludeVersion = "1.0.0-RC46"
+  val ZioSchemaVersion  = "1.8.0"
+
+  val ZioMockVersion = "1.0.0-RC12"
+  val ZioVersion     = "2.1.24"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
@@ -210,7 +212,7 @@ object Dependencies {
   val otelPyroscopeVersion = "v1.0.4"
   val hikariVersion        = "7.0.2"
   val quillVersion         = "4.8.6"
-  val sqliteVersion        = "3.51.1.0"
+  val sqliteVersion        = "3.51.1.1"
 
   val db = Seq(
     "org.xerial"   % "sqlite-jdbc"    % sqliteVersion,
