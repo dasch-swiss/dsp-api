@@ -39,6 +39,10 @@ object JioHelper {
     .fromAutoCloseable(ZIO.attemptBlocking(new FileOutputStream(f)))
     .refineToOrDie[IOException]
 
+  def sourceFromFile(f: JFile): ZIO[Scope, IOException, scala.io.Source] = ZIO
+    .fromAutoCloseable(ZIO.attemptBlocking(scala.io.Source.fromFile(f)))
+    .refineToOrDie[IOException]
+
   /**
    * Recursively walks a directory and returns a list of all files (not directories) contained within it,
    * sorted alphabetically by path.

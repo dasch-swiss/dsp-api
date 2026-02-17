@@ -8,6 +8,7 @@ package org.knora.bagit.internal
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
+import java.io.File as JFile
 
 import java.io.IOException
 import java.util.zip.ZipInputStream
@@ -41,7 +42,7 @@ object BagReader {
 
     def copyToFile(
       zis: ZipInputStream,
-      target: java.io.File,
+      target: JFile,
       totalBytesRef: Ref[Long],
     ): IO[IOException | BagItError, Unit] =
       ZIO.scoped {
@@ -157,33 +158,30 @@ object BagReader {
 
   private val MaxTagFileSize: Long = 10L * 1024 * 1024 // 10 MB
 
-  private def checkFileSize(file: java.io.File, maxSize: Long): IO[BagItError, Unit] = {
+  private def checkFileSize(file: JFile, maxSize: Long): IO[BagItError, Unit] = {
     val size = file.length()
-    if (size > maxSize) ZIO.fail(BagItError.FileTooLarge(file.getName, size))
-    else ZIO.unit
+    ZIO.when(size > maxSize)(ZIO.fail(BagItError.FileTooLarge(file.getName, size))).unit
   }
 
-  private def readContent(file: java.io.File, maxSize: Long): IO[IOException | BagItError, String] =
+  private def readContent(file: JFile, maxSize: Long): IO[IOException | BagItError, String] =
     checkFileSize(file, maxSize) *>
       ZIO.scoped {
-        ZIO
-          .fromAutoCloseable(ZIO.attemptBlocking(scala.io.Source.fromFile(file, "UTF-8")))
-          .flatMap(source => ZIO.attemptBlocking(source.mkString))
-          .refineToOrDie[IOException]
+        JioHelper
+          .sourceFromFile(file)
+          .flatMap(source => ZIO.attemptBlocking(source.mkString).refineToOrDie[IOException])
       }
 
-  private def readLines(file: java.io.File, maxSize: Long): IO[IOException | BagItError, List[String]] =
+  private def readLines(file: JFile, maxSize: Long): IO[IOException | BagItError, List[String]] =
     checkFileSize(file, maxSize) *>
       ZIO.scoped {
-        ZIO
-          .fromAutoCloseable(ZIO.attemptBlocking(scala.io.Source.fromFile(file, "UTF-8")))
-          .flatMap(source => ZIO.attemptBlocking(source.getLines().toList))
-          .refineToOrDie[IOException]
+        JioHelper
+          .sourceFromFile(file)
+          .flatMap(source => ZIO.attemptBlocking(source.getLines().toList).refineToOrDie[IOException])
       }
 
   private def parseBagitTxt(bagRoot: Path, maxSize: Long): IO[IOException | BagItError, Unit] = {
     val bagitTxt = (bagRoot / "bagit.txt").toFile
-    if (!bagitTxt.exists()) ZIO.fail(BagItError.MissingBagitTxt)
+    if (!bagitTxt.exists) ZIO.fail(BagItError.MissingBagitTxt)
     else
       readContent(bagitTxt, maxSize)
         .map(content => content.split("\n", -1).map(_.stripSuffix("\r")).filter(_.nonEmpty).toList)
