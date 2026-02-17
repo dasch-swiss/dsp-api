@@ -8,7 +8,7 @@ tags: [json-ld, jena, value-ordering, rdf, standoff, rich-text]
 severity: high
 ---
 
-# Preserving JSON Array Order Through Jena JSON-LD Parsing
+## Preserving JSON Array Order Through Jena JSON-LD Parsing
 
 ## Problem
 
@@ -84,7 +84,7 @@ def sequence[K, R, A](x: Map[K, ZIO[R, Throwable, A]]): ZIO[R, Throwable, Map[K,
 ## Test Coverage Added
 
 | Test | Type | What It Proves |
-|---|---|---|
+| --- | --- | --- |
 | Boolean values preserve order | Unit | JSON boolean literals work |
 | Color values preserve order | Unit | String-based properties work |
 | Decimal values preserve order | Unit | `xsd:decimal` typed literals work |
