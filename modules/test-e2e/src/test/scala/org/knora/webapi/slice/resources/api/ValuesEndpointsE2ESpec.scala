@@ -3841,6 +3841,43 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         valueTexts == tenValues,
       )
     },
+    test("creating a resource with multiple integer values preserves their JSON array order") {
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+
+      def createResourceJson =
+        s"""{
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : [
+           |    { "@type" : "knora-api:IntValue", "knora-api:intValueAsInt" : 100 },
+           |    { "@type" : "knora-api:IntValue", "knora-api:intValueAsInt" : 200 },
+           |    { "@type" : "knora-api:IntValue", "knora-api:intValueAsInt" : 300 }
+           |  ],
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "integer ordering test resource",
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+           |  }
+           |}""".stripMargin
+
+      for {
+        createResponse <- TestApiClient
+                            .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                            .flatMap(_.assert200)
+        resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+        valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+        valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
+        valueTexts    = valuesInOrder.flatMap(_.getRequiredString(KA.ValueAsString).toOption)
+      } yield assertTrue(
+        valueTexts == Seq("100", "200", "300"),
+      )
+    },
     suite("PUT /v2/values/order")(
       test("successfully reorder 3 values (reverse order)") {
         val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
