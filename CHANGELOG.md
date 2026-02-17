@@ -1,5 +1,18 @@
 # Changelog
 
+## [34.4.0](https://github.com/dasch-swiss/dsp-api/compare/v34.3.0...v34.4.0) (2026-02-17)
+
+
+### Enhancements
+
+* Add BagIt library (minimal implementation of https://www.rfc-editor.org/rfc/rfc8493) ([#3950](https://github.com/dasch-swiss/dsp-api/issues/3950)) ([112effd](https://github.com/dasch-swiss/dsp-api/commit/112effda9ed8e72a54b6e3ac0ff6f07e6b1a9540))
+
+
+### Bug Fixes
+
+* batch-create value ordering for all value types (DEV-5869) ([#3944](https://github.com/dasch-swiss/dsp-api/issues/3944)) ([c6c49b9](https://github.com/dasch-swiss/dsp-api/commit/c6c49b984cd7f5de440c1f425824d4eed20046eb))
+* Eliminate flaky OntologyResponderV2Spec tests ([#3952](https://github.com/dasch-swiss/dsp-api/issues/3952)) ([d97f6be](https://github.com/dasch-swiss/dsp-api/commit/d97f6be8c5215cbc431f959a3072e5a1049c956f))
+
 ## [34.3.0](https://github.com/dasch-swiss/dsp-api/compare/v34.2.2...v34.3.0) (2026-02-16)
 
 
