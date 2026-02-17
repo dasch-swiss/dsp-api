@@ -190,7 +190,7 @@ object BagReaderSpec extends ZIOSpecDefault {
         for {
           tempDir <- Files.createTempDirectoryScoped(Some("bagit-data-file-test"), Seq.empty)
           // Create a valid bag zip but with data/ as a regular file instead of a directory
-          // We need a manifest entry but data/ won't be a directory, triggering the walkFiles NPE guard
+          // We need a manifest entry but data/ won't be a directory, triggering the walkDirectory NPE guard
           zipPath <- createMinimalZip(
                        tempDir,
                        Map(

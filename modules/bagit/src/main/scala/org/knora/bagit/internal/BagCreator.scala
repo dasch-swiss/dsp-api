@@ -75,7 +75,7 @@ object BagCreator {
           writePayloadFile(zos, s"data/$relativePath", sourcePath.toFile, algorithms).map(List(_))
         case PayloadEntry.Directory(prefix, sourcePath) =>
           val baseDir = sourcePath.toFile
-          ZIO.foreach(walkDirectory(baseDir)) { file =>
+          ZIO.foreach(JioHelper.walkDirectory(baseDir)) { file =>
             val rel     = baseDir.toPath.relativize(file.toPath).toString.replace('\\', '/')
             val zipPath = if (prefix.isEmpty) s"data/$rel" else s"data/$prefix/$rel"
             writePayloadFile(zos, zipPath, file, algorithms)
@@ -154,19 +154,4 @@ object BagCreator {
         zos.closeEntry()
       }
     }.refineToOrDie[IOException]
-
-  private def walkDirectory(dir: java.io.File): List[java.io.File] =
-    if (!dir.isDirectory) Nil
-    else {
-      val result = List.newBuilder[java.io.File]
-      val stack  = scala.collection.mutable.ArrayDeque[java.io.File](dir)
-      while (stack.nonEmpty) {
-        val current       = stack.removeLast()
-        val children      = Option(current.listFiles()).map(_.toList).getOrElse(Nil)
-        val (dirs, files) = children.partition(_.isDirectory)
-        result ++= files.sortBy(_.getName)
-        dirs.sortBy(_.getName).reverse.foreach(stack.append)
-      }
-      result.result()
-    }
 }

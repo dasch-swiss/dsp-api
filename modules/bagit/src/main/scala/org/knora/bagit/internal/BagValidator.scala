@@ -24,12 +24,12 @@ object BagValidator {
     for {
       _      <- ZIO.when(bag.manifests.isEmpty)(ZIO.fail(BagItError.MissingPayloadManifest))
       dataDir = (bagRoot / "data").toFile
-      _      <- ZIO.when(!dataDir.exists() || !dataDir.isDirectory)(ZIO.fail(BagItError.MissingPayloadDirectory))
+      _      <- ZIO.when(!dataDir.exists || !dataDir.isDirectory)(ZIO.fail(BagItError.MissingPayloadDirectory))
     } yield ()
 
   private def checkCompleteness(bag: Bag, bagRoot: Path): IO[BagItError, Unit] = {
     val dataDir     = (bagRoot / "data").toFile
-    val actualFiles = if (dataDir.exists() && dataDir.isDirectory) walkFiles(dataDir) else Nil
+    val actualFiles = if (dataDir.exists && dataDir.isDirectory) JioHelper.walkDirectory(dataDir) else Nil
     val actualPaths = actualFiles.map(f => dataDir.toPath.relativize(f.toPath).toString.replace('\\', '/')).toSet
 
     // Every manifest entry must have a corresponding file
@@ -90,20 +90,5 @@ object BagValidator {
             else ZIO.fail(BagItError.ChecksumMismatch(path, manifest.algorithm.bagitName, entry.checksum, actual))
           }
       }
-    }
-
-  private def walkFiles(dir: java.io.File): List[java.io.File] =
-    if (!dir.isDirectory) Nil
-    else {
-      val result = List.newBuilder[java.io.File]
-      val stack  = scala.collection.mutable.ArrayDeque[java.io.File](dir)
-      while (stack.nonEmpty) {
-        val current       = stack.removeLast()
-        val children      = Option(current.listFiles()).map(_.toList).getOrElse(Nil)
-        val (dirs, files) = children.partition(_.isDirectory)
-        result ++= files.sortBy(_.getName)
-        dirs.sortBy(_.getName).reverse.foreach(stack.append)
-      }
-      result.result()
     }
 }

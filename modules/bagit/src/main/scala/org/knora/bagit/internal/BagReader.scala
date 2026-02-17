@@ -242,7 +242,7 @@ object BagReader {
     if (!dataDir.exists() || !dataDir.isDirectory) ZIO.succeed(Nil)
     else
       ZIO
-        .attemptBlocking(walkFiles(dataDir))
+        .attemptBlocking(JioHelper.walkDirectory(dataDir))
         .refineToOrDie[IOException]
         .flatMap { files =>
           ZIO.foreach(files) { file =>
@@ -251,20 +251,4 @@ object BagReader {
           }
         }
   }
-
-  private def walkFiles(dir: java.io.File): List[java.io.File] =
-    if (!dir.isDirectory) Nil
-    else {
-      val result = List.newBuilder[java.io.File]
-      val stack  = scala.collection.mutable.ArrayDeque[java.io.File](dir)
-      while (stack.nonEmpty) {
-        val current       = stack.removeLast()
-        val children      = Option(current.listFiles()).map(_.toList).getOrElse(Nil)
-        val (dirs, files) = children.partition(_.isDirectory)
-        result ++= files.sortBy(_.getName)
-        // Push dirs in reverse order so the first (alphabetically) is processed last (i.e., next)
-        dirs.sortBy(_.getName).reverse.foreach(stack.append)
-      }
-      result.result()
-    }
 }
