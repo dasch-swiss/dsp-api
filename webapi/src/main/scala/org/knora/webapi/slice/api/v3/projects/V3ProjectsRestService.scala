@@ -9,6 +9,14 @@ import sttp.capabilities.zio.ZioStreams
 import zio.*
 import zio.stream.ZStream
 
+import org.knora.webapi.slice.`export`.domain.DataTaskId
+import org.knora.webapi.slice.`export`.domain.ExportExistsError
+import org.knora.webapi.slice.`export`.domain.ExportFailedError
+import org.knora.webapi.slice.`export`.domain.ExportInProgressError
+import org.knora.webapi.slice.`export`.domain.ImportExistsError
+import org.knora.webapi.slice.`export`.domain.ImportInProgressError
+import org.knora.webapi.slice.`export`.domain.ProjectDataExportService
+import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -25,14 +33,6 @@ import org.knora.webapi.slice.api.v3.V3ErrorCode.import_exists
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_in_progress
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_not_found
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
-import org.knora.webapi.slice.api.v3.projects.domain.DataTaskId
-import org.knora.webapi.slice.api.v3.projects.domain.ExportExistsError
-import org.knora.webapi.slice.api.v3.projects.domain.ExportFailedError
-import org.knora.webapi.slice.api.v3.projects.domain.ExportInProgressError
-import org.knora.webapi.slice.api.v3.projects.domain.ImportExistsError
-import org.knora.webapi.slice.api.v3.projects.domain.ImportInProgressError
-import org.knora.webapi.slice.api.v3.projects.domain.ProjectDataExportService
-import org.knora.webapi.slice.api.v3.projects.domain.ProjectDataImportService
 
 final class V3ProjectsRestService(
   auth: V3Authorizer,

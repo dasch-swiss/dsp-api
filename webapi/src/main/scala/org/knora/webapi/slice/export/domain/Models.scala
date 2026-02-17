@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.api.v3.projects.domain
+package org.knora.webapi.slice.`export`.domain
 
 import sttp.tapir.Schema
 import sttp.tapir.Validator

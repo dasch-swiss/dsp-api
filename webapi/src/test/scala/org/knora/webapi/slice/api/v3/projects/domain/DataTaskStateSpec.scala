@@ -7,8 +7,14 @@ package org.knora.webapi.slice.api.v3.projects.domain
 
 import zio.*
 import zio.test.*
-
 import org.knora.webapi.TestDataFactory
+import org.knora.webapi.slice.`export`.domain.DataTaskId
+import org.knora.webapi.slice.`export`.domain.DataTaskState
+import org.knora.webapi.slice.`export`.domain.DataTaskStatus
+import org.knora.webapi.slice.`export`.domain.StateCompletedError
+import org.knora.webapi.slice.`export`.domain.StateFailedError
+import org.knora.webapi.slice.`export`.domain.StateInProgressError
+import org.knora.webapi.slice.`export`.domain.StatesExistError
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 object DataTaskStateSpec extends ZIOSpecDefault {
