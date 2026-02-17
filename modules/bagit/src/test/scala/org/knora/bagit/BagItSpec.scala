@@ -55,7 +55,7 @@ object BagItSpec extends ZIOSpecDefault {
                )
           result        <- BagIt.readAndValidateZip(outputZip)
           (bag, bagRoot) = result
-        } yield assertTrue(bag.manifests.nonEmpty) && assertTrue(bagRoot.toString.nonEmpty)
+        } yield assertTrue(bag.manifests.nonEmpty, bagRoot.toString.nonEmpty)
       }
     },
     test("round-trip: extracted file tree matches original file tree") {
