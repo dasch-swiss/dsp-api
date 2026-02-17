@@ -701,7 +701,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
     ) {
       for {
         metadataResponse <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
-        _                 = self.freetestLastModDate.updateFrom(metadataResponse)
+        _                 = self.freetestLastModDate.updateFrom(metadataResponse, freeTestOntologyIri)
         // Create class freetest:ComicBook which is a subclass of freetest:Book
         comicBookClassIri         = freeTestOntologyIri.makeEntityIri("ComicBook")
         comicBookClassInfoContent = ClassInfoContentV2(
@@ -5072,20 +5072,24 @@ case class LastModRef(private var value: Instant) {
     (oldValue, set(newValue))
   }
 
-  def updateFrom(r: ReadOntologyMetadataV2, ontologyIri: OntologyIri): (Instant, Instant) =
-    updateFrom(r, Some(ontologyIri))
-  def updateFrom(r: ReadOntologyMetadataV2): (Instant, Instant) =
-    updateFrom(r, None)
-  private def updateFrom(r: ReadOntologyMetadataV2, ontologyIri: Option[OntologyIri]): (Instant, Instant) = {
+  def updateFrom(r: ReadOntologyMetadataV2, ontologyIri: OntologyIri): (Instant, Instant) = {
     val oldValue = value
-    // Find the specified ontology in the response. If no ontology is specified, use the first one of the response.
-    val onto     = ontologyIri.map(_.smartIri).getOrElse(r.ontologies.head.ontologyIri).toComplexSchema
+    val onto     = ontologyIri.smartIri.toComplexSchema
     val newValue = r
       .toOntologySchema(ApiV2Complex)
       .ontologies
       .find(_.ontologyIri.toComplexSchema == onto)
       .flatMap(_.lastModificationDate)
-      .getOrElse(throw AssertionException(s"$r has no last modification date"))
+      .getOrElse(throw AssertionException(s"$ontologyIri has no last modification date"))
+    (oldValue, set(newValue))
+  }
+
+  def updateFrom(r: ReadOntologyMetadataV2): (Instant, Instant) = {
+    val oldValue   = value
+    val ontologies = r.toOntologySchema(ApiV2Complex).ontologies
+    Predef.assert(ontologies.size == 1, s"Expected exactly one ontology in response, got ${ontologies.size}")
+    val newValue = ontologies.head.lastModificationDate
+      .getOrElse(throw AssertionException(s"${ontologies.head.ontologyIri} has no last modification date"))
     (oldValue, set(newValue))
   }
 }
