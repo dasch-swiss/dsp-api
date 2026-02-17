@@ -269,10 +269,10 @@ object ValueOrderingSpec extends ZIOSpecDefault {
                                 val index = r.objectIntOption(OrderIndexProperty).toOption.flatten
                                 (text.toOption.getOrElse("???"), index)
                               }
-            sorted = valuesWithIndex.sortBy(_._2.getOrElse(Int.MaxValue))
+            sorted = valuesWithIndex.sortBy { case (_, idx) => idx.getOrElse(Int.MaxValue) }
           } yield assertTrue(
-            sorted.map(_._1) == Seq("Echo", "Alpha", "Delta"),
-            sorted.map(_._2) == Seq(Some(0), Some(1), Some(2)),
+            sorted.map { case (value, _) => value } == Seq("Echo", "Alpha", "Delta"),
+            sorted.map { case (_, idx) => idx } == Seq(Some(0), Some(1), Some(2)),
           )
         }
       }
@@ -301,10 +301,10 @@ object ValueOrderingSpec extends ZIOSpecDefault {
                                 val index = r.objectIntOption(OrderIndexProperty).toOption.flatten
                                 (int.toOption.getOrElse(0), index)
                               }
-            sorted = valuesWithIndex.sortBy(_._2.getOrElse(Int.MaxValue))
+            sorted = valuesWithIndex.sortBy { case (_, idx) => idx.getOrElse(Int.MaxValue) }
           } yield assertTrue(
-            sorted.map(_._1) == Seq(5, 3, 1, 4, 2),
-            sorted.map(_._2) == Seq(Some(0), Some(1), Some(2), Some(3), Some(4)),
+            sorted.map { case (value, _) => value } == Seq(5, 3, 1, 4, 2),
+            sorted.map { case (_, idx) => idx } == Seq(Some(0), Some(1), Some(2), Some(3), Some(4)),
           )
         }
       }
@@ -356,11 +356,11 @@ object ValueOrderingSpec extends ZIOSpecDefault {
                                 val index = r.objectIntOption(OrderIndexProperty).toOption.flatten
                                 (xml.toOption.getOrElse("???"), index)
                               }
-            sorted = valuesWithIndex.sortBy(_._2.getOrElse(Int.MaxValue))
+            sorted = valuesWithIndex.sortBy { case (_, idx) => idx.getOrElse(Int.MaxValue) }
           } yield assertTrue(
-            sorted.map(_._2) == Seq(Some(0), Some(1)),
-            sorted(0)._1.contains("<strong>bold</strong>"),
-            sorted(1)._1.contains("<em>italic</em>"),
+            sorted.map { case (_, idx) => idx } == Seq(Some(0), Some(1)),
+            sorted.head match { case (xml, _) => xml.contains("<strong>bold</strong>") },
+            sorted(1) match { case (xml, _) => xml.contains("<em>italic</em>") },
           )
         }
       }
@@ -406,10 +406,10 @@ object ValueOrderingSpec extends ZIOSpecDefault {
                                 val index = r.objectIntOption(OrderIndexProperty).toOption.flatten
                                 (int.toOption.getOrElse(0), index)
                               }
-            sorted = valuesWithIndex.sortBy(_._2.getOrElse(Int.MaxValue))
+            sorted = valuesWithIndex.sortBy { case (_, idx) => idx.getOrElse(Int.MaxValue) }
           } yield assertTrue(
-            sorted.map(_._1) == (0 until 10).map(i => 9 - i).toSeq,
-            sorted.map(_._2) == (0 until 10).map(Some(_)).toSeq,
+            sorted.map { case (value, _) => value } == (0 until 10).map(i => 9 - i).toSeq,
+            sorted.map { case (_, idx) => idx } == (0 until 10).map(i => Some(i)).toSeq,
           )
         }
       }
@@ -501,8 +501,12 @@ object ValueOrderingSpec extends ZIOSpecDefault {
             shortcode = Shortcode.unsafeFrom("0001")
             result   <- p.extractValues(resource, shortcode).mapError(msg => new RuntimeException(msg))
           } yield {
-            val textValues = result.find(_._1.toString.contains("hasText")).map(_._2).getOrElse(Seq.empty)
-            val intValues  = result.find(_._1.toString.contains("hasInteger")).map(_._2).getOrElse(Seq.empty)
+            val textValues =
+              result.find { case (iri, _) => iri.toString.contains("hasText") }.map { case (_, vs) => vs }
+                .getOrElse(Seq.empty)
+            val intValues =
+              result.find { case (iri, _) => iri.toString.contains("hasInteger") }.map { case (_, vs) => vs }
+                .getOrElse(Seq.empty)
             assertTrue(
               textValues.map(_.valueContent.unescape.valueHasString) == Seq("Zulu", "Alpha"),
               intValues.map(_.valueContent.unescape.valueHasString) == Seq("9", "1", "5"),
