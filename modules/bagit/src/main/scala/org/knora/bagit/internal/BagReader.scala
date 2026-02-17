@@ -8,8 +8,8 @@ package org.knora.bagit.internal
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
-import java.io.File as JFile
 
+import java.io.File as JFile
 import java.io.IOException
 import java.util.zip.ZipInputStream
 

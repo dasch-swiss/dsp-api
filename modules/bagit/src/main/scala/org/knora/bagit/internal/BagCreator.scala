@@ -6,6 +6,7 @@
 package org.knora.bagit.internal
 
 import zio.*
+import zio.nio.file.Path
 
 import java.io.IOException
 import java.security.MessageDigest
@@ -22,8 +23,8 @@ object BagCreator {
     payloadEntries: List[PayloadEntry],
     algorithms: List[ChecksumAlgorithm],
     bagInfo: Option[BagInfo],
-    outputZipPath: zio.nio.file.Path,
-  ): IO[IOException, zio.nio.file.Path] =
+    outputZipPath: Path,
+  ): IO[IOException, Path] =
     ZIO.scoped {
       for {
         zos                                      <- JioHelper.zipFileOutputStream(outputZipPath)
