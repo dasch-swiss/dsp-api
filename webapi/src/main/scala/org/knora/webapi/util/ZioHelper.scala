@@ -7,10 +7,14 @@ package org.knora.webapi.util
 
 import zio.*
 
+import scala.collection.immutable.ListMap
+
 object ZioHelper {
 
   def sequence[K, R, A](x: Map[K, ZIO[R, Throwable, A]]): ZIO[R, Throwable, Map[K, A]] =
-    ZIO.foreach(x) { case (k, v) => v.map(k -> _) }.map(_.toMap)
+    ZIO
+      .foreach(Chunk.from(x.toSeq)) { case (k, v) => v.map(k -> _) }
+      .map(pairs => ListMap.from(pairs))
 
   def addLogTiming[R, E, A](msg: String, logLevel: LogLevel = LogLevel.Debug)(zio: ZIO[R, E, A]): ZIO[R, E, A] =
     ZIO.logLevel(logLevel) {
