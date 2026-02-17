@@ -41,6 +41,24 @@ jobs:
         with:
           files: ./target/scala-3.3.7/coverage-report/cobertura.xml
 
+  test-bagit:
+    name: Test bagit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Run bagit tests
+        run: ./sbtx -v bagit/test
+      - name: Bagit Test Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Bagit Test Results
+          path: ./modules/bagit/target/test-reports/TEST-*.xml
+          reporter: java-junit
+
   test-it:
     name: Build and IT test
     runs-on: buildjet-4vcpu-ubuntu-2204

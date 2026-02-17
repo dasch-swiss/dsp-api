@@ -175,6 +175,9 @@ object Dependencies {
     zioTestSbt,
   ).map(_ % Test)
 
+  val bagitDependencies     = Seq(zio, "dev.zio" %% "zio-streams" % ZioVersion, zioNio)
+  val bagitTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
+
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
   val webapiDependencies = monocle ++ refined ++ Seq(
