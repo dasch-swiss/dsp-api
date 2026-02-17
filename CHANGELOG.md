@@ -1,5 +1,28 @@
 # Changelog
 
+## [34.3.0](https://github.com/dasch-swiss/dsp-api/compare/v34.2.2...v34.3.0) (2026-02-16)
+
+
+### Maintenances
+
+* **admin-export:** Deprecate endpoints relating to admin export/import (DEV-5823) ([#3941](https://github.com/dasch-swiss/dsp-api/issues/3941)) ([674b8f3](https://github.com/dasch-swiss/dsp-api/commit/674b8f3f8a86d6e00574349674063aad9c92cbfd))
+* Dependency updates ([#3949](https://github.com/dasch-swiss/dsp-api/issues/3949)) ([2411955](https://github.com/dasch-swiss/dsp-api/commit/24119551a9da7c3320b69e949b4b06b06c01b5f9))
+* Minor dependency updates ([#3947](https://github.com/dasch-swiss/dsp-api/issues/3947)) ([48d9d03](https://github.com/dasch-swiss/dsp-api/commit/48d9d03e4b264f899af66e029b001622436dafbe))
+* Patch dependency updates ([#3946](https://github.com/dasch-swiss/dsp-api/issues/3946)) ([4e46475](https://github.com/dasch-swiss/dsp-api/commit/4e464756520bf3b830bc9d731ec132d2b0401970))
+
+
+### Enhancements
+
+* Add PUT /v2/values/order endpoint to reorder values (DEV-5859) ([#3943](https://github.com/dasch-swiss/dsp-api/issues/3943)) ([134844b](https://github.com/dasch-swiss/dsp-api/commit/134844bfc0efc95a71120077de0a7af119ca2d3e))
+* Add stub v3 api for project data export/import (DEV-5824) ([#3937](https://github.com/dasch-swiss/dsp-api/issues/3937)) ([42774d4](https://github.com/dasch-swiss/dsp-api/commit/42774d4c3e6154eb96bef3ce1eedf96e2ec53277))
+
+
+### Bug Fixes
+
+* Count resource instances of subclasses (DEV-5854) ([#3940](https://github.com/dasch-swiss/dsp-api/issues/3940)) ([e1c60a9](https://github.com/dasch-swiss/dsp-api/commit/e1c60a94becf88076bc9200fa61ffced22adf710))
+* Do not count deleted Resources on count instances per Ontology (DEV-5847) ([#3938](https://github.com/dasch-swiss/dsp-api/issues/3938)) ([ee569eb](https://github.com/dasch-swiss/dsp-api/commit/ee569eb60a1a7cf619e2d03606aca0378e201d99))
+* Preserve value ordering on edit and batch create (DEV-5859) ([#3942](https://github.com/dasch-swiss/dsp-api/issues/3942)) ([789f980](https://github.com/dasch-swiss/dsp-api/commit/789f980385f0f41397fbdb22edce2bd712c29236))
+
 ## [34.2.2](https://github.com/dasch-swiss/dsp-api/compare/v34.2.1...v34.2.2) (2026-02-10)
 
 

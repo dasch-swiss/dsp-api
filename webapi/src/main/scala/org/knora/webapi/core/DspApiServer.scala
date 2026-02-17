@@ -52,9 +52,8 @@ final class DspApiServer(
   def startup(): UIO[Unit] = for {
     _                         <- ZIO.logInfo("Starting DSP API server...")
     app: Routes[Any, Response] = ZioHttpInterpreter(serverOptions).toHttp(endpoints.serverEndpoints)
-
-    actualPort <- Server.install(app @@ otelMiddleWare).provide(ZLayer.succeed(server))
-    _          <- ZIO.logInfo(s"API available at http://${c.externalHost}:$actualPort/version")
+    actualPort                <- Server.install(app @@ otelMiddleWare).provide(ZLayer.succeed(server))
+    _                         <- ZIO.logInfo(s"API available at http://${c.externalHost}:$actualPort/version")
   } yield ()
 
   private def otelMiddleWare: Middleware[Any] = new Middleware[Any] {
