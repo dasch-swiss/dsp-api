@@ -203,6 +203,8 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     triplestore.query(Update(query))
   }
 
+  // Uses string interpolation instead of rdf4j builder because the builder's fluent API
+  // does not support VALUES clauses with tuple bindings (?item ?newOrder) elegantly.
   def reorderValues(
     projectDataGraph: InternalIri,
     resourceIri: InternalIri,

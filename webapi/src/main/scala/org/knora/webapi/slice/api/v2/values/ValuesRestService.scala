@@ -6,12 +6,11 @@
 package org.knora.webapi.slice.api.v2.values
 
 import sttp.model.MediaType
+import zio.Clock
 import zio.Random
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
-import java.time.Instant
 
 import dsp.errors.*
 import org.knora.webapi.ApiV2Complex
@@ -100,7 +99,8 @@ final class ValuesRestService(
       validated                             <- validateReorderRequest(request)
       (propertySmartIri, requestedValueIris) = validated
 
-      // Fetch resource as system user to see all values regardless of permissions
+      // Fetch as system user so we see ALL values for canonical verification.
+      // This is safe: only value IRIs are compared (verifyCanonicalValues), no content is leaked to the caller.
       resourcesSeq <- readResources.getResources(
                         Seq(request.resourceIri),
                         targetSchema = ApiV2Complex,
@@ -119,7 +119,7 @@ final class ValuesRestService(
 
       // Derive project data graph and execute the reorder
       projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM)
-      now             <- ZIO.succeed(Instant.now)
+      now             <- Clock.instant
       _               <- valueRepo.reorderValues(projectDataGraph, InternalIri(request.resourceIri), requestedValueIris, now)
     } yield ReorderValuesResponse(
       resourceIri = request.resourceIri,
