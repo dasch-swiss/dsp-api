@@ -8,7 +8,6 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.nio.file.Path
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
@@ -17,8 +16,6 @@ import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -54,8 +51,6 @@ object ValueContentV2Spec extends ZIOSpecDefault {
 
     // The following are unsupported operations because they are not used in the test
     def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
-      ZIO.dieMessage("unsupported operation")
-    def downloadAsset(asset: Asset, targetDir: Path, user: User): Task[Option[Path]] =
       ZIO.dieMessage("unsupported operation")
   })
 }

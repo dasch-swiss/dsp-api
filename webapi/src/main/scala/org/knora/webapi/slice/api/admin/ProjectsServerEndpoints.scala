@@ -54,10 +54,6 @@ final class ProjectsServerEndpoints(
       .serverLogic(restService.getProjectAdminMembersByShortname),
     projectsEndpoints.Secured.deleteAdminProjectsByIri.serverLogic(restService.deleteProject),
     projectsEndpoints.Secured.deleteAdminProjectsByProjectShortcodeErase.serverLogic(restService.eraseProject),
-    projectsEndpoints.Secured.getAdminProjectsExports.serverLogic(restService.listExports),
-    projectsEndpoints.Secured.postAdminProjectsByShortcodeExport.serverLogic(restService.exportProject),
-    projectsEndpoints.Secured.postAdminProjectsByShortcodeExportAwaiting.serverLogic(restService.exportProjectAwaiting),
-    projectsEndpoints.Secured.postAdminProjectsByShortcodeImport.serverLogic(restService.importProject),
     projectsEndpoints.Secured.postAdminProjects.serverLogic(restService.createProject),
     projectsEndpoints.Secured.putAdminProjectsByIri.serverLogic(restService.updateProject),
   )

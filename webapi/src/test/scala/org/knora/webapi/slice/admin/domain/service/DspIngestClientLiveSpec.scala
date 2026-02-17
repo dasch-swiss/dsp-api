@@ -57,22 +57,21 @@ import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 
 object DspIngestClientSpec extends ZIOSpecDefault {
 
-  private val testShortcodeStr = "0001"
-  private val testShortcode    = Shortcode.unsafeFrom(testShortcodeStr)
-  private val testContent      = "testContent".getBytes()
+  private val testShortcode = Shortcode.unsafeFrom("0001")
+  private val testContent   = "testContent".getBytes()
 
   private val withDspIngestClient  = ZIO.serviceWithZIO[DspIngestClient]
   private val getTokenForDspIngest = ZIO.serviceWithZIO[JwtService](_.createJwtForDspIngest()).map(_.jwtString)
 
   private val exportProjectSuite = suite("exportProject")(test("should download a project export") {
-    val expectedUrl = s"/projects/$testShortcodeStr/export"
+    val expectedUrl = s"/projects/$testShortcode/export"
     for {
       // given
       _ <- HttpMockServer.stub.postResponse(
              expectedUrl,
              aResponse()
                .withHeader("Content-Type", "application/zip")
-               .withHeader("Content-Disposition", s"export-$testShortcodeStr.zip")
+               .withHeader("Content-Disposition", s"export-$testShortcode.zip")
                .withBody(testContent)
                .withStatus(200),
            )
@@ -93,7 +92,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
   private val getAssetInfoSuite = suite("getAssetInfo")(test("should return the assetInfo") {
     implicit val encoder: JsonEncoder[AssetInfoResponse] = DeriveJsonEncoder.gen[AssetInfoResponse]
     val assetId                                          = AssetId.unsafeFrom("4sAf4AmPeeg-ZjDn3Tot1Zt")
-    val expectedUrl                                      = s"/projects/$testShortcodeStr/assets/$assetId"
+    val expectedUrl                                      = s"/projects/$testShortcode/assets/$assetId"
     val expected                                         = AssetInfoResponse(
       internalFilename = s"$assetId.txt",
       originalInternalFilename = s"$assetId.txt.orig",

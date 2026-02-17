@@ -25,7 +25,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectEraseService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
-import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.admin.model.*
@@ -36,7 +35,6 @@ import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final class ProjectRestService(
@@ -46,8 +44,6 @@ final class ProjectRestService(
   permissionResponder: PermissionsResponder,
   projectEraseService: ProjectEraseService,
   projectExportService: ProjectExportService,
-  projectImportService: ProjectImportService,
-  ontologyCache: OntologyCache,
   userService: UserService,
   auth: AuthorizationRestService,
   features: Features,
@@ -291,42 +287,6 @@ final class ProjectRestService(
       restrictedView <- req.toRestrictedView
       newSettings    <- knoraProjectService.setProjectRestrictedView(project, restrictedView)
     } yield RestrictedViewResponse.from(newSettings)
-
-  def exportProject(user: User)(id: Shortcode): Task[Unit] = for {
-    _       <- auth.ensureSystemAdmin(user)
-    project <- knoraProjectService.findByShortcode(id).someOrFail(NotFoundException(s"Project $id not found."))
-    _       <- projectExportService.exportProject(project).logError.forkDaemon
-  } yield ()
-
-  def exportProjectAwaiting(user: User)(shortcode: Shortcode): Task[ProjectExportInfoResponse] = for {
-    _       <- auth.ensureSystemAdmin(user)
-    project <- knoraProjectService
-                 .findByShortcode(shortcode)
-                 .someOrFail(NotFoundException(s"Project ${shortcode.value} not found."))
-    exportInfo <- projectExportService.exportProject(project).logError
-  } yield exportInfo
-
-  def importProject(user: User)(shortcode: Shortcode): Task[ProjectImportResponse] = for {
-    _ <- auth.ensureSystemAdmin(user)
-    _ <- projectExportService
-           .findByShortcode(shortcode)
-           .someOrFail(NotFoundException(s"Project export for $shortcode not found."))
-    _ <- knoraProjectService
-           .findByShortcode(shortcode)
-           .some
-           .flatMap(projectEraseService.eraseProject(_, keepAssets = false).asSomeError)
-           .unsome
-    path <- projectImportService
-              .importProject(shortcode)
-              .someOrFail(IllegalStateException(s"Project export for $shortcode not found."))
-              .flatMap(_.toAbsolutePath)
-    _ <- ontologyCache.refreshCache()
-  } yield ProjectImportResponse(path.toString)
-
-  def listExports(user: User)(@unused ignored: Unit): Task[Chunk[ProjectExportInfoResponse]] = for {
-    _       <- auth.ensureSystemAdmin(user)
-    exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
-  } yield exports
 }
 
 object ProjectRestService {
