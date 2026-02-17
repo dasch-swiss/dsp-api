@@ -48,7 +48,7 @@ lazy val buildTime   = Instant.now.toString
 
 lazy val knoraSipiVersion = gitVersion
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, testkit, it, e2e)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, testkit, it, e2e, bagit)
 
 lazy val year           = java.time.LocalDate.now().getYear
 lazy val projectLicense = Some(
@@ -76,6 +76,7 @@ lazy val root: Project = Project(id = "root", file("."))
     it,
     e2e,
     ingest,
+    bagit,
   )
   .settings(
     // values set for all sub-projects
@@ -97,11 +98,11 @@ lazy val root: Project = Project(id = "root", file("."))
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias(
   "headerCreateAll",
-  "; all webapi/headerCreate webapi/Test/headerCreate testkit/headerCreate test-it/headerCreate test-it/Test/headerCreate test-e2e/headerCreate test-e2e/Test/headerCreate",
+  "; all webapi/headerCreate webapi/Test/headerCreate testkit/headerCreate test-it/headerCreate test-it/Test/headerCreate test-e2e/headerCreate test-e2e/Test/headerCreate bagit/headerCreate bagit/Test/headerCreate",
 )
 addCommandAlias(
   "headerCheckAll",
-  "; all webapi/headerCheck webapi/Test/headerCheck testkit/headerCheck test-it/headerCheck test-it/Test/headerCheck test-e2e/headerCheck test-e2e/Test/headerCheck",
+  "; all webapi/headerCheck webapi/Test/headerCheck testkit/headerCheck test-it/headerCheck test-it/Test/headerCheck test-e2e/headerCheck test-e2e/Test/headerCheck bagit/headerCheck bagit/Test/headerCheck",
 )
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
 addCommandAlias("test-it", "test-it/test")
@@ -276,6 +277,22 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ),
     buildInfoPackage := "org.knora.webapi.http.version",
   )
+
+//////////////////////////////////////
+// BAGIT (RFC 8493 library)
+//////////////////////////////////////
+
+lazy val bagit: Project = Project(id = "bagit", base = file("modules/bagit"))
+  .settings(buildSettings)
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    logLevel := Level.Info,
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    libraryDependencies ++= Dependencies.bagitDependencies ++ Dependencies.bagitTestDependencies,
+    publish / skip := true,
+    name           := "bagit",
+  )
+  .enablePlugins(HeaderPlugin)
 
 //////////////////////////////////////
 // TESTKIT (shared test utilities)
