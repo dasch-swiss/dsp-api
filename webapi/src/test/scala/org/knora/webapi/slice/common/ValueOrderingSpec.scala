@@ -57,8 +57,11 @@ object ValueOrderingSpec extends ZIOSpecDefault {
             |  }
             |}""".stripMargin
         val result    = p.injectOrderIndices(json)
-        val resultObj = result.fromJson[Json.Obj].toOption.get
-        val values    = resultObj.get("anything:hasText").get.asInstanceOf[Json.Arr].elements
+        val resultObj = result.fromJson[Json.Obj].fold(_ => throw new AssertionError("JSON parse failed"), identity)
+        val values    =
+          resultObj
+            .get("anything:hasText")
+            .fold(throw new AssertionError("missing key"))(_.asInstanceOf[Json.Arr].elements)
         ZIO.succeed(
           assertTrue(
             values.size == 3,
@@ -85,8 +88,11 @@ object ValueOrderingSpec extends ZIOSpecDefault {
             |  }
             |}""".stripMargin
         val result    = p.injectOrderIndices(json)
-        val resultObj = result.fromJson[Json.Obj].toOption.get
-        val values    = resultObj.get("anything:hasInteger").get.asInstanceOf[Json.Arr].elements
+        val resultObj = result.fromJson[Json.Obj].fold(_ => throw new AssertionError("JSON parse failed"), identity)
+        val values    =
+          resultObj
+            .get("anything:hasInteger")
+            .fold(throw new AssertionError("missing key"))(_.asInstanceOf[Json.Arr].elements)
         ZIO.succeed(
           assertTrue(
             values(0).asInstanceOf[Json.Obj].get(OrderIndexProperty).contains(Json.Num(0)),
@@ -108,8 +114,9 @@ object ValueOrderingSpec extends ZIOSpecDefault {
             |  }
             |}""".stripMargin
         val result    = p.injectOrderIndices(json)
-        val resultObj = result.fromJson[Json.Obj].toOption.get
-        val value     = resultObj.get("anything:hasText").get.asInstanceOf[Json.Obj]
+        val resultObj = result.fromJson[Json.Obj].fold(_ => throw new AssertionError("JSON parse failed"), identity)
+        val value     =
+          resultObj.get("anything:hasText").fold(throw new AssertionError("missing key"))(_.asInstanceOf[Json.Obj])
         ZIO.succeed(
           assertTrue(
             value.get(OrderIndexProperty).isEmpty,
@@ -127,7 +134,7 @@ object ValueOrderingSpec extends ZIOSpecDefault {
             |  }
             |}""".stripMargin
         val result    = p.injectOrderIndices(json)
-        val resultObj = result.fromJson[Json.Obj].toOption.get
+        val resultObj = result.fromJson[Json.Obj].fold(_ => throw new AssertionError("JSON parse failed"), identity)
         ZIO.succeed(
           assertTrue(
             resultObj.get("@type").contains(Json.Str("anything:Thing")),
@@ -147,8 +154,11 @@ object ValueOrderingSpec extends ZIOSpecDefault {
             |  }
             |}""".stripMargin
         val result    = p.injectOrderIndices(json)
-        val resultObj = result.fromJson[Json.Obj].toOption.get
-        val values    = resultObj.get("anything:hasText").get.asInstanceOf[Json.Arr].elements
+        val resultObj = result.fromJson[Json.Obj].fold(_ => throw new AssertionError("JSON parse failed"), identity)
+        val values    =
+          resultObj
+            .get("anything:hasText")
+            .fold(throw new AssertionError("missing key"))(_.asInstanceOf[Json.Arr].elements)
         ZIO.succeed(assertTrue(values.isEmpty))
       }
     },
@@ -171,9 +181,15 @@ object ValueOrderingSpec extends ZIOSpecDefault {
             |  }
             |}""".stripMargin
         val result    = p.injectOrderIndices(json)
-        val resultObj = result.fromJson[Json.Obj].toOption.get
-        val texts     = resultObj.get("anything:hasText").get.asInstanceOf[Json.Arr].elements
-        val ints      = resultObj.get("anything:hasInteger").get.asInstanceOf[Json.Arr].elements
+        val resultObj = result.fromJson[Json.Obj].fold(_ => throw new AssertionError("JSON parse failed"), identity)
+        val texts     =
+          resultObj
+            .get("anything:hasText")
+            .fold(throw new AssertionError("missing key"))(_.asInstanceOf[Json.Arr].elements)
+        val ints =
+          resultObj
+            .get("anything:hasInteger")
+            .fold(throw new AssertionError("missing key"))(_.asInstanceOf[Json.Arr].elements)
         ZIO.succeed(
           assertTrue(
             texts(0).asInstanceOf[Json.Obj].get(OrderIndexProperty).contains(Json.Num(0)),
@@ -213,7 +229,7 @@ object ValueOrderingSpec extends ZIOSpecDefault {
       |}""".stripMargin
 
   val orderIndexRoundTripSuite = suite("orderIndex round-trip through Jena")(
-    test("inject → Jena parse → readOrderIndex gives correct indices for 3 text values") {
+    test("inject -> Jena parse -> readOrderIndex gives correct indices for 3 text values") {
       parser { p =>
         val textJsonLd =
           """{
@@ -261,7 +277,7 @@ object ValueOrderingSpec extends ZIOSpecDefault {
         }
       }
     },
-    test("inject → Jena parse → readOrderIndex gives correct indices for 5 integer values") {
+    test("inject -> Jena parse -> readOrderIndex gives correct indices for 5 integer values") {
       parser { p =>
         val injected = p.injectOrderIndices(integerJsonLd)
         ZIO.scoped {
@@ -293,7 +309,7 @@ object ValueOrderingSpec extends ZIOSpecDefault {
         }
       }
     },
-    test("inject → Jena parse → readOrderIndex preserves rich text XML content") {
+    test("inject -> Jena parse -> readOrderIndex preserves rich text XML content") {
       parser { p =>
         val richTextJsonLd =
           """{
@@ -349,7 +365,7 @@ object ValueOrderingSpec extends ZIOSpecDefault {
         }
       }
     },
-    test("inject → Jena parse → readOrderIndex for 10 values (stress test)") {
+    test("inject -> Jena parse -> readOrderIndex for 10 values (stress test)") {
       parser { p =>
         val values = (0 until 10)
           .map(i => s"""{ "@type" : "knora-api:IntValue", "knora-api:intValueAsInt" : ${9 - i} }""")
