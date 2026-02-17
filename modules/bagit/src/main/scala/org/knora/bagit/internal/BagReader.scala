@@ -193,11 +193,7 @@ object BagReader {
           else if (lines(0) != "BagIt-Version: 1.0")
             ZIO.fail(BagItError.InvalidBagitTxt("Expected first line to be 'BagIt-Version: 1.0'"))
           else if (lines(1) != "Tag-File-Character-Encoding: UTF-8")
-            ZIO.fail(
-              BagItError.InvalidBagitTxt(
-                "Expected second line to be 'Tag-File-Character-Encoding: UTF-8'",
-              ),
-            )
+            ZIO.fail(BagItError.InvalidBagitTxt("Expected second line to be 'Tag-File-Character-Encoding: UTF-8'"))
           else ZIO.unit
         }
   }
