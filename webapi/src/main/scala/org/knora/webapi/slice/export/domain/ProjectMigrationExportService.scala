@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 // This error is used to indicate that an export exists
@@ -73,18 +74,17 @@ final class ProjectDataExportService(
   private def collectOntologyGraphs(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) = for {
     graphs <- projectService.getOntologyGraphsForProject(project)
     _      <- ZIO.logInfo(s"$taskId: Collecting ontologies '${graphs.map(_.value).mkString(",")}'")
-    _      <- ZIO.foreachParDiscard(graphs.zipWithIndex) { (g, i) =>
-           val file = rdfPath / s"ontology-${i + 1}.nq"
-           Files.createFile(file) *> triplestore.downloadGraph(g, file, NQuads)
-         }
+    _      <- ZIO.foreachParDiscard(graphs.zipWithIndex)((g, i) => downloadGraph(g, rdfPath / s"ontology-${i + 1}.nq"))
   } yield ()
+
+  private def downloadGraph(graph: InternalIri, file: Path) =
+    Files.createFile(file) *> triplestore.downloadGraph(graph, file, NQuads)
 
   private def collectProjectDataGraph(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
     val dataGraph = projectService.getDataGraphForProject(project)
     for {
-      _       <- ZIO.logInfo(s"$taskId: Collecting project data from graph '${dataGraph.value}'")
-      dataFile = rdfPath / "data.nq"
-      _       <- Files.createFile(dataFile) *> triplestore.downloadGraph(dataGraph, dataFile, NQuads)
+      _ <- ZIO.logInfo(s"$taskId: Collecting project data from graph '${dataGraph.value}'")
+      _ <- downloadGraph(dataGraph, rdfPath / "data.nq")
     } yield ()
 
   private def collectAdminGraphData(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
