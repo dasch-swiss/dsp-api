@@ -43,7 +43,7 @@ final class V3ProjectsRestService(
 
   private def ensureSystemAdminAndProjectExists(user: User, projectIri: ProjectIri) =
     auth.ensureSystemAdmin(user) *>
-      projectService.findById(projectIri).orElseFail(NotFound.from(projectIri))
+      projectService.findById(projectIri).orDie.someOrFail(NotFound.from(projectIri))
 
   private def conflict(code: Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
     Conflict(
@@ -61,10 +61,10 @@ final class V3ProjectsRestService(
 
   def triggerProjectExportCreate(user: User)(projectIri: ProjectIri): IO[V3ErrorInfo, DataTaskStatusResponse] =
     for {
-      _     <- ensureSystemAdminAndProjectExists(user, projectIri)
-      state <-
+      project <- ensureSystemAdminAndProjectExists(user, projectIri)
+      state   <-
         exportService
-          .createExport(projectIri, user)
+          .createExport(project, user)
           .mapError { case ExportExistsError(t) => conflict(export_exists, t.projectIri, t.id) }
     } yield DataTaskStatusResponse.from(state)
 
@@ -139,5 +139,5 @@ final class V3ProjectsRestService(
 }
 
 object V3ProjectsRestService {
-  val layer = ProjectDataExportService.layer >+> ProjectDataImportService.layer >>> ZLayer.derive[V3ProjectsRestService]
+  val layer = ZLayer.derive[V3ProjectsRestService]
 }

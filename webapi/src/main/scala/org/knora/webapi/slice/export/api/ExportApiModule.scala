@@ -19,7 +19,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object ExportModule { self =>
+object ExportApiModule { self =>
   type Dependencies =
     // format: off
     ConstructResponseUtilV2 &
