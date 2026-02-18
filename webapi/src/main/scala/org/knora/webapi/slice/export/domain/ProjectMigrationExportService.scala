@@ -59,8 +59,8 @@ final class ProjectDataExportService(
         _                     <- Files.createDirectories(rdfPath)
         _                     <- collectOntologyGraphs(task.id, project, rdfPath) <&>
                collectProjectDataGraph(task.id, project, rdfPath) <&>
-               collectAdminGraph(task.id, project, rdfPath) <&>
-               collectPermissionsData(task.id, project, rdfPath)
+               collectAdminGraphData(task.id, project, rdfPath) <&>
+               collectPermissionsGraphData(task.id, project, rdfPath)
         _ <- createBagItZip(task.id, rdfPath, project.id)
         _ <- currentExp.complete(task.id).ignore
         _ <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
@@ -87,7 +87,7 @@ final class ProjectDataExportService(
       _       <- Files.createFile(dataFile) *> triplestore.downloadGraph(dataGraph, dataFile, NQuads)
     } yield ()
 
-  private def collectAdminGraph(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
+  private def collectAdminGraphData(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
     for {
       _        <- ZIO.logInfo(s"$taskId: Collecting project admin data from graph '${adminDataNamedGraph.value}'")
       adminFile = rdfPath / "admin.nq"
@@ -95,7 +95,7 @@ final class ProjectDataExportService(
              triplestore.queryToFile(AdminDataQuery.build(project.id), adminDataNamedGraph, adminFile, NQuads)
     } yield ()
 
-  private def collectPermissionsData(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
+  private def collectPermissionsGraphData(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
     for {
       _             <- ZIO.logInfo(s"$taskId: Collecting project permission data from graph '${permissionsDataNamedGraph.value}'")
       permissionFile = rdfPath / "permissions.nq"
