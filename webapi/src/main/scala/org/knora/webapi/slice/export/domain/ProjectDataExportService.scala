@@ -17,10 +17,12 @@ import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.util.rdf.NQuads
+import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 // This error is used to indicate that an export exists
@@ -38,7 +40,7 @@ final class ProjectDataExportService(
   projectService: KnoraProjectService,
   storage: ProjectDataExportStorage,
   triplestore: TriplestoreService,
-) { self =>
+) extends QueryBuilderHelper { self =>
 
   def createExport(project: KnoraProject, createdBy: User): IO[ExportExistsError, CurrentDataTask] = for {
     curExp <- currentExp.makeNew(project.id, createdBy).mapError { case StatesExistError(t) => ExportExistsError(t) }
@@ -54,17 +56,19 @@ final class ProjectDataExportService(
         _                     <- ZIO.logInfo(s"${task.id}: Exporting data for project '${project.id}' to '$exportPath'")
         rdfPath                = tempPath / "rdf"
         _                     <- Files.createDirectories(rdfPath)
-        _                     <- collectOntologies(task.id, project, rdfPath) <&> collectProjectData(task.id, project, rdfPath)
-        _                     <- createBagItZip(task.id, rdfPath, project.id)
-        _                     <- currentExp.complete(task.id).ignore
-        _                     <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
+        _                     <- collectOntologyGraphs(task.id, project, rdfPath) <&>
+               collectProjectDataGraph(task.id, project, rdfPath) <&>
+               collectAdminGraph(task.id, project, rdfPath)
+        _ <- createBagItZip(task.id, rdfPath, project.id)
+        _ <- currentExp.complete(task.id).ignore
+        _ <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
       } yield ()
     }.logError.catchAll(e =>
       ZIO.logError(s"${task.id}: Export failed for project ${project.id} with error: ${e.getMessage}") *>
         currentExp.fail(task.id).ignore,
     )
 
-  private def collectOntologies(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) = for {
+  private def collectOntologyGraphs(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) = for {
     graphs <- projectService.getOntologyGraphsForProject(project)
     _      <- ZIO.logInfo(s"$taskId: Collecting ontologies '${graphs.map(_.value).mkString(",")}'")
     _      <- ZIO.foreachParDiscard(graphs.zipWithIndex) { (g, i) =>
@@ -73,12 +77,20 @@ final class ProjectDataExportService(
          }
   } yield ()
 
-  private def collectProjectData(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
+  private def collectProjectDataGraph(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
     val dataGraph = projectService.getDataGraphForProject(project)
     for {
       _       <- ZIO.logInfo(s"$taskId: Collecting project data from graph '${dataGraph.value}'")
       dataFile = rdfPath / "data.nq"
       _       <- Files.createFile(dataFile) *> triplestore.downloadGraph(dataGraph, dataFile, NQuads)
+    } yield ()
+
+  private def collectAdminGraph(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
+    for {
+      _        <- ZIO.logInfo(s"$taskId: Collecting project admin data from graph '${adminDataNamedGraph.value}'")
+      adminFile = rdfPath / "admin.nq"
+      _        <- Files.createFile(adminFile) *>
+             triplestore.queryToFile(ProjectUserAndGroupQuery.build(project.id), adminDataNamedGraph, adminFile, NQuads)
     } yield ()
 
   private def createBagItZip(taskId: DataTaskId, rdfPath: Path, projectIri: ProjectIri) =
