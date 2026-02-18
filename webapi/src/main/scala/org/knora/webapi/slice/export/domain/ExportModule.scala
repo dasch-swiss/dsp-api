@@ -1,6 +1,7 @@
 package org.knora.webapi.slice.`export`.domain
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import zio.URLayer
@@ -10,6 +11,7 @@ object ExportModule {
   type Dependencies =
     // format: off
     AppConfig &
+    KnoraApi &
     KnoraProjectService &
     TriplestoreService
     // format: on

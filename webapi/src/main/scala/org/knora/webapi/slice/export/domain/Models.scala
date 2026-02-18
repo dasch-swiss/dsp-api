@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import dsp.valueobjects.UuidUtil
 import sttp.tapir.Schema
 import sttp.tapir.Validator
 import zio.*
@@ -12,8 +13,6 @@ import zio.json.JsonCodec
 
 import java.time.Instant
 import java.util.UUID
-import scala.util.Try
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
@@ -30,10 +29,12 @@ object DataTaskId                                   extends StringValueCompanion
   given Schema[DataTaskId]      = Schema.string.description("A unique identifier.")
 
   def from(str: String): Either[String, DataTaskId] =
-    Try(UUID.fromString(str)).toEither
-      .fold(_ => Left(s"Invalid id: '$str' is not a valid UUID."), id => Right(DataTaskId(id.toString)))
+    UuidUtil
+      .base64Decode(str)
+      .toEither
+      .fold(_ => Left(s"Invalid id: '$str' is not a DataTaskId."), _ => Right(DataTaskId(str)))
 
-  def makeNew: UIO[DataTaskId] = Random.nextUUID.map(_.toString).map(DataTaskId(_))
+  def makeNew: UIO[DataTaskId] = Random.nextUUID.map(UuidUtil.base64Encode).map(DataTaskId(_))
 }
 
 enum DataTaskStatus(val responseStr: String) {

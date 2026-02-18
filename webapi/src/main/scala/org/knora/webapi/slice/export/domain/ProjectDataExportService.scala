@@ -9,6 +9,7 @@ import org.knora.bagit.BagIt
 import org.knora.bagit.domain.BagInfo
 import org.knora.bagit.domain.PayloadEntry
 import org.knora.webapi.KnoraBaseVersion
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.util.rdf.NQuads
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.http.version.BuildInfo
@@ -29,6 +30,7 @@ final case class ExportInProgressError(t: CurrentDataTask)
 final case class ExportFailedError(t: CurrentDataTask)
 
 final class ProjectDataExportService(
+  apiConfig: KnoraApi,
   currentExp: DataTaskState,
   projectService: KnoraProjectService,
   storage: ProjectDataExportStorage,
@@ -66,9 +68,9 @@ final class ProjectDataExportService(
         _        <- Files.createFile(dataFile) *> triplestore.downloadGraph(dataGraph, dataFile, NQuads)
 
         // create bagit zip
-        _       <- ZIO.logInfo(s"${task.id}: Writing export bagit.zip")
-        zipFile <- bagItZip(task.id)
-        _       <- BagIt.create(
+        _      <- ZIO.logInfo(s"${task.id}: Writing export bagit.zip")
+        zipFile = storage.bagItZipPath(task.id)
+        _      <- BagIt.create(
                List(PayloadEntry.Directory("rdf", rdfPath)),
                zipFile,
                bagInfo = Some(
@@ -79,6 +81,7 @@ final class ProjectDataExportService(
                    additionalFields = List(
                      ("KnoraBase-Version", s"$KnoraBaseVersion"),
                      ("Dsp-Api-Version", BuildInfo.version),
+                     ("Source-Server", apiConfig.externalHost),
                    ),
                  ),
                ),
@@ -90,8 +93,6 @@ final class ProjectDataExportService(
       ZIO.logError(s"Export failed for project ${project.id} with error: ${e.getMessage}") *>
         currentExp.fail(task.id).ignore,
     )
-
-  private def bagItZip(id: DataTaskId) = storage.exportDir(id).map(_ / "bagit.zip")
 
   /**
    * Delete the export task with the given id if it exists and is not in progress.
@@ -109,9 +110,9 @@ final class ProjectDataExportService(
              case Some(StateInProgressError(s)) => Some(ExportInProgressError(s))
              case None                          => None
            }
-    zipFile <- bagItZip(exportId)
-    _       <- Files.deleteIfExists(zipFile).logError.orDie
-    _       <- ZIO.logInfo(s"Deleted export task with id $exportId and associated export file")
+    zipFile = storage.bagItZipPath(exportId)
+    _      <- Files.deleteIfExists(zipFile).logError.orDie
+    _      <- ZIO.logInfo(s"Deleted export task with id $exportId and associated export file")
   } yield ()
 
   def getExportStatus(exportId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = currentExp.find(exportId)
@@ -129,12 +130,12 @@ final class ProjectDataExportService(
     exportId: DataTaskId,
   ): IO[Option[ExportInProgressError | ExportFailedError], (String, ZStream[Any, Throwable, Byte])] =
     for {
-      exp     <- canDownloadExport(exportId)
-      zipFile <- bagItZip(exportId)
-      _       <- Files
+      exp    <- canDownloadExport(exportId)
+      zipFile = storage.bagItZipPath(exportId)
+      _      <- Files
              .exists(zipFile)
-             .filterOrDie(_ == true)(new RuntimeException(s"Export file not found for export id ${exportId.value}"))
-      fileName = s"export-${exp.id}.zip"
+             .filterOrDie(_ == true)(new RuntimeException(s"Export file not found for export id $exportId"))
+      fileName = s"migration-export-${exp.id}.zip"
       content  = ZStream.fromFile(zipFile.toFile)
     } yield (fileName, content)
 
