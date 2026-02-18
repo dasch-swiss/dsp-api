@@ -78,6 +78,18 @@ stack-destroy:
 stack-init-test: && stack-start
     make init-db-test
 
+# Run API locally against the dev Fuseki
+run-with-dev-db:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source .env
+    export KNORA_WEBAPI_TRIPLESTORE_HOST=db.dev.dasch.swiss
+    export KNORA_WEBAPI_TRIPLESTORE_USE_HTTPS=true
+    export KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PORT=443
+    export KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME=admin
+    export KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD=$DEV_DB_PASSWORD
+    ./sbtx "webapi/run"
+
 ## Documentation
 
 docs-install-requirements:

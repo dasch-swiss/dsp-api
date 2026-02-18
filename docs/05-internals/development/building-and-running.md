@@ -117,6 +117,19 @@ docker logs to the terminal window of the editor.
 The docker plugin also allows for a number of other useful features, like inspecting the container's file system or
 attaching a shell to the container.
 
+## Running against the dev database
+
+When changes are hard to test with local test data (e.g. they need realistic data), you can run the API locally against the remote dev Fuseki triplestore:
+
+1. Create a `.env` file in the repo root with `DEV_DB_PASSWORD=<password>` (this file is git-ignored). Passwords can be found in [ops-deploy/host_vars](https://github.com/dasch-swiss/ops-deploy/tree/main/host_vars).
+2. Run:
+
+   ```bash
+   just run-with-dev-db
+   ```
+
+3. The API will start connected to `db.dev.dasch.swiss` via HTTPS.
+
 ## Running the automated tests
 
 To run all test targets, use the following in the command line:
