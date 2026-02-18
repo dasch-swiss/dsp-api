@@ -8,6 +8,7 @@ package org.knora.webapi.core
 import zio.*
 import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.telemetry.opentelemetry.tracing.Tracing
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.DspIngestConfig
