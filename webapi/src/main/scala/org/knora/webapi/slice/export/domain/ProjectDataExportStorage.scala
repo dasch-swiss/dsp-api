@@ -19,7 +19,7 @@ final class ProjectDataExportStorage(config: AppConfig) {
     exportPath <- exportDir(taskId)
     tempPath    = exportPath / "temp"
     _          <- ZIO.acquireRelease(Files.createDirectories(tempPath).logError.orDie.as(tempPath)) { path =>
-           ZIO.logInfo(s"Deleting export directory $path") *>
+           ZIO.logInfo(s"Deleting temp directory $path") *>
              Files.deleteRecursive(path).logError(s"Failed deleting export directory $path").orDie
          }
   } yield (tempPath, exportPath)
