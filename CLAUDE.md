@@ -118,6 +118,12 @@ Each slice typically contains:
 3. Run the API locally via IDE or `sbt run`
 4. API will be available at http://localhost:3333
 
+### Testing Against the Dev Database
+When changes are hard to test with local test data (e.g. they need realistic data), run the API against the remote dev Fuseki:
+1. Create a `.env` file in the repo root with `DEV_DB_PASSWORD=<password>` (this file is git-ignored). Passwords can be found in [ops-deploy/host_vars](https://github.com/dasch-swiss/ops-deploy/tree/main/host_vars).
+2. Run `just run-with-dev-db`
+3. The API will start connected to `db.dev.dasch.swiss` via HTTPS
+
 ### Configuration
 - Main config: `webapi/src/main/resources/application.conf`
 - Test config: `webapi/src/test/resources/test.conf`
