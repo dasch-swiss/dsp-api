@@ -66,8 +66,8 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
                }
 
         payloadPaths = bag.payloadFiles.map(_.value)
-        bagInfo      = bag.bagInfo.get
-        additional   = bagInfo.additionalFields.toMap
+        bagInfo      = bag.bagInfo
+        additional   = bagInfo.map(_.additionalFields.toMap).getOrElse(Map.empty)
 
         apiConfig <- ZIO.service[KnoraApi]
 
@@ -82,9 +82,9 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
         payloadPaths.contains("rdf/admin.nq"),
         payloadPaths.contains("rdf/permissions.nq"),
         // bag-info metadata
-        bagInfo.sourceOrganization.contains("DaSCH Service Platform"),
-        bagInfo.externalIdentifier.contains(projectIri),
-        bagInfo.baggingDate.contains(LocalDate.now()),
+        bagInfo.flatMap(_.sourceOrganization).contains("DaSCH Service Platform"),
+        bagInfo.flatMap(_.externalIdentifier).contains(projectIri),
+        bagInfo.flatMap(_.baggingDate).contains(LocalDate.now()),
         additional("KnoraBase-Version") == s"$KnoraBaseVersion",
         additional("Dsp-Api-Version") == BuildInfo.version,
         additional("Source-Server") == apiConfig.externalHost,
