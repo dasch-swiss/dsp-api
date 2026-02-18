@@ -40,12 +40,11 @@ final class ProjectDataExportService(
   triplestore: TriplestoreService,
 ) { self =>
 
-  def createExport(project: KnoraProject, createdBy: User): IO[ExportExistsError, CurrentDataTask] =
-    for {
-      curExp <- currentExp.makeNew(project.id, createdBy).mapError { case StatesExistError(t) => ExportExistsError(t) }
-      _      <- ZIO.logInfo(s"$curExp: Created export task for project '${project.id}' by user '${createdBy.id}'")
-      _      <- doExport(project, curExp).forkDaemon
-    } yield curExp
+  def createExport(project: KnoraProject, createdBy: User): IO[ExportExistsError, CurrentDataTask] = for {
+    curExp <- currentExp.makeNew(project.id, createdBy).mapError { case StatesExistError(t) => ExportExistsError(t) }
+    _      <- ZIO.logInfo(s"$curExp: Created export task for project '${project.id}' by user '${createdBy.id}'")
+    _      <- doExport(project, curExp).forkDaemon
+  } yield curExp
 
   private def doExport(project: KnoraProject, task: CurrentDataTask): UIO[Unit] =
     ZIO.scoped {
