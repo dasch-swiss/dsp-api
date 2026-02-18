@@ -6,11 +6,12 @@
 package org.knora.webapi.slice.`export`.domain
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
 
-object ProjectUserAndGroupQuery extends QueryBuilderHelper {
+object AdminDataQuery extends QueryBuilderHelper {
 
   def build(project: ProjectIri): ConstructQuery = {
     val projectIri                   = toRdfIri(project)

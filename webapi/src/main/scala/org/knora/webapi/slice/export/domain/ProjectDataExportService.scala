@@ -18,6 +18,7 @@ import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.util.rdf.NQuads
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
+import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
@@ -58,7 +59,8 @@ final class ProjectDataExportService(
         _                     <- Files.createDirectories(rdfPath)
         _                     <- collectOntologyGraphs(task.id, project, rdfPath) <&>
                collectProjectDataGraph(task.id, project, rdfPath) <&>
-               collectAdminGraph(task.id, project, rdfPath)
+               collectAdminGraph(task.id, project, rdfPath) <&>
+               collectPermissionsData(task.id, project, rdfPath)
         _ <- createBagItZip(task.id, rdfPath, project.id)
         _ <- currentExp.complete(task.id).ignore
         _ <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
@@ -90,7 +92,17 @@ final class ProjectDataExportService(
       _        <- ZIO.logInfo(s"$taskId: Collecting project admin data from graph '${adminDataNamedGraph.value}'")
       adminFile = rdfPath / "admin.nq"
       _        <- Files.createFile(adminFile) *>
-             triplestore.queryToFile(ProjectUserAndGroupQuery.build(project.id), adminDataNamedGraph, adminFile, NQuads)
+             triplestore.queryToFile(AdminDataQuery.build(project.id), adminDataNamedGraph, adminFile, NQuads)
+    } yield ()
+
+  private def collectPermissionsData(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
+    for {
+      _             <- ZIO.logInfo(s"$taskId: Collecting project permission data from graph '${permissionsDataNamedGraph.value}'")
+      permissionFile = rdfPath / "permissions.nq"
+      query          = PermissionDataQuery.build(project.id)
+      _             <- ZIO.logInfo(s"$taskId: Permission data query: \n\n${query.getQueryString}")
+      _             <- Files.createFile(permissionFile) *>
+             triplestore.queryToFile(query, permissionsDataNamedGraph, permissionFile, NQuads)
     } yield ()
 
   private def createBagItZip(taskId: DataTaskId, rdfPath: Path, projectIri: ProjectIri) =
