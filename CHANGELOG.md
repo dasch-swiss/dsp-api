@@ -1,5 +1,12 @@
 # Changelog
 
+## [34.4.1](https://github.com/dasch-swiss/dsp-api/compare/v34.4.0...v34.4.1) (2026-02-18)
+
+
+### Bug Fixes
+
+* Preserve value ordering across all types (DEV-5869) ([#3957](https://github.com/dasch-swiss/dsp-api/issues/3957)) ([cde49ee](https://github.com/dasch-swiss/dsp-api/commit/cde49ee0463841e640c31e94d5267199026a6600))
+
 ## [34.4.0](https://github.com/dasch-swiss/dsp-api/compare/v34.3.0...v34.4.0) (2026-02-17)
 
 
