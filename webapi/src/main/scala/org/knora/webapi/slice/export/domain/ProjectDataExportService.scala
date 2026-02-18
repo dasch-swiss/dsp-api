@@ -7,7 +7,9 @@ package org.knora.webapi.slice.`export`.domain
 
 import zio.*
 import zio.nio.file.Files
+import zio.nio.file.Path
 import zio.stream.ZStream
+
 import org.knora.bagit.BagIt
 import org.knora.bagit.domain.BagInfo
 import org.knora.bagit.domain.PayloadEntry
@@ -20,7 +22,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import zio.nio.file.Path
 
 // This error is used to indicate that an export exists
 final case class ExportExistsError(t: CurrentDataTask)
@@ -42,7 +43,7 @@ final class ProjectDataExportService(
   def createExport(project: KnoraProject, createdBy: User): IO[ExportExistsError, CurrentDataTask] =
     for {
       curExp <- currentExp.makeNew(project.id, createdBy).mapError { case StatesExistError(t) => ExportExistsError(t) }
-      _      <- ZIO.logInfo(s"Created export task '${curExp.id}' for project '${project.id}' by user '${createdBy.id}'")
+      _      <- ZIO.logInfo(s"$curExp: Created export task for project '${project.id}' by user '${createdBy.id}'")
       _      <- doExport(project, curExp).forkDaemon
     } yield curExp
 
@@ -57,17 +58,17 @@ final class ProjectDataExportService(
         _                     <- collectOntologies(task.id, project, rdfPath) <&> collectProjectData(task.id, project, rdfPath)
         _                     <- createBagItZip(task.id, rdfPath, project.id)
         _                     <- currentExp.complete(task.id).ignore
-        _                     <- ZIO.logInfo(s"Export completed for project ${project.id} to $exportPath")
+        _                     <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
       } yield ()
     }.logError.catchAll(e =>
-      ZIO.logError(s"Export failed for project ${project.id} with error: ${e.getMessage}") *>
+      ZIO.logError(s"${task.id}: Export failed for project ${project.id} with error: ${e.getMessage}") *>
         currentExp.fail(task.id).ignore,
     )
 
   private def collectOntologies(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) = for {
     graphs <- projectService.getOntologyGraphsForProject(project)
     _      <- ZIO.logInfo(s"$taskId: Collecting ontologies '${graphs.map(_.value).mkString(",")}'")
-    _      <- ZIO.foreachDiscard(graphs.zipWithIndex) { (g, i) =>
+    _      <- ZIO.foreachParDiscard(graphs.zipWithIndex) { (g, i) =>
            val file = rdfPath / s"ontology-${i + 1}.nq"
            Files.createFile(file) *> triplestore.downloadGraph(g, file, NQuads)
          }
@@ -121,7 +122,7 @@ final class ProjectDataExportService(
            }
     zipFile = storage.bagItZipPath(exportId)
     _      <- Files.deleteIfExists(zipFile).logError.orDie
-    _      <- ZIO.logInfo(s"Deleted export task with id $exportId and associated export file")
+    _      <- ZIO.logInfo(s"$exportId: Deleted export task and associated export file")
   } yield ()
 
   def getExportStatus(exportId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = currentExp.find(exportId)
