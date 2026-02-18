@@ -16,7 +16,7 @@ final case class ImportExistsError(t: CurrentDataTask)
 // This error is used to indicate that an import is already in progress.
 final case class ImportInProgressError(t: CurrentDataTask)
 
-final class ProjectDataImportService(
+final class ProjectMigrationImportService(
   currentImport: DataTaskState,
 ) { self =>
 
@@ -48,6 +48,6 @@ final class ProjectDataImportService(
       .unit
 }
 
-object ProjectDataImportService {
-  val layer = DataTaskState.layer >>> ZLayer.derive[ProjectDataImportService]
+object ProjectMigrationImportService {
+  val layer = DataTaskState.layer >>> ZLayer.derive[ProjectMigrationImportService]
 }

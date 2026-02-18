@@ -15,8 +15,8 @@ import org.knora.webapi.slice.`export`.domain.ExportFailedError
 import org.knora.webapi.slice.`export`.domain.ExportInProgressError
 import org.knora.webapi.slice.`export`.domain.ImportExistsError
 import org.knora.webapi.slice.`export`.domain.ImportInProgressError
-import org.knora.webapi.slice.`export`.domain.ProjectDataExportService
-import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
+import org.knora.webapi.slice.`export`.domain.ProjectMigrationExportService
+import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -36,8 +36,8 @@ import org.knora.webapi.slice.api.v3.V3ErrorInfo
 
 final class V3ProjectsRestService(
   auth: V3Authorizer,
-  exportService: ProjectDataExportService,
-  importService: ProjectDataImportService,
+  exportService: ProjectMigrationExportService,
+  importService: ProjectMigrationImportService,
   projectService: KnoraProjectService,
 ) {
 

@@ -36,11 +36,11 @@ final case class ExportInProgressError(t: CurrentDataTask)
 // This error is used to indicate that an export has failed
 final case class ExportFailedError(t: CurrentDataTask)
 
-final class ProjectDataExportService(
+final class ProjectMigrationExportService(
   apiConfig: KnoraApi,
   currentExp: DataTaskState,
   projectService: KnoraProjectService,
-  storage: ProjectDataExportStorage,
+  storage: ProjectMigrationStorageService,
   triplestore: TriplestoreService,
 ) extends QueryBuilderHelper { self =>
 
@@ -100,7 +100,7 @@ final class ProjectDataExportService(
       _             <- ZIO.logInfo(s"$taskId: Collecting project permission data from graph '${permissionsDataNamedGraph.value}'")
       permissionFile = rdfPath / "permissions.nq"
       query          = PermissionDataQuery.build(project.id)
-      _             <- ZIO.logInfo(s"$taskId: Permission data query: \n\n${query.getQueryString}")
+      _             <- ZIO.logDebug(s"$taskId: Permission data query: \n\n${query.getQueryString}")
       _             <- Files.createFile(permissionFile) *>
              triplestore.queryToFile(query, permissionsDataNamedGraph, permissionFile, NQuads)
     } yield ()
@@ -182,6 +182,6 @@ final class ProjectDataExportService(
     }
 }
 
-object ProjectDataExportService {
-  val layer = DataTaskState.layer >>> ZLayer.derive[ProjectDataExportService]
+object ProjectMigrationExportService {
+  val layer = DataTaskState.layer >>> ZLayer.derive[ProjectMigrationExportService]
 }

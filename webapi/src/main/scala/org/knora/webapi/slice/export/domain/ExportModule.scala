@@ -24,10 +24,10 @@ object ExportModule {
 
   type Provided =
     // format: off
-    ProjectDataExportService &
-    ProjectDataImportService
+    ProjectMigrationExportService &
+    ProjectMigrationImportService
     // format: on
 
   val layer: URLayer[Dependencies, Provided] =
-    ProjectDataExportStorage.layer >>> ProjectDataExportService.layer >+> ProjectDataImportService.layer
+    ProjectMigrationStorageService.layer >>> ProjectMigrationExportService.layer >+> ProjectMigrationImportService.layer
 }

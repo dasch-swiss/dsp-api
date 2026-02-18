@@ -14,7 +14,7 @@ import java.nio.file.Path as JPath
 
 import org.knora.webapi.config.AppConfig
 
-final class ProjectDataExportStorage(config: AppConfig) {
+final class ProjectMigrationStorageService(config: AppConfig) {
   private val basePath: Path = zio.nio.file.Path.fromJava(JPath.of(config.tmpDatadir)) / "migration-exports"
 
   private def exportDir(taskId: DataTaskId): Path = basePath / taskId.value
@@ -33,6 +33,6 @@ final class ProjectDataExportStorage(config: AppConfig) {
     } yield (tempPath, exportPath)
 }
 
-object ProjectDataExportStorage {
-  val layer = zio.ZLayer.derive[ProjectDataExportStorage]
+object ProjectMigrationStorageService {
+  val layer = zio.ZLayer.derive[ProjectMigrationStorageService]
 }
