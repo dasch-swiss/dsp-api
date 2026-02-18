@@ -8,7 +8,6 @@ package org.knora.webapi.slice.`export`.domain
 import zio.*
 import zio.nio.file.Files
 import zio.stream.ZStream
-
 import org.knora.bagit.BagIt
 import org.knora.bagit.domain.BagInfo
 import org.knora.bagit.domain.PayloadEntry
@@ -17,9 +16,11 @@ import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.util.rdf.NQuads
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import zio.nio.file.Path
 
 // This error is used to indicate that an export exists
 final case class ExportExistsError(t: CurrentDataTask)
@@ -53,47 +54,54 @@ final class ProjectDataExportService(
         _                     <- ZIO.logInfo(s"${task.id}: Exporting data for project '${project.id}' to '$exportPath'")
         rdfPath                = tempPath / "rdf"
         _                     <- Files.createDirectories(rdfPath)
-
-        // collect project ontologies
-        graphs <- projectService.getOntologyGraphsForProject(project)
-        _      <- ZIO.logInfo(s"${task.id}: Collecting ontologies '${graphs.map(_.value).mkString(",")}'")
-        _      <- ZIO.foreachDiscard(graphs.zipWithIndex) { (g, i) =>
-               val file = rdfPath / s"ontology-${i + 1}.nq"
-               Files.createFile(file) *> triplestore.downloadGraph(g, file, NQuads)
-             }
-
-        // collect project data
-        dataGraph = projectService.getDataGraphForProject(project)
-        _        <- ZIO.logInfo(s"${task.id}: Collecting project data from graph '${dataGraph.value}'")
-        dataFile  = rdfPath / "data.nq"
-        _        <- Files.createFile(dataFile) *> triplestore.downloadGraph(dataGraph, dataFile, NQuads)
-
-        // create bagit zip
-        _      <- ZIO.logInfo(s"${task.id}: Writing export bagit.zip")
-        zipFile = storage.bagItZipPath(task.id)
-        _      <- BagIt.create(
-               List(PayloadEntry.Directory("rdf", rdfPath)),
-               zipFile,
-               bagInfo = Some(
-                 BagInfo(
-                   baggingDate = Some(java.time.LocalDate.now()),
-                   sourceOrganization = Some("DaSCH Service Platform"),
-                   externalIdentifier = Some(project.id.value),
-                   additionalFields = List(
-                     ("KnoraBase-Version", s"$KnoraBaseVersion"),
-                     ("Dsp-Api-Version", BuildInfo.version),
-                     ("Source-Server", apiConfig.externalHost),
-                   ),
-                 ),
-               ),
-             )
-        _ <- currentExp.complete(task.id).ignore
-        _ <- ZIO.logInfo(s"Export completed for project ${project.id} to $exportPath")
+        _                     <- collectOntologies(task.id, project, rdfPath) <&> collectProjectData(task.id, project, rdfPath)
+        _                     <- createBagItZip(task.id, rdfPath, project.id)
+        _                     <- currentExp.complete(task.id).ignore
+        _                     <- ZIO.logInfo(s"Export completed for project ${project.id} to $exportPath")
       } yield ()
     }.logError.catchAll(e =>
       ZIO.logError(s"Export failed for project ${project.id} with error: ${e.getMessage}") *>
         currentExp.fail(task.id).ignore,
     )
+
+  private def collectOntologies(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) = for {
+    graphs <- projectService.getOntologyGraphsForProject(project)
+    _      <- ZIO.logInfo(s"$taskId: Collecting ontologies '${graphs.map(_.value).mkString(",")}'")
+    _      <- ZIO.foreachDiscard(graphs.zipWithIndex) { (g, i) =>
+           val file = rdfPath / s"ontology-${i + 1}.nq"
+           Files.createFile(file) *> triplestore.downloadGraph(g, file, NQuads)
+         }
+  } yield ()
+
+  private def collectProjectData(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
+    val dataGraph = projectService.getDataGraphForProject(project)
+    for {
+      _       <- ZIO.logInfo(s"$taskId: Collecting project data from graph '${dataGraph.value}'")
+      dataFile = rdfPath / "data.nq"
+      _       <- Files.createFile(dataFile) *> triplestore.downloadGraph(dataGraph, dataFile, NQuads)
+    } yield ()
+
+  private def createBagItZip(taskId: DataTaskId, rdfPath: Path, projectIri: ProjectIri) =
+    val zipFile = storage.bagItZipPath(taskId)
+    for {
+      _ <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
+      _ <- BagIt.create(
+             List(PayloadEntry.Directory("rdf", rdfPath)),
+             zipFile,
+             bagInfo = Some(
+               BagInfo(
+                 baggingDate = Some(java.time.LocalDate.now()),
+                 sourceOrganization = Some("DaSCH Service Platform"),
+                 externalIdentifier = Some(projectIri.value),
+                 additionalFields = List(
+                   ("KnoraBase-Version", s"$KnoraBaseVersion"),
+                   ("Dsp-Api-Version", BuildInfo.version),
+                   ("Source-Server", apiConfig.externalHost),
+                 ),
+               ),
+             ),
+           )
+    } yield ()
 
   /**
    * Delete the export task with the given id if it exists and is not in progress.
