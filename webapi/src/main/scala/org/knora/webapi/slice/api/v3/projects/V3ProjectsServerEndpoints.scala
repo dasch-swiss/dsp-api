@@ -5,23 +5,33 @@
 
 package org.knora.webapi.slice.api.v3.projects
 
+import org.knora.webapi.config.Features
 import zio.*
-
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint.EndpointT
 
-final class V3ProjectsServerEndpoints(endpoints: V3ProjectsEndpoints, restService: V3ProjectsRestService) {
+final class V3ProjectsServerEndpoints(
+  endpoints: V3ProjectsEndpoints,
+  restService: V3ProjectsRestService,
+  features: Features,
+) {
 
   val serverEndpoints: List[EndpointT] = List(
     endpoints.postProjectIriExports.serverLogic(restService.triggerProjectExportCreate),
     endpoints.getProjectIriExportsExportId.serverLogic(restService.getProjectExportStatus),
     endpoints.deleteProjectIriExportsExportId.serverLogic(restService.deleteProjectExport),
     endpoints.getProjectIriExportsExportIdDownload.serverLogic(restService.downloadProjectExport),
-    endpoints.postProjectIriImports.serverLogic(restService.triggerProjectImportCreate),
-    endpoints.getProjectIriImportsImportId.serverLogic(restService.getProjectImportStatus),
-    endpoints.deleteProjectIriImportsImportId.serverLogic(restService.deleteProjectImport),
+  ) ++ (
+    if features.allowImportMigrationBagit then
+      List(
+        endpoints.postProjectIriImports.serverLogic(restService.triggerProjectImportCreate),
+        endpoints.getProjectIriImportsImportId.serverLogic(restService.getProjectImportStatus),
+        endpoints.deleteProjectIriImportsImportId.serverLogic(restService.deleteProjectImport),
+      )
+    else Nil
   )
 }
 
 object V3ProjectsServerEndpoints {
-  val layer = ZLayer.derive[V3ProjectsServerEndpoints]
+  val layer: URLayer[V3ProjectsEndpoints & V3ProjectsRestService & Features, V3ProjectsServerEndpoints] =
+    ZLayer.derive[V3ProjectsServerEndpoints]
 }
