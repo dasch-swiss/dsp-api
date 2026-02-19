@@ -83,8 +83,6 @@ object LayersLive { self =>
     PermissionsResponder &
     ExportModule.Provided &
     ProjectExportService &
-    ProjectExportStorageService &
-    ProjectImportService &
     ReadResourcesService &
     RepositoryUpdater &
     ResourceUtilV2 &
@@ -132,8 +130,6 @@ object LayersLive { self =>
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,
       ProjectExportServiceLive.layer,
-      ProjectExportStorageServiceLive.layer,
-      ProjectImportService.layer,
       ReadResourcesServiceLive.layer,
       RepositoryUpdater.layer,
       ResourceUtilV2.layer,

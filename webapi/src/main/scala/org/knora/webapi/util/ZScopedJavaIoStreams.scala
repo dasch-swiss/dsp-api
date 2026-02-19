@@ -6,64 +6,56 @@
 package org.knora.webapi.util
 
 import zio.*
+import zio.nio.file.Path
 
-import java.io.*
-import java.nio.file.Files
-import java.nio.file.Path
+import java.io.BufferedOutputStream
+import java.io.ByteArrayOutputStream
+import java.io.File as JFile
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.nio.file.Path as JPath
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 object ZScopedJavaIoStreams {
 
-  private def release(in: AutoCloseable): UIO[Unit] =
-    ZIO.attempt(in.close()).logError("Unable to close AutoCloseable.").ignore
+  def byteArrayOutputStream(): ZIO[Scope, Throwable, ByteArrayOutputStream] =
+    ZIO.fromAutoCloseable(ZIO.attempt(new ByteArrayOutputStream()))
 
-  def bufferedInputStream(in: InputStream): ZIO[Any & Scope, Throwable, InputStream] = {
-    def acquire = ZIO.attempt(new BufferedInputStream(in))
-    ZIO.acquireRelease(acquire)(release)
-  }
+  def fileInputStream(path: Path): ZIO[Scope, IOException, FileInputStream]  = fileInputStream(path.toFile)
+  def fileInputStream(file: JPath): ZIO[Scope, IOException, FileInputStream] = fileInputStream(file.toFile)
+  def fileInputStream(file: JFile): ZIO[Scope, IOException, FileInputStream] =
+    ZIO.fromAutoCloseable(
+      ZIO
+        .attemptBlocking(new FileInputStream(file))
+        .refineToOrDie[IOException],
+    )
 
-  def bufferedOutputStream(in: OutputStream): ZIO[Any & Scope, Throwable, OutputStream] = {
-    def acquire = ZIO.attempt(new BufferedOutputStream(in))
-    ZIO.acquireRelease(acquire)(release)
-  }
+  def fileOutputStream(path: Path): ZIO[Scope, IOException, FileOutputStream]  = fileOutputStream(path.toFile)
+  def fileOutputStream(path: JPath): ZIO[Scope, IOException, FileOutputStream] = fileOutputStream(path.toFile)
+  def fileOutputStream(file: JFile): ZIO[Scope, IOException, FileOutputStream] =
+    ZIO.fromAutoCloseable(
+      ZIO
+        .attemptBlocking(new FileOutputStream(file))
+        .refineToOrDie[IOException],
+    )
 
-  def byteArrayOutputStream(): ZIO[Any & Scope, Throwable, ByteArrayOutputStream] = {
-    def acquire                   = ZIO.attempt(new ByteArrayOutputStream())
-    def release(os: OutputStream) = ZIO.succeed(os.close())
-    ZIO.acquireRelease(acquire)(release)
-  }
+  def zipOutputStream(file: JFile): ZIO[Scope, IOException, ZipOutputStream] =
+    ZIO.fromAutoCloseable(
+      ZIO
+        .attemptBlocking(new ZipOutputStream(new FileOutputStream(file)))
+        .refineToOrDie[IOException],
+    )
 
-  def fileInputStream(path: zio.nio.file.Path): ZIO[Any & Scope, Throwable, InputStream] =
-    fileInputStream(path.toFile)
-  def fileInputStream(file: File): ZIO[Any & Scope, Throwable, InputStream] =
-    fileInputStream(file.toPath)
-  def fileInputStream(path: Path): ZIO[Any & Scope, Throwable, InputStream] = {
-    def acquire = ZIO.attempt(Files.newInputStream(path))
-    if (!Files.exists(path)) {
-      ZIO.fail(new IllegalArgumentException(s"File ${path.toAbsolutePath} does not exist."))
-    } else {
-      ZIO.acquireRelease(acquire)(release).flatMap(bufferedInputStream)
-    }
-  }
-
-  def fileOutputStream(path: zio.nio.file.Path): ZIO[Scope, Throwable, FileOutputStream] = fileOutputStream(path.toFile)
-  def fileOutputStream(path: Path): ZIO[Scope, Throwable, FileOutputStream]              = fileOutputStream(path.toFile)
-  def fileOutputStream(file: File): ZIO[Scope, Throwable, FileOutputStream]              = {
-    def acquire = ZIO.attempt(new FileOutputStream(file))
-    ZIO.acquireRelease(acquire)(release)
-  }
-
-  def zipOutputStream(file: File): ZIO[Scope, Throwable, ZipOutputStream] = {
-    def acquire(fos: FileOutputStream) = ZIO.attempt(new ZipOutputStream(fos))
-    fileOutputStream(file).flatMap(fos => ZIO.acquireRelease(acquire(fos))(release))
-  }
-
-  def zipInputStream(path: nio.file.Path): ZIO[Scope, Throwable, ZipInputStream] = zipInputStream(path.toFile)
-  def zipInputStream(file: File): ZIO[Scope, Throwable, ZipInputStream]          = {
-    def acquire(fis: InputStream) = ZIO.attempt(new ZipInputStream(fis))
-    fileInputStream(file).flatMap(fis => ZIO.acquireRelease(acquire(fis))(release))
-  }
+  def zipInputStream(path: Path): ZIO[Scope, IOException, ZipInputStream]  = zipInputStream(path.toFile)
+  def zipInputStream(path: JPath): ZIO[Scope, IOException, ZipInputStream] = zipInputStream(path.toFile)
+  def zipInputStream(file: JFile): ZIO[Scope, IOException, ZipInputStream] =
+    ZIO.fromAutoCloseable(
+      ZIO
+        .attemptBlocking(new ZipInputStream(new FileInputStream(file)))
+        .refineToOrDie[IOException],
+    )
 
   /**
    * Opens or creates a file, returning an output stream that may be used to write bytes to the file.
@@ -73,10 +65,14 @@ object ZScopedJavaIoStreams {
    * @param path The path to the file.
    * @return The managed output stream.
    */
-  def fileBufferedOutputStream(path: zio.nio.file.Path): ZIO[Any & Scope, Throwable, OutputStream] =
-    fileBufferedOutputStream(path.toFile.toPath)
-  def fileBufferedOutputStream(path: Path): ZIO[Any & Scope, Throwable, OutputStream] = {
-    def acquire = ZIO.attempt(Files.newOutputStream(path))
-    ZIO.acquireRelease(acquire)(release).flatMap(os => bufferedOutputStream(os))
-  }
+  def fileBufferedOutputStream(path: Path): ZIO[Scope, IOException, BufferedOutputStream] =
+    fileBufferedOutputStream(path.toFile)
+  def fileBufferedOutputStream(path: JPath): ZIO[Scope, IOException, BufferedOutputStream] =
+    fileBufferedOutputStream(path.toFile)
+  def fileBufferedOutputStream(file: JFile): ZIO[Scope, IOException, BufferedOutputStream] =
+    ZIO.fromAutoCloseable(
+      ZIO
+        .attemptBlocking(new BufferedOutputStream(new FileOutputStream(file)))
+        .refineToOrDie[IOException],
+    )
 }
