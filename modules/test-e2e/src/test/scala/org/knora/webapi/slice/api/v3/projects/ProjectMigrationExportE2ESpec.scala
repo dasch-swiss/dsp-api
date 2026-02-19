@@ -15,7 +15,6 @@ import zio.nio.file.Files
 import zio.test.*
 
 import java.time.LocalDate
-
 import org.knora.bagit.BagIt
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.KnoraBaseVersion
@@ -25,6 +24,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.DataTaskStatus
+import org.knora.webapi.slice.api.v3.Conflict
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.testservices.TestApiClient
@@ -109,11 +109,9 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
           // Clean up existing export from a previous run, then retry
           val existingId = for {
             errorStr <- response.body.left.toOption
-            json     <- errorStr.fromJson[Json].toOption
-            errors   <- json.asObject.flatMap(_.apply("errors")).flatMap(_.asArray)
-            first    <- errors.headOption
-            details  <- first.asObject.flatMap(_.apply("details"))
-            id       <- details.asObject.flatMap(_.apply("id")).flatMap(_.asString)
+            json     <- errorStr.fromJson[Conflict].toOption
+            first    <- json.errors.headOption
+            id       <- first.details.get("id")
           } yield id
           for {
             _ <- ZIO.foreachDiscard(existingId)(id => deleteExport(DataTaskId.unsafeFrom(id)))
