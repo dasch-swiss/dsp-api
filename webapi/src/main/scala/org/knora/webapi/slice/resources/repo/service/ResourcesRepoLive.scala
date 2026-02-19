@@ -293,7 +293,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
 
       ZIO // Run one count query per class in parallel and collect results into a Map
         .foreachPar(classIris) { c =>
-          val where = s.isA(toRdfIri(c)).andHas(KB.isDeleted, false).from(graph)
+          val where = s.isA(toRdfIri(c)).filterNotExists(s.has(KB.isDeleted, true)).from(graph)
           val query = Queries.SELECT(select).where(where)
           triplestore.select(query).map(_.getFirst(countAs).map(_.toInt).getOrElse(0)).map(c -> _)
         }
