@@ -8,6 +8,7 @@ CURRENT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Documentation targets
 #################################
 SBTX = ./sbtx
+export BUILD_TIME := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 .PHONY: docs-build
 docs-build: ## build docs into the local 'site' folder
