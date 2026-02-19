@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.api.v3.projects.domain
+package org.knora.webapi.slice.`export`.domain
 
 import sttp.tapir.Schema
 import sttp.tapir.Validator
@@ -12,10 +12,10 @@ import zio.json.JsonCodec
 
 import java.time.Instant
 import java.util.UUID
-import scala.util.Try
 
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
 import org.knora.webapi.slice.api.admin.Codecs.TapirCodec.StringCodec
 import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
@@ -30,10 +30,12 @@ object DataTaskId                                   extends StringValueCompanion
   given Schema[DataTaskId]      = Schema.string.description("A unique identifier.")
 
   def from(str: String): Either[String, DataTaskId] =
-    Try(UUID.fromString(str)).toEither
-      .fold(_ => Left(s"Invalid id: '$str' is not a valid UUID."), id => Right(DataTaskId(id.toString)))
+    UuidUtil
+      .base64Decode(str)
+      .toEither
+      .fold(_ => Left(s"Invalid id: '$str' is not a DataTaskId."), _ => Right(DataTaskId(str)))
 
-  def makeNew: UIO[DataTaskId] = Random.nextUUID.map(_.toString).map(DataTaskId(_))
+  def makeNew: UIO[DataTaskId] = Random.nextUUID.map(UuidUtil.base64Encode).map(DataTaskId(_))
 }
 
 enum DataTaskStatus(val responseStr: String) {
@@ -62,7 +64,7 @@ final case class CurrentDataTask private (
   id: DataTaskId,
   projectIri: ProjectIri,
   status: DataTaskStatus,
-  createdBy: User,
+  createdBy: UserIri,
   createdAt: Instant,
 ) { self =>
   def complete(): Either[StateFailedError, CurrentDataTask] = self.status match
@@ -81,9 +83,17 @@ final case class CurrentDataTask private (
 }
 
 object CurrentDataTask {
-  def makeNew(projectIri: ProjectIri, createdBy: User): UIO[CurrentDataTask] =
+  def makeNew(projectIri: ProjectIri, createdBy: UserIri): UIO[CurrentDataTask] =
     for {
       id  <- DataTaskId.makeNew
       now <- Clock.instant
     } yield CurrentDataTask(id, projectIri, DataTaskStatus.InProgress, createdBy, now)
+
+  def restore(
+    id: DataTaskId,
+    projectIri: ProjectIri,
+    status: DataTaskStatus,
+    createdBy: UserIri,
+    createdAt: Instant,
+  ): CurrentDataTask = CurrentDataTask(id, projectIri, status, createdBy, createdAt)
 }

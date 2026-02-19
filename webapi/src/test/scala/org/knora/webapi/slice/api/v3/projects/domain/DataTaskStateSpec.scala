@@ -9,6 +9,14 @@ import zio.*
 import zio.test.*
 
 import org.knora.webapi.TestDataFactory
+import org.knora.webapi.slice.`export`.domain.DataTaskId
+import org.knora.webapi.slice.`export`.domain.DataTaskPersistence
+import org.knora.webapi.slice.`export`.domain.DataTaskState
+import org.knora.webapi.slice.`export`.domain.DataTaskStatus
+import org.knora.webapi.slice.`export`.domain.StateCompletedError
+import org.knora.webapi.slice.`export`.domain.StateFailedError
+import org.knora.webapi.slice.`export`.domain.StateInProgressError
+import org.knora.webapi.slice.`export`.domain.StatesExistError
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 object DataTaskStateSpec extends ZIOSpecDefault {
@@ -24,7 +32,7 @@ object DataTaskStateSpec extends ZIOSpecDefault {
           task  <- state.makeNew(projectIri, user)
         } yield assertTrue(
           task.projectIri == projectIri,
-          task.createdBy == user,
+          task.createdBy == user.userIri,
           task.status == DataTaskStatus.InProgress,
         )
       },
@@ -237,5 +245,5 @@ object DataTaskStateSpec extends ZIOSpecDefault {
         } yield assertTrue(result == Left(None))
       },
     ),
-  ).provide(DataTaskState.layer)
+  ).provide(DataTaskPersistence.noop >>> DataTaskState.layer)
 }

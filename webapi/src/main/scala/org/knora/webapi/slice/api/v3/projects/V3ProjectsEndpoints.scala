@@ -16,12 +16,12 @@ import zio.json.*
 
 import java.time.Instant
 
+import org.knora.webapi.slice.`export`.domain.CurrentDataTask
+import org.knora.webapi.slice.`export`.domain.DataTaskId
+import org.knora.webapi.slice.`export`.domain.DataTaskStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.v3.*
-import org.knora.webapi.slice.api.v3.projects.domain.CurrentDataTask
-import org.knora.webapi.slice.api.v3.projects.domain.DataTaskId
-import org.knora.webapi.slice.api.v3.projects.domain.DataTaskStatus
 
 final case class DataTaskStatusResponse(
   id: DataTaskId,

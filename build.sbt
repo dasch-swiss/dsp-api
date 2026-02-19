@@ -172,6 +172,7 @@ val customScalacOptions = Seq(
 )
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
+  .dependsOn(bagit)
   .settings(buildSettings)
   .settings(
     inConfig(Test) {

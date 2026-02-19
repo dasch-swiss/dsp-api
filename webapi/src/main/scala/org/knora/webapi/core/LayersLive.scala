@@ -15,6 +15,7 @@ import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.Features
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.util.*
@@ -26,7 +27,8 @@ import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
-import org.knora.webapi.slice.`export`.api.ExportModule
+import org.knora.webapi.slice.`export`.api.ExportApiModule
+import org.knora.webapi.slice.`export`.domain.ExportModule
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.api.ApiModule
@@ -79,6 +81,7 @@ object LayersLive { self =>
     OntologyResponderV2 &
     PermissionUtilADM &
     PermissionsResponder &
+    ExportModule.Provided &
     ProjectExportService &
     ReadResourcesService &
     RepositoryUpdater &
@@ -98,7 +101,7 @@ object LayersLive { self =>
 
   val remainingLayer: URLayer[AppConfigurations, Environment] =
     ZLayer.makeSome[
-      AppConfig & DspIngestConfig & Sipi & Triplestore & Features & GraphRoute & JwtConfig,
+      AppConfig & KnoraApi & DspIngestConfig & Sipi & Triplestore & Features & GraphRoute & JwtConfig,
       self.Environment,
     ](
       // ZLayer.Debug.mermaid,
@@ -113,6 +116,7 @@ object LayersLive { self =>
       CreateResourceV2Handler.layer,
       DspIngestClient.layer,
       ExportModule.layer,
+      ExportApiModule.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
       IriService.layer,
