@@ -59,7 +59,6 @@ import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName.GetFileMetadataFromDspIngest
-import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName.GetFileMetadataFromSipiTemp
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
@@ -88,7 +87,6 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
 
   private val configureSipiServiceMock = for {
     sipiMock <- ZIO.service[SipiServiceMock]
-    _        <- sipiMock.setReturnValue(GetFileMetadataFromSipiTemp, ZIO.fail(Exception("No interaction with sipi expected")))
     _        <- sipiMock.setReturnValue(GetFileMetadataFromDspIngest, ZIO.succeed(givenFileInfo))
   } yield ()
 

@@ -15,7 +15,6 @@ import org.apache.jena.sparql.core.Quad
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.*
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.rdf.*
-import zio.Chunk
 import zio.Scope
 import zio.Task
 import zio.ZIO
@@ -31,8 +30,6 @@ import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.api.admin.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
@@ -40,7 +37,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZScopedJavaIoStreams
 
 trait ProjectExportService {
-  def exportProject(project: KnoraProject): Task[ProjectExportInfoResponse]
 
   /**
    * Exports a project to a file.
@@ -54,25 +50,6 @@ trait ProjectExportService {
    * @return the [[Path]] to the file to which the project was exported
    */
   def exportProjectTriples(project: KnoraProject): Task[Path]
-
-  /**
-   * Exports a project to a file.
-   * The file format is TriG.
-   * The data exported is:
-   * * the project metadata
-   * * the project's permission data
-   * * the triples of the project's ontologies
-   *
-   * @param project    the project to be exported
-   * @param targetFile the file to which the project is to be exported
-   * @return the [[Path]] to the file to which the project was exported
-   */
-  def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path]
-
-  def listExports(): Task[Chunk[ProjectExportInfo]]
-
-  final def findByShortcode(shortcode: Shortcode): Task[Option[ProjectExportInfo]] =
-    listExports().map(_.find(_.projectShortcode == shortcode.value))
 }
 
 /**
@@ -128,16 +105,13 @@ private object TriGCombiner {
   }
 }
 
-final case class ProjectExportServiceLive(
-  private val projectService: KnoraProjectService,
-  private val triplestore: TriplestoreService,
-  private val dspIngestClient: DspIngestClient,
-  private val exportStorage: ProjectExportStorageService,
+final class ProjectExportServiceLive(
+  projectService: KnoraProjectService,
+  triplestore: TriplestoreService,
 ) extends ProjectExportService
     with QueryBuilderHelper {
 
-  override def listExports(): Task[Chunk[ProjectExportInfo]]           = exportStorage.listExports()
-  private def trigExportFilePath(project: KnoraProject, tempDir: Path) = tempDir / exportStorage.trigFilename(project)
+  private def trigExportFilePath(project: KnoraProject, tempDir: Path) = tempDir / s"${project.shortcode}.trig"
 
   override def exportProjectTriples(project: KnoraProject): Task[Path] =
     Files
@@ -145,7 +119,7 @@ final case class ProjectExportServiceLive(
       .map(trigExportFilePath(project, _))
       .flatMap(exportProjectTriples(project, _))
 
-  override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] = ZIO.scoped {
+  private def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] = ZIO.scoped {
     for {
       tempDir         <- Files.createTempDirectoryScoped(Some(project.shortname.value), fileAttributes = Nil)
       ontologyAndData <- downloadOntologyAndData(project, tempDir)
@@ -213,37 +187,8 @@ final case class ProjectExportServiceLive(
 
   private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =
     TriGCombiner.combineTrigFiles(allData.map(_.dataFile), targetFile)
-
-  override def exportProject(project: KnoraProject): Task[ProjectExportInfoResponse] = ZIO.scoped {
-    val shortcode             = project.shortcode.value
-    val projectExportDir      = exportStorage.projectExportDirectory(project)
-    val projectExportFilename = exportStorage.projectExportFilename(project)
-    for {
-      _          <- projectExportDir.toAbsolutePath.flatMap(p => ZIO.logInfo(s"Exporting project $shortcode to $p"))
-      _          <- Files.createDirectories(projectExportDir)
-      collectDir <- Files.createTempDirectoryScoped(Some(shortcode), fileAttributes = Nil)
-      _          <- ZIO.logInfo(s"Exporting project triples for $shortcode")
-      _          <- exportProjectTriples(project, trigExportFilePath(project, collectDir))
-      _          <- ZIO.logInfo(s"Exporting project assets for $shortcode")
-      _          <- exportProjectAssets(project, collectDir)
-      _          <- ZIO.logInfo(s"Zipping project export for $shortcode")
-      zipped     <- ZipUtility.zipFolder(collectDir, projectExportDir, Some(projectExportFilename))
-      path       <- zipped.toAbsolutePath
-      fileSize   <- Files.size(zipped)
-      _          <- ZIO.logInfo(s"Exported project $shortcode to $path ($fileSize bytes)")
-    } yield ProjectExportInfoResponse(shortcode, path.toString)
-  }
-
-  private def exportProjectAssets(project: KnoraProject, tempDir: Path): ZIO[Scope, Throwable, Path] = {
-    val exportedAssetsDir = tempDir / ProjectExportStorageService.assetsDirectoryInExport
-    for {
-      _       <- Files.createDirectory(exportedAssetsDir)
-      zipFile <- dspIngestClient.exportProject(project.shortcode)
-      _       <- ZipUtility.unzipFile(zipFile, exportedAssetsDir)
-    } yield exportedAssetsDir
-  }
 }
 
 object ProjectExportServiceLive {
-  val layer = ZLayer.fromFunction(ProjectExportServiceLive.apply _)
+  val layer = ZLayer.derive[ProjectExportServiceLive]
 }

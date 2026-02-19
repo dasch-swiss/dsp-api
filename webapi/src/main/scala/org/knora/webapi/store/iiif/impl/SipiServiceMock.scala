@@ -6,12 +6,9 @@
 package org.knora.webapi.store.iiif.impl
 
 import zio.*
-import zio.nio.file.Path
 
 import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -44,19 +41,14 @@ case class SipiServiceMock(ref: Ref[Map[SipiMockMethodName, Task[Object]]]) exte
   override def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
     getReturnValue(GetTextFileRequest)
 
-  override def downloadAsset(asset: Asset, targetDir: Path, user: User): Task[Option[Path]] =
-    getReturnValue(DownloadAsset)
-
   override def getFileMetadataFromDspIngest(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse] =
     getReturnValue(GetFileMetadataFromDspIngest)
 }
 
 object SipiServiceMock {
   enum SipiMockMethodName:
-    case GetFileMetadataFromSipiTemp
     case GetFileMetadataFromDspIngest
     case GetTextFileRequest
-    case DownloadAsset
 
   private val defaultGetFileMetadataFromSipiTempResponse = FileMetadataSipiResponse(
     originalFilename = Some("test2.tiff"),
@@ -73,7 +65,6 @@ object SipiServiceMock {
     Ref
       .make[Map[SipiMockMethodName, Task[Object]]](
         Map(
-          GetFileMetadataFromSipiTemp  -> ZIO.succeed(defaultGetFileMetadataFromSipiTempResponse),
           GetFileMetadataFromDspIngest -> ZIO.succeed(defaultGetFileMetadataFromSipiTempResponse),
         ),
       )
