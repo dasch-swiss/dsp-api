@@ -21,7 +21,7 @@ case class InfoEndpointResponse(
   version: String = BuildInfo.version,
   scalaVersion: String = BuildInfo.scalaVersion,
   sbtVersion: String = BuildInfo.sbtVersion,
-  buildTime: String = BuildInfo.builtAtString,
+  buildTime: String = BuildInfo.buildTime,
   gitCommit: String = BuildInfo.gitCommit,
 )
 

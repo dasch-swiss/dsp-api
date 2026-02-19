@@ -12,8 +12,6 @@ import scala.sys.process.*
 import org.knora.Dependencies
 import org.knora.LocalSettings
 
-import java.time.Instant
-
 import com.typesafe.sbt.packager.docker.Cmd
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import sbt.Keys.testFrameworks
@@ -44,7 +42,7 @@ val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim + 
 ThisBuild / version := gitVersion
 
 lazy val buildCommit = ("git rev-parse --short HEAD" !!).trim
-lazy val buildTime   = Instant.now.toString
+lazy val buildTime   = sys.env.getOrElse("BUILD_TIME", "dev")
 
 lazy val knoraSipiVersion = gitVersion
 
@@ -400,7 +398,7 @@ lazy val ingest = {
         BuildInfoKey("knoraSipiVersion", knoraSipiVersion),
         BuildInfoKey.action("gitCommit")(gitCommit),
       ),
-      buildInfoOptions += BuildInfoOption.BuildTime,
+      buildInfoKeys += BuildInfoKey("buildTime" -> sys.env.getOrElse("BUILD_TIME", "dev")),
       buildInfoPackage    := "swiss.dasch.version",
       Compile / mainClass := Some("swiss.dasch.Main"),
     )
