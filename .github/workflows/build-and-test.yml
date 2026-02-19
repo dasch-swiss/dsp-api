@@ -23,7 +23,7 @@ jobs:
           export DOCKER_BUILDKIT=1
           ./sbtx "sipi / Docker / publishLocal"
       - name: Export Sipi image
-        run: docker save daschswiss/knora-sipi:latest -o ${{ runner.temp }}/knora-sipi.tar
+        run: docker save daschswiss/knora-sipi -o ${{ runner.temp }}/knora-sipi.tar
       - name: Upload Sipi image artifact
         uses: actions/upload-artifact@v4
         with:
