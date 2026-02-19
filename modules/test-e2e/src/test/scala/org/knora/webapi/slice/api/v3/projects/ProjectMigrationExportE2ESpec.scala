@@ -75,7 +75,7 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
         payloadPaths.exists(p => p.startsWith("rdf/ontology") && p.endsWith(".nq")),
         payloadPaths.contains("rdf/data.nq"),
         payloadPaths.contains("rdf/admin.nq"),
-        payloadPaths.contains("rdf/permissions.nq"),
+        payloadPaths.contains("rdf/permission.nq"),
         // bag-info metadata
         bagInfo.flatMap(_.sourceOrganization).contains("DaSCH Service Platform"),
         bagInfo.flatMap(_.externalIdentifier).contains(projectIri),

@@ -98,7 +98,7 @@ final class ProjectMigrationExportService(
   private def collectPermissionsGraphData(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
     for {
       _             <- ZIO.logInfo(s"$taskId: Collecting project permission data from graph '${permissionsDataNamedGraph.value}'")
-      permissionFile = rdfPath / "permissions.nq"
+      permissionFile = rdfPath / "permission.nq"
       query          = PermissionDataQuery.build(project.id)
       _             <- ZIO.logDebug(s"$taskId: Permission data query: \n\n${query.getQueryString}")
       _             <- Files.createFile(permissionFile) *>
