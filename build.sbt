@@ -179,6 +179,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       Defaults.testSettings
     },
     Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    run / fork                := true, // run in a forked JVM so Ctrl+C shuts down cleanly
     Test / fork               := true, // run tests in a forked JVM
     Test / testForkedParallel := true, // run tests in parallel
     Test / parallelExecution  := true, // run tests in parallel
