@@ -16,16 +16,51 @@ jobs:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build and publish dsp-api/dsp-ingest/sipi image to Dockerhub
-        run: |
-          echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          make docker-publish
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: Output docker image tag
         id: output_docker_image_tag
         run: echo "tag=$(make docker-image-tag | tr -d '\n')" >> "$GITHUB_OUTPUT"
-        shell: bash # Explicit for fail-fast behaviour
+        shell: bash
+      - name: Stage Docker builds
+        run: ./sbtx "sipi / Docker / stage" "webapi / Docker / stage" "ingest / Docker / stage"
+      - name: Build and push Sipi image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./sipi/target/docker/stage
+          push: true
+          platforms: linux/amd64,linux/arm64/v8
+          tags: |
+            daschswiss/knora-sipi:${{ steps.output_docker_image_tag.outputs.tag }}
+            daschswiss/knora-sipi:latest
+          cache-from: type=gha,scope=sipi
+          cache-to: type=gha,scope=sipi,mode=max
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./webapi/target/docker/stage
+          push: true
+          platforms: linux/amd64,linux/arm64/v8
+          tags: |
+            daschswiss/knora-api:${{ steps.output_docker_image_tag.outputs.tag }}
+            daschswiss/knora-api:latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+      - name: Build and push Ingest image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ingest/target/docker/stage
+          push: true
+          platforms: linux/amd64,linux/arm64/v8
+          tags: |
+            daschswiss/dsp-ingest:${{ steps.output_docker_image_tag.outputs.tag }}
+            daschswiss/dsp-ingest:latest
+          cache-from: type=gha,scope=ingest
+          cache-to: type=gha,scope=ingest,mode=max
 
   trigger-dev-deployment:
     name: Trigger deployment to DEV
