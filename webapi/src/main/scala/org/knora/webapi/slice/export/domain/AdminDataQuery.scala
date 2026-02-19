@@ -4,9 +4,11 @@
  */
 
 package org.knora.webapi.slice.`export`.domain
+
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 
+import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
@@ -29,7 +31,8 @@ object AdminDataQuery extends QueryBuilderHelper {
           .isA(KA.KnoraProject)
           .andHas(projectPred, projectObj)
           .union(user.isA(KA.User).andHas(userPred, userObj).andHas(KA.isInProject, projectIri))
-          .union(group.isA(KA.UserGroup).andHas(groupPred, groupObj).andHas(KA.belongsToProject, projectIri)),
+          .union(group.isA(KA.UserGroup).andHas(groupPred, groupObj).andHas(KA.belongsToProject, projectIri))
+          .from(toRdfIri(adminDataNamedGraph)),
       )
       .prefix(KA.NS)
   }
