@@ -32,7 +32,7 @@ object DataTaskStateSpec extends ZIOSpecDefault {
           task  <- state.makeNew(projectIri, user)
         } yield assertTrue(
           task.projectIri == projectIri,
-          task.createdBy == user,
+          task.createdBy == user.userIri,
           task.status == DataTaskStatus.InProgress,
         )
       },

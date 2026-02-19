@@ -38,14 +38,8 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
   override val e2eSpec: Spec[env, Any] = suite("Project Migration Export E2E")(
     test("trigger export, poll until completed, download and validate BagIt zip") {
       for {
-        // Trigger export
-        triggerResponse <- TestApiClient.postJson[DataTaskStatusResponse, Json](
-                             uri"/v3/projects/$projectIri/exports",
-                             Json.Obj(),
-                             rootUser,
-                           )
-        _          <- assertTrue(triggerResponse.code == StatusCode.Accepted)
-        taskStatus <- ZIO.fromEither(triggerResponse.body).mapError(new RuntimeException(_))
+        // Trigger export (cleaning up any existing export from a previous run, since state is now persistent)
+        taskStatus <- triggerExportWithCleanup()
         exportId    = taskStatus.id
 
         // Poll status until completed (max 30 seconds)
@@ -105,6 +99,32 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
           case DataTaskStatus.Failed    => ZIO.die(new RuntimeException("Export failed"))
           case _                        => ZIO.fail(new RuntimeException("Export still in progress"))
         }
+      }
+
+  private def triggerExportWithCleanup(): ZIO[TestApiClient, Throwable, DataTaskStatusResponse] =
+    TestApiClient
+      .postJson[DataTaskStatusResponse, Json](uri"/v3/projects/$projectIri/exports", Json.Obj(), rootUser)
+      .flatMap { response =>
+        if (response.code == StatusCode.Conflict) {
+          // Clean up existing export from a previous run, then retry
+          val existingId = for {
+            errorStr <- response.body.left.toOption
+            json     <- errorStr.fromJson[Json].toOption
+            errors   <- json.asObject.flatMap(_.apply("errors")).flatMap(_.asArray)
+            first    <- errors.headOption
+            details  <- first.asObject.flatMap(_.apply("details"))
+            id       <- details.asObject.flatMap(_.apply("id")).flatMap(_.asString)
+          } yield id
+          for {
+            _ <- ZIO.foreachDiscard(existingId)(id => deleteExport(DataTaskId.unsafeFrom(id)))
+            r <- TestApiClient.postJson[DataTaskStatusResponse, Json](
+                   uri"/v3/projects/$projectIri/exports",
+                   Json.Obj(),
+                   rootUser,
+                 )
+            status <- ZIO.fromEither(r.body).mapError(new RuntimeException(_))
+          } yield status
+        } else ZIO.fromEither(response.body).mapError(new RuntimeException(_))
       }
 
   private def deleteExport(exportId: DataTaskId, prjIri: String = projectIri) =
