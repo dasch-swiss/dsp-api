@@ -152,16 +152,10 @@ jobs:
     needs: build-sipi-image
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout current branch
-        uses: actions/checkout@v4
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
-          fetch-depth: 0
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-          cache: sbt
+          java-version: ${{ env.JAVA_VERSION }}
       - name: Download Sipi image
         uses: actions/download-artifact@v4
         with:
