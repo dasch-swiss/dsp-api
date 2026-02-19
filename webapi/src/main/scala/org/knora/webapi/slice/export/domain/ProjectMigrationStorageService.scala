@@ -17,6 +17,8 @@ import org.knora.webapi.config.AppConfig
 final class ProjectMigrationStorageService(config: AppConfig) {
   private val basePath: Path = zio.nio.file.Path.fromJava(JPath.of(config.tmpDatadir)) / "migration-exports"
 
+  def exportDir: Path = basePath
+
   private def exportDir(taskId: DataTaskId): Path = basePath / taskId.value
 
   def bagItZipPath(taskId: DataTaskId): Path = exportDir(taskId) / "bagit.zip"

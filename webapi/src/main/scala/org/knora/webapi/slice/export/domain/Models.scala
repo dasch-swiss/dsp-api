@@ -15,7 +15,7 @@ import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
 import org.knora.webapi.slice.api.admin.Codecs.TapirCodec.StringCodec
 import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
@@ -64,7 +64,7 @@ final case class CurrentDataTask private (
   id: DataTaskId,
   projectIri: ProjectIri,
   status: DataTaskStatus,
-  createdBy: User,
+  createdBy: UserIri,
   createdAt: Instant,
 ) { self =>
   def complete(): Either[StateFailedError, CurrentDataTask] = self.status match
@@ -83,9 +83,17 @@ final case class CurrentDataTask private (
 }
 
 object CurrentDataTask {
-  def makeNew(projectIri: ProjectIri, createdBy: User): UIO[CurrentDataTask] =
+  def makeNew(projectIri: ProjectIri, createdBy: UserIri): UIO[CurrentDataTask] =
     for {
       id  <- DataTaskId.makeNew
       now <- Clock.instant
     } yield CurrentDataTask(id, projectIri, DataTaskStatus.InProgress, createdBy, now)
+
+  def restore(
+    id: DataTaskId,
+    projectIri: ProjectIri,
+    status: DataTaskStatus,
+    createdBy: UserIri,
+    createdAt: Instant,
+  ): CurrentDataTask = CurrentDataTask(id, projectIri, status, createdBy, createdAt)
 }

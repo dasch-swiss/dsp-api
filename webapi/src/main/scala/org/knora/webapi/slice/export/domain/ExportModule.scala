@@ -29,5 +29,7 @@ object ExportModule {
     // format: on
 
   val layer: URLayer[Dependencies, Provided] =
-    ProjectMigrationStorageService.layer >>> ProjectMigrationExportService.layer >+> ProjectMigrationImportService.layer
+    ProjectMigrationStorageService.layer >>>
+      ProjectMigrationExportService.layer >+>
+      ProjectMigrationImportService.layer
 }

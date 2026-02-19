@@ -10,6 +10,7 @@ import zio.test.*
 
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.slice.`export`.domain.DataTaskId
+import org.knora.webapi.slice.`export`.domain.DataTaskPersistence
 import org.knora.webapi.slice.`export`.domain.DataTaskState
 import org.knora.webapi.slice.`export`.domain.DataTaskStatus
 import org.knora.webapi.slice.`export`.domain.StateCompletedError
@@ -244,5 +245,5 @@ object DataTaskStateSpec extends ZIOSpecDefault {
         } yield assertTrue(result == Left(None))
       },
     ),
-  ).provide(DataTaskState.layer)
+  ).provide(DataTaskPersistence.noop >>> DataTaskState.layer)
 }

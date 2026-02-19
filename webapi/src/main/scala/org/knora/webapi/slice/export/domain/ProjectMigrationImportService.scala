@@ -49,5 +49,5 @@ final class ProjectMigrationImportService(
 }
 
 object ProjectMigrationImportService {
-  val layer = DataTaskState.layer >>> ZLayer.derive[ProjectMigrationImportService]
+  val layer = DataTaskPersistence.noop >>> DataTaskState.layer >>> ZLayer.derive[ProjectMigrationImportService]
 }

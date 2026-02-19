@@ -25,7 +25,7 @@ final case class StateCompletedError(t: CurrentDataTask)
  * The methods allow for creating a new task, finding an existing task by id, deleting a task if it's not in progress,
  * completing a task, and failing a task. Each method ensures that the state transitions are valid and handles errors appropriately.
  */
-final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
+final class DataTaskState(ref: Ref[Option[CurrentDataTask]], persistence: DataTaskPersistence) { self =>
 
   /**
    * Create a new task for the given project and user.
@@ -37,11 +37,12 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
    *         An IO that succeeds with [[CurrentDataTask]] when created successfully.
    */
   def makeNew(projectIri: ProjectIri, user: User): IO[StatesExistError, CurrentDataTask] = for {
-    newState <- CurrentDataTask.makeNew(projectIri, user)
+    newState <- CurrentDataTask.makeNew(projectIri, user.userIri)
     result   <- self.ref.modify {
                 case Some(exp) => (ZIO.fail(StatesExistError(exp)), Some(exp))
                 case None      => (ZIO.succeed(newState), Some(newState))
               }.flatten
+    _ <- persistence.onChanged(result)
   } yield result
 
   def find(taskId: DataTaskId): IO[Option[Nothing], CurrentDataTask] =
@@ -64,7 +65,7 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
         case exp if exp.isInProgress => Left(StateInProgressError(exp))
         case _                       => Right(None)
       },
-    ).unit
+    ).unit *> persistence.onDeleted(taskId)
 
   /**
    * Atomically find the task by id and update it using the provided function.
@@ -98,7 +99,10 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
    *         An IO that succeeds with the new state [[CurrentDataTask]].
    */
   def complete(taskId: DataTaskId): IO[Option[StateFailedError], CurrentDataTask] =
-    self.atomicFindAndUpdate(taskId, _.complete().map(Some(_))).someOrFail(None)
+    self
+      .atomicFindAndUpdate(taskId, _.complete().map(Some(_)))
+      .someOrFail(None)
+      .tap(task => persistence.onChanged(task))
 
   /**
    * Fail the task with the given id if it exists and is in progress.
@@ -108,9 +112,16 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]]) { self =>
    *         An IO that succeeds with the new state [[CurrentDataTask]].
    */
   def fail(taskId: DataTaskId): IO[Option[StateCompletedError], CurrentDataTask] =
-    self.atomicFindAndUpdate(taskId, _.fail().map(Some(_))).someOrFail(None)
+    self
+      .atomicFindAndUpdate(taskId, _.fail().map(Some(_)))
+      .someOrFail(None)
+      .tap(task => persistence.onChanged(task))
 }
 
 object DataTaskState {
-  def layer = ZLayer.fromZIO(Ref.make[Option[CurrentDataTask]](None)) >>> ZLayer.derive[DataTaskState]
+  val layer: URLayer[DataTaskPersistence, DataTaskState] =
+    ZLayer.fromZIO(Ref.make[Option[CurrentDataTask]](None)) >>> ZLayer.derive[DataTaskState]
+
+  def layerWithInitialState(initial: Option[CurrentDataTask]): URLayer[DataTaskPersistence, DataTaskState] =
+    ZLayer.fromZIO(Ref.make(initial)) >>> ZLayer.derive[DataTaskState]
 }
