@@ -83,7 +83,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
             version = BuildInfo.version,
             scalaVersion = BuildInfo.scalaVersion,
             sbtVersion = BuildInfo.sbtVersion,
-            buildTime = BuildInfo.builtAtString,
+            buildTime = BuildInfo.buildTime,
             gitCommit = BuildInfo.gitCommit,
           ).toJson,
         )
