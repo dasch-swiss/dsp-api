@@ -20,7 +20,7 @@ object Logger {
 
   private val logFilter = LogFilter.LogLevelByNameConfig(
     rootLogLevel,
-    ("org.apache.jena", LogLevel.Debug),
+    ("org.apache.jena", LogLevel.Info),
     ("io.netty", LogLevel.Info),
     ("org.ehcache", LogLevel.Info),
     ("zio.http.*", LogLevel.Debug),
