@@ -6,11 +6,9 @@
 package org.knora.webapi.slice.api.admin
 
 import sttp.capabilities.zio.ZioStreams
-import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
-import zio.Chunk
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -33,7 +31,6 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
 
   // other path elements
   private val keywords               = "Keywords"
-  private val `export`               = "export"
   private val members                = "members"
   private val adminMembers           = "admin-members"
   private val restrictedViewSettings = "RestrictedViewSettings"
@@ -182,43 +179,6 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
            |Requires SystemAdmin permissions.
            |Only available if the feature has been configured on the server side.""".stripMargin,
       )
-
-    val getAdminProjectsExports = baseEndpoints.securedEndpoint.get
-      .in(projectsBase / `export`)
-      .out(jsonBody[Chunk[ProjectExportInfoResponse]])
-      .description(
-        "**This endpoint is deprecated and will be removed in a future version.** " +
-          "Lists existing exports of all projects. Requires SystemAdmin permissions.",
-      )
-      .deprecated()
-
-    val postAdminProjectsByShortcodeExport = baseEndpoints.securedEndpoint.post
-      .in(projectsByShortcode / `export`)
-      .out(statusCode(StatusCode.Accepted))
-      .description(
-        "**This endpoint is deprecated and will be removed in a future version.** " +
-          "Trigger an export of a project identified by the shortcode. Requires SystemAdmin permissions.",
-      )
-      .deprecated()
-
-    val postAdminProjectsByShortcodeExportAwaiting = baseEndpoints.securedEndpoint.post
-      .in(projectsByShortcode / "export-await")
-      .out(jsonBody[ProjectExportInfoResponse])
-      .description(
-        "**This endpoint is deprecated and will be removed in a future version.** " +
-          "Trigger an export of a project identified by the shortcode. " +
-          "Returns the shortcode and the export location when the process has finished successfully. Requires SystemAdmin permissions.",
-      )
-      .deprecated()
-
-    val postAdminProjectsByShortcodeImport = baseEndpoints.securedEndpoint.post
-      .in(projectsByShortcode / "import")
-      .out(jsonBody[ProjectImportResponse])
-      .description(
-        "**This endpoint is deprecated and will be removed in a future version.** " +
-          "Trigger an import of a project identified by the shortcode. Requires SystemAdmin permissions.",
-      )
-      .deprecated()
 
     val postAdminProjects = baseEndpoints.securedEndpoint.post
       .in(projectsBase)

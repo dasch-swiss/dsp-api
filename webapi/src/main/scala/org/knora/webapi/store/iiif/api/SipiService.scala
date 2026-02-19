@@ -8,12 +8,9 @@ package org.knora.webapi.store.iiif.api
 import zio.*
 import zio.json.DeriveJsonDecoder
 import zio.json.JsonDecoder
-import zio.nio.file.Path
 
 import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.store.iiif.errors.SipiException
 
@@ -75,14 +72,4 @@ trait SipiService {
    * @param textFileRequest the request message.
    */
   def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse]
-
-  /**
-   * Downloads an asset from Sipi.
-   *
-   * @param asset     The asset to download.
-   * @param targetDir The target directory in which the asset should be stored.
-   * @param user      The user who is downloading the asset.
-   * @return The path to the downloaded asset. If the asset could not be downloaded, [[None]] is returned.
-   */
-  def downloadAsset(asset: Asset, targetDir: Path, user: User): Task[Option[Path]]
 }

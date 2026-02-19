@@ -23,7 +23,6 @@ import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectEraseService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
-import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
@@ -64,7 +63,6 @@ object AdminApiModule { self =>
       PermissionsResponder &
       ProjectEraseService &
       ProjectExportService &
-      ProjectImportService &
       ProjectService &
       TriplestoreService &
       UserService
