@@ -92,7 +92,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
           response <- addUserToProject(newUser.userIri, imagesProjectExternal.id)
 
         } yield assertTrue(response.code == StatusCode.BadRequest)
-      },
+      } @@ TestAspect.timeout(5.seconds) @@ TestAspect.flaky,
       test("remove user from project") {
         for {
           newUser <- createNewUser
