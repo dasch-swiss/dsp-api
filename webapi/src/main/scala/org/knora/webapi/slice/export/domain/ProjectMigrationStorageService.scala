@@ -11,19 +11,25 @@ import zio.nio.file.Files
 import zio.nio.file.Path
 
 import java.nio.file.Path as JPath
-
 import org.knora.webapi.config.AppConfig
+import zio.URIO
 
-final class ProjectMigrationStorageService(config: AppConfig) {
-  private val basePath: Path = zio.nio.file.Path.fromJava(JPath.of(config.tmpDatadir)) / "migration-exports"
+final class ProjectMigrationStorageService(config: AppConfig) { self =>
+  private val basePath: Path = Path.fromJava(JPath.of(config.tmpDatadir)) / "migration"
 
-  def exportDir: Path = basePath
+  val exportsDir: Path = basePath / "exports"
 
-  private def exportDir(taskId: DataTaskId): Path = basePath / taskId.value
+  private def exportDir(taskId: DataTaskId): Path = self.exportsDir / taskId.value
 
   def bagItZipPath(taskId: DataTaskId): Path = exportDir(taskId) / "bagit.zip"
 
-  def tempExportScoped(taskId: DataTaskId): ZIO[Scope, Nothing, (Path, Path)] =
+  /**
+   * Creates a temporary directory for the export task, and ensures that it is deleted when the scope is closed.
+   *
+   * @param taskId the ID of the export task
+   * @return a tuple containing the path to the temporary directory and the path to the export directory
+   */
+  def tempExportScoped(taskId: DataTaskId): URIO[Scope, (Path, Path)] =
     val exportPath = exportDir(taskId)
     for {
       _       <- Files.createDirectories(exportPath).unlessZIO(Files.exists(exportPath)).logError.orDie
