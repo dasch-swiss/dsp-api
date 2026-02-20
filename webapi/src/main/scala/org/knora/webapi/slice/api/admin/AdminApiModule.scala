@@ -89,12 +89,12 @@ object AdminApiModule { self =>
       ProjectsLegalInfoEndpoints.layer ++ ProjectsLegalInfoRestService.layer ++
       StoreEndpoints.layer ++ StoreRestService.layer ++
       UsersEndpoints.layer ++ UserRestService.layer) >+>
-    // Layer 2: Each ServerEndpoints depends on its paired Endpoints + RestService
-    (AdminListsServerEndpoints.layer ++ FilesServerEndpoints.layer ++
-      GroupsServerEndpoints.layer ++ MaintenanceServerEndpoints.layer ++
-      PermissionsServerEndpoints.layer ++ ProjectsServerEndpoints.layer ++
-      ProjectsLegalInfoServerEndpoints.layer ++ StoreServerEndpoints.layer ++
-      UsersServerEndpoints.layer) >+>
-    // Layer 3: Top-level aggregator
-    AdminApiServerEndpoints.layer
+      // Layer 2: Each ServerEndpoints depends on its paired Endpoints + RestService
+      (AdminListsServerEndpoints.layer ++ FilesServerEndpoints.layer ++
+        GroupsServerEndpoints.layer ++ MaintenanceServerEndpoints.layer ++
+        PermissionsServerEndpoints.layer ++ ProjectsServerEndpoints.layer ++
+        ProjectsLegalInfoServerEndpoints.layer ++ StoreServerEndpoints.layer ++
+        UsersServerEndpoints.layer) >+>
+      // Layer 3: Top-level aggregator
+      AdminApiServerEndpoints.layer
 }

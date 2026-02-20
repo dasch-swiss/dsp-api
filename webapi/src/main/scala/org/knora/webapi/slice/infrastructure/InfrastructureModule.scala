@@ -23,7 +23,9 @@ object InfrastructureModule { self =>
     JwtService
     // format: on
 
-  val layer: URLayer[self.Dependencies, self.Provided] =
-    CacheManager.layer >+>
-      (InvalidTokenCache.layer ++ JwtServiceLive.layer ++ CsvService.layer)
+  val layer: URLayer[self.Dependencies, self.Provided] = {
+    val cacheLayer = CacheManager.layer >+> InvalidTokenCache.layer
+    val jwtLayer   = (cacheLayer ++ ZLayer.service[JwtConfig] ++ ZLayer.service[DspIngestConfig]) >>> JwtServiceLive.layer
+    cacheLayer ++ jwtLayer ++ CsvService.layer
+  }
 }

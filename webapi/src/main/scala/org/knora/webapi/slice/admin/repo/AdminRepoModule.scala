@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.repo
 
 import zio.URLayer
-import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
