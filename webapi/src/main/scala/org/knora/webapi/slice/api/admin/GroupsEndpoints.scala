@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.api.admin
 
+// CI compile test
+
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
