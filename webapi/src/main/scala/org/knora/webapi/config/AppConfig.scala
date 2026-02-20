@@ -156,6 +156,7 @@ final case class Features(
   allowEraseProjects: Boolean,
   disableLastModificationDateCheck: Boolean,
   triggerCompactionAfterProjectErasure: Boolean,
+  allowImportMigrationBagit: Boolean,
 )
 
 object AppConfig {
@@ -177,6 +178,7 @@ object AppConfig {
       "ALLOW_ERASE_PROJECTS"                     -> c.features.allowEraseProjects,
       "DISABLE_LAST_MODIFICATION_DATE_CHECK"     -> c.features.disableLastModificationDateCheck,
       "TRIGGER_COMPACTION_AFTER_PROJECT_ERASURE" -> c.features.triggerCompactionAfterProjectErasure,
+      "ALLOW_IMPORT_MIGRATION_BAGIT"             -> c.features.allowImportMigrationBagit,
     ).collect { case (feature, enabled) if enabled => feature }
     ZIO.logInfo(s"Features enabled: ${features.mkString(", ")}").when(features.nonEmpty)
   }
