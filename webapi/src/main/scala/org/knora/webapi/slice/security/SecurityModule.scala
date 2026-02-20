@@ -29,5 +29,5 @@ object SecurityModule { self =>
   type Provided = ScopeResolver & Authenticator
 
   val layer: URLayer[self.Dependencies, self.Provided] =
-    ZLayer.makeSome[self.Dependencies, self.Provided](ScopeResolver.layer, AuthenticatorLive.layer)
+    ScopeResolver.layer >+> AuthenticatorLive.layer
 }

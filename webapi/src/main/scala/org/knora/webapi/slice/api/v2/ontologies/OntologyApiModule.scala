@@ -37,11 +37,7 @@ object OntologyApiModule { self =>
   type Provided = OntologiesServerEndpoints
 
   val layer: URLayer[self.Dependencies, self.Provided] =
-    ZLayer.makeSome[self.Dependencies, self.Provided](
-      RestCardinalityService.layer,
-      OntologiesRestService.layer,
-      OntologiesServerEndpoints.layer,
-      OntologiesEndpoints.layer,
-      OntologyV2RequestParser.layer,
-    )
+    (RestCardinalityService.layer ++ OntologyV2RequestParser.layer ++ OntologiesEndpoints.layer) >+>
+      OntologiesRestService.layer >>>
+      OntologiesServerEndpoints.layer
 }

@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.repo
 
 import zio.URLayer
-import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
@@ -35,12 +34,11 @@ object AdminRepoModule { self =>
     KnoraUserRepo
     // format: on
 
-  val layer: URLayer[self.Dependencies, self.Provided] = ZLayer.makeSome[self.Dependencies, self.Provided](
-    KnoraGroupRepoLive.layer,
-    KnoraProjectRepoLive.layer,
-    KnoraUserRepoLive.layer,
-    AdministrativePermissionRepoLive.layer,
-    DefaultObjectAccessPermissionRepoLive.layer,
-    LicenseRepo.layer,
-  )
+  val layer: URLayer[self.Dependencies, self.Provided] =
+    KnoraGroupRepoLive.layer ++
+      KnoraProjectRepoLive.layer ++
+      KnoraUserRepoLive.layer ++
+      AdministrativePermissionRepoLive.layer ++
+      DefaultObjectAccessPermissionRepoLive.layer ++
+      LicenseRepo.layer
 }

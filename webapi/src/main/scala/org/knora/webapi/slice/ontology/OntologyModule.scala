@@ -36,13 +36,8 @@ object OntologyModule { self =>
     ValueRepo
     // format: on
 
-  val layer: URLayer[self.Dependencies, self.Provided] = ZLayer.makeSome[self.Dependencies, self.Provided](
-    CardinalityService.layer,
-    OntologyCacheHelpers.layer,
-    OntologyCacheLive.layer,
-    OntologyRepoLive.layer,
-    OntologyTriplestoreHelpers.layer,
-    PredicateRepositoryLive.layer,
-    ValueRepo.layer,
-  )
+  val layer: URLayer[self.Dependencies, self.Provided] =
+    (OntologyCacheLive.layer ++ PredicateRepositoryLive.layer ++ ValueRepo.layer) >+>
+      OntologyRepoLive.layer >+>
+      (CardinalityService.layer ++ OntologyCacheHelpers.layer ++ OntologyTriplestoreHelpers.layer)
 }
