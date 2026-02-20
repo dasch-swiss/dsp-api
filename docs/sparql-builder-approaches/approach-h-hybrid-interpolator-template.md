@@ -6,12 +6,12 @@ Combine the `sparql"..."` string interpolator (from Approach A) with template-st
 
 This is essentially: "What if `sparql"..."` could be used for entire multi-line queries, not just small fragments?"
 
-**Key question**: Can the `sparql"..."` interpolator handle the mix of typed bindings (`$variable`) and literal SPARQL syntax (`?unboundVar`, keywords, punctuation) within a large template? This needs feasibility investigation.
+**Feasibility: confirmed.** The existing `sparql"..."` interpolator already supports this. Scala's `StringContext` works with triple-quoted strings (`sparql"""..."""`), SPARQL keywords/punctuation pass through as literal `RawPart`s, and `Fragment` embedding works via part splicing. No changes to the interpolator are needed.
 
 ## Shared Vocabulary
 
 ```scala
-import org.knora.sparqlbuilder.{Fragment, Iri, Variable, Literal}
+import org.knora.sparqlbuilder.{Fragment, Iri, Variable, Literal, Prefix}
 import org.knora.sparqlbuilder.Fragment.sparql
 
 val knoraBase   = "http://www.knora.org/ontology/knora-base#"
@@ -22,6 +22,26 @@ val salsahGui   = "http://www.knora.org/ontology/salsah-gui#"
 val kbIsDeleted = Iri.trusted(knoraBase + "isDeleted")
 val kbLastMod   = Iri.trusted(knoraBase + "lastModificationDate")
 val rdfType     = Iri.trusted("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+
+// Prefix type — renders as "name: <namespace>" when interpolated
+// e.g. sparql"PREFIX $kb" renders as "PREFIX knora-base: <http://...#>"
+val kb  = Prefix("knora-base" -> knoraBase)
+val pRdfs = Prefix("rdfs" -> rdfs)
+val pXsd  = Prefix("xsd" -> xsd)
+val pOwl  = Prefix("owl" -> owl)
+```
+
+### Prefix Type
+
+```scala
+// Added to the SparqlValue sealed hierarchy in types.scala
+final case class Prefix(name: String, namespace: String) extends SparqlValue {
+  def render: String = s"$name: <$namespace>"
+}
+
+object Prefix {
+  def apply(pair: (String, String)): Prefix = Prefix(pair._1, pair._2)
+}
 ```
 
 ---
@@ -158,7 +178,7 @@ val linkValuePropertyIri: Option[Iri] =
 val linkValuePropertyPred = Variable("linkValuePropertyPred")
 val linkValuePropertyObj  = Variable("linkValuePropertyObj")
 
-// Conditional — compose Fragment from Option
+// Conditional — compose Fragment from Option, embed in template
 val linkValueDeleteFragment: Fragment = linkValuePropertyIri.fold(Fragment.empty) { lvpIri =>
   sparql"$lvpIri $linkValuePropertyPred $linkValuePropertyObj ."
 }
@@ -166,12 +186,10 @@ val linkValueWhereFragment: Fragment = linkValuePropertyIri.fold(Fragment.empty)
   sparql"$lvpIri $linkValuePropertyPred $linkValuePropertyObj ."
 }
 
-// Note: Fragment interpolation into sparql"..." — a Fragment embedded in
-// another sparql"..." expands in place. This is the key composability mechanism.
 val query = sparql"""
-  PREFIX knora-base: <$knoraBase>
-  PREFIX xsd: <$xsd>
-  PREFIX owl: <$owl>
+  PREFIX $kb
+  PREFIX $pXsd
+  PREFIX $pOwl
 
   DELETE {
     GRAPH $ontologyIri {
@@ -194,10 +212,6 @@ val query = sparql"""
     $linkValueWhereFragment
   }
 """.render
-
-// Note: PREFIX IRIs use raw string interpolation within the prefix
-// declaration — this is a known limitation since PREFIX syntax expects
-// bare URIs inside angle brackets, not escaped IRI nodes.
 ```
 
 ---
@@ -308,12 +322,10 @@ val projectFilter: Fragment = limitToProject.fold(Fragment.empty) { prj =>
 }
 
 val classFilter: Fragment = limitToResourceClass.fold(Fragment.empty) { cls =>
-  // Note: property paths like subClassOf* are a raw SPARQL syntax concern
   Fragment.raw(s"${resourceClass.render} <${rdfs}subClassOf*> ${cls.render} .")
 }
 
-// Note: Lucene text#query with property list notation doesn't fit the
-// standard triple pattern. Uses Fragment.raw for that specific line.
+// Lucene text#query with property list notation — still needs Fragment.raw
 val textQueryLine = Fragment.raw(
   s"${resource.render} ${textQueryPred.render} (${rdfsLabel.render} ${Literal.string("test search").render}) ;" +
   s"\n    a ${resourceClass.render} ."
@@ -324,8 +336,8 @@ val subClassLine = Fragment.raw(
 )
 
 val query = sparql"""
-  PREFIX rdfs: <$rdfs>
-  PREFIX knora-base: <$knoraBase>
+  PREFIX $pRdfs
+  PREFIX $kb
 
   SELECT (count(distinct $resource) as $count)
   WHERE {
@@ -416,8 +428,8 @@ val linkValueBlock = Fragment.join(linkValueFragments)
 val newLmdValue = Literal.typed("2024-01-02T00:00:00Z", Iri.trusted(xsd + "dateTime"))
 
 val query = sparql"""
-  PREFIX knora-base: <$knoraBase>
-  PREFIX xsd: <$xsd>
+  PREFIX $kb
+  PREFIX $pXsd
 
   DELETE {
     GRAPH $graphIri {
@@ -441,10 +453,11 @@ val query = sparql"""
 
 ## Notes
 
-- **Readability**: For simple queries (Benchmarks 1, 2), the result reads almost exactly like SPARQL — the best readability of any approach. For complex queries, the readability depends on how well Fragment composition handles the dynamic parts.
+- **Feasibility: confirmed.** The existing `sparql"..."` interpolator already handles multi-line templates via `sparql"""..."""`. SPARQL keywords, punctuation, and newlines pass through as literal `RawPart`s. `Fragment` embedding works via part splicing. No interpolator changes needed.
+- **Readability**: For simple queries (Benchmarks 1, 2), the result reads almost exactly like raw SPARQL — the best readability of any approach.
 - **Type safety**: The `sparql"..."` interpolator only accepts `SparqlValue | Fragment` — raw `String` is a compile error. This is the same safety guarantee as Approach A.
-- **Composability**: Fragments can be composed and embedded within `sparql"..."` blocks. This handles conditionals (`Option.fold(Fragment.empty)(...)`) and iteration (`Fragment.join(list.map(...))`) naturally.
+- **PREFIX handling**: A `Prefix` type extending `SparqlValue` renders as `name: <namespace>`, enabling `sparql"PREFIX $kb"`. Requires adding `Prefix` to the sealed hierarchy in `types.scala` — minimal implementation effort.
+- **Composability**: Fragments compose and embed naturally. Conditionals use `Option.fold(Fragment.empty)(...)`, iteration uses `Fragment.join(list.map(...))`. Composed fragments expand in place when embedded in a larger `sparql"""..."""` template.
 - **Escape hatches**: `Fragment.raw(...)` still needed for Lucene `text#query` property list notation and `subClassOf*` property paths — same limitation as A and C.
-- **PREFIX handling**: The `PREFIX` declarations use bare URIs inside angle brackets. Interpolating an `Iri` would render as `<uri>`, but PREFIX syntax expects just the URI. This needs a solution — either a `Prefix` type that renders without angle brackets, or raw string interpolation for prefix lines.
-- **Feasibility concern**: The `sparql"..."` interpolator currently produces `Fragment` from small snippets. Using it for entire multi-line queries may need the interpolator to handle mixed content (SPARQL keywords, punctuation, newlines) alongside typed bindings. This is the key feasibility question.
-- **Comparison to Approach A**: A uses `sparql"..."` for fragments that get composed via `SparqlQuery.select().where()`. H uses `sparql"..."` for the entire query. They could be complementary — use H for simple/medium queries and A's builder for programmatic construction.
+- **Comparison to Approach A**: A uses `sparql"..."` for small fragments composed via `SparqlQuery.select().where()`. H uses `sparql"""..."""` for entire queries with embedded fragments. They are complementary — H for simple/medium queries where the template reads naturally, A's builder for programmatic construction with heavy conditionals/iteration.
+- **Whitespace handling**: When `Fragment.empty` is embedded (e.g., a conditional that's absent), it leaves no text — but the surrounding whitespace/newlines from the template remain. This could produce blank lines in the output. A post-processing step or smarter fragment embedding might be needed.
