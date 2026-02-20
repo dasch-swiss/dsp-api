@@ -24,10 +24,6 @@ object InfrastructureModule { self =>
     // format: on
 
   val layer: URLayer[self.Dependencies, self.Provided] =
-    ZLayer.makeSome[self.Dependencies, self.Provided](
-      CacheManager.layer,
-      InvalidTokenCache.layer,
-      JwtServiceLive.layer,
-      CsvService.layer,
-    )
+    CacheManager.layer >+>
+      (InvalidTokenCache.layer ++ JwtServiceLive.layer ++ CsvService.layer)
 }
