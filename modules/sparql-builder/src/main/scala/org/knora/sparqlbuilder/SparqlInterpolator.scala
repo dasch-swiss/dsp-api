@@ -5,12 +5,14 @@
 
 package org.knora.sparqlbuilder
 
-/** Type of values that can be interpolated into `sparql"..."` fragments.
+/**
+ * Type of values that can be interpolated into `sparql"..."` fragments.
  * This includes all `SparqlValue` subtypes (Iri, Variable, Literal) and `Fragment` itself.
  */
 type Interpolatable = SparqlValue | Fragment
 
-/** Provides the `sparql"..."` string interpolator for building safe SPARQL fragments.
+/**
+ * Provides the `sparql"..."` string interpolator for building safe SPARQL fragments.
  *
  * Usage:
  * {{{

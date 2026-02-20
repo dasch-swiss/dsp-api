@@ -34,8 +34,8 @@ object InjectionSafetySpec extends ZIOSpecDefault {
   val sparqlInjectionSuite = suite("SPARQL injection prevention")(
     test("string literal with quotes is escaped") {
       val malicious = Literal.string("""value" . ?s ?p ?o . # """)
-      val frag = sparql"?s ?p $malicious ."
-      val rendered = frag.render
+      val frag      = sparql"?s ?p $malicious ."
+      val rendered  = frag.render
       assertTrue(
         // The quotes in the malicious value should be escaped with backslash
         rendered.contains("\\\""),
@@ -47,7 +47,7 @@ object InjectionSafetySpec extends ZIOSpecDefault {
     },
     test("string literal with newlines is escaped") {
       val malicious = Literal.string("value\n} INSERT { ?s ?p ?o } WHERE {")
-      val rendered = malicious.render
+      val rendered  = malicious.render
       assertTrue(
         rendered.contains("\\n"),
         !rendered.contains("\n} INSERT"),
@@ -55,8 +55,8 @@ object InjectionSafetySpec extends ZIOSpecDefault {
     },
     test("IRI wrapping prevents injection") {
       // Even if an IRI contains spaces or special chars, it's wrapped in <...>
-      val iri = Iri.trusted("http://example.org/test> . ?s ?p ?o . <http://evil.org")
-      val frag = sparql"?s a $iri ."
+      val iri      = Iri.trusted("http://example.org/test> . ?s ?p ?o . <http://evil.org")
+      val frag     = sparql"?s a $iri ."
       val rendered = frag.render
       // The malicious content is contained within the <...> wrapper
       assertTrue(
@@ -67,8 +67,8 @@ object InjectionSafetySpec extends ZIOSpecDefault {
     },
     test("variables cannot inject SPARQL syntax") {
       // Variables are always rendered as ?name
-      val v = Variable("x> . ?s ?p ?o . ?evil")
-      val frag = sparql"?s $v ?o ."
+      val v        = Variable("x> . ?s ?p ?o . ?evil")
+      val frag     = sparql"?s $v ?o ."
       val rendered = frag.render
       assertTrue(
         rendered.contains("?x> . ?s ?p ?o . ?evil"),
@@ -86,12 +86,12 @@ object InjectionSafetySpec extends ZIOSpecDefault {
       assertTrue(escaped.render == rawString)
     },
     test("int literals cannot cause injection") {
-      val lit = Literal.int(42)
+      val lit  = Literal.int(42)
       val frag = sparql"?s ?p $lit ."
       assertTrue(frag.render == "?s ?p 42 .")
     },
     test("boolean literals cannot cause injection") {
-      val lit = Literal.bool(false)
+      val lit  = Literal.bool(false)
       val frag = sparql"?s ?p $lit ."
       assertTrue(frag.render == "?s ?p false .")
     },
@@ -103,12 +103,12 @@ object InjectionSafetySpec extends ZIOSpecDefault {
   val luceneInjectionSuite = suite("Lucene injection prevention")(
     test("Lucene special characters in string literal are escaped") {
       // Lucene special characters: + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /
-      val luceneQuery = Literal.string("""test AND secret:* OR "admin"""")
+      val luceneQuery   = Literal.string("""test AND secret:* OR "admin"""")
       val textQueryPred = Iri.trusted("http://jena.apache.org/text#query")
-      val rdfsLabel = Iri.trusted("http://www.w3.org/2000/01/rdf-schema#label")
-      val resource = Variable("resource")
+      val rdfsLabel     = Iri.trusted("http://www.w3.org/2000/01/rdf-schema#label")
+      val resource      = Variable("resource")
 
-      val frag = sparql"$resource $textQueryPred ($rdfsLabel $luceneQuery) ."
+      val frag     = sparql"$resource $textQueryPred ($rdfsLabel $luceneQuery) ."
       val rendered = frag.render
 
       assertTrue(
@@ -120,7 +120,7 @@ object InjectionSafetySpec extends ZIOSpecDefault {
     },
     test("Lucene query cannot break out of string literal") {
       val malicious = Literal.string("""") . ?s <http://jena.apache.org/text#query> ("hack""")
-      val rendered = malicious.render
+      val rendered  = malicious.render
       assertTrue(
         // All quotes are escaped. The malicious payload stays inside the string literal.
         // The opening and closing quote characters delimit the string; interior quotes are escaped.

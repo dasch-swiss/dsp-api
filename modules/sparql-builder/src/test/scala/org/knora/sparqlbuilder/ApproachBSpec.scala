@@ -27,7 +27,7 @@ object ApproachBSpec extends ZIOSpecDefault {
 
   /** A triple pattern: subject predicate object . */
   case class TriplePattern(subject: SparqlValue, predicate: SparqlValue, obj: SparqlValue) {
-    def render: String = s"${subject.render} ${predicate.render} ${obj.render} ."
+    def render: String       = s"${subject.render} ${predicate.render} ${obj.render} ."
     def toFragment: Fragment = Fragment.raw(render)
   }
 
@@ -43,20 +43,18 @@ object ApproachBSpec extends ZIOSpecDefault {
     case Raw(fragment: Fragment) // escape hatch
 
     def render: String = this match {
-      case Triple(p) => p.render
+      case Triple(p)    => p.render
       case Optional(ps) =>
         s"OPTIONAL {\n${ps.map(p => "  " + p.render).mkString("\n")}\n}"
       case Union(branches) =>
-        branches.map(branch =>
-          s"{\n${branch.map(p => "  " + p.render).mkString("\n")}\n}"
-        ).mkString(" UNION ")
+        branches.map(branch => s"{\n${branch.map(p => "  " + p.render).mkString("\n")}\n}").mkString(" UNION ")
       case FilterNotExists(ps) =>
         s"FILTER NOT EXISTS {\n${ps.map(p => "  " + p.render).mkString("\n")}\n}"
       case Minus(ps) =>
         s"MINUS {\n${ps.map(p => "  " + p.render).mkString("\n")}\n}"
-      case Filter(expr) => s"FILTER($expr)"
+      case Filter(expr)  => s"FILTER($expr)"
       case Bind(expr, v) => s"BIND($expr AS ${v.render})"
-      case Raw(frag) => frag.render
+      case Raw(frag)     => frag.render
     }
 
     def toFragment: Fragment = Fragment.raw(render)
@@ -99,8 +97,8 @@ object ApproachBSpec extends ZIOSpecDefault {
   }
 
   // -- Helpers --
-  val knoraBase = "http://www.knora.org/ontology/knora-base#"
-  val rdfs      = "http://www.w3.org/2000/01/rdf-schema#"
+  val knoraBase   = "http://www.knora.org/ontology/knora-base#"
+  val rdfs        = "http://www.w3.org/2000/01/rdf-schema#"
   val kbIsDeleted = Iri.trusted(knoraBase + "isDeleted")
   val kbLastMod   = Iri.trusted(knoraBase + "lastModificationDate")
 
@@ -119,10 +117,10 @@ object ApproachBSpec extends ZIOSpecDefault {
   // -------------------------------------------------------------------------
   val simpleSelectSuite = suite("Simple SELECT with OPTIONAL")(
     test("renders a basic SELECT with OPTIONAL using AST") {
-      val s   = Variable("s")
-      val p   = Variable("p")
-      val o   = Variable("o")
-      val lmd = Variable("lastModDate")
+      val s             = Variable("s")
+      val p             = Variable("p")
+      val o             = Variable("o")
+      val lmd           = Variable("lastModDate")
       val resourceClass = Iri.trusted("http://example.org/MyClass")
 
       val query = AstSelect(
@@ -151,17 +149,19 @@ object ApproachBSpec extends ZIOSpecDefault {
   // -------------------------------------------------------------------------
   val isNodeUsedBenchmark = suite("Benchmark: IsNodeUsedQuery with AST")(
     test("renders ASK with UNION using AST") {
-      val s       = Variable("s")
-      val nodeIri = Iri.trusted("http://rdfh.ch/lists/0001/treeList01")
-      val guiAttr = Iri.trusted("http://www.knora.org/ontology/salsah-gui#guiAttribute")
+      val s              = Variable("s")
+      val nodeIri        = Iri.trusted("http://rdfh.ch/lists/0001/treeList01")
+      val guiAttr        = Iri.trusted("http://www.knora.org/ontology/salsah-gui#guiAttribute")
       val valHasListNode = Iri.trusted(knoraBase + "valueHasListNode")
 
       val query = AstAsk(
         patterns = List(
-          GraphPattern.Union(List(
-            List(tp(s, guiAttr, Literal.string(s"hlist=<${nodeIri.value}>"))),
-            List(tp(s, valHasListNode, nodeIri)),
-          )),
+          GraphPattern.Union(
+            List(
+              List(tp(s, guiAttr, Literal.string(s"hlist=<${nodeIri.value}>"))),
+              List(tp(s, valHasListNode, nodeIri)),
+            ),
+          ),
         ),
       ).render
 
@@ -179,13 +179,13 @@ object ApproachBSpec extends ZIOSpecDefault {
   // -------------------------------------------------------------------------
   val conditionalPatternsSuite = suite("Conditional patterns with AST")(
     test("Option-based patterns") {
-      val s = Variable("s")
-      val commentIri = Iri.trusted(knoraBase + "valueHasComment")
+      val s                            = Variable("s")
+      val commentIri                   = Iri.trusted(knoraBase + "valueHasComment")
       val maybeComment: Option[String] = Some("A comment")
 
       val patterns: List[GraphPattern] =
         tp(s, Iri.trusted(knoraBase + "isDeleted"), Literal.bool(false)) ::
-        maybeComment.toList.map(c => tp(s, commentIri, Literal.string(c)))
+          maybeComment.toList.map(c => tp(s, commentIri, Literal.string(c)))
 
       val query = AstSelect(List(s), patterns).render
 
@@ -197,8 +197,8 @@ object ApproachBSpec extends ZIOSpecDefault {
     },
     test("iteration with indexed variables via AST") {
       val resource = Variable("resource")
-      val targets = List("target1", "target2")
-      val hasLink = Iri.trusted(knoraBase + "hasLink")
+      val targets  = List("target1", "target2")
+      val hasLink  = Iri.trusted(knoraBase + "hasLink")
 
       val patterns: List[GraphPattern] = targets.zipWithIndex.flatMap { case (target, idx) =>
         val linkValue = Variable(s"linkValue$idx")

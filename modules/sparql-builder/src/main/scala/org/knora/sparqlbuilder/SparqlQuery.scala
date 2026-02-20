@@ -64,7 +64,7 @@ object SparqlQuery {
       // SELECT clause
       sb.append("SELECT ")
       if (distinct) sb.append("DISTINCT ")
-      val varList = variables.map(_.render)
+      val varList  = variables.map(_.render)
       val exprList = selectExprs.map(_.render)
       sb.append((varList ++ exprList).mkString(" "))
       sb.append("\n")

@@ -5,7 +5,8 @@
 
 package org.knora.sparqlbuilder
 
-/** Typed values that can be safely interpolated into SPARQL fragments.
+/**
+ * Typed values that can be safely interpolated into SPARQL fragments.
  *
  * This sealed hierarchy ensures that only safe types can be interpolated via `sparql"..."`.
  * Raw strings cannot be interpolated — use `Fragment.raw("...")` for that (explicit escape hatch).
@@ -21,6 +22,7 @@ final case class Iri(value: String) extends SparqlValue {
 }
 
 object Iri {
+
   /** Create an IRI from a trusted source (no validation). */
   def trusted(value: String): Iri = Iri(value)
 }
@@ -75,15 +77,15 @@ enum Literal extends SparqlValue {
 }
 
 object Literal {
-  def string(value: String): Literal            = Literal.StringLit(value)
+  def string(value: String): Literal                   = Literal.StringLit(value)
   def langString(value: String, lang: String): Literal = Literal.LangString(value, lang)
   def typed(value: String, datatype: Iri): Literal     = Literal.TypedLit(value, datatype)
-  def int(value: Int): Literal                  = Literal.IntLit(value)
-  def long(value: Long): Literal                = Literal.LongLit(value)
-  def double(value: Double): Literal            = Literal.DoubleLit(value)
-  def decimal(value: BigDecimal): Literal       = Literal.DecimalLit(value)
-  def bool(value: Boolean): Literal             = Literal.BoolLit(value)
-  def dateTime(value: java.time.Instant): Literal =
+  def int(value: Int): Literal                         = Literal.IntLit(value)
+  def long(value: Long): Literal                       = Literal.LongLit(value)
+  def double(value: Double): Literal                   = Literal.DoubleLit(value)
+  def decimal(value: BigDecimal): Literal              = Literal.DecimalLit(value)
+  def bool(value: Boolean): Literal                    = Literal.BoolLit(value)
+  def dateTime(value: java.time.Instant): Literal      =
     Literal.TypedLit(value.toString, Iri.trusted("http://www.w3.org/2001/XMLSchema#dateTime"))
   def anyUri(value: String): Literal =
     Literal.TypedLit(value, Iri.trusted("http://www.w3.org/2001/XMLSchema#anyURI"))

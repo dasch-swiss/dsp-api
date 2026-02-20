@@ -45,7 +45,8 @@ object Fragment {
   /** The empty fragment — identity element for `++`. */
   val empty: Fragment = Fragment(Vector.empty)
 
-  /** Create a fragment from raw SPARQL text. Use with caution — no escaping is performed.
+  /**
+   * Create a fragment from raw SPARQL text. Use with caution — no escaping is performed.
    * This is the only injection-risk surface in the library.
    */
   def raw(sparql: String): Fragment = Fragment(Vector(RawPart(sparql)))
@@ -63,6 +64,5 @@ object Fragment {
     else fragments.reduce(_ ++ separator ++ _)
 
   /** Extension to combine a collection of fragments via monoid. */
-  extension (fragments: Iterable[Fragment])
-    def combineAll: Fragment = fragments.foldLeft(Fragment.empty)(_ ++ _)
+  extension (fragments: Iterable[Fragment]) def combineAll: Fragment = fragments.foldLeft(Fragment.empty)(_ ++ _)
 }

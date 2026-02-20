@@ -15,15 +15,15 @@ import zio.test.*
 object ApproachASpec extends ZIOSpecDefault {
 
   // -- Common vocabulary (would live in the adapter layer in production) --
-  val knoraBase   = "http://www.knora.org/ontology/knora-base#"
-  val rdf         = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  val rdfs        = "http://www.w3.org/2000/01/rdf-schema#"
-  val xsd         = "http://www.w3.org/2001/XMLSchema#"
-  val owl         = "http://www.w3.org/2002/07/owl#"
-  val kbIsDeleted = Iri.trusted(knoraBase + "isDeleted")
-  val kbResource  = Iri.trusted(knoraBase + "Resource")
-  val kbLastMod   = Iri.trusted(knoraBase + "lastModificationDate")
-  val rdfType     = Iri.trusted(rdf + "type")
+  val knoraBase      = "http://www.knora.org/ontology/knora-base#"
+  val rdf            = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  val rdfs           = "http://www.w3.org/2000/01/rdf-schema#"
+  val xsd            = "http://www.w3.org/2001/XMLSchema#"
+  val owl            = "http://www.w3.org/2002/07/owl#"
+  val kbIsDeleted    = Iri.trusted(knoraBase + "isDeleted")
+  val kbResource     = Iri.trusted(knoraBase + "Resource")
+  val kbLastMod      = Iri.trusted(knoraBase + "lastModificationDate")
+  val rdfType        = Iri.trusted(rdf + "type")
   val rdfsSubClassOf = Iri.trusted(rdfs + "subClassOf")
 
   override def spec = suite("Approach A: Fragment + sparql interpolator")(
@@ -41,13 +41,14 @@ object ApproachASpec extends ZIOSpecDefault {
   // -------------------------------------------------------------------------
   val simpleSelectSuite = suite("Simple SELECT with OPTIONAL")(
     test("renders a basic SELECT with OPTIONAL") {
-      val s            = Variable("s")
-      val p            = Variable("p")
-      val o            = Variable("o")
-      val lmd          = Variable("lastModDate")
+      val s             = Variable("s")
+      val p             = Variable("p")
+      val o             = Variable("o")
+      val lmd           = Variable("lastModDate")
       val resourceClass = Iri.trusted("http://example.org/MyClass")
 
-      val query = SparqlQuery.select(s, p, o)
+      val query = SparqlQuery
+        .select(s, p, o)
         .where(
           sparql"$s a $resourceClass .",
           sparql"$s $kbIsDeleted false .",
@@ -74,9 +75,9 @@ object ApproachASpec extends ZIOSpecDefault {
   // -------------------------------------------------------------------------
   val isNodeUsedBenchmark = suite("Benchmark: IsNodeUsedQuery")(
     test("renders ASK with UNION") {
-      val s       = Variable("s")
-      val nodeIri = Iri.trusted("http://rdfh.ch/lists/0001/treeList01")
-      val guiAttr = Iri.trusted("http://www.knora.org/ontology/salsah-gui#guiAttribute")
+      val s              = Variable("s")
+      val nodeIri        = Iri.trusted("http://rdfh.ch/lists/0001/treeList01")
+      val guiAttr        = Iri.trusted("http://www.knora.org/ontology/salsah-gui#guiAttribute")
       val valHasListNode = Iri.trusted(knoraBase + "valueHasListNode")
 
       // Approach A version of IsNodeUsedQuery
@@ -110,11 +111,12 @@ object ApproachASpec extends ZIOSpecDefault {
 
       val propertyPred = Variable("propertyPred")
       val propertyObj  = Variable("propertyObj")
-      val s = Variable("s")
-      val p = Variable("p")
+      val s            = Variable("s")
+      val p            = Variable("p")
 
       // Optional link value property (mirrors the Option[PropertyIri] in the real code)
-      val linkValuePropertyIri: Option[Iri] = Some(Iri.trusted("http://www.knora.org/ontology/0001/anything#hasOtherThingValue"))
+      val linkValuePropertyIri: Option[Iri] =
+        Some(Iri.trusted("http://www.knora.org/ontology/0001/anything#hasOtherThingValue"))
       val linkValuePropertyPred = Variable("linkValuePropertyPred")
       val linkValuePropertyObj  = Variable("linkValuePropertyObj")
 
@@ -182,8 +184,8 @@ object ApproachASpec extends ZIOSpecDefault {
 
   val insertValueBenchmarkSketch = suite("Benchmark: InsertValueQueryBuilder sketch")(
     test("handles conditional link patterns and iteration with indexed variables") {
-      val resource = Variable("resource")
-      val resourceLastMod = Variable("resourceLastModificationDate")
+      val resource         = Variable("resource")
+      val resourceLastMod  = Variable("resourceLastModificationDate")
       val kbHasPermissions = Iri.trusted(knoraBase + "hasPermissions")
       val kbValueHasUUID   = Iri.trusted(knoraBase + "valueHasUUID")
 
@@ -211,10 +213,10 @@ object ApproachASpec extends ZIOSpecDefault {
         }
 
         val linkValueExistsPatterns = Option.when(linkUpdate.linkValueExists) {
-          val linkValue     = Variable(s"linkValue$index")
-          val linkValueUUID = Variable(s"linkValueUUID$index")
+          val linkValue      = Variable(s"linkValue$index")
+          val linkValueUUID  = Variable(s"linkValueUUID$index")
           val linkValuePerms = Variable(s"linkValuePermissions$index")
-          val linkPropValue = Iri.trusted(linkUpdate.linkPropertyIri + "Value")
+          val linkPropValue  = Iri.trusted(linkUpdate.linkPropertyIri + "Value")
           Fragment.join(
             List(
               sparql"$resource $linkPropValue $linkValue .",
@@ -242,7 +244,9 @@ object ApproachASpec extends ZIOSpecDefault {
         .render
 
       assertTrue(
-        query.contains("?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?resourceLastModificationDate"),
+        query.contains(
+          "?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?resourceLastModificationDate",
+        ),
         query.contains("?resource <http://example.org/hasLink> <http://example.org/target1>"),
         query.contains("?linkValue0"),
         query.contains("?linkValueUUID0"),
@@ -260,11 +264,11 @@ object ApproachASpec extends ZIOSpecDefault {
       val resourceClass = Variable("resourceClass")
       val count         = Variable("count")
 
-      val luceneQuery  = "test search" // Would come from FusekiLuceneQuery
+      val luceneQuery   = "test search" // Would come from FusekiLuceneQuery
       val textQueryPred = Iri.trusted("http://jena.apache.org/text#query")
       val rdfsLabel     = Iri.trusted(rdfs + "label")
 
-      val limitToProject: Option[Iri] = Some(Iri.trusted("http://rdfh.ch/projects/0001"))
+      val limitToProject: Option[Iri]       = Some(Iri.trusted("http://rdfh.ch/projects/0001"))
       val limitToResourceClass: Option[Iri] = None
 
       // Build conditional filter fragments
@@ -279,7 +283,8 @@ object ApproachASpec extends ZIOSpecDefault {
 
       val filters = Fragment.combine(projectFilter, classFilter)
 
-      val query = SparqlQuery.select()
+      val query = SparqlQuery
+        .select()
         .prefix("rdfs", rdfs)
         .prefix("knora-base", knoraBase)
         .withExpr(sparql"(count(distinct $resource) as $count)")
@@ -308,8 +313,8 @@ object ApproachASpec extends ZIOSpecDefault {
   val conditionalFragmentsSuite = suite("Conditional fragments")(
     test("Option[Fragment] with combine") {
       val maybeComment: Option[String] = Some("A comment")
-      val commentIri = Iri.trusted(knoraBase + "valueHasComment")
-      val newValue   = Variable("newValue")
+      val commentIri                   = Iri.trusted(knoraBase + "valueHasComment")
+      val newValue                     = Variable("newValue")
 
       val commentPattern: Option[Fragment] = maybeComment.map { c =>
         sparql"$newValue $commentIri ${Literal.string(c)} ."
@@ -328,7 +333,7 @@ object ApproachASpec extends ZIOSpecDefault {
     },
     test("None fragments are skipped") {
       val noComment: Option[Fragment] = None
-      val result = Fragment.combine(
+      val result                      = Fragment.combine(
         Some(sparql"?s a ?type ."),
         noComment,
       )
@@ -368,7 +373,7 @@ object ApproachASpec extends ZIOSpecDefault {
       )
     },
     test("indexed variables for link updates (Twirl @for equivalent)") {
-      val resource = Variable("resource")
+      val resource    = Variable("resource")
       val linkUpdates = List("target1", "target2", "target3")
 
       val patterns: Fragment = linkUpdates.zipWithIndex.map { case (target, idx) =>
