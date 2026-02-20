@@ -35,12 +35,11 @@ object AdminRepoModule { self =>
     KnoraUserRepo
     // format: on
 
-  val layer: URLayer[self.Dependencies, self.Provided] = ZLayer.makeSome[self.Dependencies, self.Provided](
-    KnoraGroupRepoLive.layer,
-    KnoraProjectRepoLive.layer,
-    KnoraUserRepoLive.layer,
-    AdministrativePermissionRepoLive.layer,
-    DefaultObjectAccessPermissionRepoLive.layer,
-    LicenseRepo.layer,
-  )
+  val layer: URLayer[self.Dependencies, self.Provided] =
+    KnoraGroupRepoLive.layer ++
+      KnoraProjectRepoLive.layer ++
+      KnoraUserRepoLive.layer ++
+      AdministrativePermissionRepoLive.layer ++
+      DefaultObjectAccessPermissionRepoLive.layer ++
+      LicenseRepo.layer
 }
