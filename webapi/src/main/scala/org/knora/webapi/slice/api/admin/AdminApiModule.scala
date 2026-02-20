@@ -79,33 +79,22 @@ object AdminApiModule { self =>
       // format: on
 
   val layer: URLayer[self.Dependencies, self.Provided] =
-    ZLayer.makeSome[self.Dependencies, self.Provided](
-      AdminApiServerEndpoints.layer,
-      AdminListRestService.layer,
-      AdminListsEndpoints.layer,
-      AdminListsServerEndpoints.layer,
-      FilesEndpoints.layer,
-      FilesServerEndpoints.layer,
-      GroupRestService.layer,
-      GroupsEndpoints.layer,
-      GroupsServerEndpoints.layer,
-      MaintenanceEndpoints.layer,
-      MaintenanceRestService.layer,
-      MaintenanceServerEndpoints.layer,
-      PermissionRestService.layer,
-      PermissionsEndpoints.layer,
-      PermissionsServerEndpoints.layer,
-      ProjectRestService.layer,
-      ProjectsEndpoints.layer,
-      ProjectsLegalInfoEndpoints.layer,
-      ProjectsLegalInfoRestService.layer,
-      ProjectsLegalInfoServerEndpoints.layer,
-      ProjectsServerEndpoints.layer,
-      StoreEndpoints.layer,
-      StoreRestService.layer,
-      StoreServerEndpoints.layer,
-      UserRestService.layer,
-      UsersEndpoints.layer,
-      UsersServerEndpoints.layer,
-    )
+    // Layer 1: All Endpoints and RestServices are fully independent of each other
+    (AdminListsEndpoints.layer ++ AdminListRestService.layer ++
+      FilesEndpoints.layer ++
+      GroupsEndpoints.layer ++ GroupRestService.layer ++
+      MaintenanceEndpoints.layer ++ MaintenanceRestService.layer ++
+      PermissionsEndpoints.layer ++ PermissionRestService.layer ++
+      ProjectsEndpoints.layer ++ ProjectRestService.layer ++
+      ProjectsLegalInfoEndpoints.layer ++ ProjectsLegalInfoRestService.layer ++
+      StoreEndpoints.layer ++ StoreRestService.layer ++
+      UsersEndpoints.layer ++ UserRestService.layer) >+>
+    // Layer 2: Each ServerEndpoints depends on its paired Endpoints + RestService
+    (AdminListsServerEndpoints.layer ++ FilesServerEndpoints.layer ++
+      GroupsServerEndpoints.layer ++ MaintenanceServerEndpoints.layer ++
+      PermissionsServerEndpoints.layer ++ ProjectsServerEndpoints.layer ++
+      ProjectsLegalInfoServerEndpoints.layer ++ StoreServerEndpoints.layer ++
+      UsersServerEndpoints.layer) >+>
+    // Layer 3: Top-level aggregator
+    AdminApiServerEndpoints.layer
 }
