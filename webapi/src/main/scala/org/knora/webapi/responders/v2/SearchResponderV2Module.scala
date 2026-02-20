@@ -33,13 +33,8 @@ object SearchResponderV2Module {
     QueryTraverser & SearchResponderV2Live
 
   val layer: URLayer[Dependencies, Provided] =
-    ZLayer.makeSome[Dependencies, Provided](
-      InferringGravsearchTypeInspector.layer,
-      GravsearchTypeInspectionRunner.layer,
-      ZLayer.derive[SearchResponderV2Live],
-      InferenceOptimizationService.layer,
-      QueryTraverser.layer,
-      ConstructTransformer.layer,
-      OntologyInferencer.layer,
-    )
+    (OntologyInferencer.layer ++ QueryTraverser.layer ++ InferenceOptimizationService.layer) >+>
+      (ConstructTransformer.layer ++ InferringGravsearchTypeInspector.layer) >+>
+      GravsearchTypeInspectionRunner.layer >+>
+      ZLayer.derive[SearchResponderV2Live]
 }

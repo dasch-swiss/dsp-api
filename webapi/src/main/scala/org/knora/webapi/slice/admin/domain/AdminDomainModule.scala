@@ -55,19 +55,11 @@ object AdminDomainModule { self =>
       // format: on
 
   val layer: URLayer[self.Dependencies, self.Provided] =
-    ZLayer.makeSome[self.Dependencies, self.Provided](
-      AdministrativePermissionService.layer,
-      DefaultObjectAccessPermissionService.layer,
-      GroupService.layer,
-      KnoraGroupService.layer,
-      KnoraProjectService.layer,
-      KnoraUserService.layer,
-      KnoraUserToUserConverter.layer,
-      LegalInfoService.layer,
-      MaintenanceService.layer,
-      PasswordService.layer,
-      ProjectEraseService.layer,
-      ProjectService.layer,
-      UserService.layer,
-    )
+    (AdministrativePermissionService.layer ++ DefaultObjectAccessPermissionService.layer ++
+      KnoraProjectService.layer ++ PasswordService.layer) >+>
+      (KnoraUserService.layer ++ LegalInfoService.layer ++ MaintenanceService.layer ++ ProjectService.layer) >+>
+      KnoraGroupService.layer >+>
+      (ProjectEraseService.layer ++ GroupService.layer) >+>
+      KnoraUserToUserConverter.layer >+>
+      UserService.layer
 }

@@ -25,11 +25,6 @@ object ApiModule {
   type Provided = Endpoints & AdminApiModule.Provided
 
   val layer: URLayer[Dependencies, Provided] =
-    ZLayer.makeSome[Dependencies, Provided](
-      AdminApiModule.layer,
-      ManagementServerEndpoints.layer,
-      ApiV2Module.layer,
-      ApiV3Module.layer,
-      Endpoints.layer,
-    )
+    (AdminApiModule.layer ++ ManagementServerEndpoints.layer ++ ApiV2Module.layer ++ ApiV3Module.layer) >+>
+      Endpoints.layer
 }

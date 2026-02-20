@@ -46,19 +46,17 @@ object ApiV3Module {
   type Provided = ApiV3ServerEndpoints
 
   val layer: URLayer[Dependencies, ApiV3ServerEndpoints] =
-    ZLayer.makeSome[Dependencies, ApiV3ServerEndpoints](
-      ApiV3ServerEndpoints.layer,
-      ExportServerEndpoints.layer,
-      OntologyRestServiceV3.layer,
-      ResourcesEndpointsV3.layer,
-      ResourcesRestServiceV3.layer,
-      ResourcesServerEndpointsV3.layer,
-      V3Authorizer.layer,
-      V3BaseEndpoint.layer,
-      V3ProjectsEndpoints.layer,
-      V3ProjectsRestService.layer,
-      V3ProjectsServerEndpoints.layer,
-    )
+    V3BaseEndpoint.layer >+>
+      V3Authorizer.layer >+>
+      OntologyRestServiceV3.layer >+>
+      ExportServerEndpoints.layer >+>
+      ResourcesEndpointsV3.layer >+>
+      V3ProjectsEndpoints.layer >+>
+      ResourcesRestServiceV3.layer >+>
+      V3ProjectsRestService.layer >+>
+      ResourcesServerEndpointsV3.layer >+>
+      V3ProjectsServerEndpoints.layer >>>
+      ApiV3ServerEndpoints.layer
 }
 
 object ApiV3 {
