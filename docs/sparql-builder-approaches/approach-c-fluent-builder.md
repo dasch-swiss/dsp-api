@@ -25,36 +25,36 @@ def filterNotExists(body: Fragment): Fragment = ...
 ### Builder Types
 
 ```scala
-case class FluentSelect(
+case class Select(
   variables: List[Variable] = Nil,
   patterns: List[Fragment] = Nil,
   orderByClause: List[OrderBy] = Nil,
   limitValue: Option[Int] = None,
   selectExprs: List[Fragment] = Nil,
 ) {
-  def select(vars: Variable*): FluentSelect = copy(variables = vars.toList)
-  def where(pats: Fragment*): FluentSelect  = copy(patterns = pats.toList)
-  def orderBy(o: OrderBy*): FluentSelect    = copy(orderByClause = o.toList)
-  def limit(n: Int): FluentSelect           = copy(limitValue = Some(n))
-  def withExpr(expr: Fragment): FluentSelect = copy(selectExprs = selectExprs :+ expr)
+  def select(vars: Variable*): Select = copy(variables = vars.toList)
+  def where(pats: Fragment*): Select  = copy(patterns = pats.toList)
+  def orderBy(o: OrderBy*): Select    = copy(orderByClause = o.toList)
+  def limit(n: Int): Select           = copy(limitValue = Some(n))
+  def withExpr(expr: Fragment): Select = copy(selectExprs = selectExprs :+ expr)
 }
 
-case class FluentAsk(patterns: List[Fragment] = Nil) {
-  def where(pats: Fragment*): FluentAsk = copy(patterns = pats.toList)
+case class Ask(patterns: List[Fragment] = Nil) {
+  def where(pats: Fragment*): Ask = copy(patterns = pats.toList)
 }
 
-case class FluentUpdate(
+case class Update(
   prefixes: List[(String, String)] = Nil,
   deleteClause: List[Fragment] = Nil,
   insertClause: List[Fragment] = Nil,
   whereClause: List[Fragment] = Nil,
   graphIri: Option[Iri] = None,
 ) {
-  def prefix(p: String, ns: String): FluentUpdate = copy(prefixes = prefixes :+ (p, ns))
-  def delete(pats: Fragment*): FluentUpdate = copy(deleteClause = pats.toList)
-  def insert(pats: Fragment*): FluentUpdate = copy(insertClause = pats.toList)
-  def where(pats: Fragment*): FluentUpdate  = copy(whereClause = pats.toList)
-  def graph(iri: Iri): FluentUpdate         = copy(graphIri = Some(iri))
+  def prefix(p: String, ns: String): Update = copy(prefixes = prefixes :+ (p, ns))
+  def delete(pats: Fragment*): Update = copy(deleteClause = pats.toList)
+  def insert(pats: Fragment*): Update = copy(insertClause = pats.toList)
+  def where(pats: Fragment*): Update  = copy(whereClause = pats.toList)
+  def graph(iri: Iri): Update         = copy(graphIri = Some(iri))
 }
 ```
 
@@ -85,7 +85,7 @@ val o             = Variable("o")
 val lmd           = Variable("lastModDate")
 val resourceClass = Iri.trusted("http://example.org/MyClass")
 
-val query = FluentSelect()
+val query = Select()
   .select(s, p, o)
   .where(
     triple(s, rdfType, resourceClass),
@@ -121,7 +121,7 @@ val nodeIri        = Iri.trusted("http://rdfh.ch/lists/0001/treeList01")
 val guiAttr        = Iri.trusted("http://www.knora.org/ontology/salsah-gui#guiAttribute")
 val valHasListNode = Iri.trusted(knoraBase + "valueHasListNode")
 
-val query = FluentAsk()
+val query = Ask()
   .where(
     union(
       triple(s, guiAttr, Literal.string(s"hlist=<${nodeIri.value}>")),
@@ -188,7 +188,7 @@ val wherePatterns = List(
   filterNotExists(triple(s, p, propertyIri)),
 ) ++ linkValueWhere
 
-val query = FluentUpdate()
+val query = Update()
   .prefix("knora-base", knoraBase)
   .prefix("xsd", xsd)
   .prefix("owl", owl)
@@ -256,7 +256,7 @@ val linkDeletePatterns: List[Fragment] = linkUpdates.zipWithIndex.flatMap { case
 
 val deletePatterns = triple(resource, kbLastMod, resourceLastMod) :: linkDeletePatterns
 
-val query = FluentUpdate()
+val query = Update()
   .delete(deletePatterns*)
   .where(triple(resource, rdfType, Iri.trusted(knoraBase + "Resource")))
   .render
@@ -312,8 +312,8 @@ val wherePatterns = List(textQuery, subClassPattern) ++
   projectFilter ++
   List(filterNotExists(triple(resource, kbIsDeleted, Literal.bool(true))))
 
-// Note: FluentSelect needs withExpr support for computed expressions
-val query = FluentSelect()
+// Note: Select needs withExpr support for computed expressions
+val query = Select()
   .withExpr(Fragment.raw(s"(count(distinct ${resource.render}) as ${count.render})"))
   .where(wherePatterns*)
   .render
@@ -386,7 +386,7 @@ val newLmdValue = Literal.typed("2024-01-02T00:00:00Z", Iri.trusted(xsd + "dateT
 val insertPatterns = valueTypePatterns ++ linkValuePatterns ++
   List(triple(resourceIri, kbLastMod, newLmdValue))
 
-val query = FluentUpdate()
+val query = Update()
   .prefix("knora-base", knoraBase)
   .prefix("xsd", xsd)
   .graph(graphIri)
@@ -405,4 +405,19 @@ val query = FluentUpdate()
 - **Escape hatches**: `Fragment.raw(...)` is still needed for Lucene queries and property paths — same limitation as Approach A.
 - **Conditional logic**: `Option.toList` + list concatenation works but is slightly more boilerplate than `Fragment.combine(Option[Fragment]*)`.
 - **Iteration**: `flatMap` on lists is natural Scala. Patterns accumulate as `List[Fragment]`, then splat into `.where(patterns*)`.
-- **Similarity to A**: The builder structure (FluentSelect, FluentUpdate) is almost identical to SparqlQuery. The main difference is `triple(s, p, o)` vs `sparql"$s $p $o ."` for atomic patterns.
+- **Similarity to A**: The builder structure (Select, Update) is almost identical to SparqlQuery. The main difference is `triple(s, p, o)` vs `sparql"$s $p $o ."` for atomic patterns.
+
+---
+
+## Design Review Feedback
+
+**Likes:**
+- Overall readability comparably good to Approach A
+- `triple()` is more expressive than `tp()`, though `tp()` is more compact — tradeoff noted
+
+**Suggested improvements:**
+- **Drop "Fluent" prefix**: `Select()`, `Ask()`, `Update()` — not `FluentSelect()` etc. *(applied above)*
+- **`triple().optional()` over `optional(triple())`**: Wrapping should be a method on the pattern, not a standalone function.
+- **Bulk prefixes**: `.prefixes("knora-base" -> knoraBase, "xsd" -> xsd)` instead of chaining `.prefix()`.
+- **Composability**: Looks powerful but readability could be better; conditionality/iteration still undecided.
+- **See also**: Approach C Variant ("Consequent Fluent") explores taking the fluent chaining further with `.and()`, `.andOptional()`, `.andAll()` on triple patterns themselves.

@@ -423,3 +423,17 @@ val query = SparqlQuery.update
 - **Conditional logic**: `Option.when(condition)(sparql"...")` maps 1:1 to Twirl's `@if`.
 - **Iteration**: `.map { ... sparql"..." }.combineAll` maps 1:1 to Twirl's `@for`.
 - **Concerns**: `Literal.string(s"hlist=<$nodeIri>")` in benchmark 2 feels like a workaround — the `s"..."` inside bypasses the type system's protection. The `subClassOf*` property path in benchmark 5 is interpolated as a raw IRI string, which is not ideal.
+
+---
+
+## Design Review Feedback
+
+**Likes:**
+- The `SparqlQuery.select(s, p, o).where(...).orderBy(...).limit(25).render` fluent API reads beautifully
+
+**Suggested improvements:**
+- **Prefer `tp()` over `sparql"..."`**: The `sparql"..."` interpolator feels like a lot of repetition for little gain when constructing triple patterns. `tp(s, rdfType, resourceClass)` would be more compact.
+- **`triple().optional()` over `Fragments.optional(sparql"...")`**: Wrapping patterns should be a method on the pattern itself, not a standalone function. `tp(s, kbLastMod, lmd).optional` reads better.
+- **Bulk prefixes**: Instead of chaining `.prefix("a", a).prefix("b", b)`, support `.prefixes("knora-base" -> knoraBase, "xsd" -> xsd, "owl" -> owl)`.
+- **Safety**: The `sparql"..."` interpolator only accepts `SparqlValue | Fragment` — raw `String` is a compile error. This is a strong safety guarantee worth documenting prominently.
+- **Composability/conditionality**: Undecided — needs more thought on how `Fragment.combine`, `Option[Fragment]`, etc. feel in practice.
