@@ -38,8 +38,5 @@ object ExportApiModule { self =>
     // format: on
 
   val layer: URLayer[self.Dependencies, self.Provided] =
-    ZLayer.makeSome[self.Dependencies, self.Provided](
-      ExportService.layer,
-      FindResourcesService.layer,
-    )
+    FindResourcesService.layer >+> ExportService.layer
 }
