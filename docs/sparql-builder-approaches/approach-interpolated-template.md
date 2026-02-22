@@ -189,6 +189,16 @@ Template is most readable — the UNION structure is visually obvious. Builder w
 
 ## Benchmark 3: DeletePropertyQuery (DELETE/INSERT WHERE)
 
+**What this tests**: A SPARQL UPDATE query with three clauses (DELETE, INSERT, WHERE), GRAPH scoping, FILTER NOT EXISTS, and — most importantly — **conditional fragments**. The query structure changes based on runtime data: this is the Twirl `@if` equivalent.
+
+**Domain context**: In knora-base, most value properties (e.g., `hasColor`) point to a reified value object that carries metadata (creation date, permissions, etc.). Link properties are special: a link property like `hasOtherThing` points *directly* to the target resource, while a paired property `hasOtherThingValue` (name derived by appending "Value") points to a `LinkValue` reification object. This naming convention is enforced — non-link properties must not end in "Value". When deleting a property from an ontology, if it's a link property, both `hasOtherThing` and `hasOtherThingValue` must be removed. The `linkValuePropertyIri: Option[PropertyIri]` parameter is `Some` for link properties and `None` for all others.
+
+**Key challenges**:
+- Three-clause structure: DELETE { GRAPH { ... } } INSERT { GRAPH { ... } } WHERE { ... }
+- Conditional inclusion: the link value property patterns are `Option[Fragment]` — present when deleting a link property, absent for regular value properties
+- FILTER NOT EXISTS: guards against deleting a property that is still in use by any resource
+- PREFIX declarations: three prefixes used with prefixed names in the body
+
 ### Plain SPARQL
 
 ```sparql
@@ -198,23 +208,23 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
 DELETE {
   GRAPH <http://www.knora.org/ontology/0001/anything> {
-    <...> knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
-    <...#hasOtherThing> ?propertyPred ?propertyObj .
-    <...#hasOtherThingValue> ?linkValuePropertyPred ?linkValuePropertyObj .
+    <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
+    <http://www.knora.org/ontology/0001/anything#hasOtherThing> ?propertyPred ?propertyObj .
+    <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> ?linkValuePropertyPred ?linkValuePropertyObj .
   }
 }
 INSERT {
   GRAPH <http://www.knora.org/ontology/0001/anything> {
-    <...> knora-base:lastModificationDate "2024-01-02T00:00:00Z"^^xsd:dateTime .
+    <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2024-01-02T00:00:00Z"^^xsd:dateTime .
   }
 }
 WHERE {
-  <...> a owl:Ontology .
-  <...> knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
-  <...#hasOtherThing> a owl:ObjectProperty .
-  <...#hasOtherThing> ?propertyPred ?propertyObj .
-  FILTER NOT EXISTS { ?s ?p <...#hasOtherThing> . }
-  <...#hasOtherThingValue> ?linkValuePropertyPred ?linkValuePropertyObj .
+  <http://www.knora.org/ontology/0001/anything> a owl:Ontology .
+  <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
+  <http://www.knora.org/ontology/0001/anything#hasOtherThing> a owl:ObjectProperty .
+  <http://www.knora.org/ontology/0001/anything#hasOtherThing> ?propertyPred ?propertyObj .
+  FILTER NOT EXISTS { ?s ?p <http://www.knora.org/ontology/0001/anything#hasOtherThing> . }
+  <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> ?linkValuePropertyPred ?linkValuePropertyObj .
 }
 ```
 
@@ -331,6 +341,14 @@ Template clearly wins for readability — the DELETE/INSERT/WHERE structure is v
 
 ## Benchmark 4: InsertValueQueryBuilder (conditional + iteration)
 
+**What this tests**: Dynamic query construction from a **collection** of updates, where each update conditionally contributes triple patterns. This is the Twirl `@for` + `@if` equivalent: iterate over a list, conditionally emit patterns per item, and generate **indexed variables** (`?linkValue0`, `?linkValue1`, ...) to keep each iteration's bindings distinct.
+
+**Key challenges**:
+- Iteration: a `List[LinkUpdate]` produces a variable number of DELETE patterns
+- Conditionals per item: each update has `deleteDirectLink` and `linkValueExists` flags controlling which patterns appear
+- Indexed variables: `Variable(s"linkValue$index")` — each iteration gets unique variable names
+- The fragment composition logic is shared across all API styles — the styles only differ in how they embed the composed result
+
 ### Plain SPARQL
 
 ```sparql
@@ -356,19 +374,19 @@ case class LinkUpdate(
 
 val resource        = Variable("resource")
 val resourceLastMod = Variable("resourceLastModificationDate")
-val kbHasPermissions = Iri.trusted(knoraBase + "hasPermissions")
-val kbValueHasUUID   = Iri.trusted(knoraBase + "valueHasUUID")
+val kbHasPermissions = kb.unsafeIri("hasPermissions")
+val kbValueHasUUID   = kb.unsafeIri("valueHasUUID")
 
 val linkUpdates = List(
   LinkUpdate("http://example.org/hasLink", "http://example.org/target1",
     deleteDirectLink = true, linkValueExists = true),
 )
 
-// Iteration + conditionals — shared by both styles
+// Iteration + conditionals — shared by all styles
 val linkDeleteFragments: List[Fragment] = linkUpdates.zipWithIndex.flatMap { case (update, index) =>
   val directLink = Option.when(update.deleteDirectLink) {
-    val prop   = Iri.trusted(update.linkPropertyIri)
-    val target = Iri.trusted(update.linkTargetIri)
+    val prop   = Iri.unsafeFrom(update.linkPropertyIri)
+    val target = Iri.unsafeFrom(update.linkTargetIri)
     sparql"$resource $prop $target ."
   }
 
@@ -376,7 +394,7 @@ val linkDeleteFragments: List[Fragment] = linkUpdates.zipWithIndex.flatMap { cas
     val linkValue      = Variable(s"linkValue$index")
     val linkValueUUID  = Variable(s"linkValueUUID$index")
     val linkValuePerms = Variable(s"linkValuePermissions$index")
-    val linkPropValue  = Iri.trusted(update.linkPropertyIri + "Value")
+    val linkPropValue  = Iri.unsafeFrom(update.linkPropertyIri + "Value")
     sparql"""$resource $linkPropValue $linkValue .
       $linkValue $kbValueHasUUID $linkValueUUID .
       $linkValue $kbHasPermissions $linkValuePerms ."""
@@ -402,7 +420,7 @@ val query = sparql"""
 """.render
 ```
 
-### Builder style
+### Builder style (individual fragments)
 
 ```scala
 val query = Sparql.update
@@ -414,13 +432,33 @@ val query = Sparql.update
   .render
 ```
 
+### Builder style (multi-line fragment)
+
+```scala
+val query = Sparql.update
+  .delete(sparql"""
+    $resource $kbLastMod $resourceLastMod .
+    $linkDeleteBlock""")
+  .where(sparql"$resource a $kbResource .")
+  .render
+```
+
 ### Comparison
 
-The real work is in the shared fragment composition — both styles just embed the result. Template shows the DELETE/WHERE structure; builder is marginally more compact. Either works well.
+The real work is in the shared fragment composition (iteration + conditionals) — all three styles just embed the result. The query shell is simple (DELETE/WHERE with no GRAPH, no PREFIX), so the styles look nearly identical. This benchmark validates the Fragment composition model more than the query API.
 
 ---
 
 ## Benchmark 5: SearchQueries.selectCountByLabel (Lucene)
+
+**What this tests**: A full-text search query using Jena's **vendor-specific `text#query` predicate** with Lucene, combined with **property paths** (`rdfs:subClassOf*`), aggregate expressions (`COUNT(DISTINCT ...)`), conditional filters, and FILTER NOT EXISTS. This is the hardest benchmark for the type system because both `text#query` and property paths fall outside standard SPARQL triple patterns.
+
+**Key challenges**:
+- Vendor extension: `?resource <text#query> (rdfs:label "search term")` — Jena-specific predicate with property list notation
+- Property paths: `rdfs:subClassOf*` — the `*` (zero-or-more) operator on a predicate
+- Aggregate expression in SELECT: `(COUNT(DISTINCT ?resource) AS ?count)`
+- Conditional fragments: project filter and resource class filter are both optional
+- PREFIX usage with prefixed names in the body
 
 ### Plain SPARQL
 
@@ -444,59 +482,60 @@ WHERE {
 val resource      = Variable("resource")
 val resourceClass = Variable("resourceClass")
 val count         = Variable("count")
-val textQueryPred = Iri.trusted("http://jena.apache.org/text#query")
-val rdfsLabel     = Iri.trusted(rdfs + "label")
+val rdfsLabel     = rdfs.unsafeIri("label")
+val kbAttachedToProject = kb.unsafeIri("attachedToProject")
 
-val limitToProject: Option[Iri] = Some(Iri.trusted("http://rdfh.ch/projects/0001"))
+val limitToProject: Option[Iri] = Some(Iri.unsafeFrom("http://rdfh.ch/projects/0001"))
 val limitToResourceClass: Option[Iri] = None
 
-// Conditional fragments — shared by both styles
+// Conditional fragments — shared by all styles
 val projectFilter: Fragment = limitToProject.fold(Fragment.empty) { prj =>
-  sparql"$resource ${Iri.trusted(knoraBase + "attachedToProject")} $prj ."
+  sparql"$resource $kbAttachedToProject $prj ."
 }
 
 val classFilter: Fragment = limitToResourceClass.fold(Fragment.empty) { cls =>
-  Fragment.raw(s"${resourceClass.render} <${rdfs}subClassOf*> ${cls.render} .")
+  sparql"$resourceClass ${PropertyPath.zeroOrMore(rdfsSubClassOf)} $cls ."
 }
 
-// Lucene text#query — needs Fragment.raw for property list notation
-val textQueryLine = Fragment.raw(
-  s"${resource.render} ${textQueryPred.render} (${rdfsLabel.render} ${Literal.string("test search").render}) ;" +
-  s"\n    a ${resourceClass.render} ."
+// Lucene text#query — typed combinator instead of Fragment.raw
+val textQueryLine: Fragment = Fragments.jenaTextQuery(
+  subject = resource,
+  predicate = rdfsLabel,
+  query = Literal.stringEscaped("test search"),
 )
 
-val subClassLine = Fragment.raw(
-  s"${resourceClass.render} <${rdfs}subClassOf*> <${knoraBase}Resource> ."
-)
+// Property path for subclass traversal
+val subClassLine: Fragment =
+  sparql"$resourceClass ${PropertyPath.zeroOrMore(rdfsSubClassOf)} $kbResource ."
 ```
 
 ### Template style
 
 ```scala
 val query = sparql"""
-  PREFIX $pRdfs
+  PREFIX $rdfs
   PREFIX $kb
 
   SELECT (count(distinct $resource) as $count)
   WHERE {
-    $textQueryLine
+    $textQueryLine ;
+      a $resourceClass .
     $subClassLine
     $projectFilter
     $classFilter
-    FILTER NOT EXISTS { $resource $kbIsDeleted ${Literal.bool(true)} . }
+    FILTER NOT EXISTS { $resource $kbIsDeleted true . }
   }
 """.render
 ```
 
-### Builder style
+### Builder style (individual fragments)
 
 ```scala
 val query = Sparql
-  .select()
-  .prefixes("rdfs" -> rdfs, "knora-base" -> knoraBase)
-  .withExpr(sparql"(count(distinct $resource) as $count)")
+  .select(sparql"(count(distinct $resource) as $count)")
+  .prefixes(rdfs, kb)
   .where(
-    textQueryLine,
+    sparql"$textQueryLine ; a $resourceClass .",
     subClassLine,
     projectFilter,
     classFilter,
@@ -505,15 +544,64 @@ val query = Sparql
   .render
 ```
 
+### Builder style (multi-line fragment)
+
+```scala
+val query = Sparql
+  .select(sparql"(count(distinct $resource) as $count)")
+  .prefixes(rdfs, kb)
+  .where(sparql"""
+    $textQueryLine ;
+      a $resourceClass .
+    $subClassLine
+    $projectFilter
+    $classFilter
+    ${Fragments.filterNotExists(sparql"$resource $kbIsDeleted true .")}""")
+  .render
+```
+
 ### Comparison
 
-Both degrade for this benchmark due to Lucene `text#query` and property paths requiring `Fragment.raw(...)`. The template keeps the visual structure clearer. The builder's `.withExpr()` is awkward — the template's inline `SELECT (count(...) as ...)` reads more naturally.
+With `PropertyPath` and `Fragments.jenaTextQuery`, this benchmark no longer requires `Fragment.raw(s"...")`. The template style reads most naturally — the SELECT expression, PREFIX declarations, and WHERE body all appear in their natural SPARQL positions. The builder's `.select(sparql"(count(...))")` is slightly awkward but workable.
 
-**Known issue**: `Fragment.raw(s"...")` for Lucene and property paths is the weakest point of the entire design. A future `PropertyPath` type and Lucene combinator would address this.
+### New types introduced
+
+**`PropertyPath`** — represents SPARQL 1.1 property paths:
+```scala
+PropertyPath.zeroOrMore(iri)   // iri*   — zero or more
+PropertyPath.oneOrMore(iri)    // iri+   — one or more
+PropertyPath.sequence(a, b)    // a / b  — sequence
+PropertyPath.alternative(a, b) // a | b  — alternative
+PropertyPath.inverse(iri)      // ^iri   — inverse
+```
+
+`PropertyPath` implements `SparqlValue` so it can be interpolated in `sparql"..."`.
+
+**`Fragments.jenaTextQuery`** — typed Lucene full-text search combinator:
+```scala
+Fragments.jenaTextQuery(
+  subject: Variable,
+  predicate: Iri,       // the RDF predicate to search (e.g., rdfs:label)
+  query: Literal,       // the Lucene search string (escaped)
+): Fragment
+// Renders: ?subject <http://jena.apache.org/text#query> (predicate "query")
+```
+
+This encapsulates the vendor-specific `text#query` syntax, keeping the Jena dependency isolated to a single combinator.
 
 ---
 
 ## Benchmark 6: addValueVersion (polymorphic match + iteration)
+
+**What this tests**: A simplified sketch of the 518-line Twirl template `addValueVersion.scala.txt` — the most complex SPARQL generation site in the codebase. It creates a new version of a value for a resource, handling **polymorphic value types** (TextValue shown here, but the real template has 13+ cases), **optional properties** (comment), **link value iteration with indexed variables**, and **GRAPH-scoped DELETE/INSERT**.
+
+**Key challenges**:
+- Polymorphic dispatch: `match` on value type determines which triple patterns to emit (TextValue, IntValue, LinkValue, etc.)
+- Optional properties: `maybeComment` is `Option[String]` — when absent, the `valueHasComment` triple must be absent entirely
+- Link value iteration: a `List[LinkValueUpdate]` produces variable-length INSERT patterns, each with its own IRI
+- GRAPH scoping: both DELETE and INSERT are wrapped in `GRAPH <namedGraph> { ... }`
+- PREFIX declarations with prefixed names in the body
+- This is the Twirl template that most strongly motivates replacing the template engine — 518 lines of `@if`/`@for`/`@match` interleaved with SPARQL
 
 ### Plain SPARQL
 
@@ -547,46 +635,46 @@ WHERE {
 ### Shared setup
 
 ```scala
-val resourceIri  = Iri.trusted("http://rdfh.ch/0001/resource1")
-val newValueIri  = Iri.trusted("http://rdfh.ch/0001/resource1/values/newValue1")
-val graphIri     = Iri.trusted("http://www.knora.org/data/0001/project1")
+val resourceIri  = Iri.unsafeFrom("http://rdfh.ch/0001/resource1")
+val newValueIri  = Iri.unsafeFrom("http://rdfh.ch/0001/resource1/values/newValue1")
+val graphIri     = Iri.unsafeFrom("http://www.knora.org/data/0001/project1")
 val resourceLastMod = Variable("resourceLastModificationDate")
 
-val kbTextValue       = Iri.trusted(knoraBase + "TextValue")
-val kbLinkValue       = Iri.trusted(knoraBase + "LinkValue")
-val kbValueHasString  = Iri.trusted(knoraBase + "valueHasString")
-val kbValueHasComment = Iri.trusted(knoraBase + "valueHasComment")
-val kbValueHasUUID    = Iri.trusted(knoraBase + "valueHasUUID")
-val kbHasPermissions  = Iri.trusted(knoraBase + "hasPermissions")
-val kbValueHasRefCount = Iri.trusted(knoraBase + "valueHasRefCount")
+val kbTextValue       = kb.unsafeIri("TextValue")
+val kbLinkValue       = kb.unsafeIri("LinkValue")
+val kbValueHasString  = kb.unsafeIri("valueHasString")
+val kbValueHasComment = kb.unsafeIri("valueHasComment")
+val kbValueHasUUID    = kb.unsafeIri("valueHasUUID")
+val kbHasPermissions  = kb.unsafeIri("hasPermissions")
+val kbValueHasRefCount = kb.unsafeIri("valueHasRefCount")
 
 val maybeComment: Option[String] = Some("Updated value")
 
 // Polymorphic value type — compose Fragment from match
 val commentFragment: Fragment = maybeComment.fold(Fragment.empty) { c =>
-  sparql"$kbValueHasComment ${Literal.string(c)} ;"
+  sparql"$kbValueHasComment ${Literal.stringEscaped(c)} ;"
 }
 
 val valueTypeFragment = sparql"""$newValueIri a $kbTextValue ;
-      $kbValueHasString ${Literal.string("Hello world")} ;
+      $kbValueHasString ${Literal.stringEscaped("Hello world")} ;
       $commentFragment
-      $kbValueHasUUID ${Literal.string("uuid-new-value-1")} ;
-      $kbHasPermissions ${Literal.string("CR knora-admin:ProjectAdmin")} ."""
+      $kbValueHasUUID ${Literal.stringEscaped("uuid-new-value-1")} ;
+      $kbHasPermissions ${Literal.stringEscaped("CR knora-admin:ProjectAdmin")} ."""
 
 // Link value iteration
 case class LinkValueUpdate(iri: String, refCount: Int, permissions: String)
 val linkUpdates = List(LinkValueUpdate("http://example.org/newLinkValue1", 2, "CR knora-admin:ProjectAdmin"))
 
 val linkValueFragments: List[Fragment] = linkUpdates.map { update =>
-  val lvIri = Iri.trusted(update.iri)
+  val lvIri = Iri.unsafeFrom(update.iri)
   sparql"""$lvIri a $kbLinkValue ;
       $kbValueHasRefCount ${Literal.int(update.refCount)} ;
-      $kbHasPermissions ${Literal.string(update.permissions)} ."""
+      $kbHasPermissions ${Literal.stringEscaped(update.permissions)} ."""
 }
 
 val linkValueBlock = Fragment.join(linkValueFragments)
 
-val newLmdValue = Literal.typed("2024-01-02T00:00:00Z", Iri.trusted(xsd + "dateTime"))
+val newLmdValue = Literal.typedEscaped("2024-01-02T00:00:00Z", xsd.unsafeIri("dateTime"))
 ```
 
 ### Template style
@@ -594,7 +682,7 @@ val newLmdValue = Literal.typed("2024-01-02T00:00:00Z", Iri.trusted(xsd + "dateT
 ```scala
 val query = sparql"""
   PREFIX $kb
-  PREFIX $pXsd
+  PREFIX $xsd
 
   DELETE {
     GRAPH $graphIri {
@@ -614,27 +702,40 @@ val query = sparql"""
 """.render
 ```
 
-### Builder style
+### Builder style (individual fragments)
 
 ```scala
-val insertClause = Fragment.join(List(
-  valueTypeFragment,
-  linkValueBlock,
-  sparql"$resourceIri $kbLastMod $newLmdValue .",
-), Fragment.raw("\n"))
-
 val query = Sparql.update
-  .prefixes("knora-base" -> knoraBase, "xsd" -> xsd)
+  .prefixes(kb, xsd)
   .delete(sparql"$resourceIri $kbLastMod $resourceLastMod .")
   .graph(graphIri)
-  .insert(insertClause)
+  .insert(
+    valueTypeFragment,
+    linkValueBlock,
+    sparql"$resourceIri $kbLastMod $newLmdValue .",
+  )
+  .where(sparql"$resourceIri $kbLastMod $resourceLastMod .")
+  .render
+```
+
+### Builder style (multi-line fragments)
+
+```scala
+val query = Sparql.update
+  .prefixes(kb, xsd)
+  .delete(sparql"$resourceIri $kbLastMod $resourceLastMod .")
+  .graph(graphIri)
+  .insert(sparql"""
+    $valueTypeFragment
+    $linkValueBlock
+    $resourceIri $kbLastMod $newLmdValue .""")
   .where(sparql"$resourceIri $kbLastMod $resourceLastMod .")
   .render
 ```
 
 ### Comparison
 
-Template is clearly more readable — you see the full GRAPH/DELETE/INSERT/WHERE structure. Builder requires pre-composing the insert clause into a single `Fragment` to pass to `.insert()`. Both share the same fragment composition for the polymorphic value type and link value iteration.
+Template is clearly the most readable — the full GRAPH/DELETE/INSERT/WHERE structure is visually obvious. The builder variants are nearly identical here because the real complexity lives in the shared fragment composition (polymorphic value type dispatch, optional comment, link value iteration). The builder with individual fragments explicitly separates the three insert components; the multi-line variant keeps them as one visual block. All three styles benefit equally from the `Fragment` composition model — this is where the library earns its keep, replacing 518 lines of Twirl `@if`/`@for`/`@match` with typed Scala.
 
 ---
 
@@ -742,7 +843,7 @@ The adapter layer converts: `extension (lc: LanguageCode) def toLanguageTag: Lan
 
 ### Known issues (shared by both styles)
 
-- **`Fragment.raw(s"...")`**: Still needed for Lucene `text#query` and `subClassOf*` property paths. A `PropertyPath` type and Lucene combinator would address this.
+- **`Fragment.raw(s"...")`**: ~~Still needed for Lucene `text#query` and `subClassOf*` property paths.~~ Resolved: `PropertyPath` type (Benchmark 5) and `Fragments.jenaTextQuery` combinator replace the two main `Fragment.raw` use cases. `Fragment.raw` remains available as an escape hatch but should be rare.
 - **Whitespace with `Fragment.empty`**: When a conditional is absent, surrounding whitespace remains. Needs normalization.
 - **`Fragment.empty` vs `Fragment.raw("")`**: Structurally different but semantically identical. Needs equality fix.
 - **Prefix deduplication** missing.

@@ -16,43 +16,34 @@ Template style uses `PREFIX $kb` in the header, then bare `knora-base:lastModifi
 - Always use interpolated IRIs like `$kbLastMod` in the body — safer, more verbose
 - Validate prefix usage at render time — complex, may not be worth it
 
-## Benchmarks Not Yet Reviewed
+## Benchmarks Review Status
 
-- **Benchmark 3**: Updated in document but not yet discussed in detail
-- **Benchmark 4**: InsertValueQueryBuilder — needs `Iri.unsafeFrom`, prefix-derived IRIs, builder middle-ground variant
-- **Benchmark 5**: SearchQueries / Lucene — needs PropertyPath type and Lucene combinator design (per user decision), `Literal.stringEscaped`, prefix-derived IRIs
-- **Benchmark 6**: addValueVersion — needs `Iri.unsafeFrom`, `Literal.stringEscaped`, `Literal.typedEscaped`, prefix-derived IRIs, builder middle-ground variant
+All 6 benchmarks have been updated in the document with agreed conventions:
 
-## Code Updates Still Needed in Document
-
-### Benchmarks 4-6: Apply agreed conventions
-- `Iri.trusted(...)` → `Iri.unsafeFrom(...)` or prefix-derived `prefix.unsafeIri("...")`
-- `Literal.string(...)` → `Literal.stringEscaped(...)`
-- `Literal.typed(...)` → `Literal.typedEscaped(...)`
-- `Literal.int(...)` → `Literal.int(...)` (unchanged — type-safe)
-- `Literal.bool(...)` → `Literal.bool(...)` (unchanged — type-safe)
-- Add builder middle-ground variant (multi-line WHERE fragment) to each benchmark
-- Use `Prefix` objects in builder `.prefixes(...)` calls
-
-### Benchmark 5 specifically
-- Design and showcase `PropertyPath` type (for `rdfs:subClassOf*`)
-- Design and showcase Lucene combinator (for `text#query`)
-- Replace `Fragment.raw(s"...")` anti-pattern with typed alternatives
+| Benchmark | Status | Notes |
+|-----------|--------|-------|
+| 1: Simple SELECT | Updated, reviewed | All conventions applied |
+| 2: ASK with UNION | Updated, reviewed | All conventions applied |
+| 3: DeletePropertyQuery | Updated, reviewed | Intro text, full IRIs, prefix-derived IRIs, builder multi-line variant |
+| 4: InsertValueQueryBuilder | Updated, reviewed | Intro text, `Iri.unsafeFrom`, prefix-derived IRIs, builder multi-line variant |
+| 5: SearchQueries/Lucene | Updated, reviewed | Major rewrite: PropertyPath type, Fragments.jenaTextQuery combinator |
+| 6: addValueVersion | Updated, reviewed | Intro text, `Iri.unsafeFrom`, `Literal.stringEscaped`/`typedEscaped`, prefix-derived IRIs, builder multi-line variant |
 
 ## Notes Section Updates
 
-- Update "When to use which" table if needed after remaining benchmarks
-- Update "Known issues" list — some issues are now resolved by design decisions
-- Document the `sp"..."` alias convention more prominently
+- [x] Updated "Known issues" list — `Fragment.raw` issue marked resolved via PropertyPath/jenaTextQuery
+- [ ] Verify "When to use which" table still accurate after all benchmarks reviewed
 
-## Items Agreed But Not Yet Applied Everywhere
+## Items Agreed and Applied
 
 | Convention | Status |
 |-----------|--------|
-| `Iri.unsafeFrom` naming | Applied in Benchmarks 1-3, pending 4-6 |
-| `Prefix.unsafeFrom` + `prefix.unsafeIri` | Applied in vocabulary + Benchmarks 1-3, pending 4-6 |
-| `Literal.stringEscaped` / `Literal.typedEscaped` | Applied in Benchmarks 2-3, pending 4-6 |
+| `Iri.unsafeFrom` naming | Applied in all benchmarks |
+| `Prefix.unsafeFrom` + `prefix.unsafeIri` | Applied in vocabulary + all benchmarks |
+| `Literal.stringEscaped` / `Literal.typedEscaped` | Applied in all benchmarks |
 | `sp"..."` alias | Documented in Notes, not yet used in examples |
-| Builder middle-ground variant | Applied in Benchmarks 1-3, pending 4-6 |
-| `Sparql` entry point (not `SparqlQuery`) | Applied in Benchmarks 1-3, pending 4-6 |
+| Builder middle-ground variant | Applied in all benchmarks |
+| `Sparql` entry point (not `SparqlQuery`) | Applied in all benchmarks |
 | `LanguageTag` opaque type | Documented in Notes, not yet used in examples |
+| `PropertyPath` type | Applied in Benchmark 5, documented in Notes |
+| `Fragments.jenaTextQuery` combinator | Applied in Benchmark 5, documented in Notes |
