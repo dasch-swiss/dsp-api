@@ -461,3 +461,35 @@ val query = sparql"""
 - **Escape hatches**: `Fragment.raw(...)` still needed for Lucene `text#query` property list notation and `subClassOf*` property paths — same limitation as A and C.
 - **Comparison to Approach A**: A uses `sparql"..."` for small fragments composed via `SparqlQuery.select().where()`. H uses `sparql"""..."""` for entire queries with embedded fragments. They are complementary — H for simple/medium queries where the template reads naturally, A's builder for programmatic construction with heavy conditionals/iteration.
 - **Whitespace handling**: When `Fragment.empty` is embedded (e.g., a conditional that's absent), it leaves no text — but the surrounding whitespace/newlines from the template remain. This could produce blank lines in the output. A post-processing step or smarter fragment embedding might be needed.
+
+---
+
+## Design Review Feedback
+
+### Deep Review Findings
+
+**Strengths:**
+- **Best readability**: For simple/medium queries (Benchmarks 1, 2, 3), the result reads almost identically to raw SPARQL. Developers can visually verify query correctness by comparing to SPARQL documentation.
+- **Doobie/Skunk alignment**: This IS the Doobie pattern applied to SPARQL. Doobie and Skunk both write entire queries as single `sql"..."` interpolations, using fragment composition only for dynamic parts. Research confirmed that Doobie's creator attempted a builder DSL (Scoobie) and abandoned it — the interpolator-first approach is the proven industry pattern.
+- **Same safety guarantees as A**: The `sparql"..."` interpolator rejects raw `String` at compile time. Only `SparqlValue | Fragment` can be interpolated.
+- **Minimal new API surface**: Uses the same `Fragment`, `Iri`, `Variable`, `Literal` types as A. The only addition is `Prefix` type for `sparql"PREFIX $kb"`.
+- **Fragment composition for dynamic parts**: Conditionals via `Option.fold(Fragment.empty)(...)`, iteration via `Fragment.join(list.map(...))` — same patterns as A, composed into the template.
+
+**Weaknesses (addressable):**
+- **Degrades for Benchmark 5**: The Lucene `text#query` and property path patterns require `Fragment.raw(s"...")`, which is worse than A's approach for that specific benchmark. This is a known limitation shared by all approaches — a `PropertyPath` type and Lucene combinator would address it.
+- **Whitespace with Fragment.empty**: When a conditional fragment is absent, `Fragment.empty` leaves surrounding whitespace/newlines intact, potentially producing blank lines. Needs a post-processing step (whitespace normalization) or a smarter embedding strategy.
+- **Mixed PREFIX styles**: Some benchmarks use `sparql"PREFIX $kb"` (Prefix type), others use inline `knora-base:predicate` (assuming prefix is declared). Needs consistent conventions.
+
+**Cross-cutting issues (shared with all approaches):**
+- `Iri.trusted` has zero validation — any string passes through
+- `Variable` has no name validation — could contain SPARQL injection characters
+- No `PropertyPath` type — `subClassOf*` faked as IRI string
+- No `BIND` combinator
+- `Literal.string(s"hlist=<$nodeIri>")` bypasses type system
+
+### Status: Leading contender
+
+H is the primary API candidate. The direction is:
+- **H** (`sparql"""..."""`) for entire queries — the primary way developers write SPARQL
+- **A's Fragment composition** (`++`, `combineAll`, `Option[Fragment]`) for building dynamic conditional parts that get embedded into H-style templates
+- **A's builder types** (`SparqlQuery.select().where()`) as optional convenience for programmatic construction — not the primary API

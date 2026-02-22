@@ -411,6 +411,8 @@ val query = Update()
 
 ## Design Review Feedback
 
+### Initial Review
+
 **Likes:**
 - Overall readability comparably good to Approach A
 - `triple()` is more expressive than `tp()`, though `tp()` is more compact — tradeoff noted
@@ -421,3 +423,19 @@ val query = Update()
 - **Bulk prefixes**: `.prefixes("knora-base" -> knoraBase, "xsd" -> xsd)` instead of chaining `.prefix()`.
 - **Composability**: Looks powerful but readability could be better; conditionality/iteration still undecided.
 - **See also**: Approach C Variant ("Consequent Fluent") explores taking the fluent chaining further with `.and()`, `.andOptional()`, `.andAll()` on triple patterns themselves.
+
+### Deep Review Findings
+
+**Weaknesses:**
+- **`triple(s, p, o)` only handles simplest patterns**: OPTIONAL, UNION, FILTER, GRAPH, etc. all require escaping to `Fragment.raw(...)` or standalone combinators — the builder's primary abstraction covers only the base case.
+- **Safety bypass**: 4 of 6 fragments in Benchmark 5 use `Fragment.raw(...)` to express what the typed API cannot — this is worse than A's safety ratio for the same benchmark.
+- **`.where()` has replace-semantics**: Calling `.where()` twice replaces the previous WHERE clause instead of appending. This is inconsistent with how `.prefix()` (additive) and `.orderBy()` (additive) behave.
+- **3 different conditional idioms**: `Option.toList`, list concatenation, and `List.flatMap` all appear across benchmarks — no single clear pattern.
+- **Builder case class proliferation**: Each query type (Select, Ask, Update) needs its own case class with largely duplicated logic.
+
+**Industry comparison:**
+- Builder-only approach (no interpolator) diverges further from Doobie/Skunk patterns than A does. Neither Doobie nor Skunk have a builder DSL — they rely entirely on interpolation + fragment composition.
+
+### Status: Eliminated (subsumed)
+
+C's builder API is virtually identical to the Interpolated Template approach's builder style — `Select().where(triple(...))` vs `Sparql.select(...).where(sparql"...")`. The only difference is the atomic building block (`triple(s,p,o)` vs `sparql"$s $p $o ."`), which is a cosmetic distinction. The Interpolated Template approach subsumes C entirely while also offering the template style as primary API.

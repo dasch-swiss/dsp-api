@@ -427,3 +427,24 @@ val query = Update()
 - **vs Approach C**: The key difference is `.and()` chaining vs passing a flat list to `.where()`. Chaining reads more fluidly, especially for simple queries. For complex queries with conditionals, `.andAll(Option)` is cleaner than list concatenation.
 - **Potential concern**: Very long chains might become hard to read. For Benchmark 6, the insert pattern has ~8 chained calls. Whether this is "too much" is a matter of taste.
 - **Design question**: Should `.and()` take `(s, p, o)` directly, or should it take a `Pattern`? The examples above use both — `.and(s, p, o)` for simple triples, `.andAll(pattern)` for composed patterns. This dual interface needs careful design.
+
+---
+
+## Design Review Feedback
+
+### Deep Review Findings
+
+**Weaknesses:**
+- **Doubles API surface without expressiveness gain**: Every operation that C expresses via list manipulation, C-variant expresses via `.and()` chaining — but both handle the same cases. The extra API surface adds learning cost without enabling new patterns.
+- **Dual interface problem**: `.and(s, p, o)` for simple triples and `.andAll(pattern)` for composed patterns create two overlapping ways to add patterns. Developers must choose between them, and mixing them in the same chain is confusing.
+- **Reverts to list-building for complex queries**: For Benchmark 4 (InsertValueQueryBuilder), the `.andAll(linkValuePatterns)` call still requires building a `List[Pattern]` via `.map { ... }` first — the fluent chaining provides no advantage over C's approach for the hard cases.
+- **Very long chains become hard to read**: Benchmark 4's insert pattern has ~8 chained calls. At that length, the fluent chain loses its readability advantage over explicit list construction.
+- **Same escape hatch limitations as C**: `Pattern.raw(fragment)` still needed for Lucene and property paths — the fluent API doesn't improve safety coverage.
+
+**Industry comparison:**
+- The `.and()` chaining pattern resembles JOOQ's style, but JOOQ operates in a SQL ecosystem with much more structured queries. For SPARQL's graph patterns, the added ceremony of `.and()` over direct fragment composition provides little benefit.
+- Further from the Doobie/Skunk model than either A or H — no industry equivalent in the FP query builder space.
+
+### Status: Eliminated (subsumed)
+
+C itself is subsumed by the Interpolated Template approach's builder style. C-variant's `.and()` / `.andAll()` chaining idea can be trivially added as extension methods on `Fragment` within the Interpolated Template approach (e.g., `fragment.and(sparql"...")`, `fragment.andAll(optionalFragment)`) if the chaining style proves useful. No separate approach needed.

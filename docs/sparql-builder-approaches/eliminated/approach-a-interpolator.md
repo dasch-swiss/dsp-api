@@ -428,6 +428,8 @@ val query = SparqlQuery.update
 
 ## Design Review Feedback
 
+### Initial Review
+
 **Likes:**
 - The `SparqlQuery.select(s, p, o).where(...).orderBy(...).limit(25).render` fluent API reads beautifully
 
@@ -437,3 +439,25 @@ val query = SparqlQuery.update
 - **Bulk prefixes**: Instead of chaining `.prefix("a", a).prefix("b", b)`, support `.prefixes("knora-base" -> knoraBase, "xsd" -> xsd, "owl" -> owl)`.
 - **Safety**: The `sparql"..."` interpolator only accepts `SparqlValue | Fragment` — raw `String` is a compile error. This is a strong safety guarantee worth documenting prominently.
 - **Composability/conditionality**: Undecided — needs more thought on how `Fragment.combine`, `Option[Fragment]`, etc. feel in practice.
+
+### Deep Review Findings
+
+**Sound design elements (retain):**
+- Fragment monoid pattern (`++`, `combineAll`, `Fragment.empty`) — industry-aligned with Doobie/Skunk
+- `sparql"..."` interpolator with compile-time `String` rejection
+- Conditional fragments via `Option[Fragment]` + combinators
+- Iteration via `.map(...).combineAll`
+
+**Implementation bugs (fixable):**
+- `InsertDataBuilder` renders `Iri(value)` instead of `<value>` — the `Iri` case class `toString` leaks through
+- String escaping misses `\f` (form feed) and `\b` (backspace) — SPARQL 1.1 spec requires them
+- Benchmark 6 showcase understates real complexity of `addValueVersion.scala.txt`
+
+**Industry alignment:**
+- The **builder pattern** (`SparqlQuery.select().where().orderBy()`) has no industry precedent. Doobie's creator attempted a builder DSL (Scoobie project) and abandoned it. JOOQ validates builders for SQL but the SPARQL ecosystem has no equivalent.
+- The **Fragment + interpolator core** is the industry standard. Doobie and Skunk both use this exact pattern.
+- **Conclusion**: A's fragment/interpolator layer is sound and reusable. A's builder layer is a convenience that may have value, but should not be the primary API.
+
+### Status: Secondary contender
+
+A's fragment composition layer is retained as the mechanism for building dynamic query parts. A's builder pattern (`SparqlQuery.select().where()`) is demoted from primary API — Approach H's whole-query interpolation is now the primary API style, aligning with Doobie/Skunk industry patterns.
