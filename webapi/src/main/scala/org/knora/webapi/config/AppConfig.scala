@@ -160,26 +160,30 @@ final case class Features(
 
 object AppConfig {
   type AppConfigurations = AppConfig & DspIngestConfig & InstrumentationServerConfig & KnoraApi & Sipi & Triplestore &
-    Features & GraphRoute & JwtConfig
+    GraphRoute & JwtConfig
 
-  val parseConfig: UIO[AppConfig] = {
-    val descriptor = deriveConfig[AppConfig].mapKey(toKebabCase)
-    val source     = TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
-    read(descriptor from source).tap(logFeaturesEnabled).orDie
-  }
+  val config: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase)
+
+  def features[A](f: Features => A): UIO[A] = ZIO.config(config.map(_.features)).map(f).orDie
+
+  private val provider: ConfigProvider =
+    TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
+
+  lazy val parseConfig: UIO[AppConfig] = read(config from provider).tap(logFeaturesEnabled).orDie
 
   val layer: ULayer[AppConfigurations] =
-    projectAppConfigurations(ZLayer.fromZIO(parseConfig))
-      .tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
+    Runtime.setConfigProvider(provider) >>>
+      projectAppConfigurations(ZLayer.fromZIO(parseConfig))
+        .tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
 
-  private def logFeaturesEnabled(c: AppConfig) = {
-    val features = List(
-      "ALLOW_ERASE_PROJECTS"                     -> c.features.allowEraseProjects,
-      "DISABLE_LAST_MODIFICATION_DATE_CHECK"     -> c.features.disableLastModificationDateCheck,
-      "TRIGGER_COMPACTION_AFTER_PROJECT_ERASURE" -> c.features.triggerCompactionAfterProjectErasure,
-    ).collect { case (feature, enabled) if enabled => feature }
-    ZIO.logInfo(s"Features enabled: ${features.mkString(", ")}").when(features.nonEmpty)
-  }
+  private def logFeaturesEnabled(c: AppConfig) =
+    ZIO.logInfo(
+      s"""Features:
+         |* ALLOW_ERASE_PROJECTS: ${c.features.allowEraseProjects}
+         |* DISABLE_LAST_MODIFICATION_DATE_CHECK: ${c.features.disableLastModificationDateCheck}
+         |* TRIGGER_COMPACTION_AFTER_PROJECT_ERASURE: ${c.features.triggerCompactionAfterProjectErasure}
+         |""".stripMargin,
+    )
 
   def projectAppConfigurations[R](appConfigLayer: URLayer[R, AppConfig]): URLayer[R, AppConfigurations] =
     appConfigLayer ++
@@ -188,7 +192,6 @@ object AppConfig {
       appConfigLayer.project(_.dspIngest) ++
       appConfigLayer.project(_.triplestore) ++
       appConfigLayer.project(_.instrumentationServerConfig) ++
-      appConfigLayer.project(_.features) ++
       appConfigLayer.project { appConfig =>
         val jwtConfig                                 = appConfig.jwt
         val issuerFromConfigOrDefault: Option[String] =
