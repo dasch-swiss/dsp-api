@@ -5,9 +5,11 @@
 
 package org.knora.webapi.core
 
-import monocle.Lens
-import monocle.macros.GenLens
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigValueFactory
 import zio.*
+import zio.config.*
+import zio.config.typesafe.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
@@ -27,39 +29,44 @@ object TestContainerLayers { self =>
 
   private object AppConfigForTestContainers {
 
-    private val fusekiPort: Lens[AppConfig, Int]          = GenLens[AppConfig](_.triplestore.fuseki.port)
-    private val sipiPort: Lens[AppConfig, Int]            = GenLens[AppConfig](_.sipi.internalPort)
-    private val dspIngestBaseUrl: Lens[AppConfig, String] = GenLens[AppConfig](_.dspIngest.baseUrl)
-
-    private def updateConfig(
-      oldConfig: AppConfig,
+    private def providerFor(
       fusekiContainer: FusekiTestContainer,
       sipiContainer: SipiTestContainer,
       dspIngestContainer: DspIngestTestContainer,
-    ): AppConfig = {
-      val update = fusekiPort
-        .replace(fusekiContainer.getFirstMappedPort)
-        .andThen(sipiPort.replace(sipiContainer.getFirstMappedPort))
-        .andThen(dspIngestBaseUrl.replace(s"http://localhost:${dspIngestContainer.getFirstMappedPort}"))
-      update(oldConfig)
-    }
+    ): ConfigProvider =
+      TypesafeConfigProvider.fromTypesafeConfig(
+        ConfigFactory
+          .load()
+          .getConfig("app")
+          .resolve()
+          .withValue("triplestore.fuseki.port", ConfigValueFactory.fromAnyRef(fusekiContainer.getFirstMappedPort))
+          .withValue("sipi.internal-port", ConfigValueFactory.fromAnyRef(sipiContainer.getFirstMappedPort))
+          .withValue(
+            "dsp-ingest.base-url",
+            ConfigValueFactory.fromAnyRef(s"http://localhost:${dspIngestContainer.getFirstMappedPort}"),
+          ),
+      )
 
     /**
      * Altered AppConfig with ports from TestContainers for DSP-Ingest, Fuseki and Sipi.
      */
     val testcontainers
       : ZLayer[DspIngestTestContainer & FusekiTestContainer & SipiTestContainer, Nothing, AppConfigurations] = {
-      val appConfigLayer = ZLayer {
+      val providerLayer = ZLayer {
         for {
-          appConfig          <- AppConfig.parseConfig
           fusekiContainer    <- ZIO.service[FusekiTestContainer]
           sipiContainer      <- ZIO.service[SipiTestContainer]
           dspIngestContainer <- ZIO.service[DspIngestTestContainer]
-        } yield updateConfig(appConfig, fusekiContainer, sipiContainer, dspIngestContainer)
+        } yield providerFor(fusekiContainer, sipiContainer, dspIngestContainer)
       }
-      AppConfig
-        .projectAppConfigurations(appConfigLayer)
-        .tap(_ => ZIO.logInfo(">>> AppConfig for Fuseki and Sipi Testcontainers Initialized <<<"))
+      providerLayer.flatMap { env =>
+        val provider       = env.get[ConfigProvider]
+        val appConfigLayer = ZLayer.fromZIO(read(AppConfig.config from provider).orDie)
+        Runtime.setConfigProvider(provider) >>>
+          AppConfig
+            .projectAppConfigurations(appConfigLayer)
+            .tap(_ => ZIO.logInfo(">>> AppConfig for Fuseki and Sipi Testcontainers Initialized <<<"))
+      }
     }
   }
 }

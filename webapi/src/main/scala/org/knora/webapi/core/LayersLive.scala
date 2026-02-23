@@ -12,7 +12,6 @@ import zio.telemetry.opentelemetry.tracing.Tracing
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.config.Features
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.config.KnoraApi
@@ -101,7 +100,7 @@ object LayersLive { self =>
 
   val remainingLayer: URLayer[AppConfigurations, Environment] =
     ZLayer.makeSome[
-      AppConfig & KnoraApi & DspIngestConfig & Sipi & Triplestore & Features & GraphRoute & JwtConfig,
+      AppConfig & KnoraApi & DspIngestConfig & Sipi & Triplestore & GraphRoute & JwtConfig,
       self.Environment,
     ](
       // ZLayer.Debug.mermaid,

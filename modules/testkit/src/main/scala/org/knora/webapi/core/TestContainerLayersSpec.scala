@@ -20,10 +20,13 @@ object TestContainerLayersSpec extends ZIOSpecDefault {
         appConfig          <- ZIO.service[AppConfig]
         sipiContainer      <- ZIO.service[SipiTestContainer]
         dspIngestContainer <- ZIO.service[DspIngestTestContainer]
+        configFromRuntime  <- ZIO.config(AppConfig.config).orDie
       } yield {
         assertTrue(
           appConfig.sipi.internalPort == sipiContainer.getFirstMappedPort,
           appConfig.dspIngest.baseUrl.endsWith(dspIngestContainer.getFirstMappedPort.toString),
+          configFromRuntime.sipi.internalPort == sipiContainer.getFirstMappedPort,
+          configFromRuntime.dspIngest.baseUrl.endsWith(dspIngestContainer.getFirstMappedPort.toString),
         )
       }
     },

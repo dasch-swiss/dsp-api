@@ -11,9 +11,8 @@ import java.time.Instant
 
 import dsp.errors.*
 import org.knora.webapi.*
-import org.knora.webapi.config.Features
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
@@ -21,11 +20,9 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
-final case class OntologyTriplestoreHelpers(
-  features: Features,
+final class OntologyTriplestoreHelpers(
   ontologyRepo: OntologyRepo,
   triplestore: TriplestoreService,
-  stringFormatter: StringFormatter,
 ) {
 
   def checkOntologyLastModificationDate(
@@ -59,7 +56,9 @@ final case class OntologyTriplestoreHelpers(
              val msg =
                s"Ontology $ontologyIriExternal has been modified by another user, please reload it and try again."
              EditConflictException(msg)
-           }.when(!features.disableLastModificationDateCheck && lmd != expectedLastModificationDate)
+           }.whenZIO(
+             AppConfig.features(_.disableLastModificationDateCheck).map(!_ && lmd != expectedLastModificationDate),
+           )
     } yield ()
 
   /**

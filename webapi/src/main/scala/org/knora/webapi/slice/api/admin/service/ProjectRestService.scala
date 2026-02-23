@@ -14,7 +14,7 @@ import scala.annotation.unused
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-import org.knora.webapi.config.Features
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -46,7 +46,6 @@ final class ProjectRestService(
   projectExportService: ProjectExportService,
   userService: UserService,
   auth: AuthorizationRestService,
-  features: Features,
   triplestore: TriplestoreService,
 ) {
 
@@ -137,7 +136,7 @@ final class ProjectRestService(
   def eraseProject(user: User)(shortcode: Shortcode, keepAssets: Boolean): Task[ProjectOperationResponseADM] =
     for {
       _ <- auth.ensureSystemAdmin(user)
-      _ <- ZIO.unless(features.allowEraseProjects)(
+      _ <- ZIO.unlessZIO(AppConfig.features(_.allowEraseProjects))(
              ZIO.fail(ForbiddenException("The feature to erase projects is not enabled.")),
            )
       internal <- projectService
@@ -149,7 +148,7 @@ final class ProjectRestService(
       _        <- ZIO.logInfo(s"${user.userIri} erases project $shortcode")
       _        <- projectEraseService.eraseProject(project, keepAssets)
       external <- format.toExternal(ProjectOperationResponseADM(internal))
-      _        <- ZIO.when(features.triggerCompactionAfterProjectErasure)(triplestore.compact())
+      _        <- ZIO.whenZIO(AppConfig.features(_.triggerCompactionAfterProjectErasure))(triplestore.compact())
     } yield external
 
   /**
