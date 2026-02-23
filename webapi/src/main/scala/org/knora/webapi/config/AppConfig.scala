@@ -162,7 +162,13 @@ object AppConfig {
   type AppConfigurations = AppConfig & DspIngestConfig & InstrumentationServerConfig & KnoraApi & Sipi & Triplestore &
     GraphRoute & JwtConfig
 
-  val config: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase)
+  private def normalize(c: AppConfig): AppConfig = {
+    val issuerFromConfigOrDefault: Option[String] =
+      c.jwt.issuer.orElse(Some(c.knoraApi.externalKnoraApiHostPort))
+    c.copy(jwt = c.jwt.copy(issuer = issuerFromConfigOrDefault))
+  }
+
+  val config: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase).map(normalize)
 
   def features[A](f: Features => A): UIO[A] = ZIO.config(config.map(_.features)).map(f).orDie
 
@@ -192,11 +198,6 @@ object AppConfig {
       appConfigLayer.project(_.dspIngest) ++
       appConfigLayer.project(_.triplestore) ++
       appConfigLayer.project(_.instrumentationServerConfig) ++
-      appConfigLayer.project { appConfig =>
-        val jwtConfig                                 = appConfig.jwt
-        val issuerFromConfigOrDefault: Option[String] =
-          jwtConfig.issuer.orElse(Some(appConfig.knoraApi.externalKnoraApiHostPort))
-        jwtConfig.copy(issuer = issuerFromConfigOrDefault)
-      } ++
+      appConfigLayer.project(_.jwt) ++
       appConfigLayer.project(_.v2.graphRoute)
 }
