@@ -162,13 +162,11 @@ object AppConfig {
   type AppConfigurations = AppConfig & DspIngestConfig & InstrumentationServerConfig & KnoraApi & Sipi & Triplestore &
     GraphRoute & JwtConfig
 
-  private def normalize(c: AppConfig): AppConfig = {
-    val issuerFromConfigOrDefault: Option[String] =
-      c.jwt.issuer.orElse(Some(c.knoraApi.externalKnoraApiHostPort))
-    c.copy(jwt = c.jwt.copy(issuer = issuerFromConfigOrDefault))
-  }
-
-  val config: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase).map(normalize)
+  val config: Config[AppConfig] = deriveConfig[AppConfig]
+    .mapKey(toKebabCase)
+    .map(c => // provide a default value for the JWT issuer if not set explicitly in application.conf
+      c.copy(jwt = c.jwt.copy(issuer = c.jwt.issuer.orElse(Some(c.knoraApi.externalKnoraApiHostPort)))),
+    )
 
   def features[A](f: Features => A): UIO[A] = ZIO.config(config.map(_.features)).map(f).orDie
 
