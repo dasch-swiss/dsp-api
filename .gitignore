@@ -64,6 +64,7 @@ ingest/docs/openapi/*.yml
 # Claude Code
 .claude/settings.local.json
 /.claude/tmp
+/.claude/worktrees/
 .claude-flow/*
 .swarm/*
 
