@@ -5,10 +5,10 @@
 
 package org.knora.webapi.slice.api.v3.projects
 
+import org.knora.webapi.config.AppConfig
 import sttp.capabilities.zio.ZioStreams
 import zio.*
 import zio.stream.ZStream
-
 import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.ExportExistsError
 import org.knora.webapi.slice.`export`.domain.ExportFailedError
@@ -106,36 +106,45 @@ final class V3ProjectsRestService(
       contentDispositionHeaderValue = s"""attachment; filename="$filename""""
     } yield (contentDispositionHeaderValue, stream)
 
+  private val failImportFeatureMissing: IO[V3ErrorInfo, Unit] = ZIO
+    .fail(NotFound.featureMissing("allowImportMigrationBagit"))
+    .unlessZIO(AppConfig.features(_.allowImportMigrationBagit))
+    .unit
+
   def triggerProjectImportCreate(
     user: User,
   )(projectIri: ProjectIri, stream: ZStream[Any, Throwable, Byte]): IO[V3ErrorInfo, DataTaskStatusResponse] =
-    for {
+    failImportFeatureMissing.zipRight(for {
       _     <- auth.ensureSystemAdmin(user)
       state <-
         importService
           .importDataExport(projectIri, user, stream)
           .mapError { case ImportExistsError(t) => conflict(import_exists, t.projectIri, t.id) }
-    } yield DataTaskStatusResponse.from(state)
+    } yield DataTaskStatusResponse.from(state))
 
   def getProjectImportStatus(
     user: User,
   )(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
-    for {
-      _     <- auth.ensureSystemAdmin(user)
-      state <-
-        importService.getImportStatus(importId).orElseFail(notFound(import_not_found, projectIri, importId))
-    } yield DataTaskStatusResponse.from(state)
+    failImportFeatureMissing.zipRight {
+      for {
+        _     <- auth.ensureSystemAdmin(user)
+        state <-
+          importService.getImportStatus(importId).orElseFail(notFound(import_not_found, projectIri, importId))
+      } yield DataTaskStatusResponse.from(state)
+    }
 
   def deleteProjectImport(user: User)(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, Unit] =
-    for {
-      _ <- auth.ensureSystemAdmin(user)
-      _ <- importService
-             .deleteImport(importId)
-             .mapError {
-               case Some(ImportInProgressError(t)) => conflict(import_in_progress, t.projectIri, t.id)
-               case None                           => notFound(import_not_found, projectIri, importId)
-             }
-    } yield ()
+    failImportFeatureMissing.zipRight {
+      for {
+        _ <- auth.ensureSystemAdmin(user)
+        _ <- importService
+               .deleteImport(importId)
+               .mapError {
+                 case Some(ImportInProgressError(t)) => conflict(import_in_progress, t.projectIri, t.id)
+                 case None                           => notFound(import_not_found, projectIri, importId)
+               }
+      } yield ()
+    }
 }
 
 object V3ProjectsRestService {

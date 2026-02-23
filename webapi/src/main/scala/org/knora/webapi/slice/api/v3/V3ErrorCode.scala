@@ -15,6 +15,8 @@ enum V3ErrorCode(val template: String):
   case import_not_found        extends V3ErrorCode("The import '{id}' in project '{projectIri}' was not found.")
   case resourceClass_not_found extends V3ErrorCode("The resource class '{id}' was not found.")
   case resource_not_found      extends V3ErrorCode("The resource with IRI '{id}' was not found.")
+  case feature_missing
+      extends V3ErrorCode("The required feature '{name}' is missing. Ask your system administrator to enable it.")
   // V3ErrorCode.Conflict errors
   case export_exists      extends V3ErrorCode("Export '{id}' exists for project '{projectIri}'.")
   case export_in_progress extends V3ErrorCode("Export '{id}' in progress for project '{projectIri}'.")
@@ -26,7 +28,7 @@ enum V3ErrorCode(val template: String):
 object V3ErrorCode:
 
   type NotFounds = export_not_found.type | ontology_not_found.type | project_not_found.type | resource_not_found.type |
-    resourceClass_not_found.type | import_not_found.type
+    resourceClass_not_found.type | import_not_found.type | feature_missing.type
 
   type Conflicts = export_exists.type | export_failed.type | export_in_progress.type | import_exists.type |
     import_in_progress.type
