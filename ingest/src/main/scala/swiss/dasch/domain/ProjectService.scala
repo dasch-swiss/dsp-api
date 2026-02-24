@@ -5,6 +5,9 @@
 
 package swiss.dasch.domain
 
+import org.knora.bagit.BagIt
+import org.knora.bagit.domain.BagInfo
+import org.knora.bagit.domain.PayloadEntry
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
 import zio.*
@@ -59,15 +62,23 @@ final case class ProjectService(
       .flatMap(assetInfos.findAllInPath(_, shortcode))
 
   def zipProject(shortcode: ProjectShortcode): Task[Option[Path]] =
-    ZIO.logInfo(s"Zipping project $shortcode") *>
-      findProject(shortcode).flatMap(_.map(zipProjectPath).getOrElse(ZIO.none)) <*
-      ZIO.logInfo(s"Zipping project $shortcode was successful")
+    ZIO.logInfo(s"Exporting project $shortcode as BagIt") *>
+      findProject(shortcode).flatMap(_.map(exportProjectAsBagIt(shortcode, _)).getOrElse(ZIO.none)) <*
+      ZIO.logInfo(s"Exporting project $shortcode as BagIt was successful")
 
-  private def zipProjectPath(projectPath: ProjectFolder) =
-    storage
-      .getTempFolder()
-      .map(_ / "zipped")
-      .flatMap(targetFolder => ZipUtility.zipFolder(projectPath, targetFolder).map(Some(_)))
+  private def exportProjectAsBagIt(shortcode: ProjectShortcode, projectPath: ProjectFolder) =
+    for {
+      targetFolder <- storage.getTempFolder().map(_ / "zipped")
+      _            <- Files.createDirectories(targetFolder).whenZIO(Files.notExists(targetFolder))
+      outputPath    = targetFolder / s"${projectPath.path.filename.toString}.zip"
+      bagInfo       = BagInfo(
+                  sourceOrganization = Some("DaSCH Service Platform"),
+                  externalIdentifier = Some(shortcode.value),
+                  additionalFields = List("Ingest-Export-Version" -> "1"),
+                )
+      payloadEntries = List(PayloadEntry.Directory(prefix = "", sourcePath = projectPath.path))
+      resultPath    <- BagIt.create(payloadEntries, outputPath, bagInfo = Some(bagInfo))
+    } yield Some(resultPath)
 
   def deleteProject(shortcode: ProjectShortcode): IO[IOException | SQLException, Unit] =
     findProject(shortcode).tapSome { case Some(folder) =>
