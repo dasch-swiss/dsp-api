@@ -7,9 +7,9 @@ package org.knora.webapi.slice.`export`.domain
 
 import zio.*
 import zio.stream.ZStream
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import zio.stream.ZSink
 
 // This error is used to indicate that an import already exists.
 final case class ImportExistsError(t: CurrentDataTask)
@@ -18,6 +18,7 @@ final case class ImportInProgressError(t: CurrentDataTask)
 
 final class ProjectMigrationImportService(
   currentImport: DataTaskState,
+  storage: ProjectMigrationStorageService,
 ) { self =>
 
   def importDataExport(
@@ -27,8 +28,9 @@ final class ProjectMigrationImportService(
   ): IO[ImportExistsError, CurrentDataTask] = for {
     importTask <-
       currentImport.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) => ImportExistsError(t) }
+    bagItPath <- storage.importBagItZipPath(importTask.id)
     // In a real implementation, we would process the stream here and update the import status accordingly.
-    _ <- stream.runDrain.orDie
+    _ <- stream.run(ZSink.fromFile(bagItPath.toFile)).orDie
     _ <- (
            // Simulate a long-running import process by completing the import after a delay.
            // In a real implementation, this would be where the actual import logic goes.

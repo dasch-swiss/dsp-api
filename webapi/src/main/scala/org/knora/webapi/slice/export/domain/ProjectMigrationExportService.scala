@@ -106,7 +106,7 @@ final class ProjectMigrationExportService(
 
   private def createBagItZip(taskId: DataTaskId, rdfPath: Path, projectIri: ProjectIri) =
     for {
-      zipFile      <- storage.bagItZipPath(taskId)
+      zipFile      <- storage.exportBagItZipPath(taskId)
       externalHost <- AppConfig.knoraApi(_.externalHost)
       _            <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
       _            <- BagIt.create(
@@ -143,7 +143,7 @@ final class ProjectMigrationExportService(
              case Some(StateInProgressError(s)) => Some(ExportInProgressError(s))
              case None                          => None
            }
-    zipFile <- storage.bagItZipPath(exportId)
+    zipFile <- storage.exportBagItZipPath(exportId)
     _       <- Files.deleteIfExists(zipFile).logError.orDie
     _       <- ZIO.logInfo(s"$exportId: Deleted export task and associated export file")
   } yield ()
@@ -164,7 +164,7 @@ final class ProjectMigrationExportService(
   ): IO[Option[ExportInProgressError | ExportFailedError], (String, ZStream[Any, Throwable, Byte])] =
     for {
       exp     <- canDownloadExport(exportId)
-      zipFile <- storage.bagItZipPath(exportId)
+      zipFile <- storage.exportBagItZipPath(exportId)
       _       <- Files
              .exists(zipFile)
              .filterOrDie(_ == true)(new RuntimeException(s"Export file not found for export id $exportId"))

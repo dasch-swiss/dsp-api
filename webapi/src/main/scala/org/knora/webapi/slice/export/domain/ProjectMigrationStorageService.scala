@@ -10,6 +10,7 @@ import zio.nio.file.Files
 import zio.nio.file.Path
 
 import java.nio.file.Path as JPath
+
 import org.knora.webapi.config.AppConfig
 
 final class ProjectMigrationStorageService() { self =>
@@ -17,10 +18,13 @@ final class ProjectMigrationStorageService() { self =>
     AppConfig.config(_.tmpDatadir).map(dir => Path.fromJava(JPath.of(dir)) / "migration")
 
   val exportsDir: UIO[Path] = basePath.map(_ / "exports")
+  val importsDir: UIO[Path] = basePath.map(_ / "imports")
 
   private def exportDir(taskId: DataTaskId): UIO[Path] = self.exportsDir.map(_ / taskId.value)
+  private def importDir(taskId: DataTaskId): UIO[Path] = self.importsDir.map(_ / taskId.value)
 
-  def bagItZipPath(taskId: DataTaskId): UIO[Path] = exportDir(taskId).map(_ / "bagit.zip")
+  def exportBagItZipPath(taskId: DataTaskId): UIO[Path] = exportDir(taskId).map(_ / "bagit.zip")
+  def importBagItZipPath(taskId: DataTaskId): UIO[Path] = importDir(taskId).map(_ / "bagit.zip")
 
   /**
    * Creates a temporary directory for the export task, and ensures that it is deleted when the scope is closed.
@@ -29,15 +33,26 @@ final class ProjectMigrationStorageService() { self =>
    * @return a tuple containing the path to the temporary directory and the path to the export directory
    */
   def tempExportScoped(taskId: DataTaskId): URIO[Scope, (Path, Path)] =
+    exportDir(taskId).flatMap(scopedTempDir(taskId, _))
+
+  /**
+   * Creates a temporary directory for the import task, and ensures that it is deleted when the scope is closed.
+   *
+   * @param taskId the ID of the export task
+   * @return a tuple containing the path to the temporary directory and the path to the import directory
+   */
+  def tempImportScoped(taskId: DataTaskId): URIO[Scope, (Path, Path)] =
+    importDir(taskId).flatMap(scopedTempDir(taskId, _))
+
+  private def scopedTempDir(taskId: DataTaskId, baseDir: Path): URIO[Scope, (Path, Path)] =
+    val tempPath = baseDir / "temp"
     for {
-      exportPath <- exportDir(taskId)
-      _          <- Files.createDirectories(exportPath).unlessZIO(Files.exists(exportPath)).logError.orDie
-      tempPath    = exportPath / "temp"
-      _          <- ZIO.acquireRelease(Files.createDirectories(tempPath).logError.orDie.as(tempPath)) { path =>
+      _ <- Files.createDirectories(tempPath).unlessZIO(Files.exists(tempPath)).logError.orDie
+      _ <- ZIO.acquireRelease(Files.createDirectories(tempPath).logError.orDie.as(tempPath)) { (path: Path) =>
              ZIO.logInfo(s"$taskId: Deleting temp directory $path") *>
-               Files.deleteRecursive(path).logError(s"$taskId: Failed deleting export directory $path").orDie
+               Files.deleteRecursive(path).logError(s"$taskId: Failed deleting temp directory $path").orDie
            }
-    } yield (tempPath, exportPath)
+    } yield (tempPath, baseDir)
 }
 
 object ProjectMigrationStorageService {
