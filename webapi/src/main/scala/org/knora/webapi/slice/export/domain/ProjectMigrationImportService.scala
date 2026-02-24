@@ -17,6 +17,7 @@ import zio.stream.ZStream
 import java.io.IOException
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
+
 import org.knora.bagit.BagIt
 import org.knora.bagit.BagItError
 import org.knora.bagit.domain.Bag

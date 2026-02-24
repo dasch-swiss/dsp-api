@@ -296,5 +296,64 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         )
       }
     },
+    test("rejects KnoraBase-Version mismatch") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      bagInfoFields = List(
+                        "KnoraBase-Version" -> "999",
+                        "Dsp-Api-Version"   -> BuildInfo.version,
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("rejects missing KnoraBase-Version") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      bagInfoFields = List(
+                        "Dsp-Api-Version" -> BuildInfo.version,
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("rejects non-integer KnoraBase-Version") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      bagInfoFields = List(
+                        "KnoraBase-Version" -> "abc",
+                        "Dsp-Api-Version"   -> BuildInfo.version,
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("Dsp-Api-Version mismatch warns but does not fail") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      bagInfoFields = List(
+                        "KnoraBase-Version" -> KnoraBaseVersion.toString,
+                        "Dsp-Api-Version"   -> "0.0.0-test",
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Completed)
+      }
+    },
   ).provide(configLayer) @@ TestAspect.withLiveClock @@ TestAspect.timeout(30.seconds)
 }
