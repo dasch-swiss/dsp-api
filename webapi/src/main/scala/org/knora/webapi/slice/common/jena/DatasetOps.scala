@@ -14,6 +14,7 @@ import org.apache.jena.riot.RDFDataMgr
 import zio.*
 
 import java.io.ByteArrayInputStream
+import java.io.FileInputStream
 import java.nio.charset.StandardCharsets
 
 object DatasetOps { self =>
@@ -49,5 +50,18 @@ object DatasetOps { self =>
       _  <- ZIO
              .attempt(RDFDataMgr.read(ds, ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8)), lang))
              .mapError(_.getMessage)
+    } yield ds
+
+  def fromNQuadsFiles(paths: List[java.nio.file.Path]): ZIO[Scope, String, Dataset] =
+    for {
+      ds <- createDataset
+      _  <- ZIO.foreachDiscard(paths) { path =>
+             ZIO.attempt {
+               val is = new FileInputStream(path.toFile)
+               try RDFDataMgr.read(ds, is, Lang.NQUADS)
+               finally is.close()
+             }
+               .mapError(e => s"Failed to read NQuads file '${path.getFileName}': ${e.getMessage}")
+           }
     } yield ds
 }

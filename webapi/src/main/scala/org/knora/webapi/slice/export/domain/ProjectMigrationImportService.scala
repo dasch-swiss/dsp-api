@@ -17,11 +17,14 @@ import org.knora.bagit.BagItError
 import org.knora.bagit.domain.Bag
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.http.version.BuildInfo
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
+import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 // This error is used to indicate that an import already exists.
@@ -61,12 +64,14 @@ final class ProjectMigrationImportService(
                     case ex: IOException => ex: Throwable
                     case err: BagItError => new RuntimeException(err.message)
                   }
-        (bag, _) = result
-        _       <- ZIO.logInfo(s"$taskId: BagIt validation passed for project '$projectIri'")
-        _       <- validateVersionCompatibility(bag, taskId)
-        _       <- ZIO.logInfo(s"$taskId: Version compatibility validated for project '$projectIri'")
-        _       <- currentImport.complete(taskId).ignore
-        _       <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
+        (bag, bagRoot) = result
+        _             <- ZIO.logInfo(s"$taskId: BagIt validation passed for project '$projectIri'")
+        _             <- validateVersionCompatibility(bag, taskId)
+        _             <- ZIO.logInfo(s"$taskId: Version compatibility validated for project '$projectIri'")
+        _             <- validateProjectNotExists(bag, projectIri, bagRoot)
+        _             <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
+        _             <- currentImport.complete(taskId).ignore
+        _             <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
       } yield ()
     }.logError.catchAll(e =>
       ZIO.logError(s"$taskId: Import failed for project '$projectIri' with error: ${e.getMessage}") *>
@@ -101,6 +106,77 @@ final class ProjectMigrationImportService(
         )
     } yield ()
   }
+
+  private def validateProjectNotExists(
+    bag: Bag,
+    projectIri: ProjectIri,
+    bagRoot: zio.nio.file.Path,
+  ): Task[Unit] = for {
+    // Parse External-Identifier from bag-info.txt
+    externalId <- ZIO
+                    .fromOption(bag.bagInfo.flatMap(_.externalIdentifier))
+                    .orElseFail(
+                      new RuntimeException("Required field 'External-Identifier' is missing from bag-info.txt"),
+                    )
+    // Validate it's a valid ProjectIri
+    bagProjectIri <-
+      ZIO
+        .fromEither(ProjectIri.from(externalId))
+        .mapError(e => new RuntimeException(s"External-Identifier '$externalId' is not a valid project IRI: $e"))
+    // Validate it matches the endpoint's projectIri
+    _ <-
+      ZIO.when(bagProjectIri != projectIri)(
+        ZIO.fail(
+          new RuntimeException(
+            s"External-Identifier '${bagProjectIri.value}' does not match the endpoint project IRI '${projectIri.value}'",
+          ),
+        ),
+      )
+    // Check project doesn't already exist by IRI
+    exists <- projectService.existsById(projectIri)
+    _      <- ZIO.when(exists)(
+           ZIO.fail(new RuntimeException(s"Project with IRI '${projectIri.value}' already exists")),
+         )
+    // Load admin.nq and validate project presence and shortcode
+    adminNqPath = (bagRoot / "data" / "rdf" / "admin.nq").toFile.toPath
+    _          <- ZIO.scoped {
+           for {
+             ds <- DatasetOps
+                     .fromNQuadsFiles(List(adminNqPath))
+                     .mapError(e => new RuntimeException(e))
+             model           = ds.getUnionModel()
+             projectResource = model.getResource(projectIri.value)
+             // Verify project IRI appears as a subject in admin data
+             _ <- ZIO.when(!projectResource.listProperties().hasNext)(
+                    ZIO.fail(
+                      new RuntimeException(
+                        s"Project IRI '${projectIri.value}' not found as a subject in admin.nq",
+                      ),
+                    ),
+                  )
+             // Parse shortcode from admin data
+             shortcodeProp  = model.createProperty(KnoraAdminPrefixExpansion, "projectShortcode")
+             shortcodeStmt <- ZIO
+                                .fromOption(Option(projectResource.getProperty(shortcodeProp)))
+                                .orElseFail(
+                                  new RuntimeException(
+                                    s"Project '${projectIri.value}' has no projectShortcode in admin.nq",
+                                  ),
+                                )
+             shortcodeStr = shortcodeStmt.getString
+             shortcode   <- ZIO
+                            .fromEither(Shortcode.from(shortcodeStr))
+                            .mapError(e => new RuntimeException(s"Invalid shortcode '$shortcodeStr' in admin.nq: $e"))
+             // Check shortcode doesn't already exist
+             existsByShortcode <- projectService.findByShortcode(shortcode)
+             _                 <- ZIO.when(existsByShortcode.isDefined)(
+                    ZIO.fail(
+                      new RuntimeException(s"Project with shortcode '${shortcode.value}' already exists"),
+                    ),
+                  )
+           } yield ()
+         }
+  } yield ()
 
   private def getUniqueField(fields: List[(String, String)], name: String): Task[String] =
     fields.filter(_._1 == name) match {
