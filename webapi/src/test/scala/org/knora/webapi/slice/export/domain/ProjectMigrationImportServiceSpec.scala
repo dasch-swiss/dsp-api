@@ -471,5 +471,28 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
+    test("rejects existing group by IRI") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          _      <- env.groupFindByIdRef.set(_ => ZIO.some(TestDataFactory.UserGroup.testUserGroup))
+          stream <- buildBagItZip()
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("rejects existing group by name") {
+      ZIO.scoped {
+        for {
+          env <- makeTestEnv
+          // findById returns None (no conflict by IRI), but findByName returns a group
+          _      <- env.groupFindByNameRef.set(_ => ZIO.some(TestDataFactory.UserGroup.testUserGroup))
+          stream <- buildBagItZip()
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
   ).provide(configLayer) @@ TestAspect.withLiveClock @@ TestAspect.withLiveRandom @@ TestAspect.timeout(30.seconds)
 }
