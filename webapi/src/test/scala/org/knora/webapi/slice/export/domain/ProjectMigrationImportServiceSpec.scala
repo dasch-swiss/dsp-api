@@ -436,5 +436,40 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
+    test("rejects existing user by IRI") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          _      <- env.userFindByIdRef.set(_ => ZIO.some(TestDataFactory.User.testUser))
+          stream <- buildBagItZip()
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("rejects existing user by email") {
+      ZIO.scoped {
+        for {
+          env <- makeTestEnv
+          // findById returns None (no conflict by IRI), but findByEmail returns a user
+          _      <- env.userFindByEmailRef.set(_ => ZIO.some(TestDataFactory.User.testUser))
+          stream <- buildBagItZip()
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("rejects existing user by username") {
+      ZIO.scoped {
+        for {
+          env <- makeTestEnv
+          // findById and findByEmail return None, but findByUsername returns a user
+          _      <- env.userFindByUsernameRef.set(_ => ZIO.some(TestDataFactory.User.testUser))
+          stream <- buildBagItZip()
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
   ).provide(configLayer) @@ TestAspect.withLiveClock @@ TestAspect.withLiveRandom @@ TestAspect.timeout(30.seconds)
 }
