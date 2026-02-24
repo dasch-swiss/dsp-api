@@ -24,6 +24,7 @@ import zio.ULayer
 import zio.URIO
 import zio.ZIO
 import zio.ZLayer
+import zio.stream.ZStream
 
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
@@ -297,6 +298,9 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
     notImplemented
 
   override def uploadRepository(inputFile: Path): Task[Unit] =
+    notImplemented
+
+  override def uploadNQuads(stream: ZStream[Any, Throwable, Byte]): Task[Unit] =
     notImplemented
 
   override def dropGraph(graphName: IRI): Task[Unit] =

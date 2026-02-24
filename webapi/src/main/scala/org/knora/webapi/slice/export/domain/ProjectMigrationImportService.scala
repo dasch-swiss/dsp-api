@@ -10,7 +10,7 @@ import zio.stream.ZSink
 import zio.stream.ZStream
 
 import java.io.IOException
-import scala.annotation.nowarn
+import scala.jdk.CollectionConverters.*
 
 import org.knora.bagit.BagIt
 import org.knora.bagit.BagItError
@@ -37,7 +37,6 @@ final case class ImportExistsError(t: CurrentDataTask)
 // This error is used to indicate that an import is already in progress.
 final case class ImportInProgressError(t: CurrentDataTask)
 
-@nowarn("msg=unused explicit parameter")
 final class ProjectMigrationImportService(
   currentImport: DataTaskState,
   groupService: KnoraGroupService,
@@ -79,6 +78,10 @@ final class ProjectMigrationImportService(
         _             <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
         _             <- validateGroupsNotExist(bagRoot)
         _             <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
+        nqFiles       <- validateRequiredPayloadFiles(bagRoot)
+        _             <- ZIO.logInfo(s"$taskId: Payload file validation passed for project '$projectIri'")
+        _             <- uploadRdfDataToTriplestore(nqFiles)
+        _             <- ZIO.logInfo(s"$taskId: RDF data uploaded to triplestore for project '$projectIri'")
         _             <- currentImport.complete(taskId).ignore
         _             <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
       } yield ()
@@ -308,6 +311,61 @@ final class ProjectMigrationImportService(
              }
       } yield ()
     }
+  }
+
+  private def validateRequiredPayloadFiles(bagRoot: zio.nio.file.Path): Task[List[java.nio.file.Path]] = {
+    val rdfDir = (bagRoot / "data" / "rdf").toFile.toPath
+    for {
+      // Check admin.nq exists
+      _ <- ZIO.unlessZIO(ZIO.attempt(java.nio.file.Files.exists(rdfDir.resolve("admin.nq"))))(
+             ZIO.fail(new RuntimeException("Required file 'data/rdf/admin.nq' is missing from the BagIt payload")),
+           )
+      // Check data.nq exists
+      _ <- ZIO.unlessZIO(ZIO.attempt(java.nio.file.Files.exists(rdfDir.resolve("data.nq"))))(
+             ZIO.fail(new RuntimeException("Required file 'data/rdf/data.nq' is missing from the BagIt payload")),
+           )
+      // Find ontology files
+      ontologyFiles <- ZIO.attempt {
+                         val stream = java.nio.file.Files.list(rdfDir)
+                         try stream.iterator().asScala.filter(_.getFileName.toString.matches("ontology-.*\\.nq")).toList
+                         finally stream.close()
+                       }
+      _ <- ZIO.when(ontologyFiles.isEmpty)(
+             ZIO.fail(
+               new RuntimeException("No 'data/rdf/ontology-*.nq' files found in the BagIt payload"),
+             ),
+           )
+      // Validate each ontology file contains an owl:Ontology resource
+      _ <- ZIO.foreachDiscard(ontologyFiles) { path =>
+             ZIO.scoped {
+               for {
+                 ds         <- DatasetOps.fromNQuadsFiles(List(path)).mapError(e => new RuntimeException(e))
+                 model       = ds.getUnionModel()
+                 rdfType     = model.createProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "type")
+                 owlOntology = model.createResource("http://www.w3.org/2002/07/owl#Ontology")
+                 hasOntology = model.listSubjectsWithProperty(rdfType, owlOntology).hasNext
+                 _          <- ZIO.when(!hasOntology)(
+                        ZIO.fail(
+                          new RuntimeException(
+                            s"Ontology file '${path.getFileName}' does not contain an owl:Ontology resource",
+                          ),
+                        ),
+                      )
+               } yield ()
+             }
+           }
+      // Collect all .nq files from the rdf directory
+      allNqFiles <- ZIO.attempt {
+                      val stream = java.nio.file.Files.list(rdfDir)
+                      try stream.iterator().asScala.filter(_.getFileName.toString.endsWith(".nq")).toList
+                      finally stream.close()
+                    }
+    } yield allNqFiles
+  }
+
+  private def uploadRdfDataToTriplestore(nqFiles: List[java.nio.file.Path]): Task[Unit] = {
+    val stream = ZStream.fromIterable(nqFiles).flatMap(path => ZStream.fromPath(path))
+    triplestore.uploadNQuads(stream)
   }
 
   private def getUniqueField(fields: List[(String, String)], name: String): Task[String] =
