@@ -8,16 +8,19 @@ package swiss.dasch.domain
 import org.apache.commons.io.FileUtils
 import org.knora.bagit.BagIt
 import org.knora.bagit.BagItError
+import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
+import scala.language.implicitConversions
 import zio.*
 import zio.nio.file.*
 import zio.stream.*
 
 sealed trait ImportFailed
-case class IoError(e: Throwable)                  extends ImportFailed
-case object EmptyFile                             extends ImportFailed
-case object NoZipFile                             extends ImportFailed
-case object InvalidChecksums                      extends ImportFailed
-case class BagItValidationFailed(message: String) extends ImportFailed
+case class IoError(e: Throwable)                             extends ImportFailed
+case object EmptyFile                                        extends ImportFailed
+case object NoZipFile                                        extends ImportFailed
+case object InvalidChecksums                                 extends ImportFailed
+case class BagItValidationFailed(message: String)            extends ImportFailed
+case class ProjectAlreadyExists(shortcode: ProjectShortcode) extends ImportFailed
 
 trait ImportService {
   def importZipStream(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte]): IO[ImportFailed, Unit]
@@ -67,18 +70,29 @@ final case class ImportServiceLive(
       (_, bagRoot) = result
       dataDir      = bagRoot / "data"
       _           <- importProject(shortcode, dataDir)
-             .logError(s"Error while importing project $shortcode")
-             .mapError(IoError.apply)
     } yield ()
   }
 
-  private def importProject(shortcode: ProjectShortcode, dataDir: Path): IO[Throwable, Unit] =
-    storageService.getProjectFolder(shortcode).flatMap { projectPath =>
-      ZIO.logInfo(s"Importing project $shortcode") *>
-        projectService.deleteProject(shortcode) *>
-        ZIO.attemptBlockingIO(FileUtils.moveDirectory(dataDir.toFile, projectPath.toFile)) *>
-        ZIO.logInfo(s"Importing project $shortcode was successful")
-    }
+  private def importProject(shortcode: ProjectShortcode, dataDir: Path): IO[ImportFailed, Unit] =
+    for {
+      projectPath <- storageService.getProjectFolder(shortcode)
+      exists      <- Files.isDirectory(projectPath)
+      _           <- ZIO.when(exists) {
+             for {
+               hasFiles <- Files
+                             .walk(projectPath)
+                             .filterZIO(p => Files.isRegularFile(p))
+                             .runHead
+                             .map(_.isDefined)
+                             .mapError(IoError(_))
+               _ <- ZIO.when(hasFiles)(ZIO.fail(ProjectAlreadyExists(shortcode)))
+               _ <- Files.deleteRecursive(projectPath).mapError(IoError(_))
+             } yield ()
+           }
+      _ <- ZIO.logInfo(s"Importing project $shortcode")
+      _ <- ZIO.attemptBlockingIO(FileUtils.moveDirectory(dataDir.toFile, projectPath.toFile)).mapError(IoError(_))
+      _ <- ZIO.logInfo(s"Importing project $shortcode was successful")
+    } yield ()
 }
 object ImportServiceLive {
   val layer = ZLayer.derive[ImportServiceLive]

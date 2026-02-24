@@ -236,6 +236,8 @@ final case class ProjectsEndpointsHandler(
                 case NoZipFile                  => BadRequest.invalidBody("The uploaded file is not a zip file.")
                 case InvalidChecksums           => BadRequest.invalidBody("The uploaded file contains invalid checksums.")
                 case BagItValidationFailed(msg) => BadRequest.invalidBody(s"BagIt validation failed: $msg")
+                case ProjectAlreadyExists(sc)   =>
+                  Conflict(s"Project ${sc.value} already exists. Delete the project before importing.")
               },
               _ => UploadResponse(),
             ),
