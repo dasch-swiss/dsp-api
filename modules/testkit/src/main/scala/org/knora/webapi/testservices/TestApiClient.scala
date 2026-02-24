@@ -203,6 +203,20 @@ final case class TestApiClient(
     sendRequest(request, Some(user))
   }
 
+  def postBinary[A: JsonDecoder](
+    relativeUri: Uri,
+    body: Array[Byte],
+    mediaType: MediaType,
+    user: User,
+  ): Task[Response[Either[String, A]]] = {
+    val request = basicRequest
+      .post(relativeUri)
+      .body(body)
+      .contentType(mediaType)
+      .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
+    sendRequest(request, Some(user))
+  }
+
   def patchJsonLdDocument(
     relativeUri: Uri,
     jsonLdBody: String,
@@ -451,6 +465,14 @@ object TestApiClient {
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.postMultiPart[A](relativeUri, body, user))
+
+  def postBinary[A: JsonDecoder](
+    relativeUri: Uri,
+    body: Array[Byte],
+    mediaType: MediaType,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postBinary[A](relativeUri, body, mediaType, user))
 
   def postSparql(
     relativeUri: Uri,

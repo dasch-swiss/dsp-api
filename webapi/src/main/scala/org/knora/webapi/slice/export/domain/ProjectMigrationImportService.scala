@@ -5,19 +5,25 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.Resource
+import org.apache.jena.vocabulary.RDF
 import zio.*
+import zio.nio.file.Files
+import zio.nio.file.Path
 import zio.stream.ZSink
 import zio.stream.ZStream
 
 import java.io.IOException
 import scala.jdk.CollectionConverters.*
+import scala.language.implicitConversions
 
 import org.knora.bagit.BagIt
 import org.knora.bagit.BagItError
 import org.knora.bagit.domain.Bag
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
@@ -30,6 +36,9 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.common.jena.DatasetOps
+import org.knora.webapi.slice.common.jena.JenaConversions.given
+import org.knora.webapi.slice.common.jena.ModelOps.*
+import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 // This error is used to indicate that an import already exists.
@@ -54,6 +63,7 @@ final class ProjectMigrationImportService(
     importTask <-
       currentImport.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) => ImportExistsError(t) }
     bagItPath <- storage.importBagItZipPath(importTask.id)
+    _         <- Files.createDirectories(bagItPath.parent.get).orDie
     _         <- stream.run(ZSink.fromFile(bagItPath.toFile)).orDie
     _         <- doImport(importTask.id, projectIri).forkDaemon
   } yield importTask
@@ -61,34 +71,49 @@ final class ProjectMigrationImportService(
   private def doImport(taskId: DataTaskId, projectIri: ProjectIri): UIO[Unit] =
     ZIO.scoped {
       for {
-        _      <- storage.tempImportScoped(taskId)
-        zip    <- storage.importBagItZipPath(taskId)
-        _      <- ZIO.logInfo(s"$taskId: Starting import for project '$projectIri'")
+        _   <- storage.tempImportScoped(taskId)
+        zip <- storage.importBagItZipPath(taskId)
+        _   <- ZIO.logInfo(s"$taskId: Starting import for project '$projectIri'")
+
         result <- BagIt.readAndValidateZip(zip).mapError {
                     case ex: IOException => ex: Throwable
                     case err: BagItError => new RuntimeException(err.message)
                   }
         (bag, bagRoot) = result
         _             <- ZIO.logInfo(s"$taskId: BagIt validation passed for project '$projectIri'")
-        _             <- validateVersionCompatibility(bag, taskId)
-        _             <- ZIO.logInfo(s"$taskId: Version compatibility validated for project '$projectIri'")
-        _             <- validateProjectNotExists(bag, projectIri, bagRoot)
-        _             <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
-        _             <- validateUsersNotExist(bagRoot)
-        _             <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
-        _             <- validateGroupsNotExist(bagRoot)
-        _             <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
-        nqFiles       <- validateRequiredPayloadFiles(bagRoot)
-        _             <- ZIO.logInfo(s"$taskId: Payload file validation passed for project '$projectIri'")
-        _             <- uploadRdfDataToTriplestore(nqFiles)
-        _             <- ZIO.logInfo(s"$taskId: RDF data uploaded to triplestore for project '$projectIri'")
-        _             <- currentImport.complete(taskId).ignore
-        _             <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
+
+        _ <- validateVersionCompatibility(bag, taskId)
+        _ <- ZIO.logInfo(s"$taskId: Version compatibility validated for project '$projectIri'")
+
+        nqFiles <- validateRequiredPayloadFiles(bagRoot)
+        _       <- ZIO.logInfo(s"$taskId: Payload file validation passed for project '$projectIri'")
+
+        _ <- ZIO.scoped { // rdf validation
+               for {
+                 model <- loadModel(bagRoot, "admin.nq")
+                 _     <- validateProjectNotExists(bag, projectIri, model)
+                 _     <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
+                 _     <- validateUsersNotExist(model)
+                 _     <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
+                 _     <- validateGroupsNotExist(model)
+                 _     <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
+               } yield ()
+             }
+
+        // upload data
+        _ <- uploadRdfDataToTriplestore(nqFiles)
+        _ <- ZIO.logInfo(s"$taskId: RDF data uploaded to triplestore for project '$projectIri'")
+        _ <- currentImport.complete(taskId).ignore
+        _ <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
       } yield ()
     }.logError.catchAll(e =>
       ZIO.logError(s"$taskId: Import failed for project '$projectIri' with error: ${e.getMessage}") *>
         currentImport.fail(taskId).ignore,
     )
+
+  private def loadModel(bagRoot: Path, fileName: String): ZIO[Scope, Throwable, Model] =
+    val adminNqPath = (bagRoot / "data" / "rdf" / fileName).toFile.toPath
+    DatasetOps.fromNQuadsFiles(List(adminNqPath)).mapBoth(e => new RuntimeException(e), ds => ds.getUnionModel)
 
   private def validateVersionCompatibility(bag: Bag, taskId: DataTaskId): Task[Unit] = {
     val fields = bag.bagInfo.fold(List.empty[(String, String)])(_.additionalFields)
@@ -122,7 +147,7 @@ final class ProjectMigrationImportService(
   private def validateProjectNotExists(
     bag: Bag,
     projectIri: ProjectIri,
-    bagRoot: zio.nio.file.Path,
+    model: Model,
   ): Task[Unit] = for {
     // Parse External-Identifier from bag-info.txt
     externalId <- ZIO
@@ -149,166 +174,78 @@ final class ProjectMigrationImportService(
     _      <- ZIO.when(exists)(
            ZIO.fail(new RuntimeException(s"Project with IRI '${projectIri.value}' already exists")),
          )
-    // Load admin.nq and validate project presence and shortcode
-    adminNqPath = (bagRoot / "data" / "rdf" / "admin.nq").toFile.toPath
-    _          <- ZIO.scoped {
-           for {
-             ds <- DatasetOps
-                     .fromNQuadsFiles(List(adminNqPath))
-                     .mapError(e => new RuntimeException(e))
-             model           = ds.getUnionModel()
-             projectResource = model.getResource(projectIri.value)
-             // Verify project IRI appears as a subject in admin data
-             _ <- ZIO.when(!projectResource.listProperties().hasNext)(
-                    ZIO.fail(
-                      new RuntimeException(
-                        s"Project IRI '${projectIri.value}' not found as a subject in admin.nq",
-                      ),
-                    ),
-                  )
-             // Parse shortcode from admin data
-             shortcodeProp  = model.createProperty(KnoraAdminPrefixExpansion, "projectShortcode")
-             shortcodeStmt <- ZIO
-                                .fromOption(Option(projectResource.getProperty(shortcodeProp)))
-                                .orElseFail(
-                                  new RuntimeException(
-                                    s"Project '${projectIri.value}' has no projectShortcode in admin.nq",
-                                  ),
-                                )
-             shortcodeStr = shortcodeStmt.getString
-             shortcode   <- ZIO
-                            .fromEither(Shortcode.from(shortcodeStr))
-                            .mapError(e => new RuntimeException(s"Invalid shortcode '$shortcodeStr' in admin.nq: $e"))
-             // Check shortcode doesn't already exist
-             existsByShortcode <- projectService.findByShortcode(shortcode)
-             _                 <- ZIO.when(existsByShortcode.isDefined)(
-                    ZIO.fail(
-                      new RuntimeException(s"Project with shortcode '${shortcode.value}' already exists"),
-                    ),
-                  )
-           } yield ()
-         }
+    // Validate project presence and shortcode in admin data
+    projectResource <- ZIO
+                         .fromEither(model.resource(projectIri.value))
+                         .mapError(e => new RuntimeException(s"$e in admin.nq"))
+    _ <- ZIO.when(!projectResource.listProperties().hasNext)(
+           ZIO.fail(
+             new RuntimeException(
+               s"Project IRI '${projectIri.value}' not found as a subject in admin.nq",
+             ),
+           ),
+         )
+    shortcode <- ZIO
+                   .fromEither(projectResource.objectString(KnoraAdmin.ProjectShortcode, Shortcode.from))
+                   .mapError(e => new RuntimeException(s"$e in admin.nq"))
+    // Check shortcode doesn't already exist
+    existsByShortcode <- projectService.findByShortcode(shortcode)
+    _                 <- ZIO.when(existsByShortcode.isDefined)(
+           ZIO.fail(
+             new RuntimeException(s"Project with shortcode '${shortcode.value}' already exists"),
+           ),
+         )
   } yield ()
 
-  private def validateUsersNotExist(bagRoot: zio.nio.file.Path): Task[Unit] = {
-    val adminNqPath = (bagRoot / "data" / "rdf" / "admin.nq").toFile.toPath
-    ZIO.scoped {
+  private def validateUsersNotExist(model: Model): Task[Unit] = {
+    val userResources = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.User: Resource).asScala.toList
+    ZIO.foreachDiscard(userResources) { userResource =>
+      val userIriStr = userResource.getURI
       for {
-        ds           <- DatasetOps.fromNQuadsFiles(List(adminNqPath)).mapError(e => new RuntimeException(e))
-        model         = ds.getUnionModel()
-        rdfType       = model.createProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "type")
-        userType      = model.createResource(KnoraAdminPrefixExpansion + "User")
-        emailProp     = model.createProperty(KnoraAdminPrefixExpansion, "email")
-        usernameProp  = model.createProperty(KnoraAdminPrefixExpansion, "username")
-        userResources = {
-          val iter = model.listSubjectsWithProperty(rdfType, userType)
-          val buf  = scala.collection.mutable.ListBuffer.empty[org.apache.jena.rdf.model.Resource]
-          while (iter.hasNext) buf += iter.next()
-          buf.toList
-        }
-        _ <- ZIO.foreachDiscard(userResources) { userResource =>
-               val userIriStr = userResource.getURI
-               for {
-                 // Check by IRI
-                 userIri <- ZIO
-                              .fromEither(UserIri.from(userIriStr))
-                              .mapError(e => new RuntimeException(s"Invalid user IRI '$userIriStr' in admin.nq: $e"))
-                 existsById <- userService.findById(userIri)
-                 _          <- ZIO.when(existsById.isDefined)(
-                        ZIO.fail(
-                          new RuntimeException(s"User with IRI '${userIri.value}' already exists"),
-                        ),
-                      )
-                 // Check by email
-                 emailStmt <- ZIO
-                                .fromOption(Option(userResource.getProperty(emailProp)))
-                                .orElseFail(
-                                  new RuntimeException(s"User '${userIri.value}' has no email in admin.nq"),
-                                )
-                 emailStr = emailStmt.getString
-                 email   <- ZIO
-                            .fromEither(Email.from(emailStr))
-                            .mapError(e => new RuntimeException(s"Invalid email '$emailStr' in admin.nq: $e"))
-                 existsByEmail <- userService.findByEmail(email)
-                 _             <- ZIO.when(existsByEmail.isDefined)(
-                        ZIO.fail(
-                          new RuntimeException(s"User with email '$emailStr' already exists"),
-                        ),
-                      )
-                 // Check by username
-                 usernameStmt <- ZIO
-                                   .fromOption(Option(userResource.getProperty(usernameProp)))
-                                   .orElseFail(
-                                     new RuntimeException(
-                                       s"User '${userIri.value}' has no username in admin.nq",
-                                     ),
-                                   )
-                 usernameStr = usernameStmt.getString
-                 username   <- ZIO
-                               .fromEither(Username.from(usernameStr))
-                               .mapError(e => new RuntimeException(s"Invalid username '$usernameStr' in admin.nq: $e"))
-                 existsByUsername <- userService.findByUsername(username)
-                 _                <- ZIO.when(existsByUsername.isDefined)(
-                        ZIO.fail(
-                          new RuntimeException(
-                            s"User with username '${username.value}' already exists",
-                          ),
-                        ),
-                      )
-               } yield ()
-             }
+        userIri <- ZIO
+                     .fromEither(UserIri.from(userIriStr))
+                     .mapError(e => new RuntimeException(s"Invalid user IRI '$userIriStr' in admin.nq: $e"))
+        existsById <- userService.findById(userIri)
+        _          <- ZIO.when(existsById.isDefined)(
+               ZIO.fail(new RuntimeException(s"User with IRI '${userIri.value}' already exists")),
+             )
+        email <- ZIO
+                   .fromEither(userResource.objectString(KnoraAdmin.Email, Email.from))
+                   .mapError(e => new RuntimeException(s"$e in admin.nq"))
+        existsByEmail <- userService.findByEmail(email)
+        _             <- ZIO.when(existsByEmail.isDefined)(
+               ZIO.fail(new RuntimeException(s"User with email '${email.value}' already exists")),
+             )
+        username <- ZIO
+                      .fromEither(userResource.objectString(KnoraAdmin.Username, Username.from))
+                      .mapError(e => new RuntimeException(s"$e in admin.nq"))
+        existsByUsername <- userService.findByUsername(username)
+        _                <- ZIO.when(existsByUsername.isDefined)(
+               ZIO.fail(new RuntimeException(s"User with username '${username.value}' already exists")),
+             )
       } yield ()
     }
   }
 
-  private def validateGroupsNotExist(bagRoot: zio.nio.file.Path): Task[Unit] = {
-    val adminNqPath = (bagRoot / "data" / "rdf" / "admin.nq").toFile.toPath
-    ZIO.scoped {
+  private def validateGroupsNotExist(model: Model): Task[Unit] = {
+    val groupResources = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.UserGroup: Resource).asScala.toList
+    ZIO.foreachDiscard(groupResources) { groupResource =>
+      val groupIriStr = groupResource.getURI
       for {
-        ds            <- DatasetOps.fromNQuadsFiles(List(adminNqPath)).mapError(e => new RuntimeException(e))
-        model          = ds.getUnionModel()
-        rdfType        = model.createProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "type")
-        groupType      = model.createResource(KnoraAdminPrefixExpansion + "UserGroup")
-        groupNameProp  = model.createProperty(KnoraAdminPrefixExpansion, "groupName")
-        groupResources = {
-          val iter = model.listSubjectsWithProperty(rdfType, groupType)
-          val buf  = scala.collection.mutable.ListBuffer.empty[org.apache.jena.rdf.model.Resource]
-          while (iter.hasNext) buf += iter.next()
-          buf.toList
-        }
-        _ <- ZIO.foreachDiscard(groupResources) { groupResource =>
-               val groupIriStr = groupResource.getURI
-               for {
-                 // Check by IRI
-                 groupIri <- ZIO
-                               .fromEither(GroupIri.from(groupIriStr))
-                               .mapError(e => new RuntimeException(s"Invalid group IRI '$groupIriStr' in admin.nq: $e"))
-                 existsById <- groupService.findById(groupIri)
-                 _          <- ZIO.when(existsById.isDefined)(
-                        ZIO.fail(
-                          new RuntimeException(s"Group with IRI '${groupIri.value}' already exists"),
-                        ),
-                      )
-                 // Check by name
-                 nameStmt <- ZIO
-                               .fromOption(Option(groupResource.getProperty(groupNameProp)))
-                               .orElseFail(
-                                 new RuntimeException(
-                                   s"Group '${groupIri.value}' has no groupName in admin.nq",
-                                 ),
-                               )
-                 nameStr    = nameStmt.getString
-                 groupName <- ZIO
-                                .fromEither(GroupName.from(nameStr))
-                                .mapError(e => new RuntimeException(s"Invalid group name '$nameStr' in admin.nq: $e"))
-                 existsByName <- groupService.findByName(groupName)
-                 _            <- ZIO.when(existsByName.isDefined)(
-                        ZIO.fail(
-                          new RuntimeException(s"Group with name '${groupName.value}' already exists"),
-                        ),
-                      )
-               } yield ()
-             }
+        groupIri <- ZIO
+                      .fromEither(GroupIri.from(groupIriStr))
+                      .mapError(e => new RuntimeException(s"Invalid group IRI '$groupIriStr' in admin.nq: $e"))
+        existsById <- groupService.findById(groupIri)
+        _          <- ZIO.when(existsById.isDefined)(
+               ZIO.fail(new RuntimeException(s"Group with IRI '${groupIri.value}' already exists")),
+             )
+        groupName <- ZIO
+                       .fromEither(groupResource.objectString(KnoraAdmin.GroupName, GroupName.from))
+                       .mapError(e => new RuntimeException(s"$e in admin.nq"))
+        existsByName <- groupService.findByName(groupName)
+        _            <- ZIO.when(existsByName.isDefined)(
+               ZIO.fail(new RuntimeException(s"Group with name '${groupName.value}' already exists")),
+             )
       } yield ()
     }
   }
@@ -335,25 +272,7 @@ final class ProjectMigrationImportService(
                new RuntimeException("No 'data/rdf/ontology-*.nq' files found in the BagIt payload"),
              ),
            )
-      // Validate each ontology file contains an owl:Ontology resource
-      _ <- ZIO.foreachDiscard(ontologyFiles) { path =>
-             ZIO.scoped {
-               for {
-                 ds         <- DatasetOps.fromNQuadsFiles(List(path)).mapError(e => new RuntimeException(e))
-                 model       = ds.getUnionModel()
-                 rdfType     = model.createProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "type")
-                 owlOntology = model.createResource("http://www.w3.org/2002/07/owl#Ontology")
-                 hasOntology = model.listSubjectsWithProperty(rdfType, owlOntology).hasNext
-                 _          <- ZIO.when(!hasOntology)(
-                        ZIO.fail(
-                          new RuntimeException(
-                            s"Ontology file '${path.getFileName}' does not contain an owl:Ontology resource",
-                          ),
-                        ),
-                      )
-               } yield ()
-             }
-           }
+
       // Collect all .nq files from the rdf directory
       allNqFiles <- ZIO.attempt {
                       val stream = java.nio.file.Files.list(rdfDir)
