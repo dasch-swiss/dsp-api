@@ -216,7 +216,7 @@ final case class ProjectsEndpointsHandler(
               projectNotFoundOrServerError(_, shortcode),
               path =>
                 (
-                  s"attachment; filename=export-$shortcode.zip",
+                  s"attachment; filename=export-$shortcode.bagit.zip",
                   "application/zip",
                   ZStream.fromFile(path.toFile).orDie,
                 ),
