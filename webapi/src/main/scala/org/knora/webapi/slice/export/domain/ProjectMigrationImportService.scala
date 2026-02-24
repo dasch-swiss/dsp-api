@@ -6,19 +6,31 @@
 package org.knora.webapi.slice.`export`.domain
 
 import zio.*
+import zio.stream.ZSink
 import zio.stream.ZStream
+
+import scala.annotation.nowarn
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import zio.stream.ZSink
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.KnoraUserService
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 // This error is used to indicate that an import already exists.
 final case class ImportExistsError(t: CurrentDataTask)
 // This error is used to indicate that an import is already in progress.
 final case class ImportInProgressError(t: CurrentDataTask)
 
+@nowarn("msg=unused explicit parameter")
 final class ProjectMigrationImportService(
   currentImport: DataTaskState,
+  groupService: KnoraGroupService,
+  projectService: KnoraProjectService,
   storage: ProjectMigrationStorageService,
+  triplestore: TriplestoreService,
+  userService: KnoraUserService,
 ) { self =>
 
   def importDataExport(
@@ -30,12 +42,15 @@ final class ProjectMigrationImportService(
       currentImport.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) => ImportExistsError(t) }
     bagItPath <- storage.importBagItZipPath(importTask.id)
     _         <- stream.run(ZSink.fromFile(bagItPath.toFile)).orDie
-    _         <- (
-           // Simulate a long-running import process by completing the import after a delay.
-           // In a real implementation, this would be where the actual import logic goes.
-           currentImport.complete(importTask.id).delay(10.seconds).ignore
-         ).forkDaemon
+    _         <- doImport(importTask.id, projectIri).forkDaemon
   } yield importTask
+
+  private def doImport(taskId: DataTaskId, projectIri: ProjectIri): UIO[Unit] =
+    (for {
+      _ <- ZIO.logInfo(s"$taskId: Starting import for project '$projectIri'")
+      _ <- currentImport.complete(taskId).ignore
+      _ <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
+    } yield ())
 
   def getImportStatus(importId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = currentImport.find(importId)
 
@@ -50,5 +65,8 @@ final class ProjectMigrationImportService(
 }
 
 object ProjectMigrationImportService {
-  val layer = DataTaskPersistence.noop >>> DataTaskState.layer >>> ZLayer.derive[ProjectMigrationImportService]
+  val layer: URLayer[
+    KnoraGroupService & KnoraProjectService & KnoraUserService & ProjectMigrationStorageService & TriplestoreService,
+    ProjectMigrationImportService,
+  ] = DataTaskPersistence.noop >>> DataTaskState.layer >>> ZLayer.derive[ProjectMigrationImportService]
 }
