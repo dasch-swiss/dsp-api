@@ -14,7 +14,7 @@ import org.knora.bagit.BagIt
 import org.knora.bagit.domain.BagInfo
 import org.knora.bagit.domain.PayloadEntry
 import org.knora.webapi.KnoraBaseVersion
-import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.util.rdf.NQuads
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
@@ -37,7 +37,6 @@ final case class ExportInProgressError(t: CurrentDataTask)
 final case class ExportFailedError(t: CurrentDataTask)
 
 final class ProjectMigrationExportService(
-  apiConfig: KnoraApi,
   currentExp: DataTaskState,
   projectService: KnoraProjectService,
   storage: ProjectMigrationStorageService,
@@ -107,9 +106,10 @@ final class ProjectMigrationExportService(
 
   private def createBagItZip(taskId: DataTaskId, rdfPath: Path, projectIri: ProjectIri) =
     for {
-      zipFile <- storage.bagItZipPath(taskId)
-      _       <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
-      _       <- BagIt.create(
+      zipFile      <- storage.bagItZipPath(taskId)
+      externalHost <- AppConfig.knoraApi(_.externalHost)
+      _            <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
+      _            <- BagIt.create(
              List(PayloadEntry.Directory("rdf", rdfPath)),
              zipFile,
              bagInfo = Some(
@@ -120,7 +120,7 @@ final class ProjectMigrationExportService(
                  additionalFields = List(
                    ("KnoraBase-Version", s"$KnoraBaseVersion"),
                    ("Dsp-Api-Version", BuildInfo.version),
-                   ("Source-Server", apiConfig.externalHost),
+                   ("Source-Server", externalHost),
                  ),
                ),
              ),
@@ -184,7 +184,7 @@ final class ProjectMigrationExportService(
 
 object ProjectMigrationExportService {
   val layer: URLayer[
-    KnoraApi & KnoraProjectService & ProjectMigrationStorageService & TriplestoreService,
+    KnoraProjectService & ProjectMigrationStorageService & TriplestoreService,
     ProjectMigrationExportService,
   ] = FilesystemDataTaskPersistence.exportLayer >>> ZLayer {
     for {
@@ -203,10 +203,9 @@ object ProjectMigrationExportService {
            }
       ref            <- Ref.make(corrected)
       state           = new DataTaskState(ref, fsPersistence)
-      apiConfig      <- ZIO.service[KnoraApi]
       projectService <- ZIO.service[KnoraProjectService]
       storage        <- ZIO.service[ProjectMigrationStorageService]
       triplestore    <- ZIO.service[TriplestoreService]
-    } yield new ProjectMigrationExportService(apiConfig, state, projectService, storage, triplestore)
+    } yield new ProjectMigrationExportService(state, projectService, storage, triplestore)
   }
 }

@@ -14,7 +14,6 @@ import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.config.JwtConfig
-import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.util.*
@@ -100,7 +99,7 @@ object LayersLive { self =>
 
   val remainingLayer: URLayer[AppConfigurations, Environment] =
     ZLayer.makeSome[
-      AppConfig & KnoraApi & DspIngestConfig & Sipi & Triplestore & GraphRoute & JwtConfig,
+      AppConfig & DspIngestConfig & Sipi & Triplestore & GraphRoute & JwtConfig,
       self.Environment,
     ](
       // ZLayer.Debug.mermaid,

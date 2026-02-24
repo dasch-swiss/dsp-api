@@ -171,6 +171,7 @@ object AppConfig {
 
   def config[A](f: AppConfig => A): UIO[A]  = ZIO.config(config).map(f).orDie
   def features[A](f: Features => A): UIO[A] = ZIO.config(config.map(_.features)).map(f).orDie
+  def knoraApi[A](f: KnoraApi => A): UIO[A] = ZIO.config(config.map(_.knoraApi)).map(f).orDie
 
   private val provider: ConfigProvider =
     TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
