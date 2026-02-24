@@ -9,8 +9,11 @@ import zio.*
 import zio.stream.ZSink
 import zio.stream.ZStream
 
+import java.io.IOException
 import scala.annotation.nowarn
 
+import org.knora.bagit.BagIt
+import org.knora.bagit.BagItError
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
@@ -46,11 +49,23 @@ final class ProjectMigrationImportService(
   } yield importTask
 
   private def doImport(taskId: DataTaskId, projectIri: ProjectIri): UIO[Unit] =
-    (for {
-      _ <- ZIO.logInfo(s"$taskId: Starting import for project '$projectIri'")
-      _ <- currentImport.complete(taskId).ignore
-      _ <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
-    } yield ())
+    ZIO.scoped {
+      for {
+        _   <- storage.tempImportScoped(taskId)
+        zip <- storage.importBagItZipPath(taskId)
+        _   <- ZIO.logInfo(s"$taskId: Starting import for project '$projectIri'")
+        _   <- BagIt.readAndValidateZip(zip).mapError {
+               case ex: IOException => ex: Throwable
+               case err: BagItError => new RuntimeException(err.message)
+             }
+        _ <- ZIO.logInfo(s"$taskId: BagIt validation passed for project '$projectIri'")
+        _ <- currentImport.complete(taskId).ignore
+        _ <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
+      } yield ()
+    }.logError.catchAll(e =>
+      ZIO.logError(s"$taskId: Import failed for project '$projectIri' with error: ${e.getMessage}") *>
+        currentImport.fail(taskId).ignore,
+    )
 
   def getImportStatus(importId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = currentImport.find(importId)
 
