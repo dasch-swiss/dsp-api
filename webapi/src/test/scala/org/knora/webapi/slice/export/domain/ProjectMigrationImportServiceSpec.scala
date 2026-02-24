@@ -399,5 +399,42 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
+    test("rejects External-Identifier mismatch") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      externalIdentifier = Some("http://rdfh.ch/projects/8888"),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("rejects existing project by IRI") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          _      <- env.projectFindByIdRef.set(_ => ZIO.some(TestDataFactory.someProject))
+          stream <- buildBagItZip()
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("rejects existing project by shortcode") {
+      ZIO.scoped {
+        for {
+          env <- makeTestEnv
+          // existsById returns false (no conflict by IRI)
+          _ <- env.projectFindByIdRef.set(_ => ZIO.none)
+          // findByShortcode returns Some for shortcode "9999" (from adminNq)
+          _      <- env.projectFindByShortcodeRef.set(_ => ZIO.some(TestDataFactory.someProject))
+          stream <- buildBagItZip()
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
   ).provide(configLayer) @@ TestAspect.withLiveClock @@ TestAspect.withLiveRandom @@ TestAspect.timeout(30.seconds)
 }
