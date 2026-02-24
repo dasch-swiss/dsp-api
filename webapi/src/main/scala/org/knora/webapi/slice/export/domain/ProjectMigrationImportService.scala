@@ -17,7 +17,6 @@ import zio.stream.ZStream
 import java.io.IOException
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
-
 import org.knora.bagit.BagIt
 import org.knora.bagit.BagItError
 import org.knora.bagit.domain.Bag
@@ -85,8 +84,10 @@ final class ProjectMigrationImportService(
         _ <- validateVersionCompatibility(bag, taskId)
         _ <- ZIO.logInfo(s"$taskId: Version compatibility validated for project '$projectIri'")
 
-        nqFiles <- validateRequiredPayloadFiles(bagRoot)
-        _       <- ZIO.logInfo(s"$taskId: Payload file validation passed for project '$projectIri'")
+        nqFiles <- validateRdfPayloadFiles(bagRoot)
+        _       <- ZIO.logInfo(
+               s"$taskId: Payload file validation passed for project '$projectIri', found: ${nqFiles.mkString(", ")}",
+             )
 
         _ <- ZIO.scoped { // rdf validation
                for {
@@ -250,40 +251,38 @@ final class ProjectMigrationImportService(
     }
   }
 
-  private def validateRequiredPayloadFiles(bagRoot: zio.nio.file.Path): Task[List[java.nio.file.Path]] = {
-    val rdfDir = (bagRoot / "data" / "rdf").toFile.toPath
+  private def validateRdfPayloadFiles(bagRoot: Path): Task[Chunk[Path]] = {
+    val rdfDir  = bagRoot / "data" / "rdf"
+    val adminNq = rdfDir / "admin.nq"
+    val dataNq  = rdfDir / "data.nq"
     for {
       // Check admin.nq exists
-      _ <- ZIO.unlessZIO(ZIO.attempt(java.nio.file.Files.exists(rdfDir.resolve("admin.nq"))))(
+      _ <- ZIO.unlessZIO(Files.exists(adminNq))(
              ZIO.fail(new RuntimeException("Required file 'data/rdf/admin.nq' is missing from the BagIt payload")),
            )
       // Check data.nq exists
-      _ <- ZIO.unlessZIO(ZIO.attempt(java.nio.file.Files.exists(rdfDir.resolve("data.nq"))))(
+      _ <- ZIO.unlessZIO(Files.exists(dataNq))(
              ZIO.fail(new RuntimeException("Required file 'data/rdf/data.nq' is missing from the BagIt payload")),
            )
       // Find ontology files
-      ontologyFiles <- ZIO.attempt {
-                         val stream = java.nio.file.Files.list(rdfDir)
-                         try stream.iterator().asScala.filter(_.getFileName.toString.matches("ontology-.*\\.nq")).toList
-                         finally stream.close()
-                       }
-      _ <- ZIO.when(ontologyFiles.isEmpty)(
+      ontologyFiles <- Files.list(rdfDir).filter(_.filename.toString.matches("ontology-\\d+\\.nq")).runCollect
+      _             <- ZIO.when(ontologyFiles.isEmpty)(
              ZIO.fail(
                new RuntimeException("No 'data/rdf/ontology-*.nq' files found in the BagIt payload"),
              ),
            )
-
-      // Collect all .nq files from the rdf directory
-      allNqFiles <- ZIO.attempt {
-                      val stream = java.nio.file.Files.list(rdfDir)
-                      try stream.iterator().asScala.filter(_.getFileName.toString.endsWith(".nq")).toList
-                      finally stream.close()
-                    }
-    } yield allNqFiles
+      // Permissions are optional, if present, we want to include them
+      permissionNq = rdfDir / "permission.nq"
+      perms       <- ZIO.ifZIO(Files.exists(permissionNq))(ZIO.some(permissionNq), ZIO.none)
+    } yield ontologyFiles ++ Chunk(adminNq, dataNq) ++ Chunk.fromIterable(perms)
   }
 
-  private def uploadRdfDataToTriplestore(nqFiles: List[java.nio.file.Path]): Task[Unit] = {
-    val stream = ZStream.fromIterable(nqFiles).flatMap(path => ZStream.fromPath(path))
+  private def uploadRdfDataToTriplestore(nqFiles: Chunk[Path]): Task[Unit] = {
+    val newline = ZStream.fromChunk(Chunk('\n'.toByte))
+    // When concatenating files, if a file doesn't end with a newline,
+    // the last line of one file merges with the first line of the next file, corrupting both NQuad statements.
+    // To prevent this, we insert a newline between files.
+    val stream = ZStream.fromIterable(nqFiles).flatMap(p => ZStream.fromFile(p.toFile) ++ newline)
     triplestore.uploadNQuads(stream)
   }
 
