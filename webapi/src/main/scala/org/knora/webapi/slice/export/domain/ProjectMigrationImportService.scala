@@ -19,6 +19,8 @@ import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
@@ -75,6 +77,8 @@ final class ProjectMigrationImportService(
         _             <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
         _             <- validateUsersNotExist(bagRoot)
         _             <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
+        _             <- validateGroupsNotExist(bagRoot)
+        _             <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
         _             <- currentImport.complete(taskId).ignore
         _             <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
       } yield ()
@@ -246,6 +250,58 @@ final class ProjectMigrationImportService(
                           new RuntimeException(
                             s"User with username '${username.value}' already exists",
                           ),
+                        ),
+                      )
+               } yield ()
+             }
+      } yield ()
+    }
+  }
+
+  private def validateGroupsNotExist(bagRoot: zio.nio.file.Path): Task[Unit] = {
+    val adminNqPath = (bagRoot / "data" / "rdf" / "admin.nq").toFile.toPath
+    ZIO.scoped {
+      for {
+        ds            <- DatasetOps.fromNQuadsFiles(List(adminNqPath)).mapError(e => new RuntimeException(e))
+        model          = ds.getUnionModel()
+        rdfType        = model.createProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "type")
+        groupType      = model.createResource(KnoraAdminPrefixExpansion + "UserGroup")
+        groupNameProp  = model.createProperty(KnoraAdminPrefixExpansion, "groupName")
+        groupResources = {
+          val iter = model.listSubjectsWithProperty(rdfType, groupType)
+          val buf  = scala.collection.mutable.ListBuffer.empty[org.apache.jena.rdf.model.Resource]
+          while (iter.hasNext) buf += iter.next()
+          buf.toList
+        }
+        _ <- ZIO.foreachDiscard(groupResources) { groupResource =>
+               val groupIriStr = groupResource.getURI
+               for {
+                 // Check by IRI
+                 groupIri <- ZIO
+                               .fromEither(GroupIri.from(groupIriStr))
+                               .mapError(e => new RuntimeException(s"Invalid group IRI '$groupIriStr' in admin.nq: $e"))
+                 existsById <- groupService.findById(groupIri)
+                 _          <- ZIO.when(existsById.isDefined)(
+                        ZIO.fail(
+                          new RuntimeException(s"Group with IRI '${groupIri.value}' already exists"),
+                        ),
+                      )
+                 // Check by name
+                 nameStmt <- ZIO
+                               .fromOption(Option(groupResource.getProperty(groupNameProp)))
+                               .orElseFail(
+                                 new RuntimeException(
+                                   s"Group '${groupIri.value}' has no groupName in admin.nq",
+                                 ),
+                               )
+                 nameStr    = nameStmt.getString
+                 groupName <- ZIO
+                                .fromEither(GroupName.from(nameStr))
+                                .mapError(e => new RuntimeException(s"Invalid group name '$nameStr' in admin.nq: $e"))
+                 existsByName <- groupService.findByName(groupName)
+                 _            <- ZIO.when(existsByName.isDefined)(
+                        ZIO.fail(
+                          new RuntimeException(s"Group with name '${groupName.value}' already exists"),
                         ),
                       )
                } yield ()
