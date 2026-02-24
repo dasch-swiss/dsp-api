@@ -18,9 +18,12 @@ import org.knora.bagit.domain.Bag
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
@@ -70,6 +73,8 @@ final class ProjectMigrationImportService(
         _             <- ZIO.logInfo(s"$taskId: Version compatibility validated for project '$projectIri'")
         _             <- validateProjectNotExists(bag, projectIri, bagRoot)
         _             <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
+        _             <- validateUsersNotExist(bagRoot)
+        _             <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
         _             <- currentImport.complete(taskId).ignore
         _             <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
       } yield ()
@@ -177,6 +182,77 @@ final class ProjectMigrationImportService(
            } yield ()
          }
   } yield ()
+
+  private def validateUsersNotExist(bagRoot: zio.nio.file.Path): Task[Unit] = {
+    val adminNqPath = (bagRoot / "data" / "rdf" / "admin.nq").toFile.toPath
+    ZIO.scoped {
+      for {
+        ds           <- DatasetOps.fromNQuadsFiles(List(adminNqPath)).mapError(e => new RuntimeException(e))
+        model         = ds.getUnionModel()
+        rdfType       = model.createProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "type")
+        userType      = model.createResource(KnoraAdminPrefixExpansion + "User")
+        emailProp     = model.createProperty(KnoraAdminPrefixExpansion, "email")
+        usernameProp  = model.createProperty(KnoraAdminPrefixExpansion, "username")
+        userResources = {
+          val iter = model.listSubjectsWithProperty(rdfType, userType)
+          val buf  = scala.collection.mutable.ListBuffer.empty[org.apache.jena.rdf.model.Resource]
+          while (iter.hasNext) buf += iter.next()
+          buf.toList
+        }
+        _ <- ZIO.foreachDiscard(userResources) { userResource =>
+               val userIriStr = userResource.getURI
+               for {
+                 // Check by IRI
+                 userIri <- ZIO
+                              .fromEither(UserIri.from(userIriStr))
+                              .mapError(e => new RuntimeException(s"Invalid user IRI '$userIriStr' in admin.nq: $e"))
+                 existsById <- userService.findById(userIri)
+                 _          <- ZIO.when(existsById.isDefined)(
+                        ZIO.fail(
+                          new RuntimeException(s"User with IRI '${userIri.value}' already exists"),
+                        ),
+                      )
+                 // Check by email
+                 emailStmt <- ZIO
+                                .fromOption(Option(userResource.getProperty(emailProp)))
+                                .orElseFail(
+                                  new RuntimeException(s"User '${userIri.value}' has no email in admin.nq"),
+                                )
+                 emailStr = emailStmt.getString
+                 email   <- ZIO
+                            .fromEither(Email.from(emailStr))
+                            .mapError(e => new RuntimeException(s"Invalid email '$emailStr' in admin.nq: $e"))
+                 existsByEmail <- userService.findByEmail(email)
+                 _             <- ZIO.when(existsByEmail.isDefined)(
+                        ZIO.fail(
+                          new RuntimeException(s"User with email '$emailStr' already exists"),
+                        ),
+                      )
+                 // Check by username
+                 usernameStmt <- ZIO
+                                   .fromOption(Option(userResource.getProperty(usernameProp)))
+                                   .orElseFail(
+                                     new RuntimeException(
+                                       s"User '${userIri.value}' has no username in admin.nq",
+                                     ),
+                                   )
+                 usernameStr = usernameStmt.getString
+                 username   <- ZIO
+                               .fromEither(Username.from(usernameStr))
+                               .mapError(e => new RuntimeException(s"Invalid username '$usernameStr' in admin.nq: $e"))
+                 existsByUsername <- userService.findByUsername(username)
+                 _                <- ZIO.when(existsByUsername.isDefined)(
+                        ZIO.fail(
+                          new RuntimeException(
+                            s"User with username '${username.value}' already exists",
+                          ),
+                        ),
+                      )
+               } yield ()
+             }
+      } yield ()
+    }
+  }
 
   private def getUniqueField(fields: List[(String, String)], name: String): Task[String] =
     fields.filter(_._1 == name) match {
