@@ -34,9 +34,6 @@ object ImportService {
 }
 
 final case class ImportServiceLive(
-  assetService: FileChecksumService,
-  assetInfos: AssetInfoService,
-  projectService: ProjectService,
   storageService: StorageService,
 ) extends ImportService {
 
