@@ -544,5 +544,19 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         )
       }
     },
+    test("rejects duplicate import while one exists") {
+      ZIO.scoped {
+        for {
+          env     <- makeTestEnv
+          stream1 <- buildBagItZip()
+          stream2 <- buildBagItZip()
+          task    <- env.service.importDataExport(testProjectIri, testUser, stream1)
+          exit    <- env.service.importDataExport(testProjectIri, testUser, stream2).exit
+        } yield assertTrue(
+          exit.isFailure,
+          exit == Exit.fail(ImportExistsError(task)),
+        )
+      }
+    },
   ).provide(configLayer) @@ TestAspect.withLiveClock @@ TestAspect.withLiveRandom @@ TestAspect.timeout(30.seconds)
 }
