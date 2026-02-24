@@ -231,10 +231,11 @@ final case class ProjectsEndpointsHandler(
             .importZipStream(shortcode, stream.orDie)
             .mapBoth(
               {
-                case IoError(e)       => InternalServerError(s"Import of project ${shortcode.value} failed.", e)
-                case EmptyFile        => BadRequest.invalidBody("The uploaded file is empty.")
-                case NoZipFile        => BadRequest.invalidBody("The uploaded file is not a zip file.")
-                case InvalidChecksums => BadRequest.invalidBody("The uploaded file contains invalid checksums.")
+                case IoError(e)                 => InternalServerError(s"Import of project ${shortcode.value} failed.", e)
+                case EmptyFile                  => BadRequest.invalidBody("The uploaded file is empty.")
+                case NoZipFile                  => BadRequest.invalidBody("The uploaded file is not a zip file.")
+                case InvalidChecksums           => BadRequest.invalidBody("The uploaded file contains invalid checksums.")
+                case BagItValidationFailed(msg) => BadRequest.invalidBody(s"BagIt validation failed: $msg")
               },
               _ => UploadResponse(),
             ),

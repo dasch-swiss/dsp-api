@@ -6,17 +6,18 @@
 package swiss.dasch.domain
 
 import org.apache.commons.io.FileUtils
+import org.knora.bagit.BagIt
+import org.knora.bagit.BagItError
 import zio.*
 import zio.nio.file.*
 import zio.stream.*
 
-import java.util.zip.ZipFile
-
 sealed trait ImportFailed
-case class IoError(e: Throwable) extends ImportFailed
-case object EmptyFile            extends ImportFailed
-case object NoZipFile            extends ImportFailed
-case object InvalidChecksums     extends ImportFailed
+case class IoError(e: Throwable)                  extends ImportFailed
+case object EmptyFile                             extends ImportFailed
+case object NoZipFile                             extends ImportFailed
+case object InvalidChecksums                      extends ImportFailed
+case class BagItValidationFailed(message: String) extends ImportFailed
 
 trait ImportService {
   def importZipStream(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte]): IO[ImportFailed, Unit]
@@ -57,41 +58,25 @@ final case class ImportServiceLive(
 
   override def importZipFile(shortcode: ProjectShortcode, zipFile: Path): IO[ImportFailed, Unit] = ZIO.scoped {
     for {
-      unzippedFolder <- validateZipFile(shortcode, zipFile)
-      _              <- importProject(shortcode, unzippedFolder)
+      result <- BagIt
+                  .readAndValidateZip(zipFile)
+                  .mapError {
+                    case e: java.io.IOException => IoError(e)
+                    case e: BagItError          => BagItValidationFailed(e.message)
+                  }
+      (_, bagRoot) = result
+      dataDir      = bagRoot / "data"
+      _           <- importProject(shortcode, dataDir)
              .logError(s"Error while importing project $shortcode")
              .mapError(IoError.apply)
     } yield ()
   }
 
-  private def validateZipFile(shortcode: ProjectShortcode, zipFile: Path): ZIO[Scope, ImportFailed, Path] =
-    for {
-      _            <- checkIsNotEmptyFile(zipFile)
-      _            <- checkIsZipFile(zipFile)
-      unzippedPath <- unzipAndVerifyChecksums(shortcode, zipFile)
-    } yield unzippedPath
-  private def checkIsNotEmptyFile(zipFile: Path): IO[ImportFailed, Unit] =
-    ZIO.fail(EmptyFile).whenZIO(Files.size(zipFile).mapBoth(IoError.apply, _ == 0)).unit
-  private def checkIsZipFile(zipFile: Path): IO[NoZipFile.type, Unit] = ZIO.scoped {
-    ZIO.fromAutoCloseable(ZIO.attemptBlockingIO(new ZipFile(zipFile.toFile))).orElseFail(NoZipFile).unit
-  }
-  private def unzipAndVerifyChecksums(shortcode: ProjectShortcode, zipFile: Path): ZIO[Scope, ImportFailed, Path] =
-    for {
-      tempDir <- storageService.createTempDirectoryScoped(s"${shortcode}_import").mapError(IoError.apply)
-      _       <- ZipUtility.unzipFile(zipFile, tempDir).mapError(IoError.apply)
-      checks  <- assetInfos
-                  .findAllInPath(tempDir, shortcode)
-                  .mapZIOPar(StorageService.maxParallelism())(assetService.verifyChecksum)
-                  .runCollect
-                  .mapBoth(IoError.apply, _.flatten)
-      _ <- ZIO.fail(InvalidChecksums).when(checks.exists(!_.checksumMatches))
-    } yield tempDir
-
-  private def importProject(shortcode: ProjectShortcode, unzippedFolder: Path): IO[Throwable, Unit] =
+  private def importProject(shortcode: ProjectShortcode, dataDir: Path): IO[Throwable, Unit] =
     storageService.getProjectFolder(shortcode).flatMap { projectPath =>
       ZIO.logInfo(s"Importing project $shortcode") *>
         projectService.deleteProject(shortcode) *>
-        ZIO.attemptBlockingIO(FileUtils.moveDirectory(unzippedFolder.toFile, projectPath.toFile)) *>
+        ZIO.attemptBlockingIO(FileUtils.moveDirectory(dataDir.toFile, projectPath.toFile)) *>
         ZIO.logInfo(s"Importing project $shortcode was successful")
     }
 }
