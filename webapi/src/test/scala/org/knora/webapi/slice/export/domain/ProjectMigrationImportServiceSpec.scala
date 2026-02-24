@@ -55,6 +55,10 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     s"""<http://www.knora.org/ontology/9999/test> <$RdfType> <http://www.w3.org/2002/07/owl#Ontology> <http://www.knora.org/ontology/9999/test> .
        |""".stripMargin
 
+  private val permissionNq =
+    s"""<http://rdfh.ch/permissions/9999/perm001> <$RdfType> <${KnoraAdminPrefix}Permission> <http://www.knora.org/data/permissions> .
+       |""".stripMargin
+
   // === BagIt Zip Builder ===
   private def buildBagItZip(
     bagInfoFields: List[(String, String)] = List(
@@ -492,6 +496,52 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("successful import uploads all NQuads to triplestore") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      payloadFiles = Map(
+                        "rdf/admin.nq"      -> adminNq,
+                        "rdf/data.nq"       -> dataNq,
+                        "rdf/ontology-0.nq" -> ontologyNq,
+                        "rdf/permission.nq" -> permissionNq,
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+          bytes  <- env.uploadedBytesRef.get
+        } yield assertTrue(
+          result.status == DataTaskStatus.Completed,
+          bytes.nonEmpty,
+        )
+      }
+    },
+    test("uploaded stream contains data from all NQuads files") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      payloadFiles = Map(
+                        "rdf/admin.nq"      -> adminNq,
+                        "rdf/data.nq"       -> dataNq,
+                        "rdf/ontology-0.nq" -> ontologyNq,
+                        "rdf/permission.nq" -> permissionNq,
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+          bytes  <- env.uploadedBytesRef.get
+          content = new String(bytes.toArray, StandardCharsets.UTF_8)
+        } yield assertTrue(
+          result.status == DataTaskStatus.Completed,
+          content.contains("projectShortcode"),
+          content.contains("resource001"),
+          content.contains("owl#Ontology"),
+          content.contains("Permission"),
+        )
       }
     },
   ).provide(configLayer) @@ TestAspect.withLiveClock @@ TestAspect.withLiveRandom @@ TestAspect.timeout(30.seconds)
