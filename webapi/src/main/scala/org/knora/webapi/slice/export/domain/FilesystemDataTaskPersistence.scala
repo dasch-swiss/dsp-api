@@ -106,7 +106,7 @@ final class FilesystemDataTaskPersistence(basePath: Path) extends DataTaskPersis
 }
 
 object FilesystemDataTaskPersistence {
-  def exportLayer = ZLayer(ZIO.serviceWith[ProjectMigrationStorageService](_.exportsDir)) >>> layer
+  def exportLayer = ZLayer(ZIO.serviceWithZIO[ProjectMigrationStorageService](_.exportsDir)) >>> layer
 
   def layer = ZLayer.derive[FilesystemDataTaskPersistence]
 

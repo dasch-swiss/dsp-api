@@ -106,10 +106,10 @@ final class ProjectMigrationExportService(
     } yield ()
 
   private def createBagItZip(taskId: DataTaskId, rdfPath: Path, projectIri: ProjectIri) =
-    val zipFile = storage.bagItZipPath(taskId)
     for {
-      _ <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
-      _ <- BagIt.create(
+      zipFile <- storage.bagItZipPath(taskId)
+      _       <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
+      _       <- BagIt.create(
              List(PayloadEntry.Directory("rdf", rdfPath)),
              zipFile,
              bagInfo = Some(
@@ -143,9 +143,9 @@ final class ProjectMigrationExportService(
              case Some(StateInProgressError(s)) => Some(ExportInProgressError(s))
              case None                          => None
            }
-    zipFile = storage.bagItZipPath(exportId)
-    _      <- Files.deleteIfExists(zipFile).logError.orDie
-    _      <- ZIO.logInfo(s"$exportId: Deleted export task and associated export file")
+    zipFile <- storage.bagItZipPath(exportId)
+    _       <- Files.deleteIfExists(zipFile).logError.orDie
+    _       <- ZIO.logInfo(s"$exportId: Deleted export task and associated export file")
   } yield ()
 
   def getExportStatus(exportId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = currentExp.find(exportId)
@@ -163,9 +163,9 @@ final class ProjectMigrationExportService(
     exportId: DataTaskId,
   ): IO[Option[ExportInProgressError | ExportFailedError], (String, ZStream[Any, Throwable, Byte])] =
     for {
-      exp    <- canDownloadExport(exportId)
-      zipFile = storage.bagItZipPath(exportId)
-      _      <- Files
+      exp     <- canDownloadExport(exportId)
+      zipFile <- storage.bagItZipPath(exportId)
+      _       <- Files
              .exists(zipFile)
              .filterOrDie(_ == true)(new RuntimeException(s"Export file not found for export id $exportId"))
       fileName = s"migration-export-${exp.id}.zip"
