@@ -215,6 +215,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
   // Creates a fresh test environment with all stubs, returns Refs for configuration
   private case class TestEnv(
     service: ProjectMigrationImportService,
+    storage: ProjectMigrationStorageService,
     projectFindByIdRef: Ref[ProjectIri => Task[Option[KnoraProject]]],
     projectFindByShortcodeRef: Ref[Shortcode => Task[Option[KnoraProject]]],
     userFindByIdRef: Ref[UserIri => Task[Option[KnoraUser]]],
@@ -261,6 +262,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
       new ProjectMigrationImportService(taskState, groupService, projectService, storage, triplestore, userService)
   } yield TestEnv(
     service,
+    storage,
     projectFindByIdRef,
     projectFindByShortcodeRef,
     userFindByIdRef,
@@ -555,6 +557,50 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(
           exit.isFailure,
           exit == Exit.fail(ImportExistsError(task)),
+        )
+      }
+    },
+    test("temp directory is cleaned up on success") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip()
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+          // Give scope cleanup a moment to complete (cleanup runs after task is marked Completed)
+          _          <- ZIO.sleep(200.millis)
+          zipPath    <- env.storage.importBagItZipPath(task.id)
+          tempDir     = zipPath.parent.get / "temp"
+          zipExists  <- Files.exists(zipPath)
+          tempExists <- Files.exists(tempDir)
+        } yield assertTrue(
+          result.status == DataTaskStatus.Completed,
+          zipExists,
+          !tempExists,
+        )
+      }
+    },
+    test("temp directory is cleaned up on failure") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      bagInfoFields = List(
+                        "KnoraBase-Version" -> "999",
+                        "Dsp-Api-Version"   -> BuildInfo.version,
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+          // Cleanup runs before task is marked Failed, so no extra sleep needed
+          zipPath    <- env.storage.importBagItZipPath(task.id)
+          tempDir     = zipPath.parent.get / "temp"
+          zipExists  <- Files.exists(zipPath)
+          tempExists <- Files.exists(tempDir)
+        } yield assertTrue(
+          result.status == DataTaskStatus.Failed,
+          zipExists,
+          !tempExists,
         )
       }
     },
