@@ -16,9 +16,6 @@ import zio.stream.*
 
 sealed trait ImportFailed
 case class IoError(e: Throwable)                             extends ImportFailed
-case object EmptyFile                                        extends ImportFailed
-case object NoZipFile                                        extends ImportFailed
-case object InvalidChecksums                                 extends ImportFailed
 case class BagItValidationFailed(message: String)            extends ImportFailed
 case class ProjectAlreadyExists(shortcode: ProjectShortcode) extends ImportFailed
 
