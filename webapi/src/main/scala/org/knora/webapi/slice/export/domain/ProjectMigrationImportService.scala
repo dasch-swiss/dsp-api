@@ -7,6 +7,7 @@ package org.knora.webapi.slice.`export`.domain
 
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Resource
+import org.apache.jena.riot.Lang
 import org.apache.jena.vocabulary.RDF
 import zio.*
 import zio.nio.file.Files
@@ -113,8 +114,7 @@ final class ProjectMigrationImportService(
     )
 
   private def loadModel(bagRoot: Path, fileName: String): ZIO[Scope, Throwable, Model] =
-    val adminNqPath = (bagRoot / "data" / "rdf" / fileName).toFile.toPath
-    DatasetOps.fromNQuadsFiles(List(adminNqPath)).mapBoth(e => new RuntimeException(e), ds => ds.getUnionModel)
+    DatasetOps.from(Chunk(bagRoot / "data" / "rdf" / fileName), Lang.NQUADS).map(_.getUnionModel)
 
   private def validateVersionCompatibility(bag: Bag, taskId: DataTaskId): Task[Unit] = {
     val fields = bag.bagInfo.fold(List.empty[(String, String)])(_.additionalFields)

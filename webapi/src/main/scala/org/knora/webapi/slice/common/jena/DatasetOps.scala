@@ -12,10 +12,7 @@ import org.apache.jena.rdf.model.Resource
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
 import zio.*
-
-import java.io.ByteArrayInputStream
-import java.io.FileInputStream
-import java.nio.charset.StandardCharsets
+import zio.nio.file.Path
 
 object DatasetOps { self =>
 
@@ -45,23 +42,8 @@ object DatasetOps { self =>
   def fromJsonLd(jsonLd: String): ZIO[Scope, String, Dataset] = from(jsonLd, Lang.JSONLD)
 
   def from(str: String, lang: Lang): ZIO[Scope, String, Dataset] =
-    for {
-      ds <- createDataset
-      _  <- ZIO
-             .attempt(RDFDataMgr.read(ds, ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8)), lang))
-             .mapError(_.getMessage)
-    } yield ds
+    createDataset.flatMap(RdfDataMgr.read(_, str, lang)).mapError(_.getMessage)
 
-  def fromNQuadsFiles(paths: List[java.nio.file.Path]): ZIO[Scope, String, Dataset] =
-    for {
-      ds <- createDataset
-      _  <- ZIO.foreachDiscard(paths) { path =>
-             ZIO.attempt {
-               val is = new FileInputStream(path.toFile)
-               try RDFDataMgr.read(ds, is, Lang.NQUADS)
-               finally is.close()
-             }
-               .mapError(e => s"Failed to read NQuads file '${path.getFileName}': ${e.getMessage}")
-           }
-    } yield ds
+  def from(paths: Chunk[Path], lang: Lang): ZIO[Scope, Throwable, Dataset] =
+    createDataset.flatMap(RdfDataMgr.read(_, paths, lang))
 }
