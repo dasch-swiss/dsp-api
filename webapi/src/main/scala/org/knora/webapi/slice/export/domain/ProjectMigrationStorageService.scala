@@ -20,8 +20,14 @@ final class ProjectMigrationStorageService() { self =>
   val exportsDir: UIO[Path] = basePath.map(_ / "exports")
   val importsDir: UIO[Path] = basePath.map(_ / "imports")
 
-  private def exportDir(taskId: DataTaskId): UIO[Path] = self.exportsDir.map(_ / taskId.value)
-  def importDir(taskId: DataTaskId): UIO[Path]         = self.importsDir.map(_ / taskId.value)
+  private def exportDir(taskId: DataTaskId): UIO[Path] =
+    self.exportsDir.map(_ / taskId.value).tap(ensureDirExists(_, taskId))
+
+  def importDir(taskId: DataTaskId): UIO[Path] =
+    self.importsDir.map(_ / taskId.value).tap(ensureDirExists(_, taskId))
+
+  private def ensureDirExists(path: Path, taskId: DataTaskId): UIO[Unit] =
+    Files.createDirectories(path).logError(s"$taskId: Failed to create directory at $path").orDie
 
   def exportBagItZipPath(taskId: DataTaskId): UIO[Path] = exportDir(taskId).map(_ / "bagit.zip")
   def importBagItZipPath(taskId: DataTaskId): UIO[Path] = importDir(taskId).map(_ / "bagit.zip")
@@ -49,7 +55,7 @@ final class ProjectMigrationStorageService() { self =>
   private def scopedTempDir(taskId: DataTaskId, baseDir: Path): URIO[Scope, (Path, Path)] =
     val tempPath = baseDir / "temp"
     for {
-      _ <- Files.createDirectories(tempPath).unlessZIO(Files.exists(tempPath)).logError.orDie
+      _ <- ensureDirExists(tempPath, taskId)
       _ <- ZIO.acquireRelease(Files.createDirectories(tempPath).logError.orDie.as(tempPath)) { (path: Path) =>
              ZIO.logInfo(s"$taskId: Deleting temp directory $path") *>
                Files.deleteRecursive(path).logError(s"$taskId: Failed deleting temp directory $path").orDie
@@ -58,5 +64,16 @@ final class ProjectMigrationStorageService() { self =>
 }
 
 object ProjectMigrationStorageService {
-  val layer = zio.ZLayer.derive[ProjectMigrationStorageService]
+  val layer: ULayer[ProjectMigrationStorageService] = ZLayer
+    .derive[ProjectMigrationStorageService]
+    .tap(env =>
+      val service = env.get[ProjectMigrationStorageService]
+      for {
+        importsDir <- service.importsDir
+        exportsDir <- service.exportsDir
+        _          <- ZIO.logInfo(s"Ensuring project migration storage directories exist at $importsDir and $exportsDir")
+        _          <- Files.createDirectories(importsDir).unlessZIO(Files.exists(importsDir)).logError.orDie
+        _          <- Files.createDirectories(exportsDir).unlessZIO(Files.exists(exportsDir)).logError.orDie
+      } yield (),
+    )
 }

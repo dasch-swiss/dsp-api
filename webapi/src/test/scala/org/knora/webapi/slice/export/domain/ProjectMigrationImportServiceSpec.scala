@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.`export`.domain
 
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import com.typesafe.config.ConfigFactory
 import zio.*
 import zio.config.typesafe.TypesafeConfigProvider
@@ -26,6 +24,8 @@ import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {

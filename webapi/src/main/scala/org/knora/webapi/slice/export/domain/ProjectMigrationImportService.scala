@@ -40,8 +40,8 @@ import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
-import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 // This error is used to indicate that an import already exists.
 final case class ImportExistsError(t: CurrentDataTask)
@@ -70,7 +70,7 @@ final class ProjectMigrationImportService(
 
   private def saveZipStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte]) = (
     for {
-      _         <- storage.importDir(taskId).map(Files.createDirectories(_).orDie)
+      _         <- storage.importDir(taskId)
       bagItPath <- storage.importBagItZipPath(taskId)
       _         <- stream.run(ZSink.fromFile(bagItPath.toFile))
     } yield ()
