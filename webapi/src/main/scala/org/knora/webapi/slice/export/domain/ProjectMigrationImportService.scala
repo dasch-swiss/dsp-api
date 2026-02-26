@@ -311,8 +311,8 @@ final class ProjectMigrationImportService(
                case Some(StateInProgressError(s)) => Some(ImportInProgressError(s))
                case None                          => None
              }
-      dir <- storage.importsDir(importId).tap(dir => Files.deleteRecursive(dir).logError.orDie)
-      _   <- ZIO.logInfo(s"$exportId: Cleaned import dir $dir")
+      dir <- storage.importDir(importId).tap(dir => Files.deleteRecursive(dir).logError.orDie)
+      _   <- ZIO.logInfo(s"$importId: Cleaned import dir $dir")
     } yield ()
 }
 
