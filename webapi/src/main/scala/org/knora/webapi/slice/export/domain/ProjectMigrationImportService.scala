@@ -122,7 +122,7 @@ final class ProjectMigrationImportService(
     )
 
   private def loadModel(bagRoot: Path, fileName: String): ZIO[Scope, Throwable, Model] =
-    DatasetOps.from(Chunk(bagRoot / "data" / "rdf" / fileName), Lang.NQUADS).map(_.getUnionModel)
+    DatasetOps.from(bagRoot / "data" / "rdf" / fileName, Lang.NQUADS).map(_.getUnionModel)
 
   private def validateVersionCompatibility(bag: Bag, taskId: DataTaskId): Task[Unit] = {
     val fields = bag.bagInfo.fold(List.empty[(String, String)])(_.additionalFields)
@@ -282,7 +282,12 @@ final class ProjectMigrationImportService(
       // Permissions are optional, if present, we want to include them
       permissionNq = rdfDir / "permission.nq"
       perms       <- ZIO.ifZIO(Files.exists(permissionNq))(ZIO.some(permissionNq), ZIO.none)
-    } yield ontologyFiles ++ Chunk(adminNq, dataNq) ++ Chunk.fromIterable(perms)
+      rdfFiles     = ontologyFiles ++ Chunk(adminNq, dataNq) ++ Chunk.fromIterable(perms)
+      // Validate we can load files as RDF, this is a sanity check to avoid starting an import that
+      // will fail later due to malformed RDF.
+      // Exclude admin.nq from this check to avoid loading the whole model twice, it is checked separately.
+      _ <- ZIO.foreachDiscard(rdfFiles.filter(_ != adminNq))(file => ZIO.scoped(DatasetOps.from(file, Lang.NQUADS)))
+    } yield rdfFiles
   }
 
   private def uploadRdfDataToTriplestore(nqFiles: Chunk[Path]): Task[Unit] = {

@@ -44,6 +44,9 @@ object DatasetOps { self =>
   def from(str: String, lang: Lang): ZIO[Scope, String, Dataset] =
     createDataset.flatMap(RdfDataMgr.read(_, str, lang)).mapError(_.getMessage)
 
-  def from(paths: Chunk[Path], lang: Lang): ZIO[Scope, Throwable, Dataset] =
+  def from(path: Path, lang: Lang): ZIO[Scope, Throwable, Dataset] =
+    createDataset.flatMap(RdfDataMgr.read(_, path, lang))
+
+  def from(paths: Iterable[Path], lang: Lang): ZIO[Scope, Throwable, Dataset] =
     createDataset.flatMap(RdfDataMgr.read(_, paths, lang))
 }
