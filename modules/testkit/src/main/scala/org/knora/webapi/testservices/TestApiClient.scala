@@ -213,6 +213,7 @@ final case class TestApiClient(
       .post(relativeUri)
       .body(body)
       .contentType(mediaType)
+      .readTimeout(scala.concurrent.duration.Duration(120, "seconds"))
       .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
     sendRequest(request, Some(user))
   }

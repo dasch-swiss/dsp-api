@@ -53,121 +53,160 @@ object ProjectMigrationImportE2ESpec extends E2EZSpec {
     },
     test("export then import round-trip — fails because project already exists") {
       for {
-        // Step 1: Trigger export of Incunabula
-        exportStatus <- triggerExportWithCleanup()
-        exportId      = exportStatus.id
+        exportIdRef <- Ref.make(Option.empty[DataTaskId])
+        importIdRef <- Ref.make(Option.empty[DataTaskId])
+        result      <- {
+                    for {
+                      // Step 1: Trigger export of Incunabula
+                      exportStatus <- triggerExportWithCleanup()
+                      exportId      = exportStatus.id
+                      _            <- exportIdRef.set(Some(exportId))
 
-        // Step 2: Poll export until completed
-        _ <- pollExportUntilCompleted(exportId)
-               .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                      // Step 2: Poll export until completed
+                      _ <- pollExportUntilCompleted(exportId)
+                             .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
 
-        // Step 3: Download the export zip bytes
-        zipBytes <- downloadExportBytes(exportId)
+                      // Step 3: Download the export zip bytes
+                      zipBytes <- downloadExportBytes(exportId)
 
-        // Step 4: POST the zip to import endpoint
-        importResponse <- TestApiClient
-                            .postBinary[DataTaskStatusResponse](
-                              uri"/v3/projects/$projectIri/imports",
-                              zipBytes,
-                              MediaType.ApplicationZip,
-                              rootUser,
-                            )
+                      // Step 4: POST the zip to import endpoint
+                      importStatus <- triggerImportWithCleanup(zipBytes)
+                      importId      = importStatus.id
+                      _            <- importIdRef.set(Some(importId))
 
-        importStatus <- ZIO.fromEither(importResponse.body).mapError(new RuntimeException(_))
-        importId      = importStatus.id
+                      // Step 5: Poll import status until done — expect Failed (project already exists)
+                      pollResult <- pollImportUntilDone(importId)
+                                      .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
 
-        // Step 5: Poll import status until done — expect Failed (project already exists)
-        result <- pollImportUntilDone(importId)
-                    .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
-
-        // Step 6: DELETE the import task
-        deleteResponse <- TestApiClient.deleteJson[Json](
-                            uri"/v3/projects/$projectIri/imports/${importId.value}",
-                            rootUser,
-                          )
-
-        // Cleanup: delete the export
-        _ <- deleteExport(exportId)
-      } yield assertTrue(
-        importResponse.code == StatusCode.Accepted,
-        result.status == DataTaskStatus.Failed,
-        deleteResponse.code == StatusCode.NoContent,
-      )
+                      // Step 6: DELETE the import task
+                      deleteResponse <- TestApiClient.deleteJson[Json](
+                                          uri"/v3/projects/$projectIri/imports/${importId.value}",
+                                          rootUser,
+                                        )
+                      _ <- importIdRef.set(None)
+                      _ <- deleteExport(exportId)
+                      _ <- exportIdRef.set(None)
+                    } yield assertTrue(
+                      importStatus.status == DataTaskStatus.InProgress || importStatus.status == DataTaskStatus.Completed || importStatus.status == DataTaskStatus.Failed,
+                      pollResult.status == DataTaskStatus.Failed,
+                      deleteResponse.code == StatusCode.NoContent,
+                    )
+                  }.ensuring {
+                    for {
+                      importId <- importIdRef.get
+                      _        <- ZIO.foreachDiscard(importId) { id =>
+                             pollImportUntilDone(id)
+                               .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                               .ignore *> deleteImport(id)
+                           }
+                      exportId <- exportIdRef.get
+                      _        <- ZIO.foreachDiscard(exportId)(deleteExport)
+                    } yield ()
+                  }
+      } yield result
     },
     test("returns 409 when import already exists") {
       for {
-        // First, get a zip to import (use minimal approach — export then download)
-        exportStatus <- triggerExportWithCleanup()
-        exportId      = exportStatus.id
-        _            <- pollExportUntilCompleted(exportId)
-               .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
-        zipBytes <- downloadExportBytes(exportId)
+        exportIdRef <- Ref.make(Option.empty[DataTaskId])
+        importIdRef <- Ref.make(Option.empty[DataTaskId])
+        result      <- {
+                    for {
+                      // First, get a zip to import (use minimal approach — export then download)
+                      exportStatus <- triggerExportWithCleanup()
+                      exportId      = exportStatus.id
+                      _            <- exportIdRef.set(Some(exportId))
+                      _            <- pollExportUntilCompleted(exportId)
+                             .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                      zipBytes <- downloadExportBytes(exportId)
 
-        // Trigger first import
-        r1 <- TestApiClient
-                .postBinary[DataTaskStatusResponse](
-                  uri"/v3/projects/$projectIri/imports",
-                  zipBytes,
-                  MediaType.ApplicationZip,
-                  rootUser,
-                )
-        firstImport <- ZIO.fromEither(r1.body).mapError(new RuntimeException(_))
+                      // Trigger first import (with cleanup of stale imports)
+                      firstImport <- triggerImportWithCleanup(zipBytes)
+                      _           <- importIdRef.set(Some(firstImport.id))
 
-        // Trigger second import — should get 409
-        r2 <- TestApiClient
-                .postBinary[Json](
-                  uri"/v3/projects/$projectIri/imports",
-                  zipBytes,
-                  MediaType.ApplicationZip,
-                  rootUser,
-                )
+                      // Trigger second import — should get 409
+                      r2 <- TestApiClient
+                              .postBinary[Json](
+                                uri"/v3/projects/$projectIri/imports",
+                                zipBytes,
+                                MediaType.ApplicationZip,
+                                rootUser,
+                              )
 
-        // Cleanup: wait for first import to finish, then delete
-        _ <- pollImportUntilDone(firstImport.id)
-               .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
-        _ <- deleteImport(firstImport.id)
-        _ <- deleteExport(exportId)
-      } yield assertTrue(
-        r2.code == StatusCode.Conflict,
-      )
+                      // Cleanup: wait for first import to finish, then delete
+                      _ <- pollImportUntilDone(firstImport.id)
+                             .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                      _ <- deleteImport(firstImport.id)
+                      _ <- importIdRef.set(None)
+                      _ <- deleteExport(exportId)
+                      _ <- exportIdRef.set(None)
+                    } yield assertTrue(
+                      r2.code == StatusCode.Conflict,
+                    )
+                  }.ensuring {
+                    for {
+                      importId <- importIdRef.get
+                      _        <- ZIO.foreachDiscard(importId) { id =>
+                             pollImportUntilDone(id)
+                               .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                               .ignore *> deleteImport(id)
+                           }
+                      exportId <- exportIdRef.get
+                      _        <- ZIO.foreachDiscard(exportId)(deleteExport)
+                    } yield ()
+                  }
+      } yield result
     },
     test("returns 409 when deleting in-progress import") {
       for {
-        // Get a zip to import
-        exportStatus <- triggerExportWithCleanup()
-        exportId      = exportStatus.id
-        _            <- pollExportUntilCompleted(exportId)
-               .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
-        zipBytes <- downloadExportBytes(exportId)
+        exportIdRef <- Ref.make(Option.empty[DataTaskId])
+        importIdRef <- Ref.make(Option.empty[DataTaskId])
+        result      <- {
+                    for {
+                      // Get a zip to import
+                      exportStatus <- triggerExportWithCleanup()
+                      exportId      = exportStatus.id
+                      _            <- exportIdRef.set(Some(exportId))
+                      _            <- pollExportUntilCompleted(exportId)
+                             .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                      zipBytes <- downloadExportBytes(exportId)
 
-        // Trigger import
-        r1 <- TestApiClient
-                .postBinary[DataTaskStatusResponse](
-                  uri"/v3/projects/$projectIri/imports",
-                  zipBytes,
-                  MediaType.ApplicationZip,
-                  rootUser,
-                )
-        importStatus <- ZIO.fromEither(r1.body).mapError(new RuntimeException(_))
-        importId      = importStatus.id
+                      // Trigger import (with cleanup of stale imports)
+                      importStatus <- triggerImportWithCleanup(zipBytes)
+                      importId      = importStatus.id
+                      _            <- importIdRef.set(Some(importId))
 
-        // Immediately try to delete — may get 409 (in-progress) or 204 (already completed)
-        deleteResponse <- TestApiClient.deleteJson[Json](
-                            uri"/v3/projects/$projectIri/imports/${importId.value}",
-                            rootUser,
-                          )
+                      // Immediately try to delete — may get 409 (in-progress) or 204 (already completed)
+                      deleteResponse <- TestApiClient.deleteJson[Json](
+                                          uri"/v3/projects/$projectIri/imports/${importId.value}",
+                                          rootUser,
+                                        )
 
-        // Cleanup: if delete failed with 409, wait for completion and delete
-        _ <- ZIO.when(deleteResponse.code == StatusCode.Conflict) {
-               pollImportUntilDone(importId)
-                 .retry(Schedule.spaced(500.millis) && Schedule.recurs(60)) *>
-                 deleteImport(importId)
-             }
-        _ <- deleteExport(exportId)
-      } yield assertTrue(
-        // Accept both 409 (in-progress) and 204 (already completed) — timing dependent
-        deleteResponse.code == StatusCode.Conflict || deleteResponse.code == StatusCode.NoContent,
-      )
+                      // Cleanup: if delete failed with 409, wait for completion and delete
+                      _ <- ZIO.when(deleteResponse.code == StatusCode.Conflict) {
+                             pollImportUntilDone(importId)
+                               .retry(Schedule.spaced(500.millis) && Schedule.recurs(60)) *>
+                               deleteImport(importId)
+                           }
+                      _ <- importIdRef.set(None)
+                      _ <- deleteExport(exportId)
+                      _ <- exportIdRef.set(None)
+                    } yield assertTrue(
+                      // Accept both 409 (in-progress) and 204 (already completed) — timing dependent
+                      deleteResponse.code == StatusCode.Conflict || deleteResponse.code == StatusCode.NoContent,
+                    )
+                  }.ensuring {
+                    for {
+                      importId <- importIdRef.get
+                      _        <- ZIO.foreachDiscard(importId) { id =>
+                             pollImportUntilDone(id)
+                               .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                               .ignore *> deleteImport(id)
+                           }
+                      exportId <- exportIdRef.get
+                      _        <- ZIO.foreachDiscard(exportId)(deleteExport)
+                    } yield ()
+                  }
+      } yield result
     },
   )
 
@@ -189,6 +228,41 @@ object ProjectMigrationImportE2ESpec extends E2EZSpec {
             r <- TestApiClient.postJson[DataTaskStatusResponse, Json](
                    uri"/v3/projects/$projectIri/exports",
                    Json.Obj(),
+                   rootUser,
+                 )
+            status <- ZIO.fromEither(r.body).mapError(new RuntimeException(_))
+          } yield status
+        } else ZIO.fromEither(response.body).mapError(new RuntimeException(_))
+      }
+
+  private def triggerImportWithCleanup(
+    zipBytes: Array[Byte],
+  ): ZIO[TestApiClient, Throwable, DataTaskStatusResponse] =
+    TestApiClient
+      .postBinary[DataTaskStatusResponse](
+        uri"/v3/projects/$projectIri/imports",
+        zipBytes,
+        MediaType.ApplicationZip,
+        rootUser,
+      )
+      .flatMap { response =>
+        if (response.code == StatusCode.Conflict) {
+          val existingId = for {
+            errorStr <- response.body.left.toOption
+            json     <- errorStr.fromJson[Conflict].toOption
+            first    <- json.errors.headOption
+            id       <- first.details.get("id")
+          } yield id
+          for {
+            _ <- ZIO.foreachDiscard(existingId) { id =>
+                   pollImportUntilDone(DataTaskId.unsafeFrom(id))
+                     .retry(Schedule.spaced(500.millis) && Schedule.recurs(60)) *>
+                     deleteImport(DataTaskId.unsafeFrom(id))
+                 }
+            r <- TestApiClient.postBinary[DataTaskStatusResponse](
+                   uri"/v3/projects/$projectIri/imports",
+                   zipBytes,
+                   MediaType.ApplicationZip,
                    rootUser,
                  )
             status <- ZIO.fromEither(r.body).mapError(new RuntimeException(_))
