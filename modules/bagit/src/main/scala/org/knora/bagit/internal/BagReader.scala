@@ -24,9 +24,13 @@ object BagReader {
     zipPath: Path,
     limits: ExtractionLimits = ExtractionLimits.default,
     maxTagFileSize: Long = MaxTagFileSize,
+    outputDir: Option[Path] = None,
   ): ZIO[Scope, IOException | BagItError, (Bag, Path)] =
     for {
-      tempDir <- Files.createTempDirectoryScoped(Some("bagit-read"), Seq.empty)
+      tempDir <- outputDir match {
+                   case Some(dir) => ZIO.succeed(dir)
+                   case None      => Files.createTempDirectoryScoped(Some("bagit-read"), Seq.empty)
+                 }
       _       <- extractZip(zipPath, tempDir, limits)
       bagRoot <- detectBagRoot(tempDir)
       bag     <- parseBag(bagRoot, maxTagFileSize)

@@ -23,9 +23,12 @@ object BagIt {
   ): IO[IOException, Path] =
     BagCreator.createBag(payloadEntries, algorithms, bagInfo, outputZipPath)
 
-  def readAndValidateZip(zipPath: Path): ZIO[Scope, IOException | BagItError, (Bag, Path)] =
+  def readAndValidateZip(
+    zipPath: Path,
+    outputDir: Option[Path] = None,
+  ): ZIO[Scope, IOException | BagItError, (Bag, Path)] =
     for {
-      result        <- BagReader.readFromZip(zipPath)
+      result        <- BagReader.readFromZip(zipPath, outputDir = outputDir)
       (bag, bagRoot) = result
       _             <- BagValidator.validate(bag, bagRoot)
     } yield (bag, bagRoot)

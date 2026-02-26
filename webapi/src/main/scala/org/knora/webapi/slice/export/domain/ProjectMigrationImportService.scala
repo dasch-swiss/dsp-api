@@ -48,7 +48,7 @@ final case class ImportExistsError(t: CurrentDataTask)
 final case class ImportInProgressError(t: CurrentDataTask)
 
 final class ProjectMigrationImportService(
-  currentImport: DataTaskState,
+  state: DataTaskState,
   groupService: KnoraGroupService,
   projectService: KnoraProjectService,
   storage: ProjectMigrationStorageService,
@@ -61,22 +61,21 @@ final class ProjectMigrationImportService(
     createdBy: User,
     stream: ZStream[Any, Throwable, Byte],
   ): IO[ImportExistsError, CurrentDataTask] = for {
-    importTask <-
-      currentImport.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) => ImportExistsError(t) }
-    bagItPath <- storage.importBagItZipPath(importTask.id)
-    _         <- Files.createDirectories(bagItPath.parent.get).orDie
-    _         <- stream.run(ZSink.fromFile(bagItPath.toFile)).orDie
-    _         <- doImport(importTask.id, projectIri).forkDaemon
+    importTask <- state.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) => ImportExistsError(t) }
+    _          <- storage.importDir(importTask.id).tap(Files.createDirectories(_).orDie)
+    bagItPath  <- storage.importBagItZipPath(importTask.id)
+    _          <- stream.run(ZSink.fromFile(bagItPath.toFile)).orDie
+    _          <- doImport(importTask.id, projectIri).forkDaemon
   } yield importTask
 
   private def doImport(taskId: DataTaskId, projectIri: ProjectIri): UIO[Unit] =
     ZIO.scoped {
       for {
-        _   <- storage.tempImportScoped(taskId)
-        zip <- storage.importBagItZipPath(taskId)
-        _   <- ZIO.logInfo(s"$taskId: Starting import for project '$projectIri'")
+        tempZip           <- storage.tempImportScoped(taskId)
+        (tempDir, zipFile) = tempZip
+        _                 <- ZIO.logInfo(s"$taskId: Starting import for project '$projectIri'")
 
-        result <- BagIt.readAndValidateZip(zip).mapError {
+        result <- BagIt.readAndValidateZip(zipFile, Some(tempDir)).mapError {
                     case ex: IOException => ex: Throwable
                     case err: BagItError => new RuntimeException(err.message)
                   }
@@ -91,7 +90,7 @@ final class ProjectMigrationImportService(
                s"$taskId: Payload file validation passed for project '$projectIri', found: ${nqFiles.mkString(", ")}",
              )
 
-        _ <- ZIO.scoped { // rdf validation
+        _ <- ZIO.scoped { // rdf validation, close scope for model right after validation to free up memory
                for {
                  model <- loadModel(bagRoot, "admin.nq")
                  _     <- validateProjectNotExists(bag, projectIri, model)
@@ -106,12 +105,12 @@ final class ProjectMigrationImportService(
         // upload data
         _ <- uploadRdfDataToTriplestore(nqFiles)
         _ <- ZIO.logInfo(s"$taskId: RDF data uploaded to triplestore for project '$projectIri'")
-        _ <- currentImport.complete(taskId).ignore
+        _ <- state.complete(taskId).ignore
         _ <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
       } yield ()
     }.logError.catchAll(e =>
       ZIO.logError(s"$taskId: Import failed for project '$projectIri' with error: ${e.getMessage}") *>
-        currentImport.fail(taskId).ignore,
+        state.fail(taskId).ignore,
     )
 
   private def loadModel(bagRoot: Path, fileName: String): ZIO[Scope, Throwable, Model] =
@@ -294,10 +293,10 @@ final class ProjectMigrationImportService(
       case _            => ZIO.fail(new RuntimeException(s"Field '$name' appears more than once in bag-info.txt"))
     }
 
-  def getImportStatus(importId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = currentImport.find(importId)
+  def getImportStatus(importId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = state.find(importId)
 
   def deleteImport(importId: DataTaskId): IO[Option[ImportInProgressError], Unit] =
-    currentImport
+    state
       .deleteIfNotInProgress(importId)
       .mapError {
         case Some(StateInProgressError(s)) => Some(ImportInProgressError(s))
