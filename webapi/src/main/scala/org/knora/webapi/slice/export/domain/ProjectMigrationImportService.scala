@@ -25,6 +25,7 @@ import org.knora.bagit.domain.Bag
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
@@ -100,13 +101,15 @@ final class ProjectMigrationImportService(
 
         _ <- ZIO.scoped { // rdf validation, close scope for model right after validation to free up memory
                for {
-                 model <- loadModel(bagRoot, "admin.nq")
-                 _     <- validateProjectNotExists(bag, projectIri, model)
-                 _     <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
-                 _     <- validateUsersNotExist(model)
-                 _     <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
-                 _     <- validateGroupsNotExist(model)
-                 _     <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
+                 model <- DatasetOps
+                            .from(bagRoot / "data" / "rdf" / "admin.nq", Lang.NQUADS)
+                            .map(_.getNamedModel(adminDataNamedGraph.value))
+                 _ <- validateProjectNotExists(bag, projectIri, model)
+                 _ <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
+                 _ <- validateUsersNotExist(model)
+                 _ <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
+                 _ <- validateGroupsNotExist(model)
+                 _ <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
                } yield ()
              }
 
@@ -120,9 +123,6 @@ final class ProjectMigrationImportService(
       ZIO.logError(s"$taskId: Import failed for project '$projectIri' with error: ${e.getMessage}") *>
         state.fail(taskId).ignore,
     )
-
-  private def loadModel(bagRoot: Path, fileName: String): ZIO[Scope, Throwable, Model] =
-    DatasetOps.from(bagRoot / "data" / "rdf" / fileName, Lang.NQUADS).map(_.getUnionModel)
 
   private def validateVersionCompatibility(bag: Bag, taskId: DataTaskId): Task[Unit] = {
     val fields = bag.bagInfo.fold(List.empty[(String, String)])(_.additionalFields)
@@ -174,25 +174,21 @@ final class ProjectMigrationImportService(
       ZIO.when(bagProjectIri != projectIri)(
         ZIO.fail(
           new RuntimeException(
-            s"External-Identifier '${bagProjectIri.value}' does not match the endpoint project IRI '${projectIri.value}'",
+            s"External-Identifier '$bagProjectIri' does not match the endpoint project IRI '$projectIri'",
           ),
         ),
       )
     // Check project doesn't already exist by IRI
     exists <- projectService.existsById(projectIri)
     _      <- ZIO.when(exists)(
-           ZIO.fail(new RuntimeException(s"Project with IRI '${projectIri.value}' already exists")),
+           ZIO.fail(new RuntimeException(s"Project with IRI '$projectIri' already exists")),
          )
     // Validate project presence and shortcode in admin data
     projectResource <- ZIO
                          .fromEither(model.resource(projectIri.value))
                          .mapError(e => new RuntimeException(s"$e in admin.nq"))
     _ <- ZIO.when(!projectResource.listProperties().hasNext)(
-           ZIO.fail(
-             new RuntimeException(
-               s"Project IRI '${projectIri.value}' not found as a subject in admin.nq",
-             ),
-           ),
+           ZIO.fail(new RuntimeException(s"Project IRI '$projectIri' not found as a subject in admin.nq")),
          )
     shortcode <- ZIO
                    .fromEither(projectResource.objectString(KnoraAdmin.ProjectShortcode, Shortcode.from))
@@ -201,7 +197,7 @@ final class ProjectMigrationImportService(
     existsByShortcode <- projectService.findByShortcode(shortcode)
     _                 <- ZIO.when(existsByShortcode.isDefined)(
            ZIO.fail(
-             new RuntimeException(s"Project with shortcode '${shortcode.value}' already exists"),
+             new RuntimeException(s"Project with shortcode '$shortcode' already exists"),
            ),
          )
   } yield ()
@@ -216,21 +212,21 @@ final class ProjectMigrationImportService(
                      .mapError(e => new RuntimeException(s"Invalid user IRI '$userIriStr' in admin.nq: $e"))
         existsById <- userService.findById(userIri)
         _          <- ZIO.when(existsById.isDefined)(
-               ZIO.fail(new RuntimeException(s"User with IRI '${userIri.value}' already exists")),
+               ZIO.fail(new RuntimeException(s"User with IRI '$userIri' already exists")),
              )
         email <- ZIO
                    .fromEither(userResource.objectString(KnoraAdmin.Email, Email.from))
                    .mapError(e => new RuntimeException(s"$e in admin.nq"))
         existsByEmail <- userService.findByEmail(email)
         _             <- ZIO.when(existsByEmail.isDefined)(
-               ZIO.fail(new RuntimeException(s"User with email '${email.value}' already exists")),
+               ZIO.fail(new RuntimeException(s"User with email '$email' already exists")),
              )
         username <- ZIO
                       .fromEither(userResource.objectString(KnoraAdmin.Username, Username.from))
                       .mapError(e => new RuntimeException(s"$e in admin.nq"))
         existsByUsername <- userService.findByUsername(username)
         _                <- ZIO.when(existsByUsername.isDefined)(
-               ZIO.fail(new RuntimeException(s"User with username '${username.value}' already exists")),
+               ZIO.fail(new RuntimeException(s"User with username '$username' already exists")),
              )
       } yield ()
     }
@@ -246,14 +242,14 @@ final class ProjectMigrationImportService(
                       .mapError(e => new RuntimeException(s"Invalid group IRI '$groupIriStr' in admin.nq: $e"))
         existsById <- groupService.findById(groupIri)
         _          <- ZIO.when(existsById.isDefined)(
-               ZIO.fail(new RuntimeException(s"Group with IRI '${groupIri.value}' already exists")),
+               ZIO.fail(new RuntimeException(s"Group with IRI '$groupIri' already exists")),
              )
         groupName <- ZIO
                        .fromEither(groupResource.objectString(KnoraAdmin.GroupName, GroupName.from))
                        .mapError(e => new RuntimeException(s"$e in admin.nq"))
         existsByName <- groupService.findByName(groupName)
         _            <- ZIO.when(existsByName.isDefined)(
-               ZIO.fail(new RuntimeException(s"Group with name '${groupName.value}' already exists")),
+               ZIO.fail(new RuntimeException(s"Group with name '$groupName' already exists")),
              )
       } yield ()
     }
