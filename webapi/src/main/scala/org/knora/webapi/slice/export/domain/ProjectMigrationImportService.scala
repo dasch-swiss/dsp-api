@@ -304,13 +304,16 @@ final class ProjectMigrationImportService(
   def getImportStatus(importId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = state.find(importId)
 
   def deleteImport(importId: DataTaskId): IO[Option[ImportInProgressError], Unit] =
-    state
-      .deleteIfNotInProgress(importId)
-      .mapError {
-        case Some(StateInProgressError(s)) => Some(ImportInProgressError(s))
-        case None                          => None
-      }
-      .unit
+    for {
+      _ <- state
+             .deleteIfNotInProgress(importId)
+             .mapError {
+               case Some(StateInProgressError(s)) => Some(ImportInProgressError(s))
+               case None                          => None
+             }
+      dir <- storage.importsDir(importId).tap(dir => Files.deleteRecursive(dir).logError.orDie)
+      _   <- ZIO.logInfo(s"$exportId: Cleaned import dir $dir")
+    } yield ()
 }
 
 object ProjectMigrationImportService {

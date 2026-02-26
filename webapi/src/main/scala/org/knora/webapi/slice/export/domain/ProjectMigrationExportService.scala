@@ -143,9 +143,8 @@ final class ProjectMigrationExportService(
              case Some(StateInProgressError(s)) => Some(ExportInProgressError(s))
              case None                          => None
            }
-    zipFile <- storage.exportBagItZipPath(exportId)
-    _       <- Files.deleteIfExists(zipFile).logError.orDie
-    _       <- ZIO.logInfo(s"$exportId: Deleted export task and associated export file")
+    dir <- storage.exportDir(exportId).tap(Files.deleteRecursive(_).logError.orDie)
+    _   <- ZIO.logInfo(s"$exportId: Cleaned export dir $dir")
   } yield ()
 
   def getExportStatus(exportId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = currentExp.find(exportId)

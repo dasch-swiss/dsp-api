@@ -20,7 +20,7 @@ final class ProjectMigrationStorageService() { self =>
   val exportsDir: UIO[Path] = basePath.map(_ / "exports")
   val importsDir: UIO[Path] = basePath.map(_ / "imports")
 
-  private def exportDir(taskId: DataTaskId): UIO[Path] =
+  def exportDir(taskId: DataTaskId): UIO[Path] =
     self.exportsDir.map(_ / taskId.value).tap(ensureDirExists(_, taskId))
 
   def importDir(taskId: DataTaskId): UIO[Path] =
