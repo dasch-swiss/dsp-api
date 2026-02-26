@@ -218,6 +218,10 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
       }
       .retry(Schedule.spaced(100.millis) && Schedule.recurs(100))
 
+  // Cleanup helper: waits for the import to finish, then deletes its storage
+  private def cleanupImport(env: TestEnv, taskId: DataTaskId): UIO[Unit] =
+    pollUntilDone(env.service, taskId).ignore *> env.service.deleteImport(taskId).ignore
+
   // === Layer Setup ===
   // Creates a fresh test environment with all stubs, returns Refs for configuration
   private case class TestEnv(
@@ -315,6 +319,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
 
           // Poll until done
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(
           result.status == DataTaskStatus.Failed,
         )
@@ -332,6 +337,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -346,6 +352,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -361,6 +368,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -376,6 +384,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Completed)
       }
     },
@@ -391,6 +400,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -406,6 +416,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -421,6 +432,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -433,6 +445,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -444,6 +457,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           stream <- buildBagItZip()
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -458,6 +472,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           stream <- buildBagItZip()
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -469,6 +484,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           stream <- buildBagItZip()
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -481,6 +497,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           stream <- buildBagItZip()
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -493,6 +510,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           stream <- buildBagItZip()
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -504,6 +522,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           stream <- buildBagItZip()
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -516,6 +535,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           stream <- buildBagItZip()
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -532,6 +552,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -548,6 +569,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -564,6 +586,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -581,6 +604,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                     )
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
@@ -599,6 +623,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
           bytes  <- env.uploadedBytesRef.get
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(
           result.status == DataTaskStatus.Completed,
           bytes.nonEmpty,
@@ -621,6 +646,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           result <- pollUntilDone(env.service, task.id)
           bytes  <- env.uploadedBytesRef.get
           content = new String(bytes.toArray, StandardCharsets.UTF_8)
+          _      <- cleanupImport(env, task.id)
         } yield assertTrue(
           result.status == DataTaskStatus.Completed,
           content.contains("projectShortcode"),
@@ -645,6 +671,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           task          <- env.service.importDataExport(testProjectIri, testUser, stream)
           _             <- pollUntilDone(env.service, task.id)
           refreshCalled <- env.refreshCacheCalled.get
+          _             <- cleanupImport(env, task.id)
         } yield assertTrue(refreshCalled)
       }
     },
@@ -656,6 +683,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           stream2 <- buildBagItZip()
           task    <- env.service.importDataExport(testProjectIri, testUser, stream1)
           exit    <- env.service.importDataExport(testProjectIri, testUser, stream2).exit
+          _       <- cleanupImport(env, task.id)
         } yield assertTrue(
           exit.isFailure,
           exit == Exit.fail(ImportExistsError(task)),
@@ -675,6 +703,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           tempDir     = zipPath.parent.get / "temp"
           zipExists  <- Files.exists(zipPath)
           tempExists <- Files.exists(tempDir)
+          _          <- cleanupImport(env, task.id)
         } yield assertTrue(
           result.status == DataTaskStatus.Completed,
           zipExists,
@@ -699,6 +728,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           tempDir     = zipPath.parent.get / "temp"
           zipExists  <- Files.exists(zipPath)
           tempExists <- Files.exists(tempDir)
+          _          <- cleanupImport(env, task.id)
         } yield assertTrue(
           result.status == DataTaskStatus.Failed,
           zipExists,
