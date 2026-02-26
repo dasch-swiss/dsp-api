@@ -144,8 +144,8 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     override def deleteById(id: GroupIri): Task[Unit]                              = ZIO.unit
   }
 
-  private def stubOntologyCache(): OntologyCache = new OntologyCache {
-    def refreshCache(): Task[OntologyCacheData] = ZIO.succeed(OntologyCacheData.Empty)
+  private def stubOntologyCache(refreshCacheCalled: Ref[Boolean]): OntologyCache = new OntologyCache {
+    def refreshCache(): Task[OntologyCacheData] = refreshCacheCalled.set(true).as(OntologyCacheData.Empty)
     def getCacheData: UIO[OntologyCacheData]    = ZIO.succeed(OntologyCacheData.Empty)
   }
 
@@ -231,6 +231,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     groupFindByIdRef: Ref[GroupIri => Task[Option[KnoraGroup]]],
     groupFindByNameRef: Ref[GroupName => Task[Option[KnoraGroup]]],
     uploadedBytesRef: Ref[Chunk[Byte]],
+    refreshCacheCalled: Ref[Boolean],
   )
 
   private val configLayer: ULayer[Unit] = Runtime.setConfigProvider(
@@ -246,12 +247,13 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     groupFindByIdRef          <- Ref.make[GroupIri => Task[Option[KnoraGroup]]](_ => ZIO.none)
     groupFindByNameRef        <- Ref.make[GroupName => Task[Option[KnoraGroup]]](_ => ZIO.none)
     uploadedBytesRef          <- Ref.make[Chunk[Byte]](Chunk.empty)
+    refreshCacheCalled        <- Ref.make[Boolean](false)
 
     projectRepo   = stubProjectRepo(projectFindByIdRef, projectFindByShortcodeRef)
     userRepo      = stubUserRepo(userFindByIdRef, userFindByEmailRef, userFindByUsernameRef)
     groupRepo     = stubGroupRepo(groupFindByIdRef, groupFindByNameRef)
     triplestore   = stubTriplestoreService(uploadedBytesRef)
-    ontologyCache = stubOntologyCache()
+    ontologyCache = stubOntologyCache(refreshCacheCalled)
 
     // Construct services with mock repos; null for unused dependencies
     projectService = KnoraProjectService(projectRepo, null, null)
@@ -287,6 +289,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     groupFindByIdRef,
     groupFindByNameRef,
     uploadedBytesRef,
+    refreshCacheCalled,
   )
 
   override def spec: Spec[Any, Any] = suite("ProjectMigrationImportService")(
@@ -560,6 +563,24 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           content.contains("owl#Ontology"),
           content.contains("Permission"),
         )
+      }
+    },
+    test("uploaded stream triggers ontology cache refresh") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      payloadFiles = Map(
+                        "rdf/admin.nq"      -> adminNq,
+                        "rdf/data.nq"       -> dataNq,
+                        "rdf/ontology-0.nq" -> ontologyNq,
+                        "rdf/permission.nq" -> permissionNq,
+                      ),
+                    )
+          task          <- env.service.importDataExport(testProjectIri, testUser, stream)
+          _             <- pollUntilDone(env.service, task.id)
+          refreshCalled <- env.refreshCacheCalled.get
+        } yield assertTrue(refreshCalled)
       }
     },
     test("rejects duplicate import while one exists") {
