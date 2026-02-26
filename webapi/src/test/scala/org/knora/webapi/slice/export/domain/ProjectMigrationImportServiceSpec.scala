@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import com.typesafe.config.ConfigFactory
 import zio.*
 import zio.config.typesafe.TypesafeConfigProvider
@@ -142,6 +144,11 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     override def deleteById(id: GroupIri): Task[Unit]                              = ZIO.unit
   }
 
+  private def stubOntologyCache(): OntologyCache = new OntologyCache {
+    def refreshCache(): Task[OntologyCacheData] = ZIO.succeed(OntologyCacheData.Empty)
+    def getCacheData: UIO[OntologyCacheData]    = ZIO.succeed(OntologyCacheData.Empty)
+  }
+
   // TriplestoreService stub that captures uploaded bytes
   private def stubTriplestoreService(uploadedRef: Ref[Chunk[Byte]]): TriplestoreService =
     new TriplestoreService {
@@ -240,10 +247,11 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     groupFindByNameRef        <- Ref.make[GroupName => Task[Option[KnoraGroup]]](_ => ZIO.none)
     uploadedBytesRef          <- Ref.make[Chunk[Byte]](Chunk.empty)
 
-    projectRepo = stubProjectRepo(projectFindByIdRef, projectFindByShortcodeRef)
-    userRepo    = stubUserRepo(userFindByIdRef, userFindByEmailRef, userFindByUsernameRef)
-    groupRepo   = stubGroupRepo(groupFindByIdRef, groupFindByNameRef)
-    triplestore = stubTriplestoreService(uploadedBytesRef)
+    projectRepo   = stubProjectRepo(projectFindByIdRef, projectFindByShortcodeRef)
+    userRepo      = stubUserRepo(userFindByIdRef, userFindByEmailRef, userFindByUsernameRef)
+    groupRepo     = stubGroupRepo(groupFindByIdRef, groupFindByNameRef)
+    triplestore   = stubTriplestoreService(uploadedBytesRef)
+    ontologyCache = stubOntologyCache()
 
     // Construct services with mock repos; null for unused dependencies
     projectService = KnoraProjectService(projectRepo, null, null)
@@ -259,7 +267,15 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     taskStateRef <- Ref.make[Option[CurrentDataTask]](None)
     taskState     = new DataTaskState(taskStateRef, persistence)
     service       =
-      new ProjectMigrationImportService(taskState, groupService, projectService, storage, triplestore, userService)
+      new ProjectMigrationImportService(
+        taskState,
+        groupService,
+        projectService,
+        storage,
+        triplestore,
+        ontologyCache,
+        userService,
+      )
   } yield TestEnv(
     service,
     storage,

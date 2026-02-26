@@ -186,26 +186,6 @@ object ProjectMigrationExportService {
   val layer: URLayer[
     KnoraProjectService & ProjectMigrationStorageService & TriplestoreService,
     ProjectMigrationExportService,
-  ] = FilesystemDataTaskPersistence.exportLayer >>> ZLayer {
-    for {
-      // Restore the current export task from the filesystem if it exists,
-      // and mark it as failed if it was in progress
-      fsPersistence <- ZIO.service[FilesystemDataTaskPersistence]
-      restored      <- fsPersistence.restore()
-      wasInProgress  = restored.exists(_.isInProgress)
-      corrected      = restored.map { task =>
-                    if (task.isInProgress) task.fail().getOrElse(task) else task
-                  }
-      _ <- ZIO.when(wasInProgress && corrected.isDefined) {
-             val task = corrected.get
-             ZIO.logWarning(s"${task.id}: Marking previously in-progress export as failed due to service restart") *>
-               fsPersistence.onChanged(task)
-           }
-      ref            <- Ref.make(corrected)
-      state           = new DataTaskState(ref, fsPersistence)
-      projectService <- ZIO.service[KnoraProjectService]
-      storage        <- ZIO.service[ProjectMigrationStorageService]
-      triplestore    <- ZIO.service[TriplestoreService]
-    } yield new ProjectMigrationExportService(state, projectService, storage, triplestore)
-  }
+  ] = FilesystemDataTaskPersistence.exportLayer >>> ZLayer.derive[ProjectMigrationExportService]
+
 }

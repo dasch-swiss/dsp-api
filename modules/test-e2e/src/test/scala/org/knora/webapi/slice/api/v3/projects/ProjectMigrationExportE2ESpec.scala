@@ -40,12 +40,14 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
   override val e2eSpec: Spec[env, Any] = suite("Project Migration Export E2E")(
     test("return Forbidden for project admin user") {
       for {
-        triggerResponse <- TestApiClient
-                             .postJson[Json, Json](uri"/v3/projects/$projectIri/exports", Json.Obj(), incunabulaProjectAdminUser)
-        statusResponse  <- TestApiClient
-                             .getJson[Json](uri"/v3/projects/$projectIri/exports/some-id", incunabulaProjectAdminUser)
-        deleteResponse  <- TestApiClient
-                             .deleteJson[Json](uri"/v3/projects/$projectIri/exports/some-id", incunabulaProjectAdminUser)
+        triggerResponse <-
+          TestApiClient
+            .postJson[Json, Json](uri"/v3/projects/$projectIri/exports", Json.Obj(), incunabulaProjectAdminUser)
+        fakeId          = "AAAAAAAAAAAAAAAAAAAAAA"
+        statusResponse <- TestApiClient
+                            .getJson[Json](uri"/v3/projects/$projectIri/exports/$fakeId", incunabulaProjectAdminUser)
+        deleteResponse <- TestApiClient
+                            .deleteJson[Json](uri"/v3/projects/$projectIri/exports/$fakeId", incunabulaProjectAdminUser)
       } yield assertTrue(
         triggerResponse.code == StatusCode.Forbidden,
         statusResponse.code == StatusCode.Forbidden,

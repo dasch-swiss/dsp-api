@@ -41,6 +41,7 @@ import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 // This error is used to indicate that an import already exists.
 final case class ImportExistsError(t: CurrentDataTask)
@@ -53,6 +54,7 @@ final class ProjectMigrationImportService(
   projectService: KnoraProjectService,
   storage: ProjectMigrationStorageService,
   triplestore: TriplestoreService,
+  ontologyCache: OntologyCache,
   userService: KnoraUserService,
 ) { self =>
 
@@ -62,11 +64,17 @@ final class ProjectMigrationImportService(
     stream: ZStream[Any, Throwable, Byte],
   ): IO[ImportExistsError, CurrentDataTask] = for {
     importTask <- state.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) => ImportExistsError(t) }
-    _          <- storage.importDir(importTask.id).tap(Files.createDirectories(_).orDie)
-    bagItPath  <- storage.importBagItZipPath(importTask.id)
-    _          <- stream.run(ZSink.fromFile(bagItPath.toFile)).orDie
-    _          <- doImport(importTask.id, projectIri).forkDaemon
+    _          <- saveZipStream(importTask.id, stream)
+    _          <- doImport(importTask.id, projectIri).whenZIO(state.isInProgress(importTask.id)).forkDaemon
   } yield importTask
+
+  private def saveZipStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte]) = (
+    for {
+      _         <- storage.importDir(taskId).map(Files.createDirectories(_).orDie)
+      bagItPath <- storage.importBagItZipPath(taskId)
+      _         <- stream.run(ZSink.fromFile(bagItPath.toFile))
+    } yield ()
+  ).tapError(_ => state.fail(taskId).ignore).orDie
 
   private def doImport(taskId: DataTaskId, projectIri: ProjectIri): UIO[Unit] =
     ZIO.scoped {
@@ -283,7 +291,7 @@ final class ProjectMigrationImportService(
     // the last line of one file merges with the first line of the next file, corrupting both NQuad statements.
     // To prevent this, we insert a newline between files.
     val stream = ZStream.fromIterable(nqFiles).flatMap(p => ZStream.fromFile(p.toFile) ++ newline)
-    triplestore.uploadNQuads(stream)
+    triplestore.uploadNQuads(stream) *> ontologyCache.refreshCache().unit
   }
 
   private def getUniqueField(fields: List[(String, String)], name: String): Task[String] =
@@ -306,8 +314,5 @@ final class ProjectMigrationImportService(
 }
 
 object ProjectMigrationImportService {
-  val layer: URLayer[
-    KnoraGroupService & KnoraProjectService & KnoraUserService & ProjectMigrationStorageService & TriplestoreService,
-    ProjectMigrationImportService,
-  ] = DataTaskPersistence.noop >>> DataTaskState.layer >>> ZLayer.derive[ProjectMigrationImportService]
+  val layer = FilesystemDataTaskPersistence.importLayer >>> ZLayer.derive[ProjectMigrationImportService]
 }

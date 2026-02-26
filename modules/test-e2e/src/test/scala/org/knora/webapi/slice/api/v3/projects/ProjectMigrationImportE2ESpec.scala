@@ -40,10 +40,11 @@ object ProjectMigrationImportE2ESpec extends E2EZSpec {
                                MediaType.ApplicationZip,
                                incunabulaProjectAdminUser,
                              )
-        statusResponse  <- TestApiClient
-                             .getJson[Json](uri"/v3/projects/$projectIri/imports/some-id", incunabulaProjectAdminUser)
-        deleteResponse  <- TestApiClient
-                             .deleteJson[Json](uri"/v3/projects/$projectIri/imports/some-id", incunabulaProjectAdminUser)
+        fakeId          = "AAAAAAAAAAAAAAAAAAAAAA"
+        statusResponse <- TestApiClient
+                            .getJson[Json](uri"/v3/projects/$projectIri/imports/$fakeId", incunabulaProjectAdminUser)
+        deleteResponse <- TestApiClient
+                            .deleteJson[Json](uri"/v3/projects/$projectIri/imports/$fakeId", incunabulaProjectAdminUser)
       } yield assertTrue(
         triggerResponse.code == StatusCode.Forbidden,
         statusResponse.code == StatusCode.Forbidden,
