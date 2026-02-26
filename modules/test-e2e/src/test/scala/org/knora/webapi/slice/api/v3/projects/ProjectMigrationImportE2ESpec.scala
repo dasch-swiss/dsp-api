@@ -31,6 +31,25 @@ object ProjectMigrationImportE2ESpec extends E2EZSpec {
   private val projectIri = incunabulaProjectIri.value
 
   override val e2eSpec: Spec[env, Any] = suite("Project Migration Import E2E")(
+    test("return Forbidden for project admin user") {
+      for {
+        triggerResponse <- TestApiClient
+                             .postBinary[Json](
+                               uri"/v3/projects/$projectIri/imports",
+                               Array.empty[Byte],
+                               MediaType.ApplicationZip,
+                               incunabulaProjectAdminUser,
+                             )
+        statusResponse  <- TestApiClient
+                             .getJson[Json](uri"/v3/projects/$projectIri/imports/some-id", incunabulaProjectAdminUser)
+        deleteResponse  <- TestApiClient
+                             .deleteJson[Json](uri"/v3/projects/$projectIri/imports/some-id", incunabulaProjectAdminUser)
+      } yield assertTrue(
+        triggerResponse.code == StatusCode.Forbidden,
+        statusResponse.code == StatusCode.Forbidden,
+        deleteResponse.code == StatusCode.Forbidden,
+      )
+    },
     test("export then import round-trip — fails because project already exists") {
       for {
         // Step 1: Trigger export of Incunabula
