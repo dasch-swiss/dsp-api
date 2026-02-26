@@ -519,6 +519,71 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
+    test("rejects malformed admin.nq") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      payloadFiles = Map(
+                        "rdf/admin.nq"      -> "this is not valid nquads content <<<>>>",
+                        "rdf/data.nq"       -> dataNq,
+                        "rdf/ontology-0.nq" -> ontologyNq,
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("rejects malformed data.nq") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      payloadFiles = Map(
+                        "rdf/admin.nq"      -> adminNq,
+                        "rdf/data.nq"       -> "not valid { nquads } content",
+                        "rdf/ontology-0.nq" -> ontologyNq,
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("rejects malformed ontology nq") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      payloadFiles = Map(
+                        "rdf/admin.nq"      -> adminNq,
+                        "rdf/data.nq"       -> dataNq,
+                        "rdf/ontology-0.nq" -> "broken <<< ontology >>> data",
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
+    test("rejects malformed permission.nq") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      payloadFiles = Map(
+                        "rdf/admin.nq"      -> adminNq,
+                        "rdf/data.nq"       -> dataNq,
+                        "rdf/ontology-0.nq" -> ontologyNq,
+                        "rdf/permission.nq" -> "invalid permission nquads !!!",
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
     test("successful import uploads all NQuads to triplestore") {
       ZIO.scoped {
         for {
