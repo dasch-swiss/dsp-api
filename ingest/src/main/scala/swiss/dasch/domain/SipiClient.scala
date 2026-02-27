@@ -71,7 +71,7 @@ object SipiCommand {
 
 trait SipiClient {
 
-  def applyTopLeftCorrection(fileIn: Path, fileOut: Path): UIO[ProcessOutput]
+  def applyTopLeftCorrection(fileIn: Path, fileOut: Path): IO[IOException, ProcessOutput]
 
   def queryImageFile(file: Path): IO[IOException, ProcessOutput]
 
@@ -79,7 +79,7 @@ trait SipiClient {
     fileIn: Path,
     fileOut: Path,
     outputFormat: SipiImageFormat,
-  ): UIO[ProcessOutput]
+  ): IO[IOException, ProcessOutput]
 }
 
 object SipiClient {
@@ -103,25 +103,25 @@ final case class SipiClientLive(executor: CommandExecutor) extends SipiClient {
   private val sipiPrefix = "/sipi/sipi"
   private val timer      = Metric.timer("sipi_command_duration", ChronoUnit.MILLIS, Chunk.iterate(1.0, 6)(_ * 10))
 
-  private def execute(command: SipiCommand) =
+  private def execute(command: SipiCommand): IO[IOException, ProcessOutput] =
     for {
       sipiParams <- command.render()
       cmd        <- executor.buildCommand(sipiPrefix, sipiParams: _*)
       timerTagged = timer.tagged("command", command.flag())
-      out        <- executor.execute(cmd).orDie @@ timerTagged.trackDuration
+      out        <- executor.executeOrFail(cmd) @@ timerTagged.trackDuration
     } yield out
 
-  override def applyTopLeftCorrection(fileIn: Path, fileOut: Path): UIO[ProcessOutput] =
+  override def applyTopLeftCorrection(fileIn: Path, fileOut: Path): IO[IOException, ProcessOutput] =
     execute(TopLeftArgument(fileIn, fileOut))
 
   override def transcodeImageFile(
     fileIn: Path,
     fileOut: Path,
     outputFormat: SipiImageFormat,
-  ): UIO[ProcessOutput] =
+  ): IO[IOException, ProcessOutput] =
     execute(FormatArgument(outputFormat, fileIn, fileOut))
 
-  override def queryImageFile(file: Path): UIO[ProcessOutput] =
+  override def queryImageFile(file: Path): IO[IOException, ProcessOutput] =
     execute(QueryArgument(file))
 }
 
