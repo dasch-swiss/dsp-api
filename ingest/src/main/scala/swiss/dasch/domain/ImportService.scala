@@ -6,7 +6,6 @@
 package swiss.dasch.domain
 
 import org.apache.commons.io.FileUtils
-import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import zio.*
 import zio.nio.file.*
 import zio.stream.*
@@ -35,8 +34,9 @@ object ImportService {
     ZIO.serviceWithZIO[ImportService](_.importZipFile(shortcode, tempFile))
 }
 
-final case class ImportServiceLive(
+final class ImportServiceLive(
   storageService: StorageService,
+  projectService: ProjectService,
 ) extends ImportService {
 
   def importZipStream(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte]): IO[ImportFailed, Unit] =
@@ -72,24 +72,16 @@ final case class ImportServiceLive(
   private def importProject(shortcode: ProjectShortcode, dataDir: Path): IO[ImportFailed, Unit] =
     for {
       projectPath <- storageService.getProjectFolder(shortcode)
-      exists      <- Files.isDirectory(projectPath)
-      _           <- ZIO.when(exists) {
-             for {
-               hasFiles <- Files
-                             .walk(projectPath)
-                             .filterZIO(p => Files.isRegularFile(p))
-                             .runHead
-                             .map(_.isDefined)
-                             .mapError(IoError(_))
-               _ <- ZIO.when(hasFiles)(ZIO.fail(ProjectAlreadyExists(shortcode)))
-               _ <- Files.deleteRecursive(projectPath).mapError(IoError(_))
-             } yield ()
-           }
-      _ <- ZIO.logInfo(s"Importing project $shortcode")
+      _           <-
+        ZIO
+          .ifZIO(
+            projectService.exists(shortcode).mapError(IoError(_)),
+          )(ZIO.fail(ProjectAlreadyExists(shortcode)), ZIO.unit)
       _ <- ZIO.attemptBlockingIO(FileUtils.moveDirectory(dataDir.toFile, projectPath.toFile)).mapError(IoError(_))
-      _ <- ZIO.logInfo(s"Importing project $shortcode was successful")
+      _ <- ZIO.logInfo(s"Imported project $shortcode was successful")
     } yield ()
 }
+
 object ImportServiceLive {
   val layer = ZLayer.derive[ImportServiceLive]
 }

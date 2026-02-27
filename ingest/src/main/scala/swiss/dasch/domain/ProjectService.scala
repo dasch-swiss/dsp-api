@@ -53,6 +53,12 @@ final case class ProjectService(
       .getProjectFolder(shortcode)
       .flatMap(path => ZIO.whenZIO(Files.isDirectory(path))(ZIO.succeed(path)))
 
+  def exists(shortcode: ProjectShortcode) =
+    findProject(shortcode).flatMap {
+      case None    => ZIO.succeed(false)
+      case Some(p) => projectIsNotEmpty(p)
+    }
+
   def findOrCreateProject(shortcode: ProjectShortcode): IO[IOException | SQLException, ProjectFolder] =
     projectRepo.findByShortcode(shortcode).someOrElseZIO(projectRepo.addProject(shortcode)) *>
       storage.createProjectFolder(shortcode)
