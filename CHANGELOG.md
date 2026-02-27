@@ -1,5 +1,48 @@
 # Changelog
 
+## [35.0.0](https://github.com/dasch-swiss/dsp-api/compare/v34.4.1...v35.0.0) (2026-02-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove deprecated admin export/import endpoints and related dead code (DEV-5885) ([#3954](https://github.com/dasch-swiss/dsp-api/issues/3954))
+
+### Maintenances
+
+* add .claude/worktrees/ to .gitignore ([#3973](https://github.com/dasch-swiss/dsp-api/issues/3973)) ([4fadcc2](https://github.com/dasch-swiss/dsp-api/commit/4fadcc248bbb153be858012d70e6e6fc41f1e82e))
+* add Claude Code GitHub Action for [@claude](https://github.com/claude) mentions ([#3979](https://github.com/dasch-swiss/dsp-api/issues/3979)) ([5b7ab1a](https://github.com/dasch-swiss/dsp-api/commit/5b7ab1a7b208befb7c50c649eda61f15a76b14e8))
+* replace BuildJet runners with GitHub-hosted ubuntu-latest ([#3975](https://github.com/dasch-swiss/dsp-api/issues/3975)) ([a5506e2](https://github.com/dasch-swiss/dsp-api/commit/a5506e288136ee81c55e6f794a98f6e14244f923))
+* Replace ZLayer.makeSome macro with layer combinators ([#3971](https://github.com/dasch-swiss/dsp-api/issues/3971)) ([6c990e7](https://github.com/dasch-swiss/dsp-api/commit/6c990e76f0e11edbb7846027f3107f34ec271e72))
+* upgrade Sipi to v3.17.1 and check CLI exit codes (DEV-5940) ([#3978](https://github.com/dasch-swiss/dsp-api/issues/3978)) ([2702fcd](https://github.com/dasch-swiss/dsp-api/commit/2702fcd76697e70a6c9436954adf18e72e0ceb9a))
+* Use ZIO.config for features ([#3972](https://github.com/dasch-swiss/dsp-api/issues/3972)) ([26acb54](https://github.com/dasch-swiss/dsp-api/commit/26acb5460fe2546d9a84a664190f776825fb3fdf))
+
+
+### Documentation
+
+* add configuration learning — fuseki remote dev db recipe ([#3951](https://github.com/dasch-swiss/dsp-api/issues/3951)) ([05c25a7](https://github.com/dasch-swiss/dsp-api/commit/05c25a751f7f9f2cf9e0fe6c9a5770b1e50dcdd5))
+* **learnings:** add structured learnings from recent work ([#3945](https://github.com/dasch-swiss/dsp-api/issues/3945)) ([d3e3e82](https://github.com/dasch-swiss/dsp-api/commit/d3e3e822765d869fbcd86db24f4d64564ffd7bfb))
+
+
+### Enhancements
+
+* Add feature flag which deactivates project migration imports (DEV-5887) ([#3974](https://github.com/dasch-swiss/dsp-api/issues/3974)) ([a737202](https://github.com/dasch-swiss/dsp-api/commit/a737202a571d9375279b70e95c90abbb18e856b5))
+* Add project migration export as bagit zip (DEV-5886) ([#3960](https://github.com/dasch-swiss/dsp-api/issues/3960)) ([7a659e3](https://github.com/dasch-swiss/dsp-api/commit/7a659e3633bbff27ba8f9d25770ed2f0e720ed9f))
+* **dsp-api:** Add rdf migration import (DEV-5887) ([#3976](https://github.com/dasch-swiss/dsp-api/issues/3976)) ([b7cecce](https://github.com/dasch-swiss/dsp-api/commit/b7ceccea99bd963e31c4cc339ded8baa084c78f7))
+* Remove deprecated admin export/import endpoints and related dead code (DEV-5885) ([#3954](https://github.com/dasch-swiss/dsp-api/issues/3954)) ([9b45c84](https://github.com/dasch-swiss/dsp-api/commit/9b45c846b6b711b138d3c18861cb8368f8b6edb6))
+
+
+### Bug Fixes
+
+* Avoid unnecessary recompilation caused by BuildInfo timestamp ([#3963](https://github.com/dasch-swiss/dsp-api/issues/3963)) ([a9c9e95](https://github.com/dasch-swiss/dsp-api/commit/a9c9e95988a838c0f26f4f51ccd52c899498b61e))
+* Fork JVM for sbt run so Ctrl+C shuts down cleanly ([#3962](https://github.com/dasch-swiss/dsp-api/issues/3962)) ([102530d](https://github.com/dasch-swiss/dsp-api/commit/102530d4f77601f266e02c3260bd0db2c5c6b01e))
+* Mark flaky E2E test with timeout and flaky annotations ([#3965](https://github.com/dasch-swiss/dsp-api/issues/3965)) ([f0934c7](https://github.com/dasch-swiss/dsp-api/commit/f0934c72196b99632edcdfc0bbbb22af34d78ffd))
+* Suppress noisy Jena debug logs ([#3964](https://github.com/dasch-swiss/dsp-api/issues/3964)) ([35188c9](https://github.com/dasch-swiss/dsp-api/commit/35188c979026e41c8225d0fb8790505b961117c9))
+
+
+### Performance Improvements
+
+* use FILTER NOT EXISTS for resource count query ([#3961](https://github.com/dasch-swiss/dsp-api/issues/3961)) ([9c1f67b](https://github.com/dasch-swiss/dsp-api/commit/9c1f67b3286b9c5bb31ba6c9ebe6557699641980))
+
 ## [34.4.1](https://github.com/dasch-swiss/dsp-api/compare/v34.4.0...v34.4.1) (2026-02-18)
 
 
