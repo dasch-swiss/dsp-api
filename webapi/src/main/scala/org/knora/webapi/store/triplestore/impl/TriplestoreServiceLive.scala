@@ -15,6 +15,7 @@ import zio.json.ast.Json
 import zio.json.ast.JsonCursor
 import zio.metrics.Metric
 import zio.nio.file.Path as NioPath
+import zio.stream.ZStream
 import zio.telemetry.opentelemetry.tracing.Tracing
 
 import java.nio.charset.StandardCharsets
@@ -418,6 +419,31 @@ case class TriplestoreServiceLive(
       )
       .flatMap(doHttpRequest)
       .unit
+
+  override def uploadNQuads(stream: ZStream[Any, Throwable, Byte]): Task[Unit] = {
+    val request = authenticatedRequest
+      .post(targetHostUri.addPath(paths.data))
+      .contentType(mimeTypeApplicationNQuads, "UTF-8")
+      .streamBody(ZioStreams)(stream)
+
+    request
+      .send(backend)
+      .catchSome {
+        case e: java.net.SocketTimeoutException =>
+          val msg = "The triplestore took too long to process the NQuads upload."
+          ZIO.logError(msg) *> ZIO.fail(TriplestoreTimeoutException(msg, e))
+        case e: Exception =>
+          val msg = s"Failed to connect to triplestore during NQuads upload: ${request.uri.toString}"
+          ZIO.logError(msg) *> ZIO.fail(TriplestoreConnectionException(msg, Some(e)))
+      }
+      .flatMap { response =>
+        ZIO
+          .unless(response.code.isSuccess) {
+            ZIO.fail(TriplestoreResponseException(s"Triplestore responded with HTTP code ${response.code}"))
+          }
+          .unit
+      }
+  }
 
   private def doHttpRequest[T](
     request: Request[Either[String, String]],

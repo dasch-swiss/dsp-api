@@ -14,7 +14,7 @@ import org.knora.bagit.BagIt
 import org.knora.bagit.domain.BagInfo
 import org.knora.bagit.domain.PayloadEntry
 import org.knora.webapi.KnoraBaseVersion
-import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.util.rdf.NQuads
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
@@ -37,7 +37,6 @@ final case class ExportInProgressError(t: CurrentDataTask)
 final case class ExportFailedError(t: CurrentDataTask)
 
 final class ProjectMigrationExportService(
-  apiConfig: KnoraApi,
   currentExp: DataTaskState,
   projectService: KnoraProjectService,
   storage: ProjectMigrationStorageService,
@@ -106,10 +105,11 @@ final class ProjectMigrationExportService(
     } yield ()
 
   private def createBagItZip(taskId: DataTaskId, rdfPath: Path, projectIri: ProjectIri) =
-    val zipFile = storage.bagItZipPath(taskId)
     for {
-      _ <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
-      _ <- BagIt.create(
+      zipFile      <- storage.exportBagItZipPath(taskId)
+      externalHost <- AppConfig.knoraApi(_.externalHost)
+      _            <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
+      _            <- BagIt.create(
              List(PayloadEntry.Directory("rdf", rdfPath)),
              zipFile,
              bagInfo = Some(
@@ -120,7 +120,7 @@ final class ProjectMigrationExportService(
                  additionalFields = List(
                    ("KnoraBase-Version", s"$KnoraBaseVersion"),
                    ("Dsp-Api-Version", BuildInfo.version),
-                   ("Source-Server", apiConfig.externalHost),
+                   ("Source-Server", externalHost),
                  ),
                ),
              ),
@@ -143,9 +143,8 @@ final class ProjectMigrationExportService(
              case Some(StateInProgressError(s)) => Some(ExportInProgressError(s))
              case None                          => None
            }
-    zipFile = storage.bagItZipPath(exportId)
-    _      <- Files.deleteIfExists(zipFile).logError.orDie
-    _      <- ZIO.logInfo(s"$exportId: Deleted export task and associated export file")
+    dir <- storage.exportDir(exportId).tap(Files.deleteRecursive(_).logError.orDie)
+    _   <- ZIO.logInfo(s"$exportId: Cleaned export dir $dir")
   } yield ()
 
   def getExportStatus(exportId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = currentExp.find(exportId)
@@ -163,9 +162,9 @@ final class ProjectMigrationExportService(
     exportId: DataTaskId,
   ): IO[Option[ExportInProgressError | ExportFailedError], (String, ZStream[Any, Throwable, Byte])] =
     for {
-      exp    <- canDownloadExport(exportId)
-      zipFile = storage.bagItZipPath(exportId)
-      _      <- Files
+      exp     <- canDownloadExport(exportId)
+      zipFile <- storage.exportBagItZipPath(exportId)
+      _       <- Files
              .exists(zipFile)
              .filterOrDie(_ == true)(new RuntimeException(s"Export file not found for export id $exportId"))
       fileName = s"migration-export-${exp.id}.zip"
@@ -184,29 +183,8 @@ final class ProjectMigrationExportService(
 
 object ProjectMigrationExportService {
   val layer: URLayer[
-    KnoraApi & KnoraProjectService & ProjectMigrationStorageService & TriplestoreService,
+    KnoraProjectService & ProjectMigrationStorageService & TriplestoreService,
     ProjectMigrationExportService,
-  ] = FilesystemDataTaskPersistence.exportLayer >>> ZLayer {
-    for {
-      // Restore the current export task from the filesystem if it exists,
-      // and mark it as failed if it was in progress
-      fsPersistence <- ZIO.service[FilesystemDataTaskPersistence]
-      restored      <- fsPersistence.restore()
-      wasInProgress  = restored.exists(_.isInProgress)
-      corrected      = restored.map { task =>
-                    if (task.isInProgress) task.fail().getOrElse(task) else task
-                  }
-      _ <- ZIO.when(wasInProgress && corrected.isDefined) {
-             val task = corrected.get
-             ZIO.logWarning(s"${task.id}: Marking previously in-progress export as failed due to service restart") *>
-               fsPersistence.onChanged(task)
-           }
-      ref            <- Ref.make(corrected)
-      state           = new DataTaskState(ref, fsPersistence)
-      apiConfig      <- ZIO.service[KnoraApi]
-      projectService <- ZIO.service[KnoraProjectService]
-      storage        <- ZIO.service[ProjectMigrationStorageService]
-      triplestore    <- ZIO.service[TriplestoreService]
-    } yield new ProjectMigrationExportService(apiConfig, state, projectService, storage, triplestore)
-  }
+  ] = FilesystemDataTaskPersistence.exportLayer >>> ZLayer.derive[ProjectMigrationExportService]
+
 }

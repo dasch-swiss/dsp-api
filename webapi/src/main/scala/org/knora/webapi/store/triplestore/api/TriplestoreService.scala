@@ -12,6 +12,7 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import play.twirl.api.TxtFormat
 import zio.*
+import zio.stream.ZStream
 
 import java.nio.file.Path
 
@@ -166,6 +167,14 @@ trait TriplestoreService extends QueryBuilderHelper {
    * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
    */
   def uploadRepository(inputFile: Path): Task[Unit]
+
+  /**
+   * Additively uploads N-Quads data to the triplestore via the GSP endpoint.
+   * Uses POST to /{repo}/data which merges data into named graphs encoded in each N-Quad line.
+   *
+   * @param stream a byte stream of N-Quads data.
+   */
+  def uploadNQuads(stream: ZStream[Any, Throwable, Byte]): Task[Unit]
 
   def dropGraph(graphName: String): Task[Unit]
 

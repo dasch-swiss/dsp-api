@@ -32,6 +32,8 @@ case class KnoraGroupService(
 
   def findById(id: GroupIri): Task[Option[KnoraGroup]] = knoraGroupRepo.findById(id)
 
+  def findByName(name: GroupName): Task[Option[KnoraGroup]] = knoraGroupRepo.findByName(name)
+
   def findByIds(ids: Seq[GroupIri]): Task[Chunk[KnoraGroup]] = knoraGroupRepo.findByIds(ids)
 
   def findByProject(project: KnoraProject): Task[Chunk[KnoraGroup]] = knoraGroupRepo.findByProjectIri(project.id)
