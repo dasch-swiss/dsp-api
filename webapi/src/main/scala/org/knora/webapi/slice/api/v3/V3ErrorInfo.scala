@@ -51,6 +51,11 @@ object NotFound:
     apply(code, code.template.replace("{id}", projectIri.value), Map("id" -> projectIri.value))
   }
 
+  def featureMissing(featureName: String): NotFound = {
+    val code: NotFounds = V3ErrorCode.feature_missing
+    apply(code, code.template.replace("{name}", featureName), Map("name" -> featureName))
+  }
+
 case class BadRequest(message: String = "Bad Request", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
 object BadRequest {
   given JsonCodec[BadRequest] = DeriveJsonCodec.gen[BadRequest]

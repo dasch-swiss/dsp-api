@@ -106,7 +106,28 @@ final class FilesystemDataTaskPersistence(basePath: Path) extends DataTaskPersis
 }
 
 object FilesystemDataTaskPersistence {
-  def exportLayer = ZLayer(ZIO.serviceWith[ProjectMigrationStorageService](_.exportsDir)) >>> layer
+  def exportLayer: URLayer[ProjectMigrationStorageService, DataTaskState] =
+    ZLayer(ZIO.serviceWithZIO[ProjectMigrationStorageService](_.exportsDir)) >>> layer >>> ZLayer(restore)
+  def importLayer: URLayer[ProjectMigrationStorageService, DataTaskState] =
+    ZLayer(ZIO.serviceWithZIO[ProjectMigrationStorageService](_.importsDir)) >>> layer >>> ZLayer(restore)
+
+  private def restore = for {
+    // Restore the current task from the filesystem if it exists,
+    // and mark it as failed if it was in progress
+    fsPersistence <- ZIO.service[FilesystemDataTaskPersistence]
+    restored      <- fsPersistence.restore()
+    wasInProgress  = restored.exists(_.isInProgress)
+    corrected      = restored.map { task =>
+                  if (task.isInProgress) task.fail().getOrElse(task) else task
+                }
+    _ <- ZIO.when(wasInProgress && corrected.isDefined) {
+           val task = corrected.get
+           ZIO.logWarning(s"${task.id}: Marking previously in-progress export as failed due to service restart") *>
+             fsPersistence.onChanged(task)
+         }
+    ref  <- Ref.make(corrected)
+    state = new DataTaskState(ref, fsPersistence)
+  } yield state
 
   def layer = ZLayer.derive[FilesystemDataTaskPersistence]
 

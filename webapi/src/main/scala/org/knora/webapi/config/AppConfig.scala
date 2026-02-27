@@ -156,6 +156,7 @@ final case class Features(
   allowEraseProjects: Boolean,
   disableLastModificationDateCheck: Boolean,
   triggerCompactionAfterProjectErasure: Boolean,
+  allowImportMigrationBagit: Boolean,
 )
 
 object AppConfig {
@@ -168,7 +169,9 @@ object AppConfig {
       c.copy(jwt = c.jwt.copy(issuer = c.jwt.issuer.orElse(Some(c.knoraApi.externalKnoraApiHostPort)))),
     )
 
+  def config[A](f: AppConfig => A): UIO[A]  = ZIO.config(config).map(f).orDie
   def features[A](f: Features => A): UIO[A] = ZIO.config(config.map(_.features)).map(f).orDie
+  def knoraApi[A](f: KnoraApi => A): UIO[A] = ZIO.config(config.map(_.knoraApi)).map(f).orDie
 
   private val provider: ConfigProvider =
     TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
@@ -186,6 +189,7 @@ object AppConfig {
          |* ALLOW_ERASE_PROJECTS: ${c.features.allowEraseProjects}
          |* DISABLE_LAST_MODIFICATION_DATE_CHECK: ${c.features.disableLastModificationDateCheck}
          |* TRIGGER_COMPACTION_AFTER_PROJECT_ERASURE: ${c.features.triggerCompactionAfterProjectErasure}
+         |* ALLOW_IMPORT_MIGRATION_BAGIT : ${c.features.allowImportMigrationBagit}
          |""".stripMargin,
     )
 

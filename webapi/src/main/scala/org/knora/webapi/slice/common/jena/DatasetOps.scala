@@ -12,9 +12,7 @@ import org.apache.jena.rdf.model.Resource
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
 import zio.*
-
-import java.io.ByteArrayInputStream
-import java.nio.charset.StandardCharsets
+import zio.nio.file.Path
 
 object DatasetOps { self =>
 
@@ -44,10 +42,11 @@ object DatasetOps { self =>
   def fromJsonLd(jsonLd: String): ZIO[Scope, String, Dataset] = from(jsonLd, Lang.JSONLD)
 
   def from(str: String, lang: Lang): ZIO[Scope, String, Dataset] =
-    for {
-      ds <- createDataset
-      _  <- ZIO
-             .attempt(RDFDataMgr.read(ds, ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8)), lang))
-             .mapError(_.getMessage)
-    } yield ds
+    createDataset.flatMap(RdfDataMgr.read(_, str, lang)).mapError(_.getMessage)
+
+  def from(path: Path, lang: Lang): ZIO[Scope, Throwable, Dataset] =
+    createDataset.flatMap(RdfDataMgr.read(_, path, lang))
+
+  def from(paths: Iterable[Path], lang: Lang): ZIO[Scope, Throwable, Dataset] =
+    createDataset.flatMap(RdfDataMgr.read(_, paths, lang))
 }

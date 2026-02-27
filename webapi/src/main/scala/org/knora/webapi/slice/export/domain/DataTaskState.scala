@@ -116,6 +116,12 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]], persistence: DataTa
       .atomicFindAndUpdate(taskId, _.fail().map(Some(_)))
       .someOrFail(None)
       .tap(task => persistence.onChanged(task))
+
+  def isInProgress(taskId: DataTaskId): IO[Option[Nothing], Boolean] =
+    self.ref.get.map {
+      case Some(exp) if exp.id == taskId => exp.isInProgress
+      case _                             => false
+    }
 }
 
 object DataTaskState {

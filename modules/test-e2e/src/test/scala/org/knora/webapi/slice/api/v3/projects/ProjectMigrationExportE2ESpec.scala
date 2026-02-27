@@ -19,6 +19,7 @@ import java.time.LocalDate
 import org.knora.bagit.BagIt
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.KnoraBaseVersion
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -37,6 +38,22 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
   private val projectIri = incunabulaProjectIri.value
 
   override val e2eSpec: Spec[env, Any] = suite("Project Migration Export E2E")(
+    test("return Forbidden for project admin user") {
+      for {
+        triggerResponse <-
+          TestApiClient
+            .postJson[Json, Json](uri"/v3/projects/$projectIri/exports", Json.Obj(), incunabulaProjectAdminUser)
+        fakeId          = "AAAAAAAAAAAAAAAAAAAAAA"
+        statusResponse <- TestApiClient
+                            .getJson[Json](uri"/v3/projects/$projectIri/exports/$fakeId", incunabulaProjectAdminUser)
+        deleteResponse <- TestApiClient
+                            .deleteJson[Json](uri"/v3/projects/$projectIri/exports/$fakeId", incunabulaProjectAdminUser)
+      } yield assertTrue(
+        triggerResponse.code == StatusCode.Forbidden,
+        statusResponse.code == StatusCode.Forbidden,
+        deleteResponse.code == StatusCode.Forbidden,
+      )
+    },
     test("trigger export, poll until completed, download and validate BagIt zip") {
       for {
         // Trigger export (cleaning up any existing export from a previous run, since state is now persistent)
@@ -133,15 +150,12 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
 
   private def downloadExportBytes(exportId: DataTaskId) =
     for {
-      apiConfig     <- ZIO.service[KnoraApi]
-      jwtService    <- ZIO.service[JwtService]
-      scopeResolver <- ZIO.service[ScopeResolver]
-      scope         <- scopeResolver.resolve(rootUser)
-      jwt           <- jwtService.createJwt(rootUser.userIri, scope)
-      be            <- HttpClientZioBackend()
-      downloadUrl    =
-        uri"${apiConfig.externalKnoraApiBaseUrl}/v3/projects/$projectIri/exports/${exportId.value}/download"
-      response <- basicRequest
+      baseUrl    <- AppConfig.knoraApi(_.externalKnoraApiBaseUrl)
+      scope      <- ZIO.serviceWithZIO[ScopeResolver](_.resolve(rootUser))
+      jwt        <- ZIO.serviceWithZIO[JwtService](_.createJwt(rootUser.userIri, scope))
+      be         <- HttpClientZioBackend()
+      downloadUrl = uri"$baseUrl/v3/projects/$projectIri/exports/$exportId/download"
+      response   <- basicRequest
                     .get(downloadUrl)
                     .auth
                     .bearer(jwt.jwtString)
