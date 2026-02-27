@@ -5,8 +5,6 @@
 
 package swiss.dasch.domain
 
-import org.knora.bagit.BagIt
-import org.knora.bagit.ChecksumAlgorithm
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.Projects.*
@@ -24,6 +22,9 @@ import zio.test.assertTrue
 
 import java.io.FileInputStream
 import java.security.MessageDigest
+
+import org.knora.bagit.BagIt
+import org.knora.bagit.ChecksumAlgorithm
 
 object ProjectServiceSpec extends ZIOSpecDefault {
 
@@ -86,14 +87,15 @@ object ProjectServiceSpec extends ZIOSpecDefault {
         test("payload files under data/ match the expected project directory structure") {
           ZIO.scoped {
             for {
-              zipPath       <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
-              result        <- BagIt.readAndValidateZip(zipPath)
-              bag            = result._1
-              bagRoot        = result._2
-              dataDir        = bagRoot / "data"
-              extractedFiles <- Files.walk(dataDir).filterZIO(Files.isRegularFile(_)).runCollect
-              extractedRelPaths = extractedFiles.map(f => dataDir.toFile.toPath.relativize(f.toFile.toPath).toString).sorted
-              payloadPaths      = bag.payloadFiles.map(_.value).sorted
+              zipPath          <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
+              result           <- BagIt.readAndValidateZip(zipPath)
+              bag               = result._1
+              bagRoot           = result._2
+              dataDir           = bagRoot / "data"
+              extractedFiles   <- Files.walk(dataDir).filterZIO(Files.isRegularFile(_)).runCollect
+              extractedRelPaths =
+                extractedFiles.map(f => dataDir.toFile.toPath.relativize(f.toFile.toPath).toString).sorted
+              payloadPaths = bag.payloadFiles.map(_.value).sorted
             } yield assertTrue(
               extractedFiles.nonEmpty,
               extractedRelPaths == Chunk.fromIterable(payloadPaths),
@@ -146,12 +148,12 @@ object ProjectServiceSpec extends ZIOSpecDefault {
         test("SHA-512 checksums in manifest match actual file checksums") {
           ZIO.scoped {
             for {
-              zipPath <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
-              result  <- BagIt.readAndValidateZip(zipPath)
-              bag      = result._1
-              bagRoot  = result._2
+              zipPath       <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
+              result        <- BagIt.readAndValidateZip(zipPath)
+              bag            = result._1
+              bagRoot        = result._2
               sha512Manifest = bag.manifests.find(_.algorithm == ChecksumAlgorithm.SHA512).get
-              results <- ZIO.foreach(sha512Manifest.entries) { entry =>
+              results       <- ZIO.foreach(sha512Manifest.entries) { entry =>
                            val filePath = bagRoot / entry.path.value
                            ZIO.attemptBlockingIO {
                              val digest = MessageDigest.getInstance("SHA-512")

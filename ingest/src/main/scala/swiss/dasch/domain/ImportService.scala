@@ -6,13 +6,15 @@
 package swiss.dasch.domain
 
 import org.apache.commons.io.FileUtils
-import org.knora.bagit.BagIt
-import org.knora.bagit.BagItError
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
-import scala.language.implicitConversions
 import zio.*
 import zio.nio.file.*
 import zio.stream.*
+
+import scala.language.implicitConversions
+
+import org.knora.bagit.BagIt
+import org.knora.bagit.BagItError
 
 sealed trait ImportFailed
 case class IoError(e: Throwable)                             extends ImportFailed

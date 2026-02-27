@@ -5,9 +5,6 @@
 
 package swiss.dasch.domain
 
-import org.knora.bagit.BagIt
-import org.knora.bagit.domain.BagInfo
-import org.knora.bagit.domain.PayloadEntry
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
 import zio.*
@@ -20,6 +17,10 @@ import zio.stream.ZStream
 import java.io.IOException
 import java.sql.SQLException
 import scala.language.implicitConversions
+
+import org.knora.bagit.BagIt
+import org.knora.bagit.domain.BagInfo
+import org.knora.bagit.domain.PayloadEntry
 
 final case class ProjectService(
   private val assetInfos: AssetInfoService,

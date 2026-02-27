@@ -19,8 +19,6 @@ import swiss.dasch.config.Configuration.Features
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.*
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
-import org.knora.bagit.BagIt
-import org.knora.bagit.domain.PayloadEntry
 import swiss.dasch.infrastructure.CommandExecutorLive
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.Projects.emptyProject
@@ -46,6 +44,9 @@ import zio.test.assertTrue
 import java.net.URLDecoder
 import java.text.Normalizer
 import scala.language.implicitConversions
+
+import org.knora.bagit.BagIt
+import org.knora.bagit.domain.PayloadEntry
 
 object ProjectsEndpointSpec extends ZIOSpecDefault {
   private def executeRequest(request: Request) = for {
@@ -171,11 +172,11 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
         for {
           storageConfig <- ZIO.service[StorageConfig]
           // Create a valid BagIt zip from test data
-          tmpDir       <- ZIO.acquireRelease(
-                            ZIO
-                              .attemptBlockingIO(java.nio.file.Files.createTempDirectory("bagit-test"))
-                              .map(zio.nio.file.Path.fromJava)
-                          )(p => ZIO.attemptBlockingIO(org.apache.commons.io.FileUtils.deleteDirectory(p.toFile)).ignore)
+          tmpDir <- ZIO.acquireRelease(
+                      ZIO
+                        .attemptBlockingIO(java.nio.file.Files.createTempDirectory("bagit-test"))
+                        .map(zio.nio.file.Path.fromJava),
+                    )(p => ZIO.attemptBlockingIO(org.apache.commons.io.FileUtils.deleteDirectory(p.toFile)).ignore)
           bagitZipPath  = tmpDir / "test-import.bagit.zip"
           sourceDir     = SpecPaths.testFolder / "0001" / "fg"
           _            <- BagIt.create(List(PayloadEntry.Directory(prefix = "fg", sourcePath = sourceDir)), bagitZipPath)
