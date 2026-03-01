@@ -10,6 +10,7 @@ import swiss.dasch.test.SpecConstants.Projects.*
 import swiss.dasch.util.TestUtils
 import zio.*
 import zio.nio.file.Files
+import zio.stream.ZStream
 import zio.test.*
 
 import java.io.FileInputStream
@@ -29,7 +30,7 @@ object ImportServiceSpec extends ZIOSpecDefault {
       test("import fails with ProjectAlreadyExists when project folder has files") {
         for {
           zipPath <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
-          result  <- ImportService.importZipFile(existingProject, zipPath).either
+          result  <- ImportService.importZipStream(existingProject, ZStream.fromFile(zipPath.toFile).orDie).either
         } yield assertTrue(
           result match {
             case Left(_: ProjectAlreadyExists) => true
@@ -49,7 +50,10 @@ object ImportServiceSpec extends ZIOSpecDefault {
                  )
             corruptedZip = tmpDir / "corrupted.bagit.zip"
             _           <- ZIO.attemptBlockingIO(corruptZipPayload(validZip.toFile.toPath, corruptedZip.toFile.toPath))
-            result      <- ImportService.importZipFile(nonExistentProject, corruptedZip).either
+            result      <-
+              ImportService
+                .importZipStream(nonExistentProject, ZStream.fromFile(corruptedZip.toFile).orDie)
+                .either
           } yield assertTrue(
             result match {
               case Left(_: BagItValidationFailed) => true
@@ -64,7 +68,8 @@ object ImportServiceSpec extends ZIOSpecDefault {
             tmpDir    <- Files.createTempDirectoryScoped(None, List.empty)
             invalidZip = tmpDir / "no-manifest.zip"
             _         <- ZIO.attemptBlockingIO(createZipWithoutManifest(invalidZip.toFile.toPath))
-            result    <- ImportService.importZipFile(nonExistentProject, invalidZip).either
+            result    <-
+              ImportService.importZipStream(nonExistentProject, ZStream.fromFile(invalidZip.toFile).orDie).either
           } yield assertTrue(
             result match {
               case Left(_: BagItValidationFailed) => true
@@ -81,7 +86,7 @@ object ImportServiceSpec extends ZIOSpecDefault {
             originalFiles.map(f => projectFolder.path.toFile.toPath.relativize(f.toFile.toPath).toString).toSet
           zipPath         <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
           _               <- Files.deleteRecursive(projectFolder.path)
-          _               <- ImportService.importZipFile(existingProject, zipPath)
+          _               <- ImportService.importZipStream(existingProject, ZStream.fromFile(zipPath.toFile).orDie)
           restoredFiles   <- Files.walk(projectFolder.path).filterZIO(Files.isRegularFile(_)).runCollect
           restoredRelPaths =
             restoredFiles.map(f => projectFolder.path.toFile.toPath.relativize(f.toFile.toPath).toString).toSet
@@ -101,7 +106,7 @@ object ImportServiceSpec extends ZIOSpecDefault {
           originalMap        = originalChecksums.toMap
           zipPath           <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
           _                 <- Files.deleteRecursive(projectFolder.path)
-          _                 <- ImportService.importZipFile(existingProject, zipPath)
+          _                 <- ImportService.importZipStream(existingProject, ZStream.fromFile(zipPath.toFile).orDie)
           restoredFiles     <- Files.walk(projectFolder.path).filterZIO(Files.isRegularFile(_)).runCollect
           restoredChecksums <- ZIO.foreach(restoredFiles) { f =>
                                  val relPath = projectFolder.path.toFile.toPath.relativize(f.toFile.toPath).toString
