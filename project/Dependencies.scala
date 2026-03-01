@@ -65,7 +65,7 @@ object Dependencies {
     "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.4"        % Test,
   )
 
-  val SttpClientVersion = "4.0.15"
+  val SttpClientVersion = "4.0.19"
   val zioSttpClient     = Seq(
     "com.softwaremill.sttp.client4" %% "zio"      % SttpClientVersion,
     "com.softwaremill.sttp.client4" %% "zio-json" % SttpClientVersion,
