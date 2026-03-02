@@ -194,10 +194,8 @@ Template is most readable — the UNION structure is visually obvious. Builder w
 **Domain context**: In knora-base, most value properties (e.g., `hasColor`) point to a reified value object that carries metadata (creation date, permissions, etc.). Link properties are special: a link property like `hasOtherThing` points *directly* to the target resource, while a paired property `hasOtherThingValue` (name derived by appending "Value") points to a `LinkValue` reification object. This naming convention is enforced — non-link properties must not end in "Value". When deleting a property from an ontology, if it's a link property, both `hasOtherThing` and `hasOtherThingValue` must be removed. The `linkValuePropertyIri: Option[PropertyIri]` parameter is `Some` for link properties and `None` for all others.
 
 **Key challenges**:
-- Three-clause structure: DELETE { GRAPH { ... } } INSERT { GRAPH { ... } } WHERE { ... }
-- Conditional inclusion: the link value property patterns are `Option[Fragment]` — present when deleting a link property, absent for regular value properties
-- FILTER NOT EXISTS: guards against deleting a property that is still in use by any resource
-- PREFIX declarations: three prefixes used with prefixed names in the body
+- Conditional inclusion: the link value property patterns are `Option[Fragment]` — present when deleting a link property, absent for regular value properties. The same conditional appears in both the DELETE and WHERE clauses.
+- FILTER NOT EXISTS: a nested pattern that guards against deleting a property still in use by any resource
 
 ### Plain SPARQL
 
@@ -210,6 +208,7 @@ DELETE {
   GRAPH <http://www.knora.org/ontology/0001/anything> {
     <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
     <http://www.knora.org/ontology/0001/anything#hasOtherThing> ?propertyPred ?propertyObj .
+    # conditional: only present when deleting a link property
     <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> ?linkValuePropertyPred ?linkValuePropertyObj .
   }
 }
@@ -223,7 +222,9 @@ WHERE {
   <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
   <http://www.knora.org/ontology/0001/anything#hasOtherThing> a owl:ObjectProperty .
   <http://www.knora.org/ontology/0001/anything#hasOtherThing> ?propertyPred ?propertyObj .
+  # guard: only delete if the property is not used anywhere
   FILTER NOT EXISTS { ?s ?p <http://www.knora.org/ontology/0001/anything#hasOtherThing> . }
+  # conditional: only present when deleting a link property
   <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> ?linkValuePropertyPred ?linkValuePropertyObj .
 }
 ```
@@ -250,10 +251,10 @@ val linkValuePropertyPred = Variable("linkValuePropertyPred")
 val linkValuePropertyObj  = Variable("linkValuePropertyObj")
 
 // Fragment composition — shared by all styles
-val linkValueDeleteFragment: Fragment = linkValuePropertyIri.fold(Fragment.empty) { lvpIri =>
+val linkValueDeleteFragment: Fragment = Fragment.fromOption(linkValuePropertyIri) { lvpIri =>
   sparql"$lvpIri $linkValuePropertyPred $linkValuePropertyObj ."
 }
-val linkValueWhereFragment: Fragment = linkValuePropertyIri.fold(Fragment.empty) { lvpIri =>
+val linkValueWhereFragment: Fragment = Fragment.fromOption(linkValuePropertyIri) { lvpIri =>
   sparql"$lvpIri $linkValuePropertyPred $linkValuePropertyObj ."
 }
 ```
@@ -294,13 +295,12 @@ val query = sparql"""
 ```scala
 val query = Sparql.update
   .prefixes(kb, xsd, owl)
-  .delete(
+  .deleteFrom(ontologyIri)(
     sparql"$ontologyIri $kbLastMod $lmdValue .",
     sparql"$propertyIri $propertyPred $propertyObj .",
     linkValueDeleteFragment,
   )
-  .graph(ontologyIri)
-  .insert(sparql"$ontologyIri $kbLastMod $newLmd .")
+  .insertInto(ontologyIri)(sparql"$ontologyIri $kbLastMod $newLmd .")
   .where(
     sparql"$ontologyIri a $owlOntology .",
     sparql"$ontologyIri $kbLastMod $lmdValue .",
@@ -317,12 +317,11 @@ val query = Sparql.update
 ```scala
 val query = Sparql.update
   .prefixes(kb, xsd, owl)
-  .delete(sparql"""
+  .deleteFrom(ontologyIri)(sparql"""
     $ontologyIri $kbLastMod $lmdValue .
     $propertyIri $propertyPred $propertyObj .
     $linkValueDeleteFragment""")
-  .graph(ontologyIri)
-  .insert(sparql"$ontologyIri $kbLastMod $newLmd .")
+  .insertInto(ontologyIri)(sparql"$ontologyIri $kbLastMod $newLmd .")
   .where(sparql"""
     $ontologyIri a $owlOntology .
     $ontologyIri $kbLastMod $lmdValue .
@@ -335,32 +334,68 @@ val query = Sparql.update
 
 ### Comparison
 
-Template clearly wins for readability — the DELETE/INSERT/WHERE structure is visually obvious. Builder with individual fragments gives maximum structure but requires understanding that `.delete()`, `.graph()`, `.insert()`, `.where()` produce the right nesting. Builder with multi-line fragments is a good middle ground. All three use the same fragment composition for the conditional link value.
+Template clearly wins for readability — the DELETE/INSERT/WHERE structure is visually obvious. The builder variants are also readable: `deleteFrom(ontologyIri)(...)` and `insertInto(ontologyIri)(...)` make the GRAPH scope explicit in the method name, avoiding any ambiguity. All three styles share the same `Fragment.fromOption` composition for the conditional link value property.
 
 ---
 
 ## Benchmark 4: InsertValueQueryBuilder (conditional + iteration)
 
-**What this tests**: Dynamic query construction from a **collection** of updates, where each update conditionally contributes triple patterns. This is the Twirl `@for` + `@if` equivalent: iterate over a list, conditionally emit patterns per item, and generate **indexed variables** (`?linkValue0`, `?linkValue1`, ...) to keep each iteration's bindings distinct.
+**What this tests**: A simplified sketch of the 740-line `InsertValueQueryBuilder.scala` — the most complex RDF4J query builder in the codebase. It inserts a new value for a resource, handling link updates with conditional DELETE/INSERT patterns, indexed variables, BIND, and property path validation. This is the Twirl `@for` + `@if` equivalent: iterate over a list, conditionally emit patterns per item, and generate **indexed variables** (`?linkValue0`, `?linkValue1`, ...) to keep each iteration's bindings distinct.
 
 **Key challenges**:
-- Iteration: a `List[LinkUpdate]` produces a variable number of DELETE patterns
+- Iteration with indexed variables: a `List[LinkUpdate]` produces a variable number of patterns in both DELETE and INSERT, each with unique variable names (`?linkValue0`, `?linkValue1`, ...)
 - Conditionals per item: each update has `deleteDirectLink` and `linkValueExists` flags controlling which patterns appear
-- Indexed variables: `Variable(s"linkValue$index")` — each iteration gets unique variable names
-- The fragment composition logic is shared across all API styles — the styles only differ in how they embed the composed result
+- BIND: the real query uses `BIND(IRI("...") AS ?resource)` to bind string IRIs to variables — the library needs a `Fragments.bind` combinator
+- Property path in WHERE: `rdfs:subClassOf*` validates the resource class hierarchy
+- GRAPH scoping: DELETE and INSERT target a named graph
 
 ### Plain SPARQL
 
 ```sparql
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
 DELETE {
-  ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?resourceLastModificationDate .
-  ?resource <http://example.org/hasLink> <http://example.org/target1> .
-  ?resource <http://example.org/hasLinkValue> ?linkValue0 .
-  ?linkValue0 <http://www.knora.org/ontology/knora-base#valueHasUUID> ?linkValueUUID0 .
-  ?linkValue0 <http://www.knora.org/ontology/knora-base#hasPermissions> ?linkValuePermissions0 .
+  GRAPH ?dataNamedGraph {
+    ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+    # conditional: only when deleteDirectLink = true (link update 0)
+    ?resource <http://example.org/hasLink> <http://example.org/target1> .
+    # conditional: only when linkValueExists = true (link update 0)
+    ?resource <http://example.org/hasLinkValue> ?linkValue0 .
+    ?linkValue0 knora-base:valueHasUUID ?linkValueUUID0 .
+    ?linkValue0 knora-base:hasPermissions ?linkValuePermissions0 .
+    # link update 1: deleteDirectLink = false, linkValueExists = false → no patterns
+  }
+}
+INSERT {
+  GRAPH ?dataNamedGraph {
+    ?resource knora-base:lastModificationDate "2024-01-02T00:00:00Z"^^xsd:dateTime .
+    <http://example.org/newLinkValue0> a knora-base:LinkValue ;
+      knora-base:valueHasRefCount 1 ;
+      knora-base:valueHasUUID ?linkValueUUID0 ;
+      knora-base:previousValue ?linkValue0 ;
+      knora-base:hasPermissions ?linkValuePermissions0 .
+    ?resource <http://example.org/hasLinkValue> <http://example.org/newLinkValue0> .
+    <http://example.org/newLinkValue1> a knora-base:LinkValue ;
+      knora-base:valueHasRefCount 1 .
+    ?resource <http://example.org/hasOtherLinkValue> <http://example.org/newLinkValue1> .
+    ?resource <http://example.org/hasOtherLink> <http://example.org/target2> .
+  }
 }
 WHERE {
-  ?resource a <http://www.knora.org/ontology/knora-base#Resource> .
+  # BIND: real query binds string IRIs to variables
+  BIND(IRI("http://www.knora.org/data/0001/project1") AS ?dataNamedGraph)
+  BIND(IRI("http://rdfh.ch/0001/resource1") AS ?resource)
+  ?resource a ?resourceClass .
+  ?resource knora-base:isDeleted false .
+  # property path: validate resource class hierarchy
+  ?resourceClass rdfs:subClassOf* knora-base:Resource .
+  OPTIONAL { ?resource knora-base:lastModificationDate ?resourceLastModificationDate . }
+  # conditional: link update 0 has linkValueExists = true
+  ?resource <http://example.org/hasLinkValue> ?linkValue0 .
+  ?linkValue0 knora-base:valueHasUUID ?linkValueUUID0 .
+  ?linkValue0 knora-base:hasPermissions ?linkValuePermissions0 .
 }
 ```
 
@@ -370,23 +405,35 @@ WHERE {
 case class LinkUpdate(
   linkPropertyIri: String, linkTargetIri: String,
   deleteDirectLink: Boolean, linkValueExists: Boolean,
+  newLinkValueIri: String, newReferenceCount: Int,
 )
 
+val dataNamedGraph  = Variable("dataNamedGraph")
 val resource        = Variable("resource")
+val resourceClass   = Variable("resourceClass")
 val resourceLastMod = Variable("resourceLastModificationDate")
-val kbHasPermissions = kb.unsafeIri("hasPermissions")
-val kbValueHasUUID   = kb.unsafeIri("valueHasUUID")
+val kbHasPermissions  = kb.unsafeIri("hasPermissions")
+val kbValueHasUUID    = kb.unsafeIri("valueHasUUID")
+val kbValueHasRefCount = kb.unsafeIri("valueHasRefCount")
+val kbPreviousValue   = kb.unsafeIri("previousValue")
+val kbLinkValue       = kb.unsafeIri("LinkValue")
 
+// Two link updates — different flags produce different patterns
 val linkUpdates = List(
   LinkUpdate("http://example.org/hasLink", "http://example.org/target1",
-    deleteDirectLink = true, linkValueExists = true),
+    deleteDirectLink = true, linkValueExists = true,
+    newLinkValueIri = "http://example.org/newLinkValue0", newReferenceCount = 1),
+  LinkUpdate("http://example.org/hasOtherLink", "http://example.org/target2",
+    deleteDirectLink = false, linkValueExists = false,
+    newLinkValueIri = "http://example.org/newLinkValue1", newReferenceCount = 1),
 )
 
-// Iteration + conditionals — shared by all styles
+// --- DELETE fragment: iteration + conditionals ---
 val linkDeleteFragments: List[Fragment] = linkUpdates.zipWithIndex.flatMap { case (update, index) =>
+  val prop   = Iri.unsafeFrom(update.linkPropertyIri)
+  val target = Iri.unsafeFrom(update.linkTargetIri)
+
   val directLink = Option.when(update.deleteDirectLink) {
-    val prop   = Iri.unsafeFrom(update.linkPropertyIri)
-    val target = Iri.unsafeFrom(update.linkTargetIri)
     sparql"$resource $prop $target ."
   }
 
@@ -402,20 +449,86 @@ val linkDeleteFragments: List[Fragment] = linkUpdates.zipWithIndex.flatMap { cas
 
   directLink.toList ++ linkValuePatterns.toList
 }
-
 val linkDeleteBlock = Fragment.join(linkDeleteFragments)
+
+// --- INSERT fragment: new link values ---
+val linkInsertFragments: List[Fragment] = linkUpdates.zipWithIndex.map { case (update, index) =>
+  val newLvIri     = Iri.unsafeFrom(update.newLinkValueIri)
+  val linkPropValue = Iri.unsafeFrom(update.linkPropertyIri + "Value")
+
+  val baseTriples = sparql"""$newLvIri a $kbLinkValue ;
+      $kbValueHasRefCount ${Literal.int(update.newReferenceCount)} ."""
+
+  // Conditional: reuse UUID and link to previous value when updating existing
+  val previousValueTriples = Option.when(update.linkValueExists) {
+    val linkValue      = Variable(s"linkValue$index")
+    val linkValueUUID  = Variable(s"linkValueUUID$index")
+    val linkValuePerms = Variable(s"linkValuePermissions$index")
+    sparql"""$newLvIri $kbValueHasUUID $linkValueUUID .
+      $newLvIri $kbPreviousValue $linkValue .
+      $newLvIri $kbHasPermissions $linkValuePerms ."""
+  }
+
+  val resourceToLinkValue = sparql"$resource $linkPropValue $newLvIri ."
+
+  // Conditional: insert direct link when needed
+  val directLink = Option.when(update.deleteDirectLink || !update.linkValueExists) {
+    val prop   = Iri.unsafeFrom(update.linkPropertyIri)
+    val target = Iri.unsafeFrom(update.linkTargetIri)
+    sparql"$resource $prop $target ."
+  }
+
+  Fragment.join(List(Some(baseTriples), previousValueTriples, Some(resourceToLinkValue), directLink).flatten)
+}
+val linkInsertBlock = Fragment.join(linkInsertFragments)
+
+// --- WHERE fragment: conditional link value bindings ---
+val linkWhereFragments: List[Fragment] = linkUpdates.zipWithIndex.flatMap { case (update, index) =>
+  Option.when(update.linkValueExists) {
+    val linkValue      = Variable(s"linkValue$index")
+    val linkValueUUID  = Variable(s"linkValueUUID$index")
+    val linkValuePerms = Variable(s"linkValuePermissions$index")
+    val linkPropValue  = Iri.unsafeFrom(update.linkPropertyIri + "Value")
+    sparql"""$resource $linkPropValue $linkValue .
+      $linkValue $kbValueHasUUID $linkValueUUID .
+      $linkValue $kbHasPermissions $linkValuePerms ."""
+  }
+}
+val linkWhereBlock = Fragment.join(linkWhereFragments)
+
+val newLmd = Literal.typedEscaped("2024-01-02T00:00:00Z", xsd.unsafeIri("dateTime"))
+val dataGraphIri = Literal.stringEscaped("http://www.knora.org/data/0001/project1")
+val resourceIriLit = Literal.stringEscaped("http://rdfh.ch/0001/resource1")
 ```
 
 ### Template style
 
 ```scala
 val query = sparql"""
+  PREFIX $kb
+  PREFIX $rdfs
+  PREFIX $xsd
+
   DELETE {
-    $resource $kbLastMod $resourceLastMod .
-    $linkDeleteBlock
+    GRAPH $dataNamedGraph {
+      $resource $kbLastMod $resourceLastMod .
+      $linkDeleteBlock
+    }
+  }
+  INSERT {
+    GRAPH $dataNamedGraph {
+      $resource $kbLastMod $newLmd .
+      $linkInsertBlock
+    }
   }
   WHERE {
-    $resource a $kbResource .
+    ${Fragments.bind(sparql"IRI($dataGraphIri)", dataNamedGraph)}
+    ${Fragments.bind(sparql"IRI($resourceIriLit)", resource)}
+    $resource a $resourceClass .
+    $resource $kbIsDeleted false .
+    $resourceClass ${PropertyPath.zeroOrMore(rdfsSubClassOf)} $kbResource .
+    OPTIONAL { $resource $kbLastMod $resourceLastMod . }
+    $linkWhereBlock
   }
 """.render
 ```
@@ -424,11 +537,24 @@ val query = sparql"""
 
 ```scala
 val query = Sparql.update
-  .delete(
+  .prefixes(kb, rdfs, xsd)
+  .deleteFrom(dataNamedGraph)(
     sparql"$resource $kbLastMod $resourceLastMod .",
     linkDeleteBlock,
   )
-  .where(sparql"$resource a $kbResource .")
+  .insertInto(dataNamedGraph)(
+    sparql"$resource $kbLastMod $newLmd .",
+    linkInsertBlock,
+  )
+  .where(
+    Fragments.bind(sparql"IRI($dataGraphIri)", dataNamedGraph),
+    Fragments.bind(sparql"IRI($resourceIriLit)", resource),
+    sparql"$resource a $resourceClass .",
+    sparql"$resource $kbIsDeleted false .",
+    sparql"$resourceClass ${PropertyPath.zeroOrMore(rdfsSubClassOf)} $kbResource .",
+    Fragments.optional(sparql"$resource $kbLastMod $resourceLastMod ."),
+    linkWhereBlock,
+  )
   .render
 ```
 
@@ -436,16 +562,27 @@ val query = Sparql.update
 
 ```scala
 val query = Sparql.update
-  .delete(sparql"""
+  .prefixes(kb, rdfs, xsd)
+  .deleteFrom(dataNamedGraph)(sparql"""
     $resource $kbLastMod $resourceLastMod .
     $linkDeleteBlock""")
-  .where(sparql"$resource a $kbResource .")
+  .insertInto(dataNamedGraph)(sparql"""
+    $resource $kbLastMod $newLmd .
+    $linkInsertBlock""")
+  .where(sparql"""
+    ${Fragments.bind(sparql"IRI($dataGraphIri)", dataNamedGraph)}
+    ${Fragments.bind(sparql"IRI($resourceIriLit)", resource)}
+    $resource a $resourceClass .
+    $resource $kbIsDeleted false .
+    $resourceClass ${PropertyPath.zeroOrMore(rdfsSubClassOf)} $kbResource .
+    ${Fragments.optional(sparql"$resource $kbLastMod $resourceLastMod .")}
+    $linkWhereBlock""")
   .render
 ```
 
 ### Comparison
 
-The real work is in the shared fragment composition (iteration + conditionals) — all three styles just embed the result. The query shell is simple (DELETE/WHERE with no GRAPH, no PREFIX), so the styles look nearly identical. This benchmark validates the Fragment composition model more than the query API.
+The real complexity lives in the shared fragment composition — three separate iteration blocks (DELETE, INSERT, WHERE) all keyed on the same `linkUpdates` list with different conditionals per clause. The two link updates produce visibly different patterns: update 0 has both `deleteDirectLink` and `linkValueExists`, so it appears in all three clauses; update 1 has neither, so it only appears in INSERT. This is where the library's `Fragment` composition replaces the Twirl `@for`/`@if` nesting. The `Fragments.bind` combinator and `PropertyPath.zeroOrMore` handle the WHERE clause validation patterns that the real query uses extensively.
 
 ---
 
@@ -489,11 +626,11 @@ val limitToProject: Option[Iri] = Some(Iri.unsafeFrom("http://rdfh.ch/projects/0
 val limitToResourceClass: Option[Iri] = None
 
 // Conditional fragments — shared by all styles
-val projectFilter: Fragment = limitToProject.fold(Fragment.empty) { prj =>
+val projectFilter: Fragment = Fragment.fromOption(limitToProject) { prj =>
   sparql"$resource $kbAttachedToProject $prj ."
 }
 
-val classFilter: Fragment = limitToResourceClass.fold(Fragment.empty) { cls =>
+val classFilter: Fragment = Fragment.fromOption(limitToResourceClass) { cls =>
   sparql"$resourceClass ${PropertyPath.zeroOrMore(rdfsSubClassOf)} $cls ."
 }
 
@@ -651,7 +788,7 @@ val kbValueHasRefCount = kb.unsafeIri("valueHasRefCount")
 val maybeComment: Option[String] = Some("Updated value")
 
 // Polymorphic value type — compose Fragment from match
-val commentFragment: Fragment = maybeComment.fold(Fragment.empty) { c =>
+val commentFragment: Fragment = Fragment.fromOption(maybeComment) { c =>
   sparql"$kbValueHasComment ${Literal.stringEscaped(c)} ;"
 }
 
@@ -707,9 +844,8 @@ val query = sparql"""
 ```scala
 val query = Sparql.update
   .prefixes(kb, xsd)
-  .delete(sparql"$resourceIri $kbLastMod $resourceLastMod .")
-  .graph(graphIri)
-  .insert(
+  .deleteFrom(graphIri)(sparql"$resourceIri $kbLastMod $resourceLastMod .")
+  .insertInto(graphIri)(
     valueTypeFragment,
     linkValueBlock,
     sparql"$resourceIri $kbLastMod $newLmdValue .",
@@ -723,9 +859,8 @@ val query = Sparql.update
 ```scala
 val query = Sparql.update
   .prefixes(kb, xsd)
-  .delete(sparql"$resourceIri $kbLastMod $resourceLastMod .")
-  .graph(graphIri)
-  .insert(sparql"""
+  .deleteFrom(graphIri)(sparql"$resourceIri $kbLastMod $resourceLastMod .")
+  .insertInto(graphIri)(sparql"""
     $valueTypeFragment
     $linkValueBlock
     $resourceIri $kbLastMod $newLmdValue .""")
@@ -745,6 +880,8 @@ Template is clearly the most readable — the full GRAPH/DELETE/INSERT/WHERE str
 
 - **One foundation, two surfaces**: Both styles use `Fragment`, `sparql"..."`, `Iri`, `Variable`, `Literal`, `Prefix`. The builder is a thin convenience layer over fragment composition, not a separate paradigm.
 - **Builder slots accept `Fragment`**: `Sparql.select(...)`, `.where(...)`, `.delete(...)`, `.insert(...)` all take `Fragment` or `Fragment*`. No typed AST nodes needed.
+- **GRAPH scope via method name**: `deleteFrom(graph)(...)` / `insertInto(graph)(...)` instead of a separate `.graph()` call. This avoids ambiguity about which clause the GRAPH applies to, and supports DELETE and INSERT targeting different named graphs. Plain `.delete(...)` / `.insert(...)` are used when no GRAPH wrapper is needed.
+- **`Fragment.fromOption`**: `Fragment.fromOption(opt)(f)` replaces the common `opt.fold(Fragment.empty)(f)` pattern for conditional fragments.
 - **No forced choice**: Developers pick per-query. Simple queries → template. Programmatic construction → builder. Both can coexist in the same file.
 
 ### Template style strengths
