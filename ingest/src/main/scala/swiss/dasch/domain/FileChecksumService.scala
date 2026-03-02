@@ -33,7 +33,15 @@ object FileChecksumService {
     ZIO.serviceWithZIO[FileChecksumService](_.verifyChecksum(assetInfo))
 
   def createSha256Hash(path: Path): IO[FileNotFoundException, Sha256Hash] =
-    ZIO.scoped(ScopedIoStreams.fileInputStream(path).flatMap(hashSha256))
+    ZIO.scoped {
+      ZIO
+        .fromAutoCloseable(
+          ZIO
+            .attemptBlocking(new FileInputStream(path.toFile))
+            .refineOrDie { case e: FileNotFoundException => e },
+        )
+        .flatMap(hashSha256)
+    }
 
   private def hashSha256(fis: FileInputStream): UIO[Sha256Hash] = {
     val digest    = java.security.MessageDigest.getInstance("SHA-256")

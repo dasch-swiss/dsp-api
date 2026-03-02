@@ -82,6 +82,8 @@ trait StorageService {
   def deleteDirectoryIfEmpty(directory: Path): IO[IOException, Unit]
 
   def calculateSizeInBytes(path: Path): Task[FileSize]
+
+  def copyDirectory(source: Path, target: Path): IO[IOException, Unit]
 }
 
 object StorageService {
@@ -194,6 +196,20 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
       case true  => calculateDirectorySize(path)
       case false => calculateFileSize(path)
     }
+
+  override def copyDirectory(source: Path, target: Path): IO[IOException, Unit] =
+    Files
+      .walk(source)
+      .mapZIO { srcPath =>
+        val destPath = target / source.relativize(srcPath)
+        Files.isDirectory(srcPath).flatMap {
+          case true  => Files.createDirectories(destPath)
+          case false =>
+            ZIO.foreachDiscard(destPath.parent)(Files.createDirectories(_)) *>
+              Files.copy(srcPath, destPath)
+        }
+      }
+      .runDrain
 
   private def calculateDirectorySize(path: Path): ZIO[Any, IOException, FileSize] =
     Files
