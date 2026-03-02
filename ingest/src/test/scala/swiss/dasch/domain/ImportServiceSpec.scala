@@ -19,9 +19,9 @@ import java.security.MessageDigest
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
-
 import org.knora.bagit.BagIt
 import org.knora.bagit.domain.PayloadEntry
+import zio.nio.file.Path
 
 object ImportServiceSpec extends ZIOSpecDefault {
 
@@ -82,14 +82,12 @@ object ImportServiceSpec extends ZIOSpecDefault {
         for {
           projectFolder   <- StorageService.getProjectFolder(existingProject)
           originalFiles   <- Files.walk(projectFolder.path).filterZIO(Files.isRegularFile(_)).runCollect
-          originalRelPaths =
-            originalFiles.map(f => projectFolder.path.toFile.toPath.relativize(f.toFile.toPath).toString).toSet
+          originalRelPaths = originalFiles.map(projectFolder.path.relativize(_).toString).toSet
           zipPath         <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
           _               <- Files.deleteRecursive(projectFolder.path)
           _               <- ImportService.importZipStream(existingProject, ZStream.fromFile(zipPath.toFile).orDie)
           restoredFiles   <- Files.walk(projectFolder.path).filterZIO(Files.isRegularFile(_)).runCollect
-          restoredRelPaths =
-            restoredFiles.map(f => projectFolder.path.toFile.toPath.relativize(f.toFile.toPath).toString).toSet
+          restoredRelPaths = restoredFiles.map(projectFolder.path.relativize(_).toString).toSet
         } yield assertTrue(
           restoredRelPaths == originalRelPaths,
           restoredFiles.nonEmpty,
@@ -100,8 +98,8 @@ object ImportServiceSpec extends ZIOSpecDefault {
           projectFolder     <- StorageService.getProjectFolder(existingProject)
           originalFiles     <- Files.walk(projectFolder.path).filterZIO(Files.isRegularFile(_)).runCollect
           originalChecksums <- ZIO.foreach(originalFiles) { f =>
-                                 val relPath = projectFolder.path.toFile.toPath.relativize(f.toFile.toPath).toString
-                                 ZIO.attemptBlockingIO(computeSha512(f.toFile.toPath)).map(relPath -> _)
+                                 val relPath = projectFolder.path.relativize(f).toString
+                                 ZIO.attemptBlockingIO(computeSha512(f)).map(relPath -> _)
                                }
           originalMap        = originalChecksums.toMap
           zipPath           <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
@@ -109,8 +107,8 @@ object ImportServiceSpec extends ZIOSpecDefault {
           _                 <- ImportService.importZipStream(existingProject, ZStream.fromFile(zipPath.toFile).orDie)
           restoredFiles     <- Files.walk(projectFolder.path).filterZIO(Files.isRegularFile(_)).runCollect
           restoredChecksums <- ZIO.foreach(restoredFiles) { f =>
-                                 val relPath = projectFolder.path.toFile.toPath.relativize(f.toFile.toPath).toString
-                                 ZIO.attemptBlockingIO(computeSha512(f.toFile.toPath)).map(relPath -> _)
+                                 val relPath = projectFolder.path.relativize(f).toString
+                                 ZIO.attemptBlockingIO(computeSha512(f)).map(relPath -> _)
                                }
           restoredMap = restoredChecksums.toMap
         } yield assertTrue(
@@ -171,7 +169,7 @@ object ImportServiceSpec extends ZIOSpecDefault {
     }
   }
 
-  private def computeSha512(path: java.nio.file.Path): String = {
+  private def computeSha512(path: Path): String = {
     val digest = MessageDigest.getInstance("SHA-512")
     val is     = new FileInputStream(path.toFile)
     try {
