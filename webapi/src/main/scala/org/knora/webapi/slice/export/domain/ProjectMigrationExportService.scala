@@ -45,13 +45,17 @@ final class ProjectMigrationExportService(
   triplestore: TriplestoreService,
 ) extends QueryBuilderHelper { self =>
 
-  def createExport(project: KnoraProject, createdBy: User): IO[ExportExistsError, CurrentDataTask] = for {
+  def createExport(
+    project: KnoraProject,
+    createdBy: User,
+    skipAssets: Boolean = false,
+  ): IO[ExportExistsError, CurrentDataTask] = for {
     curExp <- currentExp.makeNew(project.id, createdBy).mapError { case StatesExistError(t) => ExportExistsError(t) }
     _      <- ZIO.logInfo(s"$curExp: Created export task for project '${project.id}' by user '${createdBy.id}'")
-    _      <- doExport(project, curExp).forkDaemon
+    _      <- doExport(project, curExp, skipAssets).forkDaemon
   } yield curExp
 
-  private def doExport(project: KnoraProject, task: CurrentDataTask): UIO[Unit] =
+  private def doExport(project: KnoraProject, task: CurrentDataTask, skipAssets: Boolean): UIO[Unit] =
     ZIO.scoped {
       for {
         tempExport            <- storage.tempExportScoped(task.id)
@@ -60,12 +64,13 @@ final class ProjectMigrationExportService(
         rdfPath                = tempPath / "rdf"
         _                     <- Files.createDirectories(rdfPath)
         assetZipPath           = tempPath / "assets" / "assets.zip"
-        _                     <- (collectOntologyGraphs(task.id, project, rdfPath) <&>
-               collectProjectDataGraph(task.id, project, rdfPath) <&>
-               collectAdminGraphData(task.id, project, rdfPath) <&>
-               collectPermissionsGraphData(task.id, project, rdfPath)) <&>
-               exportAssets(task.id, project.shortcode, assetZipPath)
-        _ <- createBagItZip(task.id, rdfPath, assetZipPath, project.id)
+        collectRdf             = collectOntologyGraphs(task.id, project, rdfPath) <&>
+                       collectProjectDataGraph(task.id, project, rdfPath) <&>
+                       collectAdminGraphData(task.id, project, rdfPath) <&>
+                       collectPermissionsGraphData(task.id, project, rdfPath)
+        _ <- if (skipAssets) collectRdf
+             else collectRdf <&> exportAssets(task.id, project.shortcode, assetZipPath)
+        _ <- createBagItZip(task.id, rdfPath, Option.unless(skipAssets)(assetZipPath), project.id)
         _ <- currentExp.complete(task.id).ignore
         _ <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
       } yield ()
@@ -116,16 +121,19 @@ final class ProjectMigrationExportService(
              triplestore.queryToFile(query, permissionsDataNamedGraph, permissionFile, NQuads)
     } yield ()
 
-  private def createBagItZip(taskId: DataTaskId, rdfPath: Path, assetZipPath: Path, projectIri: ProjectIri) =
+  private def createBagItZip(
+    taskId: DataTaskId,
+    rdfPath: Path,
+    assetZipPath: Option[Path],
+    projectIri: ProjectIri,
+  ) =
     for {
       zipFile      <- storage.exportBagItZipPath(taskId)
       externalHost <- AppConfig.knoraApi(_.externalHost)
       _            <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
+      assetEntries  = assetZipPath.map(p => PayloadEntry.File("assets/assets.zip", p)).toList
       _            <- BagIt.create(
-             List(
-               PayloadEntry.Directory("rdf", rdfPath),
-               PayloadEntry.File("assets/assets.zip", assetZipPath),
-             ),
+             PayloadEntry.Directory("rdf", rdfPath) :: assetEntries,
              zipFile,
              bagInfo = Some(
                BagInfo(

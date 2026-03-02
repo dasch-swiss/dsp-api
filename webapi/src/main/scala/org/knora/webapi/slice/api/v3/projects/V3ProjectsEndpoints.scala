@@ -62,6 +62,11 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     )
     .post
     .in(exportsBase)
+    .in(
+      query[Boolean]("skipAssets")
+        .default(false)
+        .description("When true, binary assets are not included in the export."),
+    )
     .out(statusCode(StatusCode.Accepted))
     .out(jsonBody[DataTaskStatusResponse])
     .description(
