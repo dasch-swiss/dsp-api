@@ -77,7 +77,8 @@ final class ImportServiceLive(
              .whenZIO(Files.exists(importPath))
              .tapError(e => ZIO.logError(s"Failed to delete existing project folder $importPath: $e"))
              .mapError(IoError(_))
-      _ <- storageService.copyDirectory(bagRoot / "data", importPath)
+      _ <- storageService
+             .copyDirectory(bagRoot / "data", importPath)
              .tapError(e => ZIO.logError(s"Failed to copy ${bagRoot / "data"} to $importPath: $e"))
              .mapError(IoError(_))
       _ <- ZIO.logInfo(s"Imported project $shortcode successfully")
