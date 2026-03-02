@@ -125,7 +125,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
       exportProjectSuite,
       getAssetInfoSuite,
     ).provideSome[Scope](
-      DspIngestClient.layer,
+      DspIngestClientLive.layer,
       HttpMockServer.layer,
       TestPort.random,
       dspIngestConfigLayer,
