@@ -162,7 +162,7 @@ object Dependencies {
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
-    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.39.0",
+    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.40.0",
   )
 
   val integrationTestDependencies = Seq(
@@ -215,7 +215,7 @@ object Dependencies {
   val otelPyroscopeVersion = "v1.0.4"
   val hikariVersion        = "7.0.2"
   val quillVersion         = "4.8.6"
-  val sqliteVersion        = "3.51.1.1"
+  val sqliteVersion        = "3.51.2.0"
 
   val db = Seq(
     "org.xerial"   % "sqlite-jdbc"    % sqliteVersion,
