@@ -156,8 +156,10 @@ object ProjectServiceSpec extends ZIOSpecDefault {
               result        <- BagIt.readAndValidateZip(zipPath)
               bag            = result._1
               bagRoot        = result._2
-              sha512Manifest = bag.manifests.find(_.algorithm == ChecksumAlgorithm.SHA512).get
-              results       <- ZIO.foreach(sha512Manifest.entries) { entry =>
+              sha512Manifest = bag.manifests
+                                 .find(_.algorithm == ChecksumAlgorithm.SHA512)
+                                 .getOrElse(throw new RuntimeException("SHA-512 manifest is missing"))
+              results <- ZIO.foreach(sha512Manifest.entries) { entry =>
                            val filePath = bagRoot / entry.path.value
                            ZIO.attemptBlockingIO {
                              val digest = MessageDigest.getInstance("SHA-512")
