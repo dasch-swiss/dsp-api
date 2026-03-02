@@ -10,9 +10,6 @@ import zio.*
 import zio.nio.file.*
 import zio.stream.*
 
-import java.nio.file.CopyOption
-import scala.language.implicitConversions
-
 import org.knora.bagit.BagIt
 import org.knora.bagit.BagItError
 
@@ -62,18 +59,28 @@ final class ImportServiceLive(
       .mapError(IoError.apply)
 
   def importZipFile(projectPath: ProjectFolder, zipFile: Path): IO[ImportFailed, Unit] = ZIO.scoped {
+    val shortcode  = projectPath.shortcode
     val importPath = projectPath.path
     for {
+      _      <- ZIO.logInfo(s"Importing project $shortcode from $zipFile to $importPath")
       result <- BagIt
                   .readAndValidateZip(zipFile)
+                  .tapError(e => ZIO.logError(s"BagIt validation failed for project $shortcode: $e"))
                   .mapError {
                     case e: java.io.IOException => IoError(e)
                     case e: BagItError          => BagItValidationFailed(e.message)
                   }
       (_, bagRoot) = result
-      _           <- Files.deleteRecursive(importPath).whenZIO(Files.exists(importPath)).mapError(IoError(_))
-      _           <- Files.move(bagRoot / "data", importPath).mapError(IoError(_))
-      _           <- ZIO.logInfo(s"Imported project ${projectPath.shortcode} was successful")
+      _           <- ZIO.logDebug(s"BagIt validated, bagRoot=$bagRoot, moving ${bagRoot / "data"} to $importPath")
+      _           <- Files
+             .deleteRecursive(importPath)
+             .whenZIO(Files.exists(importPath))
+             .tapError(e => ZIO.logError(s"Failed to delete existing project folder $importPath: $e"))
+             .mapError(IoError(_))
+      _ <- storageService.copyDirectory(bagRoot / "data", importPath)
+             .tapError(e => ZIO.logError(s"Failed to copy ${bagRoot / "data"} to $importPath: $e"))
+             .mapError(IoError(_))
+      _ <- ZIO.logInfo(s"Imported project $shortcode successfully")
     } yield ()
   }
 

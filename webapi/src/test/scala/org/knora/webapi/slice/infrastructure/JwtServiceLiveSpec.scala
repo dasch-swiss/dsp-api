@@ -112,7 +112,9 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     test("create a token for dspIngest") {
       for {
         token <- JwtService(_.createJwtForDspIngest())
-        scope <- getScopeClaimValue(token.jwtString)
+        str    = token.jwtString
+        scope <- getScopeClaimValue(str)
+        _     <- ZIO.logError(s"Token:\n$str\n")
       } yield assertTrue(scope == "admin")
     },
     test("create a token with admin scope for project admins") {
@@ -139,6 +141,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
         userIri  <- getClaim(token.jwtString, _.subject)
         audience <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
         scope    <- getScopeClaimValue(token.jwtString)
+        _        <- ZIO.logError(s"Token:\n${token.jwtString}\n")
       } yield assertTrue(
         userIri.contains(dspApiIssuer),
         audience == Set(dspIngestAudience),
