@@ -107,7 +107,8 @@ object ProjectServiceSpec extends ZIOSpecDefault {
             for {
               zipPath <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
               result  <- BagIt.readAndValidateZip(zipPath)
-              bagInfo  = result._1.bagInfo.get
+              (bag, _) = result
+              bagInfo <- ZIO.fromOption(bag.bagInfo).orElseFail(new RuntimeException("bag-info.txt is missing"))
             } yield assertTrue(bagInfo.sourceOrganization.contains("DaSCH Service Platform"))
           }
         },
@@ -116,7 +117,8 @@ object ProjectServiceSpec extends ZIOSpecDefault {
             for {
               zipPath <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
               result  <- BagIt.readAndValidateZip(zipPath)
-              bagInfo  = result._1.bagInfo.get
+              (bag, _) = result
+              bagInfo <- ZIO.fromOption(bag.bagInfo).orElseFail(new RuntimeException("bag-info.txt is missing"))
             } yield assertTrue(bagInfo.externalIdentifier.contains(existingProject.value))
           }
         },
@@ -125,23 +127,25 @@ object ProjectServiceSpec extends ZIOSpecDefault {
             for {
               zipPath <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
               result  <- BagIt.readAndValidateZip(zipPath)
-              bagInfo  = result._1.bagInfo.get
+              (bag, _) = result
+              bagInfo <- ZIO.fromOption(bag.bagInfo).orElseFail(new RuntimeException("bag-info.txt is missing"))
             } yield assertTrue(bagInfo.additionalFields.contains("Ingest-Export-Version" -> "1"))
           }
         },
         test("Payload-Oxum matches actual file count and byte total") {
           ZIO.scoped {
             for {
-              zipPath    <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
-              result     <- BagIt.readAndValidateZip(zipPath)
-              bagInfo     = result._1.bagInfo.get
-              payloadOxum = bagInfo.payloadOxum.get
-              dataDir     = result._2 / "data"
-              files      <- Files.walk(dataDir).filterZIO(Files.isRegularFile(_)).runCollect
-              totalBytes <- ZIO.foreach(files)(f => Files.size(f)).map(_.sum)
+              zipPath       <- ProjectService.zipProject(existingProject).someOrFail(new Exception("export returned None"))
+              result        <- BagIt.readAndValidateZip(zipPath)
+              (bag, bagRoot) = result
+              bagInfo       <- ZIO.fromOption(bag.bagInfo).orElseFail(new RuntimeException("bag-info.txt is missing"))
+              payloadOxum    = bagInfo.payloadOxum
+              dataDir        = bagRoot / "data"
+              files         <- Files.walk(dataDir).filterZIO(Files.isRegularFile(_)).runCollect
+              totalBytes    <- ZIO.foreach(files)(Files.size).map(_.sum)
             } yield assertTrue(
-              payloadOxum.streamCount == files.size.toLong,
-              payloadOxum.octetCount == totalBytes,
+              payloadOxum.map(_.streamCount).contains(files.size.toLong),
+              payloadOxum.map(_.octetCount).contains(totalBytes),
             )
           }
         },
