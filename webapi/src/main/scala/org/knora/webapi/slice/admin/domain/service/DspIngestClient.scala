@@ -9,7 +9,6 @@ import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
 import zio.Scope
 import zio.Task
-import zio.ZEnvironment
 import zio.ZIO
 import zio.ZLayer
 import zio.http.Body
@@ -58,7 +57,7 @@ trait DspIngestClient {
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path]
 }
 
-final case class DspIngestClientLive(
+final class DspIngestClientLive(
   jwtService: JwtService,
   dspIngestConfig: DspIngestConfig,
   backend: StreamBackend[Task, ZioStreams],
@@ -121,8 +120,6 @@ final case class DspIngestClientLive(
   }
 }
 
-object DspIngestClient {
-  val layer = TracingHttpClient.layer >>> ZLayer
-    .derive[DspIngestClientLive]
-    .map(env => ZEnvironment(env.get[DspIngestClientLive]: DspIngestClient))
+object DspIngestClientLive {
+  val layer = TracingHttpClient.layer >>> ZLayer.derive[DspIngestClientLive]
 }
