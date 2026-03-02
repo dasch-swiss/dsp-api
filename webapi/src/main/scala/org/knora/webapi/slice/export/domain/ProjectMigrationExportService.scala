@@ -22,6 +22,7 @@ import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -38,6 +39,7 @@ final case class ExportFailedError(t: CurrentDataTask)
 
 final class ProjectMigrationExportService(
   currentExp: DataTaskState,
+  dspIngestClient: DspIngestClient,
   projectService: KnoraProjectService,
   storage: ProjectMigrationStorageService,
   triplestore: TriplestoreService,
@@ -57,11 +59,13 @@ final class ProjectMigrationExportService(
         _                     <- ZIO.logInfo(s"${task.id}: Exporting data for project '${project.id}' to '$exportPath'")
         rdfPath                = tempPath / "rdf"
         _                     <- Files.createDirectories(rdfPath)
-        _                     <- collectOntologyGraphs(task.id, project, rdfPath) <&>
+        assetZipPath           = tempPath / "assets" / "assets.zip"
+        _                     <- (collectOntologyGraphs(task.id, project, rdfPath) <&>
                collectProjectDataGraph(task.id, project, rdfPath) <&>
                collectAdminGraphData(task.id, project, rdfPath) <&>
-               collectPermissionsGraphData(task.id, project, rdfPath)
-        _ <- createBagItZip(task.id, rdfPath, project.id)
+               collectPermissionsGraphData(task.id, project, rdfPath)) <&>
+               exportAssets(task.id, project.shortcode, assetZipPath)
+        _ <- createBagItZip(task.id, rdfPath, assetZipPath, project.id)
         _ <- currentExp.complete(task.id).ignore
         _ <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
       } yield ()
@@ -69,6 +73,14 @@ final class ProjectMigrationExportService(
       ZIO.logError(s"${task.id}: Export failed for project ${project.id} with error: ${e.getMessage}") *>
         currentExp.fail(task.id).ignore,
     )
+
+  private def exportAssets(taskId: DataTaskId, shortcode: KnoraProject.Shortcode, targetPath: Path) =
+    for {
+      _ <- ZIO.logInfo(s"$taskId: Exporting assets for project '$shortcode' from ingest")
+      _ <- Files.createDirectories(targetPath.parent.get)
+      _ <- dspIngestClient.exportProject(shortcode, targetPath)
+      _ <- ZIO.logInfo(s"$taskId: Assets exported to '$targetPath'")
+    } yield ()
 
   private def collectOntologyGraphs(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) = for {
     graphs <- projectService.getOntologyGraphsForProject(project)
@@ -104,13 +116,16 @@ final class ProjectMigrationExportService(
              triplestore.queryToFile(query, permissionsDataNamedGraph, permissionFile, NQuads)
     } yield ()
 
-  private def createBagItZip(taskId: DataTaskId, rdfPath: Path, projectIri: ProjectIri) =
+  private def createBagItZip(taskId: DataTaskId, rdfPath: Path, assetZipPath: Path, projectIri: ProjectIri) =
     for {
       zipFile      <- storage.exportBagItZipPath(taskId)
       externalHost <- AppConfig.knoraApi(_.externalHost)
       _            <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
       _            <- BagIt.create(
-             List(PayloadEntry.Directory("rdf", rdfPath)),
+             List(
+               PayloadEntry.Directory("rdf", rdfPath),
+               PayloadEntry.File("assets/assets.zip", assetZipPath),
+             ),
              zipFile,
              bagInfo = Some(
                BagInfo(
@@ -183,8 +198,7 @@ final class ProjectMigrationExportService(
 
 object ProjectMigrationExportService {
   val layer: URLayer[
-    KnoraProjectService & ProjectMigrationStorageService & TriplestoreService,
+    DspIngestClient & KnoraProjectService & ProjectMigrationStorageService & TriplestoreService,
     ProjectMigrationExportService,
   ] = FilesystemDataTaskPersistence.exportLayer >>> ZLayer.derive[ProjectMigrationExportService]
-
 }
