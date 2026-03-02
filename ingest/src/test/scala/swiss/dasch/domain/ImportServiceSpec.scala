@@ -10,6 +10,7 @@ import swiss.dasch.test.SpecConstants.Projects.*
 import swiss.dasch.util.TestUtils
 import zio.*
 import zio.nio.file.Files
+import zio.nio.file.Path
 import zio.stream.ZStream
 import zio.test.*
 
@@ -19,9 +20,9 @@ import java.security.MessageDigest
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
+
 import org.knora.bagit.BagIt
 import org.knora.bagit.domain.PayloadEntry
-import zio.nio.file.Path
 
 object ImportServiceSpec extends ZIOSpecDefault {
 
