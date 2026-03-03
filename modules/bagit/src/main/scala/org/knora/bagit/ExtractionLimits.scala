@@ -6,9 +6,9 @@
 package org.knora.bagit
 
 final case class ExtractionLimits(
-  maxTotalBytes: Long = 10L * 1024 * 1024 * 1024,
+  maxTotalBytes: Long = 200L * 1024 * 1024 * 1024,
   maxEntryCount: Int = 100_000,
-  maxSingleEntryBytes: Long = 5L * 1024 * 1024 * 1024,
+  maxSingleEntryBytes: Long = 20L * 1024 * 1024 * 1024,
 )
 
 object ExtractionLimits {
