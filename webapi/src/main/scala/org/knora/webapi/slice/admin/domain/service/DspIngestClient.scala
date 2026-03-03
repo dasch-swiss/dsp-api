@@ -87,11 +87,13 @@ final class DspIngestClientLive(
     for {
       request <- authenticatedRequest.map {
                    _.post(uri"${projectsPath(shortcode)}/export")
-                     .readTimeout(30.minutes)
+                     .readTimeout(60.minutes)
                      .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(outputFile.toFile))))
                  }
       response <- request.send(backend)
-      _        <- ZIO.logInfo(s"Response from ingest :${response.code}")
+      _        <- ZIO
+             .fail(new IOException(s"Export asset from ingest project $shortcode failed, code: ${response.code}"))
+             .unless(response.code.isSuccess)
     } yield ()
 
   def eraseProject(shortcode: Shortcode): Task[Unit] = for {
