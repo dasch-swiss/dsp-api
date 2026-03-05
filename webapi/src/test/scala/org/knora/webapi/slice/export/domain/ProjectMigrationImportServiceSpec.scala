@@ -723,10 +723,12 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           stream <- buildBagItZip()
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
-          // Give scope cleanup a moment to complete (cleanup runs after task is marked Completed)
-          _          <- ZIO.sleep(200.millis)
-          zipPath    <- env.storage.importBagItZipPath(task.id)
-          tempDir     = zipPath.parent.get / "temp"
+          zipPath <- env.storage.importBagItZipPath(task.id)
+          tempDir  = zipPath.parent.get / "temp"
+          // Scope finalizer deletes temp dir after task is marked Completed, so poll for deletion
+          _ <- Files.exists(tempDir).flatMap(exists => ZIO.fail(()).when(exists)).retry(
+                 Schedule.spaced(100.millis) && Schedule.recurs(50),
+               ).ignore
           zipExists  <- Files.exists(zipPath)
           tempExists <- Files.exists(tempDir)
           _          <- cleanupImport(env, task.id)
