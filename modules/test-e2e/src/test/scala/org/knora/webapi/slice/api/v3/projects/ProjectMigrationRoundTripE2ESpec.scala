@@ -19,9 +19,9 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.DataTaskStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.v3.Conflict
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.security.ScopeResolver
@@ -45,154 +45,154 @@ object ProjectMigrationRoundTripE2ESpec extends E2EZSpec {
       for {
         exportIdRef <- Ref.make(Option.empty[DataTaskId])
         importIdRef <- Ref.make(Option.empty[DataTaskId])
-        result <- {
-          for {
-            // Step 1: Collect user IRIs belonging to the project (needed for cleanup before import)
-            userIris <- findProjectUserIris(projectIri)
+        result      <- {
+                    for {
+                      // Step 1: Collect user IRIs belonging to the project (needed for cleanup before import)
+                      userIris <- findProjectUserIris(projectIri)
 
-            // Step 2: Export the project (skip assets for this test)
-            exportStatus <- triggerExportWithCleanup(skipAssets = true)
-            exportId      = exportStatus.id
-            _            <- exportIdRef.set(Some(exportId))
+                      // Step 2: Export the project (skip assets for this test)
+                      exportStatus <- triggerExportWithCleanup(skipAssets = true)
+                      exportId      = exportStatus.id
+                      _            <- exportIdRef.set(Some(exportId))
 
-            // Step 3: Poll export until completed
-            _ <- pollExportUntilCompleted(exportId)
-                   .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                      // Step 3: Poll export until completed
+                      _ <- pollExportUntilCompleted(exportId)
+                             .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
 
-            // Step 4: Download the export zip
-            zipBytes <- downloadExportBytes(exportId)
+                      // Step 4: Download the export zip
+                      zipBytes <- downloadExportBytes(exportId)
 
-            // Step 5: Erase the project (keepAssets=true since we exported without assets)
-            eraseResp <- TestApiClient.deleteJson[Json](
-                           uri"/admin/projects/shortcode/${shortcode.value}/erase?keepAssets=true",
-                           rootUser,
-                         )
+                      // Step 5: Erase the project (keepAssets=true since we exported without assets)
+                      eraseResp <- TestApiClient.deleteJson[Json](
+                                     uri"/admin/projects/shortcode/${shortcode.value}/erase?keepAssets=true",
+                                     rootUser,
+                                   )
 
-            // Step 6: Hard-delete the users from the admin graph so import validation passes
-            _ <- ZIO.foreachDiscard(userIris)(hardDeleteUser)
+                      // Step 6: Hard-delete the users from the admin graph so import validation passes
+                      _ <- ZIO.foreachDiscard(userIris)(hardDeleteUser)
 
-            // Step 7: Verify project is gone
-            projectGone <- TestAdminApiClient.getProject(shortcode, rootUser)
+                      // Step 7: Verify project is gone
+                      projectGone <- TestAdminApiClient.getProject(shortcode, rootUser)
 
-            // Step 8: Import the exported zip
-            importStatus <- triggerImportWithCleanup(zipBytes)
-            importId      = importStatus.id
-            _            <- importIdRef.set(Some(importId))
+                      // Step 8: Import the exported zip
+                      importStatus <- triggerImportWithCleanup(zipBytes)
+                      importId      = importStatus.id
+                      _            <- importIdRef.set(Some(importId))
 
-            // Step 9: Poll import until completed
-            completed <- pollImportUntilDone(importId)
-                           .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                      // Step 9: Poll import until completed
+                      completed <- pollImportUntilDone(importId)
+                                     .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
 
-            // Step 10: Verify project is restored
-            projectRestored <- TestAdminApiClient.getProject(shortcode, rootUser)
+                      // Step 10: Verify project is restored
+                      projectRestored <- TestAdminApiClient.getProject(shortcode, rootUser)
 
-            // Cleanup
-            _ <- deleteImport(importId)
-            _ <- importIdRef.set(None)
-            _ <- deleteExport(exportId)
-            _ <- exportIdRef.set(None)
-          } yield assertTrue(
-            eraseResp.code == StatusCode.Ok,
-            projectGone.code == StatusCode.NotFound,
-            completed.status == DataTaskStatus.Completed,
-            projectRestored.code == StatusCode.Ok,
-          )
-        }.ensuring {
-          for {
-            importId <- importIdRef.get
-            _ <- ZIO.foreachDiscard(importId) { id =>
-                   pollImportUntilDone(id)
-                     .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
-                     .ignore *> deleteImport(id)
-                 }
-            exportId <- exportIdRef.get
-            _        <- ZIO.foreachDiscard(exportId)(deleteExport)
-          } yield ()
-        }
+                      // Cleanup
+                      _ <- deleteImport(importId)
+                      _ <- importIdRef.set(None)
+                      _ <- deleteExport(exportId)
+                      _ <- exportIdRef.set(None)
+                    } yield assertTrue(
+                      eraseResp.code == StatusCode.Ok,
+                      projectGone.code == StatusCode.NotFound,
+                      completed.status == DataTaskStatus.Completed,
+                      projectRestored.code == StatusCode.Ok,
+                    )
+                  }.ensuring {
+                    for {
+                      importId <- importIdRef.get
+                      _        <- ZIO.foreachDiscard(importId) { id =>
+                             pollImportUntilDone(id)
+                               .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                               .ignore *> deleteImport(id)
+                           }
+                      exportId <- exportIdRef.get
+                      _        <- ZIO.foreachDiscard(exportId)(deleteExport)
+                    } yield ()
+                  }
       } yield result
     },
     test("export with assets, erase, import with assets round-trip succeeds") {
       for {
         exportIdRef <- Ref.make(Option.empty[DataTaskId])
         importIdRef <- Ref.make(Option.empty[DataTaskId])
-        result <- {
-          for {
-            // Step 1: Upload a test asset to ingest for the project
-            _ <- TestDspIngestClient.createImageAsset(shortcode)
+        result      <- {
+                    for {
+                      // Step 1: Upload a test asset to ingest for the project
+                      _ <- TestDspIngestClient.createImageAsset(shortcode)
 
-            // Step 2: Collect user IRIs belonging to the project
-            userIris <- findProjectUserIris(projectIri)
+                      // Step 2: Collect user IRIs belonging to the project
+                      userIris <- findProjectUserIris(projectIri)
 
-            // Step 3: Export the project WITH assets (skipAssets=false, the default)
-            exportStatus <- triggerExportWithCleanup(skipAssets = false)
-            exportId      = exportStatus.id
-            _            <- exportIdRef.set(Some(exportId))
+                      // Step 3: Export the project WITH assets (skipAssets=false, the default)
+                      exportStatus <- triggerExportWithCleanup(skipAssets = false)
+                      exportId      = exportStatus.id
+                      _            <- exportIdRef.set(Some(exportId))
 
-            // Step 4: Poll export until completed
-            _ <- pollExportUntilCompleted(exportId)
-                   .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                      // Step 4: Poll export until completed
+                      _ <- pollExportUntilCompleted(exportId)
+                             .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
 
-            // Step 5: Download the export zip
-            zipBytes <- downloadExportBytes(exportId)
+                      // Step 5: Download the export zip
+                      zipBytes <- downloadExportBytes(exportId)
 
-            // Step 6: Validate the BagIt zip contains assets/assets.zip
-            hasAssets <- ZIO.scoped {
-                           for {
-                             tempDir <- Files.createTempDirectoryScoped(Some("bagit-asset-test"), Seq.empty)
-                             zipPath  = tempDir / "export.zip"
-                             _       <- Files.writeBytes(zipPath, Chunk.fromArray(zipBytes))
-                             result  <- BagIt.readAndValidateZip(zipPath)
-                           } yield result._1.payloadFiles.map(_.value).exists(_ == "assets/assets.zip")
-                         }
+                      // Step 6: Validate the BagIt zip contains assets/assets.zip
+                      hasAssets <- ZIO.scoped {
+                                     for {
+                                       tempDir <- Files.createTempDirectoryScoped(Some("bagit-asset-test"), Seq.empty)
+                                       zipPath  = tempDir / "export.zip"
+                                       _       <- Files.writeBytes(zipPath, Chunk.fromArray(zipBytes))
+                                       result  <- BagIt.readAndValidateZip(zipPath)
+                                     } yield result._1.payloadFiles.map(_.value).exists(_ == "assets/assets.zip")
+                                   }
 
-            // Step 7: Erase the project INCLUDING assets (keepAssets=false)
-            eraseResp <- TestApiClient.deleteJson[Json](
-                           uri"/admin/projects/shortcode/${shortcode.value}/erase",
-                           rootUser,
-                         )
+                      // Step 7: Erase the project INCLUDING assets (keepAssets=false)
+                      eraseResp <- TestApiClient.deleteJson[Json](
+                                     uri"/admin/projects/shortcode/${shortcode.value}/erase",
+                                     rootUser,
+                                   )
 
-            // Step 8: Hard-delete the users
-            _ <- ZIO.foreachDiscard(userIris)(hardDeleteUser)
+                      // Step 8: Hard-delete the users
+                      _ <- ZIO.foreachDiscard(userIris)(hardDeleteUser)
 
-            // Step 9: Verify project is gone
-            projectGone <- TestAdminApiClient.getProject(shortcode, rootUser)
+                      // Step 9: Verify project is gone
+                      projectGone <- TestAdminApiClient.getProject(shortcode, rootUser)
 
-            // Step 10: Import the exported zip (includes assets)
-            importStatus <- triggerImportWithCleanup(zipBytes)
-            importId      = importStatus.id
-            _            <- importIdRef.set(Some(importId))
+                      // Step 10: Import the exported zip (includes assets)
+                      importStatus <- triggerImportWithCleanup(zipBytes)
+                      importId      = importStatus.id
+                      _            <- importIdRef.set(Some(importId))
 
-            // Step 11: Poll import until completed
-            completed <- pollImportUntilDone(importId)
-                           .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                      // Step 11: Poll import until completed
+                      completed <- pollImportUntilDone(importId)
+                                     .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
 
-            // Step 12: Verify project is restored
-            projectRestored <- TestAdminApiClient.getProject(shortcode, rootUser)
+                      // Step 12: Verify project is restored
+                      projectRestored <- TestAdminApiClient.getProject(shortcode, rootUser)
 
-            // Cleanup
-            _ <- deleteImport(importId)
-            _ <- importIdRef.set(None)
-            _ <- deleteExport(exportId)
-            _ <- exportIdRef.set(None)
-          } yield assertTrue(
-            hasAssets,
-            eraseResp.code == StatusCode.Ok,
-            projectGone.code == StatusCode.NotFound,
-            completed.status == DataTaskStatus.Completed,
-            projectRestored.code == StatusCode.Ok,
-          )
-        }.ensuring {
-          for {
-            importId <- importIdRef.get
-            _ <- ZIO.foreachDiscard(importId) { id =>
-                   pollImportUntilDone(id)
-                     .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
-                     .ignore *> deleteImport(id)
-                 }
-            exportId <- exportIdRef.get
-            _        <- ZIO.foreachDiscard(exportId)(deleteExport)
-          } yield ()
-        }
+                      // Cleanup
+                      _ <- deleteImport(importId)
+                      _ <- importIdRef.set(None)
+                      _ <- deleteExport(exportId)
+                      _ <- exportIdRef.set(None)
+                    } yield assertTrue(
+                      hasAssets,
+                      eraseResp.code == StatusCode.Ok,
+                      projectGone.code == StatusCode.NotFound,
+                      completed.status == DataTaskStatus.Completed,
+                      projectRestored.code == StatusCode.Ok,
+                    )
+                  }.ensuring {
+                    for {
+                      importId <- importIdRef.get
+                      _        <- ZIO.foreachDiscard(importId) { id =>
+                             pollImportUntilDone(id)
+                               .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+                               .ignore *> deleteImport(id)
+                           }
+                      exportId <- exportIdRef.get
+                      _        <- ZIO.foreachDiscard(exportId)(deleteExport)
+                    } yield ()
+                  }
       } yield result
     },
   )
