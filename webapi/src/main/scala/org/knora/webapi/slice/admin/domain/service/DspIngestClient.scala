@@ -91,10 +91,11 @@ final class DspIngestClientLive(
                      .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(outputFile.toFile))))
                  }
       response <- request.send(backend)
-      result   <- if (response.code == sttp.model.StatusCode.NotFound) ZIO.none
-                  else if (!response.code.isSuccess)
-                    ZIO.fail(new IOException(s"Export asset from ingest project $shortcode failed, code: ${response.code}"))
-                  else ZIO.some(outputFile)
+      result   <-
+        if (response.code == sttp.model.StatusCode.NotFound) ZIO.none
+        else if (!response.code.isSuccess)
+          ZIO.fail(new IOException(s"Export asset from ingest project $shortcode failed, code: ${response.code}"))
+        else ZIO.some(outputFile)
     } yield result
 
   def eraseProject(shortcode: Shortcode): Task[Unit] = for {

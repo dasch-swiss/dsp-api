@@ -70,8 +70,8 @@ final class ProjectMigrationExportService(
                        collectPermissionsGraphData(task.id, project, rdfPath)
         assetResult <- collectRdf.zipParRight(exportAssets(task.id, project.shortcode, assetZipPath, skipAssets))
         _           <- createBagItZip(task.id, rdfPath, assetResult, project.id)
-        _ <- currentExp.complete(task.id).ignore
-        _ <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
+        _           <- currentExp.complete(task.id).ignore
+        _           <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
       } yield ()
     }.logError.catchAll(e =>
       ZIO.logError(s"${task.id}: Export failed for project ${project.id} with error: ${e.getMessage}") *>
@@ -91,9 +91,12 @@ final class ProjectMigrationExportService(
         _      <- Files.createDirectories(targetPath.parent.get)
         result <- dspIngestClient.exportProject(shortcode, targetPath)
         _      <- result match {
-                    case Some(_) => ZIO.logInfo(s"$taskId: Assets exported to '$targetPath'")
-                    case None    => ZIO.logWarning(s"$taskId: No assets found for project '$shortcode' on ingest, continuing without assets")
-                  }
+               case Some(_) => ZIO.logInfo(s"$taskId: Assets exported to '$targetPath'")
+               case None    =>
+                 ZIO.logWarning(
+                   s"$taskId: No assets found for project '$shortcode' on ingest, continuing without assets",
+                 )
+             }
       } yield result
 
   private def collectOntologyGraphs(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) = for {
