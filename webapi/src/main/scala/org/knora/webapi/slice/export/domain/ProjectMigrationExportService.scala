@@ -68,9 +68,8 @@ final class ProjectMigrationExportService(
                        collectProjectDataGraph(task.id, project, rdfPath) <&>
                        collectAdminGraphData(task.id, project, rdfPath) <&>
                        collectPermissionsGraphData(task.id, project, rdfPath)
-        _ <- if (skipAssets) collectRdf
-             else collectRdf <&> exportAssets(task.id, project.shortcode, assetZipPath)
-        _ <- createBagItZip(task.id, rdfPath, Option.unless(skipAssets)(assetZipPath), project.id)
+        assetResult <- collectRdf.zipParRight(exportAssets(task.id, project.shortcode, assetZipPath, skipAssets))
+        _           <- createBagItZip(task.id, rdfPath, assetResult, project.id)
         _ <- currentExp.complete(task.id).ignore
         _ <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
       } yield ()
@@ -79,13 +78,23 @@ final class ProjectMigrationExportService(
         currentExp.fail(task.id).ignore,
     )
 
-  private def exportAssets(taskId: DataTaskId, shortcode: KnoraProject.Shortcode, targetPath: Path) =
-    for {
-      _ <- ZIO.logInfo(s"$taskId: Exporting assets for project '$shortcode' from ingest")
-      _ <- Files.createDirectories(targetPath.parent.get)
-      _ <- dspIngestClient.exportProject(shortcode, targetPath)
-      _ <- ZIO.logInfo(s"$taskId: Assets exported to '$targetPath'")
-    } yield ()
+  private def exportAssets(
+    taskId: DataTaskId,
+    shortcode: KnoraProject.Shortcode,
+    targetPath: Path,
+    skipAssets: Boolean,
+  ): Task[Option[Path]] =
+    if (skipAssets) ZIO.none
+    else
+      for {
+        _      <- ZIO.logInfo(s"$taskId: Exporting assets for project '$shortcode' from ingest")
+        _      <- Files.createDirectories(targetPath.parent.get)
+        result <- dspIngestClient.exportProject(shortcode, targetPath)
+        _      <- result match {
+                    case Some(_) => ZIO.logInfo(s"$taskId: Assets exported to '$targetPath'")
+                    case None    => ZIO.logWarning(s"$taskId: No assets found for project '$shortcode' on ingest, continuing without assets")
+                  }
+      } yield result
 
   private def collectOntologyGraphs(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) = for {
     graphs <- projectService.getOntologyGraphsForProject(project)

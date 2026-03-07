@@ -52,7 +52,7 @@ object AssetInfoResponse {
 
 trait DspIngestClient {
   def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse]
-  def exportProject(shortcode: Shortcode, outputFile: Path): Task[Unit]
+  def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]]
   def eraseProject(shortcode: Shortcode): Task[Unit]
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path]
 }
@@ -83,7 +83,7 @@ final class DspIngestClientLive(
                   .mapError(err => new IOException(s"Error parsing response: $err"))
     } yield result
 
-  def exportProject(shortcode: Shortcode, outputFile: Path): Task[Unit] =
+  def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] =
     for {
       request <- authenticatedRequest.map {
                    _.post(uri"${projectsPath(shortcode)}/export")
@@ -91,10 +91,11 @@ final class DspIngestClientLive(
                      .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(outputFile.toFile))))
                  }
       response <- request.send(backend)
-      _        <- ZIO
-             .fail(new IOException(s"Export asset from ingest project $shortcode failed, code: ${response.code}"))
-             .unless(response.code.isSuccess)
-    } yield ()
+      result   <- if (response.code == sttp.model.StatusCode.NotFound) ZIO.none
+                  else if (!response.code.isSuccess)
+                    ZIO.fail(new IOException(s"Export asset from ingest project $shortcode failed, code: ${response.code}"))
+                  else ZIO.some(outputFile)
+    } yield result
 
   def eraseProject(shortcode: Shortcode): Task[Unit] = for {
     request  <- authenticatedRequest.map(_.delete(uri"${projectsPath(shortcode)}/erase"))

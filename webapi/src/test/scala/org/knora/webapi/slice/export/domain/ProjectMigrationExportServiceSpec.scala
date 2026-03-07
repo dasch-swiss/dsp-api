@@ -41,9 +41,9 @@ object ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
   private def stubDspIngestClient(exportProjectCalled: Ref[Boolean]): DspIngestClient = new DspIngestClient {
     override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
       ZIO.die(new UnsupportedOperationException("not used in export tests"))
-    override def exportProject(shortcode: Shortcode, outputFile: Path): Task[Unit] =
+    override def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] =
       exportProjectCalled.set(true) *> Files.createDirectories(outputFile.parent.get) *>
-        Files.writeBytes(outputFile, Chunk.fromArray("fake-zip".getBytes))
+        Files.writeBytes(outputFile, Chunk.fromArray("fake-zip".getBytes)).as(Some(outputFile))
     override def eraseProject(shortcode: Shortcode): Task[Unit] =
       ZIO.die(new UnsupportedOperationException("not used in export tests"))
     override def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] =
