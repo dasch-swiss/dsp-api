@@ -59,6 +59,7 @@ cd ../dsp-das && npm run start-local
 ```
 
 Key points:
+
 - Data initialization happens FIRST, before the API starts, so caches are populated correctly
 - Use `make init-db-test` instead of `just stack-init-test` to avoid the destructive teardown/rebuild cycle
 - Explicitly stop the `app` container after `stack-start-dev` to free port 4200
