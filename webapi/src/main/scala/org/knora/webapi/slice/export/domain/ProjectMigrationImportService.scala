@@ -112,6 +112,8 @@ final class ProjectMigrationImportService(
                          _         <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
                          _         <- validateNoSystemAdminUsers(model)
                          _         <- ZIO.logInfo(s"$taskId: System admin user checks passed for project '$projectIri'")
+                         _         <- validateNoBuiltInSystemUser(model)
+                         _         <- ZIO.logInfo(s"$taskId: Built-in system user checks passed for project '$projectIri'")
                          _         <- validateGroupsNotExist(model)
                          _         <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
                        } yield shortcode
@@ -279,6 +281,16 @@ final class ProjectMigrationImportService(
       .when(systemAdminUsers.nonEmpty) {
         val iris = systemAdminUsers.map(_.getURI).mkString(", ")
         ZIO.fail(new RuntimeException(s"Import contains system admin user(s): $iris"))
+      }
+      .unit
+  }
+
+  private def validateNoBuiltInSystemUser(model: Model): Task[Unit] = {
+    val systemUserIri = "http://www.knora.org/ontology/knora-admin#SystemUser"
+    val resource      = model.getResource(systemUserIri)
+    ZIO
+      .when(resource.listProperties().hasNext) {
+        ZIO.fail(new RuntimeException(s"Import contains the built-in SystemUser ($systemUserIri)"))
       }
       .unit
   }

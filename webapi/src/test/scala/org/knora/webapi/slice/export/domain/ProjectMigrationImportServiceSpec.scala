@@ -590,6 +590,30 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
+    test("rejects import containing the built-in SystemUser") {
+      val adminNqWithSystemUser =
+        s"""<http://rdfh.ch/projects/9999> <$RdfType> <${KnoraAdminPrefix}knoraProject> <$AdminGraph> .
+           |<http://rdfh.ch/projects/9999> <${KnoraAdminPrefix}projectShortcode> "9999" <$AdminGraph> .
+           |<http://www.knora.org/ontology/knora-admin#SystemUser> <$RdfType> <${KnoraAdminPrefix}User> <$AdminGraph> .
+           |<http://www.knora.org/ontology/knora-admin#SystemUser> <${KnoraAdminPrefix}email> "system@localhost" <$AdminGraph> .
+           |<http://www.knora.org/ontology/knora-admin#SystemUser> <${KnoraAdminPrefix}username> "system" <$AdminGraph> .
+           |""".stripMargin
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      payloadFiles = Map(
+                        "rdf/admin.nq"      -> adminNqWithSystemUser,
+                        "rdf/data.nq"       -> dataNq,
+                        "rdf/ontology-0.nq" -> ontologyNq,
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed)
+      }
+    },
     test("rejects malformed admin.nq") {
       ZIO.scoped {
         for {
