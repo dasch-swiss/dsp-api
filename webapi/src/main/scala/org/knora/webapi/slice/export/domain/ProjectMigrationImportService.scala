@@ -110,6 +110,8 @@ final class ProjectMigrationImportService(
                          _         <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
                          _         <- validateUsersNotExist(model)
                          _         <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
+                         _         <- validateNoSystemAdminUsers(model)
+                         _         <- ZIO.logInfo(s"$taskId: System admin user checks passed for project '$projectIri'")
                          _         <- validateGroupsNotExist(model)
                          _         <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
                        } yield shortcode
@@ -264,6 +266,21 @@ final class ProjectMigrationImportService(
              )
       } yield ()
     }
+  }
+
+  private def validateNoSystemAdminUsers(model: Model): Task[Unit] = {
+    val userResources    = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.User: Resource).asScala.toList
+    val systemAdminUsers = userResources.filter { userResource =>
+      val prop: org.apache.jena.rdf.model.Property = KnoraAdmin.IsInSystemAdminGroup
+      val stmt                                     = userResource.getProperty(prop)
+      stmt != null && stmt.getObject.isLiteral && stmt.getLiteral.getBoolean
+    }
+    ZIO
+      .when(systemAdminUsers.nonEmpty) {
+        val iris = systemAdminUsers.map(_.getURI).mkString(", ")
+        ZIO.fail(new RuntimeException(s"Import contains system admin user(s): $iris"))
+      }
+      .unit
   }
 
   private def validateRdfPayloadFiles(bagRoot: Path): Task[Chunk[Path]] = {
