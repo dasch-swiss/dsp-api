@@ -114,6 +114,8 @@ final class ProjectMigrationImportService(
                          _         <- ZIO.logInfo(s"$taskId: System admin user checks passed for project '$projectIri'")
                          _         <- validateNoBuiltInSystemUser(model)
                          _         <- ZIO.logInfo(s"$taskId: Built-in system user checks passed for project '$projectIri'")
+                         _         <- validateAllUsersInProject(model, projectIri)
+                         _         <- ZIO.logInfo(s"$taskId: All users in project checks passed for project '$projectIri'")
                          _         <- validateGroupsNotExist(model)
                          _         <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
                        } yield shortcode
@@ -291,6 +293,23 @@ final class ProjectMigrationImportService(
     ZIO
       .when(resource.listProperties().hasNext) {
         ZIO.fail(new RuntimeException(s"Import contains the built-in SystemUser ($systemUserIri)"))
+      }
+      .unit
+  }
+
+  private def validateAllUsersInProject(model: Model, projectIri: ProjectIri): Task[Unit] = {
+    val userResources     = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.User: Resource).asScala.toList
+    val projectResource   = model.getResource(projectIri.value)
+    val usersNotInProject = userResources.filter { userResource =>
+      val prop: org.apache.jena.rdf.model.Property = KnoraAdmin.IsInProject
+      !userResource.hasProperty(prop, projectResource)
+    }
+    ZIO
+      .when(usersNotInProject.nonEmpty) {
+        val iris = usersNotInProject.map(_.getURI).mkString(", ")
+        ZIO.fail(
+          new RuntimeException(s"Import contains user(s) not in project $projectIri: $iris"),
+        )
       }
       .unit
   }
