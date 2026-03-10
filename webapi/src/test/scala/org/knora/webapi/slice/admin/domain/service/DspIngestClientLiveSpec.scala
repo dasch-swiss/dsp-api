@@ -75,9 +75,11 @@ object DspIngestClientSpec extends ZIOSpecDefault {
                .withBody(testContent)
                .withStatus(200),
            )
+      tempDir   <- Files.createTempDirectoryScoped(Some("export-test"), List.empty)
+      outputFile = tempDir / "export.zip"
 
       // when
-      path <- withDspIngestClient(_.exportProject(testShortcode))
+      _ <- withDspIngestClient(_.exportProject(testShortcode, outputFile))
 
       // then
       mockJwt <- getTokenForDspIngest
@@ -85,7 +87,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
              postRequestedFor(urlPathEqualTo(expectedUrl))
                .withHeader("Authorization", equalTo(s"Bearer $mockJwt")),
            )
-      contentIsDownloaded <- Files.readAllBytes(path).map(_.toArray).map(_ sameElements testContent)
+      contentIsDownloaded <- Files.readAllBytes(outputFile).map(_.toArray).map(_ sameElements testContent)
     } yield assertTrue(contentIsDownloaded)
   })
 
@@ -123,7 +125,7 @@ object DspIngestClientSpec extends ZIOSpecDefault {
       exportProjectSuite,
       getAssetInfoSuite,
     ).provideSome[Scope](
-      DspIngestClient.layer,
+      DspIngestClientLive.layer,
       HttpMockServer.layer,
       TestPort.random,
       dspIngestConfigLayer,

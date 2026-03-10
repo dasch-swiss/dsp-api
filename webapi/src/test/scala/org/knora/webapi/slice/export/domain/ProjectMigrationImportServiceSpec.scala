@@ -24,6 +24,7 @@ import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -73,6 +74,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
       "rdf/data.nq"       -> dataNq,
       "rdf/ontology-0.nq" -> ontologyNq,
     ),
+    binaryPayloadFiles: Map[String, Array[Byte]] = Map.empty,
   ): ZIO[Scope, Throwable, ZStream[Any, Throwable, Byte]] =
     for {
       tempDir <- Files.createTempDirectoryScoped(Some("bagit-builder"), Seq.empty)
@@ -81,13 +83,19 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
              Files.createDirectories(filePath.parent.get) *>
                Files.writeBytes(filePath, Chunk.fromArray(content.getBytes(StandardCharsets.UTF_8)))
            }
+      _ <- ZIO.foreachDiscard(binaryPayloadFiles) { case (name, content) =>
+             val filePath = tempDir / name
+             Files.createDirectories(filePath.parent.get) *>
+               Files.writeBytes(filePath, Chunk.fromArray(content))
+           }
       bagInfo = BagInfo(
                   externalIdentifier = externalIdentifier,
                   additionalFields = bagInfoFields,
                 )
-      entries = payloadFiles.keys.map(name => PayloadEntry.File(name, tempDir / name)).toList
-      zipPath = tempDir / "output.zip"
-      _      <- BagIt.create(entries, zipPath, bagInfo = Some(bagInfo))
+      allNames = payloadFiles.keys ++ binaryPayloadFiles.keys
+      entries  = allNames.map(name => PayloadEntry.File(name, tempDir / name)).toList
+      zipPath  = tempDir / "output.zip"
+      _       <- BagIt.create(entries, zipPath, bagInfo = Some(bagInfo))
     } yield ZStream.fromFile(zipPath.toFile)
 
   // === Stub Implementations ===
@@ -236,11 +244,25 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     groupFindByNameRef: Ref[GroupName => Task[Option[KnoraGroup]]],
     uploadedBytesRef: Ref[Chunk[Byte]],
     refreshCacheCalled: Ref[Boolean],
+    ingestImportCalls: Ref[Option[(Shortcode, Path)]],
   )
 
   private val configLayer: ULayer[Unit] = Runtime.setConfigProvider(
     TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve),
   )
+
+  private def stubDspIngestClient(
+    ingestImportCalls: Ref[Option[(Shortcode, Path)]],
+  ): DspIngestClient = new DspIngestClient {
+    override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
+      ZIO.die(new UnsupportedOperationException("not used in import tests"))
+    override def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] =
+      ZIO.die(new UnsupportedOperationException("not used in import tests"))
+    override def eraseProject(shortcode: Shortcode): Task[Unit] =
+      ZIO.die(new UnsupportedOperationException("not used in import tests"))
+    override def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] =
+      ingestImportCalls.set(Some((shortcode, fileToImport))).as(fileToImport)
+  }
 
   private val makeTestEnv: ZIO[Any, Nothing, TestEnv] = for {
     projectFindByIdRef        <- Ref.make[ProjectIri => Task[Option[KnoraProject]]](_ => ZIO.none)
@@ -252,12 +274,14 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     groupFindByNameRef        <- Ref.make[GroupName => Task[Option[KnoraGroup]]](_ => ZIO.none)
     uploadedBytesRef          <- Ref.make[Chunk[Byte]](Chunk.empty)
     refreshCacheCalled        <- Ref.make[Boolean](false)
+    ingestImportCalls         <- Ref.make[Option[(Shortcode, Path)]](None)
 
-    projectRepo   = stubProjectRepo(projectFindByIdRef, projectFindByShortcodeRef)
-    userRepo      = stubUserRepo(userFindByIdRef, userFindByEmailRef, userFindByUsernameRef)
-    groupRepo     = stubGroupRepo(groupFindByIdRef, groupFindByNameRef)
-    triplestore   = stubTriplestoreService(uploadedBytesRef)
-    ontologyCache = stubOntologyCache(refreshCacheCalled)
+    projectRepo     = stubProjectRepo(projectFindByIdRef, projectFindByShortcodeRef)
+    userRepo        = stubUserRepo(userFindByIdRef, userFindByEmailRef, userFindByUsernameRef)
+    groupRepo       = stubGroupRepo(groupFindByIdRef, groupFindByNameRef)
+    triplestore     = stubTriplestoreService(uploadedBytesRef)
+    ontologyCache   = stubOntologyCache(refreshCacheCalled)
+    dspIngestClient = stubDspIngestClient(ingestImportCalls)
 
     // Construct services with mock repos; null for unused dependencies
     projectService = KnoraProjectService(projectRepo, null, null)
@@ -275,6 +299,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     service       =
       new ProjectMigrationImportService(
         taskState,
+        dspIngestClient,
         groupService,
         projectService,
         storage,
@@ -294,6 +319,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     groupFindByNameRef,
     uploadedBytesRef,
     refreshCacheCalled,
+    ingestImportCalls,
   )
 
   override def spec: Spec[Any, Any] = suite("ProjectMigrationImportService")(
@@ -693,14 +719,20 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     test("temp directory is cleaned up on success") {
       ZIO.scoped {
         for {
-          env    <- makeTestEnv
-          stream <- buildBagItZip()
-          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
-          result <- pollUntilDone(env.service, task.id)
-          // Give scope cleanup a moment to complete (cleanup runs after task is marked Completed)
-          _          <- ZIO.sleep(200.millis)
-          zipPath    <- env.storage.importBagItZipPath(task.id)
-          tempDir     = zipPath.parent.get / "temp"
+          env     <- makeTestEnv
+          stream  <- buildBagItZip()
+          task    <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result  <- pollUntilDone(env.service, task.id)
+          zipPath <- env.storage.importBagItZipPath(task.id)
+          tempDir  = zipPath.parent.get / "temp"
+          // Scope finalizer deletes temp dir after task is marked Completed, so poll for deletion
+          _ <- Files
+                 .exists(tempDir)
+                 .flatMap(exists => ZIO.fail(()).when(exists))
+                 .retry(
+                   Schedule.spaced(100.millis) && Schedule.recurs(50),
+                 )
+                 .ignore
           zipExists  <- Files.exists(zipPath)
           tempExists <- Files.exists(tempDir)
           _          <- cleanupImport(env, task.id)
@@ -733,6 +765,41 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           result.status == DataTaskStatus.Failed,
           zipExists,
           !tempExists,
+        )
+      }
+    },
+    test("import without assets/assets.zip does not call ingest") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip()
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+          calls  <- env.ingestImportCalls.get
+          _      <- cleanupImport(env, task.id)
+        } yield assertTrue(
+          result.status == DataTaskStatus.Completed,
+          calls.isEmpty,
+        )
+      }
+    },
+    test("import with assets/assets.zip calls ingest importProject with correct shortcode") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      binaryPayloadFiles = Map(
+                        "assets/assets.zip" -> "fake-asset-zip-content".getBytes(StandardCharsets.UTF_8),
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+          calls  <- env.ingestImportCalls.get
+          _      <- cleanupImport(env, task.id)
+        } yield assertTrue(
+          result.status == DataTaskStatus.Completed,
+          calls.isDefined,
+          calls.get._1 == Shortcode.unsafeFrom("9999"),
         )
       }
     },

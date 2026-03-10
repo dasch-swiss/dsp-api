@@ -34,6 +34,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
@@ -51,6 +52,7 @@ final case class ImportInProgressError(t: CurrentDataTask)
 
 final class ProjectMigrationImportService(
   state: DataTaskState,
+  dspIngestClient: DspIngestClient,
   groupService: KnoraGroupService,
   projectService: KnoraProjectService,
   storage: ProjectMigrationStorageService,
@@ -99,19 +101,28 @@ final class ProjectMigrationImportService(
                s"$taskId: Payload file validation passed for project '$projectIri', found: ${nqFiles.mkString(", ")}",
              )
 
-        _ <- ZIO.scoped { // rdf validation, close scope for model right after validation to free up memory
-               for {
-                 model <- DatasetOps
-                            .from(bagRoot / "data" / "rdf" / "admin.nq", Lang.NQUADS)
-                            .map(_.getNamedModel(adminDataNamedGraph.value))
-                 _ <- validateProjectNotExists(bag, projectIri, model)
-                 _ <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
-                 _ <- validateUsersNotExist(model)
-                 _ <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
-                 _ <- validateGroupsNotExist(model)
-                 _ <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
-               } yield ()
-             }
+        shortcode <- ZIO.scoped { // rdf validation, close scope for model right after validation to free up memory
+                       for {
+                         model <- DatasetOps
+                                    .from(bagRoot / "data" / "rdf" / "admin.nq", Lang.NQUADS)
+                                    .map(_.getNamedModel(adminDataNamedGraph.value))
+                         shortcode <- validateProjectNotExists(bag, projectIri, model)
+                         _         <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
+                         _         <- validateUsersNotExist(model)
+                         _         <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
+                         _         <- validateGroupsNotExist(model)
+                         _         <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
+                       } yield shortcode
+                     }
+
+        // import assets from ingest if present
+        assetZipPath = bagRoot / "data" / "assets" / "assets.zip"
+        _           <- ZIO.ifZIO(Files.exists(assetZipPath))(
+               ZIO.logInfo(s"$taskId: Importing assets for project '$projectIri'") *>
+                 dspIngestClient.importProject(shortcode, assetZipPath) *>
+                 ZIO.logInfo(s"$taskId: Assets imported for project '$projectIri'"),
+               ZIO.logInfo(s"$taskId: No assets/assets.zip found, skipping asset import for project '$projectIri'"),
+             )
 
         // upload data
         _ <- uploadRdfDataToTriplestore(nqFiles)
@@ -157,7 +168,7 @@ final class ProjectMigrationImportService(
     bag: Bag,
     projectIri: ProjectIri,
     model: Model,
-  ): Task[Unit] = for {
+  ): Task[Shortcode] = for {
     // Parse External-Identifier from bag-info.txt
     externalId <- ZIO
                     .fromOption(bag.bagInfo.flatMap(_.externalIdentifier))
@@ -200,7 +211,7 @@ final class ProjectMigrationImportService(
              new RuntimeException(s"Project with shortcode '$shortcode' already exists"),
            ),
          )
-  } yield ()
+  } yield shortcode
 
   private def validateUsersNotExist(model: Model): Task[Unit] = {
     val userResources = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.User: Resource).asScala.toList
@@ -318,5 +329,9 @@ final class ProjectMigrationImportService(
 }
 
 object ProjectMigrationImportService {
-  val layer = FilesystemDataTaskPersistence.importLayer >>> ZLayer.derive[ProjectMigrationImportService]
+  val layer: URLayer[
+    DspIngestClient & KnoraGroupService & KnoraProjectService & ProjectMigrationStorageService & TriplestoreService &
+      OntologyCache & KnoraUserService,
+    ProjectMigrationImportService,
+  ] = FilesystemDataTaskPersistence.importLayer >>> ZLayer.derive[ProjectMigrationImportService]
 }

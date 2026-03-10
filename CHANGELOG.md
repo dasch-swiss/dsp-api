@@ -1,5 +1,24 @@
 # Changelog
 
+## [35.1.0](https://github.com/dasch-swiss/dsp-api/compare/v35.0.0...v35.1.0) (2026-03-09)
+
+
+### Maintenances
+
+* upgrade Sipi to v3.17.2 ([#3987](https://github.com/dasch-swiss/dsp-api/issues/3987)) ([03a35cf](https://github.com/dasch-swiss/dsp-api/commit/03a35cf21141591700f5c799f7fb93796a0b85d6))
+* upgrade Sipi to v3.18.0 ([#3990](https://github.com/dasch-swiss/dsp-api/issues/3990)) ([aeb1689](https://github.com/dasch-swiss/dsp-api/commit/aeb1689f71d8e81aa3da0421b20f42f0d47a08c1))
+
+
+### Documentation
+
+* add project data models and external ontology linking documentation (DEV-5976) ([#3988](https://github.com/dasch-swiss/dsp-api/issues/3988)) ([20354e1](https://github.com/dasch-swiss/dsp-api/commit/20354e15b0db276d5a0c4de45d59edf0f42cf10d))
+* **learnings:** Docker Compose dev stack startup ordering ([#3989](https://github.com/dasch-swiss/dsp-api/issues/3989)) ([47b0adb](https://github.com/dasch-swiss/dsp-api/commit/47b0adbb62668a844935a9f7b907bca90cf6058e))
+
+
+### Enhancements
+
+* **ingest:** Import and export as bagit (DEV-5888) ([#3980](https://github.com/dasch-swiss/dsp-api/issues/3980)) ([2cb3fff](https://github.com/dasch-swiss/dsp-api/commit/2cb3fff3cdadd9bc6ae5b2e688a6bbcd81f3527a))
+
 ## [35.0.0](https://github.com/dasch-swiss/dsp-api/compare/v34.4.1...v35.0.0) (2026-03-02)
 
 

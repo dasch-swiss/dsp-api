@@ -112,7 +112,7 @@ object LayersLive { self =>
       CommonModule.layer,
       ConstructResponseUtilV2.layer,
       CreateResourceV2Handler.layer,
-      DspIngestClient.layer,
+      DspIngestClientLive.layer,
       ExportModule.layer,
       ExportApiModule.layer,
       IIIFRequestMessageHandlerLive.layer,
