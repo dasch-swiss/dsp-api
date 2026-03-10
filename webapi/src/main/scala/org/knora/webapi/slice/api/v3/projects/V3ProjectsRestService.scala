@@ -60,12 +60,14 @@ final class V3ProjectsRestService(
       Map("id" -> id.value, "projectIri" -> prj.value),
     )
 
-  def triggerProjectExportCreate(user: User)(projectIri: ProjectIri): IO[V3ErrorInfo, DataTaskStatusResponse] =
+  def triggerProjectExportCreate(
+    user: User,
+  )(projectIri: ProjectIri, skipAssets: Boolean): IO[V3ErrorInfo, DataTaskStatusResponse] =
     for {
       project <- ensureSystemAdminAndProjectExists(user, projectIri)
       state   <-
         exportService
-          .createExport(project, user)
+          .createExport(project, user, skipAssets)
           .mapError { case ExportExistsError(t) => conflict(export_exists, t.projectIri, t.id) }
     } yield DataTaskStatusResponse.from(state)
 

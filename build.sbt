@@ -387,6 +387,7 @@ lazy val ingest = {
   import Dependencies._
 
   Project(id = "ingest", file("ingest"))
+    .dependsOn(bagit)
     .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
     .settings(
       scalacOptions ++= Seq("-old-syntax", "-rewrite"),

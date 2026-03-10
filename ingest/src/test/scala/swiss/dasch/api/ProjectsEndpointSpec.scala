@@ -45,6 +45,9 @@ import java.net.URLDecoder
 import java.text.Normalizer
 import scala.language.implicitConversions
 
+import org.knora.bagit.BagIt
+import org.knora.bagit.domain.PayloadEntry
+
 object ProjectsEndpointSpec extends ZIOSpecDefault {
   private def executeRequest(request: Request) = for {
     app <- ZIO.serviceWith[ProjectsEndpointsHandler](handler =>
@@ -101,7 +104,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
             status == Status.Ok,
             headers
               .get("Content-Disposition")
-              .contains(s"attachment; filename=export-${existingProject.toString}.zip"),
+              .contains(s"attachment; filename=export-${existingProject.toString}.bagit.zip"),
             headers.get("Content-Type").contains("application/zip"),
           )
         }
@@ -168,9 +171,18 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       testWithScope("given the Body is a zip, return 200")(
         for {
           storageConfig <- ZIO.service[StorageConfig]
-          body          <- bodyFromZipFile
-          response      <- postImport(emptyProject, body, validContentTypeHeaders)
-          importExists  <- Files.isDirectory(storageConfig.assetPath / emptyProject.toString)
+          // Create a valid BagIt zip from test data
+          tmpDir <- ZIO.acquireRelease(
+                      ZIO
+                        .attemptBlockingIO(java.nio.file.Files.createTempDirectory("bagit-test"))
+                        .map(zio.nio.file.Path.fromJava),
+                    )(p => ZIO.attemptBlockingIO(org.apache.commons.io.FileUtils.deleteDirectory(p.toFile)).ignore)
+          bagitZipPath  = tmpDir / "test-import.bagit.zip"
+          sourceDir     = SpecPaths.testFolder / "0001" / "fg"
+          _            <- BagIt.create(List(PayloadEntry.Directory(prefix = "fg", sourcePath = sourceDir)), bagitZipPath)
+          body         <- Body.fromFile(bagitZipPath.toFile)
+          response     <- postImport(emptyProject, body, validContentTypeHeaders)
+          importExists <- Files.isDirectory(storageConfig.assetPath / emptyProject.toString)
                             && Files.isDirectory(storageConfig.assetPath / emptyProject.toString / "fg")
           status = response.status
         } yield {

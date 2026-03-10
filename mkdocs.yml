@@ -10,6 +10,7 @@ nav:
       - An Example Project: 01-introduction/example-project.md
   - DSP Ontologies:
       - Introduction: 02-dsp-ontologies/introduction.md
+      - Project Data Models: 02-dsp-ontologies/project-data-models.md
       - The Knora Base Ontology: 02-dsp-ontologies/knora-base.md
       - The SALSAH GUI Ontology: 02-dsp-ontologies/salsah-gui.md
   - DSP-API Endpoints:

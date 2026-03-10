@@ -5,22 +5,21 @@
 
 package swiss.dasch.domain
 
-import org.apache.commons.io.FileUtils
+import swiss.dasch.domain.AugmentedPath.ProjectFolder
 import zio.*
 import zio.nio.file.*
 import zio.stream.*
 
-import java.util.zip.ZipFile
+import org.knora.bagit.BagIt
+import org.knora.bagit.BagItError
 
 sealed trait ImportFailed
-case class IoError(e: Throwable) extends ImportFailed
-case object EmptyFile            extends ImportFailed
-case object NoZipFile            extends ImportFailed
-case object InvalidChecksums     extends ImportFailed
+case class IoError(e: Throwable)                             extends ImportFailed
+case class BagItValidationFailed(message: String)            extends ImportFailed
+case class ProjectAlreadyExists(shortcode: ProjectShortcode) extends ImportFailed
 
 trait ImportService {
   def importZipStream(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte]): IO[ImportFailed, Unit]
-  def importZipFile(shortcode: ProjectShortcode, tempFile: Path): IO[ImportFailed, Unit]
 }
 object ImportService {
   def importZipStream(
@@ -28,19 +27,23 @@ object ImportService {
     stream: ZStream[Any, Nothing, Byte],
   ): ZIO[ImportService, ImportFailed, Unit] =
     ZIO.serviceWithZIO[ImportService](_.importZipStream(shortcode, stream))
-  def importZipFile(shortcode: ProjectShortcode, tempFile: Path): ZIO[ImportService, ImportFailed, Unit] =
-    ZIO.serviceWithZIO[ImportService](_.importZipFile(shortcode, tempFile))
 }
 
-final case class ImportServiceLive(
-  assetService: FileChecksumService,
-  assetInfos: AssetInfoService,
-  projectService: ProjectService,
+final class ImportServiceLive(
   storageService: StorageService,
+  projectService: ProjectService,
 ) extends ImportService {
 
   def importZipStream(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte]): IO[ImportFailed, Unit] =
-    ZIO.scoped(saveStreamToFile(shortcode, stream).flatMap(importZipFile(shortcode, _)))
+    for {
+      projectPath <- storageService.getProjectFolder(shortcode)
+      _           <-
+        ZIO
+          .ifZIO(projectService.exists(shortcode).mapError(IoError(_)))(
+            ZIO.fail(ProjectAlreadyExists(shortcode)),
+            ZIO.scoped(saveStreamToFile(shortcode, stream).flatMap(importZipFile(projectPath, _))),
+          )
+    } yield ()
 
   private def saveStreamToFile(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte]) =
     storageService
@@ -55,46 +58,35 @@ final case class ImportServiceLive(
       .logError
       .mapError(IoError.apply)
 
-  override def importZipFile(shortcode: ProjectShortcode, zipFile: Path): IO[ImportFailed, Unit] = ZIO.scoped {
+  def importZipFile(projectPath: ProjectFolder, zipFile: Path): IO[ImportFailed, Unit] = ZIO.scoped {
+    val shortcode  = projectPath.shortcode
+    val importPath = projectPath.path
     for {
-      unzippedFolder <- validateZipFile(shortcode, zipFile)
-      _              <- importProject(shortcode, unzippedFolder)
-             .logError(s"Error while importing project $shortcode")
-             .mapError(IoError.apply)
+      _      <- ZIO.logInfo(s"Importing project $shortcode from $zipFile to $importPath")
+      result <- BagIt
+                  .readAndValidateZip(zipFile)
+                  .tapError(e => ZIO.logError(s"BagIt validation failed for project $shortcode: $e"))
+                  .mapError {
+                    case e: java.io.IOException => IoError(e)
+                    case e: BagItError          => BagItValidationFailed(e.message)
+                  }
+      (_, bagRoot) = result
+      _           <- ZIO.logDebug(s"BagIt validated, bagRoot=$bagRoot, moving ${bagRoot / "data"} to $importPath")
+      _           <- Files
+             .deleteRecursive(importPath)
+             .whenZIO(Files.exists(importPath))
+             .tapError(e => ZIO.logError(s"Failed to delete existing project folder $importPath: $e"))
+             .mapError(IoError(_))
+      _ <- storageService
+             .copyDirectory(bagRoot / "data", importPath)
+             .tapError(e => ZIO.logError(s"Failed to copy ${bagRoot / "data"} to $importPath: $e"))
+             .mapError(IoError(_))
+      _ <- ZIO.logInfo(s"Imported project $shortcode successfully")
     } yield ()
   }
 
-  private def validateZipFile(shortcode: ProjectShortcode, zipFile: Path): ZIO[Scope, ImportFailed, Path] =
-    for {
-      _            <- checkIsNotEmptyFile(zipFile)
-      _            <- checkIsZipFile(zipFile)
-      unzippedPath <- unzipAndVerifyChecksums(shortcode, zipFile)
-    } yield unzippedPath
-  private def checkIsNotEmptyFile(zipFile: Path): IO[ImportFailed, Unit] =
-    ZIO.fail(EmptyFile).whenZIO(Files.size(zipFile).mapBoth(IoError.apply, _ == 0)).unit
-  private def checkIsZipFile(zipFile: Path): IO[NoZipFile.type, Unit] = ZIO.scoped {
-    ZIO.fromAutoCloseable(ZIO.attemptBlockingIO(new ZipFile(zipFile.toFile))).orElseFail(NoZipFile).unit
-  }
-  private def unzipAndVerifyChecksums(shortcode: ProjectShortcode, zipFile: Path): ZIO[Scope, ImportFailed, Path] =
-    for {
-      tempDir <- storageService.createTempDirectoryScoped(s"${shortcode}_import").mapError(IoError.apply)
-      _       <- ZipUtility.unzipFile(zipFile, tempDir).mapError(IoError.apply)
-      checks  <- assetInfos
-                  .findAllInPath(tempDir, shortcode)
-                  .mapZIOPar(StorageService.maxParallelism())(assetService.verifyChecksum)
-                  .runCollect
-                  .mapBoth(IoError.apply, _.flatten)
-      _ <- ZIO.fail(InvalidChecksums).when(checks.exists(!_.checksumMatches))
-    } yield tempDir
-
-  private def importProject(shortcode: ProjectShortcode, unzippedFolder: Path): IO[Throwable, Unit] =
-    storageService.getProjectFolder(shortcode).flatMap { projectPath =>
-      ZIO.logInfo(s"Importing project $shortcode") *>
-        projectService.deleteProject(shortcode) *>
-        ZIO.attemptBlockingIO(FileUtils.moveDirectory(unzippedFolder.toFile, projectPath.toFile)) *>
-        ZIO.logInfo(s"Importing project $shortcode was successful")
-    }
 }
+
 object ImportServiceLive {
   val layer = ZLayer.derive[ImportServiceLive]
 }
