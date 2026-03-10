@@ -8,6 +8,7 @@ package org.knora.webapi.slice.`export`.domain
 import zio.URLayer
 import zio.ZLayer
 
+import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
@@ -17,6 +18,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object ExportModule {
   type Dependencies =
     // format: off
+    DspIngestClient &
     KnoraGroupService &
     KnoraProjectService &
     KnoraUserService &

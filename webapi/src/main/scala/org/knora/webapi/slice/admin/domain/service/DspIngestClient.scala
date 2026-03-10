@@ -21,7 +21,6 @@ import zio.http.URL
 import zio.json.DecoderOps
 import zio.json.DeriveJsonDecoder
 import zio.json.JsonDecoder
-import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.stream.ZSink
 
@@ -51,11 +50,18 @@ object AssetInfoResponse {
   implicit val decoder: JsonDecoder[AssetInfoResponse] = DeriveJsonDecoder.gen[AssetInfoResponse]
 }
 
-final case class DspIngestClient(
+trait DspIngestClient {
+  def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse]
+  def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]]
+  def eraseProject(shortcode: Shortcode): Task[Unit]
+  def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path]
+}
+
+final class DspIngestClientLive(
   jwtService: JwtService,
   dspIngestConfig: DspIngestConfig,
   backend: StreamBackend[Task, ZioStreams],
-) {
+) extends DspIngestClient {
 
   private def projectsPath(shortcode: Shortcode) = s"${dspIngestConfig.baseUrl}/projects/${shortcode.value}"
 
@@ -77,18 +83,20 @@ final case class DspIngestClient(
                   .mapError(err => new IOException(s"Error parsing response: $err"))
     } yield result
 
-  def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path] =
+  def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] =
     for {
-      tempDir   <- Files.createTempDirectoryScoped(Some("export"), List.empty)
-      exportFile = tempDir / "export.zip"
-      request   <- authenticatedRequest.map {
+      request <- authenticatedRequest.map {
                    _.post(uri"${projectsPath(shortcode)}/export")
-                     .readTimeout(30.minutes)
-                     .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(exportFile.toFile))))
+                     .readTimeout(60.minutes)
+                     .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(outputFile.toFile))))
                  }
       response <- request.send(backend)
-      _        <- ZIO.logInfo(s"Response from ingest :${response.code}")
-    } yield exportFile
+      result   <-
+        if (response.code == sttp.model.StatusCode.NotFound) ZIO.none
+        else if (!response.code.isSuccess)
+          ZIO.fail(new IOException(s"Export asset from ingest project $shortcode failed, code: ${response.code}"))
+        else ZIO.some(outputFile)
+    } yield result
 
   def eraseProject(shortcode: Shortcode): Task[Unit] = for {
     request  <- authenticatedRequest.map(_.delete(uri"${projectsPath(shortcode)}/erase"))
@@ -116,6 +124,6 @@ final case class DspIngestClient(
   }
 }
 
-object DspIngestClient {
-  val layer = TracingHttpClient.layer >>> ZLayer.derive[DspIngestClient]
+object DspIngestClientLive {
+  val layer = TracingHttpClient.layer >>> ZLayer.derive[DspIngestClientLive]
 }

@@ -22,6 +22,7 @@ import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -38,18 +39,23 @@ final case class ExportFailedError(t: CurrentDataTask)
 
 final class ProjectMigrationExportService(
   currentExp: DataTaskState,
+  dspIngestClient: DspIngestClient,
   projectService: KnoraProjectService,
   storage: ProjectMigrationStorageService,
   triplestore: TriplestoreService,
 ) extends QueryBuilderHelper { self =>
 
-  def createExport(project: KnoraProject, createdBy: User): IO[ExportExistsError, CurrentDataTask] = for {
+  def createExport(
+    project: KnoraProject,
+    createdBy: User,
+    skipAssets: Boolean = false,
+  ): IO[ExportExistsError, CurrentDataTask] = for {
     curExp <- currentExp.makeNew(project.id, createdBy).mapError { case StatesExistError(t) => ExportExistsError(t) }
     _      <- ZIO.logInfo(s"$curExp: Created export task for project '${project.id}' by user '${createdBy.id}'")
-    _      <- doExport(project, curExp).forkDaemon
+    _      <- doExport(project, curExp, skipAssets).forkDaemon
   } yield curExp
 
-  private def doExport(project: KnoraProject, task: CurrentDataTask): UIO[Unit] =
+  private def doExport(project: KnoraProject, task: CurrentDataTask, skipAssets: Boolean): UIO[Unit] =
     ZIO.scoped {
       for {
         tempExport            <- storage.tempExportScoped(task.id)
@@ -57,18 +63,41 @@ final class ProjectMigrationExportService(
         _                     <- ZIO.logInfo(s"${task.id}: Exporting data for project '${project.id}' to '$exportPath'")
         rdfPath                = tempPath / "rdf"
         _                     <- Files.createDirectories(rdfPath)
-        _                     <- collectOntologyGraphs(task.id, project, rdfPath) <&>
-               collectProjectDataGraph(task.id, project, rdfPath) <&>
-               collectAdminGraphData(task.id, project, rdfPath) <&>
-               collectPermissionsGraphData(task.id, project, rdfPath)
-        _ <- createBagItZip(task.id, rdfPath, project.id)
-        _ <- currentExp.complete(task.id).ignore
-        _ <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
+        assetZipPath           = tempPath / "assets" / "assets.zip"
+        collectRdf             = collectOntologyGraphs(task.id, project, rdfPath) <&>
+                       collectProjectDataGraph(task.id, project, rdfPath) <&>
+                       collectAdminGraphData(task.id, project, rdfPath) <&>
+                       collectPermissionsGraphData(task.id, project, rdfPath)
+        assetResult <- collectRdf.zipParRight(exportAssets(task.id, project.shortcode, assetZipPath, skipAssets))
+        _           <- createBagItZip(task.id, rdfPath, assetResult, project.id)
+        _           <- currentExp.complete(task.id).ignore
+        _           <- ZIO.logInfo(s"${task.id}: Export completed for project ${project.id} to $exportPath")
       } yield ()
     }.logError.catchAll(e =>
       ZIO.logError(s"${task.id}: Export failed for project ${project.id} with error: ${e.getMessage}") *>
         currentExp.fail(task.id).ignore,
     )
+
+  private def exportAssets(
+    taskId: DataTaskId,
+    shortcode: KnoraProject.Shortcode,
+    targetPath: Path,
+    skipAssets: Boolean,
+  ): Task[Option[Path]] =
+    if (skipAssets) ZIO.none
+    else
+      for {
+        _      <- ZIO.logInfo(s"$taskId: Exporting assets for project '$shortcode' from ingest")
+        _      <- Files.createDirectories(targetPath.parent.get)
+        result <- dspIngestClient.exportProject(shortcode, targetPath)
+        _      <- result match {
+               case Some(_) => ZIO.logInfo(s"$taskId: Assets exported to '$targetPath'")
+               case None    =>
+                 ZIO.logWarning(
+                   s"$taskId: No assets found for project '$shortcode' on ingest, continuing without assets",
+                 )
+             }
+      } yield result
 
   private def collectOntologyGraphs(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) = for {
     graphs <- projectService.getOntologyGraphsForProject(project)
@@ -104,13 +133,19 @@ final class ProjectMigrationExportService(
              triplestore.queryToFile(query, permissionsDataNamedGraph, permissionFile, NQuads)
     } yield ()
 
-  private def createBagItZip(taskId: DataTaskId, rdfPath: Path, projectIri: ProjectIri) =
+  private def createBagItZip(
+    taskId: DataTaskId,
+    rdfPath: Path,
+    assetZipPath: Option[Path],
+    projectIri: ProjectIri,
+  ) =
     for {
       zipFile      <- storage.exportBagItZipPath(taskId)
       externalHost <- AppConfig.knoraApi(_.externalHost)
       _            <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
+      assetEntries  = assetZipPath.map(p => PayloadEntry.File("assets/assets.zip", p)).toList
       _            <- BagIt.create(
-             List(PayloadEntry.Directory("rdf", rdfPath)),
+             PayloadEntry.Directory("rdf", rdfPath) :: assetEntries,
              zipFile,
              bagInfo = Some(
                BagInfo(
@@ -183,8 +218,7 @@ final class ProjectMigrationExportService(
 
 object ProjectMigrationExportService {
   val layer: URLayer[
-    KnoraProjectService & ProjectMigrationStorageService & TriplestoreService,
+    DspIngestClient & KnoraProjectService & ProjectMigrationStorageService & TriplestoreService,
     ProjectMigrationExportService,
   ] = FilesystemDataTaskPersistence.exportLayer >>> ZLayer.derive[ProjectMigrationExportService]
-
 }

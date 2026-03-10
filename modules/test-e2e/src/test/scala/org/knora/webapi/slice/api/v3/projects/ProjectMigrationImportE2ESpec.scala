@@ -123,11 +123,11 @@ object ProjectMigrationImportE2ESpec extends E2EZSpec {
                       firstImport <- triggerImportWithCleanup(zipBytes)
                       _           <- importIdRef.set(Some(firstImport.id))
 
-                      // Trigger second import — should get 409
+                      // Trigger second import — should get 409 (empty body suffices, server rejects before reading)
                       r2 <- TestApiClient
                               .postBinary[Json](
                                 uri"/v3/projects/$projectIri/imports",
-                                zipBytes,
+                                Array.empty[Byte],
                                 MediaType.ApplicationZip,
                                 rootUser,
                               )
