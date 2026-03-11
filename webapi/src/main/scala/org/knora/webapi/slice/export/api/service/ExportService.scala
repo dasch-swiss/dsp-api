@@ -15,7 +15,9 @@ import scala.util.chaining.scalaUtilChainingOps
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoADM
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
@@ -53,6 +55,7 @@ final case class ExportService(
   private val findResources: FindResourcesService,
   private val listsResponder: ListsResponder,
   private val csvService: CsvService,
+  private val sf: StringFormatter,
 ) {
   def exportResources(
     project: KnoraProject,
@@ -61,6 +64,7 @@ final case class ExportService(
     requestingUser: User,
     language: LanguageCode,
     includeIris: Boolean,
+    includeArkUrls: Boolean = false,
   ): Task[ExportedCsv] =
     for {
       resourceIris  <- findResources.findResources(project, classIri).map(_.map(_.toString))
@@ -76,17 +80,15 @@ final case class ExportService(
       propertyIriInfos <- propertyIriInfos(selectedProperties)
       labelSmartIri    <- iriConverter.asSmartIri(OntologyConstants.Rdfs.Label)
       propsWithInfos    = selectedProperties.map(p => (p, propertyIriInfos.get(p)))
-      headers           = rowHeaders(propsWithInfos, labelSmartIri, language, includeIris)
+      headers           = rowHeaders(propsWithInfos, labelSmartIri, language, includeIris, includeArkUrls)
 
       rootVocabularies <- listsResponder.getLists(Some(Left(project.id)))
       vocabularies     <- ZIO.foreach(rootVocabularies.lists)(rootVocabularyLabels(_, language)).map(_.foldK)
       resourcesMap      = readResources.resourcesMap // must be cached
-    } yield ExportedCsv(
-      headers,
-      readResources.resources.toList.sortBy(_.label).map {
-        exportSingleRow(_, propsWithInfos, includeIris, resourcesMap, vocabularies)
-      },
-    )
+      rows             <- ZIO.foreach(readResources.resources.toList.sortBy(_.label)) { r =>
+                            exportSingleRow(r, propsWithInfos, includeIris, includeArkUrls, resourcesMap, vocabularies)
+                          }
+    } yield ExportedCsv(headers, rows)
 
   def toCsv(csv: ExportedCsv): Task[String] =
     ZIO.scoped(csvService.writeToString(csv.rows)(using csv.rowBuilder))
@@ -108,6 +110,7 @@ final case class ExportService(
     labelSmartIri: SmartIri,
     language: LanguageCode,
     includeIris: Boolean,
+    includeArkUrls: Boolean,
   ): List[String] =
     propsWithInfo.map { (propertyIri: PropertyIri, info: Option[ReadPropertyInfoV2]) =>
       val labelsMap = info.map(_.entityInfoContent.getPredicateObjectsWithLangs(labelSmartIri)).foldK
@@ -119,17 +122,34 @@ final case class ExportService(
         .getOrElse(propertyIri.toString)
       List(name) ++ (if (info.exists(_.isLinkValueProp) && includeIris) List(s"${name} IRI") else List.empty)
     }
-      .pipe("Resource IRI" +: "Label" +: _.flatten)
+      .pipe(hdrs =>
+        (if includeArkUrls then List("ARK URL") else Nil) ++
+          List("Resource IRI", "Label") ++
+          hdrs.flatten,
+      )
 
   private def exportSingleRow(
     resource: ReadResourceV2,
     propsWithInfo: List[(PropertyIri, Option[ReadPropertyInfoV2])],
     includeIris: Boolean,
+    includeArkUrls: Boolean,
     resources: Map[IRI, ReadResourceV2],
     vocabularies: Map[String, String],
-  ): ExportedResource =
-    ExportedResource(
-      ListMap("Resource IRI" -> resource.resourceIri.toString) ++
+  ): Task[ExportedResource] = {
+    implicit val stringFormatter: StringFormatter = sf
+
+    val arkEntryTask: Task[ListMap[String, String]] =
+      if includeArkUrls then
+        ZIO
+          .attempt(resource.resourceIri.toSmartIri.fromResourceIriToArkUrl())
+          .orDie
+          .map(url => ListMap("ARK URL" -> url))
+      else ZIO.succeed(ListMap.empty)
+
+    for arkEntry <- arkEntryTask
+    yield ExportedResource(
+      arkEntry ++
+        ListMap("Resource IRI" -> resource.resourceIri.toString) ++
         ListMap("Label" -> resource.label) ++
         ListMap.from(
           propsWithInfo.flatMap { (propertyIri: PropertyIri, info: Option[ReadPropertyInfoV2]) =>
@@ -151,6 +171,7 @@ final case class ExportService(
           },
         ),
     )
+  }
 
   // ValueContents are rightfully expected to have the same type, which is not guaranteed in the code
   private def valueColumns(
