@@ -65,6 +65,9 @@ final case class MaintenanceActionsLive(
         case SupportedFileType.MovingImage =>
           movingImageService.extractMetadata(original, MovingImageDerivativeFile.unsafeFrom(info.derivative.file))
 
+        case SupportedFileType.SvgImage =>
+          otherFilesService.extractMetadata(original, SvgDerivativeFile.unsafeFrom(info.derivative.file))
+
         case SupportedFileType.Audio | SupportedFileType.OtherFiles =>
           otherFilesService.extractMetadata(original, OtherDerivativeFile.unsafeFrom(info.derivative.file))
       }

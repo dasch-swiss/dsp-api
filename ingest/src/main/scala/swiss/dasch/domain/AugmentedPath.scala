@@ -13,6 +13,7 @@ import swiss.dasch.domain.SipiImageFormat.Jpx
 import swiss.dasch.domain.SupportedFileType.Audio
 import swiss.dasch.domain.SupportedFileType.MovingImage
 import swiss.dasch.domain.SupportedFileType.OtherFiles
+import swiss.dasch.domain.SupportedFileType.SvgImage
 import zio.IO
 import zio.nio.file.Path
 
@@ -170,6 +171,14 @@ object AugmentedPath {
     given AugmentedPathBuilder[OtherDerivativeFile] with {
       def from(path: Path): Either[String, OtherDerivativeFile] =
         AugmentedPath.from(path, OtherFiles.acceptsExtension, OtherDerivativeFile.apply)
+    }
+  }
+
+  final case class SvgDerivativeFile private (path: Path, assetId: AssetId) extends DerivativeFile
+  object SvgDerivativeFile                                                   extends WithSmartConstructors[SvgDerivativeFile] {
+    given AugmentedPathBuilder[SvgDerivativeFile] with {
+      def from(path: Path): Either[String, SvgDerivativeFile] =
+        AugmentedPath.from(path, SvgImage.acceptsExtension, SvgDerivativeFile.apply)
     }
   }
 }
