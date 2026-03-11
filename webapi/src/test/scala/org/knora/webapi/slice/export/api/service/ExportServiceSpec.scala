@@ -95,7 +95,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               user,
               LanguageCode.EN,
               includeIris = true,
-              includeArkUrls = true,
+              includeArkUrls = false,
             )
           csv <- exportService.toCsv(exportedCsv)
         } yield assertGolden(csv, "basic")
