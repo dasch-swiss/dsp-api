@@ -13,7 +13,10 @@ import zio.ZIO
 import zio.ZLayer
 
 final case class OtherFilesService(mimeTypeGuesser: MimeTypeGuesser) {
-  def extractMetadata(original: Original, derivative: OtherDerivativeFile | AudioDerivativeFile | SvgDerivativeFile): UIO[OtherMetadata] =
+  def extractMetadata(
+    original: Original,
+    derivative: OtherDerivativeFile | AudioDerivativeFile | SvgDerivativeFile,
+  ): UIO[OtherMetadata] =
     for {
       _               <- ZIO.when(original.assetId != derivative.assetId)(ZIO.die(new Exception("Asset IDs do not match")))
       originalMimeType = mimeTypeGuesser.guess(original.originalFilename)

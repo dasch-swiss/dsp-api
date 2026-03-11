@@ -175,7 +175,7 @@ object AugmentedPath {
   }
 
   final case class SvgDerivativeFile private (path: Path, assetId: AssetId) extends DerivativeFile
-  object SvgDerivativeFile                                                   extends WithSmartConstructors[SvgDerivativeFile] {
+  object SvgDerivativeFile                                                  extends WithSmartConstructors[SvgDerivativeFile] {
     given AugmentedPathBuilder[SvgDerivativeFile] with {
       def from(path: Path): Either[String, SvgDerivativeFile] =
         AugmentedPath.from(path, SvgImage.acceptsExtension, SvgDerivativeFile.apply)
