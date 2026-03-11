@@ -5,8 +5,11 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -20,6 +23,10 @@ object AdminDataQuery extends QueryBuilderHelper {
     val (projectPred, projectObj)    = (variable("projectPred"), variable("projectObj"))
     val (user, userPred, userObj)    = (variable("user"), variable("userPred"), variable("userObj"))
     val (group, groupPred, groupObj) = (variable("group"), variable("groupPred"), variable("groupObj"))
+    val userPattern                  = GraphPatterns.and(
+      user.isA(KA.User).andHas(userPred, userObj).andHas(KA.isInProject, projectIri),
+      GraphPatterns.filterNotExists(user.has(KA.isInSystemAdminGroup, Rdf.literalOfType("true", XSD.BOOLEAN))),
+    )
     Queries
       .CONSTRUCT(
         projectIri.has(projectPred, projectObj),
@@ -30,7 +37,7 @@ object AdminDataQuery extends QueryBuilderHelper {
         projectIri
           .isA(KA.KnoraProject)
           .andHas(projectPred, projectObj)
-          .union(user.isA(KA.User).andHas(userPred, userObj).andHas(KA.isInProject, projectIri))
+          .union(userPattern)
           .union(group.isA(KA.UserGroup).andHas(groupPred, groupObj).andHas(KA.belongsToProject, projectIri))
           .from(toRdfIri(adminDataNamedGraph)),
       )
