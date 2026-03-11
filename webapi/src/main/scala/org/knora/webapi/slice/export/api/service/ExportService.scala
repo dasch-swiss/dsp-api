@@ -64,7 +64,7 @@ final case class ExportService(
     requestingUser: User,
     language: LanguageCode,
     includeIris: Boolean,
-    includeArkUrls: Boolean = false,
+    includeArkUrls: Boolean,
   ): Task[ExportedCsv] =
     for {
       resourceIris  <- findResources.findResources(project, classIri).map(_.map(_.toString))
@@ -136,12 +136,14 @@ final case class ExportService(
     resources: Map[IRI, ReadResourceV2],
     vocabularies: Map[String, String],
   ): Task[ExportedResource] = {
-    implicit val stringFormatter: StringFormatter = sf
+    given StringFormatter = sf
 
     val arkEntryTask: Task[ListMap[String, String]] =
       if includeArkUrls then
         ZIO
           .attempt(resource.resourceIri.toSmartIri.fromResourceIriToArkUrl())
+          // Safe: readResourcesSequencePar only returns Knora resource IRIs from the triplestore;
+          // fromResourceIriToArkUrl only throws DataConversionException for non-resource IRIs.
           .orDie
           .map(url => ListMap("ARK URL" -> url))
       else ZIO.succeed(ListMap.empty)
