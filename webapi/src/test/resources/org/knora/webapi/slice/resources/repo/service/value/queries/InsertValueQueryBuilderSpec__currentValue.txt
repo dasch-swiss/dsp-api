@@ -33,7 +33,7 @@ BIND( IRI( "http://www.knora.org/ontology/knora-base#TextValue" ) AS ?valueType 
 ?restriction a owl:Restriction ;
     owl:onProperty ?property .
 ?resource ?property ?currentValue .
-?currentValue rdf:type ?valueType .
+?currentValue rdf:type ?currentValueType .
 ?currentValue knora-base:isDeleted false .
 ?currentValue knora-base:valueHasUUID ?currentValueUuid .
 ?currentValue knora-base:hasPermissions ?currentValuePermissions .
