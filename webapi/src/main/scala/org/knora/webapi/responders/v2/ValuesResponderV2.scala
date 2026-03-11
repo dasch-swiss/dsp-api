@@ -21,6 +21,7 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageExternalFileValue
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageFileValue
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageVectorFileValue
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
@@ -828,7 +829,7 @@ final case class ValuesResponderV2(
         Set(
           submittedInternalValueType.toInternalIri.value,
           currentValue.valueContent.valueType.toInternalIri.value,
-        ).subsetOf(Set(StillImageExternalFileValue, StillImageFileValue))
+        ).subsetOf(Set(StillImageExternalFileValue, StillImageFileValue, StillImageVectorFileValue))
 
       _ <-
         ZIO.unless(isSameType || isStillImageTypes)(
