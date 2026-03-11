@@ -95,11 +95,12 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               user,
               LanguageCode.EN,
               includeIris = true,
+              includeArkUrls = true,
             )
           csv <- exportService.toCsv(exportedCsv)
         } yield assertGolden(csv, "basic")
       },
-      test("with includeIris = false") {
+      test("with includeIris = false and includeArkUrls = false") {
         for {
           _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
@@ -119,6 +120,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               user,
               LanguageCode.DE,
               includeIris = false,
+              includeArkUrls = false,
             )
           csv <- exportService.toCsv(exportedCsv)
         } yield assertGolden(csv, "includeIrisFalse")

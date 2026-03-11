@@ -17,8 +17,8 @@ import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoADM
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
@@ -86,8 +86,8 @@ final case class ExportService(
       vocabularies     <- ZIO.foreach(rootVocabularies.lists)(rootVocabularyLabels(_, language)).map(_.foldK)
       resourcesMap      = readResources.resourcesMap // must be cached
       rows             <- ZIO.foreach(readResources.resources.toList.sortBy(_.label)) { r =>
-                            exportSingleRow(r, propsWithInfos, includeIris, includeArkUrls, resourcesMap, vocabularies)
-                          }
+                exportSingleRow(r, propsWithInfos, includeIris, includeArkUrls, resourcesMap, vocabularies)
+              }
     } yield ExportedCsv(headers, rows)
 
   def toCsv(csv: ExportedCsv): Task[String] =
