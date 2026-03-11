@@ -38,7 +38,7 @@ final class ExportRestService(
 
       data <-
         exportService
-          .exportResources(project, resourceClassIri, properties, user, request.language, request.includeIris)
+          .exportResources(project, resourceClassIri, properties, user, request.language, request.includeIris, request.includeArkUrls)
           .orDie
       csv <- exportService.toCsv(data).orDie
       now <- Clock.instant
