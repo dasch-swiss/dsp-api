@@ -33,13 +33,13 @@ import org.eclipse.rdf4j.model.vocabulary.{RDF, RDFS, XSD, OWL}
 
 ## Factory Classes
 
-| Class              | Purpose                                           |
-|--------------------|---------------------------------------------------|
-| `Queries`          | Create query objects: `SELECT()`, `CONSTRUCT()`, `MODIFY()` |
-| `SparqlBuilder`    | Create variables and prefixes: `` `var`(name) ``, `prefix(ns)` |
-| `Rdf`              | Create RDF values: `iri()`, `literalOf()`, `literalOfType()`, `literalOfLanguage()`, `bNode()` |
-| `GraphPatterns`    | Create patterns: `tp()`, `and()`, `union()`, `optional()`, `select()` (subquery) |
-| `Expressions`      | Create constraints: `regex()`, `lt()`, `gt()`, `equals()`, `notEquals()`, `not()`, `and()`, `or()` |
+| Class            | Purpose                                                                                             |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| `Queries`        | Create query objects: `SELECT()`, `CONSTRUCT()`, `MODIFY()`                                         |
+| `SparqlBuilder`  | Create variables and prefixes: `` `var`(name) ``, `prefix(ns)`                                      |
+| `Rdf`            | Create RDF values: `iri()`, `literalOf()`, `literalOfType()`, `literalOfLanguage()`, `bNode()`      |
+| `GraphPatterns`  | Create patterns: `tp()`, `and()`, `union()`, `optional()`, `select()` (subquery)                    |
+| `Expressions`    | Create constraints: `regex()`, `lt()`, `gt()`, `equals()`, `notEquals()`, `not()`, `and()`, `or()`  |
 
 ## Building Queries
 

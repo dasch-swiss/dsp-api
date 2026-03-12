@@ -266,16 +266,16 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
 
 ## Naming Conventions
 
-| Element        | Convention              | Example                  |
-| -------------- | ----------------------- | ------------------------ |
-| Services       | `*Service`              | `GroupService`           |
-| Implementations | `*Live` suffix         | `AuthServiceLive`        |
-| Rest services  | `*RestService`          | `GroupRestService`       |
-| Endpoints      | `*Endpoints`            | `GroupsEndpoints`        |
-| Handlers       | `*ServerEndpoints`      | `GroupsServerEndpoints`  |
-| Tests          | `*Spec`                 | `GroupIriSpec`            |
-| Value objects  | Domain name             | `GroupIri`, `GroupName`  |
-| Errors         | `*Exception` / `*Error` | `NotFoundException`      |
+| Element         | Convention              | Example                 |
+| --------------- | ----------------------- | ----------------------- |
+| Services        | `*Service`              | `GroupService`          |
+| Implementations | `*Live` suffix          | `AuthServiceLive`       |
+| Rest services   | `*RestService`          | `GroupRestService`      |
+| Endpoints       | `*Endpoints`            | `GroupsEndpoints`       |
+| Handlers        | `*ServerEndpoints`      | `GroupsServerEndpoints` |
+| Tests           | `*Spec`                 | `GroupIriSpec`          |
+| Value objects   | Domain name             | `GroupIri`, `GroupName` |
+| Errors          | `*Exception` / `*Error` | `NotFoundException`     |
 
 ## Import Organization
 
