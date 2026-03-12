@@ -101,7 +101,7 @@ class IngestServiceLive(
     }
 
   private def handleSvgFile(original: Original, assetDir: AssetFolder) =
-    ZIO.logInfo(s"Creating derivative for SVG $original, ${assetDir.assetRef}") *> {
+    ZIO.logInfo(s"Creating derivative for vector image $original, ${assetDir.assetRef}") *> {
       val derivative = SvgDerivativeFile.unsafeFrom(assetDir / s"${assetDir.assetId}.svg")
       for {
         _        <- storage.copyFile(original.file, derivative)

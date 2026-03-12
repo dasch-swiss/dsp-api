@@ -824,7 +824,10 @@ final case class ValuesResponderV2(
               s"Resource <${updateValue.resourceIri}> does not have value <${updateValue.valueIri}> as an object of property <${updateValue.propertyIri}>",
             ),
           )
-      isSameType        = currentValue.valueContent.valueType == submittedInternalValueType
+      isSameType = currentValue.valueContent.valueType == submittedInternalValueType
+      // Cross-type updates are intentionally allowed between all three still-image subtypes
+      // (raster, IIIF external, and vector/SVG), since they all represent the same resource
+      // and differ only in storage/delivery method.
       isStillImageTypes =
         Set(
           submittedInternalValueType.toInternalIri.value,
