@@ -198,17 +198,17 @@ Rdf.literalOfType(instant.toString, XSD.DATETIME)
 
 When working in the dsp-api codebase, extend `QueryBuilderHelper` for these conveniences:
 
-| Method | Purpose |
-|--------|---------|
-| `variable(name)` | Create a `Variable` (wraps `` SparqlBuilder.`var`(name) ``) |
-| `spo` | Returns `(variable("s"), variable("p"), variable("o"))` |
-| `toRdfIri(iri)` | Convert `SmartIri`, `InternalIri`, `KnoraIri`, or `StringValue` to `Iri` |
-| `toRdfLiteral(v)` | Convert `StringLiteralV2`, `BooleanLiteralV2`, `Instant`, `Int` to `RdfLiteral` |
-| `toRdfValue(v)` | Convert `OntologyLiteralV2` to `RdfValue` |
-| `zeroOrMore(pred)` | Create a `PropertyPath` with `*` modifier |
-| `graphIri(project)` | Get the named graph IRI for a `KnoraProject` |
-| `askWhere(triple)` | Wrap a triple pattern in an `ASK WHERE { ... }` query |
-| `ontologyAndNamespace(iri)` | Get `(Iri, SimpleNamespace)` tuple for prefix declarations |
+| Method                      | Purpose                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------- |
+| `variable(name)`            | Create a `Variable` (wraps `` SparqlBuilder.`var`(name) ``)                     |
+| `spo`                       | Returns `(variable("s"), variable("p"), variable("o"))`                         |
+| `toRdfIri(iri)`             | Convert `SmartIri`, `InternalIri`, `KnoraIri`, or `StringValue` to `Iri`        |
+| `toRdfLiteral(v)`           | Convert `StringLiteralV2`, `BooleanLiteralV2`, `Instant`, `Int` to `RdfLiteral` |
+| `toRdfValue(v)`             | Convert `OntologyLiteralV2` to `RdfValue`                                       |
+| `zeroOrMore(pred)`          | Create a `PropertyPath` with `*` modifier                                       |
+| `graphIri(project)`         | Get the named graph IRI for a `KnoraProject`                                    |
+| `askWhere(triple)`          | Wrap a triple pattern in an `ASK WHERE { ... }` query                           |
+| `ontologyAndNamespace(iri)` | Get `(Iri, SimpleNamespace)` tuple for prefix declarations                      |
 
 ## Getting the Query String
 
@@ -221,6 +221,7 @@ val queryString: String = query.getQueryString
 ## Known Limitations
 
 The SparqlBuilder does **not** support:
+
 - VALUES blocks
 - RDF collection syntax `( ... )`
 - DESCRIBE queries
