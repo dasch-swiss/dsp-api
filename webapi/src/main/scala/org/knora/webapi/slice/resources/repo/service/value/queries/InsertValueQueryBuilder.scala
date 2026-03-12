@@ -544,6 +544,7 @@ object InsertValueQueryBuilder {
       List(
         resourceVar.has(propertyVar, currentVar),
         currentVar.has(RDF.TYPE, currentValueType),
+        currentValueType.has(subClassOfPath, KB.Value),
         currentVar.has(KB.isDeleted, literalOf(false)),
         currentVar.has(KB.valueHasUUID, currentValueUUID),
         currentVar.has(KB.hasPermissions, variable("currentValuePermissions")),
