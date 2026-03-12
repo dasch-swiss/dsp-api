@@ -39,6 +39,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageVectorFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType.UnformattedText
@@ -540,6 +541,37 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             Some("originalMimeType"),
           ),
           IiifImageRequestUrl.unsafeFrom("http://www.example.org/prefix1/abcd1234/full/0/native.jpg"),
+          None,
+        ),
+      )
+    },
+    test("should parse StillImageVectorFileValue") {
+      for {
+        _      <- configureSipiServiceMock
+        actual <-
+          service(
+            _.createValueV2FromJsonLd(
+              s"""
+                 |{
+                 |  "@id" : "http://rdfh.ch/0001/a-thing",
+                 |  "@type" : "ex:Thing",
+                 |  "ex:hasOtherThingValue" : {
+                 |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                 |    "@type" : "ka:StillImageVectorFileValue",
+                 |    "ka:fileValueHasFilename": "internalFilename.ext"
+                 |  },
+                 |  "@context": {
+                 |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                 |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                 |  }
+                 |}""".stripMargin,
+            ),
+          )
+      } yield assertTrue(
+        actual.valueContent == StillImageVectorFileValueContentV2(
+          ApiV2Complex,
+          expectedFileValue,
           None,
         ),
       )

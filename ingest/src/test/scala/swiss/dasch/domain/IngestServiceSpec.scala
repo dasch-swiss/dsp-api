@@ -17,42 +17,77 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 object IngestServiceSpec extends ZIOSpecDefault {
-  val spec: Spec[Any, Any] = suite("IngestService")(test("should ingest a simple csv file") {
-    val shortcode = ProjectShortcode.unsafeFrom("0001")
-    ZIO.scoped {
-      for {
-        // given
-        tempDir     <- StorageService.createTempDirectoryScoped("test", None)
-        fileToIngest = tempDir / "test.csv"
-        _           <- Files.createFile(fileToIngest) *> Files.writeLines(fileToIngest, List("one,two", "1,2"))
-        checksum    <- FileChecksumService.createSha256Hash(fileToIngest)
-        // when
-        asset <- IngestService.ingestFile(fileToIngest, shortcode)
-        // then
-        info              <- AssetInfoService.findByAssetRef(asset.ref).map(_.head)
-        assetDir          <- StorageService.getAssetFolder(asset.ref)
-        originalFilename   = s"${asset.id}.csv.orig"
-        derivativeFilename = s"${asset.id}.csv"
-        originalExists    <- Files.exists(assetDir / originalFilename)
-        derivativeExists  <- Files.exists(assetDir / derivativeFilename)
-      } yield assertTrue(
-        asset.belongsToProject == shortcode,
-        asset.metadata.originalMimeType.map(_.value).contains("text/csv"),
-        asset.metadata.internalMimeType.map(_.value).contains("text/csv"),
-        info.originalFilename.toString == fileToIngest.filename.toString,
-        info.originalFilename == asset.original.originalFilename,
-        info.assetRef == asset.ref,
-        info.original.checksum == checksum,
-        info.original.filename.toString == originalFilename,
-        info.original.filename == asset.original.internalFilename,
-        info.derivative.checksum == checksum,
-        info.derivative.filename.toString == derivativeFilename,
-        info.derivative.filename == asset.derivative.filename,
-        originalExists,
-        derivativeExists,
-      )
-    }
-  }).provide(
+  val spec: Spec[Any, Any] = suite("IngestService")(
+    test("should ingest a simple csv file") {
+      val shortcode = ProjectShortcode.unsafeFrom("0001")
+      ZIO.scoped {
+        for {
+          // given
+          tempDir     <- StorageService.createTempDirectoryScoped("test", None)
+          fileToIngest = tempDir / "test.csv"
+          _           <- Files.createFile(fileToIngest) *> Files.writeLines(fileToIngest, List("one,two", "1,2"))
+          checksum    <- FileChecksumService.createSha256Hash(fileToIngest)
+          // when
+          asset <- IngestService.ingestFile(fileToIngest, shortcode)
+          // then
+          info              <- AssetInfoService.findByAssetRef(asset.ref).map(_.head)
+          assetDir          <- StorageService.getAssetFolder(asset.ref)
+          originalFilename   = s"${asset.id}.csv.orig"
+          derivativeFilename = s"${asset.id}.csv"
+          originalExists    <- Files.exists(assetDir / originalFilename)
+          derivativeExists  <- Files.exists(assetDir / derivativeFilename)
+        } yield assertTrue(
+          asset.belongsToProject == shortcode,
+          asset.metadata.originalMimeType.map(_.value).contains("text/csv"),
+          asset.metadata.internalMimeType.map(_.value).contains("text/csv"),
+          info.originalFilename.toString == fileToIngest.filename.toString,
+          info.originalFilename == asset.original.originalFilename,
+          info.assetRef == asset.ref,
+          info.original.checksum == checksum,
+          info.original.filename.toString == originalFilename,
+          info.original.filename == asset.original.internalFilename,
+          info.derivative.checksum == checksum,
+          info.derivative.filename.toString == derivativeFilename,
+          info.derivative.filename == asset.derivative.filename,
+          originalExists,
+          derivativeExists,
+        )
+      }
+    },
+    test("should ingest a svg file") {
+      val shortcode = ProjectShortcode.unsafeFrom("0001")
+      ZIO.scoped {
+        for {
+          // given
+          tempDir     <- StorageService.createTempDirectoryScoped("test", None)
+          fileToIngest = tempDir / "test.svg"
+          _           <- Files.createFile(fileToIngest) *>
+                           Files.writeLines(fileToIngest, List("""<svg xmlns="http://www.w3.org/2000/svg"/>"""))
+          checksum    <- FileChecksumService.createSha256Hash(fileToIngest)
+          // when
+          asset <- IngestService.ingestFile(fileToIngest, shortcode)
+          // then
+          info              <- AssetInfoService.findByAssetRef(asset.ref).map(_.head)
+          assetDir          <- StorageService.getAssetFolder(asset.ref)
+          originalFilename   = s"${asset.id}.svg.orig"
+          derivativeFilename = s"${asset.id}.svg"
+          originalExists    <- Files.exists(assetDir / originalFilename)
+          derivativeExists  <- Files.exists(assetDir / derivativeFilename)
+        } yield assertTrue(
+          asset.belongsToProject == shortcode,
+          asset.metadata.originalMimeType.map(_.value).contains("image/svg+xml"),
+          asset.metadata.internalMimeType.map(_.value).contains("image/svg+xml"),
+          info.originalFilename.toString == fileToIngest.filename.toString,
+          info.original.checksum == checksum,
+          info.original.filename.toString == originalFilename,
+          info.derivative.checksum == checksum,
+          info.derivative.filename.toString == derivativeFilename,
+          originalExists,
+          derivativeExists,
+        )
+      }
+    },
+  ).provide(
     AssetInfoServiceLive.layer,
     CommandExecutorLive.layer,
     FileChecksumServiceLive.layer,

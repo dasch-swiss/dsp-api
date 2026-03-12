@@ -2,7 +2,7 @@
     "@graph": [
         {
             "knora-api:lastModificationDate": {
-                "@value": "2017-12-19T15:23:42.166Z",
+                "@value": "2026-03-12T15:23:50.556966054Z",
                 "@type": "xsd:dateTimeStamp"
             },
             "rdfs:label": "The anything ontology",
@@ -14,7 +14,20 @@
         },
         {
             "knora-api:lastModificationDate": {
-                "@value": "2012-12-12T12:12:12.120Z",
+                "@value": "2026-03-12T15:25:00.990896295Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "rdfs:label": "The bar ontology",
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0001"
+            },
+            "rdfs:comment": "a \"new\" comment",
+            "@type": "owl:Ontology",
+            "@id": "http://0.0.0.0:3333/ontology/0001/bar/v2"
+        },
+        {
+            "knora-api:lastModificationDate": {
+                "@value": "2026-03-12T15:24:18.527038178Z",
                 "@type": "xsd:dateTimeStamp"
             },
             "rdfs:label": "The free test ontology",
@@ -47,6 +60,19 @@
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0001/something/v2"
+        },
+        {
+            "knora-api:lastModificationDate": {
+                "@value": "2026-03-12T15:25:00.430101503Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "rdfs:label": "The test ontology",
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0001"
+            },
+            "rdfs:comment": "some \"test\" comment",
+            "@type": "owl:Ontology",
+            "@id": "http://0.0.0.0:3333/ontology/0001/test/v2"
         }
     ],
     "@context": {
