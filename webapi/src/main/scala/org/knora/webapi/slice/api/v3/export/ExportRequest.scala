@@ -15,6 +15,7 @@ final case class ExportRequest(
   selectedProperties: List[String],
   language: LanguageCode = LanguageCode.EN,
   includeIris: Boolean = false,
+  includeArkUrls: Boolean = false,
 )
 
 object ExportRequest {
