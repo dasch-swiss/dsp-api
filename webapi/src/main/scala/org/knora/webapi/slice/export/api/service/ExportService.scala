@@ -142,8 +142,6 @@ final case class ExportService(
       if includeArkUrls then
         ZIO
           .attempt(resource.resourceIri.toSmartIri.fromResourceIriToArkUrl())
-          // Safe: readResourcesSequencePar only returns Knora resource IRIs from the triplestore;
-          // fromResourceIriToArkUrl only throws DataConversionException for non-resource IRIs.
           .orDie
           .map(url => ListMap("ARK URL" -> url))
       else ZIO.succeed(ListMap.empty)
