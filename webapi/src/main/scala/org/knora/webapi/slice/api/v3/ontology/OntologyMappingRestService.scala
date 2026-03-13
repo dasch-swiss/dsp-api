@@ -29,14 +29,14 @@ import org.knora.webapi.slice.ontology.repo.RemovePropertyMappingQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-class OntologyMappingRestService(
+final class OntologyMappingRestService(
   private val auth: V3Authorizer,
   private val iriConverter: IriConverter,
   private val ontologyRepo: OntologyRepo,
   private val ontologyCache: OntologyCache,
   private val triplestore: TriplestoreService,
   private val projectService: KnoraProjectService,
-)(implicit sf: StringFormatter) {
+)(implicit val sf: StringFormatter) {
 
   private val MaxMappingsPerRequest = 100
 
@@ -60,6 +60,7 @@ class OntologyMappingRestService(
                        .unless(request.mappings.size <= MaxMappingsPerRequest)
       ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
       classIri    <- iriConverter.asResourceClassIri(classIriStr).mapError(BadRequest(_))
+      _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
       projectIris <- projectOntologyIris
       mappings    <- ZIO
                        .validate(request.mappings)(validateExternalIri(projectIris, _))
@@ -68,25 +69,29 @@ class OntologyMappingRestService(
       _           <- lookupClass(classIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
       update      <- AddClassMappingQuery.build(ontologyIri, classIri.smartIri, mappings)
-      _           <- (triplestore.query(update) *> ontologyCache.refreshCache()).orDie
+      _           <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                       .tapError(e => ZIO.logError(s"PUT class mapping failed for $classIri in $ontologyIri: ${e.getMessage}"))
+                       .orDie
       response    <- buildClassResponse(ontologyIri, classIri)
     } yield response
 
   /** F2 — DELETE class mapping */
   def deleteClassMapping(
     user: User,
-  )(ontologyIriStr: String, classIriStr: String, mappingOpt: Option[String]): IO[V3ErrorInfo, ClassMappingResponse] =
+  )(ontologyIriStr: String, classIriStr: String, mappingStr: String): IO[V3ErrorInfo, ClassMappingResponse] =
     for {
-      mappingStr  <- ZIO.fromOption(mappingOpt).mapError(_ => BadRequest("Missing required query parameter 'mapping'."))
       ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
       classIri    <- iriConverter.asResourceClassIri(classIriStr).mapError(BadRequest(_))
+      _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
       projectIris <- projectOntologyIris
       extIri      <- validateExternalIri(projectIris, mappingStr).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
       _           <- lookupClass(classIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
       update      <- RemoveClassMappingQuery.build(ontologyIri, classIri.smartIri, extIri)
-      _           <- (triplestore.query(update) *> ontologyCache.refreshCache()).orDie
+      _           <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                       .tapError(e => ZIO.logError(s"DELETE class mapping failed for $classIri in $ontologyIri: ${e.getMessage}"))
+                       .orDie
       response    <- buildClassResponse(ontologyIri, classIri)
     } yield response
 
@@ -107,6 +112,7 @@ class OntologyMappingRestService(
                        .unless(request.mappings.size <= MaxMappingsPerRequest)
       ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
       propertyIri <- iriConverter.asPropertyIri(propertyIriStr).mapError(BadRequest(_))
+      _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
       projectIris <- projectOntologyIris
       mappings    <- ZIO
                        .validate(request.mappings)(validateExternalIri(projectIris, _))
@@ -115,7 +121,9 @@ class OntologyMappingRestService(
       _           <- lookupProperty(propertyIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
       update      <- AddPropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, mappings)
-      _           <- (triplestore.query(update) *> ontologyCache.refreshCache()).orDie
+      _           <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                       .tapError(e => ZIO.logError(s"PUT property mapping failed for $propertyIri in $ontologyIri: ${e.getMessage}"))
+                       .orDie
       response    <- buildPropertyResponse(ontologyIri, propertyIri)
     } yield response
     // TODO (future): validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty via rdfs:subPropertyOf).
@@ -124,18 +132,20 @@ class OntologyMappingRestService(
   /** F4 — DELETE property mapping */
   def deletePropertyMapping(
     user: User,
-  )(ontologyIriStr: String, propertyIriStr: String, mappingOpt: Option[String]): IO[V3ErrorInfo, PropertyMappingResponse] =
+  )(ontologyIriStr: String, propertyIriStr: String, mappingStr: String): IO[V3ErrorInfo, PropertyMappingResponse] =
     for {
-      mappingStr  <- ZIO.fromOption(mappingOpt).mapError(_ => BadRequest("Missing required query parameter 'mapping'."))
       ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
       propertyIri <- iriConverter.asPropertyIri(propertyIriStr).mapError(BadRequest(_))
+      _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
       projectIris <- projectOntologyIris
       extIri      <- validateExternalIri(projectIris, mappingStr).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
       _           <- lookupProperty(propertyIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
       update      <- RemovePropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, extIri)
-      _           <- (triplestore.query(update) *> ontologyCache.refreshCache()).orDie
+      _           <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                       .tapError(e => ZIO.logError(s"DELETE property mapping failed for $propertyIri in $ontologyIri: ${e.getMessage}"))
+                       .orDie
       response    <- buildPropertyResponse(ontologyIri, propertyIri)
     } yield response
 

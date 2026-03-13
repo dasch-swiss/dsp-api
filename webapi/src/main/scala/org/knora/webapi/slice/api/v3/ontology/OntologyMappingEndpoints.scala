@@ -46,7 +46,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     )
     .delete
     .in(ontologiesBase / path[String]("ontologyIri") / "classes" / path[String]("classIri") / "mapping")
-    .in(query[Option[String]]("mapping").description("The external IRI to remove from rdfs:subClassOf. Required — absent parameter returns HTTP 400."))
+    .in(query[String]("mapping").description("The external IRI to remove from rdfs:subClassOf. URL-encode the IRI value before passing as query parameter."))
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[ClassMappingResponse])
     .tags(mappingsTag)
@@ -84,7 +84,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     )
     .delete
     .in(ontologiesBase / path[String]("ontologyIri") / "properties" / path[String]("propertyIri") / "mapping")
-    .in(query[Option[String]]("mapping").description("The external IRI to remove from rdfs:subPropertyOf. Required — absent parameter returns HTTP 400."))
+    .in(query[String]("mapping").description("The external IRI to remove from rdfs:subPropertyOf. URL-encode the IRI value before passing as query parameter."))
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[PropertyMappingResponse])
     .tags(mappingsTag)

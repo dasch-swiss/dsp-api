@@ -13,10 +13,13 @@ enum V3ErrorCode(val template: String):
   case project_not_found       extends V3ErrorCode("The project '{id}' was not found.")
   case export_not_found        extends V3ErrorCode("The export '{id}' in project '{projectIri}' was not found.")
   case import_not_found        extends V3ErrorCode("The import '{id}' in project '{projectIri}' was not found.")
+  // Used by Export endpoints where the class is looked up without ontology context.
   case resourceClass_not_found extends V3ErrorCode("The resource class '{id}' was not found.")
   case resource_not_found      extends V3ErrorCode("The resource with IRI '{id}' was not found.")
-  case class_not_found         extends V3ErrorCode("The class '{id}' was not found in ontology '{ontologyIri}'.")
-  case property_not_found      extends V3ErrorCode("The property '{id}' was not found in ontology '{ontologyIri}'.")
+  // Used by ontology mapping endpoints where the class/property is looked up within a specific ontology.
+  // Distinct from resourceClass_not_found: includes {ontologyIri} context in the error template.
+  case class_not_found    extends V3ErrorCode("The class '{id}' was not found in ontology '{ontologyIri}'.")
+  case property_not_found extends V3ErrorCode("The property '{id}' was not found in ontology '{ontologyIri}'.")
   case feature_missing
       extends V3ErrorCode("The required feature '{name}' is missing. Ask your system administrator to enable it.")
   // V3ErrorCode.Conflict errors
