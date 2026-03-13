@@ -8,6 +8,7 @@ package org.knora.webapi.slice.`export`.api
 import zio.URLayer
 import zio.ZLayer
 
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -29,6 +30,7 @@ object ExportApiModule { self =>
     ListsResponder &
     OntologyRepo &
     ReadResourcesService &
+    StringFormatter &
     TriplestoreService
     // format: on
 
