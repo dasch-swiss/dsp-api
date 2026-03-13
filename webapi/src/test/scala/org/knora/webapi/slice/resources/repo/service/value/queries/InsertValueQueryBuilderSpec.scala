@@ -33,6 +33,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.resources.IiifImageRequestUrl
 
 object InsertValueQueryBuilderTestSupport {
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
@@ -597,6 +598,21 @@ object InsertValueQueryBuilderTestSupport {
         valueHasUri = "data:text/plain;base64,U0VMRUNUICoKV0hFUkUgeyA/cyA/cCA/byB9", // "SELECT * WHERE { ?s ?p ?o }"
         comment = None,
       )
+
+    def createStillImageExternalFileValue(): StillImageExternalFileValueContentV2 =
+      StillImageExternalFileValueContentV2(
+        ontologySchema = ApiV2Complex,
+        fileValue = FileValueV2(
+          internalFilename = "internalFilename.jpg",
+          internalMimeType = "image/jpeg",
+          originalFilename = Some("original.jpg"),
+          originalMimeType = Some("image/jpeg"),
+        ),
+        externalUrl = IiifImageRequestUrl
+          .from("https://iiif.example.com/prefix/identifier/full/max/0/default.jpg")
+          .fold(e => throw new IllegalArgumentException(e), identity),
+        comment = None,
+      )
   }
 
   def replaceUuidPatterns(sparqlQuery: String): String = {
@@ -1091,6 +1107,23 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
                             ),
                           )
         } yield assertGolden(replaceUuidPatterns(builderQuery), "currentValue__withLinkUpdatesDeleted")
+      },
+    ),
+    suite("Cross-type update")(
+      test("WHERE clause uses ?currentValueType (not ?valueType) for current value type check") {
+        for {
+          testValue       <- ZIO.succeed(TestDataFactory.createStillImageExternalFileValue())
+          currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
+          builderQuery    <- ZIO.attempt(
+                            TestDataFactory.createBuilderQuery(
+                              testValue,
+                              newUuidOrCurrentIri = Right(currentValueIri),
+                            ),
+                          )
+        } yield assertTrue(
+          builderQuery.contains("?currentValue rdf:type ?currentValueType"),
+          !builderQuery.contains("?currentValue rdf:type ?valueType"),
+        )
       },
     ),
     suite("Order preservation")(
