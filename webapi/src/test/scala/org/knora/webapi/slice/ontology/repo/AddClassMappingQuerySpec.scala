@@ -24,8 +24,8 @@ object AddClassMappingQuerySpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment, Any] = suite("AddClassMappingQuerySpec")(
     test("query contains the class IRI in the INSERT clause") {
       for {
-        update  <- AddClassMappingQuery.build(ontologyIri, classIri, List(externalIri1))
         instant <- Clock.instant
+        update  <- AddClassMappingQuery.build(ontologyIri, classIri, List(externalIri1))
       } yield assertTrue(
         update.sparql.contains("rdfs:subClassOf"),
         update.sparql.contains(instant.toString),
@@ -58,6 +58,16 @@ object AddClassMappingQuerySpec extends ZIOSpecDefault {
           !sparql.contains("'}"),
         )
       }
+    },
+    test("query does not decode percent-encoded injection characters in IRI positions") {
+      // %3E = '>', %7B = '{', %7D = '}' — valid percent-encoding in IRIs; RDF4J must not decode them
+      val encodedIri = "http://example.org/Thing%3Einjection".toSmartIri
+      for {
+        update <- AddClassMappingQuery.build(ontologyIri, classIri, List(encodedIri))
+      } yield assertTrue(
+        !update.sparql.contains(">injection"),
+        !update.sparql.contains("{injection"),
+      )
     },
     test("query targets the correct ontology graph") {
       for {

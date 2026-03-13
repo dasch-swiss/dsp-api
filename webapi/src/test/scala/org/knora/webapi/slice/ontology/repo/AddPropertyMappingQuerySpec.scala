@@ -32,8 +32,8 @@ object AddPropertyMappingQuerySpec extends ZIOSpecDefault {
     },
     test("query contains the external IRI in the INSERT clause") {
       for {
-        update  <- AddPropertyMappingQuery.build(ontologyIri, propertyIri, List(externalIri1))
         instant <- Clock.instant
+        update  <- AddPropertyMappingQuery.build(ontologyIri, propertyIri, List(externalIri1))
       } yield assertTrue(
         update.sparql.contains("http://purl.org/dc/terms/title"),
         update.sparql.contains(instant.toString),
@@ -53,6 +53,15 @@ object AddPropertyMappingQuerySpec extends ZIOSpecDefault {
       for {
         update <- AddPropertyMappingQuery.build(ontologyIri, propertyIri, List(externalIri1))
       } yield assertTrue(update.sparql.contains("OPTIONAL"))
+    },
+    test("query does not decode percent-encoded injection characters in IRI positions") {
+      // %3E = '>' — valid percent-encoding in IRIs; RDF4J must not decode it
+      val encodedIri = "http://example.org/prop%3Einjection".toSmartIri
+      for {
+        update <- AddPropertyMappingQuery.build(ontologyIri, propertyIri, List(encodedIri))
+      } yield assertTrue(
+        !update.sparql.contains(">injection"),
+      )
     },
     test("query targets the correct ontology graph") {
       for {

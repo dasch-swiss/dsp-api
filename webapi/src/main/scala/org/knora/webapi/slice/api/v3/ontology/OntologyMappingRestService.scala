@@ -54,6 +54,8 @@ final class OntologyMappingRestService(
     request: AddClassMappingsRequest,
   ): IO[V3ErrorInfo, ClassMappingResponse] =
     for {
+      // Validation precedes auth intentionally: malformed requests are rejected cheaply before a DB lookup.
+      // Authenticated non-admins can observe the 100-IRI limit via HTTP 400; this is accepted low-severity behaviour.
       _ <- ZIO
              .fail(BadRequest("'mappings' must contain at least one IRI."))
              .unless(request.mappings.nonEmpty)
@@ -78,13 +80,13 @@ final class OntologyMappingRestService(
       // Infrastructure failures after the SPARQL commit are not recoverable within this request.
       // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
       // exposing internals. Clients must treat PUT as idempotent on retry (re-inserting a triple is a no-op).
-      _ <- IriLocker
-             .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
-               triplestore.query(update) *> ontologyCache.refreshCache(),
-             )
-             .tapError(e => ZIO.logError(s"PUT class mapping failed for $classIri in $ontologyIri: ${e.getMessage}"))
-             .orDie
-      response <- buildClassResponse(ontologyIri, classIri)
+      // buildClassResponse is inside the lock so the cache read is guaranteed to reflect this write.
+      response <- IriLocker
+                    .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
+                      triplestore.query(update) *> ontologyCache.refreshCache() *> buildClassResponse(ontologyIri, classIri),
+                    )
+                    .tapError(e => ZIO.logError(s"PUT class mapping failed for $classIri in $ontologyIri: ${e.getMessage}"))
+                    .orDie
     } yield response
 
   /** F2 — DELETE class mapping */
@@ -106,13 +108,13 @@ final class OntologyMappingRestService(
       // Infrastructure failures after the SPARQL commit are not recoverable within this request.
       // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
       // exposing internals. Clients must treat DELETE as idempotent on retry (removing an absent triple is a no-op).
-      _ <- IriLocker
-             .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
-               triplestore.query(update) *> ontologyCache.refreshCache(),
-             )
-             .tapError(e => ZIO.logError(s"DELETE class mapping failed for $classIri in $ontologyIri: ${e.getMessage}"))
-             .orDie
-      response <- buildClassResponse(ontologyIri, classIri)
+      // buildClassResponse is inside the lock so the cache read is guaranteed to reflect this write.
+      response <- IriLocker
+                    .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
+                      triplestore.query(update) *> ontologyCache.refreshCache() *> buildClassResponse(ontologyIri, classIri),
+                    )
+                    .tapError(e => ZIO.logError(s"DELETE class mapping failed for $classIri in $ontologyIri: ${e.getMessage}"))
+                    .orDie
     } yield response
 
   /** F3 — PUT property mapping */
@@ -124,6 +126,8 @@ final class OntologyMappingRestService(
     request: AddPropertyMappingsRequest,
   ): IO[V3ErrorInfo, PropertyMappingResponse] =
     for {
+      // Validation precedes auth intentionally: malformed requests are rejected cheaply before a DB lookup.
+      // Authenticated non-admins can observe the 100-IRI limit via HTTP 400; this is accepted low-severity behaviour.
       _ <- ZIO
              .fail(BadRequest("'mappings' must contain at least one IRI."))
              .unless(request.mappings.nonEmpty)
@@ -150,14 +154,14 @@ final class OntologyMappingRestService(
       // Infrastructure failures after the SPARQL commit are not recoverable within this request.
       // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
       // exposing internals. Clients must treat PUT as idempotent on retry (re-inserting a triple is a no-op).
-      _ <-
+      // buildPropertyResponse is inside the lock so the cache read is guaranteed to reflect this write.
+      response <-
         IriLocker
           .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
-            triplestore.query(update) *> ontologyCache.refreshCache(),
+            triplestore.query(update) *> ontologyCache.refreshCache() *> buildPropertyResponse(ontologyIri, propertyIri),
           )
           .tapError(e => ZIO.logError(s"PUT property mapping failed for $propertyIri in $ontologyIri: ${e.getMessage}"))
           .orDie
-      response <- buildPropertyResponse(ontologyIri, propertyIri)
     } yield response
 
   /** F4 — DELETE property mapping */
@@ -183,15 +187,15 @@ final class OntologyMappingRestService(
       // Infrastructure failures after the SPARQL commit are not recoverable within this request.
       // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
       // exposing internals. Clients must treat DELETE as idempotent on retry (removing an absent triple is a no-op).
-      _ <- IriLocker
-             .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
-               triplestore.query(update) *> ontologyCache.refreshCache(),
-             )
-             .tapError(e =>
-               ZIO.logError(s"DELETE property mapping failed for $propertyIri in $ontologyIri: ${e.getMessage}"),
-             )
-             .orDie
-      response <- buildPropertyResponse(ontologyIri, propertyIri)
+      // buildPropertyResponse is inside the lock so the cache read is guaranteed to reflect this write.
+      response <- IriLocker
+                    .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
+                      triplestore.query(update) *> ontologyCache.refreshCache() *> buildPropertyResponse(ontologyIri, propertyIri),
+                    )
+                    .tapError(e =>
+                      ZIO.logError(s"DELETE property mapping failed for $propertyIri in $ontologyIri: ${e.getMessage}"),
+                    )
+                    .orDie
     } yield response
 
   private def projectOntologyIris: UIO[Set[SmartIri]] =
