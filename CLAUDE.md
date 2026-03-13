@@ -172,3 +172,15 @@ When changes are hard to test with local test data (e.g. they need realistic dat
 - Use `make stack-logs` to view all service logs
 - Check `make stack-health` for API health status
 - Use `make stack-status` to see container status
+
+
+### Writing SPARQL queries
+
+When writing SPARQL queries do not use Twirl templates or String concatenation.
+Instead use rdf4j and the query helper in dsp-api.
+For more details see `docs/development/dsp-api-sparql-builder.md`.
+
+### Development Conventions
+
+When writing code, follow the conventions outlined in `docs/development/dsp-api-conventions.md` for consistency across
+the codebase. This includes structuring test suites, naming conventions, and using ZIO Test features effectively.
