@@ -2799,6 +2799,89 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         savedValue.fileValue.internalFilename == internalFilename,
       )
     },
+    test("allow cross-type update from StillImageFileValue to StillImageVectorFileValue") {
+      // This tests that the type checking allows updates between StillImageFileValue and StillImageVectorFileValue
+      // which are both in the "still image family"
+      val resourceIri = aThingPictureIri
+      val propertyIri = KA.HasStillImageFileValue.toSmartIri
+
+      for {
+        maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
+        internalFilename          = "vector-image.svg"
+        internalMimeType          = "image/svg+xml"
+        updateParams              = UpdateValueContentV2(
+                         resourceIri,
+                         thingPictureClassIri.toSmartIri,
+                         propertyIri,
+                         stillImageFileValueIri.get,
+                         StillImageVectorFileValueContentV2(
+                           ontologySchema = ApiV2Complex,
+                           fileValue = FileValueV2(
+                             internalFilename = internalFilename,
+                             internalMimeType = internalMimeType,
+                             originalFilename = Some("original.svg"),
+                             originalMimeType = Some(internalMimeType),
+                           ),
+                         ),
+                       )
+        updateValueResponse         <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
+        _                            = stillImageFileValueIri.set(updateValueResponse.valueIri)
+        updatedValueFromTriplestore <- getValue(
+                                         resourceIri = resourceIri,
+                                         maybePreviousLastModDate = maybeResourceLastModDate,
+                                         propertyIriForGravsearch = propertyIri,
+                                         propertyIriInResult = propertyIri,
+                                         expectedValueIri = stillImageFileValueIri.get,
+                                         requestingUser = anythingUser1,
+                                       )
+        savedValue <- asInstanceOf[StillImageVectorFileValueContentV2](updatedValueFromTriplestore.valueContent)
+      } yield assertTrue(
+        updatedValueFromTriplestore.valueIri == stillImageFileValueIri.get,
+        savedValue.fileValue.internalFilename == internalFilename,
+      )
+    },
+    test("allow cross-type update from StillImageVectorFileValue back to StillImageFileValue") {
+      // This tests the reverse direction: StillImageVectorFileValue -> StillImageFileValue
+      val resourceIri = aThingPictureIri
+      val propertyIri = KA.HasStillImageFileValue.toSmartIri
+
+      for {
+        maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
+        dimX                      = 1024
+        dimY                      = 768
+        internalFilename          = "back-to-internal-from-vector.jp2"
+        internalMimeType          = mimeTypeJP2
+        updateParams              = UpdateValueContentV2(
+                         resourceIri,
+                         thingPictureClassIri.toSmartIri,
+                         propertyIri,
+                         stillImageFileValueIri.get,
+                         FileModelUtil.getFileValueContent(
+                           FileType.StillImageFile(dimX = dimX, dimY = dimY),
+                           internalFilename,
+                           Some(internalMimeType),
+                           None,
+                           None,
+                         ),
+                       )
+        updateValueResponse         <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
+        _                            = stillImageFileValueIri.set(updateValueResponse.valueIri)
+        updatedValueFromTriplestore <- getValue(
+                                         resourceIri = resourceIri,
+                                         maybePreviousLastModDate = maybeResourceLastModDate,
+                                         propertyIriForGravsearch = propertyIri,
+                                         propertyIriInResult = propertyIri,
+                                         expectedValueIri = stillImageFileValueIri.get,
+                                         requestingUser = anythingUser1,
+                                       )
+        savedValue <- asInstanceOf[StillImageFileValueContentV2](updatedValueFromTriplestore.valueContent)
+      } yield assertTrue(
+        updatedValueFromTriplestore.valueIri == stillImageFileValueIri.get,
+        savedValue.dimX == dimX,
+        savedValue.dimY == dimY,
+        savedValue.fileValue.internalFilename == internalFilename,
+      )
+    },
     test("not delete a standoff link directly") {
       val deleteParams = DeleteValueV2(
         ResourceIri.unsafeFrom(zeitgloeckleinIri.toSmartIri),

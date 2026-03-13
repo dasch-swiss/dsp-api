@@ -22,6 +22,8 @@ object FileFilters {
 
   val isStillImage: FileFilter = hasFileExtension(SupportedFileType.StillImage.extensions)
 
+  val isSvgImage: FileFilter = hasFileExtension(SupportedFileType.SvgImage.extensions)
+
   val isMovingImage: FileFilter = hasFileExtension(SupportedFileType.MovingImage.extensions)
 
   val isOther: FileFilter = hasFileExtension(SupportedFileType.OtherFiles.extensions)

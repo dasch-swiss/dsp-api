@@ -68,6 +68,8 @@ private val stillImages = Map(
   "tiff" -> MimeType.unsafeFrom("image/tiff"),
 )
 
+private val svgImages = Map("svg" -> MimeType.unsafeFrom("image/svg+xml"))
+
 /**
  * Enumeration of supported file types.
  * See also https://docs.dasch.swiss/2023.11.02/DSP-API/01-introduction/file-formats/
@@ -78,6 +80,7 @@ enum SupportedFileType(val mappings: Map[String, MimeType]) derives JsonCodec {
   case Audio       extends SupportedFileType(audio)
   case MovingImage extends SupportedFileType(movingImages)
   case StillImage  extends SupportedFileType(stillImages)
+  case SvgImage    extends SupportedFileType(svgImages)
   case OtherFiles  extends SupportedFileType(other)
 
   val extensions: Seq[String]                      = mappings.keys.toSeq

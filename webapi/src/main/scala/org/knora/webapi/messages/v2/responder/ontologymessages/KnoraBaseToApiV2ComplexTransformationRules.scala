@@ -23,6 +23,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeRdfProperty
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.domain.LanguageCode.*
+import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 
 /**
@@ -518,6 +519,9 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     KA.StillImageFileValueHasExternalUrl -> ExactlyOne,
   )
 
+  // No additional properties beyond inherited FileValue cardinalities — SVG has no IIIF dimensions or external URL.
+  private val StillImageVectorFileValueCardinalities = Map.empty[IRI, Cardinality]
+
   /**
    * Properties to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
    * See also [[OntologyConstants.CorrespondingIris]].
@@ -624,6 +628,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     KA.FileValue                   -> FileValueCardinalities,
     KA.StillImageFileValue         -> StillImageFileValueCardinalities,
     KA.StillImageExternalFileValue -> StillImageExternalFileValueCardinalities,
+    KA.StillImageVectorFileValue   -> StillImageVectorFileValueCardinalities,
   ).map { case (classIri, cardinalities) =>
     classIri.toSmartIri -> cardinalities.map { case (propertyIri, cardinality) =>
       propertyIri.toSmartIri -> KnoraCardinalityInfo(cardinality)

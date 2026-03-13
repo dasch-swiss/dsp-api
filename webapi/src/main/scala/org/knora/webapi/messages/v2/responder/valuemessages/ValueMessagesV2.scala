@@ -2017,6 +2017,58 @@ object StillImageExternalFileValueContentV2 {
 }
 
 /**
+ * Represents vector image file metadata.
+ *
+ * @param fileValue the basic metadata about the file value.
+ * @param comment   a comment on this `StillImageVectorFileValueContentV2`, if any.
+ */
+case class StillImageVectorFileValueContentV2(
+  ontologySchema: OntologySchema,
+  fileValue: FileValueV2,
+  comment: Option[String] = None,
+) extends FileValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.StillImageVectorFileValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  override def valueHasString: String = fileValue.internalFilename
+
+  override def toOntologySchema(targetSchema: OntologySchema): StillImageVectorFileValueContentV2 =
+    copy(ontologySchema = targetSchema)
+
+  override def toJsonLDValue(
+    targetSchema: ApiV2Schema,
+    projectADM: Project,
+    appConfig: AppConfig,
+    schemaOptions: Set[Rendering],
+  ): JsonLDValue = {
+    val fileUrl: String =
+      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
+
+    targetSchema match {
+      case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
+
+      case ApiV2Complex =>
+        JsonLDObject(toJsonLDObjectMapInComplexSchema(fileUrl))
+    }
+  }
+
+  override def unescape: ValueContentV2 =
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
+}
+
+/**
+ * Constructs [[StillImageVectorFileValueContentV2]] objects based on JSON-LD input.
+ */
+object StillImageVectorFileValueContentV2 {
+  def from(r: Resource, info: FileInfo): Either[String, StillImageVectorFileValueContentV2] = for {
+    comment   <- objectCommentOption(r)
+    fileValue <- FileValueV2.makeNew(r, info)
+  } yield StillImageVectorFileValueContentV2(ApiV2Complex, fileValue, comment)
+}
+
+/**
  * Represents document file metadata.
  *
  * @param fileValue the basic metadata about the file value.
