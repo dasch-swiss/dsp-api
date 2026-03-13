@@ -247,6 +247,18 @@ final case class TestApiClient(
     sendRequest(request, Some(user))
   }
 
+  def putJson[A: JsonDecoder, B: JsonEncoder](
+    relativeUri: Uri,
+    body: B,
+  ): Task[Response[Either[String, A]]] = {
+    val request = basicRequest
+      .put(relativeUri)
+      .body(body.toJson)
+      .contentType(MediaType.ApplicationJson)
+      .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
+    sendRequest(request)
+  }
+
   def putJsonLd(
     relativeUri: Uri,
     jsonLdBody: String,
@@ -445,6 +457,12 @@ object TestApiClient {
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.putJson(relativeUri, body, user))
+
+  def putJson[A: JsonDecoder, B: JsonEncoder](
+    relativeUri: Uri,
+    body: B,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.putJson(relativeUri, body))
 
   def putJsonLd(
     relativeUri: Uri,
