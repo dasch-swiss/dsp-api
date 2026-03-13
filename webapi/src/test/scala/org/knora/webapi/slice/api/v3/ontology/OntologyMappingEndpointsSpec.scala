@@ -8,10 +8,10 @@ package org.knora.webapi.slice.api.v3.ontology
 import zio.*
 import zio.test.*
 
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
@@ -22,13 +22,16 @@ object OntologyMappingEndpointsSpec extends ZIOSpecDefault {
   // Stub authenticator — routing tests do not exercise security logic.
   // All authenticate methods fail immediately; only the endpoint metadata (method, path) is under test.
   private val stubAuthenticator: Authenticator = new Authenticator {
-    def calculateCookieName(): String = "stub"
-    def invalidateToken(jwt: String): IO[AuthenticatorError, Unit]               = ZIO.fail(AuthenticatorError.BadCredentials)
-    def parseToken(jwt: String): IO[AuthenticatorError, Jwt]                     = ZIO.fail(AuthenticatorError.BadCredentials)
-    def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)]  = ZIO.fail(AuthenticatorError.BadCredentials)
-    def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)] = ZIO.fail(AuthenticatorError.BadCredentials)
-    def authenticate(email: Email, password: String): IO[AuthenticatorError, (User, Jwt)]      = ZIO.fail(AuthenticatorError.BadCredentials)
-    def authenticate(jwtToken: String): IO[AuthenticatorError, User]             = ZIO.fail(AuthenticatorError.BadCredentials)
+    def calculateCookieName(): String                                                         = "stub"
+    def invalidateToken(jwt: String): IO[AuthenticatorError, Unit]                            = ZIO.fail(AuthenticatorError.BadCredentials)
+    def parseToken(jwt: String): IO[AuthenticatorError, Jwt]                                  = ZIO.fail(AuthenticatorError.BadCredentials)
+    def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)] =
+      ZIO.fail(AuthenticatorError.BadCredentials)
+    def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)] =
+      ZIO.fail(AuthenticatorError.BadCredentials)
+    def authenticate(email: Email, password: String): IO[AuthenticatorError, (User, Jwt)] =
+      ZIO.fail(AuthenticatorError.BadCredentials)
+    def authenticate(jwtToken: String): IO[AuthenticatorError, User] = ZIO.fail(AuthenticatorError.BadCredentials)
   }
 
   private val baseEndpoint = V3BaseEndpoint(stubAuthenticator)
@@ -86,12 +89,12 @@ object OntologyMappingEndpointsSpec extends ZIOSpecDefault {
         show.contains("mapping"),
       )
     },
-    test("DELETE class mapping endpoint exposes 'mapping' as a required query parameter") {
-      // query[String] (not Option[String]) means the param is mandatory
+    test("DELETE class mapping endpoint exposes 'mapping' as a query parameter") {
+      // query[Option[String]] — absent param yields None; the service layer validates presence
       val show = endpoints.deleteClassMapping.endpoint.show
       assertTrue(show.contains("mapping"))
     },
-    test("DELETE property mapping endpoint exposes 'mapping' as a required query parameter") {
+    test("DELETE property mapping endpoint exposes 'mapping' as a query parameter") {
       val show = endpoints.deletePropertyMapping.endpoint.show
       assertTrue(show.contains("mapping"))
     },

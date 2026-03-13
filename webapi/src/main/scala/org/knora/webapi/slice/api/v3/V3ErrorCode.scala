@@ -9,10 +9,10 @@ import zio.json.JsonCodec
 
 enum V3ErrorCode(val template: String):
   // V3ErrorCode.NotFound errors
-  case ontology_not_found      extends V3ErrorCode("The ontology '{id}' was not found.")
-  case project_not_found       extends V3ErrorCode("The project '{id}' was not found.")
-  case export_not_found        extends V3ErrorCode("The export '{id}' in project '{projectIri}' was not found.")
-  case import_not_found        extends V3ErrorCode("The import '{id}' in project '{projectIri}' was not found.")
+  case ontology_not_found extends V3ErrorCode("The ontology '{id}' was not found.")
+  case project_not_found  extends V3ErrorCode("The project '{id}' was not found.")
+  case export_not_found   extends V3ErrorCode("The export '{id}' in project '{projectIri}' was not found.")
+  case import_not_found   extends V3ErrorCode("The import '{id}' in project '{projectIri}' was not found.")
   // Used by Export endpoints where the class is looked up without ontology context.
   case resourceClass_not_found extends V3ErrorCode("The resource class '{id}' was not found.")
   case resource_not_found      extends V3ErrorCode("The resource with IRI '{id}' was not found.")

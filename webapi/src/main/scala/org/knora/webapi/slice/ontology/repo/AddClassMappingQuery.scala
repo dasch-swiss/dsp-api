@@ -38,10 +38,10 @@ object AddClassMappingQuery extends QueryBuilderHelper {
     classIri: SmartIri,
     externalSuperIris: List[SmartIri],
   ): UIO[Update] = Clock.instant.map { now =>
-    val ontology     = toRdfIri(ontologyIri)
-    val clsIri       = toRdfIri(classIri)
-    val oldDate      = variable("oldDate")
-    val ontologyNS   = NS(ontologyIri)
+    val ontology   = toRdfIri(ontologyIri)
+    val clsIri     = toRdfIri(classIri)
+    val oldDate    = variable("oldDate")
+    val ontologyNS = NS(ontologyIri)
 
     val deletePattern: TriplePattern = ontology.has(KB.lastModificationDate, oldDate)
 
