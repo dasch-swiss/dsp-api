@@ -42,6 +42,10 @@ final class OntologyMappingRestService(
 
   private val MaxMappingsPerRequest = 100
 
+  // Characters forbidden in SPARQL 1.1 IRIREF production (RFC 3987 + SPARQL restrictions).
+  // '}' closes DELETE/INSERT/GRAPH blocks; '{' opens them — both are the primary injection vectors.
+  private val sparqlIriRefForbidden = Set('{', '}', '"', '<', '>', '\\', '^', '`', ' ', '\n', '\r', '\t')
+
   private val rdfsLabel   = Rdfs.Label.toSmartIri
   private val rdfsComment = Rdfs.Comment.toSmartIri
 
@@ -74,7 +78,9 @@ final class OntologyMappingRestService(
       projectIris <- projectOntologyIris
       mappings    <- ZIO
                     .validate(request.mappings)(validateExternalIri(projectIris, _))
-                    .mapError(errors => BadRequest(errors.mkString(", ")))
+                    .mapError(errors =>
+                      BadRequest(s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}"),
+                    )
       update    <- AddClassMappingQuery.build(ontologyIri, classIri.smartIri, mappings)
       requestId <- Random.nextUUID
       // Infrastructure failures after the SPARQL commit are not recoverable within this request.
@@ -146,7 +152,9 @@ final class OntologyMappingRestService(
       projectIris <- projectOntologyIris
       mappings    <- ZIO
                     .validate(request.mappings)(validateExternalIri(projectIris, _))
-                    .mapError(errors => BadRequest(errors.mkString(", ")))
+                    .mapError(errors =>
+                      BadRequest(s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}"),
+                    )
       // TODO (future): validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty).
       // OWL DL disallows mapping an ObjectProperty to a DatatypeProperty. Deferred per PRD "same contract as F1".
       update    <- AddPropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, mappings)
@@ -203,28 +211,42 @@ final class OntologyMappingRestService(
       cacheData.ontologies.keySet.filter(iri => !iri.isKnoraBuiltInDefinitionIri && !iri.isKnoraSharedDefinitionIri)
     }
 
-  private def validateExternalIri(projectOntologyIris: Set[SmartIri], iriStr: String): IO[String, SmartIri] =
-    iriConverter.asSmartIri(iriStr).mapError(_.getMessage).flatMap { iri =>
-      if iri.isKnoraOntologyIri || iri.isKnoraEntityIri then
-        ZIO.fail(s"Mapping IRI must be an external IRI, not a Knora-managed IRI: $iriStr")
-      else if isProjectOntologyIri(iri, projectOntologyIris) then
-        ZIO.fail(s"Mapping IRI belongs to a DSP project ontology and cannot be used as a mapping: $iriStr")
-      else ZIO.succeed(iri)
+  private def validateExternalIri(projectOntologyIris: Set[SmartIri], iriStr: String): IO[String, SmartIri] = {
+    // Explicit IRIREF guard: reject characters that are illegal in SPARQL 1.1 IRIREF positions
+    // regardless of where they appear (path, query, fragment). The UrlValidator path-component
+    // regex blocks '{'/'}' in path segments but not in query components.
+    val forbiddenChar = iriStr.find(sparqlIriRefForbidden.contains)
+    if forbiddenChar.isDefined then
+      ZIO.fail(s"Mapping IRI contains a forbidden character '${forbiddenChar.get}': $iriStr")
+    else {
+      // Pre-compute once per validateExternalIri call; callers invoke this inside ZIO.validate
+      // so this allocation happens once per IRI, not once per IRI×ontology.
+      val bases = projectOntologyIris.map(_.toIri.stripSuffix("/"))
+      iriConverter.asSmartIri(iriStr).mapError(_.getMessage).flatMap { iri =>
+        if iri.isKnoraOntologyIri || iri.isKnoraEntityIri then
+          ZIO.fail(s"Mapping IRI must be an external IRI, not a Knora-managed IRI: $iriStr")
+        else if isProjectOntologyIri(iri, bases) then
+          ZIO.fail(s"Mapping IRI belongs to a DSP project ontology and cannot be used as a mapping: $iriStr")
+        else ZIO.succeed(iri)
+      }
     }
+  }
 
-  private def isProjectOntologyIri(iri: SmartIri, projectOntologyIris: Set[SmartIri]): Boolean = {
+  private def isProjectOntologyIri(iri: SmartIri, projectOntologyBases: Set[String]): Boolean = {
     val iriStr = iri.toIri
-    val bases  = projectOntologyIris.map(_.toIri.stripSuffix("/"))
-    bases.exists(base => iriStr == base || iriStr.startsWith(base + "/") || iriStr.startsWith(base + "#"))
+    projectOntologyBases.exists(base => iriStr == base || iriStr.startsWith(base + "/") || iriStr.startsWith(base + "#"))
   }
 
   private def lookupOntology(ontologyIri: OntologyIri): IO[NotFound, ReadOntologyV2] =
+    // Repository failures are infrastructure errors; escalate to fiber defect (HTTP 500).
     ontologyRepo.findById(ontologyIri).orDie.someOrFail(NotFound(ontologyIri))
 
   private def lookupClass(classIri: ResourceClassIri, ontologyIri: OntologyIri): IO[NotFound, ReadClassInfoV2] =
+    // Repository failures are infrastructure errors; escalate to fiber defect (HTTP 500).
     ontologyRepo.findClassBy(classIri).orDie.someOrFail(classNotFound(classIri, ontologyIri))
 
   private def lookupProperty(propertyIri: PropertyIri, ontologyIri: OntologyIri): IO[NotFound, ReadPropertyInfoV2] =
+    // Repository failures are infrastructure errors; escalate to fiber defect (HTTP 500).
     ontologyRepo.findProperty(propertyIri).orDie.someOrFail(propertyNotFound(propertyIri, ontologyIri))
 
   private def authorizeByProject(user: User, ontology: ReadOntologyV2): IO[V3ErrorInfo, Unit] =
@@ -255,6 +277,14 @@ final class OntologyMappingRestService(
     )
   }
 
+  private def resolveLmd(ontologyIri: OntologyIri, ontology: ReadOntologyV2): UIO[java.time.Instant] = {
+    val lmdOpt = ontology.ontologyMetadata.lastModificationDate
+    ZIO
+      .logWarning(s"Ontology $ontologyIri has no lastModificationDate; returning Instant.EPOCH")
+      .unless(lmdOpt.isDefined)
+      .as(lmdOpt.getOrElse(java.time.Instant.EPOCH))
+  }
+
   private def buildClassResponse(ontologyIri: OntologyIri, classIri: ResourceClassIri): UIO[ClassMappingResponse] =
     for {
       ontology <- ontologyRepo
@@ -265,11 +295,7 @@ final class OntologyMappingRestService(
                      .findClassBy(classIri)
                      .someOrFail(new RuntimeException(s"Class $classIri missing from cache after update"))
                      .orDie
-      lmdOpt = ontology.ontologyMetadata.lastModificationDate
-      _     <- ZIO
-             .logWarning(s"Ontology $ontologyIri has no lastModificationDate; returning Instant.EPOCH")
-             .unless(lmdOpt.isDefined)
-      lmd = lmdOpt.getOrElse(java.time.Instant.EPOCH)
+      lmd <- resolveLmd(ontologyIri, ontology)
     } yield ClassMappingResponse(
       classIri = classIri.toComplexSchema.toIri,
       ontologyIri = ontologyIri.toComplexSchema.toIri,
@@ -292,11 +318,7 @@ final class OntologyMappingRestService(
                         .findProperty(propertyIri)
                         .someOrFail(new RuntimeException(s"Property $propertyIri missing from cache after update"))
                         .orDie
-      lmdOpt = ontology.ontologyMetadata.lastModificationDate
-      _     <- ZIO
-             .logWarning(s"Ontology $ontologyIri has no lastModificationDate; returning Instant.EPOCH")
-             .unless(lmdOpt.isDefined)
-      lmd = lmdOpt.getOrElse(java.time.Instant.EPOCH)
+      lmd <- resolveLmd(ontologyIri, ontology)
     } yield PropertyMappingResponse(
       propertyIri = propertyIri.toComplexSchema.toIri,
       ontologyIri = ontologyIri.toComplexSchema.toIri,
