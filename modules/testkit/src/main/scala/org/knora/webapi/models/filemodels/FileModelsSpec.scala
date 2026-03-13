@@ -279,8 +279,8 @@ object FileModelsSpec extends ZIOSpecDefault {
           )
           val actual   = vectorRepresentation.toJsonLd().fromJson[Json]
           val expected = Json.Obj(
-            "@type"                              -> Json.Str("knora-api:StillImageRepresentation"),
-            "knora-api:hasStillImageFileValue"   -> Json.Obj(
+            "@type"                            -> Json.Str("knora-api:StillImageRepresentation"),
+            "knora-api:hasStillImageFileValue" -> Json.Obj(
               "@type"                          -> Json.Str("knora-api:StillImageVectorFileValue"),
               "knora-api:fileValueHasFilename" -> Json.Str(fileNameSvg),
             ),

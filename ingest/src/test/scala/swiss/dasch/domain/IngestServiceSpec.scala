@@ -62,8 +62,8 @@ object IngestServiceSpec extends ZIOSpecDefault {
           tempDir     <- StorageService.createTempDirectoryScoped("test", None)
           fileToIngest = tempDir / "test.svg"
           _           <- Files.createFile(fileToIngest) *>
-                           Files.writeLines(fileToIngest, List("""<svg xmlns="http://www.w3.org/2000/svg"/>"""))
-          checksum    <- FileChecksumService.createSha256Hash(fileToIngest)
+                 Files.writeLines(fileToIngest, List("""<svg xmlns="http://www.w3.org/2000/svg"/>"""))
+          checksum <- FileChecksumService.createSha256Hash(fileToIngest)
           // when
           asset <- IngestService.ingestFile(fileToIngest, shortcode)
           // then

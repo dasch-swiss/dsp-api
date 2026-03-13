@@ -2810,20 +2810,20 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         internalFilename          = "vector-image.svg"
         internalMimeType          = "image/svg+xml"
         updateParams              = UpdateValueContentV2(
-                             resourceIri,
-                             thingPictureClassIri.toSmartIri,
-                             propertyIri,
-                             stillImageFileValueIri.get,
-                             StillImageVectorFileValueContentV2(
-                               ontologySchema = ApiV2Complex,
-                               fileValue = FileValueV2(
-                                 internalFilename = internalFilename,
-                                 internalMimeType = internalMimeType,
-                                 originalFilename = Some("original.svg"),
-                                 originalMimeType = Some(internalMimeType),
-                               ),
-                             ),
-                           )
+                         resourceIri,
+                         thingPictureClassIri.toSmartIri,
+                         propertyIri,
+                         stillImageFileValueIri.get,
+                         StillImageVectorFileValueContentV2(
+                           ontologySchema = ApiV2Complex,
+                           fileValue = FileValueV2(
+                             internalFilename = internalFilename,
+                             internalMimeType = internalMimeType,
+                             originalFilename = Some("original.svg"),
+                             originalMimeType = Some(internalMimeType),
+                           ),
+                         ),
+                       )
         updateValueResponse         <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
         _                            = stillImageFileValueIri.set(updateValueResponse.valueIri)
         updatedValueFromTriplestore <- getValue(
@@ -2852,18 +2852,18 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         internalFilename          = "back-to-internal-from-vector.jp2"
         internalMimeType          = mimeTypeJP2
         updateParams              = UpdateValueContentV2(
-                             resourceIri,
-                             thingPictureClassIri.toSmartIri,
-                             propertyIri,
-                             stillImageFileValueIri.get,
-                             FileModelUtil.getFileValueContent(
-                               FileType.StillImageFile(dimX = dimX, dimY = dimY),
-                               internalFilename,
-                               Some(internalMimeType),
-                               None,
-                               None,
-                             ),
-                           )
+                         resourceIri,
+                         thingPictureClassIri.toSmartIri,
+                         propertyIri,
+                         stillImageFileValueIri.get,
+                         FileModelUtil.getFileValueContent(
+                           FileType.StillImageFile(dimX = dimX, dimY = dimY),
+                           internalFilename,
+                           Some(internalMimeType),
+                           None,
+                           None,
+                         ),
+                       )
         updateValueResponse         <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
         _                            = stillImageFileValueIri.set(updateValueResponse.valueIri)
         updatedValueFromTriplestore <- getValue(
