@@ -31,12 +31,13 @@ object AddPropertyMappingQuerySpec extends ZIOSpecDefault {
       )
     },
     test("query contains the external IRI in the INSERT clause") {
+      val knownInstant = java.time.Instant.parse("2026-01-01T00:00:00Z")
       for {
-        instant <- Clock.instant
-        update  <- AddPropertyMappingQuery.build(ontologyIri, propertyIri, List(externalIri1))
+        _      <- TestClock.setTime(knownInstant)
+        update <- AddPropertyMappingQuery.build(ontologyIri, propertyIri, List(externalIri1))
       } yield assertTrue(
         update.sparql.contains("http://purl.org/dc/terms/title"),
-        update.sparql.contains(instant.toString),
+        update.sparql.contains(knownInstant.toString),
         update.sparql.contains("knora-base:lastModificationDate"),
         update.sparql.indexOf("lastModificationDate") != update.sparql.lastIndexOf("lastModificationDate"),
       )

@@ -30,12 +30,13 @@ object RemoveClassMappingQuerySpec extends ZIOSpecDefault {
       )
     },
     test("query rotates lastModificationDate (present in DELETE and INSERT)") {
+      val knownInstant = java.time.Instant.parse("2026-01-01T00:00:00Z")
       for {
-        update  <- RemoveClassMappingQuery.build(ontologyIri, classIri, externalIri)
-        instant <- Clock.instant
+        _      <- TestClock.setTime(knownInstant)
+        update <- RemoveClassMappingQuery.build(ontologyIri, classIri, externalIri)
       } yield assertTrue(
         update.sparql.contains("knora-base:lastModificationDate"),
-        update.sparql.contains(instant.toString),
+        update.sparql.contains(knownInstant.toString),
         // appears in both DELETE and INSERT
         update.sparql.indexOf("lastModificationDate") != update.sparql.lastIndexOf("lastModificationDate"),
       )

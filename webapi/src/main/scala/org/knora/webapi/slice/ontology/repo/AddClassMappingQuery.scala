@@ -28,16 +28,29 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  * ontology has no existing lastModificationDate.  That keeps the DELETE/INSERT pair atomic
  * regardless of triplestore state.
  *
- * Gate 1 (primary): SmartIri construction at the HTTP boundary rejects SPARQL-dangerous chars.
- * Gate 2 (this file): toRdfIri delegates to RDF4J Rdf.iri() which encodes or rejects invalid IRIs.
+ * Gate 1 (primary): explicit sparqlIriRefForbidden character-set check in OntologyMappingRestService.validateExternalIri
+ * Gate 2 (structural): SmartIri construction validates RFC 3987 IRI structure (but does NOT reject { or } in all positions)
+ * Gate 3 (defence-in-depth): require guards in build() catch any bypass of Gates 1–2
  */
 object AddClassMappingQuery extends QueryBuilderHelper {
+
+  private val sparqlIriRefForbidden = Set('{', '}', '"', '<', '>', '\\', '^', '`', ' ', '\t', '\n', '\r')
+
+  private def requireSafeIri(iriStr: String): Unit = {
+    val bad = iriStr.filter(sparqlIriRefForbidden.contains)
+    require(bad.isEmpty, s"IRI '$iriStr' contains SPARQL-unsafe characters: ${bad.mkString(", ")}")
+  }
 
   def build(
     ontologyIri: OntologyIri,
     classIri: SmartIri,
     externalSuperIris: List[SmartIri],
   ): UIO[Update] = Clock.instant.map { now =>
+    val ontologyIriStr = ontologyIri.smartIri.toIri
+    val classIriStr    = classIri.toIri
+    requireSafeIri(ontologyIriStr)
+    requireSafeIri(classIriStr)
+    externalSuperIris.foreach(iri => requireSafeIri(iri.toIri))
     val ontology   = toRdfIri(ontologyIri)
     val clsIri     = toRdfIri(classIri)
     val oldDate    = variable("oldDate")

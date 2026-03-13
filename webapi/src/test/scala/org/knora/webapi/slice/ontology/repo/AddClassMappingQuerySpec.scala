@@ -23,12 +23,13 @@ object AddClassMappingQuerySpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment, Any] = suite("AddClassMappingQuerySpec")(
     test("query contains the class IRI in the INSERT clause") {
+      val knownInstant = java.time.Instant.parse("2026-01-01T00:00:00Z")
       for {
-        instant <- Clock.instant
-        update  <- AddClassMappingQuery.build(ontologyIri, classIri, List(externalIri1))
+        _      <- TestClock.setTime(knownInstant)
+        update <- AddClassMappingQuery.build(ontologyIri, classIri, List(externalIri1))
       } yield assertTrue(
         update.sparql.contains("rdfs:subClassOf"),
-        update.sparql.contains(instant.toString),
+        update.sparql.contains(knownInstant.toString),
         update.sparql.contains("knora-base:lastModificationDate"),
         // lastModificationDate appears in both DELETE and INSERT
         update.sparql.indexOf("lastModificationDate") != update.sparql.lastIndexOf("lastModificationDate"),

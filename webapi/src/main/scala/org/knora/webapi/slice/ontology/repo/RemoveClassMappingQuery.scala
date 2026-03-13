@@ -29,14 +29,28 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  * Note: lastModificationDate is rotated even when the subClassOf triple was not present
  * (no-op deletion). This is intentional — it keeps the SPARQL pattern uniform and avoids
  * a read-before-write. Accepted team decision; document in the PR.
+ *
+ * Gate 1 (primary): explicit sparqlIriRefForbidden character-set check in OntologyMappingRestService.validateExternalIri
+ * Gate 2 (structural): SmartIri construction validates RFC 3987 IRI structure (but does NOT reject { or } in all positions)
+ * Gate 3 (defence-in-depth): require guards in build() catch any bypass of Gates 1–2
  */
 object RemoveClassMappingQuery extends QueryBuilderHelper {
+
+  private val sparqlIriRefForbidden = Set('{', '}', '"', '<', '>', '\\', '^', '`', ' ', '\t', '\n', '\r')
+
+  private def requireSafeIri(iriStr: String): Unit = {
+    val bad = iriStr.filter(sparqlIriRefForbidden.contains)
+    require(bad.isEmpty, s"IRI '$iriStr' contains SPARQL-unsafe characters: ${bad.mkString(", ")}")
+  }
 
   def build(
     ontologyIri: OntologyIri,
     classIri: SmartIri,
     externalSuperIri: SmartIri,
   ): UIO[Update] = Clock.instant.map { now =>
+    requireSafeIri(ontologyIri.smartIri.toIri)
+    requireSafeIri(classIri.toIri)
+    requireSafeIri(externalSuperIri.toIri)
     val ontology   = toRdfIri(ontologyIri)
     val clsIri     = toRdfIri(classIri)
     val extIri     = toRdfIri(externalSuperIri)

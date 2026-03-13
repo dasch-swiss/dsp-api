@@ -74,25 +74,40 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
-      _           <- lookupClass(classIri, ontologyIri)
-      projectIris <- projectOntologyIris
-      mappings    <- ZIO
-                    .validate(request.mappings)(validateExternalIri(projectIris, _))
-                    .mapError(errors =>
-                      BadRequest(s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}"),
-                    )
-      update    <- AddClassMappingQuery.build(ontologyIri, classIri.smartIri, mappings)
+      _         <- lookupClass(classIri, ontologyIri)
       requestId <- Random.nextUUID
-      // Infrastructure failures after the SPARQL commit are not recoverable within this request.
-      // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
-      // exposing internals. Clients must treat PUT as idempotent on retry (re-inserting a triple is a no-op).
-      // buildClassResponse is inside the lock so the cache read is guaranteed to reflect this write.
-      response <- IriLocker
-                    .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
-                      triplestore.query(update) *> ontologyCache.refreshCache() *> buildClassResponse(ontologyIri, classIri),
-                    )
-                    .tapError(e => ZIO.logError(s"PUT class mapping failed for $classIri in $ontologyIri: ${e.getMessage}"))
-                    .orDie
+      // projectOntologyIris is read inside the lock so the validation snapshot is atomic with the write.
+      // validateExternalIri errors are carried via Either to preserve the typed V3ErrorInfo error channel.
+      // Infrastructure failures (triplestore, cache) are escalated to defects (.orDie) so the lock's
+      // Task[A] constraint is satisfied; clients must treat PUT as idempotent on retry.
+      eitherResponse <- IriLocker
+                          .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
+                            (for
+                              projectIris          <- projectOntologyIris
+                              projectOntologyBases  = projectIris.map(_.toIri.stripSuffix("/"))
+                              mappings             <- ZIO
+                                                       .validate(request.mappings)(validateExternalIri(projectOntologyBases, _))
+                                                       .mapError(errors =>
+                                                         BadRequest(
+                                                           s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}",
+                                                         ),
+                                                       )
+                              update <- AddClassMappingQuery.build(ontologyIri, classIri.smartIri, mappings)
+                              _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                                     .tapError(e =>
+                                       ZIO.logError(
+                                         s"PUT class mapping failed for $classIri in $ontologyIri: ${e.getMessage}",
+                                       ),
+                                     )
+                                     .orDie
+                              r <- buildClassResponse(ontologyIri, classIri)
+                            yield r).either
+                          )
+                          .tapError(e =>
+                            ZIO.logError(s"PUT class mapping lock failed for $classIri in $ontologyIri: ${e.getMessage}"),
+                          )
+                          .orDie
+      response <- ZIO.fromEither(eitherResponse)
     } yield response
 
   /** F2 — DELETE class mapping */
@@ -106,21 +121,33 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
-      _           <- lookupClass(classIri, ontologyIri)
-      projectIris <- projectOntologyIris
-      extIri      <- validateExternalIri(projectIris, mappingStr).mapError(BadRequest(_))
-      update      <- RemoveClassMappingQuery.build(ontologyIri, classIri.smartIri, extIri)
-      requestId   <- Random.nextUUID
-      // Infrastructure failures after the SPARQL commit are not recoverable within this request.
-      // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
-      // exposing internals. Clients must treat DELETE as idempotent on retry (removing an absent triple is a no-op).
-      // buildClassResponse is inside the lock so the cache read is guaranteed to reflect this write.
-      response <- IriLocker
-                    .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
-                      triplestore.query(update) *> ontologyCache.refreshCache() *> buildClassResponse(ontologyIri, classIri),
-                    )
-                    .tapError(e => ZIO.logError(s"DELETE class mapping failed for $classIri in $ontologyIri: ${e.getMessage}"))
-                    .orDie
+      _         <- lookupClass(classIri, ontologyIri)
+      requestId <- Random.nextUUID
+      // projectOntologyIris is read inside the lock so the validation snapshot is atomic with the write.
+      eitherResponse <- IriLocker
+                          .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
+                            (for
+                              projectIris          <- projectOntologyIris
+                              projectOntologyBases  = projectIris.map(_.toIri.stripSuffix("/"))
+                              extIri               <- validateExternalIri(projectOntologyBases, mappingStr).mapError(BadRequest(_))
+                              update               <- RemoveClassMappingQuery.build(ontologyIri, classIri.smartIri, extIri)
+                              _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                                     .tapError(e =>
+                                       ZIO.logError(
+                                         s"DELETE class mapping failed for $classIri in $ontologyIri: ${e.getMessage}",
+                                       ),
+                                     )
+                                     .orDie
+                              r <- buildClassResponse(ontologyIri, classIri)
+                            yield r).either
+                          )
+                          .tapError(e =>
+                            ZIO.logError(
+                              s"DELETE class mapping lock failed for $classIri in $ontologyIri: ${e.getMessage}",
+                            ),
+                          )
+                          .orDie
+      response <- ZIO.fromEither(eitherResponse)
     } yield response
 
   /** F3 — PUT property mapping */
@@ -148,28 +175,41 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
-      _           <- lookupProperty(propertyIri, ontologyIri)
-      projectIris <- projectOntologyIris
-      mappings    <- ZIO
-                    .validate(request.mappings)(validateExternalIri(projectIris, _))
-                    .mapError(errors =>
-                      BadRequest(s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}"),
-                    )
-      // TODO (future): validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty).
-      // OWL DL disallows mapping an ObjectProperty to a DatatypeProperty. Deferred per PRD "same contract as F1".
-      update    <- AddPropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, mappings)
+      _         <- lookupProperty(propertyIri, ontologyIri)
       requestId <- Random.nextUUID
-      // Infrastructure failures after the SPARQL commit are not recoverable within this request.
-      // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
-      // exposing internals. Clients must treat PUT as idempotent on retry (re-inserting a triple is a no-op).
-      // buildPropertyResponse is inside the lock so the cache read is guaranteed to reflect this write.
-      response <-
-        IriLocker
-          .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
-            triplestore.query(update) *> ontologyCache.refreshCache() *> buildPropertyResponse(ontologyIri, propertyIri),
-          )
-          .tapError(e => ZIO.logError(s"PUT property mapping failed for $propertyIri in $ontologyIri: ${e.getMessage}"))
-          .orDie
+      // projectOntologyIris is read inside the lock so the validation snapshot is atomic with the write.
+      eitherResponse <- IriLocker
+                          .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
+                            (for
+                              projectIris          <- projectOntologyIris
+                              projectOntologyBases  = projectIris.map(_.toIri.stripSuffix("/"))
+                              mappings             <- ZIO
+                                                       .validate(request.mappings)(validateExternalIri(projectOntologyBases, _))
+                                                       .mapError(errors =>
+                                                         BadRequest(
+                                                           s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}",
+                                                         ),
+                                                       )
+                              // TODO DEV-5887: validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty).
+                              // OWL DL disallows mapping an ObjectProperty to a DatatypeProperty. Deferred per PRD "same contract as F1".
+                              update <- AddPropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, mappings)
+                              _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                                     .tapError(e =>
+                                       ZIO.logError(
+                                         s"PUT property mapping failed for $propertyIri in $ontologyIri: ${e.getMessage}",
+                                       ),
+                                     )
+                                     .orDie
+                              r <- buildPropertyResponse(ontologyIri, propertyIri)
+                            yield r).either
+                          )
+                          .tapError(e =>
+                            ZIO.logError(
+                              s"PUT property mapping lock failed for $propertyIri in $ontologyIri: ${e.getMessage}",
+                            ),
+                          )
+                          .orDie
+      response <- ZIO.fromEither(eitherResponse)
     } yield response
 
   /** F4 — DELETE property mapping */
@@ -187,23 +227,33 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
-      _           <- lookupProperty(propertyIri, ontologyIri)
-      projectIris <- projectOntologyIris
-      extIri      <- validateExternalIri(projectIris, mappingStr).mapError(BadRequest(_))
-      update      <- RemovePropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, extIri)
-      requestId   <- Random.nextUUID
-      // Infrastructure failures after the SPARQL commit are not recoverable within this request.
-      // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
-      // exposing internals. Clients must treat DELETE as idempotent on retry (removing an absent triple is a no-op).
-      // buildPropertyResponse is inside the lock so the cache read is guaranteed to reflect this write.
-      response <- IriLocker
-                    .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
-                      triplestore.query(update) *> ontologyCache.refreshCache() *> buildPropertyResponse(ontologyIri, propertyIri),
-                    )
-                    .tapError(e =>
-                      ZIO.logError(s"DELETE property mapping failed for $propertyIri in $ontologyIri: ${e.getMessage}"),
-                    )
-                    .orDie
+      _         <- lookupProperty(propertyIri, ontologyIri)
+      requestId <- Random.nextUUID
+      // projectOntologyIris is read inside the lock so the validation snapshot is atomic with the write.
+      eitherResponse <- IriLocker
+                          .runWithIriLock(requestId, ONTOLOGY_CACHE_LOCK_IRI)(
+                            (for
+                              projectIris          <- projectOntologyIris
+                              projectOntologyBases  = projectIris.map(_.toIri.stripSuffix("/"))
+                              extIri               <- validateExternalIri(projectOntologyBases, mappingStr).mapError(BadRequest(_))
+                              update               <- RemovePropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, extIri)
+                              _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                                     .tapError(e =>
+                                       ZIO.logError(
+                                         s"DELETE property mapping failed for $propertyIri in $ontologyIri: ${e.getMessage}",
+                                       ),
+                                     )
+                                     .orDie
+                              r <- buildPropertyResponse(ontologyIri, propertyIri)
+                            yield r).either
+                          )
+                          .tapError(e =>
+                            ZIO.logError(
+                              s"DELETE property mapping lock failed for $propertyIri in $ontologyIri: ${e.getMessage}",
+                            ),
+                          )
+                          .orDie
+      response <- ZIO.fromEither(eitherResponse)
     } yield response
 
   private def projectOntologyIris: UIO[Set[SmartIri]] =
@@ -211,7 +261,7 @@ final class OntologyMappingRestService(
       cacheData.ontologies.keySet.filter(iri => !iri.isKnoraBuiltInDefinitionIri && !iri.isKnoraSharedDefinitionIri)
     }
 
-  private def validateExternalIri(projectOntologyIris: Set[SmartIri], iriStr: String): IO[String, SmartIri] = {
+  private def validateExternalIri(projectOntologyBases: Set[String], iriStr: String): IO[String, SmartIri] = {
     // Explicit IRIREF guard: reject characters that are illegal in SPARQL 1.1 IRIREF positions
     // regardless of where they appear (path, query, fragment). The UrlValidator path-component
     // regex blocks '{'/'}' in path segments but not in query components.
@@ -219,13 +269,11 @@ final class OntologyMappingRestService(
     if forbiddenChar.isDefined then
       ZIO.fail(s"Mapping IRI contains a forbidden character '${forbiddenChar.get}': $iriStr")
     else {
-      // Pre-compute once per validateExternalIri call; callers invoke this inside ZIO.validate
-      // so this allocation happens once per IRI, not once per IRI×ontology.
-      val bases = projectOntologyIris.map(_.toIri.stripSuffix("/"))
+      // projectOntologyBases is pre-computed by the caller (once per request, not once per IRI).
       iriConverter.asSmartIri(iriStr).mapError(_.getMessage).flatMap { iri =>
         if iri.isKnoraOntologyIri || iri.isKnoraEntityIri then
           ZIO.fail(s"Mapping IRI must be an external IRI, not a Knora-managed IRI: $iriStr")
-        else if isProjectOntologyIri(iri, bases) then
+        else if isProjectOntologyIri(iri, projectOntologyBases) then
           ZIO.fail(s"Mapping IRI belongs to a DSP project ontology and cannot be used as a mapping: $iriStr")
         else ZIO.succeed(iri)
       }
