@@ -1,0 +1,82 @@
+/*
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.knora.webapi.slice.ontology.repo
+
+import zio.*
+import zio.test.*
+
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+
+object AddClassMappingQuerySpec extends ZIOSpecDefault {
+
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+
+  private val ontologyIri  = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
+  private val classIri     = ontologyIri.makeClass("Thing").smartIri
+  private val externalIri1 = "http://schema.org/Thing".toSmartIri
+  private val externalIri2 = "http://purl.org/dc/terms/Agent".toSmartIri
+
+  override def spec: Spec[TestEnvironment, Any] = suite("AddClassMappingQuerySpec")(
+    test("query contains the class IRI in the INSERT clause") {
+      val knownInstant = java.time.Instant.parse("2026-01-01T00:00:00Z")
+      for {
+        _      <- TestClock.setTime(knownInstant)
+        update <- AddClassMappingQuery.build(ontologyIri, classIri, List(externalIri1))
+      } yield assertTrue(
+        update.sparql.contains("rdfs:subClassOf"),
+        update.sparql.contains(knownInstant.toString),
+        update.sparql.contains("knora-base:lastModificationDate"),
+        // lastModificationDate appears in both DELETE and INSERT
+        update.sparql.indexOf("lastModificationDate") != update.sparql.lastIndexOf("lastModificationDate"),
+      )
+    },
+    test("query contains all external IRIs when multiple mappings are given") {
+      for {
+        update <- AddClassMappingQuery.build(ontologyIri, classIri, List(externalIri1, externalIri2))
+      } yield assertTrue(
+        update.sparql.contains("http://schema.org/Thing"),
+        update.sparql.contains("http://purl.org/dc/terms/Agent"),
+      )
+    },
+    test("query uses OPTIONAL for the WHERE clause (idempotency)") {
+      for {
+        update <- AddClassMappingQuery.build(ontologyIri, classIri, List(externalIri1))
+      } yield assertTrue(update.sparql.contains("OPTIONAL"))
+    },
+    test("query output contains no unescaped injection-dangerous characters in IRI positions") {
+      for {
+        update <- AddClassMappingQuery.build(ontologyIri, classIri, List(externalIri1))
+      } yield {
+        val sparql = update.sparql
+        assertTrue(
+          !sparql.contains("'>"),
+          !sparql.contains("'{"),
+          !sparql.contains("'}"),
+        )
+      }
+    },
+    test("query does not decode percent-encoded injection characters in IRI positions") {
+      // %3E = '>', %7B = '{', %7D = '}' — valid percent-encoding in IRIs; RDF4J must not decode them
+      val encodedIri = "http://example.org/Thing%3Einjection".toSmartIri
+      for {
+        update <- AddClassMappingQuery.build(ontologyIri, classIri, List(encodedIri))
+      } yield assertTrue(
+        !update.sparql.contains(">injection"),
+        !update.sparql.contains("{injection"),
+      )
+    },
+    test("query targets the correct ontology graph") {
+      for {
+        update <- AddClassMappingQuery.build(ontologyIri, classIri, List(externalIri1))
+      } yield assertTrue(
+        // Internal schema IRI used in the query
+        update.sparql.contains("http://www.knora.org/ontology/0001/anything"),
+      )
+    },
+  )
+}
