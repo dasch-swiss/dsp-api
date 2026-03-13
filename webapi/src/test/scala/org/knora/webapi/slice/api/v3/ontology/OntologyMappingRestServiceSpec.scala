@@ -24,6 +24,7 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
 import org.knora.webapi.slice.ontology.domain.ReadClassInfoV2Builder
 import org.knora.webapi.slice.ontology.domain.ReadOntologyV2Builder
+import org.knora.webapi.slice.ontology.domain.ReadPropertyInfoV2Builder
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromString
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
@@ -46,12 +47,13 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
     .addOntology(ReadOntologyV2Builder.builder(anythingOntologyIri.smartIri))
     .build
 
-  // Cache data: ontology assigned to testProjectIri + a class in that ontology
+  // Cache data: ontology assigned to testProjectIri + a class and a property in that ontology
   private val projectOntologyCacheData = OntologyCacheDataBuilder.builder
     .addOntology(
       ReadOntologyV2Builder
         .builder(anythingOntologyIri.smartIri)
         .addClassInfo(ReadClassInfoV2Builder.builder(anythingClassIri.smartIri))
+        .addPropertyInfo(ReadPropertyInfoV2Builder.builder(anythingPropertyIri.smartIri))
         .assignToProject(testProjectIri),
     )
     .build
@@ -162,7 +164,14 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
             _ <- OntologyCacheFake.set(projectOntologyCacheData)
             // Project repo is empty — findById returns None
             result <- putClass(anythingOntologyIri, anythingClassIri, List("https://schema.org/Thing"))
-          } yield assertTrue(result == Exit.fail(Forbidden(s"Project $testProjectIri not found.")))
+          } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
+        },
+        test("putPropertyMapping returns Forbidden when the ontology's project cannot be found") {
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheData)
+            // Project repo is empty — findById returns None
+            result <- putProperty(anythingOntologyIri, anythingPropertyIri, List("https://schema.org/Thing"))
+          } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
         },
       ),
       suite("IRI validation — Knora IRI must not be used as a mapping target")(
@@ -177,6 +186,27 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
                    ),
                  )
             result <- putClass(anythingOntologyIri, anythingClassIri, List(knoraIri))
+          } yield assertTrue(
+            result match {
+              case Exit.Failure(cause) =>
+                cause.failureOption match {
+                  case Some(BadRequest(msg, _)) => msg.contains("Mapping IRI must be an external IRI")
+                  case _                        => false
+                }
+              case _ => false
+            },
+          )
+        },
+        test("putPropertyMapping rejects a Knora entity IRI as mapping") {
+          val knoraIri = "http://www.knora.org/ontology/knora-base#TextValue"
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheData)
+            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
+                   _.save(
+                     org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri),
+                   ),
+                 )
+            result <- putProperty(anythingOntologyIri, anythingPropertyIri, List(knoraIri))
           } yield assertTrue(
             result match {
               case Exit.Failure(cause) =>

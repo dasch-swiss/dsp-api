@@ -38,7 +38,7 @@ final class OntologyMappingRestService(
   ontologyCache: OntologyCache,
   triplestore: TriplestoreService,
   projectService: KnoraProjectService,
-)(implicit sf: StringFormatter) {
+)(implicit val sf: StringFormatter) {
 
   private val MaxMappingsPerRequest = 100
 
@@ -143,6 +143,8 @@ final class OntologyMappingRestService(
       mappings    <- ZIO
                     .validate(request.mappings)(validateExternalIri(projectIris, _))
                     .mapError(errors => BadRequest(errors.mkString(", ")))
+      // TODO (future): validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty).
+      // OWL DL disallows mapping an ObjectProperty to a DatatypeProperty. Deferred per PRD "same contract as F1".
       update    <- AddPropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, mappings)
       requestId <- Random.nextUUID
       // Infrastructure failures after the SPARQL commit are not recoverable within this request.
@@ -157,8 +159,6 @@ final class OntologyMappingRestService(
           .orDie
       response <- buildPropertyResponse(ontologyIri, propertyIri)
     } yield response
-    // TODO (future): validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty via rdfs:subPropertyOf).
-    // OWL DL disallows mapping an ObjectProperty to a DatatypeProperty. Deferred per PRD "same contract as F1".
 
   /** F4 — DELETE property mapping */
   def deletePropertyMapping(
@@ -210,10 +210,8 @@ final class OntologyMappingRestService(
 
   private def isProjectOntologyIri(iri: SmartIri, projectOntologyIris: Set[SmartIri]): Boolean = {
     val iriStr = iri.toIri
-    projectOntologyIris.exists { ontIri =>
-      val base = ontIri.toIri.stripSuffix("/")
-      iriStr == base || iriStr.startsWith(base + "/") || iriStr.startsWith(base + "#")
-    }
+    val bases  = projectOntologyIris.map(_.toIri.stripSuffix("/"))
+    bases.exists(base => iriStr == base || iriStr.startsWith(base + "/") || iriStr.startsWith(base + "#"))
   }
 
   private def lookupOntology(ontologyIri: OntologyIri): IO[NotFound, ReadOntologyV2] =
@@ -230,7 +228,7 @@ final class OntologyMappingRestService(
       case None             => ZIO.fail(Forbidden("Cannot modify a system ontology."))
       case Some(projectIri) =>
         projectService.findById(projectIri).orDie.flatMap {
-          case None          => ZIO.fail(Forbidden(s"Project $projectIri not found."))
+          case None          => ZIO.fail(Forbidden("Cannot modify this ontology."))
           case Some(project) => auth.ensureSystemAdminOrProjectAdmin(user, project)
         }
     }
@@ -257,12 +255,10 @@ final class OntologyMappingRestService(
     for {
       ontology <- ontologyRepo
                     .findById(ontologyIri)
-                    .orDie
                     .someOrFail(new RuntimeException(s"Ontology $ontologyIri missing from cache after update"))
                     .orDie
       classInfo <- ontologyRepo
                      .findClassBy(classIri)
-                     .orDie
                      .someOrFail(new RuntimeException(s"Class $classIri missing from cache after update"))
                      .orDie
       lmdOpt = ontology.ontologyMetadata.lastModificationDate
@@ -286,12 +282,10 @@ final class OntologyMappingRestService(
     for {
       ontology <- ontologyRepo
                     .findById(ontologyIri)
-                    .orDie
                     .someOrFail(new RuntimeException(s"Ontology $ontologyIri missing from cache after update"))
                     .orDie
       propertyInfo <- ontologyRepo
                         .findProperty(propertyIri)
-                        .orDie
                         .someOrFail(new RuntimeException(s"Property $propertyIri missing from cache after update"))
                         .orDie
       lmdOpt = ontology.ontologyMetadata.lastModificationDate
