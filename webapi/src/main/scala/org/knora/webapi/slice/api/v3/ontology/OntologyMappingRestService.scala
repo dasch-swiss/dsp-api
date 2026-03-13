@@ -54,7 +54,7 @@ final class OntologyMappingRestService(
     for {
       _           <- ZIO
                        .fail(BadRequest("'mappings' must contain at least one IRI."))
-                       .unless(request.mappings.nonEmpty)
+                       .unless(Option(request.mappings).exists(_.nonEmpty))
       _           <- ZIO
                        .fail(BadRequest(s"'mappings' must contain at most $MaxMappingsPerRequest IRIs (got ${request.mappings.size})."))
                        .unless(request.mappings.size <= MaxMappingsPerRequest)
@@ -69,6 +69,9 @@ final class OntologyMappingRestService(
       _           <- lookupClass(classIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
       update      <- AddClassMappingQuery.build(ontologyIri, classIri.smartIri, mappings)
+      // Infrastructure failures after the SPARQL commit are not recoverable within this request.
+      // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
+      // exposing internals. Clients must treat PUT as idempotent on retry (re-inserting a triple is a no-op).
       _           <- (triplestore.query(update) *> ontologyCache.refreshCache())
                        .tapError(e => ZIO.logError(s"PUT class mapping failed for $classIri in $ontologyIri: ${e.getMessage}"))
                        .orDie
@@ -78,8 +81,9 @@ final class OntologyMappingRestService(
   /** F2 — DELETE class mapping */
   def deleteClassMapping(
     user: User,
-  )(ontologyIriStr: String, classIriStr: String, mappingStr: String): IO[V3ErrorInfo, ClassMappingResponse] =
+  )(ontologyIriStr: String, classIriStr: String, mappingOpt: Option[String]): IO[V3ErrorInfo, ClassMappingResponse] =
     for {
+      mappingStr  <- ZIO.fromOption(mappingOpt).orElseFail(BadRequest("Missing required query parameter 'mapping'."))
       ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
       classIri    <- iriConverter.asResourceClassIri(classIriStr).mapError(BadRequest(_))
       _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
@@ -89,6 +93,9 @@ final class OntologyMappingRestService(
       _           <- lookupClass(classIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
       update      <- RemoveClassMappingQuery.build(ontologyIri, classIri.smartIri, extIri)
+      // Infrastructure failures after the SPARQL commit are not recoverable within this request.
+      // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
+      // exposing internals. Clients must treat DELETE as idempotent on retry (removing an absent triple is a no-op).
       _           <- (triplestore.query(update) *> ontologyCache.refreshCache())
                        .tapError(e => ZIO.logError(s"DELETE class mapping failed for $classIri in $ontologyIri: ${e.getMessage}"))
                        .orDie
@@ -106,7 +113,7 @@ final class OntologyMappingRestService(
     for {
       _           <- ZIO
                        .fail(BadRequest("'mappings' must contain at least one IRI."))
-                       .unless(request.mappings.nonEmpty)
+                       .unless(Option(request.mappings).exists(_.nonEmpty))
       _           <- ZIO
                        .fail(BadRequest(s"'mappings' must contain at most $MaxMappingsPerRequest IRIs (got ${request.mappings.size})."))
                        .unless(request.mappings.size <= MaxMappingsPerRequest)
@@ -121,6 +128,9 @@ final class OntologyMappingRestService(
       _           <- lookupProperty(propertyIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
       update      <- AddPropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, mappings)
+      // Infrastructure failures after the SPARQL commit are not recoverable within this request.
+      // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
+      // exposing internals. Clients must treat PUT as idempotent on retry (re-inserting a triple is a no-op).
       _           <- (triplestore.query(update) *> ontologyCache.refreshCache())
                        .tapError(e => ZIO.logError(s"PUT property mapping failed for $propertyIri in $ontologyIri: ${e.getMessage}"))
                        .orDie
@@ -132,8 +142,9 @@ final class OntologyMappingRestService(
   /** F4 — DELETE property mapping */
   def deletePropertyMapping(
     user: User,
-  )(ontologyIriStr: String, propertyIriStr: String, mappingStr: String): IO[V3ErrorInfo, PropertyMappingResponse] =
+  )(ontologyIriStr: String, propertyIriStr: String, mappingOpt: Option[String]): IO[V3ErrorInfo, PropertyMappingResponse] =
     for {
+      mappingStr  <- ZIO.fromOption(mappingOpt).orElseFail(BadRequest("Missing required query parameter 'mapping'."))
       ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
       propertyIri <- iriConverter.asPropertyIri(propertyIriStr).mapError(BadRequest(_))
       _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
@@ -143,6 +154,9 @@ final class OntologyMappingRestService(
       _           <- lookupProperty(propertyIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
       update      <- RemovePropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, extIri)
+      // Infrastructure failures after the SPARQL commit are not recoverable within this request.
+      // orDie escalates to a fiber defect; ZIO HTTP's global handler returns HTTP 500 without
+      // exposing internals. Clients must treat DELETE as idempotent on retry (removing an absent triple is a no-op).
       _           <- (triplestore.query(update) *> ontologyCache.refreshCache())
                        .tapError(e => ZIO.logError(s"DELETE property mapping failed for $propertyIri in $ontologyIri: ${e.getMessage}"))
                        .orDie
