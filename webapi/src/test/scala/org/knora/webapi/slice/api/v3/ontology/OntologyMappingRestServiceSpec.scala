@@ -174,6 +174,74 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
         },
       ),
+      suite("authorization — system ontology cannot be modified (DELETE)")(
+        test("deleteClassMapping returns Forbidden for an ontology with no projectIri") {
+          for {
+            _      <- OntologyCacheFake.set(systemOntologyCacheData)
+            result <- deleteClass(anythingOntologyIri, anythingClassIri, Some("https://schema.org/Thing"))
+          } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify a system ontology.")))
+        },
+        test("deletePropertyMapping returns Forbidden for an ontology with no projectIri") {
+          for {
+            _      <- OntologyCacheFake.set(systemOntologyCacheData)
+            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, Some("https://schema.org/Thing"))
+          } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify a system ontology.")))
+        },
+      ),
+      suite("authorization — project not found (DELETE)")(
+        test("deleteClassMapping returns Forbidden when the ontology's project cannot be found") {
+          for {
+            _      <- OntologyCacheFake.set(projectOntologyCacheData)
+            result <- deleteClass(anythingOntologyIri, anythingClassIri, Some("https://schema.org/Thing"))
+          } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
+        },
+        test("deletePropertyMapping returns Forbidden when the ontology's project cannot be found") {
+          for {
+            _      <- OntologyCacheFake.set(projectOntologyCacheData)
+            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, Some("https://schema.org/Thing"))
+          } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
+        },
+      ),
+      suite("IRI validation — Knora IRI rejected by DELETE")(
+        test("deleteClassMapping rejects a Knora entity IRI as mapping") {
+          val knoraIri = "http://www.knora.org/ontology/knora-base#TextValue"
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheData)
+            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
+                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
+                 )
+            result <- deleteClass(anythingOntologyIri, anythingClassIri, Some(knoraIri))
+          } yield assertTrue(
+            result match {
+              case Exit.Failure(cause) =>
+                cause.failureOption match {
+                  case Some(BadRequest(msg, _)) => msg.contains("Mapping IRI must be an external IRI")
+                  case _                        => false
+                }
+              case _ => false
+            },
+          )
+        },
+        test("deletePropertyMapping rejects a Knora entity IRI as mapping") {
+          val knoraIri = "http://www.knora.org/ontology/knora-base#TextValue"
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheData)
+            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
+                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
+                 )
+            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, Some(knoraIri))
+          } yield assertTrue(
+            result match {
+              case Exit.Failure(cause) =>
+                cause.failureOption match {
+                  case Some(BadRequest(msg, _)) => msg.contains("Mapping IRI must be an external IRI")
+                  case _                        => false
+                }
+              case _ => false
+            },
+          )
+        },
+      ),
       suite("IRI validation — Knora IRI must not be used as a mapping target")(
         test("putClassMapping rejects a Knora entity IRI as mapping") {
           val knoraIri = "http://www.knora.org/ontology/knora-base#TextValue"

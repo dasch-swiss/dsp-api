@@ -54,13 +54,36 @@ object AddPropertyMappingQuerySpec extends ZIOSpecDefault {
         update <- AddPropertyMappingQuery.build(ontologyIri, propertyIri, List(externalIri1))
       } yield assertTrue(update.sparql.contains("OPTIONAL"))
     },
+    test("query output contains no unescaped injection-dangerous characters in IRI positions") {
+      for {
+        update <- AddPropertyMappingQuery.build(ontologyIri, propertyIri, List(externalIri1))
+      } yield {
+        val sparql = update.sparql
+        assertTrue(
+          !sparql.contains("'>"),
+          !sparql.contains("'{"),
+          !sparql.contains("'}"),
+        )
+      }
+    },
     test("query does not decode percent-encoded injection characters in IRI positions") {
-      // %3E = '>' — valid percent-encoding in IRIs; RDF4J must not decode it
+      // %3E = '>', %7B = '{', %7D = '}' — valid percent-encoding in IRIs; RDF4J must not decode them
       val encodedIri = "http://example.org/prop%3Einjection".toSmartIri
       for {
         update <- AddPropertyMappingQuery.build(ontologyIri, propertyIri, List(encodedIri))
       } yield assertTrue(
         !update.sparql.contains(">injection"),
+        !update.sparql.contains("{injection"),
+        !update.sparql.contains("}injection"),
+      )
+    },
+    test("query does not decode percent-encoded { and } in IRI positions") {
+      val encodedIri = "http://example.org/prop%7Binjection".toSmartIri
+      for {
+        update <- AddPropertyMappingQuery.build(ontologyIri, propertyIri, List(encodedIri))
+      } yield assertTrue(
+        !update.sparql.contains("{injection"),
+        !update.sparql.contains("}injection"),
       )
     },
     test("query targets the correct ontology graph") {
