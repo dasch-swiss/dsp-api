@@ -7,6 +7,7 @@ package org.knora.webapi.slice.common
 
 import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.impl.SimpleNamespace
+import zio.*
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.PropertyPath
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
@@ -87,6 +88,21 @@ trait QueryBuilderHelper {
     values.flatMap(pred => pred.objects.map(obj => iri.has(toRdfIri(pred.predicateIri), toRdfValue(obj)))).toList
 
   def graphIri(knoraProject: KnoraProject): Iri = Rdf.iri(ProjectService.projectDataNamedGraphV2(knoraProject).value)
+
+  /**
+   * Returns true when `iriStr` contains a character forbidden in a SPARQL 1.1 IRIREF position.
+   * Delegates to [[SparqlIriSafety]] — single source of truth.
+   */
+  protected def isSparqlIriRefUnsafe(iriStr: String): Boolean = SparqlIriSafety.isSparqlIriRefUnsafe(iriStr)
+
+  /**
+   * Returns [[UIO.unit]] or dies with [[IllegalArgumentException]] if `iriStr` is SPARQL-unsafe.
+   * Makes Gate-3 defence-in-depth guards explicit ZIO effects rather than hidden throws.
+   */
+  protected def requireSafeIriEffect(iriStr: String, label: String): UIO[Unit] =
+    if (isSparqlIriRefUnsafe(iriStr))
+      ZIO.die(new IllegalArgumentException(s"$label '$iriStr' contains a SPARQL IRIREF-forbidden character"))
+    else ZIO.unit
 
   def variable(name: String): Variable = SparqlBuilder.`var`(name)
 

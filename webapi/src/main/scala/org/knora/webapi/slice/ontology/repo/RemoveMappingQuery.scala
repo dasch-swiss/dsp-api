@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.eclipse.rdf4j.model.IRI
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
@@ -19,46 +20,54 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
  * Builds a SPARQL UPDATE that atomically:
- *  1. Removes the rdfs:subClassOf triple from the class to the given external IRI (if present).
+ *  1. Removes the `predicate` triple from `subjectIri` to `externalObjectIri` (if present).
  *  2. Rotates the ontology's lastModificationDate to the current clock instant.
  *
+ * Pass [[org.eclipse.rdf4j.model.vocabulary.RDFS.SUBCLASSOF]] for class mappings (F2)
+ * or [[org.eclipse.rdf4j.model.vocabulary.RDFS.SUBPROPERTYOF]] for property mappings (F4).
+ *
  * Idempotency: SPARQL 1.1 §3.1.3 — deleting a triple that is not present is a no-op.
- * The OPTIONAL in WHERE makes the query produce one solution even if lastModificationDate is absent,
- * so the lastModificationDate rotation always fires.
+ * The OPTIONAL in WHERE makes the query produce one solution even if lastModificationDate is
+ * absent, so the lastModificationDate rotation always fires.
  *
- * Note: lastModificationDate is rotated even when the subClassOf triple was not present
+ * Note: lastModificationDate is rotated even when the mapping triple was not present
  * (no-op deletion). This is intentional — it keeps the SPARQL pattern uniform and avoids
- * a read-before-write. Accepted team decision; document in the PR.
+ * a read-before-write.
  *
- * Gate 1 (primary): explicit sparqlIriRefForbidden character-set check in OntologyMappingRestService.validateExternalIri
- * Gate 2 (structural): SmartIri construction validates RFC 3987 IRI structure (but does NOT reject { or } in all positions)
- * Gate 3 (defence-in-depth): require guards in build() catch any bypass of Gates 1–2
+ * Gate 1 (primary): explicit SPARQL IRIREF character-set check in OntologyMappingRestService.validateExternalIri
+ * Gate 2 (structural): SmartIri construction validates RFC 3987 IRI structure
+ * Gate 3 (defence-in-depth): requireSafeIriEffect in build() catches any bypass of Gates 1–2
  */
-object RemoveClassMappingQuery extends QueryBuilderHelper {
-
-  private val sparqlIriRefForbidden = Set('{', '}', '"', '<', '>', '\\', '^', '`', ' ', '\t', '\n', '\r')
-
-  private def requireSafeIri(iriStr: String): Unit = {
-    val bad = iriStr.filter(sparqlIriRefForbidden.contains)
-    require(bad.isEmpty, s"IRI '$iriStr' contains SPARQL-unsafe characters: ${bad.mkString(", ")}")
-  }
+object RemoveMappingQuery extends QueryBuilderHelper {
 
   def build(
     ontologyIri: OntologyIri,
-    classIri: SmartIri,
-    externalSuperIri: SmartIri,
-  ): UIO[Update] = Clock.instant.map { now =>
-    requireSafeIri(ontologyIri.smartIri.toIri)
-    requireSafeIri(classIri.toIri)
-    requireSafeIri(externalSuperIri.toIri)
+    subjectIri: SmartIri,
+    predicate: IRI,
+    externalObjectIri: SmartIri,
+  ): UIO[Update] =
+    for {
+      _   <- requireSafeIriEffect(ontologyIri.smartIri.toIri, "ontologyIri")
+      _   <- requireSafeIriEffect(subjectIri.toIri, "subjectIri")
+      _   <- requireSafeIriEffect(externalObjectIri.toIri, "mappingIri")
+      now <- Clock.instant
+    } yield buildUpdate(ontologyIri, subjectIri, predicate, externalObjectIri, now)
+
+  private def buildUpdate(
+    ontologyIri: OntologyIri,
+    subjectIri: SmartIri,
+    predicate: IRI,
+    externalObjectIri: SmartIri,
+    now: java.time.Instant,
+  ): Update = {
     val ontology   = toRdfIri(ontologyIri)
-    val clsIri     = toRdfIri(classIri)
-    val extIri     = toRdfIri(externalSuperIri)
+    val subjIri    = toRdfIri(subjectIri)
+    val extIri     = toRdfIri(externalObjectIri)
     val oldDate    = variable("oldDate")
     val ontologyNS = NS(ontologyIri)
 
     val deletePatterns: List[TriplePattern] = List(
-      clsIri.has(RDFS.SUBCLASSOF, extIri),
+      subjIri.has(predicate, extIri),
       ontology.has(KB.lastModificationDate, oldDate),
     )
 

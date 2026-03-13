@@ -242,6 +242,46 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           )
         },
       ),
+      suite("IRI validation — forbidden SPARQL characters rejected by Gate 1")(
+        test("putClassMapping rejects a mapping IRI containing '|'") {
+          val pipeIri = "http://schema.org/Thing|injection"
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheData)
+            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
+                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
+                 )
+            result <- putClass(anythingOntologyIri, anythingClassIri, List(pipeIri))
+          } yield assertTrue(
+            result match {
+              case Exit.Failure(cause) =>
+                cause.failureOption match {
+                  case Some(BadRequest(msg, _)) => msg.contains("forbidden character")
+                  case _                        => false
+                }
+              case _ => false
+            },
+          )
+        },
+        test("putClassMapping rejects a mapping IRI containing a control character") {
+          val ctrlIri = "http://schema.org/Thing\u0001ctrl"
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheData)
+            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
+                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
+                 )
+            result <- putClass(anythingOntologyIri, anythingClassIri, List(ctrlIri))
+          } yield assertTrue(
+            result match {
+              case Exit.Failure(cause) =>
+                cause.failureOption match {
+                  case Some(BadRequest(msg, _)) => msg.contains("forbidden character")
+                  case _                        => false
+                }
+              case _ => false
+            },
+          )
+        },
+      ),
       suite("IRI validation — Knora IRI must not be used as a mapping target")(
         test("putClassMapping rejects a Knora entity IRI as mapping") {
           val knoraIri = "http://www.knora.org/ontology/knora-base#TextValue"

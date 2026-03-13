@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.eclipse.rdf4j.model.IRI
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
@@ -20,39 +21,44 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 /**
  * Builds a SPARQL UPDATE that atomically:
  *  1. Rotates the ontology's lastModificationDate to the current clock instant.
- *  2. Adds rdfs:subClassOf triples from the class to each of the given external IRIs.
+ *  2. Adds `predicate` triples from `subjectIri` to each of the given external IRIs.
+ *
+ * Pass [[org.eclipse.rdf4j.model.vocabulary.RDFS.SUBCLASSOF]] for class mappings (F1)
+ * or [[org.eclipse.rdf4j.model.vocabulary.RDFS.SUBPROPERTYOF]] for property mappings (F3).
  *
  * The INSERT is idempotent — re-inserting an existing triple is a no-op per SPARQL 1.1.
  *
  * The WHERE clause uses OPTIONAL so the query always produces one solution even when the
- * ontology has no existing lastModificationDate.  That keeps the DELETE/INSERT pair atomic
- * regardless of triplestore state.
+ * ontology has no existing lastModificationDate.
  *
- * Gate 1 (primary): explicit sparqlIriRefForbidden character-set check in OntologyMappingRestService.validateExternalIri
- * Gate 2 (structural): SmartIri construction validates RFC 3987 IRI structure (but does NOT reject { or } in all positions)
- * Gate 3 (defence-in-depth): require guards in build() catch any bypass of Gates 1–2
+ * Gate 1 (primary): explicit SPARQL IRIREF character-set check in OntologyMappingRestService.validateExternalIri
+ * Gate 2 (structural): SmartIri construction validates RFC 3987 IRI structure
+ * Gate 3 (defence-in-depth): requireSafeIriEffect in build() catches any bypass of Gates 1–2
  */
-object AddClassMappingQuery extends QueryBuilderHelper {
-
-  private val sparqlIriRefForbidden = Set('{', '}', '"', '<', '>', '\\', '^', '`', ' ', '\t', '\n', '\r')
-
-  private def requireSafeIri(iriStr: String): Unit = {
-    val bad = iriStr.filter(sparqlIriRefForbidden.contains)
-    require(bad.isEmpty, s"IRI '$iriStr' contains SPARQL-unsafe characters: ${bad.mkString(", ")}")
-  }
+object AddMappingQuery extends QueryBuilderHelper {
 
   def build(
     ontologyIri: OntologyIri,
-    classIri: SmartIri,
-    externalSuperIris: List[SmartIri],
-  ): UIO[Update] = Clock.instant.map { now =>
-    val ontologyIriStr = ontologyIri.smartIri.toIri
-    val classIriStr    = classIri.toIri
-    requireSafeIri(ontologyIriStr)
-    requireSafeIri(classIriStr)
-    externalSuperIris.foreach(iri => requireSafeIri(iri.toIri))
+    subjectIri: SmartIri,
+    predicate: IRI,
+    externalObjectIris: List[SmartIri],
+  ): UIO[Update] =
+    for {
+      _   <- requireSafeIriEffect(ontologyIri.smartIri.toIri, "ontologyIri")
+      _   <- requireSafeIriEffect(subjectIri.toIri, "subjectIri")
+      _   <- ZIO.foreachDiscard(externalObjectIris)(iri => requireSafeIriEffect(iri.toIri, "mappingIri"))
+      now <- Clock.instant
+    } yield buildUpdate(ontologyIri, subjectIri, predicate, externalObjectIris, now)
+
+  private def buildUpdate(
+    ontologyIri: OntologyIri,
+    subjectIri: SmartIri,
+    predicate: IRI,
+    externalObjectIris: List[SmartIri],
+    now: java.time.Instant,
+  ): Update = {
     val ontology   = toRdfIri(ontologyIri)
-    val clsIri     = toRdfIri(classIri)
+    val subjIri    = toRdfIri(subjectIri)
     val oldDate    = variable("oldDate")
     val ontologyNS = NS(ontologyIri)
 
@@ -60,7 +66,7 @@ object AddClassMappingQuery extends QueryBuilderHelper {
 
     val insertPatterns: List[TriplePattern] =
       ontology.has(KB.lastModificationDate, toRdfLiteral(now)) ::
-        externalSuperIris.map(iri => clsIri.has(RDFS.SUBCLASSOF, toRdfIri(iri)))
+        externalObjectIris.map(iri => subjIri.has(predicate, toRdfIri(iri)))
 
     val wherePattern = ontology.has(KB.lastModificationDate, oldDate).optional()
 

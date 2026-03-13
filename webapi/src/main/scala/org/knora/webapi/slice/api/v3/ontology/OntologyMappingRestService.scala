@@ -23,10 +23,11 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.ontology.repo.AddClassMappingQuery
-import org.knora.webapi.slice.ontology.repo.AddPropertyMappingQuery
-import org.knora.webapi.slice.ontology.repo.RemoveClassMappingQuery
-import org.knora.webapi.slice.ontology.repo.RemovePropertyMappingQuery
+import org.eclipse.rdf4j.model.vocabulary.{RDFS => Rdf4jRDFS}
+
+import org.knora.webapi.slice.common.SparqlIriSafety
+import org.knora.webapi.slice.ontology.repo.AddMappingQuery
+import org.knora.webapi.slice.ontology.repo.RemoveMappingQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -41,10 +42,6 @@ final class OntologyMappingRestService(
 )(implicit val sf: StringFormatter) {
 
   private val MaxMappingsPerRequest = 100
-
-  // Characters forbidden in SPARQL 1.1 IRIREF production (RFC 3987 + SPARQL restrictions).
-  // '}' closes DELETE/INSERT/GRAPH blocks; '{' opens them — both are the primary injection vectors.
-  private val sparqlIriRefForbidden = Set('{', '}', '"', '<', '>', '\\', '^', '`', ' ', '\n', '\r', '\t')
 
   private val rdfsLabel   = Rdfs.Label.toSmartIri
   private val rdfsComment = Rdfs.Comment.toSmartIri
@@ -74,20 +71,21 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
-      _        <- lookupClass(classIri, ontologyIri)
-      // projectOntologyIris is read inside the lock so the validation snapshot is atomic with the write.
+      // lookupClass, projectOntologyIris, and IRI validation all run inside the lock so
+      // the entity-existence check and validation snapshot are atomic with the write.
       response <- withOntologyLock(for
-                    projectIris          <- projectOntologyIris
-                    projectOntologyBases  = projectIris.map(_.toIri.stripSuffix("/"))
-                    mappings             <- ZIO
-                                             .validate(request.mappings)(validateExternalIri(projectOntologyBases, _))
-                                             .mapError(errors =>
-                                               BadRequest(
-                                                 s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}",
-                                               ),
-                                             )
-                    update <- AddClassMappingQuery.build(ontologyIri, classIri.smartIri, mappings)
-                    _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                    _                   <- lookupClass(classIri, ontologyIri)
+                    projectIris         <- projectOntologyIris
+                    projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
+                    mappings            <- ZIO
+                                  .validate(request.mappings)(validateExternalIri(projectOntologyBases, _))
+                                  .mapError(errors =>
+                                    BadRequest(
+                                      s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}",
+                                    ),
+                                  )
+                    update <- AddMappingQuery.build(ontologyIri, classIri.smartIri, Rdf4jRDFS.SUBCLASSOF, mappings)
+                    _      <- (triplestore.query(update) *> ontologyCache.refreshCache())
                            .tapError(e =>
                              ZIO.logError(
                                s"PUT class mapping failed for $classIri in $ontologyIri: ${e.getMessage}",
@@ -109,14 +107,15 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
-      _        <- lookupClass(classIri, ontologyIri)
-      // projectOntologyIris is read inside the lock so the validation snapshot is atomic with the write.
+      // lookupClass, projectOntologyIris, and IRI validation all run inside the lock so
+      // the entity-existence check and validation snapshot are atomic with the write.
       response <- withOntologyLock(for
-                    projectIris          <- projectOntologyIris
-                    projectOntologyBases  = projectIris.map(_.toIri.stripSuffix("/"))
-                    extIri               <- validateExternalIri(projectOntologyBases, mappingStr).mapError(BadRequest(_))
-                    update               <- RemoveClassMappingQuery.build(ontologyIri, classIri.smartIri, extIri)
-                    _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                    _                   <- lookupClass(classIri, ontologyIri)
+                    projectIris         <- projectOntologyIris
+                    projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
+                    extIri              <- validateExternalIri(projectOntologyBases, mappingStr).mapError(BadRequest(_))
+                    update              <- RemoveMappingQuery.build(ontologyIri, classIri.smartIri, Rdf4jRDFS.SUBCLASSOF, extIri)
+                    _                   <- (triplestore.query(update) *> ontologyCache.refreshCache())
                            .tapError(e =>
                              ZIO.logError(
                                s"DELETE class mapping failed for $classIri in $ontologyIri: ${e.getMessage}",
@@ -152,21 +151,23 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
-      _        <- lookupProperty(propertyIri, ontologyIri)
-      // projectOntologyIris is read inside the lock so the validation snapshot is atomic with the write.
+      // lookupProperty, projectOntologyIris, and IRI validation all run inside the lock so
+      // the entity-existence check and validation snapshot are atomic with the write.
       response <- withOntologyLock(for
-                    projectIris          <- projectOntologyIris
-                    projectOntologyBases  = projectIris.map(_.toIri.stripSuffix("/"))
-                    mappings             <- ZIO
-                                             .validate(request.mappings)(validateExternalIri(projectOntologyBases, _))
-                                             .mapError(errors =>
-                                               BadRequest(
-                                                 s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}",
-                                               ),
-                                             )
+                    _                   <- lookupProperty(propertyIri, ontologyIri)
+                    projectIris         <- projectOntologyIris
+                    projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
+                    mappings            <- ZIO
+                                  .validate(request.mappings)(validateExternalIri(projectOntologyBases, _))
+                                  .mapError(errors =>
+                                    BadRequest(
+                                      s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}",
+                                    ),
+                                  )
                     // TODO DEV-5887: validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty).
                     // OWL DL disallows mapping an ObjectProperty to a DatatypeProperty. Deferred per PRD "same contract as F1".
-                    update <- AddPropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, mappings)
+                    update <-
+                      AddMappingQuery.build(ontologyIri, propertyIri.smartIri, Rdf4jRDFS.SUBPROPERTYOF, mappings)
                     _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
                            .tapError(e =>
                              ZIO.logError(
@@ -193,13 +194,15 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
-      _        <- lookupProperty(propertyIri, ontologyIri)
-      // projectOntologyIris is read inside the lock so the validation snapshot is atomic with the write.
+      // lookupProperty, projectOntologyIris, and IRI validation all run inside the lock so
+      // the entity-existence check and validation snapshot are atomic with the write.
       response <- withOntologyLock(for
-                    projectIris          <- projectOntologyIris
-                    projectOntologyBases  = projectIris.map(_.toIri.stripSuffix("/"))
-                    extIri               <- validateExternalIri(projectOntologyBases, mappingStr).mapError(BadRequest(_))
-                    update               <- RemovePropertyMappingQuery.build(ontologyIri, propertyIri.smartIri, extIri)
+                    _                   <- lookupProperty(propertyIri, ontologyIri)
+                    projectIris         <- projectOntologyIris
+                    projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
+                    extIri              <- validateExternalIri(projectOntologyBases, mappingStr).mapError(BadRequest(_))
+                    update              <-
+                      RemoveMappingQuery.build(ontologyIri, propertyIri.smartIri, Rdf4jRDFS.SUBPROPERTYOF, extIri)
                     _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
                            .tapError(e =>
                              ZIO.logError(
@@ -229,7 +232,7 @@ final class OntologyMappingRestService(
     // Explicit IRIREF guard: reject characters that are illegal in SPARQL 1.1 IRIREF positions
     // regardless of where they appear (path, query, fragment). The UrlValidator path-component
     // regex blocks '{'/'}' in path segments but not in query components.
-    val forbiddenChar = iriStr.find(sparqlIriRefForbidden.contains)
+    val forbiddenChar = SparqlIriSafety.findForbiddenChar(iriStr)
     if forbiddenChar.isDefined then
       ZIO.fail(s"Mapping IRI contains a forbidden character '${forbiddenChar.get}': $iriStr")
     else {
@@ -246,7 +249,9 @@ final class OntologyMappingRestService(
 
   private def isProjectOntologyIri(iri: SmartIri, projectOntologyBases: Set[String]): Boolean = {
     val iriStr = iri.toIri
-    projectOntologyBases.exists(base => iriStr == base || iriStr.startsWith(base + "/") || iriStr.startsWith(base + "#"))
+    projectOntologyBases.exists(base =>
+      iriStr == base || iriStr.startsWith(base + "/") || iriStr.startsWith(base + "#"),
+    )
   }
 
   private def lookupOntology(ontologyIri: OntologyIri): IO[NotFound, ReadOntologyV2] =
