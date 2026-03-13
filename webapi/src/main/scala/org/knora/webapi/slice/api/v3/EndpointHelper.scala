@@ -26,6 +26,13 @@ trait EndpointHelper {
       statusCode(StatusCode.BadRequest).and(jsonBody[BadRequest].example(BadRequest("Bad request example message"))),
     )
 
+  def internalServerErrorVariant: EndpointOutput.OneOfVariant[InternalServerError] =
+    oneOfVariant(
+      statusCode(StatusCode.InternalServerError).and(
+        jsonBody[InternalServerError].example(InternalServerError("An unexpected error occurred.")),
+      ),
+    )
+
   def conflictVariant(codes: V3ErrorCode.Conflicts*): EndpointOutput.OneOfVariant[Conflict] =
     oneOfVariant(
       statusCode(StatusCode.Conflict).and(

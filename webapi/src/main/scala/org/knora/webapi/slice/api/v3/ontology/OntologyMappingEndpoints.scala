@@ -23,6 +23,9 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.class_not_found),
         badRequestVariant,
+        // HTTP 500 is declared for OpenAPI documentation completeness.
+        // It is NOT produced by application logic (infrastructure failures use .orDie → fiber defect).
+        internalServerErrorVariant,
       ),
     )
     .put
@@ -42,13 +45,19 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.class_not_found),
         badRequestVariant,
+        // HTTP 500 is declared for OpenAPI documentation completeness.
+        // It is NOT produced by application logic (infrastructure failures use .orDie → fiber defect).
+        internalServerErrorVariant,
       ),
     )
     .delete
     .in(ontologiesBase / path[String]("ontologyIri") / "classes" / path[String]("classIri") / "mapping")
     .in(
       query[Option[String]]("mapping").description(
-        "The external IRI to remove from rdfs:subClassOf (URL-encoded). Required; absent parameter returns HTTP 400 with a v3-shaped error body.",
+        "Required. The external IRI to remove from rdfs:subClassOf (URL-encoded). " +
+          "This parameter is declared as optional in the OpenAPI schema because Tapir uses Option[String] to " +
+          "allow a typed 400 response for missing values instead of a generic framework 400. " +
+          "Sending a request without this parameter returns HTTP 400 with a v3-shaped error body.",
       ),
     )
     .out(statusCode(StatusCode.Ok))
@@ -65,6 +74,9 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.property_not_found),
         badRequestVariant,
+        // HTTP 500 is declared for OpenAPI documentation completeness.
+        // It is NOT produced by application logic (infrastructure failures use .orDie → fiber defect).
+        internalServerErrorVariant,
       ),
     )
     .put
@@ -84,13 +96,19 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.property_not_found),
         badRequestVariant,
+        // HTTP 500 is declared for OpenAPI documentation completeness.
+        // It is NOT produced by application logic (infrastructure failures use .orDie → fiber defect).
+        internalServerErrorVariant,
       ),
     )
     .delete
     .in(ontologiesBase / path[String]("ontologyIri") / "properties" / path[String]("propertyIri") / "mapping")
     .in(
       query[Option[String]]("mapping").description(
-        "The external IRI to remove from rdfs:subPropertyOf (URL-encoded). Required; absent parameter returns HTTP 400 with a v3-shaped error body.",
+        "Required. The external IRI to remove from rdfs:subPropertyOf (URL-encoded). " +
+          "This parameter is declared as optional in the OpenAPI schema because Tapir uses Option[String] to " +
+          "allow a typed 400 response for missing values instead of a generic framework 400. " +
+          "Sending a request without this parameter returns HTTP 400 with a v3-shaped error body.",
       ),
     )
     .out(statusCode(StatusCode.Ok))
