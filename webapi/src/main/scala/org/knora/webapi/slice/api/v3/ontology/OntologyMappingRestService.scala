@@ -38,6 +38,8 @@ class OntologyMappingRestService(
   private val projectService: KnoraProjectService,
 )(implicit sf: StringFormatter) {
 
+  private val MaxMappingsPerRequest = 100
+
   private val rdfsLabel   = Rdfs.Label.toSmartIri
   private val rdfsComment = Rdfs.Comment.toSmartIri
 
@@ -50,9 +52,18 @@ class OntologyMappingRestService(
     request: AddClassMappingsRequest,
   ): IO[V3ErrorInfo, ClassMappingResponse] =
     for {
+      _           <- ZIO
+                       .fail(BadRequest("'mappings' must contain at least one IRI."))
+                       .unless(request.mappings.nonEmpty)
+      _           <- ZIO
+                       .fail(BadRequest(s"'mappings' must contain at most $MaxMappingsPerRequest IRIs (got ${request.mappings.size})."))
+                       .unless(request.mappings.size <= MaxMappingsPerRequest)
       ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
       classIri    <- iriConverter.asResourceClassIri(classIriStr).mapError(BadRequest(_))
-      mappings    <- ZIO.foreach(request.mappings)(validateExternalIri).mapError(BadRequest(_))
+      projectIris <- projectOntologyIris
+      mappings    <- ZIO
+                       .validate(request.mappings)(validateExternalIri(projectIris, _))
+                       .mapError(errors => BadRequest(errors.mkString(", ")))
       ontology    <- lookupOntology(ontologyIri)
       _           <- lookupClass(classIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
@@ -64,11 +75,13 @@ class OntologyMappingRestService(
   /** F2 — DELETE class mapping */
   def deleteClassMapping(
     user: User,
-  )(ontologyIriStr: String, classIriStr: String, mappingStr: String): IO[V3ErrorInfo, ClassMappingResponse] =
+  )(ontologyIriStr: String, classIriStr: String, mappingOpt: Option[String]): IO[V3ErrorInfo, ClassMappingResponse] =
     for {
+      mappingStr  <- ZIO.fromOption(mappingOpt).mapError(_ => BadRequest("Missing required query parameter 'mapping'."))
       ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
       classIri    <- iriConverter.asResourceClassIri(classIriStr).mapError(BadRequest(_))
-      extIri      <- validateExternalIri(mappingStr).mapError(BadRequest(_))
+      projectIris <- projectOntologyIris
+      extIri      <- validateExternalIri(projectIris, mappingStr).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
       _           <- lookupClass(classIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
@@ -86,9 +99,18 @@ class OntologyMappingRestService(
     request: AddPropertyMappingsRequest,
   ): IO[V3ErrorInfo, PropertyMappingResponse] =
     for {
+      _           <- ZIO
+                       .fail(BadRequest("'mappings' must contain at least one IRI."))
+                       .unless(request.mappings.nonEmpty)
+      _           <- ZIO
+                       .fail(BadRequest(s"'mappings' must contain at most $MaxMappingsPerRequest IRIs (got ${request.mappings.size})."))
+                       .unless(request.mappings.size <= MaxMappingsPerRequest)
       ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
       propertyIri <- iriConverter.asPropertyIri(propertyIriStr).mapError(BadRequest(_))
-      mappings    <- ZIO.foreach(request.mappings)(validateExternalIri).mapError(BadRequest(_))
+      projectIris <- projectOntologyIris
+      mappings    <- ZIO
+                       .validate(request.mappings)(validateExternalIri(projectIris, _))
+                       .mapError(errors => BadRequest(errors.mkString(", ")))
       ontology    <- lookupOntology(ontologyIri)
       _           <- lookupProperty(propertyIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
@@ -96,15 +118,19 @@ class OntologyMappingRestService(
       _           <- (triplestore.query(update) *> ontologyCache.refreshCache()).orDie
       response    <- buildPropertyResponse(ontologyIri, propertyIri)
     } yield response
+    // TODO (future): validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty via rdfs:subPropertyOf).
+    // OWL DL disallows mapping an ObjectProperty to a DatatypeProperty. Deferred per PRD "same contract as F1".
 
   /** F4 — DELETE property mapping */
   def deletePropertyMapping(
     user: User,
-  )(ontologyIriStr: String, propertyIriStr: String, mappingStr: String): IO[V3ErrorInfo, PropertyMappingResponse] =
+  )(ontologyIriStr: String, propertyIriStr: String, mappingOpt: Option[String]): IO[V3ErrorInfo, PropertyMappingResponse] =
     for {
+      mappingStr  <- ZIO.fromOption(mappingOpt).mapError(_ => BadRequest("Missing required query parameter 'mapping'."))
       ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
       propertyIri <- iriConverter.asPropertyIri(propertyIriStr).mapError(BadRequest(_))
-      extIri      <- validateExternalIri(mappingStr).mapError(BadRequest(_))
+      projectIris <- projectOntologyIris
+      extIri      <- validateExternalIri(projectIris, mappingStr).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
       _           <- lookupProperty(propertyIri, ontologyIri)
       _           <- authorizeByProject(user, ontology)
@@ -113,12 +139,27 @@ class OntologyMappingRestService(
       response    <- buildPropertyResponse(ontologyIri, propertyIri)
     } yield response
 
-  private def validateExternalIri(iriStr: String): IO[String, SmartIri] =
+  private def projectOntologyIris: UIO[Set[SmartIri]] =
+    ontologyCache.getCacheData.map { cacheData =>
+      cacheData.ontologies.keySet.filter(iri => !iri.isKnoraBuiltInDefinitionIri && !iri.isKnoraSharedDefinitionIri)
+    }
+
+  private def validateExternalIri(projectOntologyIris: Set[SmartIri], iriStr: String): IO[String, SmartIri] =
     iriConverter.asSmartIri(iriStr).mapError(_.getMessage).flatMap { iri =>
       if iri.isKnoraOntologyIri || iri.isKnoraEntityIri then
         ZIO.fail(s"Mapping IRI must be an external IRI, not a Knora-managed IRI: $iriStr")
+      else if isProjectOntologyIri(iri, projectOntologyIris) then
+        ZIO.fail(s"Mapping IRI belongs to a DSP project ontology and cannot be used as a mapping: $iriStr")
       else ZIO.succeed(iri)
     }
+
+  private def isProjectOntologyIri(iri: SmartIri, projectOntologyIris: Set[SmartIri]): Boolean = {
+    val iriStr = iri.toIri
+    projectOntologyIris.exists { ontIri =>
+      val base = ontIri.toIri.stripSuffix("/")
+      iriStr == base || iriStr.startsWith(base + "/") || iriStr.startsWith(base + "#")
+    }
+  }
 
   private def lookupOntology(ontologyIri: OntologyIri): IO[NotFound, ReadOntologyV2] =
     ontologyRepo.findById(ontologyIri).orDie.someOrFail(NotFound(ontologyIri))
@@ -131,10 +172,10 @@ class OntologyMappingRestService(
 
   private def authorizeByProject(user: User, ontology: ReadOntologyV2): IO[V3ErrorInfo, Unit] =
     ontology.projectIri match {
-      case None             => ZIO.unit
+      case None => ZIO.fail(Forbidden("Cannot modify a system ontology."))
       case Some(projectIri) =>
         projectService.findById(projectIri).orDie.flatMap {
-          case None          => ZIO.unit
+          case None          => ZIO.fail(Forbidden(s"Project $projectIri not found."))
           case Some(project) => auth.ensureSystemAdminOrProjectAdmin(user, project)
         }
     }

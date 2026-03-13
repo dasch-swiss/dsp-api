@@ -15,6 +15,7 @@ import org.knora.webapi.slice.api.v3.*
 final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelper {
 
   private val ontologiesBase = ApiV3.basePath / "ontologies"
+  private val mappingsTag    = List("Ontology Mappings")
 
   /** F1 — PUT class mapping: add/replace rdfs:subClassOf triples pointing to external IRIs */
   val putClassMapping = base
@@ -29,6 +30,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     .in(jsonBody[AddClassMappingsRequest])
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[ClassMappingResponse])
+    .tags(mappingsTag)
     .description(
       "Adds rdfs:subClassOf triples from the given class to the listed external IRIs. " +
         "Existing external super-class mappings are not removed — use DELETE first to replace them.",
@@ -44,9 +46,10 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     )
     .delete
     .in(ontologiesBase / path[String]("ontologyIri") / "classes" / path[String]("classIri") / "mapping")
-    .in(query[String]("mapping").description("The external IRI to remove from rdfs:subClassOf."))
+    .in(query[Option[String]]("mapping").description("The external IRI to remove from rdfs:subClassOf. Required — absent parameter returns HTTP 400."))
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[ClassMappingResponse])
+    .tags(mappingsTag)
     .description(
       "Removes a single rdfs:subClassOf triple from the given class to the specified external IRI. " +
         "Idempotent: deleting an absent triple is a no-op.",
@@ -65,6 +68,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     .in(jsonBody[AddPropertyMappingsRequest])
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[PropertyMappingResponse])
+    .tags(mappingsTag)
     .description(
       "Adds rdfs:subPropertyOf triples from the given property to the listed external IRIs. " +
         "Existing external super-property mappings are not removed — use DELETE first to replace them.",
@@ -80,9 +84,10 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     )
     .delete
     .in(ontologiesBase / path[String]("ontologyIri") / "properties" / path[String]("propertyIri") / "mapping")
-    .in(query[String]("mapping").description("The external IRI to remove from rdfs:subPropertyOf."))
+    .in(query[Option[String]]("mapping").description("The external IRI to remove from rdfs:subPropertyOf. Required — absent parameter returns HTTP 400."))
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[PropertyMappingResponse])
+    .tags(mappingsTag)
     .description(
       "Removes a single rdfs:subPropertyOf triple from the given property to the specified external IRI. " +
         "Idempotent: deleting an absent triple is a no-op.",

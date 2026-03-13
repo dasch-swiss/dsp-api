@@ -41,7 +41,7 @@ object AddClassMappingQuery extends QueryBuilderHelper {
     val ontology     = toRdfIri(ontologyIri)
     val clsIri       = toRdfIri(classIri)
     val oldDate      = variable("oldDate")
-    val (ontologyNS) = NS(ontologyIri)
+    val ontologyNS   = NS(ontologyIri)
 
     val deletePattern: TriplePattern = ontology.has(KB.lastModificationDate, oldDate)
 
