@@ -367,7 +367,10 @@ a `kb:FileValue`. The base class `FileValue`, which is not intended to be used d
 
 The subclasses of `FileValue`, which are intended to be used directly in data, include:
 
-- `StillImageAbstractFileValue`: Contains metadata about a still image file, which can be either `StillImageFileValue` (an image stored in Sipi) or `StillImageExternalFileValue` (a reference to an image stored in an external IIIF service).
+- `StillImageAbstractFileValue`: Contains metadata about a still image file, which can be:
+    - `StillImageFileValue`: A raster image (JPG, PNG, TIFF, etc.) stored in Sipi, converted to JPEG 2000.
+    - `StillImageExternalFileValue`: A reference to an image stored in an external IIIF service.
+    - `StillImageVectorFileValue`: A vector image (SVG) stored as-is without conversion.
 
 - `MovingImageFileValue`: Contains metadata about a video file.
 
