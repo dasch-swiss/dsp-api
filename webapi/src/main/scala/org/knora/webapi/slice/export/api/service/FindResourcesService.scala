@@ -73,7 +73,10 @@ final case class FindResourcesServiceLive(
         .from(Rdf.iri(projectGraph.value))
 
     val classSubclassOfRequested =
-      variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), Rdf.iri(classIri.toInternalSchema.toIri))
+      variable(classIriVar).has(
+        PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(),
+        Rdf.iri(classIri.toInternalSchema.toIri),
+      )
 
     Queries
       .SELECT(selectPattern)
