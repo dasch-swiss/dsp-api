@@ -16,17 +16,23 @@ import zio.*
 import java.io.StringWriter
 import java.nio.file.Path
 
-trait ShaclValidator {
-  def validate(
-    ontologies: NonEmptyChunk[Path],
-    data: NonEmptyChunk[Path],
-    shapes: NonEmptyChunk[Path],
-  ): IO[ShaclValidationError, Unit]
+
+enum ShaclValidationError {
+  case LoadingError(cause: Throwable)
+  case ValidationError(report: Resource)
+
+  def message: String = this match {
+    case LoadingError(cause)     => s"Error loading data for SHACL validation: ${cause.getMessage}"
+    case ValidationError(report) =>
+      val sw = new StringWriter()
+      RDFDataMgr.write(sw, report.getModel, Lang.TURTLE)
+      sw.toString
+  }
 }
 
-object ShaclValidator extends ShaclValidator {
+object ShaclValidator {
 
-  override def validate(
+  def validate(
     ontologies: NonEmptyChunk[Path],
     data: NonEmptyChunk[Path],
     shapes: NonEmptyChunk[Path],
@@ -61,15 +67,3 @@ object ShaclValidator extends ShaclValidator {
       }
 }
 
-enum ShaclValidationError {
-  case LoadingError(cause: Throwable)
-  case ValidationError(report: Resource)
-
-  def message: String = this match {
-    case LoadingError(cause)     => s"Error loading data for SHACL validation: ${cause.getMessage}"
-    case ValidationError(report) =>
-      val sw = new StringWriter()
-      RDFDataMgr.write(sw, report.getModel, Lang.TURTLE)
-      sw.toString
-  }
-}
