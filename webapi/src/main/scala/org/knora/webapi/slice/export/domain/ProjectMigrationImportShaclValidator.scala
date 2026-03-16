@@ -12,6 +12,7 @@ import org.knora.shacl.RdfData
 import org.knora.shacl.RdfGraphs
 import org.knora.shacl.ShaclShapes
 import org.knora.shacl.ShaclValidator
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 final class ProjectMigrationImportShaclValidator() {
 
@@ -22,7 +23,9 @@ final class ProjectMigrationImportShaclValidator() {
     ("knora-ontologies/standoff-onto.ttl", "http://www.knora.org/ontology/standoff"),
   )
 
-  def validate(ontologyFiles: Chunk[Path], dataFiles: Chunk[Path]): Task[Unit] =
+  private val ProjectIriPlaceholder = "urn:placeholder:projectIri"
+
+  def validate(ontologyFiles: Chunk[Path], dataFiles: Chunk[Path], projectIri: ProjectIri): Task[Unit] =
     for {
       builtIn <- ZIO.foreach(builtInOntologyResources) { case (resource, graphIri) =>
                    readClasspathResource(resource).map(RdfData.InMemoryTurtle(_, graphIri))
@@ -34,6 +37,7 @@ final class ProjectMigrationImportShaclValidator() {
                  data = NonEmptyChunk.fromChunk(dataNq).get,
                )
       ontologyShapesTtl <- readClasspathResource("shacl/ontology-shapes.ttl")
+                             .map(_.replace(ProjectIriPlaceholder, projectIri.value))
       dataShapesTtl     <- readClasspathResource("shacl/data-shapes.ttl")
       shapes             = ShaclShapes(
                  ontologyShapes = NonEmptyChunk(RdfData.InMemoryTurtle(ontologyShapesTtl, "")),

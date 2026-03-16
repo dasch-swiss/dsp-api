@@ -1,11 +1,14 @@
+# Placeholder IRIs (urn:placeholder:*) are replaced at runtime with actual values
+# by ProjectMigrationImportShaclValidator before validation.
+# - urn:placeholder:projectIri  →  the IRI of the project being imported
+
 @prefix sh:         <http://www.w3.org/ns/shacl#> .
 @prefix owl:        <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 
-# Validates that every project ontology (owl:Ontology, excluding system ontologies)
-# has at least one rdfs:label.
+# Validates every project ontology (owl:Ontology, excluding system ontologies)
 knora-base:OntologyShape
   a sh:NodeShape ;
   sh:target [
@@ -25,4 +28,9 @@ knora-base:OntologyShape
     sh:path rdfs:label ;
     sh:minCount 1 ;
     sh:message "Project ontology must have at least one rdfs:label" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:attachedToProject ;
+    sh:hasValue <urn:placeholder:projectIri> ;
+    sh:message "Project ontology must be attached to project <urn:placeholder:projectIri>" ;
   ] .

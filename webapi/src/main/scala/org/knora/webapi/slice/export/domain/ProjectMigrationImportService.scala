@@ -104,7 +104,7 @@ final class ProjectMigrationImportService(
                s"$taskId: Payload file validation passed for project '$projectIri', found: ${nqFiles.mkString(", ")}",
              )
 
-        _ <- projectShaclValidator.validate(ontologyFiles, dataFiles)
+        _ <- projectShaclValidator.validate(ontologyFiles, dataFiles, projectIri)
         _ <- ZIO.logInfo(s"$taskId: SHACL validation passed for project '$projectIri'")
 
         shortcode <- ZIO.scoped { // rdf validation, close scope for model right after validation to free up memory
@@ -385,8 +385,8 @@ final class ProjectMigrationImportService(
 
 object ProjectMigrationImportService {
   val layer: URLayer[
-    DspIngestClient & KnoraGroupService & KnoraProjectService & ProjectMigrationImportShaclValidator & ProjectMigrationStorageService &
-      TriplestoreService & OntologyCache & KnoraUserService,
+    DspIngestClient & KnoraGroupService & KnoraProjectService & ProjectMigrationImportShaclValidator &
+      ProjectMigrationStorageService & TriplestoreService & OntologyCache & KnoraUserService,
     ProjectMigrationImportService,
   ] = FilesystemDataTaskPersistence.importLayer >>> ZLayer.derive[ProjectMigrationImportService]
 }
