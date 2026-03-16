@@ -69,7 +69,7 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
       for {
         schemaPath <- writeTempTtl(schemaTtl)
         dataPath   <- writeTempTtl(ontologyTtl)
-        result <- validator
+        result     <- validator
                     .validate(
                       NonEmptyChunk(schemaPath),
                       NonEmptyChunk(dataPath),

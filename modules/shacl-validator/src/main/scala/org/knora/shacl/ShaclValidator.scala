@@ -16,7 +16,6 @@ import zio.*
 import java.io.StringWriter
 import java.nio.file.Path
 
-
 enum ShaclValidationError {
   case LoadingError(cause: Throwable)
   case ValidationError(report: Resource)
@@ -66,4 +65,3 @@ object ShaclValidator {
         else ZIO.fail(ShaclValidationError.ValidationError(report))
       }
 }
-
