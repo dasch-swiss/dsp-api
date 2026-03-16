@@ -9,12 +9,13 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-import java.nio.file.Files
 import java.nio.file.Path
 
 object ShaclValidatorSpec extends ZIOSpecDefault {
 
-  private val validator = ShaclValidator
+  private val schemaGraphIri = "http://www.knora.org/ontology/knora-base"
+  private val ontoGraphIri   = "http://www.knora.org/ontology/0001/test"
+  private val dataGraphIri   = "http://example.org/data#"
 
   /** Minimal knora-base schema — just enough for the SHACL shapes to work. */
   private val minimalSchema =
@@ -52,32 +53,36 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
       |    knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
       |""".stripMargin
 
-  private def writeTempTtl(content: String): ZIO[Scope, Throwable, Path] =
-    ZIO.acquireRelease(
-      ZIO.attemptBlocking {
-        val tmp = Files.createTempFile("shacl-test-", ".ttl")
-        Files.writeString(tmp, content)
-        tmp
-      },
-    )(path => ZIO.attemptBlocking(Files.deleteIfExists(path)).ignoreLogged)
-
   private def shapesPath: Path =
     Path.of(getClass.getClassLoader.getResource("shacl/ontology-shapes.ttl").toURI)
 
+  private def ontologyShapes = ShaclShapes(
+    ontologyShapes = Chunk(RdfData.TurtleFile(shapesPath, "urn:shapes")),
+    dataShapes = Chunk.empty,
+  )
+
   private def validate(ontologyTtl: String, schemaTtl: String = minimalSchema) =
-    ZIO.scoped {
-      for {
-        schemaPath <- writeTempTtl(schemaTtl)
-        dataPath   <- writeTempTtl(ontologyTtl)
-        result     <- validator
-                    .validate(
-                      NonEmptyChunk(schemaPath),
-                      NonEmptyChunk(dataPath),
-                      NonEmptyChunk(shapesPath),
-                    )
-                    .either
-      } yield result
-    }
+    ShaclValidator
+      .validate(
+        ontologies = NonEmptyChunk(
+          RdfData.InMemoryTurtle(schemaTtl, schemaGraphIri),
+          RdfData.InMemoryTurtle(ontologyTtl, ontoGraphIri),
+        ),
+        data = NonEmptyChunk(RdfData.InMemoryNQuad("")),
+        shapes = ontologyShapes,
+      )
+      .either
+
+  /** Convert Turtle triples into NQuad lines within a named graph. */
+  private def ttlToNQuads(ttl: String, graphIri: String): String = {
+    val model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel()
+    org.apache.jena.riot.RDFDataMgr.read(model, new java.io.StringReader(ttl), null, org.apache.jena.riot.Lang.TURTLE)
+    val sw      = new java.io.StringWriter()
+    val dataset = org.apache.jena.query.DatasetFactory.create()
+    dataset.addNamedModel(graphIri, model)
+    org.apache.jena.riot.RDFDataMgr.write(sw, dataset, org.apache.jena.riot.Lang.NQUADS)
+    sw.toString
+  }
 
   def spec: Spec[Any, Any] = suite("ShaclValidatorSpec")(
     suite("ontology validation")(
@@ -223,6 +228,181 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
             |    knora-base:objectClassConstraint knora-base:TextValue .
             |""".stripMargin
         validate(ttl).map(result => assert(result)(isRight))
+      },
+    ),
+    suite("NQuad input")(
+      test("ontology provided as NQuads conforms") {
+        val ttl = prefixes + validOntologyHeader
+        val nq  = ttlToNQuads(ttl, ontoGraphIri)
+        ShaclValidator
+          .validate(
+            ontologies = NonEmptyChunk(
+              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+              RdfData.InMemoryNQuad(nq),
+            ),
+            data = NonEmptyChunk(RdfData.InMemoryNQuad("")),
+            shapes = ontologyShapes,
+          )
+          .either
+          .map(result => assert(result)(isRight))
+      },
+      test("ontology as NQuads missing rdfs:label fails") {
+        val ttl = prefixes +
+          """<http://www.knora.org/ontology/0001/test>
+            |    rdf:type                        owl:Ontology ;
+            |    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
+            |    knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
+            |""".stripMargin
+        val nq = ttlToNQuads(ttl, ontoGraphIri)
+        ShaclValidator
+          .validate(
+            ontologies = NonEmptyChunk(
+              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+              RdfData.InMemoryNQuad(nq),
+            ),
+            data = NonEmptyChunk(RdfData.InMemoryNQuad("")),
+            shapes = ontologyShapes,
+          )
+          .either
+          .map(result => assert(result)(isLeft))
+      },
+    ),
+    suite("named graph isolation")(
+      test("ontology shapes do not see data graphs") {
+        val ontoTtl = prefixes + validOntologyHeader
+        // Data graph contains an owl:Ontology without rdfs:label — but ontology shapes should not see it
+        val dataNq =
+          s"""<http://example.org/sneaky-onto> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> <$dataGraphIri> .\n"""
+        ShaclValidator
+          .validate(
+            ontologies = NonEmptyChunk(
+              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+              RdfData.InMemoryTurtle(ontoTtl, ontoGraphIri),
+            ),
+            data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
+            shapes = ontologyShapes,
+          )
+          .either
+          .map(result => assert(result)(isRight))
+      },
+      test("data shapes do not see ontology graphs") {
+        val ontoTtl = prefixes + validOntologyHeader
+        // Data shapes that require rdfs:label on all owl:NamedIndividual
+        val dataShapesTtl =
+          """@prefix sh:  <http://www.w3.org/ns/shacl#> .
+            |@prefix owl: <http://www.w3.org/2002/07/owl#> .
+            |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+            |
+            |<urn:shapes/IndividualShape>
+            |    a sh:NodeShape ;
+            |    sh:targetClass owl:NamedIndividual ;
+            |    sh:property [
+            |        sh:path rdfs:label ;
+            |        sh:minCount 1 ;
+            |        sh:message "Individual must have rdfs:label" ;
+            |    ] .
+            |""".stripMargin
+        // Data has a valid individual with label
+        val dataNq =
+          s"""<http://example.org/ind1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#NamedIndividual> <$dataGraphIri> .
+             |<http://example.org/ind1> <http://www.w3.org/2000/01/rdf-schema#label> "Individual 1" <$dataGraphIri> .
+             |""".stripMargin
+        ShaclValidator
+          .validate(
+            ontologies = NonEmptyChunk(
+              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+              RdfData.InMemoryTurtle(ontoTtl, ontoGraphIri),
+            ),
+            data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
+            shapes = ShaclShapes(
+              ontologyShapes = Chunk(RdfData.TurtleFile(shapesPath, "urn:shapes")),
+              dataShapes = Chunk(RdfData.InMemoryTurtle(dataShapesTtl, "urn:data-shapes")),
+            ),
+          )
+          .either
+          .map(result => assert(result)(isRight))
+      },
+      test("data validation uses RDFS inference from ontology graphs") {
+        val ontoTtl = prefixes + validOntologyHeader +
+          """:TestThing
+            |    rdf:type        owl:Class ;
+            |    rdfs:subClassOf knora-base:Resource ;
+            |    rdfs:label      "Test thing"@en .
+            |""".stripMargin
+        // Shape requires rdfs:label on all knora-base:Resource instances (via inference)
+        val dataShapesTtl =
+          """@prefix sh:         <http://www.w3.org/ns/shacl#> .
+            |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+            |@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+            |
+            |<urn:shapes/ResourceInstanceShape>
+            |    a sh:NodeShape ;
+            |    sh:targetClass knora-base:Resource ;
+            |    sh:property [
+            |        sh:path rdfs:label ;
+            |        sh:minCount 1 ;
+            |        sh:message "Resource instance must have rdfs:label" ;
+            |    ] .
+            |""".stripMargin
+        // Data: instance of :TestThing (subclass of knora-base:Resource) with label
+        val dataNq =
+          s"""<http://example.org/thing1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/0001/test#TestThing> <$dataGraphIri> .
+             |<http://example.org/thing1> <http://www.w3.org/2000/01/rdf-schema#label> "Thing 1" <$dataGraphIri> .
+             |""".stripMargin
+        ShaclValidator
+          .validate(
+            ontologies = NonEmptyChunk(
+              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+              RdfData.InMemoryTurtle(ontoTtl, ontoGraphIri),
+            ),
+            data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
+            shapes = ShaclShapes(
+              ontologyShapes = Chunk.empty,
+              dataShapes = Chunk(RdfData.InMemoryTurtle(dataShapesTtl, "urn:data-shapes")),
+            ),
+          )
+          .either
+          .map(result => assert(result)(isRight))
+      },
+      test("data validation fails when RDFS-inferred instance violates shape") {
+        val ontoTtl = prefixes + validOntologyHeader +
+          """:TestThing
+            |    rdf:type        owl:Class ;
+            |    rdfs:subClassOf knora-base:Resource ;
+            |    rdfs:label      "Test thing"@en .
+            |""".stripMargin
+        val dataShapesTtl =
+          """@prefix sh:         <http://www.w3.org/ns/shacl#> .
+            |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+            |@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+            |
+            |<urn:shapes/ResourceInstanceShape>
+            |    a sh:NodeShape ;
+            |    sh:targetClass knora-base:Resource ;
+            |    sh:property [
+            |        sh:path rdfs:label ;
+            |        sh:minCount 1 ;
+            |        sh:message "Resource instance must have rdfs:label" ;
+            |    ] .
+            |""".stripMargin
+        // Data: instance of :TestThing without rdfs:label — should fail via RDFS inference
+        val dataNq =
+          s"""<http://example.org/thing1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/0001/test#TestThing> <$dataGraphIri> .
+             |""".stripMargin
+        ShaclValidator
+          .validate(
+            ontologies = NonEmptyChunk(
+              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+              RdfData.InMemoryTurtle(ontoTtl, ontoGraphIri),
+            ),
+            data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
+            shapes = ShaclShapes(
+              ontologyShapes = Chunk.empty,
+              dataShapes = Chunk(RdfData.InMemoryTurtle(dataShapesTtl, "urn:data-shapes")),
+            ),
+          )
+          .either
+          .map(result => assert(result)(isLeft))
       },
     ),
   )
