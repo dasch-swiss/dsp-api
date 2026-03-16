@@ -1,0 +1,2 @@
+Resource IRI,Label
+http://rdfh.ch/1612/SubClass1Resource00001,SubResource1
