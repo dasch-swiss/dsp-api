@@ -384,6 +384,32 @@ and the `knora-api:externalUrl` property is used to provide the URL of the image
     The `knora-api:stillImageFileValueHasExternalUrl` property with a `xsd:anyURI` type 
     is correct and must be used for reading and writing.
 
+##### Vector Images (SVG)
+
+For vector images such as SVG files, use the file value type `knora-api:StillImageVectorFileValue`.
+Unlike raster images, SVG files are not converted to JPEG 2000 and are stored as-is and served as static files.
+
+```json
+{
+  "@type": "anything:ThingPicture",
+  "knora-api:hasStillImageFileValue": {
+    "@type": "knora-api:StillImageVectorFileValue",
+    "knora-api:fileValueHasFilename": "abc123.svg"
+  },
+  "knora-api:attachedToProject": {
+    "@id": "http://rdfh.ch/projects/0001"
+  },
+  "rdfs:label": "test vector image",
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
 #### PDF Documents
 
 If you're submitting a PDF document, use the resource class `knora-api:DocumentRepresentation`, which has the property

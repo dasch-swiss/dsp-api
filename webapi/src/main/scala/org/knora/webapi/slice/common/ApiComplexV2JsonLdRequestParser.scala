@@ -553,6 +553,7 @@ final case class ApiComplexV2JsonLdRequestParser(
           case MovingImageFileValue        => withFileInfo(v, MovingImageFileValueContentV2.from)
           case StillImageExternalFileValue => ZIO.fromEither(StillImageExternalFileValueContentV2.from(v.r))
           case StillImageFileValue         => withFileInfo(v, StillImageFileValueContentV2.from)
+          case StillImageVectorFileValue   => withFileInfo(v, StillImageVectorFileValueContentV2.from)
           case TextValue                   => TextValueContentV2.from(v.r).provide(ZLayer.succeed(messageRelay))
           case TextFileValue               => withFileInfo(v, TextFileValueContentV2.from)
           case TimeValue                   => ZIO.fromEither(TimeValueContentV2.from(v.r))

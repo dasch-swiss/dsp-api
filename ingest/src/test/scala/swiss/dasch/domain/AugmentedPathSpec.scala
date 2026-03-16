@@ -9,6 +9,7 @@ import swiss.dasch.domain.AugmentedPath.*
 import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile.given
 import swiss.dasch.domain.AugmentedPath.MovingImageDerivativeFile.given
 import swiss.dasch.domain.AugmentedPath.ProjectFolder.given
+import swiss.dasch.domain.AugmentedPath.SvgDerivativeFile.given
 import swiss.dasch.domain.AugmentedPathSpec.ExpectedErrorMessages.hiddenFile
 import swiss.dasch.domain.AugmentedPathSpec.ExpectedErrorMessages.noAssetIdInFilename
 import swiss.dasch.domain.AugmentedPathSpec.ExpectedErrorMessages.notAProjectFolder
@@ -161,11 +162,40 @@ object AugmentedPathSpec extends ZIOSpecDefault {
     },
   )
 
+  private val svgDerivativeFileSuite = suite("SvgDerivativeFile")(
+    test("can be created from a Path which is a derivative file svg") {
+      val gen = Gen.fromIterable(List("svg", "SVG"))
+      check(gen) { extension =>
+        val actual = SvgDerivativeFile.from(Path(s"/tmp/$someAssetId.$extension"))
+        assertTrue(
+          actual.map(_.path).contains(Path(s"/tmp/$someAssetId.$extension")),
+          actual.map(_.assetId).contains(someAssetId),
+        )
+      }
+    },
+    test("cannot be created if filename is not a valid AssetId") {
+      assertTrue(SvgDerivativeFile.from(Path("/tmp/this_is_no_asset_id!.svg")) == Left(noAssetIdInFilename))
+    },
+    test("cannot be created from original file") {
+      assertTrue(SvgDerivativeFile.from(Path(s"/tmp/$someAssetId.orig")) == Left(unsupportedFileType))
+    },
+    test("cannot be created from directory") {
+      assertTrue(SvgDerivativeFile.from(Path(s"/tmp/hello/")) == Left(unsupportedFileType))
+    },
+    test("cannot be created from hidden file") {
+      val hiddenFiles = Gen.fromIterable(List(s".$someAssetId.svg", s".$someAssetId.SVG"))
+      check(hiddenFiles) { filename =>
+        assertTrue(SvgDerivativeFile.from(Path(s"/tmp/$filename")) == Left(hiddenFile))
+      }
+    },
+  )
+
   val spec: Spec[Any, Any] = suite("AugmentedPath")(
     projectFolderSuite,
     jpxDerivativeFileSuite,
     movingImageDerivativeFileSuite,
     origFileSuite,
     otherDerivativeFileSuite,
+    svgDerivativeFileSuite,
   )
 }

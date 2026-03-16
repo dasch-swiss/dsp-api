@@ -487,6 +487,8 @@ final case class CreateResourceV2Handler(
                   ZIO.succeed(OtherFileValueInfo(fileValue))
                 case AudioFileValueContentV2(_, fileValue, _) =>
                   ZIO.succeed(OtherFileValueInfo(fileValue))
+                case StillImageVectorFileValueContentV2(_, fileValue, _) =>
+                  ZIO.succeed(OtherFileValueInfo(fileValue))
                 case MovingImageFileValueContentV2(_, fileValue, _) =>
                   ZIO.succeed(OtherFileValueInfo(fileValue))
                 case LinkValueContentV2(_, referredResourceIri, _, _, _, _) =>

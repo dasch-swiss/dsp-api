@@ -18,6 +18,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageVectorFileValueContentV2
 import org.knora.webapi.models.filemodels.FileType.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -32,6 +33,7 @@ object FileModelsSpec extends ZIOSpecDefault {
   private val fileNameAudio   = "audio.mpeg"
   private val fileNameText    = "text.txt"
   private val fileNameArchive = "archive.zip"
+  private val fileNameSvg     = "image.svg"
 
   override val spec = suite("FileModelsUtil")(
     suite("creating a JSON-LD context")(
@@ -193,6 +195,16 @@ object FileModelsSpec extends ZIOSpecDefault {
             archiveRepresentation.internalFilename == fileNameArchive,
           )
         },
+        test("create a valid representation of a StillImageVectorRepresentation") {
+          val vectorRepresentation = UploadFileRequest.make(
+            fileType = FileType.StillImageVectorFile,
+            internalFilename = fileNameSvg,
+          )
+          assertTrue(
+            vectorRepresentation.fileType == FileType.StillImageVectorFile,
+            vectorRepresentation.internalFilename == fileNameSvg,
+          )
+        },
       ),
       suite("generating a JSON-LD representation of a UploadFileRequest")(
         test("correctly serialize a DocumentRepresentation with default values") {
@@ -256,6 +268,31 @@ object FileModelsSpec extends ZIOSpecDefault {
               "rdfs"       -> Json.Str("http://www.w3.org/2000/01/rdf-schema#"),
               "xsd"        -> Json.Str("http://www.w3.org/2001/XMLSchema#"),
               ontologyName -> Json.Str(ontologyIRI.get),
+            ),
+          )
+          assertTrue(actual == Right(expected))
+        },
+        test("correctly serialize a StillImageVectorRepresentation") {
+          val vectorRepresentation = UploadFileRequest.make(
+            fileType = FileType.StillImageVectorFile,
+            internalFilename = fileNameSvg,
+          )
+          val actual   = vectorRepresentation.toJsonLd().fromJson[Json]
+          val expected = Json.Obj(
+            "@type"                            -> Json.Str("knora-api:StillImageRepresentation"),
+            "knora-api:hasStillImageFileValue" -> Json.Obj(
+              "@type"                          -> Json.Str("knora-api:StillImageVectorFileValue"),
+              "knora-api:fileValueHasFilename" -> Json.Str(fileNameSvg),
+            ),
+            "knora-api:attachedToProject" -> Json.Obj(
+              "@id" -> Json.Str("http://rdfh.ch/projects/0001"),
+            ),
+            "rdfs:label" -> Json.Str("test label"),
+            "@context"   -> Json.Obj(
+              "rdf"       -> Json.Str("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+              "knora-api" -> Json.Str("http://api.knora.org/ontology/knora-api/v2#"),
+              "rdfs"      -> Json.Str("http://www.w3.org/2000/01/rdf-schema#"),
+              "xsd"       -> Json.Str("http://www.w3.org/2001/XMLSchema#"),
             ),
           )
           assertTrue(actual == Right(expected))
@@ -377,6 +414,42 @@ object FileModelsSpec extends ZIOSpecDefault {
                   ),
                 ),
               ),
+          )
+        },
+        test("correctly serialize a StillImageVectorRepresentation") {
+          val vectorRepresentation = UploadFileRequest.make(
+            fileType = FileType.StillImageVectorFile,
+            internalFilename = fileNameSvg,
+          )
+          val msg = vectorRepresentation.toMessage()
+          assertTrue(
+            msg.resourceClassIri == FileModelUtil.getFileRepresentationClassIri(FileType.StillImageVectorFile),
+            msg.label == "test label",
+            msg.values == Map(
+              FileModelUtil.getFileRepresentationPropertyIri(FileType.StillImageVectorFile) -> List(
+                CreateValueInNewResourceV2(
+                  valueContent = StillImageVectorFileValueContentV2(
+                    ontologySchema = ApiV2Complex,
+                    fileValue = FileValueV2(
+                      internalFilename = fileNameSvg,
+                      internalMimeType = "image/svg+xml",
+                      originalFilename = None,
+                      originalMimeType = None,
+                      None,
+                      None,
+                      None,
+                    ),
+                    comment = None,
+                  ),
+                  customValueIri = None,
+                  customValueUUID = None,
+                  customValueCreationDate = None,
+                  permissions = None,
+                ),
+              ),
+            ),
+            msg.projectADM == SharedTestDataADM.anythingProject,
+            msg.permissions.isEmpty,
           )
         },
       ),

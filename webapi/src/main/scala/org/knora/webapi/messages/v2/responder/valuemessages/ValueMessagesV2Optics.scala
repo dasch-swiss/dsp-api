@@ -27,6 +27,7 @@ object ValueMessagesV2Optics {
         case vc: AudioFileValueContentV2              => vc.copy(fileValue = fv)
         case vc: DocumentFileValueContentV2           => vc.copy(fileValue = fv)
         case vc: StillImageExternalFileValueContentV2 => vc.copy(fileValue = fv)
+        case vc: StillImageVectorFileValueContentV2   => vc.copy(fileValue = fv)
         case vc: ArchiveFileValueContentV2            => vc.copy(fileValue = fv)
         case vc: TextFileValueContentV2               => vc.copy(fileValue = fv)
       })
