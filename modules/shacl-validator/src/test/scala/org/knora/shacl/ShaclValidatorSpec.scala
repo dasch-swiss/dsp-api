@@ -56,19 +56,24 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
   private def shapesPath: Path =
     Path.of(getClass.getClassLoader.getResource("shacl/ontology-shapes.ttl").toURI)
 
+  /** No-op shapes — contains no SHACL shape definitions, so validation always conforms. */
+  private val noOpShapes = RdfData.InMemoryTurtle("", "urn:no-op-shapes")
+
   private def ontologyShapes = ShaclShapes(
-    ontologyShapes = Chunk(RdfData.TurtleFile(shapesPath, "urn:shapes")),
-    dataShapes = Chunk.empty,
+    ontologyShapes = NonEmptyChunk(RdfData.TurtleFile(shapesPath, "urn:shapes")),
+    dataShapes = NonEmptyChunk(noOpShapes),
   )
 
   private def validate(ontologyTtl: String, schemaTtl: String = minimalSchema) =
     ShaclValidator
       .validate(
-        ontologies = NonEmptyChunk(
-          RdfData.InMemoryTurtle(schemaTtl, schemaGraphIri),
-          RdfData.InMemoryTurtle(ontologyTtl, ontoGraphIri),
+        graphs = RdfGraphs(
+          ontologies = NonEmptyChunk(
+            RdfData.InMemoryTurtle(schemaTtl, schemaGraphIri),
+            RdfData.InMemoryTurtle(ontologyTtl, ontoGraphIri),
+          ),
+          data = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
         ),
-        data = NonEmptyChunk(RdfData.InMemoryNQuad("")),
         shapes = ontologyShapes,
       )
       .either
@@ -236,11 +241,13 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
         val nq  = ttlToNQuads(ttl, ontoGraphIri)
         ShaclValidator
           .validate(
-            ontologies = NonEmptyChunk(
-              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
-              RdfData.InMemoryNQuad(nq),
+            graphs = RdfGraphs(
+              ontologies = NonEmptyChunk(
+                RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+                RdfData.InMemoryNQuad(nq),
+              ),
+              data = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
             ),
-            data = NonEmptyChunk(RdfData.InMemoryNQuad("")),
             shapes = ontologyShapes,
           )
           .either
@@ -256,73 +263,53 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
         val nq = ttlToNQuads(ttl, ontoGraphIri)
         ShaclValidator
           .validate(
-            ontologies = NonEmptyChunk(
-              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
-              RdfData.InMemoryNQuad(nq),
+            graphs = RdfGraphs(
+              ontologies = NonEmptyChunk(
+                RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+                RdfData.InMemoryNQuad(nq),
+              ),
+              data = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
             ),
-            data = NonEmptyChunk(RdfData.InMemoryNQuad("")),
             shapes = ontologyShapes,
           )
           .either
           .map(result => assert(result)(isLeft))
       },
     ),
-    suite("named graph isolation")(
-      test("ontology shapes do not see data graphs") {
-        val ontoTtl = prefixes + validOntologyHeader
-        // Data graph contains an owl:Ontology without rdfs:label — but ontology shapes should not see it
-        val dataNq =
-          s"""<http://example.org/sneaky-onto> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> <$dataGraphIri> .\n"""
-        ShaclValidator
-          .validate(
-            ontologies = NonEmptyChunk(
-              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
-              RdfData.InMemoryTurtle(ontoTtl, ontoGraphIri),
-            ),
-            data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
-            shapes = ontologyShapes,
-          )
-          .either
-          .map(result => assert(result)(isRight))
-      },
-      test("data shapes do not see ontology graphs") {
-        val ontoTtl = prefixes + validOntologyHeader
-        // Data shapes that require rdfs:label on all owl:NamedIndividual
-        val dataShapesTtl =
-          """@prefix sh:  <http://www.w3.org/ns/shacl#> .
-            |@prefix owl: <http://www.w3.org/2002/07/owl#> .
-            |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-            |
-            |<urn:shapes/IndividualShape>
-            |    a sh:NodeShape ;
-            |    sh:targetClass owl:NamedIndividual ;
-            |    sh:property [
-            |        sh:path rdfs:label ;
-            |        sh:minCount 1 ;
-            |        sh:message "Individual must have rdfs:label" ;
-            |    ] .
+    suite("two-step validation")(
+      test("ontology validation fails before data is loaded") {
+        val invalidOntoTtl = prefixes +
+          """<http://www.knora.org/ontology/0001/test>
+            |    rdf:type                        owl:Ontology ;
+            |    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
+            |    knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
             |""".stripMargin
-        // Data has a valid individual with label
+        // Data contains an owl:Ontology too — but ontology validation should fail first, before data is added
         val dataNq =
-          s"""<http://example.org/ind1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#NamedIndividual> <$dataGraphIri> .
-             |<http://example.org/ind1> <http://www.w3.org/2000/01/rdf-schema#label> "Individual 1" <$dataGraphIri> .
-             |""".stripMargin
+          s"""<http://example.org/ind1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#NamedIndividual> <$dataGraphIri> .\n"""
         ShaclValidator
           .validate(
-            ontologies = NonEmptyChunk(
-              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
-              RdfData.InMemoryTurtle(ontoTtl, ontoGraphIri),
+            graphs = RdfGraphs(
+              ontologies = NonEmptyChunk(
+                RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+                RdfData.InMemoryTurtle(invalidOntoTtl, ontoGraphIri),
+              ),
+              data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
             ),
-            data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
             shapes = ShaclShapes(
-              ontologyShapes = Chunk(RdfData.TurtleFile(shapesPath, "urn:shapes")),
-              dataShapes = Chunk(RdfData.InMemoryTurtle(dataShapesTtl, "urn:data-shapes")),
+              ontologyShapes = NonEmptyChunk(RdfData.TurtleFile(shapesPath, "urn:shapes")),
+              dataShapes = NonEmptyChunk(noOpShapes),
             ),
           )
           .either
-          .map(result => assert(result)(isRight))
+          .map { result =>
+            assert(result)(isLeft) &&
+            assert(result.left.toOption.get)(
+              Assertion.isSubtype[ShaclValidationError.OntologyValidationError](anything),
+            )
+          }
       },
-      test("data validation uses RDFS inference from ontology graphs") {
+      test("data shapes can use RDFS inference from ontology triples") {
         val ontoTtl = prefixes + validOntologyHeader +
           """:TestThing
             |    rdf:type        owl:Class ;
@@ -351,14 +338,16 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
              |""".stripMargin
         ShaclValidator
           .validate(
-            ontologies = NonEmptyChunk(
-              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
-              RdfData.InMemoryTurtle(ontoTtl, ontoGraphIri),
+            graphs = RdfGraphs(
+              ontologies = NonEmptyChunk(
+                RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+                RdfData.InMemoryTurtle(ontoTtl, ontoGraphIri),
+              ),
+              data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
             ),
-            data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
             shapes = ShaclShapes(
-              ontologyShapes = Chunk.empty,
-              dataShapes = Chunk(RdfData.InMemoryTurtle(dataShapesTtl, "urn:data-shapes")),
+              ontologyShapes = NonEmptyChunk(noOpShapes),
+              dataShapes = NonEmptyChunk(RdfData.InMemoryTurtle(dataShapesTtl, "urn:data-shapes")),
             ),
           )
           .either
@@ -391,18 +380,65 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
              |""".stripMargin
         ShaclValidator
           .validate(
-            ontologies = NonEmptyChunk(
-              RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
-              RdfData.InMemoryTurtle(ontoTtl, ontoGraphIri),
+            graphs = RdfGraphs(
+              ontologies = NonEmptyChunk(
+                RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+                RdfData.InMemoryTurtle(ontoTtl, ontoGraphIri),
+              ),
+              data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
             ),
-            data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
             shapes = ShaclShapes(
-              ontologyShapes = Chunk.empty,
-              dataShapes = Chunk(RdfData.InMemoryTurtle(dataShapesTtl, "urn:data-shapes")),
+              ontologyShapes = NonEmptyChunk(noOpShapes),
+              dataShapes = NonEmptyChunk(RdfData.InMemoryTurtle(dataShapesTtl, "urn:data-shapes")),
             ),
           )
           .either
           .map(result => assert(result)(isLeft))
+      },
+    ),
+    suite("NQuad single-graph check")(
+      test("NQuad data with two named graphs fails with LoadingError") {
+        val graph1 =
+          s"""<http://example.org/s1> <http://example.org/p1> <http://example.org/o1> <http://example.org/g1> .\n"""
+        val graph2 =
+          s"""<http://example.org/s2> <http://example.org/p2> <http://example.org/o2> <http://example.org/g2> .\n"""
+        val nq = graph1 + graph2
+        ShaclValidator
+          .validate(
+            graphs = RdfGraphs(
+              ontologies = NonEmptyChunk(RdfData.InMemoryNQuad(nq)),
+              data = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
+            ),
+            shapes = ShaclShapes(
+              ontologyShapes = NonEmptyChunk(noOpShapes),
+              dataShapes = NonEmptyChunk(noOpShapes),
+            ),
+          )
+          .either
+          .map { result =>
+            assert(result)(isLeft) &&
+            assert(result.left.toOption.get)(Assertion.isSubtype[ShaclValidationError.LoadingError](anything))
+          }
+      },
+      test("NQuad data with triples only in default graph fails with LoadingError") {
+        // NTriples-style triples (no graph component) parsed as NQuads go into the default graph and should fail
+        val nq = s"""<http://example.org/s1> <http://example.org/p1> <http://example.org/o1> .\n"""
+        ShaclValidator
+          .validate(
+            graphs = RdfGraphs(
+              ontologies = NonEmptyChunk(RdfData.InMemoryNQuad(nq)),
+              data = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
+            ),
+            shapes = ShaclShapes(
+              ontologyShapes = NonEmptyChunk(noOpShapes),
+              dataShapes = NonEmptyChunk(noOpShapes),
+            ),
+          )
+          .either
+          .map { result =>
+            assert(result)(isLeft) &&
+            assert(result.left.toOption.get)(Assertion.isSubtype[ShaclValidationError.LoadingError](anything))
+          }
       },
     ),
   )

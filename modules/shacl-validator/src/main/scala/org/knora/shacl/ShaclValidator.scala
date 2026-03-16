@@ -26,75 +26,114 @@ enum RdfData {
   case InMemoryNQuad(quads: String)
 }
 
+case class RdfGraphs(   ontologies: NonEmptyChunk[RdfData], data: NonEmptyChunk[RdfData] )
+
 case class ShaclShapes(
-  ontologyShapes: Chunk[RdfData],
-  dataShapes: Chunk[RdfData],
+  ontologyShapes: NonEmptyChunk[RdfData],
+  dataShapes: NonEmptyChunk[RdfData],
 )
 
 enum ShaclValidationError {
   case LoadingError(cause: Throwable)
-  case ValidationError(report: Resource)
+  case OntologyValidationError(report: Resource)
+  case DataValidationError(report: Resource)
 
   def message: String = this match {
-    case LoadingError(cause)     => s"Error loading data for SHACL validation: ${cause.getMessage}"
-    case ValidationError(report) =>
+    case LoadingError(cause)             => s"Error loading data for SHACL validation: ${cause.getMessage}"
+    case OntologyValidationError(report) =>
       val sw = new StringWriter()
-      RDFDataMgr.write(sw, report.getModel, Lang.TURTLE)
-      sw.toString
+      sw.write("Ontology check failed:\n")
+      asTtlStr(sw, report)
+    case DataValidationError(report) =>
+      val sw = new StringWriter()
+      sw.write("Data check failed:\n")
+      asTtlStr(sw, report)
   }
+
+  private def asTtlStr(sw: StringWriter , report: Resource) =
+    RDFDataMgr.write(sw, report.getModel, Lang.TURTLE)
+    sw.toString
 }
 
 object ShaclValidator {
 
   def validate(
-    ontologies: NonEmptyChunk[RdfData],
-    data: NonEmptyChunk[RdfData],
+    graphs: RdfGraphs,
     shapes: ShaclShapes,
-  ): IO[ShaclValidationError, Unit] =
-    ZIO.attempt {
-      val dataset = DatasetFactory.create()
+  ): IO[ShaclValidationError, Unit] = {
+    val model = ModelFactory.createDefaultModel()
+    for {
+      // Step 1: load ontologies and validate ontology shapes
+      _            <- ZIO.foreachDiscard(graphs.ontologies)(loadIntoModel(model, _))
+      shapesModel1 <- loadShapes(shapes.ontologyShapes)
+      _            <- validateModel(ModelFactory.createRDFSModel(model), shapesModel1, ShaclValidationError.OntologyValidationError(_))
+      // Step 2: load data and validate data shapes
+      _            <- ZIO.foreachDiscard(graphs.data)(loadIntoModel(model, _))
+      shapesModel2 <- loadShapes(shapes.dataShapes)
+      _            <- validateModel(ModelFactory.createRDFSModel(model), shapesModel2, ShaclValidationError.DataValidationError(_))
+    } yield ()
+  }
 
-      // Load ontologies first, then snapshot graph names → these are ontology graphs
-      ontologies.foreach(source => loadIntoDataset(dataset, source))
-      val ontologyGraphIris = datasetNames(dataset)
-
-      // Load data, any new graph names are data graphs
-      data.foreach(source => loadIntoDataset(dataset, source))
-      val dataGraphIris = datasetNames(dataset) -- ontologyGraphIris
-
-      (dataset, ontologyGraphIris, dataGraphIris)
+  private def loadIntoModel(model: Model, source: RdfData): IO[ShaclValidationError, Unit] =
+    source match {
+      case RdfData.TurtleFile(path, _) =>
+        ZIO
+          .attempt(RDFDataMgr.read(model, path.toUri.toString, Lang.TURTLE))
+          .mapError(ShaclValidationError.LoadingError(_))
+      case RdfData.NQuadFile(path) =>
+        ZIO.attempt {
+          val ds = DatasetFactory.create()
+          RDFDataMgr.read(ds, path.toUri.toString, Lang.NQUADS)
+          ds
+        }
+          .mapError(ShaclValidationError.LoadingError(_))
+          .flatMap(ds => loadNQuadsIntoModel(model, ds))
+      case RdfData.InMemoryTurtle(content, _) =>
+        ZIO
+          .attempt(RDFDataMgr.read(model, new StringReader(content), null, Lang.TURTLE))
+          .mapError(ShaclValidationError.LoadingError(_))
+      case RdfData.InMemoryNQuad(content) =>
+        ZIO.attempt {
+          val ds = DatasetFactory.create()
+          RDFDataMgr.read(ds, new StringReader(content), null, Lang.NQUADS)
+          ds
+        }
+          .mapError(ShaclValidationError.LoadingError(_))
+          .flatMap(ds => loadNQuadsIntoModel(model, ds))
     }
-      .mapError(ShaclValidationError.LoadingError(_))
-      .flatMap { case (dataset, ontologyGraphIris, dataGraphIris) =>
-        val ontologyValidation =
-          if (shapes.ontologyShapes.isEmpty) ZIO.unit
-          else {
-            // Validate ontology graphs with ontology shapes, using RDFS inference within ontologies
-            val ontoModel   = mergeGraphs(dataset, ontologyGraphIris)
-            val schemaModel = ModelFactory.createOntologyModel()
-            schemaModel.add(ontoModel)
-            val dataModel   = ModelFactory.createRDFSModel(schemaModel, ontoModel)
-            val shapesModel = loadShapes(shapes.ontologyShapes)
-            validateModel(dataModel, shapesModel)
-          }
 
-        val dataValidation =
-          if (shapes.dataShapes.isEmpty || dataGraphIris.isEmpty) ZIO.unit
-          else {
-            // Validate data graphs with data shapes, using RDFS inference from ontology graphs
-            val schemaModel = ModelFactory.createOntologyModel()
-            val ontoModel   = mergeGraphs(dataset, ontologyGraphIris)
-            schemaModel.add(ontoModel)
-            val baseDataModel = mergeGraphs(dataset, dataGraphIris)
-            val dataModel     = ModelFactory.createRDFSModel(schemaModel, baseDataModel)
-            val shapesModel   = loadShapes(shapes.dataShapes)
-            validateModel(dataModel, shapesModel)
-          }
+  private def loadNQuadsIntoModel(
+    model: Model,
+    ds: org.apache.jena.query.Dataset,
+  ): IO[ShaclValidationError, Unit] = {
+    val it    = ds.listNames()
+    val names = scala.collection.mutable.ListBuffer.empty[String]
+    while (it.hasNext) names += it.next()
+    if (names.size != 1 || !ds.getDefaultModel.isEmpty)
+      ZIO.fail(
+        ShaclValidationError.LoadingError(
+          new IllegalArgumentException(
+            s"NQuad data must contain exactly one named graph, found ${names.size} named graph(s)" +
+              (if (!ds.getDefaultModel.isEmpty) " plus triples in the default graph" else ""),
+          ),
+        ),
+      )
+    else
+      ZIO.attempt {
+        ds.asDatasetGraph().find().forEachRemaining(q => model.getGraph.add(q.asTriple))
+      }.mapError(ShaclValidationError.LoadingError(_))
+  }
 
-        ontologyValidation *> dataValidation
-      }
+  private def loadShapes(sources: NonEmptyChunk[RdfData]): IO[ShaclValidationError, Model] = {
+    val model = ModelFactory.createDefaultModel()
+    ZIO.foreachDiscard(sources)(source => loadIntoModel(model, source)).as(model)
+  }
 
-  private def validateModel(dataModel: Model, shapesModel: Model): IO[ShaclValidationError, Unit] =
+  private def validateModel(
+    dataModel: Model,
+    shapesModel: Model,
+    errorFactory: Resource => ShaclValidationError,
+  ): IO[ShaclValidationError, Unit] =
     ZIO.attempt {
       val config   = new ValidationEngineConfiguration().setValidateShapes(false)
       val report   = ValidationUtil.validateModel(dataModel, shapesModel, config)
@@ -103,74 +142,5 @@ object ShaclValidator {
       (conforms, report)
     }
       .mapError(ShaclValidationError.LoadingError(_))
-      .flatMap { case (conforms, report) =>
-        if (conforms) ZIO.unit
-        else ZIO.fail(ShaclValidationError.ValidationError(report))
-      }
-
-  private def loadIntoDataset(dataset: org.apache.jena.query.Dataset, source: RdfData): Unit =
-    source match {
-      case RdfData.TurtleFile(path, graphIri) =>
-        val model = dataset.getNamedModel(graphIri)
-        RDFDataMgr.read(model, path.toUri.toString, Lang.TURTLE)
-
-      case RdfData.NQuadFile(path) =>
-        val tmp = DatasetFactory.create()
-        RDFDataMgr.read(tmp, path.toUri.toString, Lang.NQUADS)
-        mergeDataset(tmp, dataset)
-
-      case RdfData.InMemoryTurtle(content, graphIri) =>
-        val model = dataset.getNamedModel(graphIri)
-        RDFDataMgr.read(model, new StringReader(content), null, Lang.TURTLE)
-
-      case RdfData.InMemoryNQuad(content) =>
-        val tmp = DatasetFactory.create()
-        RDFDataMgr.read(tmp, new StringReader(content), null, Lang.NQUADS)
-        mergeDataset(tmp, dataset)
-    }
-
-  private def mergeDataset(source: org.apache.jena.query.Dataset, target: org.apache.jena.query.Dataset): Unit = {
-    // Merge default graph
-    val _ = target.getDefaultModel.add(source.getDefaultModel)
-    // Merge named graphs
-    val it = source.listNames()
-    while (it.hasNext) {
-      val name = it.next()
-      val _    = target.getNamedModel(name).add(source.getNamedModel(name))
-    }
-  }
-
-  private def datasetNames(dataset: org.apache.jena.query.Dataset): Set[String] = {
-    val it    = dataset.listNames()
-    val names = scala.collection.mutable.Set.empty[String]
-    while (it.hasNext) names += it.next()
-    names.toSet
-  }
-
-  private def mergeGraphs(dataset: org.apache.jena.query.Dataset, graphIris: Set[String]): Model = {
-    val merged = ModelFactory.createDefaultModel()
-    graphIris.foreach { iri =>
-      val model = dataset.getNamedModel(iri)
-      if (model != null) { val _ = merged.add(model) }
-    }
-    merged
-  }
-
-  private def loadShapes(sources: Chunk[RdfData]): Model = {
-    val model = ModelFactory.createDefaultModel()
-    sources.foreach {
-      case RdfData.TurtleFile(path, _) => RDFDataMgr.read(model, path.toUri.toString, Lang.TURTLE)
-      case RdfData.NQuadFile(path)     =>
-        val ds = DatasetFactory.create()
-        RDFDataMgr.read(ds, path.toUri.toString, Lang.NQUADS)
-        ds.asDatasetGraph().find().forEachRemaining(q => model.getGraph.add(q.asTriple))
-      case RdfData.InMemoryTurtle(content, _) =>
-        RDFDataMgr.read(model, new StringReader(content), null, Lang.TURTLE)
-      case RdfData.InMemoryNQuad(content) =>
-        val ds = DatasetFactory.create()
-        RDFDataMgr.read(ds, new StringReader(content), null, Lang.NQUADS)
-        ds.asDatasetGraph().find().forEachRemaining(q => model.getGraph.add(q.asTriple))
-    }
-    model
-  }
+      .flatMap { case (conforms, report) => ZIO.unless(conforms)(ZIO.fail(errorFactory(report))).unit }
 }
