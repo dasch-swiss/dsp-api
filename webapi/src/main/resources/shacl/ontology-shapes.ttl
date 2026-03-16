@@ -1,0 +1,28 @@
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+# Validates that every project ontology (owl:Ontology, excluding system ontologies)
+# has at least one rdfs:label.
+knora-base:OntologyShape
+  a sh:NodeShape ;
+  sh:target [
+    a sh:SPARQLTarget ;
+    sh:select """
+      PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+      SELECT ?this
+      WHERE {
+        ?this a owl:Ontology .
+        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
+        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/salsah-gui"))
+        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/standoff"))
+      }
+    """ ;
+  ] ;
+  sh:property [
+    sh:path rdfs:label ;
+    sh:minCount 1 ;
+    sh:message "Project ontology must have at least one rdfs:label" ;
+  ] .

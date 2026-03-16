@@ -1,0 +1,10 @@
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+# Placeholder — no data-level SHACL constraints yet.
+# The validator requires at least one shape entry; this node shape
+# targets nothing and therefore always conforms.
+knora-base:NoOpDataShape
+  a sh:NodeShape ;
+  sh:targetNode knora-base:NoOpDataShape_SentinelDoesNotExist .
