@@ -32,6 +32,7 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -80,11 +81,25 @@ final case class ExportService(
                          skipRetrievalChecks = true,
                        )
 
-      // propertyIriInfos <- propertyIriInfos(selectedProperties)
-      // propsWithInfos    = selectedProperties.map(p => (p, propertyIriInfos.get(p)))
-
-      resourcesMap = readResources.resourcesMap // must be cached
-    } yield "".toJson
+      records = readResources.resources.toList.map { r =>
+                  MetadataRecord(
+                    id = r.resourceIri.toString,
+                    pid = r.resourceIri.toString,
+                    label = Map("en" -> r.label),
+                    accessRights = "Full Open Access",
+                    howToCite = r.label,
+                    publisher = "DaSCH",
+                    source = None,
+                    description = None,
+                    dateCreated = None,
+                    dateModified = None,
+                    datePublished = None,
+                    typeOfData = None,
+                    size = None,
+                    keywords = List.empty,
+                  )
+                }
+    } yield records.toJson
   }
 
   def exportResources(
