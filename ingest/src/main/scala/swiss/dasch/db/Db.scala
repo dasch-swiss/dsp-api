@@ -7,8 +7,6 @@ package swiss.dasch.db
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.getquill.*
-import io.getquill.jdbczio.*
 import swiss.dasch.config.Configuration.DbConfig
 import zio.URLayer
 import zio.ZIO
@@ -29,7 +27,4 @@ object Db {
 
   val dataSourceLive: URLayer[DbConfig, DataSource] =
     ZLayer.scoped(ZIO.fromAutoCloseable(ZIO.serviceWith[DbConfig](makeDataSource)))
-
-  val quillLive: URLayer[DataSource, Quill.Sqlite[SnakeCase]] =
-    Quill.Sqlite.fromNamingStrategy(SnakeCase)
 }

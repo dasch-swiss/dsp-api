@@ -214,13 +214,11 @@ object Dependencies {
   val otelAgentVersion     = "v2.18.1"
   val otelPyroscopeVersion = "v1.0.4"
   val hikariVersion        = "7.0.2"
-  val quillVersion         = "4.8.6"
   val sqliteVersion        = "3.51.2.0"
 
   val db = Seq(
-    "org.xerial"   % "sqlite-jdbc"    % sqliteVersion,
-    "org.flywaydb" % "flyway-core"    % flywayVersion,
-    "com.zaxxer"   % "HikariCP"       % hikariVersion,
-    "io.getquill" %% "quill-jdbc-zio" % quillVersion,
+    "org.xerial"   % "sqlite-jdbc" % sqliteVersion,
+    "org.flywaydb" % "flyway-core" % flywayVersion,
+    "com.zaxxer"   % "HikariCP"    % hikariVersion,
   )
 }
