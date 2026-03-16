@@ -38,6 +38,7 @@ class GroupServiceLive(...) extends GroupService { ... }
 ```
 
 **Rules:**
+
 - Use `final case class` for service implementations
 - Constructor parameters are `private val`
 - Public methods return ZIO effects (`Task[A]` or `IO[Error, A]`)
@@ -69,6 +70,7 @@ object GroupIri extends StringValueCompanion[GroupIri] {
 ```
 
 **Rules:**
+
 - `final case class ClassName private (value: Type)` extending `StringValue`
 - Companion extends `StringValueCompanion[T]` (or `WithFrom[I, T]`)
 - `from(value): Either[String, T]` — smart constructor with validation
@@ -178,6 +180,7 @@ object NotFoundException {
 ```
 
 **Rules:**
+
 - `RequestRejectedException` → 4xx errors
 - `InternalServerException` → 5xx errors
 - Each concrete error: `final case class` with smart constructors
@@ -253,6 +256,7 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
 ```
 
 **Rules:**
+
 - `object XSpec extends ZIOSpecDefault`
 - `suite("description")(test("...") { ... })`
 - Use `.provide(layers...)` for dependency injection
@@ -263,7 +267,7 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
 ## Naming Conventions
 
 | Element | Convention | Example |
-|---------|-----------|---------|
+| ------- | ---------- | ------- |
 | Services | `*Service` | `GroupService` |
 | Implementations | `*Live` suffix | `AuthServiceLive` |
 | Rest services | `*RestService` | `GroupRestService` |
