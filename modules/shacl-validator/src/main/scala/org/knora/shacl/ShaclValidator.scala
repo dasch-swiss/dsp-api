@@ -26,7 +26,7 @@ enum RdfData {
   case InMemoryNQuad(quads: String)
 }
 
-case class RdfGraphs(   ontologies: NonEmptyChunk[RdfData], data: NonEmptyChunk[RdfData] )
+case class RdfGraphs(ontologies: NonEmptyChunk[RdfData], data: NonEmptyChunk[RdfData])
 
 case class ShaclShapes(
   ontologyShapes: NonEmptyChunk[RdfData],
@@ -50,7 +50,7 @@ enum ShaclValidationError {
       asTtlStr(sw, report)
   }
 
-  private def asTtlStr(sw: StringWriter , report: Resource) =
+  private def asTtlStr(sw: StringWriter, report: Resource) =
     RDFDataMgr.write(sw, report.getModel, Lang.TURTLE)
     sw.toString
 }
@@ -66,7 +66,11 @@ object ShaclValidator {
       // Step 1: load ontologies and validate ontology shapes
       _            <- ZIO.foreachDiscard(graphs.ontologies)(loadIntoModel(model, _))
       shapesModel1 <- loadShapes(shapes.ontologyShapes)
-      _            <- validateModel(ModelFactory.createRDFSModel(model), shapesModel1, ShaclValidationError.OntologyValidationError(_))
+      _            <- validateModel(
+             ModelFactory.createRDFSModel(model),
+             shapesModel1,
+             ShaclValidationError.OntologyValidationError(_),
+           )
       // Step 2: load data and validate data shapes
       _            <- ZIO.foreachDiscard(graphs.data)(loadIntoModel(model, _))
       shapesModel2 <- loadShapes(shapes.dataShapes)
