@@ -46,7 +46,7 @@ lazy val buildTime   = sys.env.getOrElse("BUILD_TIME", "dev")
 
 lazy val knoraSipiVersion = gitVersion
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, testkit, it, e2e, bagit, jwt)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, testkit, it, e2e, bagit, jwt, shaclValidator)
 
 lazy val year           = java.time.LocalDate.now().getYear
 lazy val projectLicense = Some(
@@ -76,6 +76,7 @@ lazy val root: Project = Project(id = "root", file("."))
     ingest,
     bagit,
     jwt,
+    shaclValidator,
   )
   .settings(
     // values set for all sub-projects
@@ -97,11 +98,11 @@ lazy val root: Project = Project(id = "root", file("."))
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias(
   "headerCreateAll",
-  "; all webapi/headerCreate webapi/Test/headerCreate testkit/headerCreate test-it/headerCreate test-it/Test/headerCreate test-e2e/headerCreate test-e2e/Test/headerCreate bagit/headerCreate bagit/Test/headerCreate jwt/headerCreate jwt/Test/headerCreate",
+  "; all webapi/headerCreate webapi/Test/headerCreate testkit/headerCreate test-it/headerCreate test-it/Test/headerCreate test-e2e/headerCreate test-e2e/Test/headerCreate bagit/headerCreate bagit/Test/headerCreate jwt/headerCreate jwt/Test/headerCreate shacl-validator/headerCreate shacl-validator/Test/headerCreate",
 )
 addCommandAlias(
   "headerCheckAll",
-  "; all webapi/headerCheck webapi/Test/headerCheck testkit/headerCheck test-it/headerCheck test-it/Test/headerCheck test-e2e/headerCheck test-e2e/Test/headerCheck bagit/headerCheck bagit/Test/headerCheck jwt/headerCheck jwt/Test/headerCheck",
+  "; all webapi/headerCheck webapi/Test/headerCheck testkit/headerCheck test-it/headerCheck test-it/Test/headerCheck test-e2e/headerCheck test-e2e/Test/headerCheck bagit/headerCheck bagit/Test/headerCheck jwt/headerCheck jwt/Test/headerCheck shacl-validator/headerCheck shacl-validator/Test/headerCheck",
 )
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
 addCommandAlias("test-it", "test-it/test")
@@ -173,7 +174,7 @@ val customScalacOptions = Seq(
 )
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
-  .dependsOn(bagit, jwt)
+  .dependsOn(bagit, jwt, shaclValidator)
   .settings(buildSettings)
   .settings(
     inConfig(Test) {
@@ -309,6 +310,22 @@ lazy val bagit: Project = Project(id = "bagit", base = file("modules/bagit"))
     libraryDependencies ++= Dependencies.bagitDependencies ++ Dependencies.bagitTestDependencies,
     publish / skip := true,
     name           := "bagit",
+  )
+  .enablePlugins(HeaderPlugin)
+
+//////////////////////////////////////
+// SHACL VALIDATOR
+//////////////////////////////////////
+
+lazy val shaclValidator: Project = Project(id = "shacl-validator", base = file("modules/shacl-validator"))
+  .settings(buildSettings)
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    logLevel := Level.Info,
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    libraryDependencies ++= Dependencies.shaclValidatorDependencies ++ Dependencies.shaclValidatorTestDependencies,
+    publish / skip := true,
+    name           := "shacl-validator",
   )
   .enablePlugins(HeaderPlugin)
 

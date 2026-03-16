@@ -1,0 +1,108 @@
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix :           <http://www.knora.org/ontology/shacl/ontology-shapes#> .
+
+#
+# OntologyShape — validates project ontologies (excludes system ontologies)
+#
+:OntologyShape
+    a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX owl: <http://www.w3.org/2002/07/owl#>
+            SELECT ?this
+            WHERE {
+                ?this rdf:type owl:Ontology .
+                FILTER(STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-") = false)
+                FILTER(STRSTARTS(STR(?this), "http://www.knora.org/ontology/salsah-gui") = false)
+            }
+        """ ;
+    ] ;
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "Ontology must have at least one rdfs:label" ;
+    ] ;
+    sh:property [
+        sh:path knora-base:attachedToProject ;
+        sh:minCount 1 ;
+        sh:message "Ontology must have knora-base:attachedToProject" ;
+    ] ;
+    sh:property [
+        sh:path knora-base:lastModificationDate ;
+        sh:minCount 1 ;
+        sh:datatype xsd:dateTime ;
+        sh:message "Ontology must have knora-base:lastModificationDate of type xsd:dateTime" ;
+    ] .
+
+#
+# ResourceClassShape — validates project-specific subclasses of knora-base:Resource
+#
+:ResourceClassShape
+    a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            SELECT ?this
+            WHERE {
+                ?this rdfs:subClassOf+ knora-base:Resource .
+                FILTER(?this != knora-base:Resource)
+                FILTER(STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-") = false)
+            }
+        """ ;
+    ] ;
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "Resource class must have at least one rdfs:label" ;
+    ] .
+
+#
+# PropertyShape — validates project-specific subproperties of knora-base:hasValue or knora-base:hasLinkTo
+#
+:PropertyShape
+    a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            SELECT ?this
+            WHERE {
+                {
+                    ?this rdfs:subPropertyOf+ knora-base:hasValue .
+                } UNION {
+                    ?this rdfs:subPropertyOf+ knora-base:hasLinkTo .
+                }
+                FILTER(STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-") = false)
+            }
+        """ ;
+    ] ;
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "Property must have at least one rdfs:label" ;
+    ] ;
+    sh:or (
+        [
+            sh:property [
+                sh:path knora-base:objectClassConstraint ;
+                sh:minCount 1 ;
+            ] ;
+        ]
+        [
+            sh:property [
+                sh:path knora-base:objectDatatypeConstraint ;
+                sh:minCount 1 ;
+            ] ;
+        ]
+    ) ;
+    sh:message "Property must have knora-base:objectClassConstraint or knora-base:objectDatatypeConstraint" .

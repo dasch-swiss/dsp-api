@@ -177,6 +177,12 @@ object Dependencies {
   val bagitDependencies     = Seq(zio, "dev.zio" %% "zio-streams" % ZioVersion, zioNio)
   val bagitTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
 
+  val TopbraidShaclVersion = "1.4.4"
+  val topbraidShacl        = "org.topbraid" % "shacl" % TopbraidShaclVersion
+
+  val shaclValidatorDependencies     = Seq(topbraidShacl, zio)
+  val shaclValidatorTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
+
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
   val webapiDependencies = monocle ++ refined ++ Seq(
