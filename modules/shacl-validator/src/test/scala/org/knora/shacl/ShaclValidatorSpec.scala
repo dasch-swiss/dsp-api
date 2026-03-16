@@ -54,7 +54,7 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
       |""".stripMargin
 
   private def shapesPath: Path =
-    Path.of(getClass.getClassLoader.getResource("shacl/ontology-shapes.ttl").toURI)
+    Path.of(getClass.getClassLoader.getResource("shacl/test-onto-shapes.ttl").toURI)
 
   /** No-op shapes — contains no SHACL shape definitions, so validation always conforms. */
   private val noOpShapes = RdfData.InMemoryTurtle("", "urn:no-op-shapes")
