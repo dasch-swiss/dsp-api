@@ -23,6 +23,7 @@ object FileModelUtil {
     case FileType.DocumentFile(_, _, _)     => OntologyConstants.KnoraApiV2Complex.DocumentRepresentation.toSmartIri
     case FileType.StillImageFile(_, _)      => OntologyConstants.KnoraApiV2Complex.StillImageRepresentation.toSmartIri
     case FileType.StillImageExternalFile(_) => OntologyConstants.KnoraApiV2Complex.StillImageRepresentation.toSmartIri
+    case FileType.StillImageVectorFile      => OntologyConstants.KnoraApiV2Complex.StillImageRepresentation.toSmartIri
     case FileType.MovingImageFile(_, _)     => OntologyConstants.KnoraApiV2Complex.MovingImageRepresentation.toSmartIri
     case FileType.TextFile                  => OntologyConstants.KnoraApiV2Complex.TextRepresentation.toSmartIri
     case FileType.AudioFile                 => OntologyConstants.KnoraApiV2Complex.AudioRepresentation.toSmartIri
@@ -33,6 +34,7 @@ object FileModelUtil {
     case FileType.DocumentFile(_, _, _)     => OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri
     case FileType.StillImageFile(_, _)      => OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
     case FileType.StillImageExternalFile(_) => OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+    case FileType.StillImageVectorFile      => OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
     case FileType.MovingImageFile(_, _)     => OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri
     case FileType.TextFile                  => OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri
     case FileType.AudioFile                 => OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri
@@ -43,6 +45,7 @@ object FileModelUtil {
     case FileType.DocumentFile(_, _, _)     => "knora-api:hasDocumentFileValue"
     case FileType.StillImageFile(_, _)      => "knora-api:hasStillImageFileValue"
     case FileType.StillImageExternalFile(_) => "knora-api:hasStillImageFileValue"
+    case FileType.StillImageVectorFile      => "knora-api:hasStillImageFileValue"
     case FileType.MovingImageFile(_, _)     => "knora-api:hasMovingImageFileValue"
     case FileType.TextFile                  => "knora-api:hasTextFileValue"
     case FileType.AudioFile                 => "knora-api:hasAudioFileValue"
@@ -53,6 +56,7 @@ object FileModelUtil {
     case FileType.DocumentFile(_, _, _)     => "DocumentRepresentation"
     case FileType.StillImageFile(_, _)      => "StillImageRepresentation"
     case FileType.StillImageExternalFile(_) => "StillImageRepresentation"
+    case FileType.StillImageVectorFile      => "StillImageRepresentation"
     case FileType.MovingImageFile(_, _)     => "MovingImageRepresentation"
     case FileType.TextFile                  => "TextRepresentation"
     case FileType.AudioFile                 => "AudioRepresentation"
@@ -63,6 +67,7 @@ object FileModelUtil {
     case FileType.DocumentFile(_, _, _)     => "knora-api:DocumentFileValue"
     case FileType.StillImageFile(_, _)      => "knora-api:StillImageFileValue"
     case FileType.StillImageExternalFile(_) => "knora-api:StillImageExternalFileValue"
+    case FileType.StillImageVectorFile      => "knora-api:StillImageVectorFileValue"
     case FileType.MovingImageFile(_, _)     => "knora-api:MovingImageFileValue"
     case FileType.TextFile                  => "knora-api:TextFileValue"
     case FileType.AudioFile                 => "knora-api:AudioFileValue"
@@ -74,6 +79,7 @@ object FileModelUtil {
     case FileType.StillImageFile(_, _)      => OntologyConstants.KnoraApiV2Complex.StillImageFileValue.toSmartIri
     case FileType.StillImageExternalFile(_) =>
       OntologyConstants.KnoraApiV2Complex.StillImageExternalFileValue.toSmartIri
+    case FileType.StillImageVectorFile  => OntologyConstants.KnoraApiV2Complex.StillImageVectorFileValue.toSmartIri
     case FileType.MovingImageFile(_, _) => OntologyConstants.KnoraApiV2Complex.MovingImageFileValue.toSmartIri
     case FileType.TextFile              => OntologyConstants.KnoraApiV2Complex.TextFileValue.toSmartIri
     case FileType.AudioFile             => OntologyConstants.KnoraApiV2Complex.AudioFileValue.toSmartIri
@@ -138,6 +144,20 @@ object FileModelUtil {
             licenseIri = licenseIri,
           ),
           externalUrl = externalUrl,
+          comment = comment,
+        )
+      case FileType.StillImageVectorFile =>
+        StillImageVectorFileValueContentV2(
+          ontologySchema = ApiV2Complex,
+          fileValue = FileValueV2(
+            internalFilename = internalFilename,
+            internalMimeType = internalMimeType.getOrElse("image/svg+xml"),
+            originalFilename = originalFilename,
+            originalMimeType = originalMimeType,
+            copyrightHolder = copyrightHolder,
+            authorship = authorship,
+            licenseIri = licenseIri,
+          ),
           comment = comment,
         )
       case FileType.MovingImageFile(_, _) =>
@@ -244,6 +264,7 @@ object FileType {
   ) extends FileType
   case class StillImageFile(dimX: Int = 100, dimY: Int = 100)         extends FileType
   case class StillImageExternalFile(externalUrl: IiifImageRequestUrl) extends FileType
+  case object StillImageVectorFile                                    extends FileType
   case class MovingImageFile(dimX: Int = 100, dimY: Int = 100)        extends FileType
   case object TextFile                                                extends FileType
   case object AudioFile                                               extends FileType

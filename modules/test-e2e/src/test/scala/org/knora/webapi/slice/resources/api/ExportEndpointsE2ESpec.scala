@@ -43,6 +43,12 @@ object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
           .flatMap(_.assert200)
           .map(assertGolden(_, "withResourceIri"))
       },
+      test("with ARK URLs included") {
+        TestExportApiClient
+          .postExportResources(request.copy(includeArkUrls = true), anythingAdminUser)
+          .flatMap(_.assert200)
+          .map(assertGolden(_, "withArkUrls"))
+      },
     ),
   )
 }

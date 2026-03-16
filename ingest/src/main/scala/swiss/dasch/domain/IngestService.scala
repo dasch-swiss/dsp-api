@@ -15,11 +15,13 @@ import swiss.dasch.domain.AugmentedPath.AudioDerivativeFile
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.OrigFile
 import swiss.dasch.domain.AugmentedPath.OtherDerivativeFile
+import swiss.dasch.domain.AugmentedPath.SvgDerivativeFile
 import swiss.dasch.domain.PathOps.fileExtension
 import swiss.dasch.domain.SupportedFileType.Audio
 import swiss.dasch.domain.SupportedFileType.MovingImage
 import swiss.dasch.domain.SupportedFileType.OtherFiles
 import swiss.dasch.domain.SupportedFileType.StillImage
+import swiss.dasch.domain.SupportedFileType.SvgImage
 import zio.IO
 import zio.Task
 import zio.ZIO
@@ -66,6 +68,7 @@ class IngestServiceLive(
                    case StillImage  => handleImageFile(original, assetDir)
                    case MovingImage => handleMovingImageFile(original, assetDir)
                    case Audio       => handleAudioFile(original, assetDir)
+                   case SvgImage    => handleSvgFile(original, assetDir)
                    case OtherFiles  => handleOtherFile(original, assetDir)
                  }
       _ <- assetInfo.createAssetInfo(asset).tap(assetInfo.save).logError
@@ -95,6 +98,15 @@ class IngestServiceLive(
       val fileExtension = FilenameUtils.getExtension(original.originalFilename.toString)
       val derivative    = AudioDerivativeFile.unsafeFrom(assetDir / s"${assetDir.assetId}.$fileExtension")
       handleAudioAndOtherFile(original, assetDir, derivative)
+    }
+
+  private def handleSvgFile(original: Original, assetDir: AssetFolder) =
+    ZIO.logInfo(s"Creating derivative for vector image $original, ${assetDir.assetRef}") *> {
+      val derivative = SvgDerivativeFile.unsafeFrom(assetDir / s"${assetDir.assetId}.svg")
+      for {
+        _        <- storage.copyFile(original.file, derivative)
+        metadata <- otherFilesService.extractMetadata(original, derivative)
+      } yield Asset.makeOther(assetDir.assetRef, original, derivative, metadata)
     }
 
   private def handleOtherFile(original: Original, assetDir: AssetFolder) =

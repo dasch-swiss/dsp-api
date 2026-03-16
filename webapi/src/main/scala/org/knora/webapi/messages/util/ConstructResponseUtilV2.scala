@@ -733,6 +733,15 @@ final case class ConstructResponseUtilV2(
           ),
         )
 
+      case OntologyConstants.KnoraBase.StillImageVectorFileValue =>
+        ZIO.succeed(
+          StillImageVectorFileValueContentV2(
+            ontologySchema = InternalSchema,
+            fileValue = fileValue,
+            comment = valueCommentOption,
+          ),
+        )
+
       case OntologyConstants.KnoraBase.StillImageExternalFileValue =>
         ZIO.succeed(
           StillImageExternalFileValueContentV2(

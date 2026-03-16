@@ -1,0 +1,5 @@
+ARK URL,Resource IRI,Label,Place Label,Link Property Label,Text Paragraph Label,Text Rich Text Label,Funk List Label
+http://0.0.0.0:3336/ark:/72163/1/1612/Htygzo8mQDubd8gyinQ3ZwI,http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw,Resource0,,,,,
+http://0.0.0.0:3336/ark:/72163/1/1612/TfZ6cOzQThSMAkCoEeJFjAA,http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA,Resource1,https://www.geonames.org/2661604,Resource2,Lazy\nFox\nJumped,The richest text…   … you can imagine. ,Vulfpeck
+http://0.0.0.0:3336/ark:/72163/1/1612/1DP5KVTxRPaGktcDY7IqyQk,http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ,Resource11,,,,,
+http://0.0.0.0:3336/ark:/72163/1/1612/wQtVscpOTt=Sc_cH=dQL=wB,http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w,Resource2,https://www.geonames.org/2768042,Resource1,Text text,Rich rich ,Hiatus Kaiyote

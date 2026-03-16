@@ -6726,6 +6726,162 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "still image vector file value",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:StillImageAbstractFileValue"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToUser"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deletedBy"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:fileValueAsUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:fileValueHasFilename"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasCopyrightHolder"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasLicense"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPermissions"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isDeleted"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:userHasPermission"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueAsString"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueCreationDate"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueHasComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueHasUUID"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                }
+            ],
+            "rdfs:comment": "A file containing a two-dimensional vector image (e.g. SVG)",
+            "@type": "owl:Class",
+            "@id": "knora-api:StillImageVectorFileValue"
+        },
+        {
+            "knora-api:isValueClass": true,
             "rdfs:label": "Text file value",
             "rdfs:subClassOf": [
                 {

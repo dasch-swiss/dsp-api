@@ -55,6 +55,9 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   def resourceClassIri: ResourceClassIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/1612/Data#Class1")(using sf)
 
+  def superClassIri: ResourceClassIri =
+    ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/1612/Data#SuperClass1")(using sf)
+
   val user       = TestDataFactory.User.rootUser
   val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw")
 
@@ -95,11 +98,12 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               user,
               LanguageCode.EN,
               includeIris = true,
+              includeArkUrls = false,
             )
           csv <- exportService.toCsv(exportedCsv)
         } yield assertGolden(csv, "basic")
       },
-      test("with includeIris = false") {
+      test("with includeIris = false and includeArkUrls = false") {
         for {
           _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
@@ -119,9 +123,54 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               user,
               LanguageCode.DE,
               includeIris = false,
+              includeArkUrls = false,
             )
           csv <- exportService.toCsv(exportedCsv)
         } yield assertGolden(csv, "includeIrisFalse")
+      },
+      test("superclass export returns instances of subclasses") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          exportedCsv   <-
+            exportService.exportResources(
+              project,
+              superClassIri,
+              List.empty,
+              user,
+              LanguageCode.EN,
+              includeIris = true,
+              includeArkUrls = false,
+            )
+          csv <- exportService.toCsv(exportedCsv)
+        } yield assertGolden(csv, "superclassExport")
+      },
+      test("with includeArkUrls = true") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          exportedCsv   <-
+            exportService.exportResources(
+              project,
+              resourceClassIri,
+              List(
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#Place")),
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextParagraph")),
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextRich")),
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#FunkList")),
+              ),
+              user,
+              LanguageCode.EN,
+              includeIris = false,
+              includeArkUrls = true,
+            )
+          csv <- exportService.toCsv(exportedCsv)
+        } yield assertGolden(csv, "includeArkUrlsTrue")
       },
     ).provide(
       ConstructResponseUtilV2.layer,

@@ -21,6 +21,7 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageExternalFileValue
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageFileValue
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageVectorFileValue
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
@@ -823,12 +824,15 @@ final case class ValuesResponderV2(
               s"Resource <${updateValue.resourceIri}> does not have value <${updateValue.valueIri}> as an object of property <${updateValue.propertyIri}>",
             ),
           )
-      isSameType        = currentValue.valueContent.valueType == submittedInternalValueType
+      isSameType = currentValue.valueContent.valueType == submittedInternalValueType
+      // Cross-type updates are intentionally allowed between all three still-image subtypes
+      // (raster, IIIF external, and vector/SVG), since they all represent the same resource
+      // and differ only in storage/delivery method.
       isStillImageTypes =
         Set(
           submittedInternalValueType.toInternalIri.value,
           currentValue.valueContent.valueType.toInternalIri.value,
-        ).subsetOf(Set(StillImageExternalFileValue, StillImageFileValue))
+        ).subsetOf(Set(StillImageExternalFileValue, StillImageFileValue, StillImageVectorFileValue))
 
       _ <-
         ZIO.unless(isSameType || isStillImageTypes)(
