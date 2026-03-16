@@ -153,7 +153,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % tapirVersion,
   )
 
-  val otelVersion = "1.59.0"
+  val otelVersion = "1.60.1"
 
   val openTelemetryWithSentry = Seq(
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
@@ -210,7 +210,7 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion        = "12.0.3"
+  val flywayVersion        = "12.1.0"
   val otelAgentVersion     = "v2.18.1"
   val otelPyroscopeVersion = "v1.0.4"
   val hikariVersion        = "7.0.2"
