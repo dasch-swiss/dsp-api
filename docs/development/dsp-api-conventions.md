@@ -38,7 +38,6 @@ class GroupServiceLive(...) extends GroupService { ... }
 ```
 
 **Rules:**
-
 - Use `final case class` for service implementations
 - Constructor parameters are `private val`
 - Public methods return ZIO effects (`Task[A]` or `IO[Error, A]`)
@@ -70,7 +69,6 @@ object GroupIri extends StringValueCompanion[GroupIri] {
 ```
 
 **Rules:**
-
 - `final case class ClassName private (value: Type)` extending `StringValue`
 - Companion extends `StringValueCompanion[T]` (or `WithFrom[I, T]`)
 - `from(value): Either[String, T]` — smart constructor with validation
@@ -180,7 +178,6 @@ object NotFoundException {
 ```
 
 **Rules:**
-
 - `RequestRejectedException` → 4xx errors
 - `InternalServerException` → 5xx errors
 - Each concrete error: `final case class` with smart constructors
@@ -256,7 +253,6 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
 ```
 
 **Rules:**
-
 - `object XSpec extends ZIOSpecDefault`
 - `suite("description")(test("...") { ... })`
 - Use `.provide(layers...)` for dependency injection
@@ -266,16 +262,16 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
 
 ## Naming Conventions
 
-| Element         | Convention              | Example                 |
-| --------------- | ----------------------- | ----------------------- |
-| Services        | `*Service`              | `GroupService`          |
-| Implementations | `*Live` suffix          | `AuthServiceLive`       |
-| Rest services   | `*RestService`          | `GroupRestService`      |
-| Endpoints       | `*Endpoints`            | `GroupsEndpoints`       |
-| Handlers        | `*ServerEndpoints`      | `GroupsServerEndpoints` |
-| Tests           | `*Spec`                 | `GroupIriSpec`          |
-| Value objects   | Domain name             | `GroupIri`, `GroupName` |
-| Errors          | `*Exception` / `*Error` | `NotFoundException`     |
+| Element | Convention | Example |
+|---------|-----------|---------|
+| Services | `*Service` | `GroupService` |
+| Implementations | `*Live` suffix | `AuthServiceLive` |
+| Rest services | `*RestService` | `GroupRestService` |
+| Endpoints | `*Endpoints` | `GroupsEndpoints` |
+| Handlers | `*ServerEndpoints` | `GroupsServerEndpoints` |
+| Tests | `*Spec` | `GroupIriSpec` |
+| Value objects | Domain name | `GroupIri`, `GroupName` |
+| Errors | `*Exception` / `*Error` | `NotFoundException` |
 
 ## Import Organization
 
@@ -297,3 +293,7 @@ When writing SPARQL queries do not use Twirl templates or String concatenation.
 Instead use rdf4j and the query helper in dsp-api.
 For more details see `dsp-api-sparql-builder.md`.
 
+## Formatting 
+
+Run `sbt fmt` before pushing to the remote branch. Scalafmt reformats all Scala sources in-place.
+CI runs `sbt check` and will fail if formatting is off.
