@@ -207,7 +207,6 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       test("exportResourcesOai") {
         for {
           _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
-          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
           json          <- exportService.exportResourcesOai(project, user)

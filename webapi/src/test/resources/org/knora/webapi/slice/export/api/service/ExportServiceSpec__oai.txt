@@ -1,0 +1,90 @@
+[
+  {
+    "id" : "http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ",
+    "pid" : "http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ",
+    "label" : {
+      "en" : "Resource11"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseUri" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "Resource11",
+    "publisher" : "DaSCH",
+    "keywords" : []
+  },
+  {
+    "id" : "http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw",
+    "pid" : "http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw",
+    "label" : {
+      "en" : "Resource0"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseUri" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "Resource0",
+    "publisher" : "DaSCH",
+    "keywords" : []
+  },
+  {
+    "id" : "http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w",
+    "pid" : "http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w",
+    "label" : {
+      "en" : "Resource2"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseUri" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "Resource2",
+    "publisher" : "DaSCH",
+    "keywords" : []
+  },
+  {
+    "id" : "http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA",
+    "pid" : "http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA",
+    "label" : {
+      "en" : "Resource1"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseUri" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "Resource1",
+    "publisher" : "DaSCH",
+    "keywords" : []
+  }
+]

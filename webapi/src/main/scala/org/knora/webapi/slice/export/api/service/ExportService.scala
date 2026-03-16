@@ -99,7 +99,7 @@ final case class ExportService(
                     keywords = List.empty,
                   )
                 }
-    } yield records.toJson
+    } yield records.toJsonPretty
   }
 
   def exportResources(
