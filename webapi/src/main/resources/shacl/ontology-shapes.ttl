@@ -33,4 +33,10 @@ knora-base:OntologyShape
     sh:path knora-base:attachedToProject ;
     sh:hasValue <urn:placeholder:projectIri> ;
     sh:message "Project ontology must be attached to project <urn:placeholder:projectIri>" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:lastModificationDate ;
+    sh:minCount 1 ;
+    sh:datatype xsd:dateTime ;
+    sh:message "Project ontology must have knora-base:lastModificationDate of type xsd:dateTime" ;
   ] .
