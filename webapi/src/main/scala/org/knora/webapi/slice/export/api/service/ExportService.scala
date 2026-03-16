@@ -63,6 +63,30 @@ final case class ExportService(
   private val footnoteTagIri: SmartIri         = OntologyConstants.Standoff.StandoffFootnoteTag.toSmartIri
   private val footnoteContentPropIri: SmartIri = OntologyConstants.Standoff.StandoffFootnoteTagHasContent.toSmartIri
 
+  def exportResourcesOai(
+    project: KnoraProject,
+    requestingUser: User,
+  ): Task[String] = {
+    import zio.json.*
+
+    for {
+      resourceIris  <- findResources.findResources(project, None)
+      readResources <- readResources.readResourcesSequencePar(
+                         resourceIris = resourceIris.map(_.toString),
+                         targetSchema = ApiV2Complex,
+                         requestingUser = requestingUser,
+                         preview = false,
+                         withDeleted = false,
+                         skipRetrievalChecks = true,
+                       )
+
+      // propertyIriInfos <- propertyIriInfos(selectedProperties)
+      // propsWithInfos    = selectedProperties.map(p => (p, propertyIriInfos.get(p)))
+
+      resourcesMap = readResources.resourcesMap // must be cached
+    } yield "".toJson
+  }
+
   def exportResources(
     project: KnoraProject,
     classIri: ResourceClassIri,

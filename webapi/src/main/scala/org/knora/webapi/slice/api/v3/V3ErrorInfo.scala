@@ -56,6 +56,9 @@ object NotFound:
     apply(code, code.template.replace("{name}", featureName), Map("name" -> featureName))
   }
 
+  def byShortcode(shortcode: String): NotFound =
+    apply(V3ErrorCode.project_not_found, s"The project with shortcode $shortcode was not found.", Map.empty)
+
 case class BadRequest(message: String = "Bad Request", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
 object BadRequest {
   given JsonCodec[BadRequest] = DeriveJsonCodec.gen[BadRequest]

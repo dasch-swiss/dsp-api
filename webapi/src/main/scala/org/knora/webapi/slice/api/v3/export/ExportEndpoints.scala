@@ -49,6 +49,21 @@ final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends Endpoint
     .out(stringBodyAnyFormat(Codec.string.format(ExportEndpoints.Csv()), StandardCharsets.UTF_8))
     .out(header[MediaType](HeaderNames.ContentType))
     .out(header[String]("Content-Disposition"))
+
+  val postExportResourcesOai = baseEndpoints
+    .withUser(
+      oneOf(
+        notFoundVariant(project_not_found),
+        // badRequestVariant,
+      ),
+    )
+    .post
+    .in(ApiV3.basePath / "export" / "resources" / "oai")
+    .description(
+      "Export resources to CSV format. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
+    .in(jsonBody[ExportRequestOai].example(ExportRequestOai(shortcode = "0803")))
+    .out(stringBody)
 }
 
 object ExportEndpoints {

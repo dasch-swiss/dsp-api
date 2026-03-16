@@ -15,6 +15,7 @@ import org.knora.webapi.slice.api.v3.NotFound
 import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 final class ExportRestService(
   iriConverter: IriConverter,
@@ -55,6 +56,17 @@ final class ExportRestService(
       MediaType.TextCsv,
       s"attachment; filename=project_${shortcode.value}_resources_${resourceClassIri.name}_${now}.csv",
     ))
+
+  def exportResourcesOai(
+    user: User,
+  )(
+    request: ExportRequestOai,
+  ): IO[V3ErrorInfo, String] =
+    (for {
+      shortcode <- ZIO.fromEither(Shortcode.from(request.shortcode)).mapError(BadRequest(_))
+      project   <- projectService.findByShortcode(shortcode).orDie.someOrFail(NotFound.byShortcode(shortcode.value))
+      out       <- exportService.exportResourcesOai(project, user).orDie
+    } yield out)
 }
 
 object ExportRestService {
