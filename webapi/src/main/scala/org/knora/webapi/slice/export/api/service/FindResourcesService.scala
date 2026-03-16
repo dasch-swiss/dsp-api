@@ -72,14 +72,12 @@ final case class FindResourcesServiceLive(
         .isA(variable(classIriVar))
         .from(Rdf.iri(projectGraph.value))
 
-    val classConstraint = variable(resourceIriVar).isA(Rdf.iri(classIri.toInternalSchema.toIri))
-
-    val classSubclassOfResource =
-      variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
+    val classSubclassOfRequested =
+      variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), Rdf.iri(classIri.toInternalSchema.toIri))
 
     Queries
       .SELECT(selectPattern)
-      .where(resourceWhere, classConstraint, classSubclassOfResource)
+      .where(resourceWhere, classSubclassOfRequested)
       .prefix(KB.NS, RDFS.NS)
   }
 }
