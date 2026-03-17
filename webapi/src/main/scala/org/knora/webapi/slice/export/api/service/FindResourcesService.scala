@@ -30,8 +30,13 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
 trait FindResourcesService {
   def findResources(
     project: KnoraProject,
-    classIri: ResourceClassIri,
+    classIri: Option[ResourceClassIri],
   ): Task[Seq[SmartIri]]
+
+  def findResourcesByClass(
+    project: KnoraProject,
+    classIri: ResourceClassIri,
+  ): Task[Seq[SmartIri]] = findResources(project, Some(classIri))
 }
 
 final case class FindResourcesServiceLive(
@@ -43,7 +48,7 @@ final case class FindResourcesServiceLive(
 ) extends FindResourcesService {
   def findResources(
     project: KnoraProject,
-    classIri: ResourceClassIri,
+    classIri: Option[ResourceClassIri],
   ): Task[Seq[SmartIri]] =
     for {
       query <- ZIO.succeed(resourceQuery(project, classIri))
@@ -60,7 +65,7 @@ final case class FindResourcesServiceLive(
 
   private def resourceQuery(
     project: KnoraProject,
-    classIri: ResourceClassIri,
+    classIri: Option[ResourceClassIri],
   ): SelectQuery = {
     val selectPattern = SparqlBuilder
       .select(variable(resourceIriVar))
@@ -78,15 +83,24 @@ final case class FindResourcesServiceLive(
         Rdf.iri(classIri.toInternalSchema.toIri),
       )
 
-    Queries
-      .SELECT(selectPattern)
-      .where(resourceWhere, classSubclassOfRequested)
-      .prefix(KB.NS, RDFS.NS)
+    classIri match {
+      case Some(iri) =>
+        val classConstraint = variable(resourceIriVar).isA(Rdf.iri(iri.toInternalSchema.toIri))
+        Queries
+          .SELECT(selectPattern)
+          .where(resourceWhere, classConstraint, classSubclassOfResource)
+          .prefix(KB.NS, RDFS.NS)
+      case None =>
+        Queries
+          .SELECT(selectPattern)
+          .where(resourceWhere, classSubclassOfResource)
+          .prefix(KB.NS, RDFS.NS)
+    }
   }
 }
 
 object FindResourcesService {
   val layer = ZLayer.derive[FindResourcesServiceLive]
 
-  val Empty = ZLayer.succeed[FindResourcesService]((_: KnoraProject, _: ResourceClassIri) => ZIO.succeed(Seq()))
+  val Empty = ZLayer.succeed[FindResourcesService]((_: KnoraProject, _: Option[ResourceClassIri]) => ZIO.succeed(Seq()))
 }

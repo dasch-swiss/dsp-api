@@ -73,7 +73,7 @@ final case class ExportService(
     includeArkUrls: Boolean,
   ): Task[ExportedCsv] =
     for {
-      resourceIris  <- findResources.findResources(project, classIri).map(_.map(_.toString))
+      resourceIris  <- findResources.findResourcesByClass(project, classIri).map(_.map(_.toString))
       readResources <- readResources.readResourcesSequencePar(
                          resourceIris = resourceIris,
                          targetSchema = ApiV2Complex,
