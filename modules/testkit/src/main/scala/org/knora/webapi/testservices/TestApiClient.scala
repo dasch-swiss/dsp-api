@@ -48,7 +48,7 @@ final case class TestApiClient(
   }
 
   def deleteJson[A: JsonDecoder](relativeUri: Uri): Task[Response[Either[String, A]]] =
-    deleteJson(relativeUri, identity)
+    deleteJson(relativeUri, (r: Request[Either[String, A]]) => r)
 
   private def sendRequest[A](
     request: Request[Either[String, A]],
