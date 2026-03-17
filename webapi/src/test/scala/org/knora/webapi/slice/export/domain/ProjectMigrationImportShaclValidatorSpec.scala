@@ -18,12 +18,12 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
 
   private val testProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/9999")
 
-  private val RdfType        = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-  private val OntologyGraph  = "http://www.knora.org/ontology/9999/test"
-  private val DataGraph      = "http://www.knora.org/data/9999/test"
-  private val OwlOntology    = "http://www.w3.org/2002/07/owl#Ontology"
-  private val OwlClass       = "http://www.w3.org/2002/07/owl#Class"
-  private val RdfsLabel      = "http://www.w3.org/2000/01/rdf-schema#label"
+  private val RdfType           = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+  private val OntologyGraph     = "http://www.knora.org/ontology/9999/test"
+  private val DataGraph         = "http://www.knora.org/data/9999/test"
+  private val OwlOntology       = "http://www.w3.org/2002/07/owl#Ontology"
+  private val OwlClass          = "http://www.w3.org/2002/07/owl#Class"
+  private val RdfsLabel         = "http://www.w3.org/2000/01/rdf-schema#label"
   private val RdfsSubClassOf    = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
   private val RdfsSubPropertyOf = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf"
   private val KnoraBase         = "http://www.knora.org/ontology/knora-base#"
