@@ -68,7 +68,9 @@ object ListsMessagesADMSpec extends ZIOSpecDefault {
       val c1   = makeChild("http://rdfh.ch/lists/0001/c1")
       val c2   = makeChild("http://rdfh.ch/lists/0001/c2")
       val list = ListADM(listinfo = makeRoot, children = Seq(c1, c2))
-      assertTrue(list.withChildren.map(_.id) == Seq(rootIri, "http://rdfh.ch/lists/0001/c1", "http://rdfh.ch/lists/0001/c2"))
+      assertTrue(
+        list.withChildren.map(_.id) == Seq(rootIri, "http://rdfh.ch/lists/0001/c1", "http://rdfh.ch/lists/0001/c2"),
+      )
     },
     test("includes grandchildren at depth 2 (REQ-1.1)") {
       val grandchild = makeChild("http://rdfh.ch/lists/0001/gc")
