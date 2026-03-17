@@ -45,28 +45,32 @@ final case class ProjectRepositoryLive(private val ds: DataSource) extends Proje
     )
 
   private def queryOpt(sql: String)(bind: java.sql.PreparedStatement => Unit): DbTask[Option[Project]] =
-    ZIO.blocking(ZIO.attempt {
-      val conn = ds.getConnection
-      try {
-        val ps = conn.prepareStatement(sql)
+    ZIO
+      .blocking(ZIO.attempt {
+        val conn = ds.getConnection
         try {
-          bind(ps)
-          val rs = ps.executeQuery()
-          try if (rs.next()) Some(toProject(rs)) else None
-          finally rs.close()
-        } finally ps.close()
-      } finally conn.close()
-    }).refineToOrDie[SQLException]
+          val ps = conn.prepareStatement(sql)
+          try {
+            bind(ps)
+            val rs = ps.executeQuery()
+            try if (rs.next()) Some(toProject(rs)) else None
+            finally rs.close()
+          } finally ps.close()
+        } finally conn.close()
+      })
+      .refineToOrDie[SQLException]
 
   private def update(sql: String)(bind: java.sql.PreparedStatement => Unit): DbTask[Unit] =
-    ZIO.blocking(ZIO.attempt {
-      val conn = ds.getConnection
-      try {
-        val ps = conn.prepareStatement(sql)
-        try { bind(ps); ps.executeUpdate(); () }
-        finally ps.close()
-      } finally conn.close()
-    }).refineToOrDie[SQLException]
+    ZIO
+      .blocking(ZIO.attempt {
+        val conn = ds.getConnection
+        try {
+          val ps = conn.prepareStatement(sql)
+          try { bind(ps); ps.executeUpdate(); () }
+          finally ps.close()
+        } finally conn.close()
+      })
+      .refineToOrDie[SQLException]
 
   override def findById(id: ProjectId): DbTask[Option[Project]] =
     queryOpt("SELECT id, shortcode, created_at FROM project WHERE id = ? LIMIT 1")(_.setInt(1, id.value))
@@ -78,24 +82,26 @@ final case class ProjectRepositoryLive(private val ds: DataSource) extends Proje
 
   override def addProject(shortcode: ProjectShortcode): DbTask[Project] = for {
     now <- Clock.instant
-    id  <- ZIO.blocking(ZIO.attempt {
-             val conn = ds.getConnection
-             try {
-               val ps =
-                 conn.prepareStatement(
-                   "INSERT INTO project (shortcode, created_at) VALUES (?, ?)",
-                   java.sql.Statement.RETURN_GENERATED_KEYS,
-                 )
-               try {
-                 ps.setString(1, shortcode.value)
-                 ps.setLong(2, now.toEpochMilli)
-                 ps.executeUpdate()
-                 val keys = ps.getGeneratedKeys
-                 try { keys.next(); keys.getInt(1) }
-                 finally keys.close()
-               } finally ps.close()
-             } finally conn.close()
-           }).refineToOrDie[SQLException]
+    id  <- ZIO
+            .blocking(ZIO.attempt {
+              val conn = ds.getConnection
+              try {
+                val ps =
+                  conn.prepareStatement(
+                    "INSERT INTO project (shortcode, created_at) VALUES (?, ?)",
+                    java.sql.Statement.RETURN_GENERATED_KEYS,
+                  )
+                try {
+                  ps.setString(1, shortcode.value)
+                  ps.setLong(2, now.toEpochMilli)
+                  ps.executeUpdate()
+                  val keys = ps.getGeneratedKeys
+                  try { keys.next(); keys.getInt(1) }
+                  finally keys.close()
+                } finally ps.close()
+              } finally conn.close()
+            })
+            .refineToOrDie[SQLException]
   } yield Project(id.toProjectIdUnsafe, shortcode, now)
 
   override def deleteById(id: ProjectId): DbTask[Unit] =
