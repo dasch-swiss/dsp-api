@@ -5,12 +5,17 @@
 
 package org.knora.shacl
 
-import org.apache.jena.query.DatasetFactory
+import org.apache.jena.graph.Node
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
+import org.apache.jena.riot.RDFParser
+import org.apache.jena.riot.RDFParserBuilder
+import org.apache.jena.riot.system.StreamRDF
+import org.apache.jena.riot.system.StreamRDFBase
+import org.apache.jena.sparql.core.Quad
 import org.topbraid.shacl.validation.ValidationEngineConfiguration
 import org.topbraid.shacl.validation.ValidationUtil
 import zio.*
@@ -85,48 +90,51 @@ object ShaclValidator {
           .attempt(RDFDataMgr.read(model, path.toUri.toString, Lang.TURTLE))
           .mapError(ShaclValidationError.LoadingError(_))
       case RdfData.NQuadFile(path) =>
-        ZIO.attempt {
-          val ds = DatasetFactory.create()
-          RDFDataMgr.read(ds, path.toUri.toString, Lang.NQUADS)
-          ds
-        }
-          .mapError(ShaclValidationError.LoadingError(_))
-          .flatMap(ds => loadNQuadsIntoModel(model, ds))
+        streamNQuadsIntoModel(model, RDFParser.source(path.toUri.toString).lang(Lang.NQUADS))
       case RdfData.InMemoryTurtle(content, _) =>
         ZIO
           .attempt(RDFDataMgr.read(model, new StringReader(content), null, Lang.TURTLE))
           .mapError(ShaclValidationError.LoadingError(_))
       case RdfData.InMemoryNQuad(content) =>
-        ZIO.attempt {
-          val ds = DatasetFactory.create()
-          RDFDataMgr.read(ds, new StringReader(content), null, Lang.NQUADS)
-          ds
-        }
-          .mapError(ShaclValidationError.LoadingError(_))
-          .flatMap(ds => loadNQuadsIntoModel(model, ds))
+        streamNQuadsIntoModel(model, RDFParser.create().source(new StringReader(content)).lang(Lang.NQUADS))
     }
 
-  private def loadNQuadsIntoModel(
+  /** Streams NQuads directly into the model without buffering an intermediate Dataset.
+    * Validates that all quads belong to exactly one named graph and none are in the default graph.
+    */
+  private def streamNQuadsIntoModel(
     model: Model,
-    ds: org.apache.jena.query.Dataset,
-  ): IO[ShaclValidationError, Unit] = {
-    val it    = ds.listNames()
-    val names = scala.collection.mutable.ListBuffer.empty[String]
-    while (it.hasNext) names += it.next()
-    if (names.size != 1 || !ds.getDefaultModel.isEmpty)
-      ZIO.fail(
-        ShaclValidationError.LoadingError(
-          new IllegalArgumentException(
-            s"NQuad data must contain exactly one named graph, found ${names.size} named graph(s)" +
-              (if (!ds.getDefaultModel.isEmpty) " plus triples in the default graph" else ""),
-          ),
-        ),
-      )
-    else
-      ZIO.attempt {
-        ds.asDatasetGraph().find().forEachRemaining(q => model.getGraph.add(q.asTriple))
-      }.mapError(ShaclValidationError.LoadingError(_))
-  }
+    parser: RDFParserBuilder,
+  ): IO[ShaclValidationError, Unit] =
+    ZIO
+      .attempt {
+        val graph          = model.getGraph
+        val graphNames     = scala.collection.mutable.Set.empty[Node]
+        var hasDefaultTriples = false
+
+        val sink: StreamRDF = new StreamRDFBase {
+          override def quad(quad: Quad): Unit = {
+            val g = quad.getGraph
+            if (g == null || Quad.isDefaultGraph(g)) {
+              hasDefaultTriples = true
+            } else {
+              graphNames += g
+              graph.add(quad.asTriple)
+            }
+          }
+          override def triple(triple: org.apache.jena.graph.Triple): Unit =
+            hasDefaultTriples = true
+        }
+
+        parser.parse(sink)
+
+        if (graphNames.size != 1 || hasDefaultTriples)
+          throw new IllegalArgumentException(
+            s"NQuad data must contain exactly one named graph, found ${graphNames.size} named graph(s)" +
+              (if (hasDefaultTriples) " plus triples in the default graph" else ""),
+          )
+      }
+      .mapError(ShaclValidationError.LoadingError(_))
 
   private def loadShapes(sources: NonEmptyChunk[RdfData]): IO[ShaclValidationError, Model] = {
     val model = ModelFactory.createDefaultModel()
