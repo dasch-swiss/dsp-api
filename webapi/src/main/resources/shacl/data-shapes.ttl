@@ -1,10 +1,43 @@
 @prefix sh:         <http://www.w3.org/ns/shacl#> .
 @prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 
-# Placeholder — no data-level SHACL constraints yet.
-# The validator requires at least one shape entry; this node shape
-# targets nothing and therefore always conforms.
-knora-base:NoOpDataShape
+# Validates every instance of a knora-base:Resource subclass.
+# With RDFS inference, sh:targetClass matches instances of all subclasses.
+knora-base:ResourceShape
   a sh:NodeShape ;
-  sh:targetNode knora-base:NoOpDataShape_SentinelDoesNotExist .
+  sh:targetClass knora-base:Resource ;
+  sh:property [
+    sh:path rdfs:label ;
+    sh:minCount 1 ;
+    sh:message "Resource instance must have at least one rdfs:label" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:isDeleted ;
+    sh:minCount 1 ;
+    sh:datatype xsd:boolean ;
+    sh:message "Resource instance must have knora-base:isDeleted of type xsd:boolean" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:attachedToUser ;
+    sh:minCount 1 ;
+    sh:message "Resource instance must have knora-base:attachedToUser" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:attachedToProject ;
+    sh:minCount 1 ;
+    sh:message "Resource instance must have knora-base:attachedToProject" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:hasPermissions ;
+    sh:minCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Resource instance must have knora-base:hasPermissions of type xsd:string" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:creationDate ;
+    sh:minCount 1 ;
+    sh:datatype xsd:dateTime ;
+    sh:message "Resource instance must have knora-base:creationDate of type xsd:dateTime" ;
+  ] .
