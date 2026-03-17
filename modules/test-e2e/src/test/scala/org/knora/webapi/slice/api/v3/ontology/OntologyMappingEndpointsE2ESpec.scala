@@ -312,23 +312,23 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
       },
       test("P-7 PUT property mapping is idempotent") {
         for {
-          r1     <- TestApiClient.putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
-                      putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
-                      AddPropertyMappingsRequest(List(extSchemaOrgName)),
-                      anythingAdminUser,
-                    )
+          r1 <- TestApiClient.putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
+                  putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
+                  AddPropertyMappingsRequest(List(extSchemaOrgName)),
+                  anythingAdminUser,
+                )
           result1 <- r1.assert200
           r2      <- TestApiClient.putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
-                       putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
-                       AddPropertyMappingsRequest(List(extSchemaOrgName)),
-                       anythingAdminUser,
-                     )
+                  putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
+                  AddPropertyMappingsRequest(List(extSchemaOrgName)),
+                  anythingAdminUser,
+                )
           result2 <- r2.assert200
           // Clean up
-          _       <- TestApiClient.deleteJson[PropertyMappingResponse](
-                       deletePropertyMappingUri(anythingOntIri, hasIntegerPropIri, extSchemaOrgName),
-                       anythingAdminUser,
-                     )
+          _ <- TestApiClient.deleteJson[PropertyMappingResponse](
+                 deletePropertyMappingUri(anythingOntIri, hasIntegerPropIri, extSchemaOrgName),
+                 anythingAdminUser,
+               )
         } yield assertTrue(
           r1.code == StatusCode.Ok,
           r2.code == StatusCode.Ok,
@@ -426,20 +426,20 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
     suite("all mutation endpoints require authentication")(
       ZIO.succeed(
         List(
-          "PUT class mapping"       -> TestApiClient.putJson[ClassMappingResponse, AddClassMappingsRequest](
-                                         putClassMappingUri(anythingOntIri, thingClassIri),
-                                         AddClassMappingsRequest(List(extSchemaOrg)),
-                                       ),
-          "DELETE class mapping"    -> TestApiClient.deleteJson[ClassMappingResponse](
-                                         deleteClassMappingUri(anythingOntIri, thingClassIri, extSchemaOrg),
-                                       ),
-          "PUT property mapping"    -> TestApiClient.putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
-                                         putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
-                                         AddPropertyMappingsRequest(List(extSchemaOrgName)),
-                                       ),
+          "PUT class mapping" -> TestApiClient.putJson[ClassMappingResponse, AddClassMappingsRequest](
+            putClassMappingUri(anythingOntIri, thingClassIri),
+            AddClassMappingsRequest(List(extSchemaOrg)),
+          ),
+          "DELETE class mapping" -> TestApiClient.deleteJson[ClassMappingResponse](
+            deleteClassMappingUri(anythingOntIri, thingClassIri, extSchemaOrg),
+          ),
+          "PUT property mapping" -> TestApiClient.putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
+            putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
+            AddPropertyMappingsRequest(List(extSchemaOrgName)),
+          ),
           "DELETE property mapping" -> TestApiClient.deleteJson[PropertyMappingResponse](
-                                         deletePropertyMappingUri(anythingOntIri, hasIntegerPropIri, extSchemaOrgName),
-                                       ),
+            deletePropertyMappingUri(anythingOntIri, hasIntegerPropIri, extSchemaOrgName),
+          ),
         ).map { case (label, request) =>
           test(s"$label without credentials returns 401") {
             request.map(r => assertTrue(r.code == StatusCode.Unauthorized))
@@ -496,38 +496,38 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
     suite("roundtrip visibility in v2 allentities")(
       test("C-roundtrip: PUT class mapping appears in GET /v2/ontologies/allentities") {
         for {
-          _           <- TestApiClient
-                           .putJson[ClassMappingResponse, AddClassMappingsRequest](
-                             putClassMappingUri(anythingOntIri, thingClassIri),
-                             AddClassMappingsRequest(List(extSchemaOrg)),
-                             anythingAdminUser,
-                           )
-                           .flatMap(_.assert200)
+          _ <- TestApiClient
+                 .putJson[ClassMappingResponse, AddClassMappingsRequest](
+                   putClassMappingUri(anythingOntIri, thingClassIri),
+                   AddClassMappingsRequest(List(extSchemaOrg)),
+                   anythingAdminUser,
+                 )
+                 .flatMap(_.assert200)
           allEntities <- TestApiClient
                            .getJsonLd(uri"/v2/ontologies/allentities/$anythingOntIri", anythingAdminUser)
                            .flatMap(_.assert200)
           // Clean up
-          _           <- TestApiClient.deleteJson[ClassMappingResponse](
-                           deleteClassMappingUri(anythingOntIri, thingClassIri, extSchemaOrg),
-                           anythingAdminUser,
-                         )
+          _ <- TestApiClient.deleteJson[ClassMappingResponse](
+                 deleteClassMappingUri(anythingOntIri, thingClassIri, extSchemaOrg),
+                 anythingAdminUser,
+               )
         } yield assertTrue(allEntities.contains(extSchemaOrg))
       },
       test("C-roundtrip: DELETE class mapping is absent from GET /v2/ontologies/allentities") {
         for {
-          _           <- TestApiClient
-                           .putJson[ClassMappingResponse, AddClassMappingsRequest](
-                             putClassMappingUri(anythingOntIri, thingClassIri),
-                             AddClassMappingsRequest(List(extSchemaOrg)),
-                             anythingAdminUser,
-                           )
-                           .flatMap(_.assert200)
-          _           <- TestApiClient
-                           .deleteJson[ClassMappingResponse](
-                             deleteClassMappingUri(anythingOntIri, thingClassIri, extSchemaOrg),
-                             anythingAdminUser,
-                           )
-                           .flatMap(_.assert200)
+          _ <- TestApiClient
+                 .putJson[ClassMappingResponse, AddClassMappingsRequest](
+                   putClassMappingUri(anythingOntIri, thingClassIri),
+                   AddClassMappingsRequest(List(extSchemaOrg)),
+                   anythingAdminUser,
+                 )
+                 .flatMap(_.assert200)
+          _ <- TestApiClient
+                 .deleteJson[ClassMappingResponse](
+                   deleteClassMappingUri(anythingOntIri, thingClassIri, extSchemaOrg),
+                   anythingAdminUser,
+                 )
+                 .flatMap(_.assert200)
           allEntities <- TestApiClient
                            .getJsonLd(uri"/v2/ontologies/allentities/$anythingOntIri", anythingAdminUser)
                            .flatMap(_.assert200)
@@ -535,38 +535,38 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
       },
       test("P-roundtrip: PUT property mapping appears in GET /v2/ontologies/allentities") {
         for {
-          _           <- TestApiClient
-                           .putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
-                             putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
-                             AddPropertyMappingsRequest(List(extSchemaOrgName)),
-                             anythingAdminUser,
-                           )
-                           .flatMap(_.assert200)
+          _ <- TestApiClient
+                 .putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
+                   putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
+                   AddPropertyMappingsRequest(List(extSchemaOrgName)),
+                   anythingAdminUser,
+                 )
+                 .flatMap(_.assert200)
           allEntities <- TestApiClient
                            .getJsonLd(uri"/v2/ontologies/allentities/$anythingOntIri", anythingAdminUser)
                            .flatMap(_.assert200)
           // Clean up
-          _           <- TestApiClient.deleteJson[PropertyMappingResponse](
-                           deletePropertyMappingUri(anythingOntIri, hasIntegerPropIri, extSchemaOrgName),
-                           anythingAdminUser,
-                         )
+          _ <- TestApiClient.deleteJson[PropertyMappingResponse](
+                 deletePropertyMappingUri(anythingOntIri, hasIntegerPropIri, extSchemaOrgName),
+                 anythingAdminUser,
+               )
         } yield assertTrue(allEntities.contains(extSchemaOrgName))
       },
       test("P-roundtrip: DELETE property mapping is absent from GET /v2/ontologies/allentities") {
         for {
-          _           <- TestApiClient
-                           .putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
-                             putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
-                             AddPropertyMappingsRequest(List(extSchemaOrgName)),
-                             anythingAdminUser,
-                           )
-                           .flatMap(_.assert200)
-          _           <- TestApiClient
-                           .deleteJson[PropertyMappingResponse](
-                             deletePropertyMappingUri(anythingOntIri, hasIntegerPropIri, extSchemaOrgName),
-                             anythingAdminUser,
-                           )
-                           .flatMap(_.assert200)
+          _ <- TestApiClient
+                 .putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
+                   putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
+                   AddPropertyMappingsRequest(List(extSchemaOrgName)),
+                   anythingAdminUser,
+                 )
+                 .flatMap(_.assert200)
+          _ <- TestApiClient
+                 .deleteJson[PropertyMappingResponse](
+                   deletePropertyMappingUri(anythingOntIri, hasIntegerPropIri, extSchemaOrgName),
+                   anythingAdminUser,
+                 )
+                 .flatMap(_.assert200)
           allEntities <- TestApiClient
                            .getJsonLd(uri"/v2/ontologies/allentities/$anythingOntIri", anythingAdminUser)
                            .flatMap(_.assert200)
