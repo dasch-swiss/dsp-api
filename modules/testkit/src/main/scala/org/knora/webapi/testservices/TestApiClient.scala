@@ -54,7 +54,7 @@ final case class TestApiClient(
     (user match {
       case Some(u) => jwtFor(u).map(jwt => request.auth.bearer(jwt))
       case None    => ZIO.succeed(request)
-    }).flatMap(_.send(backend))
+    }).flatMap(_.readTimeout(scala.concurrent.duration.Duration(120, "seconds")).send(backend))
 
   def deleteJsonLd(
     relativeUri: Uri,
@@ -213,7 +213,6 @@ final case class TestApiClient(
       .post(relativeUri)
       .body(body)
       .contentType(mediaType)
-      .readTimeout(scala.concurrent.duration.Duration(120, "seconds"))
       .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
     sendRequest(request, Some(user))
   }
