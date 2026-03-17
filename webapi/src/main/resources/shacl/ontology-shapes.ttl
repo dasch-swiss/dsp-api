@@ -52,7 +52,6 @@ knora-base:ResourceClassShape
       SELECT ?this
       WHERE {
         ?this rdfs:subClassOf+ knora-base:Resource .
-        FILTER(?this != knora-base:Resource)
         FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
       }
     """ ;
