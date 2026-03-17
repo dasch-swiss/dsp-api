@@ -47,10 +47,14 @@ object JwtCodec {
 
   private def constantTimeEquals(a: Array[Byte], b: Array[Byte]): Boolean = {
     var result = a.length ^ b.length
-    val len    = math.min(a.length, b.length)
+    val len    = math.max(a.length, b.length)
     var i      = 0
     while (i < len) {
-      result |= a(i) ^ b(i)
+      // Branchless index clamping: when i >= array length, reads index 0 instead.
+      // The length XOR in `result` already captures the mismatch.
+      val ai = a(((i - a.length) >>> 31) * i)
+      val bi = b(((i - b.length) >>> 31) * i)
+      result |= ai ^ bi
       i += 1
     }
     result == 0
