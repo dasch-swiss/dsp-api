@@ -79,6 +79,8 @@ final case class ExportService(
   ): Task[String] = {
     import zio.json.*
 
+    given StringFormatter = sf
+
     for {
       resourceIris  <- findResources.findResources(project, None)
       readResources <- readResources.readResourcesSequencePar(
@@ -95,7 +97,7 @@ final case class ExportService(
                   val description = descriptionProp.flatMap(r.values.get(_).flatMap(_.headOption))
                   MetadataRecord(
                     id = r.resourceIri.toString,
-                    pid = r.resourceIri.toString,
+                    pid = r.resourceIri.toSmartIri.fromResourceIriToArkUrl(),
                     label = Map("en" -> r.label),
                     accessRights = "Full Open Access",
                     legalInfo = LegalInfo.publicDomain,
@@ -115,17 +117,15 @@ final case class ExportService(
   }
 
   private def findDescriptionProperty(project: KnoraProject): Task[Option[SmartIri]] =
-    project.shortcode.value.toUpperCase() match {
-      case "0803" =>
-        iriConverter.asInternalSmartIri("http://www.knora.org/ontology/0803/incunabula#description").map(Some(_))
-      case "1612" =>
-        iriConverter.asInternalSmartIri("http://www.knora.org/ontology/1612/Data#TextShort").map(Some(_))
-      case "081C" =>
-        iriConverter.asInternalSmartIri("http://www.knora.org/ontology/081C/hdm#hasDescription").map(Some(_))
-      case "" =>
-        iriConverter.asInternalSmartIri("http://www.knora.org/ontology/0868/SolarEclipses#hasDescription").map(Some(_))
-      case _ => ZIO.none
-    }
+    (project.shortcode.value.toUpperCase() match {
+      case "0803" => Some("http://www.knora.org/ontology/0803/incunabula#description")
+      case "081C" => Some("http://www.knora.org/ontology/081C/hdm#hasDescription")
+      case "0868" => Some("http://www.knora.org/ontology/0868/SolarEclipses#hasDescription")
+      case "1612" => Some("http://www.knora.org/ontology/1612/Data#TextShort")
+      case _      => None
+    }).map {
+      iriConverter.asInternalSmartIri(_).map(Some(_))
+    }.getOrElse(ZIO.none)
 
   private def typeOfDataOf(r: ReadResourceV2): Option[String] =
     r.values.values.flatten.map(_.valueContent).collectFirst {
