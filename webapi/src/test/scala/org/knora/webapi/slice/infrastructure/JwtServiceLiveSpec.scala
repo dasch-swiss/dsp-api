@@ -5,10 +5,6 @@
 
 package org.knora.webapi.slice.infrastructure
 
-import pdi.jwt.JwtAlgorithm
-import pdi.jwt.JwtClaim
-import pdi.jwt.JwtHeader
-import pdi.jwt.JwtZIOJson
 import zio.IO
 import zio.Scope
 import zio.ZIO
@@ -31,6 +27,9 @@ import java.time.Instant
 import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
+import org.knora.jwt.JwtClaim
+import org.knora.jwt.JwtCodec
+import org.knora.jwt.JwtHeader
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -78,7 +77,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
 
   private def decodeToken(token: String): ZIO[JwtConfig, Nothing, (JwtHeader, JwtClaim, String)] =
     ZIO.serviceWithZIO[JwtConfig] { jwtConfig =>
-      ZIO.fromTry(JwtZIOJson.decodeAll(token, jwtConfig.secret, Seq(JwtAlgorithm.HS256))).orDie
+      ZIO.fromTry(JwtCodec.decodeAll(token, jwtConfig.secret)).orDie
     }
 
   private def getClaim[A](token: String, extract: JwtClaim => A) =
@@ -178,7 +177,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
       ) { claim =>
         for {
           secret <- ZIO.serviceWith[JwtConfig](_.secret)
-          token   = JwtZIOJson.encode("""{"typ":"JWT","alg":"HS256"}""", claim.toJson, secret, JwtAlgorithm.HS256)
+          token   = JwtCodec.encode("""{"typ":"JWT","alg":"HS256"}""", claim.toJson, secret)
           exit   <- ZIO.serviceWithZIO[JwtService](_.parseToken(token).exit)
         } yield assertTrue(exit.isFailure)
       }

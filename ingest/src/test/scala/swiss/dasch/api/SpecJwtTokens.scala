@@ -5,13 +5,15 @@
 
 package swiss.dasch.api
 
-import pdi.jwt.*
 import swiss.dasch.api.AuthService.*
 import swiss.dasch.config.Configuration.JwtConfig
 import zio.*
 import zio.json.*
 
 import java.time.Instant
+
+import org.knora.jwt.JwtClaim
+import org.knora.jwt.JwtCodec
 
 object SpecJwtTokens {
   def validToken(): URIO[JwtConfig, String]                      = createToken()
@@ -39,5 +41,5 @@ object SpecJwtTokens {
                 issuedAt = Some(now.getEpochSecond),
                 expiration = expiration.orElse(Some(now.plusSeconds(3600))).map(_.getEpochSecond),
               )
-    } yield JwtZIOJson.encode(claim, secret.getOrElse(jwtConfig.secret), JwtAlgorithm.HS256)
+    } yield JwtCodec.encode(claim, secret.getOrElse(jwtConfig.secret))
 }
