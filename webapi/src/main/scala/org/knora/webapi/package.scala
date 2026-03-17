@@ -19,7 +19,7 @@ package object webapi {
    * Safe to deploy only to environments at v50 or below.
    * If deployed to an environment at v51, RepositoryUpdater will call ZIO.die (crash on startup).
    */
-  val KnoraBaseVersion: Int          = 50
+  val KnoraBaseVersion: Int          = 51
   val KnoraBaseVersionString: String = s"$versionPrefix$KnoraBaseVersion"
 
   /**

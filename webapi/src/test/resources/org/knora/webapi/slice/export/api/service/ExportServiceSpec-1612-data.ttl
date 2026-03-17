@@ -13,6 +13,15 @@ PREFIX salsah-gui:  <http://www.knora.org/ontology/salsah-gui#>
 PREFIX standoff:    <http://www.knora.org/ontology/standoff#>
 PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
 
+<http://rdfh.ch/1612/SubClass1Resource00001>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#SubClass1>;
+        rdfs:label                    "SubResource1";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2026-03-13T10:00:00.000000Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
 <http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ>
         rdf:type                      <http://www.knora.org/ontology/1612/Data#Class1>;
         rdfs:label                    "Resource11";

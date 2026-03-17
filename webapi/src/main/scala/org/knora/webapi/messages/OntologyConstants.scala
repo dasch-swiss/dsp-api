@@ -311,6 +311,7 @@ object OntologyConstants {
     val ArchiveFileValue: IRI            = KnoraBasePrefixExpansion + "ArchiveFileValue"
     val StillImageFileValue: IRI         = KnoraBasePrefixExpansion + "StillImageFileValue"
     val StillImageExternalFileValue: IRI = KnoraBasePrefixExpansion + "StillImageExternalFileValue"
+    val StillImageVectorFileValue: IRI   = KnoraBasePrefixExpansion + "StillImageVectorFileValue"
     val MovingImageFileValue: IRI        = KnoraBasePrefixExpansion + "MovingImageFileValue"
     val TextFileValue: IRI               = KnoraBasePrefixExpansion + "TextFileValue"
 
@@ -326,6 +327,7 @@ object OntologyConstants {
       FileValue,
       StillImageFileValue,
       StillImageExternalFileValue,
+      StillImageVectorFileValue,
       MovingImageFileValue,
       AudioFileValue,
       DDDFileValue,
@@ -354,6 +356,7 @@ object OntologyConstants {
       DocumentFileValue,
       ArchiveFileValue,
       StillImageFileValue,
+      StillImageVectorFileValue,
       MovingImageFileValue,
       TextFileValue,
     )
@@ -701,6 +704,7 @@ object OntologyConstants {
 
     val StillImageFileValue: IRI         = KnoraApiV2PrefixExpansion + "StillImageFileValue"
     val StillImageExternalFileValue: IRI = KnoraApiV2PrefixExpansion + "StillImageExternalFileValue"
+    val StillImageVectorFileValue: IRI   = KnoraApiV2PrefixExpansion + "StillImageVectorFileValue"
     val MovingImageFileValue: IRI        = KnoraApiV2PrefixExpansion + "MovingImageFileValue"
     val AudioFileValue: IRI              = KnoraApiV2PrefixExpansion + "AudioFileValue"
     val DDDFileValue: IRI                = KnoraApiV2PrefixExpansion + "DDDFileValue"
@@ -719,6 +723,7 @@ object OntologyConstants {
     val FileValueClasses: Set[IRI] = Set(
       FileValue,
       StillImageFileValue,
+      StillImageVectorFileValue,
       MovingImageFileValue,
       AudioFileValue,
       DDDFileValue,
@@ -950,6 +955,7 @@ object OntologyConstants {
       KnoraBase.FileValue                   -> KnoraApiV2Simple.File,
       KnoraBase.StillImageFileValue         -> KnoraApiV2Simple.File,
       KnoraBase.StillImageExternalFileValue -> KnoraApiV2Simple.File,
+      KnoraBase.StillImageVectorFileValue   -> KnoraApiV2Simple.File,
       KnoraBase.MovingImageFileValue        -> KnoraApiV2Simple.File,
       KnoraBase.AudioFileValue              -> KnoraApiV2Simple.File,
       KnoraBase.DDDFileValue                -> KnoraApiV2Simple.File,

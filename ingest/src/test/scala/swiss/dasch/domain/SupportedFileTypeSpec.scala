@@ -50,6 +50,12 @@ object SupportedFileTypeSpec extends ZIOSpecDefault {
         assertTrue(SupportedFileType.fromPath(Path(s"test.$ext")).contains(SupportedFileType.MovingImage))
       }
     },
+    test("All valid extensions for SvgImage are supported") {
+      val svg = Seq("svg")
+      check(Gen.fromIterable(withUpperCase(svg))) { ext =>
+        assertTrue(SupportedFileType.fromPath(Path(s"test.$ext")).contains(SupportedFileType.SvgImage))
+      }
+    },
     test("Unknown file extensions are not supported") {
       val sampleUnknown = Seq("iff", "m3u", "mob", "odf", "xslt")
       check(Gen.fromIterable(withUpperCase(sampleUnknown))) { ext =>

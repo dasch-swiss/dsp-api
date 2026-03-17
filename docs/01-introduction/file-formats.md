@@ -11,7 +11,8 @@ The following table shows the accepted file formats:
 | --------------------- |------------------------------------------|----------------------------------------------------------------------------|
 | Text, XML *)          | HTML, JSON, ODD, RNG, TXT, XML, XSD, XSL | No                                                                         |
 | Tables                | CSV, XLS, XLSX                           | No                                                                         |
-| 2D Images             | JPG, JPEG, JP2, PNG, TIF, TIFF           | Yes, converted to JPEG 2000 by [Sipi](https://github.com/dasch-swiss/sipi) |
+| 2D Images (raster)    | JPG, JPEG, JP2, PNG, TIF, TIFF           | Yes, converted to JPEG 2000 by [Sipi](https://github.com/dasch-swiss/sipi) |
+| 2D Images (vector)    | SVG                                      | No                                                                         |
 | Audio                 | MPEG (MP3), WAV                          | No                                                                         |
 | Video                 | MP4                                      | No                                                                         |
 | Office                | EPUB, PDF, DOC, DOCX, PPT, PPTX          | No                                                                         |
