@@ -1,3 +1,7 @@
+# Placeholder IRIs (urn:placeholder:*) are replaced at runtime with actual values
+# by ProjectMigrationImportShaclValidator before validation.
+# - urn:placeholder:projectIri  →  the IRI of the project being imported
+
 @prefix sh:         <http://www.w3.org/ns/shacl#> .
 @prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
@@ -27,8 +31,8 @@ knora-base:ResourceShape
   ] ;
   sh:property [
     sh:path knora-base:attachedToProject ;
-    sh:minCount 1 ;
-    sh:message "Resource instance must have knora-base:attachedToProject" ;
+    sh:hasValue <urn:placeholder:projectIri> ;
+    sh:message "Resource instance must have knora-base:attachedToProject equal to <urn:placeholder:projectIri>" ;
   ] ;
   sh:property [
     sh:path knora-base:hasPermissions ;

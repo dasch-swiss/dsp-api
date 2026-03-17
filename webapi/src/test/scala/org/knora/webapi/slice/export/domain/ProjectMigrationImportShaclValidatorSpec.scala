@@ -208,6 +208,20 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
             validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
           }
         },
+        test("rejects resource attached to wrong project") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+               |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/0001> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
         test("rejects resource missing knora-base:attachedToProject") {
           val nq =
             s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .

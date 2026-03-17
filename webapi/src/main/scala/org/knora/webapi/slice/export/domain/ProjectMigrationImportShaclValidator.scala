@@ -39,6 +39,7 @@ final class ProjectMigrationImportShaclValidator() {
       ontologyShapesTtl <- readClasspathResource("shacl/ontology-shapes.ttl")
                              .map(_.replace(ProjectIriPlaceholder, projectIri.value))
       dataShapesTtl <- readClasspathResource("shacl/data-shapes.ttl")
+                             .map(_.replace(ProjectIriPlaceholder, projectIri.value))
       shapes         = ShaclShapes(
                  ontologyShapes = NonEmptyChunk(RdfData.InMemoryTurtle(ontologyShapesTtl, "")),
                  dataShapes = NonEmptyChunk(RdfData.InMemoryTurtle(dataShapesTtl, "")),
