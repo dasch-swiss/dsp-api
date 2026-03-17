@@ -46,9 +46,7 @@ final case class BaseEndpoints(authenticator: Authenticator) {
       oneOfDefaultVariant(
         statusCode(StatusCode.InternalServerError).and(
           jsonBody[BaseEndpoints.ErrorResponse]
-            .map[Throwable](er => new Exception(er.message))(_ =>
-              BaseEndpoints.ErrorResponse("Internal server error"),
-            ),
+            .map[Throwable](er => new Exception(er.message))(_ => BaseEndpoints.ErrorResponse("Internal server error")),
         ),
       ),
     )
