@@ -5,8 +5,6 @@
 
 package swiss.dasch.domain
 
-import io.getquill.*
-import io.getquill.jdbczio.*
 import swiss.dasch.domain.ProjectId.toProjectIdUnsafe
 import swiss.dasch.domain.ProjectShortcode.toShortcodeUnsafe
 import zio.Chunk
@@ -15,8 +13,10 @@ import zio.IO
 import zio.ZIO
 import zio.ZLayer
 
+import java.sql.ResultSet
 import java.sql.SQLException
 import java.time.Instant
+import javax.sql.DataSource
 
 trait Repository[Entity, Id] { self =>
 
@@ -35,38 +35,80 @@ trait ProjectRepository extends Repository[Project, ProjectId] {
   def deleteByShortcode(shortcode: ProjectShortcode): DbTask[Unit]
 }
 
-private final case class ProjectRow(id: Int, shortcode: String, createdAt: Instant)
+final case class ProjectRepositoryLive(private val ds: DataSource) extends ProjectRepository {
 
-final case class ProjectRepositoryLive(private val quill: Quill.Sqlite[SnakeCase]) extends ProjectRepository {
-  import quill.*
+  private def toProject(rs: ResultSet): Project =
+    Project(
+      rs.getInt("id").toProjectIdUnsafe,
+      rs.getString("shortcode").toShortcodeUnsafe,
+      Instant.ofEpochMilli(rs.getLong("created_at")),
+    )
 
-  private inline def queryProject =
-    quote(querySchema[ProjectRow](entity = "project"))
-  private inline def queryProjectById(id: ProjectId) =
-    quote(queryProject.filter(prj => prj.id == lift(id.value)))
-  private inline def queryProjectByShortcode(shortcode: ProjectShortcode) =
-    quote(queryProject.filter(prj => prj.shortcode == lift(shortcode.value)))
+  private def queryOpt(sql: String)(bind: java.sql.PreparedStatement => Unit): DbTask[Option[Project]] =
+    ZIO
+      .blocking(ZIO.attempt {
+        val conn = ds.getConnection
+        try {
+          val ps = conn.prepareStatement(sql)
+          try {
+            bind(ps)
+            val rs = ps.executeQuery()
+            try if (rs.next()) Some(toProject(rs)) else None
+            finally rs.close()
+          } finally ps.close()
+        } finally conn.close()
+      })
+      .refineToOrDie[SQLException]
 
-  private def toProject(row: ProjectRow): Project =
-    Project(row.id.toProjectIdUnsafe, row.shortcode.toShortcodeUnsafe, row.createdAt)
+  private def update(sql: String)(bind: java.sql.PreparedStatement => Unit): DbTask[Unit] =
+    ZIO
+      .blocking(ZIO.attempt {
+        val conn = ds.getConnection
+        try {
+          val ps = conn.prepareStatement(sql)
+          try { bind(ps); ps.executeUpdate(); () }
+          finally ps.close()
+        } finally conn.close()
+      })
+      .refineToOrDie[SQLException]
 
   override def findById(id: ProjectId): DbTask[Option[Project]] =
-    run(queryProjectById(id).take(1)).map(_.headOption.map(toProject))
+    queryOpt("SELECT id, shortcode, created_at FROM project WHERE id = ? LIMIT 1")(_.setInt(1, id.value))
 
   override def findByShortcode(shortcode: ProjectShortcode): DbTask[Option[Project]] =
-    run(queryProjectByShortcode(shortcode).take(1)).map(_.headOption.map(toProject))
+    queryOpt("SELECT id, shortcode, created_at FROM project WHERE shortcode = ? LIMIT 1")(
+      _.setString(1, shortcode.value),
+    )
 
   override def addProject(shortcode: ProjectShortcode): DbTask[Project] = for {
-    now   <- Clock.instant
-    row    = ProjectRow(0, shortcode.value, now)
-    newId <- run(queryProject.insertValue(lift(row)).returningGenerated(_.id))
-  } yield Project(newId.toProjectIdUnsafe, shortcode, now)
+    now <- Clock.instant
+    id  <- ZIO
+            .blocking(ZIO.attempt {
+              val conn = ds.getConnection
+              try {
+                val ps =
+                  conn.prepareStatement(
+                    "INSERT INTO project (shortcode, created_at) VALUES (?, ?)",
+                    java.sql.Statement.RETURN_GENERATED_KEYS,
+                  )
+                try {
+                  ps.setString(1, shortcode.value)
+                  ps.setLong(2, now.toEpochMilli)
+                  ps.executeUpdate()
+                  val keys = ps.getGeneratedKeys
+                  try { keys.next(); keys.getInt(1) }
+                  finally keys.close()
+                } finally ps.close()
+              } finally conn.close()
+            })
+            .refineToOrDie[SQLException]
+  } yield Project(id.toProjectIdUnsafe, shortcode, now)
 
   override def deleteById(id: ProjectId): DbTask[Unit] =
-    run(queryProjectById(id).delete).unit
+    update("DELETE FROM project WHERE id = ?")(_.setInt(1, id.value))
 
   override def deleteByShortcode(shortcode: ProjectShortcode): DbTask[Unit] =
-    run(queryProjectByShortcode(shortcode).delete).unit
+    update("DELETE FROM project WHERE shortcode = ?")(_.setString(1, shortcode.value))
 }
 
 object ProjectRepositoryLive {
