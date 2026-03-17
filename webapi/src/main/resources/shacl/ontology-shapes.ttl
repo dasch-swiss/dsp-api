@@ -61,3 +61,28 @@ knora-base:ResourceClassShape
     sh:minCount 1 ;
     sh:message "Resource class must have at least one rdfs:label" ;
   ] .
+
+# Validates every project-specific subproperty of knora-base:hasValue or knora-base:hasLinkTo
+knora-base:PropertyShape
+  a sh:NodeShape ;
+  sh:target [
+    a sh:SPARQLTarget ;
+    sh:select """
+      PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+      SELECT ?this
+      WHERE {
+        {
+          ?this rdfs:subPropertyOf+ knora-base:hasValue .
+        } UNION {
+          ?this rdfs:subPropertyOf+ knora-base:hasLinkTo .
+        }
+        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
+      }
+    """ ;
+  ] ;
+  sh:property [
+    sh:path rdfs:label ;
+    sh:minCount 1 ;
+    sh:message "Property must have at least one rdfs:label" ;
+  ] .

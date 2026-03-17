@@ -24,9 +24,10 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
   private val OwlOntology    = "http://www.w3.org/2002/07/owl#Ontology"
   private val OwlClass       = "http://www.w3.org/2002/07/owl#Class"
   private val RdfsLabel      = "http://www.w3.org/2000/01/rdf-schema#label"
-  private val RdfsSubClassOf = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
-  private val KnoraBase      = "http://www.knora.org/ontology/knora-base#"
-  private val XsdDateTime    = "http://www.w3.org/2001/XMLSchema#dateTime"
+  private val RdfsSubClassOf    = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
+  private val RdfsSubPropertyOf = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf"
+  private val KnoraBase         = "http://www.knora.org/ontology/knora-base#"
+  private val XsdDateTime       = "http://www.w3.org/2001/XMLSchema#dateTime"
 
   private val validOntologyNq =
     s"""<$OntologyGraph> <$RdfType> <$OwlOntology> <$OntologyGraph> .
@@ -100,6 +101,36 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
           s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
              |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
              |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isRight))
+        }
+      },
+    ),
+    suite("PropertyShape")(
+      test("rejects property missing rdfs:label (subPropertyOf hasValue)") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#hasName> <$RdfType> <http://www.w3.org/2002/07/owl#ObjectProperty> <$OntologyGraph> .
+             |<${OntologyGraph}#hasName> <$RdfsSubPropertyOf> <${KnoraBase}hasValue> <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("rejects property missing rdfs:label (subPropertyOf hasLinkTo)") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#hasRelation> <$RdfType> <http://www.w3.org/2002/07/owl#ObjectProperty> <$OntologyGraph> .
+             |<${OntologyGraph}#hasRelation> <$RdfsSubPropertyOf> <${KnoraBase}hasLinkTo> <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("accepts property with rdfs:label") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#hasName> <$RdfType> <http://www.w3.org/2002/07/owl#ObjectProperty> <$OntologyGraph> .
+             |<${OntologyGraph}#hasName> <$RdfsSubPropertyOf> <${KnoraBase}hasValue> <$OntologyGraph> .
+             |<${OntologyGraph}#hasName> <$RdfsLabel> "has name"@en <$OntologyGraph> .
              |""".stripMargin
         ZIO.scoped {
           validate(nq).map(result => assertTrue(result.isRight))
