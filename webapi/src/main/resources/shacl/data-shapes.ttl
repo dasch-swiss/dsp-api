@@ -41,3 +41,26 @@ knora-base:ResourceShape
     sh:datatype xsd:dateTime ;
     sh:message "Resource instance must have knora-base:creationDate of type xsd:dateTime" ;
   ] .
+
+# Validates every instance of a knora-base:Value subclass.
+# With RDFS inference, sh:targetClass matches instances of all subclasses.
+knora-base:ValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:Value ;
+  sh:property [
+    sh:path knora-base:valueCreationDate ;
+    sh:minCount 1 ;
+    sh:datatype xsd:dateTime ;
+    sh:message "Value instance must have knora-base:valueCreationDate of type xsd:dateTime" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:attachedToUser ;
+    sh:minCount 1 ;
+    sh:message "Value instance must have knora-base:attachedToUser" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:isDeleted ;
+    sh:minCount 1 ;
+    sh:datatype xsd:boolean ;
+    sh:message "Value instance must have knora-base:isDeleted of type xsd:boolean" ;
+  ] .
