@@ -47,9 +47,9 @@ object AuthenticationError       {
 }
 
 final case class AuthServiceLive(jwtConfig: JwtConfig) extends AuthService {
-  private val secret   = jwtConfig.secret
-  private val audience = jwtConfig.audience
-  private val issuer   = jwtConfig.issuer
+  private val secretBytes = jwtConfig.secret.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+  private val audience    = jwtConfig.audience
+  private val issuer      = jwtConfig.issuer
 
   def authenticate(jwtString: String): IO[NonEmptyChunk[AuthenticationError], Principal] =
     if (jwtConfig.disableAuth) {
@@ -59,7 +59,7 @@ final case class AuthServiceLive(jwtConfig: JwtConfig) extends AuthService {
         ZIO.succeed(Principal("developer", AuthScope(Set(AuthScope.ScopeValue.Admin)), "fake jwt claim"))
     } else {
       ZIO
-        .fromTry(JwtCodec.decode(jwtString, secret))
+        .fromTry(JwtCodec.decode(jwtString, secretBytes))
         .mapError(e => NonEmptyChunk(AuthenticationError.jwtProblem(e)))
         .flatMap(verifyClaim(_, jwtString))
     }

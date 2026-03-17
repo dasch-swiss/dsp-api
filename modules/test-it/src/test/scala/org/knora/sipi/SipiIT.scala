@@ -55,7 +55,7 @@ object SipiIT extends ZIOSpecDefault {
   } yield JwtCodec.encode(
     """{"typ":"JWT","alg":"HS256"}""",
     claim.toJson,
-    "UP 4888, nice 4-8-4 steam engine",
+    "UP 4888, nice 4-8-4 steam engine".getBytes(java.nio.charset.StandardCharsets.UTF_8),
   )
 
   private val authSuite =

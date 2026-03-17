@@ -5,12 +5,14 @@
 
 package org.knora.jwt
 
+import java.nio.charset.StandardCharsets
+
 import zio.Scope
 import zio.test.*
 
 object JwtCodecSpec extends ZIOSpecDefault {
 
-  private val secret = "test-secret-key-for-hmac-sha256"
+  private val secret = "test-secret-key-for-hmac-sha256".getBytes(StandardCharsets.UTF_8)
 
   val spec: Spec[TestEnvironment & Scope, Any] = suite("JwtCodec")(
     suite("encode and decode roundtrip")(
@@ -102,12 +104,18 @@ object JwtCodecSpec extends ZIOSpecDefault {
     ),
     suite("validation")(
       test("fails with wrong secret") {
-        val claim = JwtClaim(expiration = Some(java.time.Instant.now.getEpochSecond + 3600))
-        val token = JwtCodec.encode(claim, secret)
-        assertTrue(JwtCodec.decode(token, "wrong-secret").isFailure)
+        val claim       = JwtClaim(expiration = Some(java.time.Instant.now.getEpochSecond + 3600))
+        val token       = JwtCodec.encode(claim, secret)
+        val wrongSecret = "wrong-secret".getBytes(StandardCharsets.UTF_8)
+        assertTrue(JwtCodec.decode(token, wrongSecret).isFailure)
       },
       test("fails with expired token") {
         val claim = JwtClaim(expiration = Some(java.time.Instant.now.getEpochSecond - 10))
+        val token = JwtCodec.encode(claim, secret)
+        assertTrue(JwtCodec.decode(token, secret).isFailure)
+      },
+      test("fails with missing expiration") {
+        val claim = JwtClaim(subject = Some("sub"))
         val token = JwtCodec.encode(claim, secret)
         assertTrue(JwtCodec.decode(token, secret).isFailure)
       },
@@ -126,6 +134,52 @@ object JwtCodecSpec extends ZIOSpecDefault {
           s"${parts(0)}.${java.util.Base64.getUrlEncoder.withoutPadding.encodeToString("{\"sub\":\"tampered\"}".getBytes)}.${parts(2)}"
         assertTrue(JwtCodec.decode(tampered, secret).isFailure)
       },
+      test("fails with missing algorithm in header") {
+        val headerNoAlg = """{"typ":"JWT"}"""
+        val claim       = JwtClaim(subject = Some("sub"), expiration = Some(java.time.Instant.now.getEpochSecond + 3600))
+        val token       = JwtCodec.encode(headerNoAlg, claim.toJson, secret)
+        assertTrue(JwtCodec.decode(token, secret).isFailure)
+      },
+      test("fails with unsupported algorithm in header") {
+        val headerRS256 = """{"typ":"JWT","alg":"RS256"}"""
+        val claim = JwtClaim(subject = Some("sub"), expiration = Some(java.time.Instant.now.getEpochSecond + 3600))
+        val token = JwtCodec.encode(headerRS256, claim.toJson, secret)
+        assertTrue(JwtCodec.decode(token, secret).isFailure)
+      },
+    ),
+    suite("issuer and audience validation")(
+      test("validates expected issuer") {
+        val claim = JwtClaim(
+          issuer = Some("correct-issuer"),
+          expiration = Some(java.time.Instant.now.getEpochSecond + 3600),
+        )
+        val token = JwtCodec.encode(claim, secret)
+        assertTrue(
+          JwtCodec.decodeAll(token, secret, expectedIssuer = Some("correct-issuer")).isSuccess,
+          JwtCodec.decodeAll(token, secret, expectedIssuer = Some("wrong-issuer")).isFailure,
+        )
+      },
+      test("validates expected audience") {
+        val claim = JwtClaim(
+          audience = Some(Set("aud1", "aud2")),
+          expiration = Some(java.time.Instant.now.getEpochSecond + 3600),
+        )
+        val token = JwtCodec.encode(claim, secret)
+        assertTrue(
+          JwtCodec.decodeAll(token, secret, expectedAudience = Some(Set("aud1"))).isSuccess,
+          JwtCodec.decodeAll(token, secret, expectedAudience = Some(Set("aud1", "aud2"))).isSuccess,
+          JwtCodec.decodeAll(token, secret, expectedAudience = Some(Set("aud3"))).isFailure,
+        )
+      },
+      test("skips issuer/audience validation when not specified") {
+        val claim = JwtClaim(
+          issuer = Some("any-issuer"),
+          audience = Some(Set("any-aud")),
+          expiration = Some(java.time.Instant.now.getEpochSecond + 3600),
+        )
+        val token = JwtCodec.encode(claim, secret)
+        assertTrue(JwtCodec.decodeAll(token, secret).isSuccess)
+      },
     ),
     suite("backward compatibility with jwt-scala")(
       test("decodes a token produced by jwt-scala (jwt-zio-json 11.0.3)") {
@@ -135,8 +189,8 @@ object JwtCodecSpec extends ZIOSpecDefault {
         //         jti=wfc0lbBxRz2fAf0wpm1iXA, scope=admin
         val jwtScalaToken =
           "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIwLjAuMC4wOjMzMzMiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy84YmtRaklMM1RjLUcxVFd5QVFaeHJ3IiwiYXVkIjpbIktub3JhIiwiU2lwaSIsImh0dHA6Ly9sb2NhbGhvc3Q6MzM0MCJdLCJleHAiOjE3NzYzNDc3NzAsImlhdCI6MTc3Mzc1NTc3MCwianRpIjoid2ZjMGxiQnhSejJmQWYwd3BtMWlYQSIsInNjb3BlIjoiYWRtaW4ifQ.JNBqPl78qnVjHdBhGapRmSU55HsYAQ8ePuk7BHy4zSg"
-        val secret  = "UP 4888, nice 4-8-4 steam engine"
-        val decoded = JwtCodec.decodeAll(jwtScalaToken, secret)
+        val jwtScalaSecret = "UP 4888, nice 4-8-4 steam engine".getBytes(StandardCharsets.UTF_8)
+        val decoded        = JwtCodec.decodeAll(jwtScalaToken, jwtScalaSecret)
         assertTrue(
           decoded.isSuccess,
           decoded.get._1.typ.contains("JWT"),

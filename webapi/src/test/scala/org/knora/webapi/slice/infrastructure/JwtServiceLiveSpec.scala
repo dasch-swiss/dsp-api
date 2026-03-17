@@ -77,7 +77,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
 
   private def decodeToken(token: String): ZIO[JwtConfig, Nothing, (JwtHeader, JwtClaim, String)] =
     ZIO.serviceWithZIO[JwtConfig] { jwtConfig =>
-      ZIO.fromTry(JwtCodec.decodeAll(token, jwtConfig.secret)).orDie
+      ZIO.fromTry(JwtCodec.decodeAll(token, jwtConfig.secret.getBytes(java.nio.charset.StandardCharsets.UTF_8))).orDie
     }
 
   private def getClaim[A](token: String, extract: JwtClaim => A) =
@@ -176,7 +176,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
         Gen.fromIterable(Seq(issuerMissing, invalidSubject, missingAudience, missingIat, expired, missingJwtId)),
       ) { claim =>
         for {
-          secret <- ZIO.serviceWith[JwtConfig](_.secret)
+          secret <- ZIO.serviceWith[JwtConfig](_.secret.getBytes(java.nio.charset.StandardCharsets.UTF_8))
           token   = JwtCodec.encode("""{"typ":"JWT","alg":"HS256"}""", claim.toJson, secret)
           exit   <- ZIO.serviceWithZIO[JwtService](_.parseToken(token).exit)
         } yield assertTrue(exit.isFailure)

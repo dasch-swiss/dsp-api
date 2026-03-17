@@ -18,7 +18,8 @@ import org.knora.jwt.JwtCodec
 object SpecJwtTokens {
   def validToken(): URIO[JwtConfig, String]                      = createToken()
   def expiredToken(expiration: Instant): URIO[JwtConfig, String] = createToken(expiration = Some(expiration))
-  def tokenWithInvalidSignature(): URIO[JwtConfig, String]       = createToken(secret = Some("invalid-secret"))
+  def tokenWithInvalidSignature(): URIO[JwtConfig, String] =
+    createToken(secret = Some("invalid-secret".getBytes(java.nio.charset.StandardCharsets.UTF_8)))
   def tokenWithInvalidAudience(): URIO[JwtConfig, String]        = createToken(audience = Some(Set("invalid-audience")))
   def tokenWithInvalidIssuer(): URIO[JwtConfig, String]          = createToken(issuer = Some("invalid-issuer"))
   def tokenWithMissingSubject(): URIO[JwtConfig, String]         = createToken(subject = None)
@@ -27,7 +28,7 @@ object SpecJwtTokens {
     subject: Option[String] = Some("some-subject"),
     audience: Option[Set[String]] = None,
     expiration: Option[Instant] = None,
-    secret: Option[String] = None,
+    secret: Option[Array[Byte]] = None,
     scope: Option[String] = None,
   ): URIO[JwtConfig, String] =
     for {
@@ -41,5 +42,5 @@ object SpecJwtTokens {
                 issuedAt = Some(now.getEpochSecond),
                 expiration = expiration.orElse(Some(now.plusSeconds(3600))).map(_.getEpochSecond),
               )
-    } yield JwtCodec.encode(claim, secret.getOrElse(jwtConfig.secret))
+    } yield JwtCodec.encode(claim, secret.getOrElse(jwtConfig.secret.getBytes(java.nio.charset.StandardCharsets.UTF_8)))
 }
