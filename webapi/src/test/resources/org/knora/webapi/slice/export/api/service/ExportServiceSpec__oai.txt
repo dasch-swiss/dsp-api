@@ -67,6 +67,9 @@
     },
     "howToCite" : "Resource2",
     "publisher" : "DaSCH",
+    "description" : {
+      "en" : "Ource2"
+    },
     "dateCreated" : "2025-11-24T09:32:03.341988Z",
     "dateModified" : "2025-11-24T09:32:22.911407Z",
     "datePublished" : "2025-11-24T09:32:03.341988Z",
@@ -92,6 +95,9 @@
     },
     "howToCite" : "Resource1",
     "publisher" : "DaSCH",
+    "description" : {
+      "en" : "Short text"
+    },
     "dateCreated" : "2025-11-24T09:29:32.559220Z",
     "dateModified" : "2025-11-24T09:32:35.114097Z",
     "datePublished" : "2025-11-24T09:29:32.559220Z",

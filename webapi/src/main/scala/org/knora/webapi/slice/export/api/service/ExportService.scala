@@ -81,8 +81,10 @@ final case class ExportService(
                          withDeleted = false,
                          skipRetrievalChecks = true,
                        )
+      descriptionProp <- findDescriptionProperty(project)
 
       records = readResources.resources.toList.map { r =>
+                  val description = descriptionProp.flatMap(r.values.get(_).flatMap(_.headOption))
                   MetadataRecord(
                     id = r.resourceIri.toString,
                     pid = r.resourceIri.toString,
@@ -92,7 +94,7 @@ final case class ExportService(
                     howToCite = r.label,
                     publisher = "DaSCH",
                     source = None,
-                    description = None,
+                    description = description.map(v => Map("en" -> v.valueContent.valueHasString)),
                     dateCreated = Some(r.creationDate.toString),
                     dateModified = r.lastModificationDate.map(_.toString),
                     datePublished = Some(r.creationDate.toString),
@@ -103,6 +105,15 @@ final case class ExportService(
                 }
     } yield records.toJsonPretty
   }
+
+  private def findDescriptionProperty(project: KnoraProject): Task[Option[SmartIri]] =
+    project.shortcode.value match {
+      case "0803" =>
+        iriConverter.asInternalSmartIri("http://www.knora.org/ontology/0803/incunabula#description").map(Some(_))
+      case "1612" =>
+        iriConverter.asInternalSmartIri("http://www.knora.org/ontology/1612/Data#TextShort").map(Some(_))
+      case _ => ZIO.none
+    }
 
   def exportResources(
     project: KnoraProject,
