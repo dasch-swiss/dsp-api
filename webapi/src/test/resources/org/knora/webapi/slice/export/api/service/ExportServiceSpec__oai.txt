@@ -1,5 +1,29 @@
 [
   {
+    "id" : "http://rdfh.ch/1612/SubClass1Resource00001",
+    "pid" : "http://rdfh.ch/1612/SubClass1Resource00001",
+    "label" : {
+      "en" : "SubResource1"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseUri" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "SubResource1",
+    "publisher" : "DaSCH",
+    "dateCreated" : "2026-03-13T10:00:00Z",
+    "datePublished" : "2026-03-13T10:00:00Z",
+    "keywords" : []
+  },
+  {
     "id" : "http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ",
     "pid" : "http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ",
     "label" : {
