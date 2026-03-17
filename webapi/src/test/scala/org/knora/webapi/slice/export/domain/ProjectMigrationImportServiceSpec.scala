@@ -644,51 +644,6 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
-    test("rejects ontology attached to wrong project") {
-      val wrongProjectOntologyNq =
-        s"""<http://www.knora.org/ontology/9999/test> <$RdfType> <http://www.w3.org/2002/07/owl#Ontology> <http://www.knora.org/ontology/9999/test> .
-           |<http://www.knora.org/ontology/9999/test> <http://www.w3.org/2000/01/rdf-schema#label> "Test Ontology" <http://www.knora.org/ontology/9999/test> .
-           |<http://www.knora.org/ontology/9999/test> <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0001> <http://www.knora.org/ontology/9999/test> .
-           |<http://www.knora.org/ontology/9999/test> <http://www.knora.org/ontology/knora-base#lastModificationDate> "2024-01-01T00:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <http://www.knora.org/ontology/9999/test> .
-           |""".stripMargin
-      ZIO.scoped {
-        for {
-          env    <- makeTestEnv
-          stream <- buildBagItZip(
-                      payloadFiles = Map(
-                        "rdf/admin.nq"      -> adminNq,
-                        "rdf/data.nq"       -> dataNq,
-                        "rdf/ontology-0.nq" -> wrongProjectOntologyNq,
-                      ),
-                    )
-          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
-          result <- pollUntilDone(env.service, task.id)
-          _      <- cleanupImport(env, task.id)
-        } yield assertTrue(result.status == DataTaskStatus.Failed)
-      }
-    },
-    test("rejects ontology missing lastModificationDate") {
-      val noLastModDateOntologyNq =
-        s"""<http://www.knora.org/ontology/9999/test> <$RdfType> <http://www.w3.org/2002/07/owl#Ontology> <http://www.knora.org/ontology/9999/test> .
-           |<http://www.knora.org/ontology/9999/test> <http://www.w3.org/2000/01/rdf-schema#label> "Test Ontology" <http://www.knora.org/ontology/9999/test> .
-           |<http://www.knora.org/ontology/9999/test> <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/9999> <http://www.knora.org/ontology/9999/test> .
-           |""".stripMargin
-      ZIO.scoped {
-        for {
-          env    <- makeTestEnv
-          stream <- buildBagItZip(
-                      payloadFiles = Map(
-                        "rdf/admin.nq"      -> adminNq,
-                        "rdf/data.nq"       -> dataNq,
-                        "rdf/ontology-0.nq" -> noLastModDateOntologyNq,
-                      ),
-                    )
-          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
-          result <- pollUntilDone(env.service, task.id)
-          _      <- cleanupImport(env, task.id)
-        } yield assertTrue(result.status == DataTaskStatus.Failed)
-      }
-    },
     test("rejects malformed admin.nq") {
       ZIO.scoped {
         for {

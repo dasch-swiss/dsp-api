@@ -40,3 +40,25 @@ knora-base:OntologyShape
     sh:datatype xsd:dateTime ;
     sh:message "Project ontology must have knora-base:lastModificationDate of type xsd:dateTime" ;
   ] .
+
+# Validates every project-specific subclass of knora-base:Resource
+knora-base:ResourceClassShape
+  a sh:NodeShape ;
+  sh:target [
+    a sh:SPARQLTarget ;
+    sh:select """
+      PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+      SELECT ?this
+      WHERE {
+        ?this rdfs:subClassOf+ knora-base:Resource .
+        FILTER(?this != knora-base:Resource)
+        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
+      }
+    """ ;
+  ] ;
+  sh:property [
+    sh:path rdfs:label ;
+    sh:minCount 1 ;
+    sh:message "Resource class must have at least one rdfs:label" ;
+  ] .
