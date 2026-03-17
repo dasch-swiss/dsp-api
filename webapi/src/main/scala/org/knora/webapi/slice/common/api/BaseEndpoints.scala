@@ -15,6 +15,8 @@ import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.model.UsernamePassword
 import sttp.tapir.ztapir.*
 import zio.*
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
 import dsp.errors.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
@@ -25,7 +27,7 @@ final case class BaseEndpoints(authenticator: Authenticator) {
 
   private val errorOutputs: EndpointOutput.OneOf[Throwable, Throwable] =
     oneOf[Throwable](
-      // default
+      // client errors
       oneOfVariant[NotFoundException](statusCode(StatusCode.NotFound).and(jsonBody[NotFoundException])),
       oneOfVariant[BadRequestException](statusCode(StatusCode.BadRequest).and(jsonBody[BadRequestException])),
       oneOfVariant[EditConflictException](
@@ -37,9 +39,18 @@ final case class BaseEndpoints(authenticator: Authenticator) {
       oneOfVariant[ValidationException](statusCode(StatusCode.BadRequest).and(jsonBody[ValidationException])),
       oneOfVariant[DuplicateValueException](statusCode(StatusCode.BadRequest).and(jsonBody[DuplicateValueException])),
       oneOfVariant[GravsearchException](statusCode(StatusCode.BadRequest).and(jsonBody[GravsearchException])),
-      // plus security
+      // security
       oneOfVariant[BadCredentialsException](statusCode(StatusCode.Unauthorized).and(jsonBody[BadCredentialsException])),
       oneOfVariant[ForbiddenException](statusCode(StatusCode.Forbidden).and(jsonBody[ForbiddenException])),
+      // catch-all for any unhandled error (e.g. TriplestoreTimeoutException, other InternalServerException subtypes)
+      oneOfDefaultVariant(
+        statusCode(StatusCode.InternalServerError).and(
+          jsonBody[BaseEndpoints.ErrorResponse]
+            .map[Throwable](er => new Exception(er.message))(_ =>
+              BaseEndpoints.ErrorResponse("Internal server error"),
+            ),
+        ),
+      ),
     )
 
   val publicEndpoint: PublicEndpoint[Unit, Throwable, Unit, Any] = endpoint.errorOut(errorOutputs)
@@ -84,4 +95,9 @@ final case class BaseEndpoints(authenticator: Authenticator) {
 
 object BaseEndpoints {
   val layer = ZLayer.derive[BaseEndpoints]
+
+  private[api] final case class ErrorResponse(message: String)
+  private[api] object ErrorResponse {
+    implicit val codec: JsonCodec[ErrorResponse] = DeriveJsonCodec.gen[ErrorResponse]
+  }
 }
