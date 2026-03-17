@@ -26,6 +26,14 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagString
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.responders.admin.ListsResponder
@@ -98,7 +106,7 @@ final case class ExportService(
                     dateCreated = Some(r.creationDate.toString),
                     dateModified = r.lastModificationDate.map(_.toString),
                     datePublished = Some(r.creationDate.toString),
-                    typeOfData = None,
+                    typeOfData = typeOfDataOf(r),
                     size = None,
                     keywords = List.empty,
                   )
@@ -107,12 +115,25 @@ final case class ExportService(
   }
 
   private def findDescriptionProperty(project: KnoraProject): Task[Option[SmartIri]] =
-    project.shortcode.value match {
+    project.shortcode.value.toUpperCase() match {
       case "0803" =>
         iriConverter.asInternalSmartIri("http://www.knora.org/ontology/0803/incunabula#description").map(Some(_))
       case "1612" =>
         iriConverter.asInternalSmartIri("http://www.knora.org/ontology/1612/Data#TextShort").map(Some(_))
+      case "081C" =>
+        iriConverter.asInternalSmartIri("http://www.knora.org/ontology/081C/hdm#hasDescription").map(Some(_))
+      case "" =>
+        iriConverter.asInternalSmartIri("http://www.knora.org/ontology/0868/SolarEclipses#hasDescription").map(Some(_))
       case _ => ZIO.none
+    }
+
+  private def typeOfDataOf(r: ReadResourceV2): Option[String] =
+    r.values.values.flatten.map(_.valueContent).collectFirst {
+      case _: StillImageFileValueContentV2 | _: StillImageExternalFileValueContentV2 => "Image"
+      case _: MovingImageFileValueContentV2                                          => "Audiovisual"
+      case _: AudioFileValueContentV2                                                => "Sound"
+      case _: TextFileValueContentV2                                                 => "Text"
+      case _: TextValueContentV2                                                     => "Text"
     }
 
   def exportResources(

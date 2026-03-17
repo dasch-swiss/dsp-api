@@ -73,6 +73,7 @@
     "dateCreated" : "2025-11-24T09:32:03.341988Z",
     "dateModified" : "2025-11-24T09:32:22.911407Z",
     "datePublished" : "2025-11-24T09:32:03.341988Z",
+    "typeOfData" : "Text",
     "keywords" : []
   },
   {
@@ -101,6 +102,7 @@
     "dateCreated" : "2025-11-24T09:29:32.559220Z",
     "dateModified" : "2025-11-24T09:32:35.114097Z",
     "datePublished" : "2025-11-24T09:29:32.559220Z",
+    "typeOfData" : "Text",
     "keywords" : []
   }
 ]
