@@ -7,6 +7,7 @@ package org.knora.webapi.store.triplestore.impl
 
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.HttpHost
+import sttp.capabilities.Effect
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
 import zio.*
@@ -15,11 +16,10 @@ import zio.json.ast.Json
 import zio.json.ast.JsonCursor
 import zio.metrics.Metric
 import zio.nio.file.Path as NioPath
+import zio.stream.ZSink
 import zio.stream.ZStream
 import zio.telemetry.opentelemetry.tracing.Tracing
 
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption.*
@@ -127,10 +127,32 @@ case class TriplestoreServiceLive(
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat,
-  ): Task[Unit] =
-    executeSparqlQuery(query, acceptMimeType = mimeTypeTextTurtle)
-      .map(RdfStringSource.apply)
-      .mapAttempt(RdfFormatUtil.turtleToQuadsFile(_, graphIri.value, outputFile.toFile.toPath, outputFormat))
+  ): Task[Unit] = {
+    val timeout = triplestoreConfig.queryTimeout
+    val params  = Map(("query", query.sparql), ("timeout", timeout.toSeconds.toString))
+    val request = authenticatedRequest
+      .post(targetHostUri.addPath(paths.query))
+      .header("Accept", mimeTypeTextTurtle)
+      .body(params)
+      .response(
+        asStream(ZioStreams)(stream =>
+          ZIO.scoped {
+            stream.toInputStream.flatMap { is =>
+              ZIO.attemptBlocking {
+                RdfFormatUtil.turtleToQuadsFile(
+                  RdfInputStreamSource(is),
+                  graphIri.value,
+                  outputFile.toFile.toPath,
+                  outputFormat,
+                )
+              }
+            }
+          },
+        ),
+      )
+
+    sendStreamingRequest(request, s"Triplestore query failed")
+  }
 
   /**
    * Performs a SPARQL update operation.
@@ -322,20 +344,30 @@ case class TriplestoreServiceLive(
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat,
-  ): Task[Unit] =
-    for {
-      request <-
-        ZIO.succeed(
-          authenticatedRequest
-            .get(targetHostUri.addPath(paths.get).addParam("graph", s"${graphIri.value}"))
-            .header("Accept", mimeTypeTextTurtle),
-        )
-      response <- doHttpRequest(request)
-      rdfBody  <- ensuringBody(response.body).map(RdfStringSource(_))
-      _        <- ZIO.attemptBlocking {
-             RdfFormatUtil.turtleToQuadsFile(rdfBody, graphIri.value, outputFile.toFile.toPath, outputFormat, APPEND)
-           }
-    } yield ()
+  ): Task[Unit] = {
+    val request = authenticatedRequest
+      .get(targetHostUri.addPath(paths.get).addParam("graph", s"${graphIri.value}"))
+      .header("Accept", mimeTypeTextTurtle)
+      .response(
+        asStream(ZioStreams)(stream =>
+          ZIO.scoped {
+            stream.toInputStream.flatMap { is =>
+              ZIO.attemptBlocking {
+                RdfFormatUtil.turtleToQuadsFile(
+                  RdfInputStreamSource(is),
+                  graphIri.value,
+                  outputFile.toFile.toPath,
+                  outputFormat,
+                  APPEND,
+                )
+              }
+            }
+          },
+        ),
+      )
+
+    sendStreamingRequest(request, s"Triplestore returned error for graph '${graphIri.value}'")
+  }
 
   private def executeSparqlQuery(
     query: SparqlQuery,
@@ -384,19 +416,41 @@ case class TriplestoreServiceLive(
   override def downloadRepository(outputFile: Path, graphs: GraphsForMigration): Task[Unit] =
     graphs match {
       case MigrateAllGraphs =>
-        for {
-          response <-
-            doHttpRequest(
-              authenticatedRequest
-                .get(targetHostUri.addPath(paths.repository))
-                .header("Accept", mimeTypeApplicationNQuads),
-            )
-          body <- ensuringBody(response.body)
-          _    <- ZIO.attempt(Files.write(outputFile, body.getBytes(StandardCharsets.UTF_8), CREATE, TRUNCATE_EXISTING))
-        } yield ()
+        val request = authenticatedRequest
+          .get(targetHostUri.addPath(paths.repository))
+          .header("Accept", mimeTypeApplicationNQuads)
+          .response(asStream(ZioStreams)(_.run(ZSink.fromFile(outputFile.toFile))))
+
+        sendStreamingRequest(request, "Triplestore repository download failed")
       case MigrateSpecificGraphs(graphIris) =>
         ZIO.foreach(graphIris)(downloadGraph(_, NioPath.fromJava(outputFile), NQuads)).unit
     }
+
+  private def sendStreamingRequest[T](
+    request: StreamRequest[Either[String, T], ZioStreams & Effect[Task]],
+    context: String,
+  ): Task[Unit] =
+    request
+      .send(backend)
+      .catchSome {
+        case e: java.net.SocketTimeoutException =>
+          val msg = s"$context: triplestore timeout"
+          ZIO.logError(msg) *> ZIO.fail(TriplestoreTimeoutException(msg, e))
+        case e: Exception =>
+          val msg = s"$context: failed to connect to triplestore"
+          ZIO.logError(msg) *> ZIO.fail(TriplestoreConnectionException(msg, Some(e)))
+      }
+      .flatMap { response =>
+        response.body match {
+          case Right(_) => ZIO.unit
+          case Left(error) =>
+            val msg = s"$context (HTTP ${response.code}): $error"
+            response.code.code match {
+              case 503 if error.contains("Query timed out") => ZIO.fail(TriplestoreTimeoutException(msg))
+              case _                                        => ZIO.fail(TriplestoreResponseException(msg))
+            }
+        }
+      }
 
   private def ensuringBody(body: Either[String, String]): Task[String] =
     ZIO
