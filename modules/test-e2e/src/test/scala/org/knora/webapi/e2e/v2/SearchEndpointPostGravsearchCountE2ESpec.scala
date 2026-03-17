@@ -56,7 +56,7 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
             |}
             |ORDER BY DESC(?date)
             |""".stripMargin
-        verifySearchCountResult(query, 45)
+        verifySearchCountResult(query, 44)
       },
       test(
         "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer",
@@ -314,7 +314,7 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
             |}
             |ORDER BY DESC(?date)
             |""".stripMargin
-        verifySearchCountResult(query, 45)
+        verifySearchCountResult(query, 44)
       },
       test(
         "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (submitting the complex schema)",
@@ -394,7 +394,7 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
             |
             |}
             |""".stripMargin
-        verifySearchCountResult(query, 3)
+        verifySearchCountResult(query, 2)
       },
       test("not return duplicate results when there are UNION branches with different variables") {
         val query =
@@ -441,7 +441,7 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
             |  }
             |}
             |""".stripMargin
-        verifySearchCountResult(query, 53, Some(anythingUser1))
+        verifySearchCountResult(query, 52, Some(anythingUser1))
       },
       test("count anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)") {
         val query =
@@ -460,7 +460,7 @@ object SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
             |}
             |
             """.stripMargin
-        verifySearchCountResult(query, 51, Some(anythingUser1))
+        verifySearchCountResult(query, 50, Some(anythingUser1))
       },
     ),
   )
