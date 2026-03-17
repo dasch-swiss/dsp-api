@@ -47,7 +47,7 @@ final case class MetadataRecord(
   pid: String,
   label: LangString,
   accessRights: String,
-  legalInfo: LegalInfo = LegalInfo.publicDomain,
+  legalInfo: LegalInfo,
   howToCite: String,
   publisher: String,
   source: Option[String],

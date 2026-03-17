@@ -32,6 +32,7 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v3.`export`.LegalInfo
 import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
@@ -87,13 +88,14 @@ final case class ExportService(
                     pid = r.resourceIri.toString,
                     label = Map("en" -> r.label),
                     accessRights = "Full Open Access",
+                    legalInfo = LegalInfo.publicDomain,
                     howToCite = r.label,
                     publisher = "DaSCH",
                     source = None,
                     description = None,
-                    dateCreated = None,
-                    dateModified = None,
-                    datePublished = None,
+                    dateCreated = Some(r.creationDate.toString),
+                    dateModified = r.lastModificationDate.map(_.toString),
+                    datePublished = Some(r.creationDate.toString),
                     typeOfData = None,
                     size = None,
                     keywords = List.empty,

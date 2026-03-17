@@ -19,6 +19,8 @@
     },
     "howToCite" : "Resource11",
     "publisher" : "DaSCH",
+    "dateCreated" : "2025-11-24T09:46:30.814066Z",
+    "datePublished" : "2025-11-24T09:46:30.814066Z",
     "keywords" : []
   },
   {
@@ -41,6 +43,8 @@
     },
     "howToCite" : "Resource0",
     "publisher" : "DaSCH",
+    "dateCreated" : "2025-11-24T09:46:24.126020Z",
+    "datePublished" : "2025-11-24T09:46:24.126020Z",
     "keywords" : []
   },
   {
@@ -63,6 +67,9 @@
     },
     "howToCite" : "Resource2",
     "publisher" : "DaSCH",
+    "dateCreated" : "2025-11-24T09:32:03.341988Z",
+    "dateModified" : "2025-11-24T09:32:22.911407Z",
+    "datePublished" : "2025-11-24T09:32:03.341988Z",
     "keywords" : []
   },
   {
@@ -85,6 +92,9 @@
     },
     "howToCite" : "Resource1",
     "publisher" : "DaSCH",
+    "dateCreated" : "2025-11-24T09:29:32.559220Z",
+    "dateModified" : "2025-11-24T09:32:35.114097Z",
+    "datePublished" : "2025-11-24T09:29:32.559220Z",
     "keywords" : []
   }
 ]
