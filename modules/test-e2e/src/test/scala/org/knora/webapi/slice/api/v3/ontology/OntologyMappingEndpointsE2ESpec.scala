@@ -35,7 +35,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
   override def rdfDataObjects: List[RdfDataObject] = anythingRdfOntologyAndData
 
   // -------------------------------------------------------------------------
-  // Test IRIs — API v2 complex schema (what clients send).
+  // Test IRIs -- API v2 complex schema (what clients send).
   // -------------------------------------------------------------------------
 
   private val anythingOntIri    = "http://0.0.0.0:3333/ontology/0001/anything/v2"
@@ -50,7 +50,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
   private val unknownPropIri  = s"$anythingOntIri#nonExistentProperty"
 
   // -------------------------------------------------------------------------
-  // Request helpers — sttp uri interpolation encodes the IRI path segments.
+  // Request helpers -- sttp uri interpolation encodes the IRI path segments.
   // -------------------------------------------------------------------------
 
   private def putClassMappingUri(ontIri: String, classIri: String) =
@@ -69,7 +69,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
 
   override val e2eSpec: Spec[env, Any] = suite("OntologyMapping E2E")(
     // -----------------------------------------------------------------------
-    // F1 — PUT class mapping
+    // F1 -- PUT class mapping
     // -----------------------------------------------------------------------
     suite("F1 PUT class mapping")(
       test("C-1 happy path: adds a mapping and returns updated subClassOf") {
@@ -164,7 +164,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
     ),
 
     // -----------------------------------------------------------------------
-    // F2 — DELETE class mapping
+    // F2 -- DELETE class mapping
     // -----------------------------------------------------------------------
     suite("F2 DELETE class mapping")(
       test("C-30 happy path: removes a mapping and it disappears from subClassOf") {
@@ -239,7 +239,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
     ),
 
     // -----------------------------------------------------------------------
-    // F3 — PUT property mapping
+    // F3 -- PUT property mapping
     // -----------------------------------------------------------------------
     suite("F3 PUT property mapping")(
       test("P-1 happy path: adds a mapping and returns updated subPropertyOf") {
@@ -332,14 +332,14 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
         } yield assertTrue(
           r1.code == StatusCode.Ok,
           r2.code == StatusCode.Ok,
-          // State is identical after two calls — no duplicate accumulation
+          // State is identical after two calls -- no duplicate accumulation
           result1.subPropertyOf == result2.subPropertyOf,
         )
       },
     ),
 
     // -----------------------------------------------------------------------
-    // F4 — DELETE property mapping
+    // F4 -- DELETE property mapping
     // -----------------------------------------------------------------------
     suite("F4 DELETE property mapping")(
       test("P-20 happy path: removes a mapping and it disappears from subPropertyOf") {
@@ -418,7 +418,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
     ),
 
     // -----------------------------------------------------------------------
-    // Authentication — unauthenticated requests must return 401 for all endpoints.
+    // Authentication -- unauthenticated requests must return 401 for all endpoints.
     // Using ZIO.succeed(List(...).map(...)) to keep these DRY per the pattern in
     // AuthenticationEndpointsV2E2ESpec. Test IRIs are non-alphabetical to avoid
     // false positives from accidental ordering matches.
@@ -449,10 +449,10 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
     ),
 
     // -----------------------------------------------------------------------
-    // Authorization — admin of a different project must be denied (403).
+    // Authorization -- admin of a different project must be denied (403).
     // incunabulaProjectAdminUser is an admin of incunabula (0803), not anything (0001).
     // -----------------------------------------------------------------------
-    suite("authorization — cross-project admin is forbidden")(
+    suite("authorization -- cross-project admin is forbidden")(
       test("PUT class mapping by admin of a different project returns 403") {
         TestApiClient
           .putJson[ClassMappingResponse, AddClassMappingsRequest](
@@ -490,7 +490,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
     ),
 
     // -----------------------------------------------------------------------
-    // Roundtrip visibility — v3 PUT must be visible via v2 GET allentities.
+    // Roundtrip visibility -- v3 PUT must be visible via v2 GET allentities.
     // Verifies cache invalidation and cross-version integration.
     // -----------------------------------------------------------------------
     suite("roundtrip visibility in v2 allentities")(
