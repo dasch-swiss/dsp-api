@@ -381,6 +381,31 @@
         },
         {
             "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_deep_list_valuem",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "A thing that has a deep list value",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_deep_list_valuem.20180131T150510Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0001"
+            },
+            "knora-api:userHasPermission": "M",
+            "knora-api:creationDate": {
+                "@value": "2018-01-31T15:05:10Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+            },
+            "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+            "@type": "anything:Thing",
+            "@id": "http://rdfh.ch/0001/thing_with_deep_list_value"
+        },
+        {
+            "knora-api:arkUrl": {
                 "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_list_valueO",
                 "@type": "xsd:anyURI"
             },
