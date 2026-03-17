@@ -311,7 +311,7 @@ object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
                           ),
                         ),
                       ),
-                      itemCount = 52,
+                      itemCount = 53,
                     ),
                     ResourceClassAndCountDto(
                       resourceClass = ResourceClassDto(
