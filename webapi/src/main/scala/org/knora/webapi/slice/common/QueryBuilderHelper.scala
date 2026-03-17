@@ -7,7 +7,6 @@ package org.knora.webapi.slice.common
 
 import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.impl.SimpleNamespace
-import zio.*
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.PropertyPath
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
@@ -18,6 +17,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfValue
+import zio.*
 
 import java.time.Instant
 

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.v3.ontology
 
+import org.eclipse.rdf4j.model.vocabulary.RDFS as Rdf4jRDFS
 import zio.*
 
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
@@ -21,11 +22,9 @@ import org.knora.webapi.slice.api.v3.*
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.SparqlIriSafety
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.eclipse.rdf4j.model.vocabulary.{RDFS => Rdf4jRDFS}
-
-import org.knora.webapi.slice.common.SparqlIriSafety
 import org.knora.webapi.slice.ontology.repo.AddMappingQuery
 import org.knora.webapi.slice.ontology.repo.RemoveMappingQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
