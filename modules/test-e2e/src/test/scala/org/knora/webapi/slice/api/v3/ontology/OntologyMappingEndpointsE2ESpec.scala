@@ -432,7 +432,6 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
                                        ),
           "DELETE class mapping"    -> TestApiClient.deleteJson[ClassMappingResponse](
                                          deleteClassMappingUri(anythingOntIri, thingClassIri, extSchemaOrg),
-                                         identity,
                                        ),
           "PUT property mapping"    -> TestApiClient.putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
                                          putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
@@ -440,7 +439,6 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
                                        ),
           "DELETE property mapping" -> TestApiClient.deleteJson[PropertyMappingResponse](
                                          deletePropertyMappingUri(anythingOntIri, hasIntegerPropIri, extSchemaOrgName),
-                                         identity,
                                        ),
         ).map { case (label, request) =>
           test(s"$label without credentials returns 401") {

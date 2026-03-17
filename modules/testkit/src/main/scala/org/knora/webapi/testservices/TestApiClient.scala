@@ -47,6 +47,9 @@ final case class TestApiClient(
     sendRequest(f(request))
   }
 
+  def deleteJson[A: JsonDecoder](relativeUri: Uri): Task[Response[Either[String, A]]] =
+    deleteJson(relativeUri, identity)
+
   private def sendRequest[A](
     request: Request[Either[String, A]],
     user: Option[User] = None,
@@ -336,6 +339,11 @@ object TestApiClient {
     f: Request[Either[String, A]] => Request[Either[String, A]],
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.deleteJson(relativeUri, f))
+
+  def deleteJson[A: JsonDecoder](
+    relativeUri: Uri,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.deleteJson(relativeUri))
 
   def deleteJsonLd(
     relativeUri: Uri,
