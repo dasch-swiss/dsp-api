@@ -99,41 +99,41 @@ object ShaclValidator {
         streamNQuadsIntoModel(model, RDFParser.create().source(new StringReader(content)).lang(Lang.NQUADS))
     }
 
-  /** Streams NQuads directly into the model without buffering an intermediate Dataset.
-    * Validates that all quads belong to exactly one named graph and none are in the default graph.
-    */
+  /**
+   * Streams NQuads directly into the model without buffering an intermediate Dataset.
+   * Validates that all quads belong to exactly one named graph and none are in the default graph.
+   */
   private def streamNQuadsIntoModel(
     model: Model,
     parser: RDFParserBuilder,
   ): IO[ShaclValidationError, Unit] =
-    ZIO
-      .attempt {
-        val graph          = model.getGraph
-        val graphNames     = scala.collection.mutable.Set.empty[Node]
-        var hasDefaultTriples = false
+    ZIO.attempt {
+      val graph             = model.getGraph
+      val graphNames        = scala.collection.mutable.Set.empty[Node]
+      var hasDefaultTriples = false
 
-        val sink: StreamRDF = new StreamRDFBase {
-          override def quad(quad: Quad): Unit = {
-            val g = quad.getGraph
-            if (g == null || Quad.isDefaultGraph(g)) {
-              hasDefaultTriples = true
-            } else {
-              graphNames += g
-              graph.add(quad.asTriple)
-            }
-          }
-          override def triple(triple: org.apache.jena.graph.Triple): Unit =
+      val sink: StreamRDF = new StreamRDFBase {
+        override def quad(quad: Quad): Unit = {
+          val g = quad.getGraph
+          if (g == null || Quad.isDefaultGraph(g)) {
             hasDefaultTriples = true
+          } else {
+            graphNames += g
+            graph.add(quad.asTriple)
+          }
         }
-
-        parser.parse(sink)
-
-        if (graphNames.size != 1 || hasDefaultTriples)
-          throw new IllegalArgumentException(
-            s"NQuad data must contain exactly one named graph, found ${graphNames.size} named graph(s)" +
-              (if (hasDefaultTriples) " plus triples in the default graph" else ""),
-          )
+        override def triple(triple: org.apache.jena.graph.Triple): Unit =
+          hasDefaultTriples = true
       }
+
+      parser.parse(sink)
+
+      if (graphNames.size != 1 || hasDefaultTriples)
+        throw new IllegalArgumentException(
+          s"NQuad data must contain exactly one named graph, found ${graphNames.size} named graph(s)" +
+            (if (hasDefaultTriples) " plus triples in the default graph" else ""),
+        )
+    }
       .mapError(ShaclValidationError.LoadingError(_))
 
   private def loadShapes(sources: NonEmptyChunk[RdfData]): IO[ShaclValidationError, Model] = {
