@@ -442,7 +442,7 @@ case class TriplestoreServiceLive(
       }
       .flatMap { response =>
         response.body match {
-          case Right(_) => ZIO.unit
+          case Right(_)    => ZIO.unit
           case Left(error) =>
             val msg = s"$context (HTTP ${response.code}): $error"
             response.code.code match {
