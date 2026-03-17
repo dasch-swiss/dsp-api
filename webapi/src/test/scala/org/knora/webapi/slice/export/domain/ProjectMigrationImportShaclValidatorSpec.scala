@@ -30,6 +30,10 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
   private val XsdDateTime       = "http://www.w3.org/2001/XMLSchema#dateTime"
   private val XsdBoolean        = "http://www.w3.org/2001/XMLSchema#boolean"
   private val XsdString         = "http://www.w3.org/2001/XMLSchema#string"
+  private val XsdInteger        = "http://www.w3.org/2001/XMLSchema#integer"
+  private val RdfSubject        = "http://www.w3.org/1999/02/22-rdf-syntax-ns#subject"
+  private val RdfPredicate      = "http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate"
+  private val RdfObject         = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object"
 
   private val validOntologyNq =
     s"""<$OntologyGraph> <$RdfType> <$OwlOntology> <$OntologyGraph> .
@@ -303,6 +307,111 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
             s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
                |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+      )
+    },
+    suite("LinkValueShape (data)") {
+      val ontologyWithClass = validOntologyNq +
+        s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+           |""".stripMargin
+
+      val Resource1 = "http://rdfh.ch/9999/thing001"
+      val Resource2 = "http://rdfh.ch/9999/thing002"
+      val LinkVal1  = "http://rdfh.ch/9999/thing001/values/link001"
+
+      val validResourcesNq =
+        s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+           |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+           |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |<$Resource2> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+           |<$Resource2> <$RdfsLabel> "Thing 2" <$DataGraph> .
+           |<$Resource2> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$Resource2> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$Resource2> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<$Resource2> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$Resource2> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin
+
+      // LinkValue also needs ValueShape properties (valueCreationDate, attachedToUser, isDeleted)
+      val validLinkValueNq =
+        s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$LinkVal1> <$RdfSubject> <$Resource1> <$DataGraph> .
+           |<$LinkVal1> <$RdfPredicate> <${OntologyGraph}#hasRelation> <$DataGraph> .
+           |<$LinkVal1> <$RdfObject> <$Resource2> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+           |""".stripMargin
+
+      suite("valid and missing properties")(
+        test("accepts link value with all required properties") {
+          ZIO.scoped {
+            validate(ontologyWithClass, validResourcesNq + validLinkValueNq)
+              .map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects link value missing rdf:subject") {
+          val nq = validResourcesNq +
+            s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$LinkVal1> <$RdfPredicate> <${OntologyGraph}#hasRelation> <$DataGraph> .
+               |<$LinkVal1> <$RdfObject> <$Resource2> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects link value missing rdf:predicate") {
+          val nq = validResourcesNq +
+            s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$LinkVal1> <$RdfSubject> <$Resource1> <$DataGraph> .
+               |<$LinkVal1> <$RdfObject> <$Resource2> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects link value missing rdf:object") {
+          val nq = validResourcesNq +
+            s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$LinkVal1> <$RdfSubject> <$Resource1> <$DataGraph> .
+               |<$LinkVal1> <$RdfPredicate> <${OntologyGraph}#hasRelation> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects link value missing knora-base:valueHasRefCount") {
+          val nq = validResourcesNq +
+            s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$LinkVal1> <$RdfSubject> <$Resource1> <$DataGraph> .
+               |<$LinkVal1> <$RdfPredicate> <${OntologyGraph}#hasRelation> <$DataGraph> .
+               |<$LinkVal1> <$RdfObject> <$Resource2> <$DataGraph> .
                |""".stripMargin
           ZIO.scoped {
             validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
