@@ -18,11 +18,11 @@ import org.knora.jwt.JwtCodec
 object SpecJwtTokens {
   def validToken(): URIO[JwtConfig, String]                      = createToken()
   def expiredToken(expiration: Instant): URIO[JwtConfig, String] = createToken(expiration = Some(expiration))
-  def tokenWithInvalidSignature(): URIO[JwtConfig, String] =
+  def tokenWithInvalidSignature(): URIO[JwtConfig, String]       =
     createToken(secret = Some("invalid-secret".getBytes(java.nio.charset.StandardCharsets.UTF_8)))
-  def tokenWithInvalidAudience(): URIO[JwtConfig, String]        = createToken(audience = Some(Set("invalid-audience")))
-  def tokenWithInvalidIssuer(): URIO[JwtConfig, String]          = createToken(issuer = Some("invalid-issuer"))
-  def tokenWithMissingSubject(): URIO[JwtConfig, String]         = createToken(subject = None)
+  def tokenWithInvalidAudience(): URIO[JwtConfig, String] = createToken(audience = Some(Set("invalid-audience")))
+  def tokenWithInvalidIssuer(): URIO[JwtConfig, String]   = createToken(issuer = Some("invalid-issuer"))
+  def tokenWithMissingSubject(): URIO[JwtConfig, String]  = createToken(subject = None)
   def createToken(
     issuer: Option[String] = None,
     subject: Option[String] = Some("some-subject"),

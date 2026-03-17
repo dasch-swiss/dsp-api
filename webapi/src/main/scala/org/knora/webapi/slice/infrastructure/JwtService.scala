@@ -71,9 +71,9 @@ final case class JwtServiceLive(
   private val dspIngestConfig: DspIngestConfig,
   private val cache: InvalidTokenCache,
 ) extends JwtService {
-  private val header: String    = """{"typ":"JWT","alg":"HS256"}"""
-  private val audience          = Set("Knora", "Sipi", dspIngestConfig.audience)
-  private val secretBytes       = jwtConfig.secret.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+  private val header: String = """{"typ":"JWT","alg":"HS256"}"""
+  private val audience       = Set("Knora", "Sipi", dspIngestConfig.audience)
+  private val secretBytes    = jwtConfig.secret.getBytes(java.nio.charset.StandardCharsets.UTF_8)
 
   override def createJwt(userIri: UserIri, scope: Scope, content: Map[String, Json] = Map.empty): UIO[Jwt] =
     createJwtToken(jwtConfig.issuerAsString(), userIri.value, audience, scope, Some(Json.Obj(content.toSeq: _*)))

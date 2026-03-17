@@ -5,10 +5,10 @@
 
 package org.knora.jwt
 
-import java.nio.charset.StandardCharsets
-
 import zio.Scope
 import zio.test.*
+
+import java.nio.charset.StandardCharsets
 
 object JwtCodecSpec extends ZIOSpecDefault {
 
@@ -142,8 +142,8 @@ object JwtCodecSpec extends ZIOSpecDefault {
       },
       test("fails with unsupported algorithm in header") {
         val headerRS256 = """{"typ":"JWT","alg":"RS256"}"""
-        val claim = JwtClaim(subject = Some("sub"), expiration = Some(java.time.Instant.now.getEpochSecond + 3600))
-        val token = JwtCodec.encode(headerRS256, claim.toJson, secret)
+        val claim       = JwtClaim(subject = Some("sub"), expiration = Some(java.time.Instant.now.getEpochSecond + 3600))
+        val token       = JwtCodec.encode(headerRS256, claim.toJson, secret)
         assertTrue(JwtCodec.decode(token, secret).isFailure)
       },
     ),
