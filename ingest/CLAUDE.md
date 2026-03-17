@@ -39,8 +39,7 @@ This is a Scala 3 application using ZIO ecosystem for functional programming:
 - **ZIO 2.x** - Effect system for async/concurrent programming
 - **tAPIr** - Type-safe API endpoint definitions with auto-generated OpenAPI docs
 - **ZIO HTTP** - HTTP server implementation
-- **Quill** - Database access with compile-time query generation
-- **SQLite** - Database (with Flyway migrations in `src/main/resources/db/migration/`)
+- **SQLite** - Database with plain JDBC (Flyway migrations in `src/main/resources/db/migration/`)
 
 ### Application Structure
 - **Main.scala** - Application entry point with dependency injection layer
