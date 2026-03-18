@@ -132,6 +132,7 @@ case class TriplestoreServiceLive(
     val params  = Map(("query", query.sparql), ("timeout", timeout.toSeconds.toString))
     val request = authenticatedRequest
       .post(targetHostUri.addPath(paths.query))
+      .readTimeout(FiniteDuration(1, TimeUnit.HOURS))
       .header("Accept", mimeTypeTextTurtle)
       .body(params)
       .response(
@@ -347,6 +348,7 @@ case class TriplestoreServiceLive(
   ): Task[Unit] = {
     val request = authenticatedRequest
       .get(targetHostUri.addPath(paths.get).addParam("graph", s"${graphIri.value}"))
+      .readTimeout(FiniteDuration(1, TimeUnit.HOURS))
       .header("Accept", mimeTypeTextTurtle)
       .response(
         asStream(ZioStreams)(stream =>
@@ -418,6 +420,7 @@ case class TriplestoreServiceLive(
       case MigrateAllGraphs =>
         val request = authenticatedRequest
           .get(targetHostUri.addPath(paths.repository))
+          .readTimeout(FiniteDuration(1, TimeUnit.HOURS))
           .header("Accept", mimeTypeApplicationNQuads)
           .response(asStream(ZioStreams)(_.run(ZSink.fromFile(outputFile.toFile))))
 
@@ -544,5 +547,5 @@ case class TriplestoreServiceLive(
 object TriplestoreServiceLive {
 
   val layer: URLayer[Triplestore & Tracing, TriplestoreService] =
-    TracingHttpClient.layer(FiniteDuration(2, TimeUnit.HOURS)) >>> ZLayer.derive[TriplestoreServiceLive]
+    TracingHttpClient.layer(FiniteDuration(1, TimeUnit.MINUTES)) >>> ZLayer.derive[TriplestoreServiceLive]
 }
