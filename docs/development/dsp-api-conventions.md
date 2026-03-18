@@ -268,6 +268,8 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
 
 **Service-layer tests** have self-contained fixture files co-located in `src/test/resources/<package>/` and use an in-memory triplestore. Add regression data there — never to a shared dataset.
 
+Example:
+
 | Service | Fixture files | Loaded by |
 |---------|--------------|-----------|
 | `ExportService` | `webapi/src/test/resources/org/knora/webapi/slice/export/api/service/ExportServiceSpec-1612-*.ttl` | `ExportServiceSpec` only |
