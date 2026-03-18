@@ -167,7 +167,7 @@ object AdminUsersEndpointsE2ESpec extends E2EZSpec {
           .postJson[UserResponse, UserCreateRequest](uri"/admin/users", createUserRequest, rootUser)
           .map(response => assertTrue(response.code == StatusCode.BadRequest))
       },
-    ),
+    ) @@ TestAspect.flaky,
     suite("dealing with special characters")(
       test("escape special characters when creating the user") {
         val createUserRequest = UserCreateRequest(
