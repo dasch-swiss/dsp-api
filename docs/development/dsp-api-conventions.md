@@ -264,6 +264,20 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
 - Use `.exit` to capture `Exit[E, A]` for error testing
 - Use `check(Gen[T])` for property-based testing
 
+### Test Data Placement
+
+**Service-layer tests** have self-contained fixture files co-located in `src/test/resources/<package>/` and use an in-memory triplestore. Add regression data there — never to a shared dataset.
+
+| Service | Fixture files | Loaded by |
+|---------|--------------|-----------|
+| `ExportService` | `webapi/src/test/resources/org/knora/webapi/slice/export/api/service/ExportServiceSpec-1612-*.ttl` | `ExportServiceSpec` only |
+
+**`test_data/project_data/anything-data.ttl`** is loaded by almost every E2E spec. Adding a resource there cascades into count assertions, golden fixtures, and pagination offsets across 50+ unrelated tests. Only modify it for data that genuinely belongs to the shared `anything` project dataset.
+
+Before adding test data anywhere, verify:
+1. Do existing instances already exercise the scenario? (Check instances, not just the ontology/schema.)
+2. Does the component under test have its own fixture files in `src/test/resources/`?
+
 ## Naming Conventions
 
 | Element | Convention | Example |
