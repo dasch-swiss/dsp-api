@@ -115,7 +115,7 @@ object JwtCodec {
       val actualSig   = Try(base64UrlDecode(signatureB64))
 
       actualSig match {
-        case Failure(e)                                                  => Failure(new SecurityException(s"Invalid signature encoding: ${e.getMessage}"))
+        case Failure(e)                                                     => Failure(new SecurityException(s"Invalid signature encoding: ${e.getMessage}"))
         case Success(actual) if !MessageDigest.isEqual(expectedSig, actual) =>
           Failure(new SecurityException("Invalid JWT signature"))
         case Success(_) =>
