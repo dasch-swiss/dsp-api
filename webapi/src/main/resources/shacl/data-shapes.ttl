@@ -6,7 +6,8 @@
 @prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
-@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 
 # Validates every instance of a knora-base:Resource subclass.
 # With RDFS inference, sh:targetClass matches instances of all subclasses.
@@ -95,4 +96,17 @@ knora-base:LinkValueShape
     sh:minCount 1 ;
     sh:datatype xsd:integer ;
     sh:message "LinkValue instance must have knora-base:valueHasRefCount of type xsd:integer" ;
+  ] .
+
+# Validates that every knora-base:attachedToUser value (on resources and values)
+# references a node of type knora-admin:User. Since admin.nq is loaded into the
+# unified model, the knora-admin:User nodes are present and SHACL with RDFS
+# inference can verify this.
+knora-base:AttachedToUserExistsShape
+  a sh:NodeShape ;
+  sh:targetSubjectsOf knora-base:attachedToUser ;
+  sh:property [
+    sh:path knora-base:attachedToUser ;
+    sh:class knora-admin:User ;
+    sh:message "knora-base:attachedToUser must reference a knora-admin:User instance" ;
   ] .

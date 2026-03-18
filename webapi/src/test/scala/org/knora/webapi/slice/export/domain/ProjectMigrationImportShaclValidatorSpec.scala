@@ -21,6 +21,8 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
   private val RdfType           = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
   private val OntologyGraph     = "http://www.knora.org/ontology/9999/test"
   private val DataGraph         = "http://www.knora.org/data/9999/test"
+  private val AdminGraph        = "http://www.knora.org/data/admin"
+  private val KnoraAdmin        = "http://www.knora.org/ontology/knora-admin#"
   private val OwlOntology       = "http://www.w3.org/2002/07/owl#Ontology"
   private val OwlClass          = "http://www.w3.org/2002/07/owl#Class"
   private val RdfsLabel         = "http://www.w3.org/2000/01/rdf-schema#label"
@@ -46,6 +48,10 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
     s"""<http://rdfh.ch/9999/resource001> <$RdfType> <${OntologyGraph}#TestResource> <$DataGraph> .
        |""".stripMargin
 
+  private val defaultAdminNq =
+    s"""<http://rdfh.ch/users/test001> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+       |""".stripMargin
+
   private def writeNqFile(dir: Path, name: String, content: String): Task[Path] = {
     val file = dir / name
     Files.writeBytes(file, Chunk.fromArray(content.getBytes(StandardCharsets.UTF_8))).as(file)
@@ -54,13 +60,15 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
   private def validate(
     ontologyNq: String,
     dataNq: String = emptyDataNq,
+    adminNq: String = defaultAdminNq,
   ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
     for {
       dir          <- Files.createTempDirectoryScoped(Some("shacl-test"), Seq.empty)
       ontologyFile <- writeNqFile(dir, "ontology-0.nq", ontologyNq)
       dataFile     <- writeNqFile(dir, "data.nq", dataNq)
+      adminFile    <- writeNqFile(dir, "admin.nq", adminNq)
       validator     = new ProjectMigrationImportShaclValidator()
-      result       <- validator.validate(Chunk(ontologyFile), Chunk(dataFile), testProjectIri).either
+      result       <- validator.validate(Chunk(ontologyFile), Chunk(adminFile, dataFile), testProjectIri).either
     } yield result
 
   override def spec: Spec[Any, Any] = suite("ProjectMigrationImportShaclValidatorSpec")(
@@ -426,6 +434,59 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
                |<$LinkVal1> <$RdfSubject> <$Resource1> <$DataGraph> .
                |<$LinkVal1> <$RdfPredicate> <${OntologyGraph}#hasRelation> <$DataGraph> .
                |<$LinkVal1> <$RdfObject> <$Resource2> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+      )
+    },
+    suite("AttachedToUserExistsShape (data)") {
+      val ontologyWithClass = validOntologyNq +
+        s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+           |""".stripMargin
+
+      val Resource1 = "http://rdfh.ch/9999/thing001"
+
+      val validResourceNq =
+        s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+           |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+           |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin
+
+      suite("user reference validation")(
+        test("accepts resource referencing a valid knora-admin:User") {
+          ZIO.scoped {
+            validate(ontologyWithClass, validResourceNq).map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects resource referencing a non-existent user") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+               |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/unknown999> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects value referencing a non-existent user") {
+          val Value1 = "http://rdfh.ch/9999/thing001/values/val001"
+          val nq = validResourceNq +
+            s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+               |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/unknown999> <$DataGraph> .
+               |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
                |""".stripMargin
           ZIO.scoped {
             validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
