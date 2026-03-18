@@ -170,6 +170,28 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
         knora-base:lastModificationDate
                 "2025-11-24T09:32:22.911407Z"^^xsd:dateTime .
 
+<http://rdfh.ch/1612/Resource3DeepList>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#Class1>;
+        rdfs:label                    "Resource3";
+        <http://www.knora.org/ontology/1612/Data#FunkList>
+                <http://rdfh.ch/1612/Resource3DeepList/values/DeepListVal>;
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2025-11-24T09:29:32.559220Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
+<http://rdfh.ch/1612/Resource3DeepList/values/DeepListVal>
+        rdf:type                      knora-base:ListValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:29:32.559220Z"^^xsd:dateTime;
+        knora-base:valueHasListNode   <http://rdfh.ch/lists/1612/Dp3IaXCMR3uP-kLF-WXpSg>;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasString     "http://rdfh.ch/lists/1612/Dp3IaXCMR3uP-kLF-WXpSg";
+        knora-base:valueHasUUID       "Dp3IaXCMR3uPkLFWXpSgAA" .
+
 <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/gAXaUlRMTNC15dXxfijJkQ>
         rdf:type                        knora-base:GeonameValue;
         knora-base:attachedToUser       <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
@@ -327,7 +349,15 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
         rdf:type                     knora-base:ListNode;
         rdfs:label                   "Vulfpeck"@en;
         knora-base:hasRootNode       <http://rdfh.ch/lists/1612/PCkZVGmXQ9uMnkpyEU-4-Q>;
+        knora-base:hasSubListNode    <http://rdfh.ch/lists/1612/Dp3IaXCMR3uP-kLF-WXpSg>;
         knora-base:listNodeName      "Vk0NruDmRyeZCZvOVwXOnw-z2myqvsqj2l01r08cqbehdz";
+        knora-base:listNodePosition  0 .
+
+<http://rdfh.ch/lists/1612/Dp3IaXCMR3uP-kLF-WXpSg>
+        rdf:type                     knora-base:ListNode;
+        rdfs:label                   "Scary Pockets"@en;
+        knora-base:hasRootNode       <http://rdfh.ch/lists/1612/PCkZVGmXQ9uMnkpyEU-4-Q>;
+        knora-base:listNodeName      "Vk0NruDmRyeZCZvOVwXOnw-depth2funknode";
         knora-base:listNodePosition  0 .
 
 <http://rdfh.ch/lists/1612/PCkZVGmXQ9uMnkpyEU-4-Q>
