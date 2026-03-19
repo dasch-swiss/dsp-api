@@ -482,7 +482,7 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
         },
         test("rejects value referencing a non-existent user") {
           val Value1 = "http://rdfh.ch/9999/thing001/values/val001"
-          val nq = validResourceNq +
+          val nq     = validResourceNq +
             s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
                |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/unknown999> <$DataGraph> .
