@@ -23,6 +23,9 @@ final class ProjectMigrationImportShaclValidator() {
     ("knora-ontologies/standoff-onto.ttl", "http://www.knora.org/ontology/standoff"),
   )
 
+  // Placeholder replaced at runtime with the actual project IRI.
+  // Safe: the TTL templates are controlled by us and ProjectIri is validated by a strict regex.
+  // Tests catch any mismatch since sh:hasValue would match the literal placeholder, failing validation.
   private val ProjectIriPlaceholder = "urn:placeholder:projectIri"
 
   def validate(
