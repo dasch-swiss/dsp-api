@@ -32,7 +32,8 @@ knora-base:OntologyShape
   sh:property [
     sh:path knora-base:attachedToProject ;
     sh:hasValue <urn:placeholder:projectIri> ;
-    sh:message "Project ontology must be attached to project <urn:placeholder:projectIri>" ;
+    sh:maxCount 1 ;
+    sh:message "Project ontology must be attached to exactly one project <urn:placeholder:projectIri>" ;
   ] ;
   sh:property [
     sh:path knora-base:lastModificationDate ;

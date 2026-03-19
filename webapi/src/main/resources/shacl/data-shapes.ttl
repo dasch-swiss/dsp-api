@@ -33,7 +33,8 @@ knora-base:ResourceShape
   sh:property [
     sh:path knora-base:attachedToProject ;
     sh:hasValue <urn:placeholder:projectIri> ;
-    sh:message "Resource instance must have knora-base:attachedToProject equal to <urn:placeholder:projectIri>" ;
+    sh:maxCount 1 ;
+    sh:message "Resource instance must have exactly one knora-base:attachedToProject equal to <urn:placeholder:projectIri>" ;
   ] ;
   sh:property [
     sh:path knora-base:hasPermissions ;
