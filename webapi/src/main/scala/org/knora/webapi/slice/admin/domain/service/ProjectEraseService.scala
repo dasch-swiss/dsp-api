@@ -41,6 +41,7 @@ final case class ProjectEraseService(
     _              <- removeOntologyAndDataGraphs(project)
     _              <- projectService.erase(project)
     _              <- ingestClient.eraseProject(project.shortcode).logError.ignore.unless(keepAssets)
+    _              <- ZIO.logInfo(s"${logPrefix(project)} Project erased successfully")
   } yield ()
 
   private def cleanUpUsersAndGroups(project: KnoraProject, groups: Chunk[KnoraGroup]): UIO[Unit] = for {
