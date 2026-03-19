@@ -20,6 +20,8 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.admin.ListsResponder
+import org.knora.webapi.responders.v2.OntologyResponderV2
+import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -38,9 +40,13 @@ import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.CsvService
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
+import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
+import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -57,6 +63,9 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
 
   def superClassIri: ResourceClassIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/1612/Data#SuperClass1")(using sf)
+
+  def footnoteClassIri: ResourceClassIri =
+    ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/1612/Data#FootnoteTestClass")(using sf)
 
   val user       = TestDataFactory.User.rootUser
   val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw")
@@ -172,6 +181,29 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           csv <- exportService.toCsv(exportedCsv)
         } yield assertGolden(csv, "includeArkUrlsTrue")
       },
+      test("with footnotes in text value") {
+        for {
+          // OntologyResponderV2 must be initialized so it subscribes to MessageRelay (handles StandoffEntityInfoGetRequestV2)
+          _             <- ZIO.serviceWithZIO[OntologyResponderV2](_ => ZIO.unit)
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          exportedCsv   <-
+            exportService.exportResources(
+              project,
+              footnoteClassIri,
+              List(
+                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextRich")),
+              ),
+              user,
+              LanguageCode.EN,
+              includeIris = false,
+              includeArkUrls = false,
+            )
+          csv <- exportService.toCsv(exportedCsv)
+        } yield assertGolden(csv, "withFootnotes")
+      },
     ).provide(
       ConstructResponseUtilV2.layer,
       AppConfig.layer,
@@ -185,8 +217,14 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       KnoraProjectService.layer,
       LicenseRepo.layer,
       MessageRelayLive.layer,
+      CardinalityHandler.layer,
+      CardinalityService.layer,
+      OntologyCacheHelpers.layer,
       OntologyCacheLive.layer,
       OntologyRepoLive.layer,
+      OntologyResponderV2.layer,
+      OntologyTriplestoreHelpers.layer,
+      PredicateRepositoryLive.layer,
       ProjectService.layer,
       ReadResourcesServiceLive.layer,
       StandoffTagUtilV2Live.layer,

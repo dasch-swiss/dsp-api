@@ -1,0 +1,499 @@
+/*
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.knora.webapi.slice.`export`.domain
+
+import zio.*
+import zio.nio.file.Files
+import zio.nio.file.Path
+import zio.test.*
+
+import java.nio.charset.StandardCharsets
+
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+
+object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
+
+  private val testProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/9999")
+
+  private val RdfType           = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+  private val OntologyGraph     = "http://www.knora.org/ontology/9999/test"
+  private val DataGraph         = "http://www.knora.org/data/9999/test"
+  private val AdminGraph        = "http://www.knora.org/data/admin"
+  private val KnoraAdmin        = "http://www.knora.org/ontology/knora-admin#"
+  private val OwlOntology       = "http://www.w3.org/2002/07/owl#Ontology"
+  private val OwlClass          = "http://www.w3.org/2002/07/owl#Class"
+  private val RdfsLabel         = "http://www.w3.org/2000/01/rdf-schema#label"
+  private val RdfsSubClassOf    = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
+  private val RdfsSubPropertyOf = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf"
+  private val KnoraBase         = "http://www.knora.org/ontology/knora-base#"
+  private val XsdDateTime       = "http://www.w3.org/2001/XMLSchema#dateTime"
+  private val XsdBoolean        = "http://www.w3.org/2001/XMLSchema#boolean"
+  private val XsdString         = "http://www.w3.org/2001/XMLSchema#string"
+  private val XsdInteger        = "http://www.w3.org/2001/XMLSchema#integer"
+  private val RdfSubject        = "http://www.w3.org/1999/02/22-rdf-syntax-ns#subject"
+  private val RdfPredicate      = "http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate"
+  private val RdfObject         = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object"
+
+  private val validOntologyNq =
+    s"""<$OntologyGraph> <$RdfType> <$OwlOntology> <$OntologyGraph> .
+       |<$OntologyGraph> <$RdfsLabel> "Test Ontology" <$OntologyGraph> .
+       |<$OntologyGraph> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$OntologyGraph> .
+       |<$OntologyGraph> <${KnoraBase}lastModificationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$OntologyGraph> .
+       |""".stripMargin
+
+  private val baselineDataNq =
+    s"""<http://rdfh.ch/9999/resource001> <$RdfType> <${OntologyGraph}#TestResource> <$DataGraph> .
+       |""".stripMargin
+
+  private val defaultAdminNq =
+    s"""<http://rdfh.ch/users/test001> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+       |""".stripMargin
+
+  private def writeNqFile(dir: Path, name: String, content: String): Task[Path] = {
+    val file = dir / name
+    Files.writeBytes(file, Chunk.fromArray(content.getBytes(StandardCharsets.UTF_8))).as(file)
+  }
+
+  private def validate(
+    ontologyNq: String,
+    dataNq: String = baselineDataNq,
+    adminNq: String = defaultAdminNq,
+  ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
+    for {
+      dir          <- Files.createTempDirectoryScoped(Some("shacl-test"), Seq.empty)
+      ontologyFile <- writeNqFile(dir, "ontology-0.nq", ontologyNq)
+      dataFile     <- writeNqFile(dir, "data.nq", dataNq)
+      adminFile    <- writeNqFile(dir, "admin.nq", adminNq)
+      validator     = new ProjectMigrationImportShaclValidator()
+      result       <-
+        validator.validate(NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile), testProjectIri).either
+    } yield result
+
+  override def spec: Spec[Any, Any] = suite("ProjectMigrationImportShaclValidatorSpec")(
+    suite("OntologyShape")(
+      test("valid ontology conforms") {
+        ZIO.scoped {
+          validate(validOntologyNq).map(result => assertTrue(result.isRight))
+        }
+      },
+      test("rejects ontology attached to wrong project") {
+        val nq =
+          s"""<$OntologyGraph> <$RdfType> <$OwlOntology> <$OntologyGraph> .
+             |<$OntologyGraph> <$RdfsLabel> "Test Ontology" <$OntologyGraph> .
+             |<$OntologyGraph> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/0001> <$OntologyGraph> .
+             |<$OntologyGraph> <${KnoraBase}lastModificationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("rejects ontology missing lastModificationDate") {
+        val nq =
+          s"""<$OntologyGraph> <$RdfType> <$OwlOntology> <$OntologyGraph> .
+             |<$OntologyGraph> <$RdfsLabel> "Test Ontology" <$OntologyGraph> .
+             |<$OntologyGraph> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isLeft))
+        }
+      },
+    ),
+    suite("ResourceClassShape")(
+      test("rejects resource class missing rdfs:label") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+             |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("accepts resource class with rdfs:label") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+             |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+             |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isRight))
+        }
+      },
+    ),
+    suite("PropertyShape")(
+      test("rejects property missing rdfs:label (subPropertyOf hasValue)") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#hasName> <$RdfType> <http://www.w3.org/2002/07/owl#ObjectProperty> <$OntologyGraph> .
+             |<${OntologyGraph}#hasName> <$RdfsSubPropertyOf> <${KnoraBase}hasValue> <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("rejects property missing rdfs:label (subPropertyOf hasLinkTo)") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#hasRelation> <$RdfType> <http://www.w3.org/2002/07/owl#ObjectProperty> <$OntologyGraph> .
+             |<${OntologyGraph}#hasRelation> <$RdfsSubPropertyOf> <${KnoraBase}hasLinkTo> <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("accepts property with rdfs:label") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#hasName> <$RdfType> <http://www.w3.org/2002/07/owl#ObjectProperty> <$OntologyGraph> .
+             |<${OntologyGraph}#hasName> <$RdfsSubPropertyOf> <${KnoraBase}hasValue> <$OntologyGraph> .
+             |<${OntologyGraph}#hasName> <$RdfsLabel> "has name"@en <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isRight))
+        }
+      },
+    ),
+    suite("ResourceShape (data)") {
+      // Ontology that declares a resource class — needed for RDFS inference
+      val ontologyWithClass = validOntologyNq +
+        s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+           |""".stripMargin
+
+      val Resource1 = "http://rdfh.ch/9999/thing001"
+
+      val validResourceNq =
+        s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+           |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+           |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin
+
+      suite("valid and missing properties")(
+        test("accepts resource with all required properties") {
+          ZIO.scoped {
+            validate(ontologyWithClass, validResourceNq).map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects resource missing rdfs:label") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects resource missing knora-base:isDeleted") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects resource missing knora-base:attachedToUser") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+               |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects resource attached to wrong project") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+               |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/0001> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects resource missing knora-base:attachedToProject") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+               |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects resource missing knora-base:hasPermissions") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+               |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects resource missing knora-base:creationDate") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+               |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+      )
+    },
+    suite("ValueShape (data)") {
+      val ontologyWithClass = validOntologyNq +
+        s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+           |""".stripMargin
+
+      val Value1 = "http://rdfh.ch/9999/thing001/values/val001"
+
+      // A valid resource is needed so the ResourceShape doesn't fail
+      val validResourceNq =
+        s"""<http://rdfh.ch/9999/thing001> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <$RdfsLabel> "Thing 1" <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin
+
+      val validValueNq =
+        s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+           |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |""".stripMargin
+
+      suite("valid and missing properties")(
+        test("accepts value with all required properties") {
+          ZIO.scoped {
+            validate(ontologyWithClass, validResourceNq + validValueNq).map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects value missing knora-base:valueCreationDate") {
+          val nq = validResourceNq +
+            s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+               |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects value missing knora-base:attachedToUser") {
+          val nq = validResourceNq +
+            s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+               |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects value missing knora-base:isDeleted") {
+          val nq = validResourceNq +
+            s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+               |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+      )
+    },
+    suite("LinkValueShape (data)") {
+      val ontologyWithClass = validOntologyNq +
+        s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+           |""".stripMargin
+
+      val Resource1 = "http://rdfh.ch/9999/thing001"
+      val Resource2 = "http://rdfh.ch/9999/thing002"
+      val LinkVal1  = "http://rdfh.ch/9999/thing001/values/link001"
+
+      val validResourcesNq =
+        s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+           |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+           |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |<$Resource2> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+           |<$Resource2> <$RdfsLabel> "Thing 2" <$DataGraph> .
+           |<$Resource2> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$Resource2> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$Resource2> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<$Resource2> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$Resource2> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin
+
+      // LinkValue also needs ValueShape properties (valueCreationDate, attachedToUser, isDeleted)
+      val validLinkValueNq =
+        s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$LinkVal1> <$RdfSubject> <$Resource1> <$DataGraph> .
+           |<$LinkVal1> <$RdfPredicate> <${OntologyGraph}#hasRelation> <$DataGraph> .
+           |<$LinkVal1> <$RdfObject> <$Resource2> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+           |""".stripMargin
+
+      suite("valid and missing properties")(
+        test("accepts link value with all required properties") {
+          ZIO.scoped {
+            validate(ontologyWithClass, validResourcesNq + validLinkValueNq)
+              .map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects link value missing rdf:subject") {
+          val nq = validResourcesNq +
+            s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$LinkVal1> <$RdfPredicate> <${OntologyGraph}#hasRelation> <$DataGraph> .
+               |<$LinkVal1> <$RdfObject> <$Resource2> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects link value missing rdf:predicate") {
+          val nq = validResourcesNq +
+            s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$LinkVal1> <$RdfSubject> <$Resource1> <$DataGraph> .
+               |<$LinkVal1> <$RdfObject> <$Resource2> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects link value missing rdf:object") {
+          val nq = validResourcesNq +
+            s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$LinkVal1> <$RdfSubject> <$Resource1> <$DataGraph> .
+               |<$LinkVal1> <$RdfPredicate> <${OntologyGraph}#hasRelation> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects link value missing knora-base:valueHasRefCount") {
+          val nq = validResourcesNq +
+            s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$LinkVal1> <$RdfSubject> <$Resource1> <$DataGraph> .
+               |<$LinkVal1> <$RdfPredicate> <${OntologyGraph}#hasRelation> <$DataGraph> .
+               |<$LinkVal1> <$RdfObject> <$Resource2> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+      )
+    },
+    suite("AttachedToUserExistsShape (data)") {
+      val ontologyWithClass = validOntologyNq +
+        s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+           |""".stripMargin
+
+      val Resource1 = "http://rdfh.ch/9999/thing001"
+
+      val validResourceNq =
+        s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+           |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+           |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin
+
+      suite("user reference validation")(
+        test("accepts resource referencing a valid knora-admin:User") {
+          ZIO.scoped {
+            validate(ontologyWithClass, validResourceNq).map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects resource referencing a non-existent user") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+               |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/unknown999> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects value referencing a non-existent user") {
+          val Value1 = "http://rdfh.ch/9999/thing001/values/val001"
+          val nq     = validResourceNq +
+            s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+               |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/unknown999> <$DataGraph> .
+               |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+      )
+    },
+  ) @@ TestAspect.timeout(30.seconds)
+}

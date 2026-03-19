@@ -133,3 +133,7 @@ The DSP-API release versioning follows the [Semantic Versioning](https://semver.
 
 Additionally, we will also increment the MAJOR version in the case when any kind of changes to existing
 data would be necessary, e.g., any changes to the [knora-base ontology](https://docs.dasch.swiss/latest/DSP-API/02-dsp-ontologies/knora-base/) which are not backwards compatible.
+
+## Issues & Contributions
+
+If you'd like to report an issue or contribute to this project, please contact us at [support@dasch.swiss](mailto:support@dasch.swiss) so we can align it with our planning.

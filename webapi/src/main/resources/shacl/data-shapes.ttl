@@ -1,0 +1,119 @@
+# Placeholder IRIs (urn:placeholder:*) are replaced at runtime with actual values
+# by ProjectMigrationImportShaclValidator before validation.
+# - urn:placeholder:projectIri  →  the IRI of the project being imported
+
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+
+# Validates every instance of a knora-base:Resource subclass.
+# With RDFS inference, sh:targetClass matches instances of all subclasses.
+knora-base:ResourceShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:Resource ;
+  sh:property [
+    sh:path rdfs:label ;
+    sh:minCount 1 ;
+    sh:message "Resource instance must have at least one rdfs:label" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:isDeleted ;
+    sh:minCount 1 ;
+    sh:datatype xsd:boolean ;
+    sh:message "Resource instance must have knora-base:isDeleted of type xsd:boolean" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:attachedToUser ;
+    sh:minCount 1 ;
+    sh:message "Resource instance must have knora-base:attachedToUser" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:attachedToProject ;
+    sh:hasValue <urn:placeholder:projectIri> ;
+    sh:maxCount 1 ;
+    sh:message "Resource instance must have exactly one knora-base:attachedToProject equal to <urn:placeholder:projectIri>" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:hasPermissions ;
+    sh:minCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Resource instance must have knora-base:hasPermissions of type xsd:string" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:creationDate ;
+    sh:minCount 1 ;
+    sh:datatype xsd:dateTime ;
+    sh:message "Resource instance must have knora-base:creationDate of type xsd:dateTime" ;
+  ] .
+
+# Validates every instance of a knora-base:Value subclass.
+# With RDFS inference, sh:targetClass matches instances of all subclasses.
+knora-base:ValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:Value ;
+  sh:property [
+    sh:path knora-base:valueCreationDate ;
+    sh:minCount 1 ;
+    sh:datatype xsd:dateTime ;
+    sh:message "Value instance must have knora-base:valueCreationDate of type xsd:dateTime" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:attachedToUser ;
+    sh:minCount 1 ;
+    sh:message "Value instance must have knora-base:attachedToUser" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:hasPermissions ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Value instance must have at most one knora-base:hasPermissions of type xsd:string" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:isDeleted ;
+    sh:minCount 1 ;
+    sh:datatype xsd:boolean ;
+    sh:message "Value instance must have knora-base:isDeleted of type xsd:boolean" ;
+  ] .
+
+# Validates every instance of knora-base:LinkValue.
+# LinkValue is a subclass of Value, so ValueShape constraints also apply.
+knora-base:LinkValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:LinkValue ;
+  sh:property [
+    sh:path rdf:subject ;
+    sh:minCount 1 ;
+    sh:message "LinkValue instance must have rdf:subject" ;
+  ] ;
+  sh:property [
+    sh:path rdf:predicate ;
+    sh:minCount 1 ;
+    sh:message "LinkValue instance must have rdf:predicate" ;
+  ] ;
+  sh:property [
+    sh:path rdf:object ;
+    sh:minCount 1 ;
+    sh:message "LinkValue instance must have rdf:object" ;
+  ] ;
+  sh:property [
+    sh:path knora-base:valueHasRefCount ;
+    sh:minCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "LinkValue instance must have knora-base:valueHasRefCount of type xsd:integer" ;
+  ] .
+
+# Validates that every knora-base:attachedToUser value (on resources and values)
+# references a node of type knora-admin:User. Since admin.nq is loaded into the
+# unified model, the knora-admin:User nodes are present and SHACL with RDFS
+# inference can verify this.
+knora-base:AttachedToUserExistsShape
+  a sh:NodeShape ;
+  sh:targetSubjectsOf knora-base:attachedToUser ;
+  sh:property [
+    sh:path knora-base:attachedToUser ;
+    sh:class knora-admin:User ;
+    sh:message "knora-base:attachedToUser must reference a knora-admin:User instance" ;
+  ] .
