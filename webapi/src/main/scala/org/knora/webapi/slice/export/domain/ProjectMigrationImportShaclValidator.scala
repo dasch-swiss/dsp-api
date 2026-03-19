@@ -25,7 +25,11 @@ final class ProjectMigrationImportShaclValidator() {
 
   private val ProjectIriPlaceholder = "urn:placeholder:projectIri"
 
-  def validate(ontologyFiles: Chunk[Path], dataFiles: Chunk[Path], projectIri: ProjectIri): Task[Unit] =
+  def validate(
+    ontologyFiles: NonEmptyChunk[Path],
+    dataFiles: NonEmptyChunk[Path],
+    projectIri: ProjectIri,
+  ): Task[Unit] =
     for {
       builtIn <- ZIO.foreach(builtInOntologyResources) { case (resource, graphIri) =>
                    readClasspathResource(resource).map(RdfData.InMemoryTurtle(_, graphIri))
@@ -33,8 +37,8 @@ final class ProjectMigrationImportShaclValidator() {
       ontologyNq = ontologyFiles.map(p => RdfData.NQuadFile(p.toFile.toPath): RdfData)
       dataNq     = dataFiles.map(p => RdfData.NQuadFile(p.toFile.toPath): RdfData)
       graphs     = RdfGraphs(
-                 ontologies = NonEmptyChunk.fromChunk(builtIn ++ ontologyNq).get,
-                 data = NonEmptyChunk.fromChunk(dataNq).get,
+                 ontologies = NonEmptyChunk.fromChunk(builtIn ++ ontologyNq).get, // safe: builtIn is always 4 elements
+                 data = dataNq,
                )
       ontologyShapesTtl <- readClasspathResource("shacl/ontology-shapes.ttl")
                              .map(_.replace(ProjectIriPlaceholder, projectIri.value))

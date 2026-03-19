@@ -320,7 +320,7 @@ final class ProjectMigrationImportService(
       .unit
   }
 
-  private def validateRdfPayloadFiles(bagRoot: Path): Task[(Chunk[Path], Chunk[Path])] = {
+  private def validateRdfPayloadFiles(bagRoot: Path): Task[(NonEmptyChunk[Path], NonEmptyChunk[Path])] = {
     val rdfDir  = bagRoot / "data" / "rdf"
     val adminNq = rdfDir / "admin.nq"
     val dataNq  = rdfDir / "data.nq"
@@ -335,21 +335,21 @@ final class ProjectMigrationImportService(
            )
       // Find ontology files
       ontologyFiles <- Files.list(rdfDir).filter(_.filename.toString.matches("ontology-\\d+\\.nq")).runCollect
-      _             <- ZIO.when(ontologyFiles.isEmpty)(
-             ZIO.fail(
-               new RuntimeException("No 'data/rdf/ontology-*.nq' files found in the BagIt payload"),
-             ),
-           )
+      ontologyFilesNec <- ZIO
+                            .fromOption(NonEmptyChunk.fromChunk(ontologyFiles))
+                            .orElseFail(
+                              new RuntimeException("No 'data/rdf/ontology-*.nq' files found in the BagIt payload"),
+                            )
       // Permissions are optional, if present, we want to include them
       permissionNq = rdfDir / "permission.nq"
       perms       <- ZIO.ifZIO(Files.exists(permissionNq))(ZIO.some(permissionNq), ZIO.none)
-      dataFiles    = Chunk(adminNq, dataNq) ++ Chunk.fromIterable(perms)
-      rdfFiles     = ontologyFiles ++ dataFiles
+      dataFiles    = NonEmptyChunk(adminNq, dataNq) ++ Chunk.fromIterable(perms)
+      rdfFiles     = ontologyFilesNec ++ dataFiles
       // Validate we can load files as RDF, this is a sanity check to avoid starting an import that
       // will fail later due to malformed RDF.
       // Exclude admin.nq from this check to avoid loading the whole model twice, it is checked separately.
       _ <- ZIO.foreachDiscard(rdfFiles.filter(_ != adminNq))(file => ZIO.scoped(DatasetOps.from(file, Lang.NQUADS)))
-    } yield (ontologyFiles, dataFiles)
+    } yield (ontologyFilesNec, dataFiles)
   }
 
   private def uploadRdfDataToTriplestore(nqFiles: Chunk[Path]): Task[Unit] = {
