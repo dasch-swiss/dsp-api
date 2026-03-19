@@ -334,7 +334,7 @@ final class ProjectMigrationImportService(
              ZIO.fail(new RuntimeException("Required file 'data/rdf/data.nq' is missing from the BagIt payload")),
            )
       // Find ontology files
-      ontologyFiles <- Files.list(rdfDir).filter(_.filename.toString.matches("ontology-\\d+\\.nq")).runCollect
+      ontologyFiles    <- Files.list(rdfDir).filter(_.filename.toString.matches("ontology-\\d+\\.nq")).runCollect
       ontologyFilesNec <- ZIO
                             .fromOption(NonEmptyChunk.fromChunk(ontologyFiles))
                             .orElseFail(

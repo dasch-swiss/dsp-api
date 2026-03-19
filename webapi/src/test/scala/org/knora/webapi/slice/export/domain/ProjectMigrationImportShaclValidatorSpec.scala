@@ -68,7 +68,8 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
       dataFile     <- writeNqFile(dir, "data.nq", dataNq)
       adminFile    <- writeNqFile(dir, "admin.nq", adminNq)
       validator     = new ProjectMigrationImportShaclValidator()
-      result       <- validator.validate(NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile), testProjectIri).either
+      result       <-
+        validator.validate(NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile), testProjectIri).either
     } yield result
 
   override def spec: Spec[Any, Any] = suite("ProjectMigrationImportShaclValidatorSpec")(
