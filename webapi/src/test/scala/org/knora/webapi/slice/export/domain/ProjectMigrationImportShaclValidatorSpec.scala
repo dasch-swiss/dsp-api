@@ -44,7 +44,7 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
        |<$OntologyGraph> <${KnoraBase}lastModificationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$OntologyGraph> .
        |""".stripMargin
 
-  private val emptyDataNq =
+  private val baselineDataNq =
     s"""<http://rdfh.ch/9999/resource001> <$RdfType> <${OntologyGraph}#TestResource> <$DataGraph> .
        |""".stripMargin
 
@@ -59,7 +59,7 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
 
   private def validate(
     ontologyNq: String,
-    dataNq: String = emptyDataNq,
+    dataNq: String = baselineDataNq,
     adminNq: String = defaultAdminNq,
   ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
     for {
