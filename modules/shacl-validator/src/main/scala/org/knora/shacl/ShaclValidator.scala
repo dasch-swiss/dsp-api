@@ -87,13 +87,13 @@ object ShaclValidator {
     source match {
       case RdfData.TurtleFile(path, _) =>
         ZIO
-          .attempt(RDFDataMgr.read(model, path.toUri.toString, Lang.TURTLE))
+          .attemptBlocking(RDFDataMgr.read(model, path.toUri.toString, Lang.TURTLE))
           .mapError(ShaclValidationError.LoadingError(_))
       case RdfData.NQuadFile(path) =>
         streamNQuadsIntoModel(model, RDFParser.source(path.toUri.toString).lang(Lang.NQUADS))
       case RdfData.InMemoryTurtle(content, _) =>
         ZIO
-          .attempt(RDFDataMgr.read(model, new StringReader(content), null, Lang.TURTLE))
+          .attemptBlocking(RDFDataMgr.read(model, new StringReader(content), null, Lang.TURTLE))
           .mapError(ShaclValidationError.LoadingError(_))
       case RdfData.InMemoryNQuad(content) =>
         streamNQuadsIntoModel(model, RDFParser.create().source(new StringReader(content)).lang(Lang.NQUADS))
@@ -107,7 +107,7 @@ object ShaclValidator {
     model: Model,
     parser: RDFParserBuilder,
   ): IO[ShaclValidationError, Unit] =
-    ZIO.attempt {
+    ZIO.attemptBlocking {
       val graph             = model.getGraph
       val graphNames        = scala.collection.mutable.Set.empty[Node]
       var hasDefaultTriples = false
@@ -146,7 +146,7 @@ object ShaclValidator {
     shapesModel: Model,
     errorFactory: Resource => ShaclValidationError,
   ): IO[ShaclValidationError, Unit] =
-    ZIO.attempt {
+    ZIO.attemptBlocking {
       val config   = new ValidationEngineConfiguration().setValidateShapes(false)
       val report   = ValidationUtil.validateModel(dataModel, shapesModel, config)
       val conforms =
