@@ -66,6 +66,12 @@ knora-base:ValueShape
     sh:message "Value instance must have knora-base:attachedToUser" ;
   ] ;
   sh:property [
+    sh:path knora-base:hasPermissions ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Value instance must have at most one knora-base:hasPermissions of type xsd:string" ;
+  ] ;
+  sh:property [
     sh:path knora-base:isDeleted ;
     sh:minCount 1 ;
     sh:datatype xsd:boolean ;
