@@ -185,7 +185,7 @@ final case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildN
    */
   def sorted: ListADM = this.copy(children = children.sortBy(_.position).map(_.sorted))
 
-  def withChildren: Seq[ListNode] = listinfo +: children
+  def withChildren: Seq[ListNode] = listinfo +: children.flatMap(c => c +: c.allDescendants)
 }
 object ListADM {
   implicit lazy val codec: JsonCodec[ListADM] = DeriveJsonCodec.gen[ListADM]
@@ -201,7 +201,7 @@ final case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChild
    */
   def sorted: NodeADM = this.copy(children = children.sortBy(_.position).map(_.sorted))
 
-  def withChildren: Seq[ListNode] = nodeinfo +: children
+  def withChildren: Seq[ListNode] = nodeinfo +: children.flatMap(c => c +: c.allDescendants)
 }
 object NodeADM {
   implicit lazy val codec: JsonCodec[NodeADM] = DeriveJsonCodec.gen[NodeADM]
@@ -540,6 +540,8 @@ final case class ListChildNodeADM(
    */
   override def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] =
     comments.getPreferredLanguage(userLang, fallbackLang)
+
+  def allDescendants: Seq[ListChildNodeADM] = children.flatMap(c => c +: c.allDescendants)
 }
 object ListChildNodeADM {
   implicit lazy val codec: JsonCodec[ListChildNodeADM] = DeriveJsonCodec.gen[ListChildNodeADM]

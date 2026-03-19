@@ -17,8 +17,6 @@ import zio.test.TestAspect
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import java.time.temporal.ChronoUnit
-
 object AuthServiceLiveSpec extends ZIOSpecDefault {
   val spec = suite("AuthServiceLive")(
     test("Should extract AuthScope from contents") {
@@ -51,7 +49,7 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
         result     <- AuthService.authenticate(token).exit
       } yield assertTrue(
         result == Exit.fail(
-          NonEmptyChunk(JwtProblem(s"The token is expired since ${expiration.truncatedTo(ChronoUnit.SECONDS)}")),
+          NonEmptyChunk(JwtProblem("JWT token has expired")),
         ),
       )
     },
@@ -61,7 +59,7 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
       } yield assertTrue(
         result == Exit.fail(
           NonEmptyChunk(
-            JwtProblem("Expected token [invalid-token] to be composed of 2 or 3 parts separated by dots."),
+            JwtProblem("Invalid JWT format: expected 3 parts"),
           ),
         ),
       )
@@ -71,7 +69,7 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
         token  <- tokenWithInvalidSignature()
         result <- AuthService.authenticate(token).exit
       } yield assertTrue(
-        result == Exit.fail(NonEmptyChunk(JwtProblem("Invalid signature for this token or wrong algorithm."))),
+        result == Exit.fail(NonEmptyChunk(JwtProblem("Invalid JWT signature"))),
       )
     },
     test("A token with invalid audience should fail with JwtProblem") {

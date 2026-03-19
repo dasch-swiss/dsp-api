@@ -5,10 +5,6 @@
 
 package org.knora.webapi.slice.infrastructure
 
-import pdi.jwt.JwtAlgorithm
-import pdi.jwt.JwtClaim
-import pdi.jwt.JwtHeader
-import pdi.jwt.JwtZIOJson
 import zio.Clock
 import zio.Duration
 import zio.IO
@@ -25,6 +21,9 @@ import scala.util.Success
 import dsp.errors.BadCredentialsException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
+import org.knora.jwt.JwtClaim
+import org.knora.jwt.JwtCodec
+import org.knora.jwt.JwtHeader
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
@@ -72,9 +71,9 @@ final case class JwtServiceLive(
   private val dspIngestConfig: DspIngestConfig,
   private val cache: InvalidTokenCache,
 ) extends JwtService {
-  private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
-  private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
-  private val audience                = Set("Knora", "Sipi", dspIngestConfig.audience)
+  private val header: String = """{"typ":"JWT","alg":"HS256"}"""
+  private val audience       = Set("Knora", "Sipi", dspIngestConfig.audience)
+  private val secretBytes    = jwtConfig.secret.getBytes(java.nio.charset.StandardCharsets.UTF_8)
 
   override def createJwt(userIri: UserIri, scope: Scope, content: Map[String, Json] = Map.empty): UIO[Jwt] =
     createJwtToken(jwtConfig.issuerAsString(), userIri.value, audience, scope, Some(Json.Obj(content.toSeq: _*)))
@@ -109,7 +108,7 @@ final case class JwtServiceLive(
                 expiration = Some(exp.getEpochSecond),
                 jwtId = Some(UuidUtil.base64Encode(uuid)),
               ) + ("scope", scope.toScopeString)
-    } yield Jwt(JwtZIOJson.encode(header, claim.toJson, jwtConfig.secret, algorithm), exp.getEpochSecond)
+    } yield Jwt(JwtCodec.encode(header, claim.toJson, secretBytes), exp.getEpochSecond)
 
   /**
    * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
@@ -147,7 +146,7 @@ final case class JwtServiceLive(
    * @return the token's header and claim, or `None` if the token is invalid.
    */
   private def decodeToken(token: String): Option[(JwtHeader, JwtClaim)] =
-    JwtZIOJson.decodeAll(token, jwtConfig.secret, Seq(JwtAlgorithm.HS256)) match {
+    JwtCodec.decodeAll(token, secretBytes) match {
       case Success((header: JwtHeader, claim: JwtClaim, _)) =>
         val missingRequiredContent: Boolean = Set(
           header.typ.isDefined,

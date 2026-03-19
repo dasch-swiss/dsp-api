@@ -5,8 +5,6 @@
 
 package swiss.dasch.util
 
-import io.getquill.SnakeCase
-import io.getquill.jdbczio.Quill
 import swiss.dasch.config.Configuration.DbConfig
 import swiss.dasch.db.Db
 import swiss.dasch.db.DbMigrator
@@ -22,7 +20,7 @@ import java.nio.file.Paths
 import javax.sql.DataSource
 
 object TestUtils {
-  type TestDbLayer = DbConfig & DataSource & DbMigrator & Quill.Sqlite[SnakeCase]
+  type TestDbLayer = DbConfig & DataSource & DbMigrator
 
   private val initializeDb: RIO[DbMigrator, Unit] = DbMigrator.migrateOrDie()
 
@@ -40,7 +38,7 @@ object TestUtils {
     ZLayer.scoped(ZIO.acquireRelease(createTestDbConfig)(config => clearDb(config)))
 
   val testDbLayer: ULayer[TestDbLayer] =
-    testDbConfigLive >+> Db.dataSourceLive >+> Db.quillLive >+> DbMigrator.layer
+    testDbConfigLive >+> Db.dataSourceLive >+> DbMigrator.layer
 
   val testDbLayerWithEmptyDb: ULayer[TestDbLayer] =
     testDbLayer >+> ZLayer.fromZIO(initializeDb.orDie)
