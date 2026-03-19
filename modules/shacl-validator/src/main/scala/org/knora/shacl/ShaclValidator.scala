@@ -24,6 +24,9 @@ import java.io.StringReader
 import java.io.StringWriter
 import java.nio.file.Path
 
+// graphIri on TurtleFile/InMemoryTurtle: Turtle has no named-graph semantics, so graphIri is
+// not used during loading. It is kept as metadata because all data in dsp-api belongs to a
+// named graph, and this information may be used for future performance optimizations.
 enum RdfData {
   case TurtleFile(path: Path, graphIri: String)
   case NQuadFile(path: Path)
