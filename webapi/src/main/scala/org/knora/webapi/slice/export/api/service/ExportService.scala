@@ -22,9 +22,11 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoADM
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagStringAttributeV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -57,6 +59,10 @@ final case class ExportService(
   private val csvService: CsvService,
   private val sf: StringFormatter,
 ) {
+  private given StringFormatter                = sf
+  private val footnoteTagIri: SmartIri         = OntologyConstants.Standoff.StandoffFootnoteTag.toSmartIri
+  private val footnoteContentPropIri: SmartIri = OntologyConstants.Standoff.StandoffFootnoteTagHasContent.toSmartIri
+
   def exportResources(
     project: KnoraProject,
     classIri: ResourceClassIri,
@@ -74,6 +80,7 @@ final case class ExportService(
                          requestingUser = requestingUser,
                          preview = false,
                          withDeleted = false,
+                         queryStandoff = true,
                          skipRetrievalChecks = true,
                        )
 
@@ -136,8 +143,6 @@ final case class ExportService(
     resources: Map[IRI, ReadResourceV2],
     vocabularies: Map[String, String],
   ): Task[ExportedResource] = {
-    given StringFormatter = sf
-
     val arkEntryTask: Task[ListMap[String, String]] =
       if includeArkUrls then
         ZIO
@@ -192,9 +197,29 @@ final case class ExportService(
           RegularValue(List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
         case lvc: HierarchicalListValueContentV2 =>
           RegularValue(List(vocabularies.get(lvc.valueHasString).getOrElse("")))
-        case vc =>
+        case tvc: TextValueContentV2 => textValueColumn(tvc)
+        case vc                      =>
           RegularValue(List(stringFormat(vc.valueHasString)))
     }
+
+  private def textValueColumn(tvc: TextValueContentV2): RegularValue = {
+    val footnoteTags     = tvc.standoff.filter(_.standoffTagClassIri == footnoteTagIri).sortBy(_.startPosition)
+    val footnoteContents = footnoteTags.flatMap(
+      _.attributes.collectFirst {
+        case StandoffTagStringAttributeV2(iri, value) if iri == footnoteContentPropIri => value
+      },
+    )
+    if (footnoteContents.isEmpty)
+      RegularValue(List(stringFormat(tvc.valueHasString)))
+    else {
+      // Insert [n] markers right-to-left (foldRight) to preserve character offsets in valueHasString
+      val textWithMarkers = footnoteTags.zipWithIndex.foldRight(tvc.valueHasString) { case ((tag, i), text) =>
+        text.patch(tag.endPosition, s"[${i + 1}]", 0)
+      }
+      val footnoteList = footnoteContents.zipWithIndex.map { case (fn, i) => s"[${i + 1}] $fn" }.mkString("\n")
+      RegularValue(List(stringFormat(s"$textWithMarkers\n\n$footnoteList")))
+    }
+  }
 
   private def stringFormat(s: String): String =
     s.replaceAll("\n", "\\\\n").replaceAll("\u001e", " ")
