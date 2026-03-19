@@ -1,0 +1,2 @@
+Resource IRI,Label,Text Rich Text Label
+http://rdfh.ch/1612/FootnoteResource,FootnoteResource,Hello[1] world[2]\n\n[1] a note on hello\n[2] a note on world

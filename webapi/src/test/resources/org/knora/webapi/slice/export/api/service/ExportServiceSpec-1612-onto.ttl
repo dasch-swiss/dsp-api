@@ -146,6 +146,16 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
                            owl:onProperty       <http://www.knora.org/ontology/1612/Data#TextShort>
                          ] .
 
+<http://www.knora.org/ontology/1612/Data#FootnoteTestClass>
+        rdf:type         owl:Class;
+        rdfs:label       "FootnoteTestClass"@en;
+        rdfs:subClassOf  knora-base:Resource;
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "1"^^xsd:nonNegativeInteger;
+                           owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       <http://www.knora.org/ontology/1612/Data#TextRich>
+                         ] .
+
 <http://www.knora.org/ontology/1612/Data#SuperClass1>
         rdf:type         owl:Class;
         rdfs:label       "SuperClass1"@en;
