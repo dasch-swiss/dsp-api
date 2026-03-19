@@ -14,7 +14,7 @@ type LangString = Map[String, String]
 final case class License(
   licenseIdentifier: String,
   licenseDate: String,
-  licenseUri: String,
+  licenseURI: String,
 )
 
 object License {
@@ -35,7 +35,7 @@ object LegalInfo {
     license = License(
       licenseIdentifier = "public domain",
       licenseDate = "2023-01-01",
-      licenseUri = "https://creativecommons.org/publicdomain/zero/1.0/",
+      licenseURI = "https://creativecommons.org/publicdomain/zero/1.0/",
     ),
     copyrightHolder = "DaSCH",
     authorship = List("DaSCH"),
