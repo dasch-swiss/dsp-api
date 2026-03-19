@@ -1,5 +1,27 @@
 # Changelog
 
+## [35.2.0](https://github.com/dasch-swiss/dsp-api/compare/v35.1.0...v35.2.0) (2026-03-16)
+
+
+### Maintenances
+
+* Major dependency updates ([#3983](https://github.com/dasch-swiss/dsp-api/issues/3983)) ([74d3b43](https://github.com/dasch-swiss/dsp-api/commit/74d3b439b45d7611ba2fff630afd06286853e8b0))
+* Minor dependency updates ([#4001](https://github.com/dasch-swiss/dsp-api/issues/4001)) ([52071cf](https://github.com/dasch-swiss/dsp-api/commit/52071cf4eb29bdfd8e0699c1abb2ab88a9ba9401))
+* Patch dependency updates ([#3981](https://github.com/dasch-swiss/dsp-api/issues/3981)) ([8b573d6](https://github.com/dasch-swiss/dsp-api/commit/8b573d6e2303dda19bca6309314c972febb32044))
+* update docs ([#3999](https://github.com/dasch-swiss/dsp-api/issues/3999)) ([0aa5edd](https://github.com/dasch-swiss/dsp-api/commit/0aa5edd90f782707492cf2c619ca51d29c9673cc))
+
+
+### Enhancements
+
+* **dsp-api:** Integrate assets to project migration export/import (DEV-5889) ([#3985](https://github.com/dasch-swiss/dsp-api/issues/3985)) ([1e94a23](https://github.com/dasch-swiss/dsp-api/commit/1e94a23a8af098006b58caf97bb1874a441d25c1))
+* Prevent system admin users from being exported or imported ([#3992](https://github.com/dasch-swiss/dsp-api/issues/3992)) ([93493c8](https://github.com/dasch-swiss/dsp-api/commit/93493c8ebf80a9a3e94c023c7ee2f1a8a7c69524))
+* **webapi:** add StillImageVectorFileValue SVG support (DEV-5963) ([#3994](https://github.com/dasch-swiss/dsp-api/issues/3994)) ([9394b20](https://github.com/dasch-swiss/dsp-api/commit/9394b20d06f5b634161ac2c2583f173f49ae83cc))
+
+
+### Bug Fixes
+
+* **resources:** cross-type StillImage replace silently does nothing (DEV-6008) ([#3996](https://github.com/dasch-swiss/dsp-api/issues/3996)) ([a6bdf8d](https://github.com/dasch-swiss/dsp-api/commit/a6bdf8d7309a34411a14487ae497f2eadecddb48))
+
 ## [35.1.0](https://github.com/dasch-swiss/dsp-api/compare/v35.0.0...v35.1.0) (2026-03-09)
 
 

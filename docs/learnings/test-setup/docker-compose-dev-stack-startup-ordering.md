@@ -8,7 +8,7 @@ problem_type: setup_failure
 severity: medium
 symptoms: "Port already in use when starting local dev servers; API boots with empty triplestore cache; Docker services torn down unexpectedly during data initialization"
 root_cause: "just/make recipes chain destructive operations (volume deletion, full stack restart) behind constructive-sounding names; dev stack recipes only stop the replaced service, not all conflicting services"
-tags: ["docker-compose", "local-development", "startup-ordering", "port-conflicts", "just-recipes", "fuseki", "dsp-api", "dsp-das", "test-infrastructure"]
+tags: ["docker-compose", "local-development", "startup-ordering", "port-conflicts", "just-recipes", "fuseki", "dsp-api", "dsp-app", "test-infrastructure"]
 related:
   - configuration-errors/fuseki-remote-dev-db-config-recipe.md
   - build-errors/fork-long-lived-processes-from-build-tools.md
@@ -55,7 +55,7 @@ docker compose down app
 ./sbtx "webapi/run"
 
 # 5. Start Angular frontend locally (port 4200 is now free)
-cd ../dsp-das && npm run start-local
+cd ../dsp-app && npm run start-local
 ```
 
 Key points:

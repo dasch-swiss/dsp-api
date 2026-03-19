@@ -5,13 +5,15 @@
 
 package swiss.dasch.api
 
-import pdi.jwt.*
 import swiss.dasch.api.AuthService.JwtContents
 import swiss.dasch.config.Configuration.JwtConfig
 import swiss.dasch.domain.AuthScope
 import zio.*
 import zio.json.*
 import zio.prelude.Validation
+
+import org.knora.jwt.JwtClaim
+import org.knora.jwt.JwtCodec
 
 trait AuthService {
   def authenticate(jwtToken: String): ZIO[Any, NonEmptyChunk[AuthenticationError], Principal]
@@ -45,10 +47,9 @@ object AuthenticationError       {
 }
 
 final case class AuthServiceLive(jwtConfig: JwtConfig) extends AuthService {
-  private val alg      = Seq(JwtAlgorithm.HS256)
-  private val secret   = jwtConfig.secret
-  private val audience = jwtConfig.audience
-  private val issuer   = jwtConfig.issuer
+  private val secretBytes = jwtConfig.secret.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+  private val audience    = jwtConfig.audience
+  private val issuer      = jwtConfig.issuer
 
   def authenticate(jwtString: String): IO[NonEmptyChunk[AuthenticationError], Principal] =
     if (jwtConfig.disableAuth) {
@@ -58,7 +59,7 @@ final case class AuthServiceLive(jwtConfig: JwtConfig) extends AuthService {
         ZIO.succeed(Principal("developer", AuthScope(Set(AuthScope.ScopeValue.Admin)), "fake jwt claim"))
     } else {
       ZIO
-        .fromTry(JwtZIOJson.decode(jwtString, secret, alg))
+        .fromTry(JwtCodec.decode(jwtString, secretBytes))
         .mapError(e => NonEmptyChunk(AuthenticationError.jwtProblem(e)))
         .flatMap(verifyClaim(_, jwtString))
     }
