@@ -43,46 +43,38 @@ case class ShaclShapes(
 
 enum ShaclValidationError {
   case LoadingError(cause: Throwable)
-  case OntologyValidationError(report: Resource)
-  case DataValidationError(report: Resource)
+  case OntologyValidationError(reportTtl: String)
+  case DataValidationError(reportTtl: String)
 
   def message: String = this match {
-    case LoadingError(cause)             => s"Error loading data for SHACL validation: ${cause.getMessage}"
-    case OntologyValidationError(report) =>
-      val sw = new StringWriter()
-      sw.write("Ontology check failed:\n")
-      asTtlStr(sw, report)
-    case DataValidationError(report) =>
-      val sw = new StringWriter()
-      sw.write("Data check failed:\n")
-      asTtlStr(sw, report)
+    case LoadingError(cause)                => s"Error loading data for SHACL validation: ${cause.getMessage}"
+    case OntologyValidationError(reportTtl) => s"Ontology check failed:\n$reportTtl"
+    case DataValidationError(reportTtl)     => s"Data check failed:\n$reportTtl"
   }
-
-  private def asTtlStr(sw: StringWriter, report: Resource) =
-    RDFDataMgr.write(sw, report.getModel, Lang.TURTLE)
-    sw.toString
 }
 
 object ShaclValidator {
 
+  private val defaultModel =
+    ZIO.acquireRelease(ZIO.succeed(ModelFactory.createDefaultModel()))(m => ZIO.attempt(m.close()).logError.ignore)
+  private val rdfsModel = defaultModel.flatMap(m =>
+    ZIO.acquireRelease(ZIO.succeed(ModelFactory.createRDFSModel(m)))(m => ZIO.attempt(m.close()).logError.ignore),
+  )
+
   def validate(
     graphs: RdfGraphs,
     shapes: ShaclShapes,
-  ): IO[ShaclValidationError, Unit] = {
-    val model = ModelFactory.createDefaultModel()
+  ): IO[ShaclValidationError, Unit] = ZIO.scoped {
     for {
+      rdfsModel <- rdfsModel
       // Step 1: load ontologies and validate ontology shapes
-      _            <- ZIO.foreachDiscard(graphs.ontologies)(loadIntoModel(model, _))
+      _            <- ZIO.foreachDiscard(graphs.ontologies)(loadIntoModel(rdfsModel, _))
       shapesModel1 <- loadShapes(shapes.ontologyShapes)
-      _            <- validateModel(
-             ModelFactory.createRDFSModel(model),
-             shapesModel1,
-             ShaclValidationError.OntologyValidationError(_),
-           )
+      _            <- validateModel(rdfsModel, shapesModel1, ShaclValidationError.OntologyValidationError(_))
       // Step 2: load data and validate data shapes
-      _            <- ZIO.foreachDiscard(graphs.data)(loadIntoModel(model, _))
+      _            <- ZIO.foreachDiscard(graphs.data)(loadIntoModel(rdfsModel, _))
       shapesModel2 <- loadShapes(shapes.dataShapes)
-      _            <- validateModel(ModelFactory.createRDFSModel(model), shapesModel2, ShaclValidationError.DataValidationError(_))
+      _            <- validateModel(rdfsModel, shapesModel2, ShaclValidationError.DataValidationError(_))
     } yield ()
   }
 
@@ -139,23 +131,55 @@ object ShaclValidator {
     }
       .mapError(ShaclValidationError.LoadingError(_))
 
-  private def loadShapes(sources: NonEmptyChunk[RdfData]): IO[ShaclValidationError, Model] = {
-    val model = ModelFactory.createDefaultModel()
-    ZIO.foreachDiscard(sources)(source => loadIntoModel(model, source)).as(model)
+  private def loadShapes(sources: NonEmptyChunk[RdfData]): ZIO[Scope, ShaclValidationError, Model] =
+    defaultModel.flatMap { model =>
+      ZIO.foreachDiscard(sources)(source => loadIntoModel(model, source)).as(model)
+    }
+
+  private def reportToTtl(report: Resource): Task[String] = ZIO.scoped {
+    ZIO
+      .acquireRelease(ZIO.succeed(ModelFactory.createDefaultModel()))(m => ZIO.attempt(m.close()).logError.ignore)
+      .flatMap { reportModel =>
+        ZIO.attemptBlocking {
+          // Copy only the report node's own statements, not the entire data model
+          val reportStmts = report.getModel.listStatements(report, null, null: org.apache.jena.rdf.model.RDFNode)
+          while (reportStmts.hasNext) { reportModel.add(reportStmts.nextStatement()): Unit }
+          // Also copy statements about each sh:result
+          val shResult    = report.getModel.createProperty("http://www.w3.org/ns/shacl#result")
+          val resultNodes = report.getModel.listObjectsOfProperty(report, shResult)
+          while (resultNodes.hasNext) {
+            val node = resultNodes.next()
+            if (node.isResource) {
+              val stmts =
+                report.getModel.listStatements(node.asResource(), null, null: org.apache.jena.rdf.model.RDFNode)
+              while (stmts.hasNext) { reportModel.add(stmts.nextStatement()): Unit }
+            }
+          }
+          val sw = new StringWriter()
+          RDFDataMgr.write(sw, reportModel, Lang.TURTLE)
+          sw.toString
+        }
+      }
   }
 
   private def validateModel(
     dataModel: Model,
     shapesModel: Model,
-    errorFactory: Resource => ShaclValidationError,
+    errorFactory: String => ShaclValidationError,
   ): IO[ShaclValidationError, Unit] =
     ZIO.attemptBlocking {
       val config   = new ValidationEngineConfiguration().setValidateShapes(false)
       val report   = ValidationUtil.validateModel(dataModel, shapesModel, config)
       val conforms =
         report.getRequiredProperty(report.getModel.createProperty("http://www.w3.org/ns/shacl#conforms")).getBoolean
-      (conforms, report)
+      if (conforms) None else Some(report)
     }
       .mapError(ShaclValidationError.LoadingError(_))
-      .flatMap { case (conforms, report) => ZIO.unless(conforms)(ZIO.fail(errorFactory(report))).unit }
+      .flatMap {
+        case Some(report) =>
+          reportToTtl(report)
+            .mapError(ShaclValidationError.LoadingError(_))
+            .flatMap(ttl => ZIO.fail(errorFactory(ttl)))
+        case None => ZIO.unit
+      }
 }

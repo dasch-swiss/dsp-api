@@ -104,9 +104,7 @@ final class ProjectMigrationImportService(
                s"$taskId: Payload file validation passed for project '$projectIri', found: ${nqFiles.mkString(", ")}",
              )
 
-        _ <- projectShaclValidator.validate(ontologyFiles, dataFiles, projectIri)
-        _ <- ZIO.logInfo(s"$taskId: SHACL validation passed for project '$projectIri'")
-
+        _         <- ZIO.logInfo(s"$taskId: Starting admin data validation for project '$projectIri'")
         shortcode <- ZIO.scoped { // rdf validation, close scope for model right after validation to free up memory
                        for {
                          model <- DatasetOps
@@ -126,6 +124,11 @@ final class ProjectMigrationImportService(
                          _         <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
                        } yield shortcode
                      }
+        _ <- ZIO.logInfo(s"$taskId: Admin data validation passed for project '$projectIri'")
+
+        _ <- ZIO.logInfo(s"$taskId: Starting shacl validation '$projectIri'")
+        _ <- projectShaclValidator.validate(ontologyFiles, dataFiles, projectIri)
+        _ <- ZIO.logInfo(s"$taskId: SHACL validation passed for project '$projectIri'")
 
         // import assets from ingest if present
         assetZipPath = bagRoot / "data" / "assets" / "assets.zip"
@@ -344,11 +347,6 @@ final class ProjectMigrationImportService(
       permissionNq = rdfDir / "permission.nq"
       perms       <- ZIO.ifZIO(Files.exists(permissionNq))(ZIO.some(permissionNq), ZIO.none)
       dataFiles    = NonEmptyChunk(adminNq, dataNq) ++ Chunk.fromIterable(perms)
-      rdfFiles     = ontologyFilesNec ++ dataFiles
-      // Validate we can load files as RDF, this is a sanity check to avoid starting an import that
-      // will fail later due to malformed RDF.
-      // Exclude admin.nq from this check to avoid loading the whole model twice, it is checked separately.
-      _ <- ZIO.foreachDiscard(rdfFiles.filter(_ != adminNq))(file => ZIO.scoped(DatasetOps.from(file, Lang.NQUADS)))
     } yield (ontologyFilesNec, dataFiles)
   }
 
