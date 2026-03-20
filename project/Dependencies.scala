@@ -27,7 +27,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.5.5"
 
   val ZioPreludeVersion = "1.0.0-RC46"
-  val ZioSchemaVersion  = "1.8.1"
+  val ZioSchemaVersion  = "1.8.3"
 
   val ZioMockVersion = "1.0.0-RC12"
   val ZioVersion     = "2.1.24"
@@ -138,7 +138,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.13.9"
+  val tapirVersion = "1.13.11"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -157,7 +157,7 @@ object Dependencies {
   val openTelemetryWithSentry = Seq(
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
     "com.softwaremill.sttp.tapir"   %% "tapir-opentelemetry-tracing"         % tapirVersion,
-    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.14",
+    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.15",
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
