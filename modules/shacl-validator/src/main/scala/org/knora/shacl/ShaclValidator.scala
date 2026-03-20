@@ -167,14 +167,13 @@ object ShaclValidator {
     shapesModel: Model,
     errorFactory: String => ShaclValidationError,
   ): IO[ShaclValidationError, Unit] =
-    ZIO
-      .attemptBlocking {
-        val config   = new ValidationEngineConfiguration().setValidateShapes(false)
-        val report   = ValidationUtil.validateModel(dataModel, shapesModel, config)
-        val conforms =
-          report.getRequiredProperty(report.getModel.createProperty("http://www.w3.org/ns/shacl#conforms")).getBoolean
-        if (conforms) None else Some(report)
-      }
+    ZIO.attemptBlocking {
+      val config   = new ValidationEngineConfiguration().setValidateShapes(false)
+      val report   = ValidationUtil.validateModel(dataModel, shapesModel, config)
+      val conforms =
+        report.getRequiredProperty(report.getModel.createProperty("http://www.w3.org/ns/shacl#conforms")).getBoolean
+      if (conforms) None else Some(report)
+    }
       .mapError(ShaclValidationError.LoadingError(_))
       .flatMap {
         case Some(report) =>
