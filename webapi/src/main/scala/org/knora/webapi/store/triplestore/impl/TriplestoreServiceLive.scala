@@ -481,6 +481,7 @@ case class TriplestoreServiceLive(
     val request = authenticatedRequest
       .post(targetHostUri.addPath(paths.data))
       .contentType(mimeTypeApplicationNQuads, "UTF-8")
+      .readTimeout(FiniteDuration(1, TimeUnit.HOURS))
       .streamBody(ZioStreams)(stream)
 
     request

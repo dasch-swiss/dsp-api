@@ -104,6 +104,7 @@ final class ProjectMigrationImportService(
                s"$taskId: Payload file validation passed for project '$projectIri', found: ${nqFiles.mkString(", ")}",
              )
 
+        _ <- ZIO.logInfo(s"$taskId: Starting shacl validation '$projectIri'")
         _ <- projectShaclValidator.validate(ontologyFiles, dataFiles, projectIri)
         _ <- ZIO.logInfo(s"$taskId: SHACL validation passed for project '$projectIri'")
 
