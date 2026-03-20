@@ -136,10 +136,30 @@ object ShaclValidator {
       ZIO.foreachDiscard(sources)(source => loadIntoModel(model, source)).as(model)
     }
 
-  private def reportToTtl(report: Resource): String = {
-    val sw = new StringWriter()
-    RDFDataMgr.write(sw, report.getModel, Lang.TURTLE)
-    sw.toString
+  private def reportToTtl(report: Resource): Task[String] = ZIO.scoped {
+    ZIO
+      .acquireRelease(ZIO.succeed(ModelFactory.createDefaultModel()))(m => ZIO.attempt(m.close()).logError.ignore)
+      .flatMap { reportModel =>
+        ZIO.attemptBlocking {
+          // Copy only the report node's own statements, not the entire data model
+          val reportStmts = report.getModel.listStatements(report, null, null: org.apache.jena.rdf.model.RDFNode)
+          while (reportStmts.hasNext) { reportModel.add(reportStmts.nextStatement()): Unit }
+          // Also copy statements about each sh:result
+          val shResult    = report.getModel.createProperty("http://www.w3.org/ns/shacl#result")
+          val resultNodes = report.getModel.listObjectsOfProperty(report, shResult)
+          while (resultNodes.hasNext) {
+            val node = resultNodes.next()
+            if (node.isResource) {
+              val stmts =
+                report.getModel.listStatements(node.asResource(), null, null: org.apache.jena.rdf.model.RDFNode)
+              while (stmts.hasNext) { reportModel.add(stmts.nextStatement()): Unit }
+            }
+          }
+          val sw = new StringWriter()
+          RDFDataMgr.write(sw, reportModel, Lang.TURTLE)
+          sw.toString
+        }
+      }
   }
 
   private def validateModel(
@@ -147,16 +167,20 @@ object ShaclValidator {
     shapesModel: Model,
     errorFactory: String => ShaclValidationError,
   ): IO[ShaclValidationError, Unit] =
-    ZIO.attemptBlocking {
-      val config   = new ValidationEngineConfiguration().setValidateShapes(false)
-      val report   = ValidationUtil.validateModel(dataModel, shapesModel, config)
-      val conforms =
-        report.getRequiredProperty(report.getModel.createProperty("http://www.w3.org/ns/shacl#conforms")).getBoolean
-      if (conforms) None else Some(reportToTtl(report))
-    }
+    ZIO
+      .attemptBlocking {
+        val config   = new ValidationEngineConfiguration().setValidateShapes(false)
+        val report   = ValidationUtil.validateModel(dataModel, shapesModel, config)
+        val conforms =
+          report.getRequiredProperty(report.getModel.createProperty("http://www.w3.org/ns/shacl#conforms")).getBoolean
+        if (conforms) None else Some(report)
+      }
       .mapError(ShaclValidationError.LoadingError(_))
       .flatMap {
-        case Some(reportTtl) => ZIO.fail(errorFactory(reportTtl))
-        case None            => ZIO.unit
+        case Some(report) =>
+          reportToTtl(report)
+            .mapError(ShaclValidationError.LoadingError(_))
+            .flatMap(ttl => ZIO.fail(errorFactory(ttl)))
+        case None => ZIO.unit
       }
 }
