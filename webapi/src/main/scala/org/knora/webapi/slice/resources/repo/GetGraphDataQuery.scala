@@ -37,14 +37,24 @@ object GetGraphDataQuery extends QueryBuilderHelper {
   private val linkValueCreator     = variable("linkValueCreator")
   private val linkValuePermissions = variable("linkValuePermissions")
 
-  private val rdfsLabel     = Rdf.iri(RDFS.LABEL.stringValue())
-  private val rdfSubject    = Rdf.iri(RDF.SUBJECT.stringValue())
-  private val rdfPredicate  = Rdf.iri(RDF.PREDICATE.stringValue())
-  private val rdfObject     = Rdf.iri(RDF.OBJECT.stringValue())
+  private val rdfsLabel    = Rdf.iri(RDFS.LABEL.stringValue())
+  private val rdfSubject   = Rdf.iri(RDF.SUBJECT.stringValue())
+  private val rdfPredicate = Rdf.iri(RDF.PREDICATE.stringValue())
+  private val rdfObject    = Rdf.iri(RDF.OBJECT.stringValue())
 
   private val projectedVars =
-    Array(node, nodeClass, nodeLabel, nodeCreator, nodeProject, nodePermissions,
-      linkValue, linkProp, linkValueCreator, linkValuePermissions)
+    Array(
+      node,
+      nodeClass,
+      nodeLabel,
+      nodeCreator,
+      nodeProject,
+      nodePermissions,
+      linkValue,
+      linkProp,
+      linkValueCreator,
+      linkValuePermissions,
+    )
 
   /**
    * Builds a query that returns information about a single start node.
