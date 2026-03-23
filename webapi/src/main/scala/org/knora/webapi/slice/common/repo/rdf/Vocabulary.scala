@@ -95,6 +95,7 @@ object Vocabulary {
     val hasPermissions: Iri         = iri(kb + "hasPermissions")
     val creationDate: Iri           = iri(kb + "creationDate")
     val lastModificationDate: Iri   = iri(kb + "lastModificationDate")
+    val hasLinkTo: Iri              = iri(kb + "hasLinkTo")
     val hasStandoffLinkTo: Iri      = iri(kb + "hasStandoffLinkTo")
     val hasStandoffLinkToValue: Iri = iri(kb + "hasStandoffLinkToValue")
     val deleteDate: Iri             = iri(kb + "deleteDate")

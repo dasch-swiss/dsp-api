@@ -61,6 +61,7 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
+import org.knora.webapi.slice.resources.repo.GetGraphDataQuery
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
@@ -885,14 +886,12 @@ final case class ResourcesResponderV2(
         // Get the direct links from/to the start node.
         response <- triplestore.query(
                       Select(
-                        sparql.v2.txt
-                          .getGraphData(
-                            startNode.nodeIri,
-                            false,
-                            excludePropertyInternal,
-                            outbound,
-                            appConfig.v2.graphRoute.maxGraphBreadth,
-                          ),
+                        GetGraphDataQuery.buildTraversal(
+                          startNode.nodeIri,
+                          outbound,
+                          excludePropertyInternal,
+                          appConfig.v2.graphRoute.maxGraphBreadth,
+                        ),
                       ),
                     )
         rows: Seq[VariableResultsRow] = response.results.bindings
@@ -1019,14 +1018,10 @@ final case class ResourcesResponderV2(
 
     // Get the start node.
     val query =
-      sparql.v2.txt
-        .getGraphData(
-          startNodeIri = resourceIri,
-          maybeExcludeLinkProperty = excludePropertyInternal,
-          startNodeOnly = true,
-          outbound = true,
-          limit = appConfig.v2.graphRoute.maxGraphBreadth,
-        )
+      GetGraphDataQuery.buildStartNodeOnly(
+        resourceIri,
+        appConfig.v2.graphRoute.maxGraphBreadth,
+      )
 
     for {
       response                     <- triplestore.query(Select(query))
