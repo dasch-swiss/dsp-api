@@ -26,7 +26,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
 import org.knora.webapi.messages.util.PermissionUtilADM
@@ -47,6 +46,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
+import org.knora.webapi.slice.resources.repo.GetStandoffTagByUUIDQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.*
@@ -510,7 +510,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       .mapError(msg => AssertionException(msg))
 
   private def getStandoffTagByUUID(uuid: UUID) = ZIO
-    .serviceWithZIO[TriplestoreService](_.query(Select(sparql.v2.txt.getStandoffTagByUUID(uuid))))
+    .serviceWithZIO[TriplestoreService](_.query(Select(GetStandoffTagByUUIDQuery.build(uuid))))
     .map(_.getColOrThrow("standoffTag").toSet)
 
   override val e2eSpec = suite("ResourceResponserV2")(
