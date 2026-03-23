@@ -13,10 +13,10 @@ import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.ontology.repo.IsOntologyUsedQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
@@ -68,12 +68,11 @@ final class OntologyTriplestoreHelpers(
    * @return the set of subjects that refer to the ontology or its entities.
    */
   def getSubjectsUsingOntology(ontology: ReadOntologyV2): Task[Set[IRI]] = {
-    val query = sparql.v2.txt
-      .isOntologyUsed(
-        ontologyNamedGraphIri = ontology.ontologyMetadata.ontologyIri,
-        classIris = ontology.classes.keySet,
-        propertyIris = ontology.properties.keySet,
-      )
+    val query = IsOntologyUsedQuery.build(
+      ontologyNamedGraphIri = ontology.ontologyMetadata.ontologyIri,
+      classIris = ontology.classes.keySet,
+      propertyIris = ontology.properties.keySet,
+    )
     triplestore.query(Select(query)).map(_.getCol("s").toSet)
   }
 }
