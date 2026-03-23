@@ -63,6 +63,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
 import org.knora.webapi.slice.resources.repo.GetAllResourcesInProjectPrequery
 import org.knora.webapi.slice.resources.repo.GetGraphDataQuery
+import org.knora.webapi.slice.resources.repo.GetResourceValueVersionHistoryQuery
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
@@ -1152,13 +1153,12 @@ final case class ResourcesResponderV2(
 
       // Get the version history of the resource's values.
 
-      historyRequestSparql = sparql.v2.txt
-                               .getResourceValueVersionHistory(
-                                 withDeletedResource = resourceHistoryRequest.withDeletedResource,
-                                 resourceIri = resourceHistoryRequest.resourceIri,
-                                 maybeStartDate = resourceHistoryRequest.startDate,
-                                 maybeEndDate = resourceHistoryRequest.endDate,
-                               )
+      historyRequestSparql = GetResourceValueVersionHistoryQuery.build(
+                               resourceIri = resourceHistoryRequest.resourceIri,
+                               withDeletedResource = resourceHistoryRequest.withDeletedResource,
+                               maybeStartDate = resourceHistoryRequest.startDate,
+                               maybeEndDate = resourceHistoryRequest.endDate,
+                             )
       valueHistoryResponse <- triplestore.query(Select(historyRequestSparql))
 
       valueHistoryEntries <-
