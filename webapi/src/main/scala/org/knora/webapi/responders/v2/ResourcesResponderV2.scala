@@ -61,6 +61,7 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
+import org.knora.webapi.slice.resources.repo.GetAllResourcesInProjectPrequery
 import org.knora.webapi.slice.resources.repo.GetGraphDataQuery
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
@@ -1358,8 +1359,7 @@ final case class ResourcesResponderV2(
       _ <- projectService.findById(projectId).someOrFail(NotFoundException(s"Project $projectId not found"))
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
-      prequery              = sparql.v2.txt.getAllResourcesInProjectPrequery(projectId.value)
-      sparqlSelectResponse <- triplestore.query(Select(prequery))
+      sparqlSelectResponse <- triplestore.query(Select(GetAllResourcesInProjectPrequery.build(projectId.value)))
       mainResourceIris      = sparqlSelectResponse.getColOrThrow("resource")
       // For each resource IRI return history events
       historyOfResourcesAsSeqOfFutures: Seq[Task[Seq[ResourceAndValueHistoryEvent]]] =
