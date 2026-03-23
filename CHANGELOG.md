@@ -1,5 +1,56 @@
 # Changelog
 
+## [35.3.0](https://github.com/dasch-swiss/dsp-api/compare/v35.2.0...v35.3.0) (2026-03-23)
+
+
+### Maintenances
+
+* **claude:** Move coding hints from dasch-claude-plugin into repo ([#3997](https://github.com/dasch-swiss/dsp-api/issues/3997)) ([0f85b6d](https://github.com/dasch-swiss/dsp-api/commit/0f85b6dcc3093f27c1036d17a83a9eccd011a636))
+* **jwt:** Replace jwt-scala library (DEV-6058) ([#4010](https://github.com/dasch-swiss/dsp-api/issues/4010)) ([c3587bd](https://github.com/dasch-swiss/dsp-api/commit/c3587bda5889142cf5655ccabf599984582b47d7))
+* Migrate getAllResourcesInProjectPrequery to rdf4j ([#4024](https://github.com/dasch-swiss/dsp-api/issues/4024)) ([d95ac30](https://github.com/dasch-swiss/dsp-api/commit/d95ac30d10661e71fc432ccde5e1c3cb909096fe))
+* Migrate getGraphData Twirl SPARQL template to rdf4j query builder (DEV-6130) ([#4022](https://github.com/dasch-swiss/dsp-api/issues/4022)) ([3ccad47](https://github.com/dasch-swiss/dsp-api/commit/3ccad474926af2ec8358b367f12597dff080c187))
+* Migrate getMapping Twirl template to rdf4j ([#4023](https://github.com/dasch-swiss/dsp-api/issues/4023)) ([4113c5b](https://github.com/dasch-swiss/dsp-api/commit/4113c5b18d35ab9bfd2480819378d478080e9e0e))
+* Migrate getResourcesByClassInProjectPrequery to rdf4j (DEV-6153) ([#4028](https://github.com/dasch-swiss/dsp-api/issues/4028)) ([054ecef](https://github.com/dasch-swiss/dsp-api/commit/054ecef3f060deda777548d27e95b93bccaad75c))
+* Migrate getStandoffTagByUUID to rdf4j (DEV-6135) ([#4025](https://github.com/dasch-swiss/dsp-api/issues/4025)) ([00b62eb](https://github.com/dasch-swiss/dsp-api/commit/00b62eb560105d96aaa880dba6f2eddb3bcd872d))
+* Migrate isOntologyUsed Twirl template to rdf4j (DEV-6152) ([#4027](https://github.com/dasch-swiss/dsp-api/issues/4027)) ([fdcd883](https://github.com/dasch-swiss/dsp-api/commit/fdcd883b862370e3e3c85234b2c80d8ff20a9e5e))
+* Patch dependency updates ([#4000](https://github.com/dasch-swiss/dsp-api/issues/4000)) ([e46ba15](https://github.com/dasch-swiss/dsp-api/commit/e46ba15b9245382c48da50b8e32740b96bc79d27))
+* Replace quill dependency with plain JDBC (DEV-6053) ([#4006](https://github.com/dasch-swiss/dsp-api/issues/4006)) ([191cf7a](https://github.com/dasch-swiss/dsp-api/commit/191cf7a0377687d9c900b63ea6e5fde61f9bf203))
+* upgrade Sipi to v4.0.0 ([#4021](https://github.com/dasch-swiss/dsp-api/issues/4021)) ([f45ae1c](https://github.com/dasch-swiss/dsp-api/commit/f45ae1c5d96fea30d46e130ef0ac1d0b0c94ad4f))
+
+
+### Documentation
+
+* **CLAUDE:** avoid "Knora" in human-readable text ([#4007](https://github.com/dasch-swiss/dsp-api/issues/4007)) ([638d020](https://github.com/dasch-swiss/dsp-api/commit/638d0209397098c57d0a2c3a26c64f26a68656ad))
+* direct external contributors to info@dasch.swiss ([#4019](https://github.com/dasch-swiss/dsp-api/issues/4019)) ([dd65b4d](https://github.com/dasch-swiss/dsp-api/commit/dd65b4d55e3feece0a1b72cbbfe3b2e24f0c6e8b))
+* rename dsp-das to dsp-app in learnings after repo rename ([#4013](https://github.com/dasch-swiss/dsp-api/issues/4013)) ([0b7e808](https://github.com/dasch-swiss/dsp-api/commit/0b7e80897b4d01788dab62d67bb64920971fc445))
+
+
+### Enhancements
+
+* Add SHACL validation to project import ([#4005](https://github.com/dasch-swiss/dsp-api/issues/4005)) ([512f91d](https://github.com/dasch-swiss/dsp-api/commit/512f91d82f3235928118a9652eac09c779cb1221))
+
+
+### Bug Fixes
+
+* **api:** add catch-all 500 error variant to tapir endpoint error outputs ([#4009](https://github.com/dasch-swiss/dsp-api/issues/4009)) ([c91c7bd](https://github.com/dasch-swiss/dsp-api/commit/c91c7bd30151ca8b333bb049cc9fbb5c0aa5a66c))
+* **ci:** add checkout step to Claude Code workflow ([#4014](https://github.com/dasch-swiss/dsp-api/issues/4014)) ([3ba9989](https://github.com/dasch-swiss/dsp-api/commit/3ba9989aa7757bfbac32551789d771016ee44174))
+* **export:** Add read timeout to streaming triplestore requests ([#4017](https://github.com/dasch-swiss/dsp-api/issues/4017)) ([618b25d](https://github.com/dasch-swiss/dsp-api/commit/618b25d0cbf4b11502be2fae34d95559ca728c99))
+* **export:** include footnotes in CSV resource download ([#4018](https://github.com/dasch-swiss/dsp-api/issues/4018)) ([2c70df3](https://github.com/dasch-swiss/dsp-api/commit/2c70df3c8b6bf8ff8640a4dee0f886297d6898f5))
+* **export:** include subclass instances in CSV export (DEV-5952) ([#4003](https://github.com/dasch-swiss/dsp-api/issues/4003)) ([f3e920d](https://github.com/dasch-swiss/dsp-api/commit/f3e920ddda9fafaf36212af9ecb698e42cc71f0d))
+* **exporting resource:** make withChildren recurse through all list descendants ([#4008](https://github.com/dasch-swiss/dsp-api/issues/4008)) ([609e9a4](https://github.com/dasch-swiss/dsp-api/commit/609e9a4b5995f029672b86f88238860cc6ef1cbf))
+* **migration-import:** Upload timeout and memory leaks ([#4020](https://github.com/dasch-swiss/dsp-api/issues/4020)) ([270dea4](https://github.com/dasch-swiss/dsp-api/commit/270dea4b1fd2b58eccafe6bbf9ef3dc95989c364))
+* **test:** increase default read timeout in TestApiClient to fix flaky E2E test ([#4011](https://github.com/dasch-swiss/dsp-api/issues/4011)) ([07cc866](https://github.com/dasch-swiss/dsp-api/commit/07cc8662738ca06731f899ad32aadb1ab2eb95dc))
+
+
+### Performance Improvements
+
+* **export:** Stream Fuseki HTTP responses to avoid multi-GB memory spikes ([#4012](https://github.com/dasch-swiss/dsp-api/issues/4012)) ([e0820a6](https://github.com/dasch-swiss/dsp-api/commit/e0820a68c87d9270aff78d813c2930d0684acce8))
+
+
+### Tests
+
+* **e2e:** Mark flaky custom IRI suite in AdminUsersEndpointsE2ESpec ([#4016](https://github.com/dasch-swiss/dsp-api/issues/4016)) ([2da7e40](https://github.com/dasch-swiss/dsp-api/commit/2da7e40c38370b67e79fa0ddb2f603055fe9d080))
+
 ## [35.2.0](https://github.com/dasch-swiss/dsp-api/compare/v35.1.0...v35.2.0) (2026-03-16)
 
 
