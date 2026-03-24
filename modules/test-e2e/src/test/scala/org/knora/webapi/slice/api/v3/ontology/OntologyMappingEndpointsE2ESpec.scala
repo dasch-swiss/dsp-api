@@ -13,10 +13,6 @@ import zio.test.*
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.api.v3.AddClassMappingsRequest
-import org.knora.webapi.slice.api.v3.AddPropertyMappingsRequest
-import org.knora.webapi.slice.api.v3.ClassMappingResponse
-import org.knora.webapi.slice.api.v3.PropertyMappingResponse
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 
