@@ -25,12 +25,14 @@ knora-base:OntologyShape
     """ ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path rdfs:label ;
     sh:minCount 1 ;
     sh:maxCount 5 ;
     sh:message "Project ontology must have between 1 and 5 rdfs:label" ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path knora-base:attachedToProject ;
     sh:hasValue <urn:placeholder:projectIri> ;
     sh:minCount 1 ;
@@ -38,6 +40,7 @@ knora-base:OntologyShape
     sh:message "Project ontology must be attached to exactly one project <urn:placeholder:projectIri>" ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path knora-base:lastModificationDate ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
@@ -61,6 +64,7 @@ knora-base:ResourceClassShape
     """ ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path rdfs:label ;
     sh:minCount 1 ;
     sh:maxCount 5 ;
@@ -87,6 +91,7 @@ knora-base:PropertyShape
     """ ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path rdfs:label ;
     sh:minCount 1 ;
     sh:maxCount 5 ;
