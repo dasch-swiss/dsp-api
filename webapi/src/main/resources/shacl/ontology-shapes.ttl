@@ -21,13 +21,13 @@ knora-base:OntologyLabelShapeUnique
   a sh:PropertyShape ;
   sh:path rdfs:label ;
   sh:uniqueLang true ;
-  sh:message "You may only have one label per language." .
+  sh:message "It is not permissible to have multiple labels with the same language tag." .
 
 knora-base:OntologyLabelSingleLine
   a sh:PropertyShape ;
   sh:path rdfs:label ;
   dash:singleLine true ;
-  sh:message "You may only have one label per language." .
+  sh:message "Labels may not contain newlines." .
 
 
 # Validates every project ontology (owl:Ontology, excluding system ontologies)
