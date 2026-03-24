@@ -57,7 +57,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
 
   private val ontologyNq =
     s"""<http://www.knora.org/ontology/9999/test> <$RdfType> <http://www.w3.org/2002/07/owl#Ontology> <http://www.knora.org/ontology/9999/test> .
-       |<http://www.knora.org/ontology/9999/test> <http://www.w3.org/2000/01/rdf-schema#label> "Test Ontology" <http://www.knora.org/ontology/9999/test> .
+       |<http://www.knora.org/ontology/9999/test> <http://www.w3.org/2000/01/rdf-schema#label> "Test Ontology"@en <http://www.knora.org/ontology/9999/test> .
        |<http://www.knora.org/ontology/9999/test> <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/9999> <http://www.knora.org/ontology/9999/test> .
        |<http://www.knora.org/ontology/9999/test> <http://www.knora.org/ontology/knora-base#lastModificationDate> "2024-01-01T00:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <http://www.knora.org/ontology/9999/test> .
        |""".stripMargin
