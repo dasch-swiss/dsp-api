@@ -13,8 +13,10 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIri
@@ -81,6 +83,11 @@ object ReadOntologyV2Builder {
       copy(ro = ro.copy(classes = ro.classes + (info.entityInfoContent.classIri.internal -> info)))
 
     def addClassInfo(infoBuilder: ReadClassInfoV2Builder.Builder): Builder = addClassInfo(infoBuilder.build)
+
+    def addPropertyInfo(info: ReadPropertyInfoV2): Builder =
+      copy(ro = ro.copy(properties = ro.properties + (info.entityInfoContent.propertyIri.internal -> info)))
+
+    def addPropertyInfo(infoBuilder: ReadPropertyInfoV2Builder.Builder): Builder = addPropertyInfo(infoBuilder.build)
 
     def assignToProject(projectIri: ProjectIri): Builder =
       copy(ro = ro.copy(ontologyMetadata = ro.ontologyMetadata.copy(projectIri = Some(projectIri))))
@@ -158,4 +165,15 @@ object ReadClassInfoV2Builder {
       ClassInfoContentV2(classIri.internal, ontologySchema = ApiV2Complex),
     )
   }
+}
+
+object ReadPropertyInfoV2Builder {
+
+  case class Builder(rpi: ReadPropertyInfoV2) {
+    def build: ReadPropertyInfoV2 = rpi
+  }
+
+  def builder(propertyIri: SmartIri): Builder = Builder(
+    ReadPropertyInfoV2(PropertyInfoContentV2(propertyIri.internal, ontologySchema = InternalSchema)),
+  )
 }

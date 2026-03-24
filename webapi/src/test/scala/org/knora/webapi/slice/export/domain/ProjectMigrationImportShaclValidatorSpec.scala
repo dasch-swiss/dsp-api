@@ -39,7 +39,7 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
 
   private val validOntologyNq =
     s"""<$OntologyGraph> <$RdfType> <$OwlOntology> <$OntologyGraph> .
-       |<$OntologyGraph> <$RdfsLabel> "Test Ontology" <$OntologyGraph> .
+       |<$OntologyGraph> <$RdfsLabel> "Test Ontology"@en <$OntologyGraph> .
        |<$OntologyGraph> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$OntologyGraph> .
        |<$OntologyGraph> <${KnoraBase}lastModificationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$OntologyGraph> .
        |""".stripMargin
@@ -119,6 +119,57 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
              |""".stripMargin
         ZIO.scoped {
           validate(nq).map(result => assertTrue(result.isRight))
+        }
+      },
+      test("accepts resource class with valid English label") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#ProjectClass_Good> <$RdfType> <$OwlClass> <$OntologyGraph> .
+             |<${OntologyGraph}#ProjectClass_Good> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+             |<${OntologyGraph}#ProjectClass_Good> <$RdfsLabel> "good label"@en <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isRight))
+        }
+      },
+      test("rejects resource class label with unsupported language tag") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#ProjectClass_WrongLang> <$RdfType> <$OwlClass> <$OntologyGraph> .
+             |<${OntologyGraph}#ProjectClass_WrongLang> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+             |<${OntologyGraph}#ProjectClass_WrongLang> <$RdfsLabel> "label catalan"@ca <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("rejects resource class label without language tag") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#ProjectClass_NoLang> <$RdfType> <$OwlClass> <$OntologyGraph> .
+             |<${OntologyGraph}#ProjectClass_NoLang> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+             |<${OntologyGraph}#ProjectClass_NoLang> <$RdfsLabel> "label string" <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("rejects resource class with duplicate labels for same language") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#ProjectClass_Duplicate> <$RdfType> <$OwlClass> <$OntologyGraph> .
+             |<${OntologyGraph}#ProjectClass_Duplicate> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+             |<${OntologyGraph}#ProjectClass_Duplicate> <$RdfsLabel> "label 1"@en <$OntologyGraph> .
+             |<${OntologyGraph}#ProjectClass_Duplicate> <$RdfsLabel> "label 2"@en <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("rejects resource class label containing a newline") {
+        val nq = validOntologyNq +
+          s"""<${OntologyGraph}#ProjectClass_MultiLine> <$RdfType> <$OwlClass> <$OntologyGraph> .
+             |<${OntologyGraph}#ProjectClass_MultiLine> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+             |<${OntologyGraph}#ProjectClass_MultiLine> <$RdfsLabel> "label\n    with newline"@en <$OntologyGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(nq).map(result => assertTrue(result.isLeft))
         }
       },
     ),
