@@ -55,6 +55,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.slice.resources.repo.GetResourcesByClassInProjectPrequery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -1074,16 +1075,15 @@ final case class SearchResponderV2Live(
           // at most one page of standoff per text value.
           val resourceRequestSparql =
             Construct(
-              sparql.v2.txt
-                .getResourcePropertiesAndValues(
-                  resourceIris = mainResourceIris,
-                  preview = false,
-                  withDeleted = false,
-                  queryAllNonStandoff = true,
-                  queryStandoff = queryStandoff,
-                  maybePropertyIri = None,
-                  maybeVersionDate = None,
-                ),
+              GetResourcePropertiesAndValuesQuery.build(
+                resourceIris = mainResourceIris,
+                preview = false,
+                withDeleted = false,
+                queryAllNonStandoff = true,
+                queryStandoff = queryStandoff,
+                maybePropertyIri = None,
+                maybeVersionDate = None,
+              ),
             )
 
           for {
