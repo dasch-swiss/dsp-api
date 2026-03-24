@@ -13,11 +13,6 @@ package object webapi {
   /**
    * The version of `knora-base` and of the other built-in ontologies that this version of Knora requires.
    * Must be the same as the object of `knora-base:ontologyVersion` in the `knora-base` ontology being used.
-   *
-   * NOTE: A v51 entry was introduced on feature/add-ontology-mapping-endpoints
-   * but was never merged to main and was never deployed to production. It has been removed here.
-   * Safe to deploy only to environments at v50 or below.
-   * If deployed to an environment at v51, RepositoryUpdater will call ZIO.die (crash on startup).
    */
   val KnoraBaseVersion: Int          = 51
   val KnoraBaseVersionString: String = s"$versionPrefix$KnoraBaseVersion"

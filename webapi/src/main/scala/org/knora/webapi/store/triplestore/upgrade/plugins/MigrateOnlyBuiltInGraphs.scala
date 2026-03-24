@@ -14,11 +14,6 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * An update plugin that itself does no migration itself.
  * Used for updates in which only the built-in named graphs have changed.
  * These will automatically be updated by the [[org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater]].
- *
- * Also used by RepositoryUpdater as the no-op fallback migration when the database version
- * already matches KnoraBaseVersion and no upgrade plugins need to run.
- * See RepositoryUpdater — the `if (plugins.isEmpty)` branch.
- * Do not delete: removing this class would cause a compile error in RepositoryUpdater.
  */
 class MigrateOnlyBuiltInGraphs extends UpgradePlugin {
   override def transform(model: RdfModel): Unit       = {}

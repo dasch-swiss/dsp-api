@@ -16,10 +16,6 @@ object RepositoryUpdatePlan {
 
   /**
    * Constructs list of all repository update plugins in chronological order.
-   *
-   * NOTE: A v51 plugin (MigrateOnlyBuiltInGraphs) was introduced on feature/add-ontology-mapping-endpoints
-   * but was never merged to main and was never deployed to production. It has been removed here.
-   * The highest version entry is v50. Do not add v51 unless deploying to an environment at v51.
    */
   def makePluginsForVersions: Seq[PluginForKnoraBaseVersion] =
     Seq(
