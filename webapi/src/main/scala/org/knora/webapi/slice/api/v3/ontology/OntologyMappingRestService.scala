@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.api.v3.ontology
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS as Rdf4jRDFS
 import zio.*
 
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
@@ -18,14 +17,15 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v3.*
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.SparqlIriSafety
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.AddMappingQuery
+import org.knora.webapi.slice.ontology.repo.MappingPredicate
 import org.knora.webapi.slice.ontology.repo.RemoveMappingQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
@@ -49,8 +49,8 @@ final class OntologyMappingRestService(
   def putClassMapping(
     user: User,
   )(
-    ontologyIriStr: String,
-    classIriStr: String,
+    ontologyIriDto: IriDto,
+    classIriDto: IriDto,
     request: AddClassMappingsRequest,
   ): IO[V3ErrorInfo, ClassMappingResponse] =
     for {
@@ -65,8 +65,8 @@ final class OntologyMappingRestService(
             BadRequest(s"'mappings' must contain at most $MaxMappingsPerRequest IRIs (got ${request.mappings.size})."),
           )
           .unless(request.mappings.size <= MaxMappingsPerRequest)
-      ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
-      classIri    <- iriConverter.asResourceClassIri(classIriStr).mapError(BadRequest(_))
+      ontologyIri <- iriConverter.asOntologyIriApiV2Complex(ontologyIriDto.value).mapError(BadRequest(_))
+      classIri    <- iriConverter.asResourceClassIriApiV2Complex(classIriDto.value).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
@@ -83,8 +83,9 @@ final class OntologyMappingRestService(
                                       s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}",
                                     ),
                                   )
-                    update <- AddMappingQuery.build(ontologyIri, classIri.smartIri, Rdf4jRDFS.SUBCLASSOF, mappings)
-                    _      <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                    update <-
+                      AddMappingQuery.build(ontologyIri, classIri.smartIri, MappingPredicate.SubClassOf, mappings)
+                    _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
                            .tapError(e =>
                              ZIO.logError(
                                s"PUT class mapping failed for $classIri in $ontologyIri: ${e.getMessage}",
@@ -98,11 +99,10 @@ final class OntologyMappingRestService(
   /** F2 — DELETE class mapping */
   def deleteClassMapping(
     user: User,
-  )(ontologyIriStr: String, classIriStr: String, mappingOpt: Option[String]): IO[V3ErrorInfo, ClassMappingResponse] =
+  )(ontologyIriDto: IriDto, classIriDto: IriDto, mappingIriDto: IriDto): IO[V3ErrorInfo, ClassMappingResponse] =
     for {
-      mappingStr  <- ZIO.fromOption(mappingOpt).mapError(_ => BadRequest("Missing required query parameter 'mapping'."))
-      ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
-      classIri    <- iriConverter.asResourceClassIri(classIriStr).mapError(BadRequest(_))
+      ontologyIri <- iriConverter.asOntologyIriApiV2Complex(ontologyIriDto.value).mapError(BadRequest(_))
+      classIri    <- iriConverter.asResourceClassIriApiV2Complex(classIriDto.value).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
@@ -112,9 +112,10 @@ final class OntologyMappingRestService(
                     _                   <- lookupClass(classIri, ontologyIri)
                     projectIris         <- projectOntologyIris
                     projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
-                    extIri              <- validateExternalIri(projectOntologyBases, mappingStr).mapError(BadRequest(_))
-                    update              <- RemoveMappingQuery.build(ontologyIri, classIri.smartIri, Rdf4jRDFS.SUBCLASSOF, extIri)
-                    _                   <- (triplestore.query(update) *> ontologyCache.refreshCache())
+                    extIri              <- validateExternalIri(projectOntologyBases, mappingIriDto.value).mapError(BadRequest(_))
+                    update              <-
+                      RemoveMappingQuery.build(ontologyIri, classIri.smartIri, MappingPredicate.SubClassOf, extIri)
+                    _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
                            .tapError(e =>
                              ZIO.logError(
                                s"DELETE class mapping failed for $classIri in $ontologyIri: ${e.getMessage}",
@@ -129,8 +130,8 @@ final class OntologyMappingRestService(
   def putPropertyMapping(
     user: User,
   )(
-    ontologyIriStr: String,
-    propertyIriStr: String,
+    ontologyIriDto: IriDto,
+    propertyIriDto: IriDto,
     request: AddPropertyMappingsRequest,
   ): IO[V3ErrorInfo, PropertyMappingResponse] =
     for {
@@ -145,8 +146,8 @@ final class OntologyMappingRestService(
             BadRequest(s"'mappings' must contain at most $MaxMappingsPerRequest IRIs (got ${request.mappings.size})."),
           )
           .unless(request.mappings.size <= MaxMappingsPerRequest)
-      ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
-      propertyIri <- iriConverter.asPropertyIri(propertyIriStr).mapError(BadRequest(_))
+      ontologyIri <- iriConverter.asOntologyIriApiV2Complex(ontologyIriDto.value).mapError(BadRequest(_))
+      propertyIri <- iriConverter.asPropertyIriApiV2Complex(propertyIriDto.value).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
@@ -166,7 +167,7 @@ final class OntologyMappingRestService(
                     // TODO DEV-5887: validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty).
                     // OWL DL disallows mapping an ObjectProperty to a DatatypeProperty. Deferred per PRD "same contract as F1".
                     update <-
-                      AddMappingQuery.build(ontologyIri, propertyIri.smartIri, Rdf4jRDFS.SUBPROPERTYOF, mappings)
+                      AddMappingQuery.build(ontologyIri, propertyIri.smartIri, MappingPredicate.SubPropertyOf, mappings)
                     _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
                            .tapError(e =>
                              ZIO.logError(
@@ -182,14 +183,13 @@ final class OntologyMappingRestService(
   def deletePropertyMapping(
     user: User,
   )(
-    ontologyIriStr: String,
-    propertyIriStr: String,
-    mappingOpt: Option[String],
+    ontologyIriDto: IriDto,
+    propertyIriDto: IriDto,
+    mappingIriDto: IriDto,
   ): IO[V3ErrorInfo, PropertyMappingResponse] =
     for {
-      mappingStr  <- ZIO.fromOption(mappingOpt).mapError(_ => BadRequest("Missing required query parameter 'mapping'."))
-      ontologyIri <- iriConverter.asOntologyIri(ontologyIriStr).mapError(BadRequest(_))
-      propertyIri <- iriConverter.asPropertyIri(propertyIriStr).mapError(BadRequest(_))
+      ontologyIri <- iriConverter.asOntologyIriApiV2Complex(ontologyIriDto.value).mapError(BadRequest(_))
+      propertyIri <- iriConverter.asPropertyIriApiV2Complex(propertyIriDto.value).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
@@ -199,9 +199,10 @@ final class OntologyMappingRestService(
                     _                   <- lookupProperty(propertyIri, ontologyIri)
                     projectIris         <- projectOntologyIris
                     projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
-                    extIri              <- validateExternalIri(projectOntologyBases, mappingStr).mapError(BadRequest(_))
+                    extIri              <- validateExternalIri(projectOntologyBases, mappingIriDto.value).mapError(BadRequest(_))
                     update              <-
-                      RemoveMappingQuery.build(ontologyIri, propertyIri.smartIri, Rdf4jRDFS.SUBPROPERTYOF, extIri)
+                      RemoveMappingQuery
+                        .build(ontologyIri, propertyIri.smartIri, MappingPredicate.SubPropertyOf, extIri)
                     _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
                            .tapError(e =>
                              ZIO.logError(
@@ -227,24 +228,15 @@ final class OntologyMappingRestService(
       cacheData.ontologies.keySet.filter(iri => !iri.isKnoraBuiltInDefinitionIri && !iri.isKnoraSharedDefinitionIri)
     }
 
-  private def validateExternalIri(projectOntologyBases: Set[String], iriStr: String): IO[String, SmartIri] = {
-    // Explicit IRIREF guard: reject characters that are illegal in SPARQL 1.1 IRIREF positions
-    // regardless of where they appear (path, query, fragment). The UrlValidator path-component
-    // regex blocks '{'/'}' in path segments but not in query components.
-    val forbiddenChar = SparqlIriSafety.findForbiddenChar(iriStr)
-    if forbiddenChar.isDefined then
-      ZIO.fail(s"Mapping IRI contains a forbidden character '${forbiddenChar.get}': $iriStr")
-    else {
-      // projectOntologyBases is pre-computed by the caller (once per request, not once per IRI).
-      iriConverter.asSmartIri(iriStr).mapError(_.getMessage).flatMap { iri =>
-        if iri.isKnoraOntologyIri || iri.isKnoraEntityIri then
-          ZIO.fail(s"Mapping IRI must be an external IRI, not a Knora-managed IRI: $iriStr")
-        else if isProjectOntologyIri(iri, projectOntologyBases) then
-          ZIO.fail(s"Mapping IRI belongs to a DSP project ontology and cannot be used as a mapping: $iriStr")
-        else ZIO.succeed(iri)
-      }
+  private def validateExternalIri(projectOntologyBases: Set[String], iriStr: String): IO[String, SmartIri] =
+    // projectOntologyBases is pre-computed by the caller (once per request, not once per IRI).
+    iriConverter.asSmartIri(iriStr).mapError(_.getMessage).flatMap { iri =>
+      if iri.isKnoraOntologyIri || iri.isKnoraEntityIri then
+        ZIO.fail(s"Mapping IRI must be an external IRI, not a Knora-managed IRI: $iriStr")
+      else if isProjectOntologyIri(iri, projectOntologyBases) then
+        ZIO.fail(s"Mapping IRI belongs to a DSP project ontology and cannot be used as a mapping: $iriStr")
+      else ZIO.succeed(iri)
     }
-  }
 
   private def isProjectOntologyIri(iri: SmartIri, projectOntologyBases: Set[String]): Boolean = {
     val iriStr = iri.toIri

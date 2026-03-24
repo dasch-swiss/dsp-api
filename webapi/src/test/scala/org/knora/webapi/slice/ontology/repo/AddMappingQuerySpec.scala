@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS
 import zio.*
 import zio.test.*
 
@@ -30,7 +29,7 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
         val knownInstant = java.time.Instant.parse("2026-01-01T00:00:00Z")
         for {
           _      <- TestClock.setTime(knownInstant)
-          update <- AddMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, List(externalIri1))
+          update <- AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(externalIri1))
         } yield assertTrue(
           update.sparql.contains("rdfs:subClassOf"),
           !update.sparql.contains("rdfs:subPropertyOf"),
@@ -42,7 +41,8 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
       },
       test("query contains all external IRIs when multiple class mappings are given") {
         for {
-          update <- AddMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, List(externalIri1, externalIri2))
+          update <-
+            AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(externalIri1, externalIri2))
         } yield assertTrue(
           update.sparql.contains("http://schema.org/Thing"),
           update.sparql.contains("http://purl.org/dc/terms/Agent"),
@@ -53,7 +53,7 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
     suite("rdfs:subPropertyOf predicate")(
       test("query uses rdfs:subPropertyOf (not subClassOf)") {
         for {
-          update <- AddMappingQuery.build(ontologyIri, propertyIri, RDFS.SUBPROPERTYOF, List(externalIri1))
+          update <- AddMappingQuery.build(ontologyIri, propertyIri, MappingPredicate.SubPropertyOf, List(externalIri1))
         } yield assertTrue(
           update.sparql.contains("rdfs:subPropertyOf"),
           !update.sparql.contains("rdfs:subClassOf"),
@@ -62,7 +62,8 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
       test("query contains all external IRIs when multiple property mappings are given") {
         val propIri2 = "http://schema.org/name".toSmartIri
         for {
-          update <- AddMappingQuery.build(ontologyIri, propertyIri, RDFS.SUBPROPERTYOF, List(externalIri1, propIri2))
+          update <- AddMappingQuery
+                      .build(ontologyIri, propertyIri, MappingPredicate.SubPropertyOf, List(externalIri1, propIri2))
         } yield assertTrue(
           update.sparql.contains("http://schema.org/Thing"),
           update.sparql.contains("http://schema.org/name"),
@@ -73,17 +74,17 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
     suite("common structural checks")(
       test("query uses OPTIONAL for the WHERE clause (idempotency)") {
         for {
-          update <- AddMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, List(externalIri1))
+          update <- AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(externalIri1))
         } yield assertTrue(update.sparql.contains("OPTIONAL"))
       },
       test("query targets the correct ontology graph") {
         for {
-          update <- AddMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, List(externalIri1))
+          update <- AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(externalIri1))
         } yield assertTrue(update.sparql.contains("http://www.knora.org/ontology/0001/anything"))
       },
       test("query output contains no unescaped injection-dangerous characters in IRI positions") {
         for {
-          update <- AddMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, List(externalIri1))
+          update <- AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(externalIri1))
         } yield {
           val sparql = update.sparql
           assertTrue(
@@ -96,30 +97,24 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
       test("query does not decode percent-encoded injection characters in IRI positions") {
         val encodedIri = "http://example.org/Thing%3Einjection".toSmartIri
         for {
-          update <- AddMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, List(encodedIri))
+          update <- AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(encodedIri))
         } yield assertTrue(
           !update.sparql.contains(">injection"),
           !update.sparql.contains("{injection"),
         )
       },
     ),
-    // ── Gate-3 note ───────────────────────────────────────────────────────────
-    // SmartIri percent-encodes raw '|', '}', and control characters before the
-    // builder sees them, so those chars cannot trigger requireSafeIriEffect via
-    // the normal SmartIri path.  The underlying predicate is unit-tested directly
-    // in SparqlIriSafetySpec.  Gate-1 service-level coverage is in
-    // OntologyMappingRestServiceSpec.
     suite("percent-encoded injection chars produce valid SPARQL output")(
       test("percent-encoded '|' (%7C) in mapping IRI succeeds (SmartIri encodes '|' to '%7C')") {
         val encodedIri = "http://example.org/Thing%7Cinjection".toSmartIri
         for {
-          exit <- AddMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, List(encodedIri)).exit
+          exit <- AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(encodedIri)).exit
         } yield assertTrue(exit.isSuccess)
       },
       test("percent-encoded '}' (%7D) in mapping IRI succeeds (SmartIri encodes '}' to '%7D')") {
         val encodedIri = "http://example.org/Thing%7Dinjection".toSmartIri
         for {
-          exit <- AddMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, List(encodedIri)).exit
+          exit <- AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(encodedIri)).exit
         } yield assertTrue(exit.isSuccess)
       },
     ),

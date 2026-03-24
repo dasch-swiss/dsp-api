@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS
 import zio.*
 import zio.test.*
 
@@ -28,7 +27,7 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
     suite("rdfs:subClassOf predicate")(
       test("query contains the subClassOf triple in the DELETE clause") {
         for {
-          update <- RemoveMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, externalIri)
+          update <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, externalIri)
         } yield assertTrue(
           update.sparql.contains("rdfs:subClassOf"),
           update.sparql.contains("http://schema.org/Thing"),
@@ -38,7 +37,7 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
         val knownInstant = java.time.Instant.parse("2026-01-01T00:00:00Z")
         for {
           _      <- TestClock.setTime(knownInstant)
-          update <- RemoveMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, externalIri)
+          update <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, externalIri)
         } yield assertTrue(
           update.sparql.contains("knora-base:lastModificationDate"),
           update.sparql.contains(knownInstant.toString),
@@ -48,7 +47,7 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
       },
       test("removed subClassOf triple does NOT appear in INSERT clause") {
         for {
-          update <- RemoveMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, externalIri)
+          update <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, externalIri)
         } yield {
           val insertSection = update.sparql.substring(update.sparql.indexOf("INSERT"))
           assertTrue(!insertSection.contains("rdfs:subClassOf"))
@@ -56,7 +55,7 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
       },
       test("removed triple is fully specified in DELETE (no variables for the subClassOf triple)") {
         for {
-          update <- RemoveMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, externalIri)
+          update <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, externalIri)
         } yield {
           val sparql        = update.sparql
           val deleteSection = sparql.substring(sparql.indexOf("DELETE"), sparql.indexOf("INSERT"))
@@ -72,7 +71,7 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
     suite("rdfs:subPropertyOf predicate")(
       test("query uses rdfs:subPropertyOf (not subClassOf)") {
         for {
-          update <- RemoveMappingQuery.build(ontologyIri, propertyIri, RDFS.SUBPROPERTYOF, propExtIri)
+          update <- RemoveMappingQuery.build(ontologyIri, propertyIri, MappingPredicate.SubPropertyOf, propExtIri)
         } yield assertTrue(
           update.sparql.contains("rdfs:subPropertyOf"),
           !update.sparql.contains("rdfs:subClassOf"),
@@ -80,7 +79,7 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
       },
       test("removed subPropertyOf triple does NOT appear in INSERT clause") {
         for {
-          update <- RemoveMappingQuery.build(ontologyIri, propertyIri, RDFS.SUBPROPERTYOF, propExtIri)
+          update <- RemoveMappingQuery.build(ontologyIri, propertyIri, MappingPredicate.SubPropertyOf, propExtIri)
         } yield {
           val insertSection = update.sparql.substring(update.sparql.indexOf("INSERT"))
           assertTrue(!insertSection.contains("rdfs:subPropertyOf"))
@@ -88,7 +87,7 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
       },
       test("removed triple is fully specified in DELETE (no variables for the subPropertyOf triple)") {
         for {
-          update <- RemoveMappingQuery.build(ontologyIri, propertyIri, RDFS.SUBPROPERTYOF, propExtIri)
+          update <- RemoveMappingQuery.build(ontologyIri, propertyIri, MappingPredicate.SubPropertyOf, propExtIri)
         } yield {
           val sparql        = update.sparql
           val deleteSection = sparql.substring(sparql.indexOf("DELETE"), sparql.indexOf("INSERT"))
@@ -104,32 +103,26 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
     suite("common structural checks")(
       test("query uses OPTIONAL in WHERE clause (idempotent on missing lastModificationDate)") {
         for {
-          update <- RemoveMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, externalIri)
+          update <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, externalIri)
         } yield assertTrue(update.sparql.contains("OPTIONAL"))
       },
       test("query targets the correct ontology graph") {
         for {
-          update <- RemoveMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, externalIri)
+          update <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, externalIri)
         } yield assertTrue(update.sparql.contains("http://www.knora.org/ontology/0001/anything"))
       },
     ),
-    // ── Gate-3 note ───────────────────────────────────────────────────────────
-    // SmartIri percent-encodes raw '|', '}', and control characters before the
-    // builder sees them, so those chars cannot trigger requireSafeIriEffect via
-    // the normal SmartIri path.  The underlying predicate is unit-tested directly
-    // in SparqlIriSafetySpec.  Gate-1 service-level coverage is in
-    // OntologyMappingRestServiceSpec.
     suite("percent-encoded injection chars produce valid SPARQL output")(
       test("percent-encoded '|' (%7C) in mapping IRI succeeds (SmartIri encodes '|' to '%7C')") {
         val encodedIri = "http://example.org/Thing%7Cinjection".toSmartIri
         for {
-          exit <- RemoveMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, encodedIri).exit
+          exit <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, encodedIri).exit
         } yield assertTrue(exit.isSuccess)
       },
       test("percent-encoded '}' (%7D) in mapping IRI succeeds (SmartIri encodes '}' to '%7D')") {
         val encodedIri = "http://example.org/Thing%7Dinjection".toSmartIri
         for {
-          exit <- RemoveMappingQuery.build(ontologyIri, classIri, RDFS.SUBCLASSOF, encodedIri).exit
+          exit <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, encodedIri).exit
         } yield assertTrue(exit.isSuccess)
       },
     ),

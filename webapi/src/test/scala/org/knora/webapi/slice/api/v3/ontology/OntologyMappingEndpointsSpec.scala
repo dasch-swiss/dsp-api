@@ -90,7 +90,6 @@ object OntologyMappingEndpointsSpec extends ZIOSpecDefault {
       )
     },
     test("DELETE class mapping endpoint exposes 'mapping' as a query parameter") {
-      // query[Option[String]] — absent param yields None; the service layer validates presence
       val show = endpoints.deleteClassMapping.endpoint.show
       assertTrue(show.contains("mapping"))
     },

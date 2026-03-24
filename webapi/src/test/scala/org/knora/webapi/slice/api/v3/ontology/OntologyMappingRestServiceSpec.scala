@@ -17,6 +17,7 @@ import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
+import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v3.*
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.service.IriConverter
@@ -33,27 +34,32 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
 
-  // Test IRIs (internal schema)
-  private val anythingOntologyIri = IriTestConstants.Anything.Ontology.value
-  private val anythingClassIri    = IriTestConstants.Anything.Class.Thing.value
-  private val anythingPropertyIri = IriTestConstants.Anything.Property.hasOtherThing.value
-  private val testProjectIri      = IriTestConstants.Project.TestProject
+  // Internal-schema IRIs for cache setup
+  private val anythingOntologyIriInternal = IriTestConstants.Anything.Ontology.value
+  private val anythingClassIriInternal    = IriTestConstants.Anything.Class.Thing.value
+  private val anythingPropertyIriInternal = IriTestConstants.Anything.Property.hasOtherThing.value
+  private val testProjectIri              = IriTestConstants.Project.TestProject
+
+  // Complex-schema (ApiV2Complex) IRIs for REST service input
+  private val anythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2"
+  private val anythingClassIri    = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
+  private val anythingPropertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing"
 
   // A user that is system admin — passes any project auth check
   private val adminUser = SystemUser
 
   // Cache data: ontology without a project (system/built-in ontology)
   private val systemOntologyCacheData = OntologyCacheDataBuilder.builder
-    .addOntology(ReadOntologyV2Builder.builder(anythingOntologyIri.smartIri))
+    .addOntology(ReadOntologyV2Builder.builder(anythingOntologyIriInternal.smartIri))
     .build
 
   // Cache data: ontology assigned to testProjectIri + a class and a property in that ontology
   private val projectOntologyCacheData = OntologyCacheDataBuilder.builder
     .addOntology(
       ReadOntologyV2Builder
-        .builder(anythingOntologyIri.smartIri)
-        .addClassInfo(ReadClassInfoV2Builder.builder(anythingClassIri.smartIri))
-        .addPropertyInfo(ReadPropertyInfoV2Builder.builder(anythingPropertyIri.smartIri))
+        .builder(anythingOntologyIriInternal.smartIri)
+        .addClassInfo(ReadClassInfoV2Builder.builder(anythingClassIriInternal.smartIri))
+        .addPropertyInfo(ReadPropertyInfoV2Builder.builder(anythingPropertyIriInternal.smartIri))
         .assignToProject(testProjectIri),
     )
     .build
@@ -65,7 +71,7 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
     mappings: List[String],
   ) = ZIO
     .serviceWithZIO[OntologyMappingRestService](
-      _.putClassMapping(adminUser)(ontologyIri, classIri, AddClassMappingsRequest(mappings)),
+      _.putClassMapping(adminUser)(IriDto(ontologyIri), IriDto(classIri), AddClassMappingsRequest(mappings)),
     )
     .exit
 
@@ -73,10 +79,10 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
   private def deleteClass(
     ontologyIri: String,
     classIri: String,
-    mappingOpt: Option[String],
+    mapping: String,
   ) = ZIO
     .serviceWithZIO[OntologyMappingRestService](
-      _.deleteClassMapping(adminUser)(ontologyIri, classIri, mappingOpt),
+      _.deleteClassMapping(adminUser)(IriDto(ontologyIri), IriDto(classIri), IriDto(mapping)),
     )
     .exit
 
@@ -87,7 +93,7 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
     mappings: List[String],
   ) = ZIO
     .serviceWithZIO[OntologyMappingRestService](
-      _.putPropertyMapping(adminUser)(ontologyIri, propertyIri, AddPropertyMappingsRequest(mappings)),
+      _.putPropertyMapping(adminUser)(IriDto(ontologyIri), IriDto(propertyIri), AddPropertyMappingsRequest(mappings)),
     )
     .exit
 
@@ -95,10 +101,10 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
   private def deleteProperty(
     ontologyIri: String,
     propertyIri: String,
-    mappingOpt: Option[String],
+    mapping: String,
   ) = ZIO
     .serviceWithZIO[OntologyMappingRestService](
-      _.deletePropertyMapping(adminUser)(ontologyIri, propertyIri, mappingOpt),
+      _.deletePropertyMapping(adminUser)(IriDto(ontologyIri), IriDto(propertyIri), IriDto(mapping)),
     )
     .exit
 
@@ -128,18 +134,6 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           for {
             result <- putProperty(anythingOntologyIri, anythingPropertyIri, tooMany)
           } yield assertTrue(result == Exit.fail(BadRequest("'mappings' must contain at most 100 IRIs (got 101).")))
-        },
-      ),
-      suite("input validation — missing DELETE query parameter")(
-        test("deleteClassMapping with absent mapping param returns BadRequest") {
-          for {
-            result <- deleteClass(anythingOntologyIri, anythingClassIri, None)
-          } yield assertTrue(result == Exit.fail(BadRequest("Missing required query parameter 'mapping'.")))
-        },
-        test("deletePropertyMapping with absent mapping param returns BadRequest") {
-          for {
-            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, None)
-          } yield assertTrue(result == Exit.fail(BadRequest("Missing required query parameter 'mapping'.")))
         },
       ),
       suite("authorization — system ontology cannot be modified")(
@@ -178,13 +172,13 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
         test("deleteClassMapping returns Forbidden for an ontology with no projectIri") {
           for {
             _      <- OntologyCacheFake.set(systemOntologyCacheData)
-            result <- deleteClass(anythingOntologyIri, anythingClassIri, Some("https://schema.org/Thing"))
+            result <- deleteClass(anythingOntologyIri, anythingClassIri, "https://schema.org/Thing")
           } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify a system ontology.")))
         },
         test("deletePropertyMapping returns Forbidden for an ontology with no projectIri") {
           for {
             _      <- OntologyCacheFake.set(systemOntologyCacheData)
-            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, Some("https://schema.org/Thing"))
+            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, "https://schema.org/Thing")
           } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify a system ontology.")))
         },
       ),
@@ -192,13 +186,13 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
         test("deleteClassMapping returns Forbidden when the ontology's project cannot be found") {
           for {
             _      <- OntologyCacheFake.set(projectOntologyCacheData)
-            result <- deleteClass(anythingOntologyIri, anythingClassIri, Some("https://schema.org/Thing"))
+            result <- deleteClass(anythingOntologyIri, anythingClassIri, "https://schema.org/Thing")
           } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
         },
         test("deletePropertyMapping returns Forbidden when the ontology's project cannot be found") {
           for {
             _      <- OntologyCacheFake.set(projectOntologyCacheData)
-            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, Some("https://schema.org/Thing"))
+            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, "https://schema.org/Thing")
           } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
         },
       ),
@@ -210,7 +204,7 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
             _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
                    _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
                  )
-            result <- deleteClass(anythingOntologyIri, anythingClassIri, Some(knoraIri))
+            result <- deleteClass(anythingOntologyIri, anythingClassIri, knoraIri)
           } yield assertTrue(
             result match {
               case Exit.Failure(cause) =>
@@ -229,52 +223,12 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
             _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
                    _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
                  )
-            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, Some(knoraIri))
+            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, knoraIri)
           } yield assertTrue(
             result match {
               case Exit.Failure(cause) =>
                 cause.failureOption match {
                   case Some(BadRequest(msg, _)) => msg.contains("Mapping IRI must be an external IRI")
-                  case _                        => false
-                }
-              case _ => false
-            },
-          )
-        },
-      ),
-      suite("IRI validation — forbidden SPARQL characters rejected by Gate 1")(
-        test("putClassMapping rejects a mapping IRI containing '|'") {
-          val pipeIri = "http://schema.org/Thing|injection"
-          for {
-            _ <- OntologyCacheFake.set(projectOntologyCacheData)
-            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
-                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
-                 )
-            result <- putClass(anythingOntologyIri, anythingClassIri, List(pipeIri))
-          } yield assertTrue(
-            result match {
-              case Exit.Failure(cause) =>
-                cause.failureOption match {
-                  case Some(BadRequest(msg, _)) => msg.contains("forbidden character")
-                  case _                        => false
-                }
-              case _ => false
-            },
-          )
-        },
-        test("putClassMapping rejects a mapping IRI containing a control character") {
-          val ctrlIri = "http://schema.org/Thing\u0001ctrl"
-          for {
-            _ <- OntologyCacheFake.set(projectOntologyCacheData)
-            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
-                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
-                 )
-            result <- putClass(anythingOntologyIri, anythingClassIri, List(ctrlIri))
-          } yield assertTrue(
-            result match {
-              case Exit.Failure(cause) =>
-                cause.failureOption match {
-                  case Some(BadRequest(msg, _)) => msg.contains("forbidden character")
                   case _                        => false
                 }
               case _ => false

@@ -10,6 +10,7 @@ import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 import zio.*
 
+import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v3.*
 
 final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelper {
@@ -29,7 +30,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       ),
     )
     .put
-    .in(ontologiesBase / path[String]("ontologyIri") / "classes" / path[String]("classIri") / "mapping")
+    .in(ontologiesBase / path[IriDto].name("ontologyIri") / "classes" / path[IriDto].name("classIri") / "mapping")
     .in(jsonBody[AddClassMappingsRequest])
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[ClassMappingResponse])
@@ -51,15 +52,8 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       ),
     )
     .delete
-    .in(ontologiesBase / path[String]("ontologyIri") / "classes" / path[String]("classIri") / "mapping")
-    .in(
-      query[Option[String]]("mapping").description(
-        "Required. The external IRI to remove from rdfs:subClassOf (URL-encoded). " +
-          "This parameter is declared as optional in the OpenAPI schema because Tapir uses Option[String] to " +
-          "allow a typed 400 response for missing values instead of a generic framework 400. " +
-          "Sending a request without this parameter returns HTTP 400 with a v3-shaped error body.",
-      ),
-    )
+    .in(ontologiesBase / path[IriDto].name("ontologyIri") / "classes" / path[IriDto].name("classIri") / "mapping")
+    .in(query[IriDto]("mapping").description("The external IRI to remove from rdfs:subClassOf. Must be URL-encoded."))
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[ClassMappingResponse])
     .tags(mappingsTag)
@@ -80,7 +74,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       ),
     )
     .put
-    .in(ontologiesBase / path[String]("ontologyIri") / "properties" / path[String]("propertyIri") / "mapping")
+    .in(ontologiesBase / path[IriDto].name("ontologyIri") / "properties" / path[IriDto].name("propertyIri") / "mapping")
     .in(jsonBody[AddPropertyMappingsRequest])
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[PropertyMappingResponse])
@@ -102,14 +96,9 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       ),
     )
     .delete
-    .in(ontologiesBase / path[String]("ontologyIri") / "properties" / path[String]("propertyIri") / "mapping")
+    .in(ontologiesBase / path[IriDto].name("ontologyIri") / "properties" / path[IriDto].name("propertyIri") / "mapping")
     .in(
-      query[Option[String]]("mapping").description(
-        "Required. The external IRI to remove from rdfs:subPropertyOf (URL-encoded). " +
-          "This parameter is declared as optional in the OpenAPI schema because Tapir uses Option[String] to " +
-          "allow a typed 400 response for missing values instead of a generic framework 400. " +
-          "Sending a request without this parameter returns HTTP 400 with a v3-shaped error body.",
-      ),
+      query[IriDto]("mapping").description("The external IRI to remove from rdfs:subPropertyOf. Must be URL-encoded."),
     )
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[PropertyMappingResponse])
