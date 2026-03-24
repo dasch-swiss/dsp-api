@@ -70,7 +70,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
 
   override val e2eSpec: Spec[env, Any] = suite("OntologyMapping E2E")(
     suite("PUT class mapping")(
-      test("C-1 happy path: adds a mapping and returns updated subClassOf") {
+      test("happy path: adds a mapping and returns updated subClassOf") {
         for {
           response <- TestApiClient.putJson[ClassMappingResponse, AddClassMappingsRequest](
                         putClassMappingUri(anythingOntIri, thingClassIri),
@@ -89,7 +89,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           result.ontologyIri.nonEmpty,
         )
       },
-      test("C-2 idempotent: applying the same mapping twice returns 200 both times") {
+      test("idempotent: applying the same mapping twice returns 200 both times") {
         for {
           r1 <- TestApiClient.putJson[ClassMappingResponse, AddClassMappingsRequest](
                   putClassMappingUri(anythingOntIri, thingClassIri),
@@ -110,7 +110,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
                )
         } yield assertTrue(r1.code == StatusCode.Ok, r2.code == StatusCode.Ok)
       },
-      test("C-3 empty mappings list returns 400") {
+      test("empty mappings list returns 400") {
         TestApiClient
           .putJson[ClassMappingResponse, AddClassMappingsRequest](
             putClassMappingUri(anythingOntIri, thingClassIri),
@@ -120,7 +120,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert400)
           .map(body => assertTrue(body.contains("at least one")))
       },
-      test("C-4 Knora IRI in mappings returns 400") {
+      test("Knora IRI in mappings returns 400") {
         TestApiClient
           .putJson[ClassMappingResponse, AddClassMappingsRequest](
             putClassMappingUri(anythingOntIri, thingClassIri),
@@ -130,7 +130,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert400)
           .map(body => assertTrue(body.contains("external IRI")))
       },
-      test("C-5 ontology not found returns 404") {
+      test("ontology not found returns 404") {
         TestApiClient
           .putJson[ClassMappingResponse, AddClassMappingsRequest](
             putClassMappingUri(unknownOntIri, s"$unknownOntIri#Thing"),
@@ -140,7 +140,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert404)
           .map(body => assertTrue(body.nonEmpty))
       },
-      test("C-6 class not found in ontology returns 404") {
+      test("class not found in ontology returns 404") {
         TestApiClient
           .putJson[ClassMappingResponse, AddClassMappingsRequest](
             putClassMappingUri(anythingOntIri, unknownClassIri),
@@ -150,7 +150,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert404)
           .map(body => assertTrue(body.nonEmpty))
       },
-      test("C-7 user without project admin rights returns 403") {
+      test("user without project admin rights returns 403") {
         TestApiClient
           .putJson[ClassMappingResponse, AddClassMappingsRequest](
             putClassMappingUri(anythingOntIri, thingClassIri),
@@ -163,7 +163,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
 
     // -----------------------------------------------------------------------
     suite("DELETE class mapping")(
-      test("C-30 happy path: removes a mapping and it disappears from subClassOf") {
+      test("happy path: removes a mapping and it disappears from subClassOf") {
         for {
           _ <- TestApiClient
                  .putJson[ClassMappingResponse, AddClassMappingsRequest](
@@ -179,7 +179,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           result <- deleteResp.assert200
         } yield assertTrue(!result.subClassOf.contains(extSchemaOrg))
       },
-      test("C-31 idempotent: deleting an absent mapping returns 200") {
+      test("idempotent: deleting an absent mapping returns 200") {
         TestApiClient
           .deleteJson[ClassMappingResponse](
             deleteClassMappingUri(anythingOntIri, thingClassIri, extSchemaOrg),
@@ -188,7 +188,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert200)
           .as(assertCompletes)
       },
-      test("C-32 missing 'mapping' query param returns 400") {
+      test("missing 'mapping' query param returns 400") {
         TestApiClient
           .deleteJson[ClassMappingResponse](
             uri"/v3/ontologies/$anythingOntIri/classes/$thingClassIri/mapping",
@@ -197,7 +197,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert400)
           .map(body => assertTrue(body.contains("mapping")))
       },
-      test("C-33 Knora IRI as mapping param returns 400") {
+      test("Knora IRI as mapping param returns 400") {
         TestApiClient
           .deleteJson[ClassMappingResponse](
             deleteClassMappingUri(anythingOntIri, thingClassIri, "http://www.knora.org/ontology/0001/anything#Thing"),
@@ -206,7 +206,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert400)
           .map(body => assertTrue(body.contains("external IRI")))
       },
-      test("C-34 ontology not found returns 404") {
+      test("ontology not found returns 404") {
         TestApiClient
           .deleteJson[ClassMappingResponse](
             deleteClassMappingUri(unknownOntIri, s"$unknownOntIri#Thing", extSchemaOrg),
@@ -215,7 +215,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert404)
           .map(body => assertTrue(body.nonEmpty))
       },
-      test("C-35 class not found in ontology returns 404") {
+      test("class not found in ontology returns 404") {
         TestApiClient
           .deleteJson[ClassMappingResponse](
             deleteClassMappingUri(anythingOntIri, unknownClassIri, extSchemaOrg),
@@ -224,7 +224,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert404)
           .map(body => assertTrue(body.nonEmpty))
       },
-      test("C-36 user without project admin rights returns 403") {
+      test("user without project admin rights returns 403") {
         TestApiClient
           .deleteJson[ClassMappingResponse](
             deleteClassMappingUri(anythingOntIri, thingClassIri, extSchemaOrg),
@@ -236,7 +236,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
 
     // -----------------------------------------------------------------------
     suite("PUT property mapping")(
-      test("P-1 happy path: adds a mapping and returns updated subPropertyOf") {
+      test("happy path: adds a mapping and returns updated subPropertyOf") {
         for {
           response <- TestApiClient.putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
                         putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
@@ -255,7 +255,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           result.ontologyIri.nonEmpty,
         )
       },
-      test("P-2 empty mappings list returns 400") {
+      test("empty mappings list returns 400") {
         TestApiClient
           .putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
             putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
@@ -265,7 +265,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert400)
           .map(body => assertTrue(body.contains("at least one")))
       },
-      test("P-3 Knora IRI in mappings returns 400") {
+      test("Knora IRI in mappings returns 400") {
         TestApiClient
           .putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
             putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
@@ -275,7 +275,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert400)
           .map(body => assertTrue(body.contains("external IRI")))
       },
-      test("P-4 ontology not found returns 404") {
+      test("ontology not found returns 404") {
         TestApiClient
           .putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
             putPropertyMappingUri(unknownOntIri, s"$unknownOntIri#hasInteger"),
@@ -285,7 +285,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert404)
           .map(body => assertTrue(body.nonEmpty))
       },
-      test("P-5 property not found returns 404") {
+      test("property not found returns 404") {
         TestApiClient
           .putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
             putPropertyMappingUri(anythingOntIri, unknownPropIri),
@@ -295,7 +295,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert404)
           .map(body => assertTrue(body.nonEmpty))
       },
-      test("P-6 user without project admin rights returns 403") {
+      test("user without project admin rights returns 403") {
         TestApiClient
           .putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
             putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
@@ -304,7 +304,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           )
           .map(r => assertTrue(r.code == StatusCode.Forbidden))
       },
-      test("P-7 PUT property mapping is idempotent") {
+      test("PUT property mapping is idempotent") {
         for {
           r1 <- TestApiClient.putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
                   putPropertyMappingUri(anythingOntIri, hasIntegerPropIri),
@@ -334,7 +334,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
 
     // -----------------------------------------------------------------------
     suite("DELETE property mapping")(
-      test("P-20 happy path: removes a mapping and it disappears from subPropertyOf") {
+      test("happy path: removes a mapping and it disappears from subPropertyOf") {
         for {
           _ <- TestApiClient
                  .putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
@@ -350,7 +350,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           result <- deleteResp.assert200
         } yield assertTrue(!result.subPropertyOf.contains(extSchemaOrgName))
       },
-      test("P-21 idempotent: deleting an absent mapping returns 200") {
+      test("idempotent: deleting an absent mapping returns 200") {
         TestApiClient
           .deleteJson[PropertyMappingResponse](
             deletePropertyMappingUri(anythingOntIri, hasIntegerPropIri, extSchemaOrgName),
@@ -359,7 +359,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert200)
           .as(assertCompletes)
       },
-      test("P-22 missing 'mapping' query param returns 400") {
+      test("missing 'mapping' query param returns 400") {
         TestApiClient
           .deleteJson[PropertyMappingResponse](
             uri"/v3/ontologies/$anythingOntIri/properties/$hasIntegerPropIri/mapping",
@@ -368,7 +368,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert400)
           .map(body => assertTrue(body.contains("mapping")))
       },
-      test("P-23 Knora IRI as mapping param returns 400") {
+      test("Knora IRI as mapping param returns 400") {
         TestApiClient
           .deleteJson[PropertyMappingResponse](
             deletePropertyMappingUri(
@@ -381,7 +381,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert400)
           .map(body => assertTrue(body.contains("external IRI")))
       },
-      test("P-24 ontology not found returns 404") {
+      test("ontology not found returns 404") {
         TestApiClient
           .deleteJson[PropertyMappingResponse](
             deletePropertyMappingUri(unknownOntIri, s"$unknownOntIri#hasInteger", extSchemaOrgName),
@@ -390,7 +390,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert404)
           .map(body => assertTrue(body.nonEmpty))
       },
-      test("P-25 property not found returns 404") {
+      test("property not found returns 404") {
         TestApiClient
           .deleteJson[PropertyMappingResponse](
             deletePropertyMappingUri(anythingOntIri, unknownPropIri, extSchemaOrgName),
@@ -399,7 +399,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert404)
           .map(body => assertTrue(body.nonEmpty))
       },
-      test("P-26 user without project admin rights returns 403") {
+      test("user without project admin rights returns 403") {
         TestApiClient
           .deleteJson[PropertyMappingResponse](
             deletePropertyMappingUri(anythingOntIri, hasIntegerPropIri, extSchemaOrgName),
