@@ -27,17 +27,20 @@ knora-base:OntologyShape
   sh:property [
     sh:path rdfs:label ;
     sh:minCount 1 ;
-    sh:message "Project ontology must have at least one rdfs:label" ;
+    sh:maxCount 5 ;
+    sh:message "Project ontology must have between 1 and 5 rdfs:label" ;
   ] ;
   sh:property [
     sh:path knora-base:attachedToProject ;
     sh:hasValue <urn:placeholder:projectIri> ;
+    sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:message "Project ontology must be attached to exactly one project <urn:placeholder:projectIri>" ;
   ] ;
   sh:property [
     sh:path knora-base:lastModificationDate ;
     sh:minCount 1 ;
+    sh:maxCount 1 ;
     sh:datatype xsd:dateTime ;
     sh:message "Project ontology must have knora-base:lastModificationDate of type xsd:dateTime" ;
   ] .
@@ -60,7 +63,7 @@ knora-base:ResourceClassShape
   sh:property [
     sh:path rdfs:label ;
     sh:minCount 1 ;
-    sh:message "Resource class must have at least one rdfs:label" ;
+    sh:message "Resource class must have between 1 and 5 rdfs:label" ;
   ] .
 
 # Validates every project-specific subproperty of knora-base:hasValue or knora-base:hasLinkTo
@@ -85,5 +88,5 @@ knora-base:PropertyShape
   sh:property [
     sh:path rdfs:label ;
     sh:minCount 1 ;
-    sh:message "Property must have at least one rdfs:label" ;
+    sh:message "Property must have between 1 and 5 rdfs:label" ;
   ] .
