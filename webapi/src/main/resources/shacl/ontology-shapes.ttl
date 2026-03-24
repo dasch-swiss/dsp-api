@@ -10,13 +10,18 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 
 
-knora-base:OntologyLabelShape
+knora-base:OntologyLabelShapeLanguages
   a sh:PropertyShape ;
   sh:path rdfs:label ;
-  sh:datatype rdf:langString ;
-  sh:uniqueLang true ;
   sh:languageIn ( "en" "de" "fr" "it" "rm" ) ;
-  sh:message "The label must have one of the following language tags: en, de, fr, it, rm. Additionally you may only have one label per language." .
+  sh:message "The label must have one of the following language tags: en, de, fr, it, rm." .
+
+
+knora-base:OntologyLabelShapeUnique
+  a sh:PropertyShape ;
+  sh:path rdfs:label ;
+  sh:uniqueLang true ;
+  sh:message "You may only have one label per language." .
 
 
 # Validates every project ontology (owl:Ontology, excluding system ontologies)
@@ -35,7 +40,7 @@ knora-base:OntologyShape
       }
     """ ;
   ] ;
-  sh:property knora-base:OntologyLabelShape ;
+  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
@@ -75,7 +80,7 @@ knora-base:ResourceClassShape
       }
     """ ;
   ] ;
-  sh:property knora-base:OntologyLabelShape ;
+  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
@@ -103,7 +108,7 @@ knora-base:PropertyShape
       }
     """ ;
   ] ;
-  sh:property knora-base:OntologyLabelShape ;
+  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
