@@ -54,7 +54,6 @@ final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends Endpoint
     .withUser(
       oneOf(
         notFoundVariant(project_not_found),
-        // badRequestVariant,
       ),
     )
     .post
