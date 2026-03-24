@@ -19,7 +19,7 @@ import org.knora.webapi.slice.security.AuthenticatorError
 
 object OntologyMappingEndpointsSpec extends ZIOSpecDefault {
 
-  // Stub authenticator — routing tests do not exercise security logic.
+  // Stub authenticator -- routing tests do not exercise security logic.
   // All authenticate methods fail immediately; only the endpoint metadata (method, path) is under test.
   private val stubAuthenticator: Authenticator = new Authenticator {
     def calculateCookieName(): String                                                         = "stub"

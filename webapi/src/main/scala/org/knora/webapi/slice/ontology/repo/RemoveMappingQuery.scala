@@ -25,12 +25,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  * Pass [[MappingPredicate.SubClassOf]] for class mappings
  * or [[MappingPredicate.SubPropertyOf]] for property mappings.
  *
- * Idempotency: SPARQL 1.1 §3.1.3 — deleting a triple that is not present is a no-op.
+ * Idempotency: SPARQL 1.1 section3.1.3 -- deleting a triple that is not present is a no-op.
  * The OPTIONAL in WHERE makes the query produce one solution even if lastModificationDate is
  * absent, so the lastModificationDate rotation always fires.
  *
  * Note: lastModificationDate is rotated even when the mapping triple was not present
- * (no-op deletion). This is intentional — it keeps the SPARQL pattern uniform and avoids
+ * (no-op deletion). This is intentional -- it keeps the SPARQL pattern uniform and avoids
  * a read-before-write.
  *
  * Primary validation: IriDto ensures IRI syntax, SmartIri construction validates RFC 3987 structure

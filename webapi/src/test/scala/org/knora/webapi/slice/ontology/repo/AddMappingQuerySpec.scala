@@ -23,7 +23,7 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
   private val externalIri2 = "http://purl.org/dc/terms/Agent".toSmartIri
 
   override def spec: Spec[TestEnvironment, Any] = suite("AddMappingQuerySpec")(
-    // ── SUBCLASSOF (class mappings) ───────────────────────────────────────────
+    // -- SUBCLASSOF (class mappings) -------------------------------------------
     suite("rdfs:subClassOf predicate")(
       test("query contains rdfs:subClassOf in the INSERT clause") {
         val knownInstant = java.time.Instant.parse("2026-01-01T00:00:00Z")
@@ -49,7 +49,7 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
         )
       },
     ),
-    // ── SUBPROPERTYOF (property mappings) ────────────────────────────────────
+    // -- SUBPROPERTYOF (property mappings) ------------------------------------
     suite("rdfs:subPropertyOf predicate")(
       test("query uses rdfs:subPropertyOf (not subClassOf)") {
         for {
@@ -70,7 +70,7 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
         )
       },
     ),
-    // ── Common structural checks ──────────────────────────────────────────────
+    // -- Common structural checks ----------------------------------------------
     suite("common structural checks")(
       test("query uses OPTIONAL for the WHERE clause (idempotency)") {
         for {

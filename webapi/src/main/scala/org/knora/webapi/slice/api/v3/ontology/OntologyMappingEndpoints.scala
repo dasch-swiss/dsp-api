@@ -34,7 +34,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     .tags(mappingsTag)
     .description(
       "Adds rdfs:subClassOf triples from the given class to the listed external IRIs. " +
-        "Existing external super-class mappings are not removed — use DELETE first to replace them.",
+        "Existing external super-class mappings are not removed - use DELETE first to replace them.",
     )
 
   /** DELETE class mapping: remove a single rdfs:subClassOf triple to an external IRI */
@@ -72,7 +72,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     .tags(mappingsTag)
     .description(
       "Adds rdfs:subPropertyOf triples from the given property to the listed external IRIs. " +
-        "Existing external super-property mappings are not removed — use DELETE first to replace them.",
+        "Existing external super-property mappings are not removed - use DELETE first to replace them.",
     )
 
   /** DELETE property mapping: remove a single rdfs:subPropertyOf triple to an external IRI */

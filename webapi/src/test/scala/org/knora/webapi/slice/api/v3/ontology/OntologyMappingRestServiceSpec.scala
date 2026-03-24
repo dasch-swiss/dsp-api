@@ -45,7 +45,7 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
   private val anythingClassIri    = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
   private val anythingPropertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing"
 
-  // A user that is system admin — passes any project auth check
+  // A user that is system admin -- passes any project auth check
   private val adminUser = SystemUser
 
   // Cache data: ontology without a project (system/built-in ontology)
@@ -110,7 +110,7 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment, Any] =
     suite("OntologyMappingRestService")(
-      suite("input validation — empty mappings list")(
+      suite("input validation -- empty mappings list")(
         test("putClassMapping rejects empty list") {
           for {
             result <- putClass(anythingOntologyIri, anythingClassIri, Nil)
@@ -122,7 +122,7 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           } yield assertTrue(result == Exit.fail(BadRequest("'mappings' must contain at least one IRI.")))
         },
       ),
-      suite("input validation — mappings list exceeds limit")(
+      suite("input validation -- mappings list exceeds limit")(
         test("putClassMapping rejects more than 100 IRIs") {
           val tooMany = (1 to 101).map(i => s"https://schema.org/Thing$i").toList
           for {
@@ -136,7 +136,7 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           } yield assertTrue(result == Exit.fail(BadRequest("'mappings' must contain at most 100 IRIs (got 101).")))
         },
       ),
-      suite("authorization — system ontology cannot be modified")(
+      suite("authorization -- system ontology cannot be modified")(
         test("putClassMapping returns Forbidden for an ontology with no projectIri") {
           for {
             _ <-
@@ -152,23 +152,23 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify a system ontology.")))
         },
       ),
-      suite("authorization — project not found")(
+      suite("authorization -- project not found")(
         test("putClassMapping returns Forbidden when the ontology's project cannot be found") {
           for {
             _ <- OntologyCacheFake.set(projectOntologyCacheData)
-            // Project repo is empty — findById returns None
+            // Project repo is empty -- findById returns None
             result <- putClass(anythingOntologyIri, anythingClassIri, List("https://schema.org/Thing"))
           } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
         },
         test("putPropertyMapping returns Forbidden when the ontology's project cannot be found") {
           for {
             _ <- OntologyCacheFake.set(projectOntologyCacheData)
-            // Project repo is empty — findById returns None
+            // Project repo is empty -- findById returns None
             result <- putProperty(anythingOntologyIri, anythingPropertyIri, List("https://schema.org/Thing"))
           } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
         },
       ),
-      suite("authorization — system ontology cannot be modified (DELETE)")(
+      suite("authorization -- system ontology cannot be modified (DELETE)")(
         test("deleteClassMapping returns Forbidden for an ontology with no projectIri") {
           for {
             _      <- OntologyCacheFake.set(systemOntologyCacheData)
@@ -182,7 +182,7 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify a system ontology.")))
         },
       ),
-      suite("authorization — project not found (DELETE)")(
+      suite("authorization -- project not found (DELETE)")(
         test("deleteClassMapping returns Forbidden when the ontology's project cannot be found") {
           for {
             _      <- OntologyCacheFake.set(projectOntologyCacheData)
@@ -196,7 +196,7 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
         },
       ),
-      suite("IRI validation — Knora IRI rejected by DELETE")(
+      suite("IRI validation -- Knora IRI rejected by DELETE")(
         test("deleteClassMapping rejects a Knora entity IRI as mapping") {
           val knoraIri = "http://www.knora.org/ontology/knora-base#TextValue"
           for {
@@ -236,7 +236,7 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           )
         },
       ),
-      suite("IRI validation — Knora IRI must not be used as a mapping target")(
+      suite("IRI validation -- Knora IRI must not be used as a mapping target")(
         test("putClassMapping rejects a Knora entity IRI as mapping") {
           val knoraIri = "http://www.knora.org/ontology/knora-base#TextValue"
           for {

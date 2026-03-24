@@ -23,7 +23,7 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
   private val propExtIri  = "http://purl.org/dc/terms/title".toSmartIri
 
   override def spec: Spec[TestEnvironment, Any] = suite("RemoveMappingQuerySpec")(
-    // ── SUBCLASSOF (class mappings) ───────────────────────────────────────────
+    // -- SUBCLASSOF (class mappings) -------------------------------------------
     suite("rdfs:subClassOf predicate")(
       test("query contains the subClassOf triple in the DELETE clause") {
         for {
@@ -67,7 +67,7 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
         }
       },
     ),
-    // ── SUBPROPERTYOF (property mappings) ────────────────────────────────────
+    // -- SUBPROPERTYOF (property mappings) ------------------------------------
     suite("rdfs:subPropertyOf predicate")(
       test("query uses rdfs:subPropertyOf (not subClassOf)") {
         for {
@@ -99,7 +99,7 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
         }
       },
     ),
-    // ── Common structural checks ──────────────────────────────────────────────
+    // -- Common structural checks ----------------------------------------------
     suite("common structural checks")(
       test("query uses OPTIONAL in WHERE clause (idempotent on missing lastModificationDate)") {
         for {

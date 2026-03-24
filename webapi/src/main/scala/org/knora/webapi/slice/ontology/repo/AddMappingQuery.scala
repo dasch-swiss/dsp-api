@@ -25,7 +25,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  * Pass [[MappingPredicate.SubClassOf]] for class mappings
  * or [[MappingPredicate.SubPropertyOf]] for property mappings.
  *
- * The INSERT is idempotent — re-inserting an existing triple is a no-op per SPARQL 1.1.
+ * The INSERT is idempotent -- re-inserting an existing triple is a no-op per SPARQL 1.1.
  *
  * The WHERE clause uses OPTIONAL so the query always produces one solution even when the
  * ontology has no existing lastModificationDate.
