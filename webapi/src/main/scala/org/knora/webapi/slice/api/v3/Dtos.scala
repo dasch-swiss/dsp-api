@@ -89,7 +89,7 @@ object AddPropertyMappingsRequest {
 }
 
 /**
- * V3 response for PUT/DELETE class mapping endpoints (F1, F2).
+ * V3 response for PUT/DELETE class mapping endpoints.
  *
  * `subClassOf` lists all current super-class IRIs in API v2 complex schema form; order is unspecified.
  * `lastModificationDate` is always updated on write, even for no-op operations.
@@ -108,13 +108,10 @@ object ClassMappingResponse {
 }
 
 /**
- * V3 response for PUT/DELETE property mapping endpoints (F3, F4).
+ * V3 response for PUT/DELETE property mapping endpoints.
  *
  * `subPropertyOf` lists all current super-property IRIs in API v2 complex schema form; order is unspecified.
  * `lastModificationDate` is always updated on write, even for no-op operations.
- *
- * Note: OWL DL property type compatibility (ObjectProperty vs DatatypeProperty) validation is
- * intentionally out of scope for v1 (PRD: "same contract as F1"). Deferred to a future iteration.
  */
 final case class PropertyMappingResponse(
   propertyIri: String,

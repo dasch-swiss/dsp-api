@@ -45,7 +45,7 @@ final class OntologyMappingRestService(
   private val rdfsLabel   = Rdfs.Label.toSmartIri
   private val rdfsComment = Rdfs.Comment.toSmartIri
 
-  /** F1 — PUT class mapping */
+  /** PUT class mapping */
   def putClassMapping(
     user: User,
   )(
@@ -96,7 +96,7 @@ final class OntologyMappingRestService(
                   yield r)
     } yield response
 
-  /** F2 — DELETE class mapping */
+  /** DELETE class mapping */
   def deleteClassMapping(
     user: User,
   )(ontologyIriDto: IriDto, classIriDto: IriDto, mappingIriDto: IriDto): IO[V3ErrorInfo, ClassMappingResponse] =
@@ -126,7 +126,7 @@ final class OntologyMappingRestService(
                   yield r)
     } yield response
 
-  /** F3 — PUT property mapping */
+  /** PUT property mapping */
   def putPropertyMapping(
     user: User,
   )(
@@ -165,7 +165,7 @@ final class OntologyMappingRestService(
                                     ),
                                   )
                     // TODO DEV-5887: validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty).
-                    // OWL DL disallows mapping an ObjectProperty to a DatatypeProperty. Deferred per PRD "same contract as F1".
+                    // TODO DEV-5887: validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty).
                     update <-
                       AddMappingQuery.build(ontologyIri, propertyIri.smartIri, MappingPredicate.SubPropertyOf, mappings)
                     _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
@@ -179,7 +179,7 @@ final class OntologyMappingRestService(
                   yield r)
     } yield response
 
-  /** F4 — DELETE property mapping */
+  /** DELETE property mapping */
   def deletePropertyMapping(
     user: User,
   )(

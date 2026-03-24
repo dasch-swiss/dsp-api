@@ -22,8 +22,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  *  1. Removes the `predicate` triple from `subjectIri` to `externalObjectIri` (if present).
  *  2. Rotates the ontology's lastModificationDate to the current clock instant.
  *
- * Pass [[MappingPredicate.SubClassOf]] for class mappings (F2)
- * or [[MappingPredicate.SubPropertyOf]] for property mappings (F4).
+ * Pass [[MappingPredicate.SubClassOf]] for class mappings
+ * or [[MappingPredicate.SubPropertyOf]] for property mappings.
  *
  * Idempotency: SPARQL 1.1 §3.1.3 — deleting a triple that is not present is a no-op.
  * The OPTIONAL in WHERE makes the query produce one solution even if lastModificationDate is

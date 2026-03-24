@@ -22,8 +22,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  *  1. Rotates the ontology's lastModificationDate to the current clock instant.
  *  2. Adds `predicate` triples from `subjectIri` to each of the given external IRIs.
  *
- * Pass [[MappingPredicate.SubClassOf]] for class mappings (F1)
- * or [[MappingPredicate.SubPropertyOf]] for property mappings (F3).
+ * Pass [[MappingPredicate.SubClassOf]] for class mappings
+ * or [[MappingPredicate.SubPropertyOf]] for property mappings.
  *
  * The INSERT is idempotent — re-inserting an existing triple is a no-op per SPARQL 1.1.
  *

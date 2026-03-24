@@ -21,11 +21,12 @@ import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 
 /**
- * E2E tests for the four ontology-mapping endpoints:
- *   F1  PUT    /v3/ontologies/{ontologyIri}/classes/{classIri}/mapping
- *   F2  DELETE /v3/ontologies/{ontologyIri}/classes/{classIri}/mapping?mapping=...
- *   F3  PUT    /v3/ontologies/{ontologyIri}/properties/{propertyIri}/mapping
- *   F4  DELETE /v3/ontologies/{ontologyIri}/properties/{propertyIri}/mapping?mapping=...
+ * E2E tests for the ontology-mapping endpoints:
+ *
+ *   PUT    /v3/ontologies/{ontologyIri}/classes/{classIri}/mapping
+ *   DELETE /v3/ontologies/{ontologyIri}/classes/{classIri}/mapping?mapping=...
+ *   PUT    /v3/ontologies/{ontologyIri}/properties/{propertyIri}/mapping
+ *   DELETE /v3/ontologies/{ontologyIri}/properties/{propertyIri}/mapping?mapping=...
  *
  * sttp's uri interpolator URL-encodes each interpolated value as a path segment or query value,
  * so IRI strings (which contain '/', '#' etc.) are transmitted correctly.
@@ -68,10 +69,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
   // -------------------------------------------------------------------------
 
   override val e2eSpec: Spec[env, Any] = suite("OntologyMapping E2E")(
-    // -----------------------------------------------------------------------
-    // F1 -- PUT class mapping
-    // -----------------------------------------------------------------------
-    suite("F1 PUT class mapping")(
+    suite("PUT class mapping")(
       test("C-1 happy path: adds a mapping and returns updated subClassOf") {
         for {
           response <- TestApiClient.putJson[ClassMappingResponse, AddClassMappingsRequest](
@@ -164,9 +162,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
     ),
 
     // -----------------------------------------------------------------------
-    // F2 -- DELETE class mapping
-    // -----------------------------------------------------------------------
-    suite("F2 DELETE class mapping")(
+    suite("DELETE class mapping")(
       test("C-30 happy path: removes a mapping and it disappears from subClassOf") {
         for {
           _ <- TestApiClient
@@ -239,9 +235,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
     ),
 
     // -----------------------------------------------------------------------
-    // F3 -- PUT property mapping
-    // -----------------------------------------------------------------------
-    suite("F3 PUT property mapping")(
+    suite("PUT property mapping")(
       test("P-1 happy path: adds a mapping and returns updated subPropertyOf") {
         for {
           response <- TestApiClient.putJson[PropertyMappingResponse, AddPropertyMappingsRequest](
@@ -339,9 +333,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
     ),
 
     // -----------------------------------------------------------------------
-    // F4 -- DELETE property mapping
-    // -----------------------------------------------------------------------
-    suite("F4 DELETE property mapping")(
+    suite("DELETE property mapping")(
       test("P-20 happy path: removes a mapping and it disappears from subPropertyOf") {
         for {
           _ <- TestApiClient

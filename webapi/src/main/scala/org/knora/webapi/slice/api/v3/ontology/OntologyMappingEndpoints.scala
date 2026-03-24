@@ -18,7 +18,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
   private val ontologiesBase = ApiV3.basePath / "ontologies"
   private val mappingsTag    = List("Ontology Mappings")
 
-  /** F1 — PUT class mapping: add/replace rdfs:subClassOf triples pointing to external IRIs */
+  /** PUT class mapping: add/replace rdfs:subClassOf triples pointing to external IRIs */
   val putClassMapping = base
     .secured(
       oneOf(
@@ -40,7 +40,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
         "Existing external super-class mappings are not removed — use DELETE first to replace them.",
     )
 
-  /** F2 — DELETE class mapping: remove a single rdfs:subClassOf triple to an external IRI */
+  /** DELETE class mapping: remove a single rdfs:subClassOf triple to an external IRI */
   val deleteClassMapping = base
     .secured(
       oneOf(
@@ -62,7 +62,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
         "Idempotent: deleting an absent triple is a no-op.",
     )
 
-  /** F3 — PUT property mapping: add/replace rdfs:subPropertyOf triples pointing to external IRIs */
+  /** PUT property mapping: add/replace rdfs:subPropertyOf triples pointing to external IRIs */
   val putPropertyMapping = base
     .secured(
       oneOf(
@@ -84,7 +84,7 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
         "Existing external super-property mappings are not removed — use DELETE first to replace them.",
     )
 
-  /** F4 — DELETE property mapping: remove a single rdfs:subPropertyOf triple to an external IRI */
+  /** DELETE property mapping: remove a single rdfs:subPropertyOf triple to an external IRI */
   val deletePropertyMapping = base
     .secured(
       oneOf(
