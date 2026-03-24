@@ -15,12 +15,12 @@ knora-base:OntologyShape
     a sh:SPARQLTarget ;
     sh:select """
       PREFIX owl:  <http://www.w3.org/2002/07/owl#>
-      SELECT ?this
+      SELECT $this
       WHERE {
-        ?this a owl:Ontology .
-        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
-        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/salsah-gui"))
-        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/standoff"))
+        $this a owl:Ontology .
+        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/knora-"))
+        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/salsah-gui"))
+        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/standoff"))
       }
     """ ;
   ] ;
@@ -53,16 +53,17 @@ knora-base:ResourceClassShape
     sh:select """
       PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-      SELECT ?this
+      SELECT $this
       WHERE {
-        ?this rdfs:subClassOf+ knora-base:Resource .
-        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
+        $this rdfs:subClassOf+ knora-base:Resource .
+        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/knora-"))
       }
     """ ;
   ] ;
   sh:property [
     sh:path rdfs:label ;
     sh:minCount 1 ;
+    sh:maxCount 5 ;
     sh:message "Resource class must have between 1 and 5 rdfs:label" ;
   ] .
 
@@ -74,19 +75,20 @@ knora-base:PropertyShape
     sh:select """
       PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-      SELECT ?this
+      SELECT $this
       WHERE {
         {
-          ?this rdfs:subPropertyOf+ knora-base:hasValue .
+          $this rdfs:subPropertyOf+ knora-base:hasValue .
         } UNION {
-          ?this rdfs:subPropertyOf+ knora-base:hasLinkTo .
+          $this rdfs:subPropertyOf+ knora-base:hasLinkTo .
         }
-        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
+        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/knora-"))
       }
     """ ;
   ] ;
   sh:property [
     sh:path rdfs:label ;
     sh:minCount 1 ;
+    sh:maxCount 5 ;
     sh:message "Property must have between 1 and 5 rdfs:label" ;
   ] .
