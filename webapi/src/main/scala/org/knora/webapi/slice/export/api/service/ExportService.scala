@@ -23,15 +23,22 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoA
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagStringAttributeV2
+import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v3.`export`.LegalInfo
+import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -63,6 +70,69 @@ final case class ExportService(
   private val footnoteTagIri: SmartIri         = OntologyConstants.Standoff.StandoffFootnoteTag.toSmartIri
   private val footnoteContentPropIri: SmartIri = OntologyConstants.Standoff.StandoffFootnoteTagHasContent.toSmartIri
 
+  def exportResourcesOai(
+    project: KnoraProject,
+    requestingUser: User,
+  ): Task[String] = {
+    import zio.json.*
+
+    given StringFormatter = sf
+
+    for {
+      resourceIris  <- findResources.findResources(project, None)
+      readResources <- readResources.readResourcesSequencePar(
+                         resourceIris = resourceIris.map(_.toString),
+                         targetSchema = ApiV2Complex,
+                         requestingUser = requestingUser,
+                         preview = false,
+                         withDeleted = false,
+                         skipRetrievalChecks = true,
+                       )
+      descriptionProp <- findDescriptionProperty(project)
+
+      records = readResources.resources.toList.map { r =>
+                  val description = descriptionProp.flatMap(r.values.get(_).flatMap(_.headOption))
+                  MetadataRecord(
+                    id = r.resourceIri.toString,
+                    pid = r.resourceIri.toSmartIri.fromResourceIriToArkUrl(),
+                    label = Map("en" -> r.label),
+                    accessRights = "Full Open Access",
+                    legalInfo = LegalInfo.publicDomain,
+                    howToCite = r.label,
+                    publisher = "DaSCH",
+                    source = None,
+                    description = description.map(v => Map("en" -> v.valueContent.valueHasString)),
+                    dateCreated = Some(r.creationDate.toString),
+                    dateModified = r.lastModificationDate.map(_.toString),
+                    datePublished = Some(r.creationDate.toString),
+                    typeOfData = typeOfDataOf(r),
+                    size = None,
+                    keywords = List.empty,
+                  )
+                }
+    } yield records.toJsonPretty
+  }
+
+  private def findDescriptionProperty(project: KnoraProject): Task[Option[SmartIri]] =
+    (project.shortcode.value.toUpperCase() match {
+      case "0803" => Some("http://www.knora.org/ontology/0803/incunabula#description")
+      case "081C" => Some("http://www.knora.org/ontology/081C/hdm#hasDescription")
+      case "0868" => Some("http://www.knora.org/ontology/0868/SolarEclipses#hasDescription")
+      case "1612" => Some("http://www.knora.org/ontology/1612/Data#TextShort")
+      case _      => None
+    }).map {
+      iriConverter.asInternalSmartIri(_).map(Some(_))
+    }.getOrElse(ZIO.none)
+
+  private def typeOfDataOf(r: ReadResourceV2): Option[String] =
+    r.values.values.flatten.map(_.valueContent).collectFirst {
+      case _: StillImageFileValueContentV2 | _: StillImageExternalFileValueContentV2 => "Image"
+      case _: MovingImageFileValueContentV2                                          => "Audiovisual"
+      case _: AudioFileValueContentV2                                                => "Sound"
+      case _: TextFileValueContentV2                                                 => "Text"
+      case _: TextValueContentV2                                                     => "Text"
+    }
+
   def exportResources(
     project: KnoraProject,
     classIri: ResourceClassIri,
@@ -73,7 +143,7 @@ final case class ExportService(
     includeArkUrls: Boolean,
   ): Task[ExportedCsv] =
     for {
-      resourceIris  <- findResources.findResources(project, classIri).map(_.map(_.toString))
+      resourceIris  <- findResources.findResourcesByClass(project, classIri).map(_.map(_.toString))
       readResources <- readResources.readResourcesSequencePar(
                          resourceIris = resourceIris,
                          targetSchema = ApiV2Complex,

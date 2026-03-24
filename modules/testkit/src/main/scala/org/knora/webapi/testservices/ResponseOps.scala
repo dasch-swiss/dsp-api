@@ -31,6 +31,13 @@ object ResponseOps {
           ZIO.fail(ResponseError("Expected 400 Bad Request but got a successful response"))
         case _ => ZIO.fail(ResponseError.from(StatusCode.BadRequest, r))
 
+    def assert401: IO[ResponseError, String] =
+      (r.body, r.code) match
+        case (Left(error), StatusCode.Unauthorized) => ZIO.succeed(error)
+        case (Right(_), StatusCode.Unauthorized)    =>
+          ZIO.fail(ResponseError("Expected 401 Unauthorized but got a successful response"))
+        case _ => ZIO.fail(ResponseError.from(StatusCode.Unauthorized, r))
+
     def assert404: IO[ResponseError, String] =
       (r.body, r.code) match
         case (Left(error), StatusCode.NotFound) => ZIO.succeed(error)

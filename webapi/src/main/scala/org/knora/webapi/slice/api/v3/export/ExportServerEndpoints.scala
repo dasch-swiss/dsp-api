@@ -12,7 +12,10 @@ import org.knora.webapi.slice.api.v3.V3BaseEndpoint.EndpointT
 final class ExportServerEndpoints(endpoints: ExportEndpoints, restService: ExportRestService) {
 
   val serverEndpoints: List[EndpointT] =
-    List(endpoints.postExportResources.serverLogic(restService.exportResources))
+    List(
+      endpoints.postExportResources.serverLogic(restService.exportResources),
+      endpoints.postExportResourcesOai.serverLogic(restService.exportResourcesOai),
+    )
 }
 
 object ExportServerEndpoints {

@@ -3,10 +3,31 @@
 # - urn:placeholder:projectIri  →  the IRI of the project being imported
 
 @prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix dash:       <http://datashapes.org/dash#> .
 @prefix owl:        <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+
+knora-base:OntologyLabelShapeLanguages
+  a sh:PropertyShape ;
+  sh:path rdfs:label ;
+  sh:languageIn ( "en" "de" "fr" "it" "rm" ) ;
+  sh:message "The label must have one of the following language tags: en, de, fr, it, rm." .
+
+knora-base:OntologyLabelShapeUnique
+  a sh:PropertyShape ;
+  sh:path rdfs:label ;
+  sh:uniqueLang true ;
+  sh:message "It is not permissible to have multiple labels with the same language tag." .
+
+knora-base:OntologyLabelSingleLine
+  a sh:PropertyShape ;
+  sh:path rdfs:label ;
+  dash:singleLine true ;
+  sh:message "Labels may not contain newlines." .
+
 
 # Validates every project ontology (owl:Ontology, excluding system ontologies)
 knora-base:OntologyShape
@@ -15,29 +36,36 @@ knora-base:OntologyShape
     a sh:SPARQLTarget ;
     sh:select """
       PREFIX owl:  <http://www.w3.org/2002/07/owl#>
-      SELECT ?this
+      SELECT $this
       WHERE {
-        ?this a owl:Ontology .
-        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
-        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/salsah-gui"))
-        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/standoff"))
+        $this a owl:Ontology .
+        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/knora-"))
+        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/salsah-gui"))
+        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/standoff"))
       }
     """ ;
   ] ;
+  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique , knora-base:OntologyLabelSingleLine ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path rdfs:label ;
     sh:minCount 1 ;
-    sh:message "Project ontology must have at least one rdfs:label" ;
+    sh:maxCount 5 ;
+    sh:message "Project ontology must have between 1 and 5 rdfs:label" ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path knora-base:attachedToProject ;
     sh:hasValue <urn:placeholder:projectIri> ;
+    sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:message "Project ontology must be attached to exactly one project <urn:placeholder:projectIri>" ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path knora-base:lastModificationDate ;
     sh:minCount 1 ;
+    sh:maxCount 1 ;
     sh:datatype xsd:dateTime ;
     sh:message "Project ontology must have knora-base:lastModificationDate of type xsd:dateTime" ;
   ] .
@@ -50,17 +78,20 @@ knora-base:ResourceClassShape
     sh:select """
       PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-      SELECT ?this
+      SELECT $this
       WHERE {
-        ?this rdfs:subClassOf+ knora-base:Resource .
-        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
+        $this rdfs:subClassOf+ knora-base:Resource .
+        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/knora-"))
       }
     """ ;
   ] ;
+  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique , knora-base:OntologyLabelSingleLine ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path rdfs:label ;
     sh:minCount 1 ;
-    sh:message "Resource class must have at least one rdfs:label" ;
+    sh:maxCount 5 ;
+    sh:message "Resource class must have between 1 and 5 rdfs:label" ;
   ] .
 
 # Validates every project-specific subproperty of knora-base:hasValue or knora-base:hasLinkTo
@@ -71,19 +102,22 @@ knora-base:PropertyShape
     sh:select """
       PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-      SELECT ?this
+      SELECT $this
       WHERE {
         {
-          ?this rdfs:subPropertyOf+ knora-base:hasValue .
+          $this rdfs:subPropertyOf+ knora-base:hasValue .
         } UNION {
-          ?this rdfs:subPropertyOf+ knora-base:hasLinkTo .
+          $this rdfs:subPropertyOf+ knora-base:hasLinkTo .
         }
-        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
+        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/knora-"))
       }
     """ ;
   ] ;
+  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique , knora-base:OntologyLabelSingleLine ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path rdfs:label ;
     sh:minCount 1 ;
-    sh:message "Property must have at least one rdfs:label" ;
+    sh:maxCount 5 ;
+    sh:message "Property must have between 1 and 5 rdfs:label" ;
   ] .

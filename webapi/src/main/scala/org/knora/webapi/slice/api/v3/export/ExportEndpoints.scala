@@ -15,6 +15,7 @@ import zio.ZLayer
 
 import java.nio.charset.StandardCharsets
 
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.EndpointHelper
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
@@ -49,6 +50,20 @@ final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends Endpoint
     .out(stringBodyAnyFormat(Codec.string.format(ExportEndpoints.Csv()), StandardCharsets.UTF_8))
     .out(header[MediaType](HeaderNames.ContentType))
     .out(header[String]("Content-Disposition"))
+
+  val postExportResourcesOai = baseEndpoints
+    .withUser(
+      oneOf(
+        notFoundVariant(project_not_found),
+      ),
+    )
+    .post
+    .in(ApiV3.basePath / "export" / "resources" / "oai")
+    .description(
+      "Export resources to CSV format. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
+    .in(jsonBody[ExportRequestOai].example(ExportRequestOai(shortcode = Shortcode.unsafeFrom("0803"))))
+    .out(stringBody)
 }
 
 object ExportEndpoints {
