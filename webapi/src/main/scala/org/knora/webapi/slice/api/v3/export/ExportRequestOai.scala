@@ -7,11 +7,13 @@ package org.knora.webapi.slice.api.v3.`export`
 
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 final case class ExportRequestOai(
-  shortcode: String,
+  shortcode: Shortcode,
 )
 
 object ExportRequestOai {
+  import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec.shortcode
   implicit val codec: JsonCodec[ExportRequestOai] = DeriveJsonCodec.gen[ExportRequestOai]
 }

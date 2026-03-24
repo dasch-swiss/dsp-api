@@ -19,6 +19,7 @@ import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.EndpointHelper
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 import org.knora.webapi.slice.api.v3.V3ErrorCode.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends EndpointHelper {
 
@@ -61,7 +62,7 @@ final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends Endpoint
     .description(
       "Export resources to CSV format. Publicly accessible. Requires appropriate object access permissions on the resources.",
     )
-    .in(jsonBody[ExportRequestOai].example(ExportRequestOai(shortcode = "0803")))
+    .in(jsonBody[ExportRequestOai].example(ExportRequestOai(shortcode = Shortcode.unsafeFrom("0803"))))
     .out(stringBody)
 }
 

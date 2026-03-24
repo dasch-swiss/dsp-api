@@ -8,7 +8,6 @@ package org.knora.webapi.slice.api.v3.`export`
 import sttp.model.MediaType
 import zio.*
 
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.*
@@ -64,10 +63,12 @@ final class ExportRestService(
     request: ExportRequestOai,
   ): IO[V3ErrorInfo, String] =
     (for {
-      _         <- authorizer.ensureSystemAdmin(user)
-      shortcode <- ZIO.fromEither(Shortcode.from(request.shortcode)).mapError(BadRequest(_))
-      project   <- projectService.findByShortcode(shortcode).orDie.someOrFail(NotFound.byShortcode(shortcode.value))
-      out       <- exportService.exportResourcesOai(project, user).orDie
+      _       <- authorizer.ensureSystemAdmin(user)
+      project <- projectService
+                   .findByShortcode(request.shortcode)
+                   .orDie
+                   .someOrFail(NotFound.byShortcode(request.shortcode.value))
+      out <- exportService.exportResourcesOai(project, user).orDie
     } yield out)
 }
 
