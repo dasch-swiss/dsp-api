@@ -15,11 +15,11 @@ import zio.ZLayer
 
 import java.nio.charset.StandardCharsets
 
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.EndpointHelper
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 import org.knora.webapi.slice.api.v3.V3ErrorCode.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends EndpointHelper {
 
