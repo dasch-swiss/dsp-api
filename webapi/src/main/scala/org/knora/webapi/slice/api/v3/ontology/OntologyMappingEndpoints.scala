@@ -24,9 +24,6 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.class_not_found),
         badRequestVariant,
-        // HTTP 500 is declared for OpenAPI documentation completeness.
-        // It is NOT produced by application logic (infrastructure failures use .orDie → fiber defect).
-        internalServerErrorVariant,
       ),
     )
     .put
@@ -46,9 +43,6 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.class_not_found),
         badRequestVariant,
-        // HTTP 500 is declared for OpenAPI documentation completeness.
-        // It is NOT produced by application logic (infrastructure failures use .orDie → fiber defect).
-        internalServerErrorVariant,
       ),
     )
     .delete
@@ -68,9 +62,6 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.property_not_found),
         badRequestVariant,
-        // HTTP 500 is declared for OpenAPI documentation completeness.
-        // It is NOT produced by application logic (infrastructure failures use .orDie → fiber defect).
-        internalServerErrorVariant,
       ),
     )
     .put
@@ -90,9 +81,6 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.property_not_found),
         badRequestVariant,
-        // HTTP 500 is declared for OpenAPI documentation completeness.
-        // It is NOT produced by application logic (infrastructure failures use .orDie → fiber defect).
-        internalServerErrorVariant,
       ),
     )
     .delete
