@@ -4,9 +4,20 @@
 
 @prefix sh:         <http://www.w3.org/ns/shacl#> .
 @prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+
+knora-base:OntologyLabelShape
+  a sh:PropertyShape ;
+  sh:path rdfs:label ;
+  sh:datatype rdf:langString ;
+  sh:uniqueLang true ;
+  sh:languageIn ( "en" "de" "fr" "it" "rm" ) ;
+  sh:message "The label must have one of the following language tags: en, de, fr, it, rm. Additionally you may only have one label per language." .
+
 
 # Validates every project ontology (owl:Ontology, excluding system ontologies)
 knora-base:OntologyShape
@@ -24,6 +35,7 @@ knora-base:OntologyShape
       }
     """ ;
   ] ;
+  sh:property knora-base:OntologyLabelShape ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
@@ -63,6 +75,7 @@ knora-base:ResourceClassShape
       }
     """ ;
   ] ;
+  sh:property knora-base:OntologyLabelShape ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
@@ -90,6 +103,7 @@ knora-base:PropertyShape
       }
     """ ;
   ] ;
+  sh:property knora-base:OntologyLabelShape ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
