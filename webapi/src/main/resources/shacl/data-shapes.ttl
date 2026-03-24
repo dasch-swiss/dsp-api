@@ -39,7 +39,7 @@ knora-base:ResourceShape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:attachedToProject ;
-    sh:hasValue <urn:placeholder:projectIri> ;  # TODO
+    sh:hasValue <urn:placeholder:projectIri> ;
     sh:maxCount 1 ;
     sh:maxCount 1 ;
     sh:message "Resource instance must have exactly one knora-base:attachedToProject equal to <urn:placeholder:projectIri>" ;
@@ -67,6 +67,7 @@ knora-base:ValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:Value ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path knora-base:valueCreationDate ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
@@ -74,12 +75,14 @@ knora-base:ValueShape
     sh:message "Value instance must have knora-base:valueCreationDate of type xsd:dateTime" ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path knora-base:attachedToUser ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:message "Value instance must have knora-base:attachedToUser" ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path knora-base:hasPermissions ;
     sh:maxCount 1 ;
     sh:maxCount 1 ;
@@ -87,6 +90,7 @@ knora-base:ValueShape
     sh:message "Value instance must have at most one knora-base:hasPermissions of type xsd:string" ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path knora-base:isDeleted ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
@@ -100,24 +104,28 @@ knora-base:LinkValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:LinkValue ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path rdf:subject ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:message "LinkValue instance must have rdf:subject" ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path rdf:predicate ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:message "LinkValue instance must have rdf:predicate" ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path rdf:object ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:message "LinkValue instance must have rdf:object" ;
   ] ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path knora-base:valueHasRefCount ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
@@ -133,6 +141,7 @@ knora-base:AttachedToUserExistsShape
   a sh:NodeShape ;
   sh:targetSubjectsOf knora-base:attachedToUser ;
   sh:property [
+    a sh:PropertyShape ;
     sh:path knora-base:attachedToUser ;
     sh:class knora-admin:User ;
     sh:message "knora-base:attachedToUser must reference a knora-admin:User instance" ;
