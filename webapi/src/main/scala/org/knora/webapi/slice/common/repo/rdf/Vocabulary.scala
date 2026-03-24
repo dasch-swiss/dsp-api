@@ -79,6 +79,7 @@ object Vocabulary {
 
     val Value              = iri(kb + "Value")
     val linkValue: Iri     = iri(kb + "LinkValue")
+    val hasValue: Iri      = iri(kb + "hasValue")
     val previousValue: Iri = iri(kb + "previousValue")
 
     // list properties
