@@ -190,3 +190,10 @@ For more details see `docs/development/dsp-api-sparql-builder.md`.
 
 When writing code, follow the conventions outlined in `docs/development/dsp-api-conventions.md` for consistency across
 the codebase. This includes structuring test suites, naming conventions, and using ZIO Test features effectively.
+
+### V3 API — IRI Handling
+
+When adding or modifying v3 endpoints that accept IRI parameters, follow the two-category model
+described in `docs/development/dsp-api-v3-iri-handling.md`:
+- **Simple IRIs** (e.g. `ProjectIri`, `UserIri`): use the typed value object directly in endpoints.
+- **SmartIri-backed IRIs** (ontology, class, property IRIs): accept as `IriDto` in endpoints, convert via `IriConverter` in the RestService.
