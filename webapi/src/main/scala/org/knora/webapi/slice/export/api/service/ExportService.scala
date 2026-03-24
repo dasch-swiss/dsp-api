@@ -23,9 +23,6 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoA
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagStringAttributeV2
-import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
