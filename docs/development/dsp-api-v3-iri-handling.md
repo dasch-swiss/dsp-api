@@ -36,6 +36,7 @@ Ontology IRIs, resource class IRIs, resource IRIs, value IRIs  and property IRIs
 Their external (API) representation depends on server configuration (complex schema) and differs from the internal representation stored in the triplestore.
 
 Example domain types: `KnoraIris.OntologyIri`, `KnoraIris.ResourceClassIri`, `KnoraIris.PropertyIri`
+
 - these wrap a `SmartIri` and implement the `KnoraIri` trait.
 
 **In v3 endpoints** these IRIs are accepted as `IriDto` (a simple validated-IRI string wrapper).
@@ -61,7 +62,7 @@ val getClass = base
 The v3 API only accepts the **complex** (external) representation of SmartIri-backed IRIs, aka. `ApiV2Complex` schema.
 Use the `*ApiV2Complex` variants on `IriConverter` - they reject IRIs that are not in the API v2 complex schema with a descriptive error.
 
-**Example 1: converting and validating a class IRI is complex**
+#### Example 1: converting and validating a class IRI is complex
 
 ```scala
 final case class OntologyMappingRestService(
@@ -77,7 +78,7 @@ final case class OntologyMappingRestService(
 }
 ```
 
-**Example 2: converting and validating an ontology IRI is complex with additional validations**
+#### Example 2: converting and validating an ontology IRI is complex with additional validations
 
 ```scala
 def getOntology(user: User)(name: OntologyName, ontologyIriDto: IriDto): IO[V3ErrorInfo, OntologyResponse] =
@@ -97,7 +98,7 @@ If a client sends an internal IRI (e.g. `http://www.knora.org/ontology/0001/anyt
 Key `IriConverter` methods for SmartIri-backed types:
 
 | Method | Returns | Validates complex? | Use for |
-|--------|---------|-------------------|---------|
+| ------ | ------- | ----------------- | ------- |
 | `asOntologyIriApiV2Complex(iri)` | `IO[String, OntologyIri]` | Yes | Ontology IRIs (v3) |
 | `asResourceClassIriApiV2Complex(iri)` | `IO[String, ResourceClassIri]` | Yes | Class IRIs (v3) |
 | `asPropertyIriApiV2Complex(iri)` | `IO[String, PropertyIri]` | Yes | Property IRIs (v3) |
@@ -130,7 +131,7 @@ Document this in the `.description(...)` of every IRI path/query parameter: `"Mu
 ## Summary
 
 | IRI category | Endpoint type | RestService conversion |
-|---|---|---|
+| --- | --- | --- |
 | Simple (same internal/external) | Typed value object (`ProjectIri`, `UserIri`, ...) | None needed |
 | SmartIri-backed (different internal/external) | `IriDto` | `IriConverter.as*` methods |
 
