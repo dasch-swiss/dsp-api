@@ -8,17 +8,20 @@ import zio.*
 
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint.EndpointT
 import org.knora.webapi.slice.api.v3.`export`.ExportServerEndpoints
+import org.knora.webapi.slice.api.v3.ontology.OntologyMappingServerEndpoints
 import org.knora.webapi.slice.api.v3.projects.*
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpointsV3
 
 final class ApiV3ServerEndpoints(
   resourcesServerEndpoints: ResourcesServerEndpointsV3,
   exportServerEndpoints: ExportServerEndpoints,
+  ontologyMappingServerEndpoints: OntologyMappingServerEndpoints,
   projectServerEndpoints: V3ProjectsServerEndpoints,
 ) {
   val serverEndpoints: List[EndpointT] =
     (resourcesServerEndpoints.serverEndpoints ++
       exportServerEndpoints.serverEndpoints ++
+      ontologyMappingServerEndpoints.serverEndpoints ++
       projectServerEndpoints.serverEndpoints)
       .map(_.tag("API v3"))
 }
