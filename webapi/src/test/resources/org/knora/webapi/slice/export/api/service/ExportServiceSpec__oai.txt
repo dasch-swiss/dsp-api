@@ -1,7 +1,7 @@
 [
   {
     "id" : "http://rdfh.ch/1612/SubClass1Resource00001",
-    "pid" : "http://rdfh.ch/1612/SubClass1Resource00001",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/SubClass1Resource00001m",
     "label" : {
       "en" : "SubResource1"
     },
@@ -10,7 +10,7 @@
       "license" : {
         "licenseIdentifier" : "public domain",
         "licenseDate" : "2023-01-01",
-        "licenseUri" : "https://creativecommons.org/publicdomain/zero/1.0/"
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
       },
       "copyrightHolder" : "DaSCH",
       "authorship" : [
@@ -25,7 +25,7 @@
   },
   {
     "id" : "http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ",
-    "pid" : "http://rdfh.ch/1612/1DP5KVTxRPaGktcDY7IqyQ",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/1DP5KVTxRPaGktcDY7IqyQk",
     "label" : {
       "en" : "Resource11"
     },
@@ -34,7 +34,7 @@
       "license" : {
         "licenseIdentifier" : "public domain",
         "licenseDate" : "2023-01-01",
-        "licenseUri" : "https://creativecommons.org/publicdomain/zero/1.0/"
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
       },
       "copyrightHolder" : "DaSCH",
       "authorship" : [
@@ -49,7 +49,7 @@
   },
   {
     "id" : "http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw",
-    "pid" : "http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/Htygzo8mQDubd8gyinQ3ZwI",
     "label" : {
       "en" : "Resource0"
     },
@@ -58,7 +58,7 @@
       "license" : {
         "licenseIdentifier" : "public domain",
         "licenseDate" : "2023-01-01",
-        "licenseUri" : "https://creativecommons.org/publicdomain/zero/1.0/"
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
       },
       "copyrightHolder" : "DaSCH",
       "authorship" : [
@@ -73,7 +73,7 @@
   },
   {
     "id" : "http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w",
-    "pid" : "http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/wQtVscpOTt=Sc_cH=dQL=wB",
     "label" : {
       "en" : "Resource2"
     },
@@ -82,7 +82,7 @@
       "license" : {
         "licenseIdentifier" : "public domain",
         "licenseDate" : "2023-01-01",
-        "licenseUri" : "https://creativecommons.org/publicdomain/zero/1.0/"
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
       },
       "copyrightHolder" : "DaSCH",
       "authorship" : [
@@ -102,7 +102,7 @@
   },
   {
     "id" : "http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA",
-    "pid" : "http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/TfZ6cOzQThSMAkCoEeJFjAA",
     "label" : {
       "en" : "Resource1"
     },
@@ -111,7 +111,7 @@
       "license" : {
         "licenseIdentifier" : "public domain",
         "licenseDate" : "2023-01-01",
-        "licenseUri" : "https://creativecommons.org/publicdomain/zero/1.0/"
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
       },
       "copyrightHolder" : "DaSCH",
       "authorship" : [
@@ -126,6 +126,55 @@
     "dateCreated" : "2025-11-24T09:29:32.559220Z",
     "dateModified" : "2025-11-24T09:32:35.114097Z",
     "datePublished" : "2025-11-24T09:29:32.559220Z",
+    "typeOfData" : "Text",
+    "keywords" : []
+  },
+  {
+    "id" : "http://rdfh.ch/1612/Resource3DeepList",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/Resource3DeepListV",
+    "label" : {
+      "en" : "Resource3"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "Resource3",
+    "publisher" : "DaSCH",
+    "dateCreated" : "2025-11-24T09:29:32.559220Z",
+    "datePublished" : "2025-11-24T09:29:32.559220Z",
+    "keywords" : []
+  },
+  {
+    "id" : "http://rdfh.ch/1612/FootnoteResource",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/FootnoteResourceY",
+    "label" : {
+      "en" : "FootnoteResource"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "FootnoteResource",
+    "publisher" : "DaSCH",
+    "dateCreated" : "2026-03-18T10:00:00Z",
+    "datePublished" : "2026-03-18T10:00:00Z",
     "typeOfData" : "Text",
     "keywords" : []
   }
