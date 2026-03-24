@@ -30,8 +30,13 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
 trait FindResourcesService {
   def findResources(
     project: KnoraProject,
-    classIri: ResourceClassIri,
+    classIri: Option[ResourceClassIri],
   ): Task[Seq[SmartIri]]
+
+  def findResourcesByClass(
+    project: KnoraProject,
+    classIri: ResourceClassIri,
+  ): Task[Seq[SmartIri]] = findResources(project, Some(classIri))
 }
 
 final case class FindResourcesServiceLive(
@@ -43,7 +48,7 @@ final case class FindResourcesServiceLive(
 ) extends FindResourcesService {
   def findResources(
     project: KnoraProject,
-    classIri: ResourceClassIri,
+    classIri: Option[ResourceClassIri],
   ): Task[Seq[SmartIri]] =
     for {
       query <- ZIO.succeed(resourceQuery(project, classIri))
@@ -60,7 +65,7 @@ final case class FindResourcesServiceLive(
 
   private def resourceQuery(
     project: KnoraProject,
-    classIri: ResourceClassIri,
+    classIri: Option[ResourceClassIri],
   ): SelectQuery = {
     val selectPattern = SparqlBuilder
       .select(variable(resourceIriVar))
@@ -72,21 +77,32 @@ final case class FindResourcesServiceLive(
         .isA(variable(classIriVar))
         .from(Rdf.iri(projectGraph.value))
 
-    val classSubclassOfRequested =
-      variable(classIriVar).has(
-        PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(),
-        Rdf.iri(classIri.toInternalSchema.toIri),
-      )
+    val classSubclassOfResource =
+      variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
 
-    Queries
-      .SELECT(selectPattern)
-      .where(resourceWhere, classSubclassOfRequested)
-      .prefix(KB.NS, RDFS.NS)
+    classIri match {
+      case Some(iri) =>
+        val classSubclassOfRequested =
+          variable(classIriVar).has(
+            PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(),
+            Rdf.iri(iri.toInternalSchema.toIri),
+          )
+
+        Queries
+          .SELECT(selectPattern)
+          .where(resourceWhere, classSubclassOfRequested, classSubclassOfResource)
+          .prefix(KB.NS, RDFS.NS)
+      case None =>
+        Queries
+          .SELECT(selectPattern)
+          .where(resourceWhere, classSubclassOfResource)
+          .prefix(KB.NS, RDFS.NS)
+    }
   }
 }
 
 object FindResourcesService {
   val layer = ZLayer.derive[FindResourcesServiceLive]
 
-  val Empty = ZLayer.succeed[FindResourcesService]((_: KnoraProject, _: ResourceClassIri) => ZIO.succeed(Seq()))
+  val Empty = ZLayer.succeed[FindResourcesService]((_: KnoraProject, _: Option[ResourceClassIri]) => ZIO.succeed(Seq()))
 }

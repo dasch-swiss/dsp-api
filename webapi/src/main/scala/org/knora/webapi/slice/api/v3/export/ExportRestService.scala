@@ -21,6 +21,7 @@ final class ExportRestService(
   exportService: ExportService,
   projectService: KnoraProjectService,
   ontologyService: OntologyRepo,
+  authorizer: V3Authorizer,
 ) {
   def exportResources(
     user: User,
@@ -55,6 +56,20 @@ final class ExportRestService(
       MediaType.TextCsv,
       s"attachment; filename=project_${shortcode.value}_resources_${resourceClassIri.name}_${now}.csv",
     ))
+
+  def exportResourcesOai(
+    user: User,
+  )(
+    request: ExportRequestOai,
+  ): IO[V3ErrorInfo, String] =
+    (for {
+      _       <- authorizer.ensureSystemAdmin(user)
+      project <- projectService
+                   .findByShortcode(request.shortcode)
+                   .orDie
+                   .someOrFail(NotFound.byShortcode(request.shortcode.value))
+      out <- exportService.exportResourcesOai(project, user).orDie
+    } yield out)
 }
 
 object ExportRestService {
