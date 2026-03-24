@@ -3,6 +3,7 @@
 # - urn:placeholder:projectIri  →  the IRI of the project being imported
 
 @prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix dash:       <http://datashapes.org/dash#> .
 @prefix owl:        <http://www.w3.org/2002/07/owl#> .
 @prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
@@ -16,11 +17,16 @@ knora-base:OntologyLabelShapeLanguages
   sh:languageIn ( "en" "de" "fr" "it" "rm" ) ;
   sh:message "The label must have one of the following language tags: en, de, fr, it, rm." .
 
-
 knora-base:OntologyLabelShapeUnique
   a sh:PropertyShape ;
   sh:path rdfs:label ;
   sh:uniqueLang true ;
+  sh:message "You may only have one label per language." .
+
+knora-base:OntologyLabelSingleLine
+  a sh:PropertyShape ;
+  sh:path rdfs:label ;
+  dash:singleLine true ;
   sh:message "You may only have one label per language." .
 
 
@@ -40,7 +46,7 @@ knora-base:OntologyShape
       }
     """ ;
   ] ;
-  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique ;
+  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique , knora-base:OntologyLabelSingleLine ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
@@ -80,7 +86,7 @@ knora-base:ResourceClassShape
       }
     """ ;
   ] ;
-  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique ;
+  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique , knora-base:OntologyLabelSingleLine ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
@@ -108,7 +114,7 @@ knora-base:PropertyShape
       }
     """ ;
   ] ;
-  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique ;
+  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique , knora-base:OntologyLabelSingleLine ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
