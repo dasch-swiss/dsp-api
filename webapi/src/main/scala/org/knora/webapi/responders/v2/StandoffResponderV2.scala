@@ -50,6 +50,7 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.slice.resources.repo.GetMappingQuery
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -421,8 +422,8 @@ final case class StandoffResponderV2(
       _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff)
 
       // check if the mapping IRI already exists
-      getExistingMappingSparql = sparql.v2.txt.getMapping(mappingIri)
-      existingMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))
+      getExistingMappingQuery  = GetMappingQuery.build(mappingIri)
+      existingMappingResponse <- triplestore.query(Construct(getExistingMappingQuery))
 
       _ = if (existingMappingResponse.statements.nonEmpty) {
             throw BadRequestException(s"mapping IRI $mappingIri already exists")
@@ -438,7 +439,7 @@ final case class StandoffResponderV2(
       _ <- triplestore.query(Update(createNewMappingSparql))
 
       // check if the mapping has been created
-      newMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))
+      newMappingResponse <- triplestore.query(Construct(getExistingMappingQuery))
 
       _ = if (newMappingResponse.statements.isEmpty) {
             throw UpdateNotPerformedException(
@@ -651,7 +652,7 @@ final case class StandoffResponderV2(
    */
   private def getMappingFromTriplestore(mappingIri: IRI) =
     for {
-      mappingResponse <- triplestore.query(Construct(sparql.v2.txt.getMapping(mappingIri)))
+      mappingResponse <- triplestore.query(Construct(GetMappingQuery.build(mappingIri)))
 
       // if the result is empty, the mapping does not exist
       _ = if (mappingResponse.statements.isEmpty) {

@@ -42,6 +42,7 @@ trait ReadResourcesService {
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
+    queryStandoff: Boolean = false,
     skipRetrievalChecks: Boolean = false,
   ): Task[ReadResourcesSequenceV2]
 
@@ -171,6 +172,7 @@ final case class ReadResourcesServiceLive(
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
+    queryStandoff: Boolean = false,
     skipRetrievalChecks: Boolean = false,
   ): Task[ReadResourcesSequenceV2] =
     ZIO
@@ -183,6 +185,7 @@ final case class ReadResourcesServiceLive(
           targetSchema,
           requestingUser,
           withDeleted = withDeleted,
+          queryStandoff = queryStandoff,
           skipRetrievalChecks = skipRetrievalChecks,
         )
       }

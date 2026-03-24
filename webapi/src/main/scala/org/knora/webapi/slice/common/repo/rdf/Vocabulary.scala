@@ -95,6 +95,7 @@ object Vocabulary {
     val hasPermissions: Iri         = iri(kb + "hasPermissions")
     val creationDate: Iri           = iri(kb + "creationDate")
     val lastModificationDate: Iri   = iri(kb + "lastModificationDate")
+    val hasLinkTo: Iri              = iri(kb + "hasLinkTo")
     val hasStandoffLinkTo: Iri      = iri(kb + "hasStandoffLinkTo")
     val hasStandoffLinkToValue: Iri = iri(kb + "hasStandoffLinkToValue")
     val deleteDate: Iri             = iri(kb + "deleteDate")
@@ -159,6 +160,19 @@ object Vocabulary {
 
     val subjectClassConstraint: Iri = iri(kb + "subjectClassConstraint")
     val objectClassConstraint: Iri  = iri(kb + "objectClassConstraint")
+
+    // mapping properties
+    val hasMappingElement: Iri                  = iri(kb + "hasMappingElement")
+    val mappingHasDefaultXSLTransformation: Iri = iri(kb + "mappingHasDefaultXSLTransformation")
+    val mappingHasXMLTagname: Iri               = iri(kb + "mappingHasXMLTagname")
+    val mappingHasXMLNamespace: Iri             = iri(kb + "mappingHasXMLNamespace")
+    val mappingHasXMLClass: Iri                 = iri(kb + "mappingHasXMLClass")
+    val mappingHasStandoffClass: Iri            = iri(kb + "mappingHasStandoffClass")
+    val mappingElementRequiresSeparator: Iri    = iri(kb + "mappingElementRequiresSeparator")
+    val mappingHasXMLAttribute: Iri             = iri(kb + "mappingHasXMLAttribute")
+    val mappingHasXMLAttributename: Iri         = iri(kb + "mappingHasXMLAttributename")
+    val mappingHasStandoffProperty: Iri         = iri(kb + "mappingHasStandoffProperty")
+    val mappingHasStandoffDataTypeClass: Iri    = iri(kb + "mappingHasStandoffDataTypeClass")
   }
 
   object NamedGraphs {

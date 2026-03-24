@@ -12,7 +12,7 @@ object Dependencies {
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
   val fusekiImage = "daschswiss/apache-jena-fuseki:5.5.0-2"
   // base image the knora-sipi image is created from
-  val sipiImage = "daschswiss/sipi:v3.18.0"
+  val sipiImage = "daschswiss/sipi:v4.0.0"
 
   val ScalaVersion = "3.3.7"
 
@@ -27,7 +27,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.5.5"
 
   val ZioPreludeVersion = "1.0.0-RC46"
-  val ZioSchemaVersion  = "1.8.1"
+  val ZioSchemaVersion  = "1.8.3"
 
   val ZioMockVersion = "1.0.0-RC12"
   val ZioVersion     = "2.1.24"
@@ -106,7 +106,6 @@ object Dependencies {
     "commons-validator" % "commons-validator" % "1.10.1" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtZioJson         = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.3"
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "7.0.3" exclude (
       "commons-logging",
@@ -139,7 +138,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.13.9"
+  val tapirVersion = "1.13.11"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -158,7 +157,7 @@ object Dependencies {
   val openTelemetryWithSentry = Seq(
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
     "com.softwaremill.sttp.tapir"   %% "tapir-opentelemetry-tracing"         % tapirVersion,
-    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.14",
+    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.15",
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
@@ -178,6 +177,13 @@ object Dependencies {
   val bagitDependencies     = Seq(zio, "dev.zio" %% "zio-streams" % ZioVersion, zioNio)
   val bagitTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
 
+  val TopbraidShaclVersion = "1.4.4"
+  val topbraidShacl        = "org.topbraid" % "shacl" % TopbraidShaclVersion
+
+  val shaclValidatorDependencies     = Seq(topbraidShacl, zio)
+  val slf4jSimple                    = "org.slf4j" % "slf4j-simple" % "2.0.17"
+  val shaclValidatorTestDependencies = Seq(zioTest, zioTestSbt, slf4jSimple).map(_ % Test)
+
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
   val webapiDependencies = monocle ++ refined ++ Seq(
@@ -189,7 +195,7 @@ object Dependencies {
     icu4j,
     jakartaJSON,
     jenaText,
-    jwtZioJson,
+
     rdf4jShacl,
     rdf4jSparql,
     saxonHE,

@@ -531,6 +531,9 @@ object OntologyConstants {
     val StandoffOrderedListTag: IRI   = StandoffPrefixExpansion + "StandoffOrderedListTag"
     val StandoffUnorderedListTag: IRI = StandoffPrefixExpansion + "StandoffUnorderedListTag"
     val StandoffListElementTag: IRI   = StandoffPrefixExpansion + "StandoffListElementTag"
+
+    val StandoffFootnoteTag: IRI           = StandoffPrefixExpansion + "StandoffFootnoteTag"
+    val StandoffFootnoteTagHasContent: IRI = StandoffPrefixExpansion + "standoffFootnoteTagHasContent"
   }
 
   object KnoraApi {

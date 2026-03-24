@@ -55,6 +55,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.resources.repo.GetResourcesByClassInProjectPrequery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -1048,15 +1049,14 @@ final case class SearchResponderV2Live(
                                     }
 
       // Do a SELECT prequery to get the IRIs of the requested page of resources.
-      prequery = sparql.v2.txt
-                   .getResourcesByClassInProjectPrequery(
-                     projectIri = projectIri.value,
-                     resourceClassIri = internalClassIri,
-                     maybeOrderByProperty = maybeInternalOrderByPropertyIri,
-                     maybeOrderByValuePredicate = maybeOrderByValuePredicate,
-                     limit = appConfig.v2.resourcesSequence.resultsPerPage,
-                     offset = page * appConfig.v2.resourcesSequence.resultsPerPage,
-                   )
+      prequery = GetResourcesByClassInProjectPrequery.build(
+                   projectIri = projectIri.value,
+                   resourceClassIri = internalClassIri,
+                   maybeOrderByProperty = maybeInternalOrderByPropertyIri,
+                   maybeOrderByValuePredicate = maybeOrderByValuePredicate,
+                   limit = appConfig.v2.resourcesSequence.resultsPerPage,
+                   offset = page * appConfig.v2.resourcesSequence.resultsPerPage,
+                 )
       sparqlSelectResponse      <- triplestore.query(Select(prequery))
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.getColOrThrow("resource")
 

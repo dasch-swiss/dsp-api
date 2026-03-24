@@ -36,6 +36,7 @@ final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) ex
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
+    queryStandoff: Boolean = false,
     skipRetrievalChecks: Boolean = false,
   ): Task[ReadResourcesSequenceV2] = null
 

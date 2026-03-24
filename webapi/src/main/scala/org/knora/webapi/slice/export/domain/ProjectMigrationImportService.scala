@@ -55,6 +55,7 @@ final class ProjectMigrationImportService(
   dspIngestClient: DspIngestClient,
   groupService: KnoraGroupService,
   projectService: KnoraProjectService,
+  projectShaclValidator: ProjectMigrationImportShaclValidator,
   storage: ProjectMigrationStorageService,
   triplestore: TriplestoreService,
   ontologyCache: OntologyCache,
@@ -96,11 +97,14 @@ final class ProjectMigrationImportService(
         _ <- validateVersionCompatibility(bag, taskId)
         _ <- ZIO.logInfo(s"$taskId: Version compatibility validated for project '$projectIri'")
 
-        nqFiles <- validateRdfPayloadFiles(bagRoot)
-        _       <- ZIO.logInfo(
+        payloadFiles              <- validateRdfPayloadFiles(bagRoot)
+        (ontologyFiles, dataFiles) = payloadFiles
+        nqFiles                    = ontologyFiles ++ dataFiles
+        _                         <- ZIO.logInfo(
                s"$taskId: Payload file validation passed for project '$projectIri', found: ${nqFiles.mkString(", ")}",
              )
 
+        _         <- ZIO.logInfo(s"$taskId: Starting admin data validation for project '$projectIri'")
         shortcode <- ZIO.scoped { // rdf validation, close scope for model right after validation to free up memory
                        for {
                          model <- DatasetOps
@@ -120,6 +124,11 @@ final class ProjectMigrationImportService(
                          _         <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
                        } yield shortcode
                      }
+        _ <- ZIO.logInfo(s"$taskId: Admin data validation passed for project '$projectIri'")
+
+        _ <- ZIO.logInfo(s"$taskId: Starting shacl validation '$projectIri'")
+        _ <- projectShaclValidator.validate(ontologyFiles, dataFiles, projectIri)
+        _ <- ZIO.logInfo(s"$taskId: SHACL validation passed for project '$projectIri'")
 
         // import assets from ingest if present
         assetZipPath = bagRoot / "data" / "assets" / "assets.zip"
@@ -314,7 +323,7 @@ final class ProjectMigrationImportService(
       .unit
   }
 
-  private def validateRdfPayloadFiles(bagRoot: Path): Task[Chunk[Path]] = {
+  private def validateRdfPayloadFiles(bagRoot: Path): Task[(NonEmptyChunk[Path], NonEmptyChunk[Path])] = {
     val rdfDir  = bagRoot / "data" / "rdf"
     val adminNq = rdfDir / "admin.nq"
     val dataNq  = rdfDir / "data.nq"
@@ -328,21 +337,17 @@ final class ProjectMigrationImportService(
              ZIO.fail(new RuntimeException("Required file 'data/rdf/data.nq' is missing from the BagIt payload")),
            )
       // Find ontology files
-      ontologyFiles <- Files.list(rdfDir).filter(_.filename.toString.matches("ontology-\\d+\\.nq")).runCollect
-      _             <- ZIO.when(ontologyFiles.isEmpty)(
-             ZIO.fail(
-               new RuntimeException("No 'data/rdf/ontology-*.nq' files found in the BagIt payload"),
-             ),
-           )
+      ontologyFiles    <- Files.list(rdfDir).filter(_.filename.toString.matches("ontology-\\d+\\.nq")).runCollect
+      ontologyFilesNec <- ZIO
+                            .fromOption(NonEmptyChunk.fromChunk(ontologyFiles))
+                            .orElseFail(
+                              new RuntimeException("No 'data/rdf/ontology-*.nq' files found in the BagIt payload"),
+                            )
       // Permissions are optional, if present, we want to include them
       permissionNq = rdfDir / "permission.nq"
       perms       <- ZIO.ifZIO(Files.exists(permissionNq))(ZIO.some(permissionNq), ZIO.none)
-      rdfFiles     = ontologyFiles ++ Chunk(adminNq, dataNq) ++ Chunk.fromIterable(perms)
-      // Validate we can load files as RDF, this is a sanity check to avoid starting an import that
-      // will fail later due to malformed RDF.
-      // Exclude admin.nq from this check to avoid loading the whole model twice, it is checked separately.
-      _ <- ZIO.foreachDiscard(rdfFiles.filter(_ != adminNq))(file => ZIO.scoped(DatasetOps.from(file, Lang.NQUADS)))
-    } yield rdfFiles
+      dataFiles    = NonEmptyChunk(adminNq, dataNq) ++ Chunk.fromIterable(perms)
+    } yield (ontologyFilesNec, dataFiles)
   }
 
   private def uploadRdfDataToTriplestore(nqFiles: Chunk[Path]): Task[Unit] = {
@@ -378,8 +383,8 @@ final class ProjectMigrationImportService(
 
 object ProjectMigrationImportService {
   val layer: URLayer[
-    DspIngestClient & KnoraGroupService & KnoraProjectService & ProjectMigrationStorageService & TriplestoreService &
-      OntologyCache & KnoraUserService,
+    DspIngestClient & KnoraGroupService & KnoraProjectService & ProjectMigrationImportShaclValidator &
+      ProjectMigrationStorageService & TriplestoreService & OntologyCache & KnoraUserService,
     ProjectMigrationImportService,
   ] = FilesystemDataTaskPersistence.importLayer >>> ZLayer.derive[ProjectMigrationImportService]
 }

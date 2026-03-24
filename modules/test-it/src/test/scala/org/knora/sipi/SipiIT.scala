@@ -11,9 +11,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
-import pdi.jwt.JwtAlgorithm
-import pdi.jwt.JwtClaim
-import pdi.jwt.JwtZIOJson
 import zio.*
 import zio.http.*
 import zio.json.DecoderOps
@@ -25,6 +22,8 @@ import scala.util.Success
 import scala.util.Try
 
 import dsp.valueobjects.UuidUtil
+import org.knora.jwt.JwtClaim
+import org.knora.jwt.JwtCodec
 import org.knora.sipi.MockDspApiServer.verify.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
@@ -53,11 +52,10 @@ object SipiIT extends ZIOSpecDefault {
               expiration = Some(exp.getEpochSecond),
               jwtId = Some(UuidUtil.base64Encode(uuid)),
             ) + ("scope", scope.toScopeString)
-  } yield JwtZIOJson.encode(
+  } yield JwtCodec.encode(
     """{"typ":"JWT","alg":"HS256"}""",
     claim.toJson,
-    "UP 4888, nice 4-8-4 steam engine",
-    JwtAlgorithm.HS256,
+    "UP 4888, nice 4-8-4 steam engine".getBytes(java.nio.charset.StandardCharsets.UTF_8),
   )
 
   private val authSuite =
