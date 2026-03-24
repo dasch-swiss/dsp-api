@@ -204,6 +204,14 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           csv <- exportService.toCsv(exportedCsv)
         } yield assertGolden(csv, "withFootnotes")
       },
+      test("exportResourcesOai") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          json          <- exportService.exportResourcesOai(project, user)
+        } yield assertGolden(json, "oai")
+      },
     ).provide(
       ConstructResponseUtilV2.layer,
       AppConfig.layer,

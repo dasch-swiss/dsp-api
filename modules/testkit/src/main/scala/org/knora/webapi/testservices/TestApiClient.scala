@@ -47,6 +47,9 @@ final case class TestApiClient(
     sendRequest(f(request))
   }
 
+  def deleteJson[A: JsonDecoder](relativeUri: Uri): Task[Response[Either[String, A]]] =
+    deleteJson(relativeUri, (r: Request[Either[String, A]]) => r)
+
   private def sendRequest[A](
     request: Request[Either[String, A]],
     user: Option[User] = None,
@@ -246,6 +249,18 @@ final case class TestApiClient(
     sendRequest(request, Some(user))
   }
 
+  def putJson[A: JsonDecoder, B: JsonEncoder](
+    relativeUri: Uri,
+    body: B,
+  ): Task[Response[Either[String, A]]] = {
+    val request = basicRequest
+      .put(relativeUri)
+      .body(body.toJson)
+      .contentType(MediaType.ApplicationJson)
+      .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
+    sendRequest(request)
+  }
+
   def putJsonLd(
     relativeUri: Uri,
     jsonLdBody: String,
@@ -323,6 +338,11 @@ object TestApiClient {
     f: Request[Either[String, A]] => Request[Either[String, A]],
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.deleteJson(relativeUri, f))
+
+  def deleteJson[A: JsonDecoder](
+    relativeUri: Uri,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.deleteJson(relativeUri))
 
   def deleteJsonLd(
     relativeUri: Uri,
@@ -444,6 +464,12 @@ object TestApiClient {
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.putJson(relativeUri, body, user))
+
+  def putJson[A: JsonDecoder, B: JsonEncoder](
+    relativeUri: Uri,
+    body: B,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.putJson(relativeUri, body))
 
   def putJsonLd(
     relativeUri: Uri,
