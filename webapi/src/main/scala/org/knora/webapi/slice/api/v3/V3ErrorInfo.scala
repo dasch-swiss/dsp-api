@@ -74,17 +74,6 @@ final case class Unauthorized(message: String = "Unauthorized", errors: Chunk[Er
     extends V3ErrorInfo
 final case class Forbidden(message: String = "Forbidden", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
 
-// HTTP 500 is declared for OpenAPI documentation completeness.
-// It is NOT produced by application logic (infrastructure failures use .orDie → fiber defect).
-// Clients should treat 500 as a transient error safe to retry with exponential backoff.
-final case class InternalServerError(
-  message: String = "Internal Server Error",
-  errors: Chunk[ErrorDetail] = Chunk.empty,
-) extends V3ErrorInfo
-object InternalServerError {
-  given JsonCodec[InternalServerError] = DeriveJsonCodec.gen[InternalServerError]
-}
-
 final case class ErrorDetail(
   code: V3ErrorCode,
   message: String,
