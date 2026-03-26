@@ -14,12 +14,12 @@ import dsp.errors.NotFoundException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.VersionDate
+import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
@@ -108,17 +108,16 @@ final case class ReadResourcesServiceLive(
         triplestore
           .query(
             Construct(
-              sparql.v2.txt
-                .getResourcePropertiesAndValues(
-                  resourceIris = resourceIris.distinct,
-                  preview = preview,
-                  withDeleted = withDeleted,
-                  maybePropertyIri = propertyIri,
-                  maybeValueUuid = valueUuid,
-                  maybeVersionDate = versionDate.map(_.value),
-                  queryAllNonStandoff = true,
-                  queryStandoff = queryStandoff,
-                ),
+              GetResourcePropertiesAndValuesQuery.build(
+                resourceIris = resourceIris.distinct,
+                preview = preview,
+                withDeleted = withDeleted,
+                maybePropertyIri = propertyIri,
+                maybeValueUuid = valueUuid,
+                maybeVersionDate = versionDate.map(_.value),
+                queryAllNonStandoff = true,
+                queryStandoff = queryStandoff,
+              ),
             ),
           )
           .flatMap(_.asExtended)

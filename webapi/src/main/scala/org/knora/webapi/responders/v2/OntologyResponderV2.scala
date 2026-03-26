@@ -50,6 +50,7 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
+import org.knora.webapi.slice.ontology.repo.AddCardinalitiesToClassQuery
 import org.knora.webapi.slice.ontology.repo.ChangeClassLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
@@ -806,21 +807,18 @@ final case class OntologyResponderV2(
     val task = for {
       requestingUser <- ZIO.succeed(addCardinalitiesRequest.requestingUser)
 
-      classInfo           = addCardinalitiesRequest.classInfoContent
-      externalClassIri    = classInfo.classIri
-      internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
-      externalOntologyIri = externalClassIri.getOntologyFromEntity
-      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+      classInfo        = addCardinalitiesRequest.classInfoContent
+      resourceClassIri = classInfo.resourceClassIri
+      ontologyIri      = resourceClassIri.ontologyIri
 
-      _ <-
-        ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
+      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(resourceClassIri, requestingUser)
 
       cacheData                           <- ontologyCache.getCacheData
       internalClassDef: ClassInfoContentV2 = classInfo.toOntologySchema(InternalSchema)
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
       _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-             internalOntologyIri,
+             ontologyIri,
              addCardinalitiesRequest.lastModificationDate,
            )
 
@@ -839,10 +837,10 @@ final case class OntologyResponderV2(
 
       // Check that the class exists, that it's a Knora resource class, and that the submitted cardinalities aren't for properties that already have cardinalities
       // directly defined on the class.
-      ontology               = cacheData.ontologies(internalOntologyIri)
+      ontology               = cacheData.ontologies(ontologyIri.toInternalSchema)
       existingReadClassInfo <-
         ZIO
-          .fromOption(ontology.classes.get(internalClassIri))
+          .fromOption(ontology.classes.get(resourceClassIri.toInternalSchema))
           .orElseFail(
             BadRequestException(s"Class ${classInfo.classIri} does not exist"),
           )
@@ -892,7 +890,7 @@ final case class OntologyResponderV2(
                                           )
                                         }
 
-      allBaseClassIris                       = internalClassIri +: allBaseClassIrisWithoutInternal
+      allBaseClassIris                       = resourceClassIri.toInternalSchema +: allBaseClassIrisWithoutInternal
       existingLinkPropsToKeep: Set[SmartIri] =
         existingReadClassInfo.entityInfoContent.directCardinalities.keySet
           .flatMap(p => cacheData.ontologies(p.getOntologyFromEntity).properties.get(p))
@@ -923,18 +921,17 @@ final case class OntologyResponderV2(
       cardinalitiesToAdd =
         newInternalClassDefWithLinkValueProps.directCardinalities -- existingClassDef.directCardinalities.keySet
 
-      updateSparql = sparql.v2.txt.addCardinalitiesToClass(
-                       ontologyNamedGraphIri = internalOntologyIri,
-                       ontologyIri = internalOntologyIri,
-                       classIri = internalClassIri,
-                       cardinalitiesToAdd = cardinalitiesToAdd,
-                       lastModificationDate = addCardinalitiesRequest.lastModificationDate,
-                       currentTime = currentTime,
-                     )
-      _ <- save(Update(updateSparql))
+      updateQuery = AddCardinalitiesToClassQuery.build(
+                      ontologyIri,
+                      classIri = resourceClassIri.toInternalSchema,
+                      cardinalitiesToAdd = cardinalitiesToAdd,
+                      lastModificationDate = addCardinalitiesRequest.lastModificationDate,
+                      currentTime = currentTime,
+                    )
+      _ <- save(updateQuery)
       // Read the data back from the cache.
       response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
-                    classIris = Set(internalClassIri),
+                    classIris = Set(resourceClassIri.toInternalSchema),
                     allLanguages = true,
                     requestingUser = addCardinalitiesRequest.requestingUser,
                   )
