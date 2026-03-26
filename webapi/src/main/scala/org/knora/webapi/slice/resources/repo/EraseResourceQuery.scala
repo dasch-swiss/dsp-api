@@ -10,14 +10,14 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
-import org.knora.webapi.IRI
+import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 
 object EraseResourceQuery extends QueryBuilderHelper {
-  def build(dataNamedGraph: IRI, resourceIri: IRI): ModifyQuery = {
+  def build(project: Project, resourceIri: ResourceIri): ModifyQuery = {
     val resourcePred      = variable("resourcePred")
     val resourceObj       = variable("resourceObj")
     val value             = variable("value")
@@ -33,8 +33,8 @@ object EraseResourceQuery extends QueryBuilderHelper {
     val currentTextValue  = variable("currentTextValue")
     val textValue         = variable("textValue")
 
-    val resIri       = Rdf.iri(resourceIri)
-    val dataGraphIri = Rdf.iri(dataNamedGraph)
+    val resIri       = toRdfIri(resourceIri)
+    val dataGraphIri = graphIri(project)
 
     // Resource type check
     val typeCheck = resIri

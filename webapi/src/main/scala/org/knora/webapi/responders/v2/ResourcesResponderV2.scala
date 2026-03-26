@@ -456,14 +456,11 @@ final case class ResourcesResponderV2(
         resourceIri <- iriConverter.asResourceIri(eraseResourceV2.resourceIri).mapError(BadRequestException.apply)
         _           <- ensureResourceIsNotInUse(resourceIri)
 
-        // Get the IRI of the named graph from which the resource will be erased.
-        dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
-
         // Do the update.
         _ <- ZIO.logInfo(
                s"User ${eraseResourceV2.requestingUser.id} is erasing resource ${eraseResourceV2.resourceIri}",
              )
-        _ <- triplestore.query(Update(EraseResourceQuery.build(dataNamedGraph, eraseResourceV2.resourceIri)))
+        _ <- triplestore.query(Update(EraseResourceQuery.build(resource.projectADM, resourceIri)))
 
         _ <- // Verify that the resource was erased correctly.
           ZIO
