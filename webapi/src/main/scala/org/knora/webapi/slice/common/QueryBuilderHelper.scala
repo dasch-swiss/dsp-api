@@ -31,6 +31,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -87,6 +88,7 @@ trait QueryBuilderHelper {
     values.flatMap(pred => pred.objects.map(obj => iri.has(toRdfIri(pred.predicateIri), toRdfValue(obj)))).toList
 
   def graphIri(knoraProject: KnoraProject): Iri = Rdf.iri(ProjectService.projectDataNamedGraphV2(knoraProject).value)
+  def graphIri(project: Project): Iri           = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
 
   def variable(name: String): Variable = SparqlBuilder.`var`(name)
 
