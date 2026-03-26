@@ -61,6 +61,7 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
+import org.knora.webapi.slice.resources.repo.EraseResourceQuery
 import org.knora.webapi.slice.resources.repo.GetAllResourcesInProjectPrequery
 import org.knora.webapi.slice.resources.repo.GetGraphDataQuery
 import org.knora.webapi.slice.resources.repo.GetResourceValueVersionHistoryQuery
@@ -455,14 +456,11 @@ final case class ResourcesResponderV2(
         resourceIri <- iriConverter.asResourceIri(eraseResourceV2.resourceIri).mapError(BadRequestException.apply)
         _           <- ensureResourceIsNotInUse(resourceIri)
 
-        // Get the IRI of the named graph from which the resource will be erased.
-        dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
-
         // Do the update.
         _ <- ZIO.logInfo(
                s"User ${eraseResourceV2.requestingUser.id} is erasing resource ${eraseResourceV2.resourceIri}",
              )
-        _ <- triplestore.query(Update(sparql.v2.txt.eraseResource(dataNamedGraph, eraseResourceV2.resourceIri)))
+        _ <- triplestore.query(Update(EraseResourceQuery.build(resource.projectADM, resourceIri)))
 
         _ <- // Verify that the resource was erased correctly.
           ZIO
