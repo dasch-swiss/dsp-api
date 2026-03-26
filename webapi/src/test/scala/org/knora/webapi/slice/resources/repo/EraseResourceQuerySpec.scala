@@ -1,0 +1,40 @@
+/*
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.knora.webapi.slice.resources.repo
+
+import zio.test.*
+
+object EraseResourceQuerySpec extends ZIOSpecDefault {
+
+  private val dataNamedGraph = "http://www.knora.org/data/0001/anything"
+  private val resourceIri    = "http://rdfh.ch/0001/thing_with_history"
+
+  override def spec: Spec[TestEnvironment, Any] = suite("EraseResourceQuery")(
+    test("build should produce the expected SPARQL query") {
+      val actual = EraseResourceQuery.build(dataNamedGraph, resourceIri).getQueryString
+      assertTrue(
+        actual ==
+          """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing_with_history> ?resourcePred ?resourceObj .
+            |?value ?valuePred ?valueObj .
+            |?standoff ?standoffPred ?standoffObj . } }
+            |WHERE { <http://rdfh.ch/0001/thing_with_history> a ?resourceClass .
+            |?resourceClass rdfs:subClassOf* knora-base:Resource .
+            |{ <http://rdfh.ch/0001/thing_with_history> ?resourcePred ?resourceObj . } UNION { <http://rdfh.ch/0001/thing_with_history> ?valueProp ?currentValue .
+            |?currentValue a ?currentValueClass .
+            |?currentValueClass rdfs:subClassOf* knora-base:Value .
+            |?currentValue knora-base:previousValue* ?value .
+            |?value ?valuePred ?valueObj . } UNION { <http://rdfh.ch/0001/thing_with_history> ?valueProp ?currentTextValue .
+            |?currentTextValue a knora-base:TextValue ;
+            |    knora-base:previousValue* ?textValue .
+            |?textValue knora-base:valueHasStandoff ?standoff .
+            |?standoff ?standoffPred ?standoffObj . } }""".stripMargin,
+      )
+    },
+  )
+}

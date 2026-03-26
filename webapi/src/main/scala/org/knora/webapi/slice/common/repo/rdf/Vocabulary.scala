@@ -78,6 +78,7 @@ object Vocabulary {
     val Resource: Iri = iri(kb + "Resource")
 
     val Value              = iri(kb + "Value")
+    val TextValue: Iri     = iri(kb + "TextValue")
     val linkValue: Iri     = iri(kb + "LinkValue")
     val hasValue: Iri      = iri(kb + "hasValue")
     val previousValue: Iri = iri(kb + "previousValue")
