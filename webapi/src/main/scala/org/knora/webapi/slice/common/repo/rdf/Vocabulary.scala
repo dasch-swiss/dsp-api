@@ -75,7 +75,8 @@ object Vocabulary {
 
     val NS: Namespace = new SimpleNamespace("knora-base", kb)
 
-    val Resource: Iri = iri(kb + "Resource")
+    val Resource: Iri       = iri(kb + "Resource")
+    val isMainResource: Iri = iri(kb + "isMainResource")
 
     val Value              = iri(kb + "Value")
     val linkValue: Iri     = iri(kb + "LinkValue")
@@ -143,14 +144,16 @@ object Vocabulary {
     val externalUrl: Iri      = iri(kb + "externalUrl")
     val pageCount: Iri        = iri(kb + "pageCount")
 
-    val standoffTagHasStartIndex: Iri    = iri(kb + "standoffTagHasStartIndex")
-    val standoffTagHasEndIndex: Iri      = iri(kb + "standoffTagHasEndIndex")
-    val standoffTagHasStartParent: Iri   = iri(kb + "standoffTagHasStartParent")
-    val standoffTagHasEndParent: Iri     = iri(kb + "standoffTagHasEndParent")
-    val standoffTagHasOriginalXMLID: Iri = iri(kb + "standoffTagHasOriginalXMLID")
-    val standoffTagHasUUID: Iri          = iri(kb + "standoffTagHasUUID")
-    val standoffTagHasStart: Iri         = iri(kb + "standoffTagHasStart")
-    val standoffTagHasEnd: Iri           = iri(kb + "standoffTagHasEnd")
+    val standoffTagHasStartIndex: Iri        = iri(kb + "standoffTagHasStartIndex")
+    val standoffTagHasEndIndex: Iri          = iri(kb + "standoffTagHasEndIndex")
+    val standoffTagHasStartParent: Iri       = iri(kb + "standoffTagHasStartParent")
+    val standoffTagHasEndParent: Iri         = iri(kb + "standoffTagHasEndParent")
+    val standoffTagHasOriginalXMLID: Iri     = iri(kb + "standoffTagHasOriginalXMLID")
+    val standoffTagHasInternalReference: Iri = iri(kb + "standoffTagHasInternalReference")
+    val targetHasOriginalXMLID: Iri          = iri(kb + "targetHasOriginalXMLID")
+    val standoffTagHasUUID: Iri              = iri(kb + "standoffTagHasUUID")
+    val standoffTagHasStart: Iri             = iri(kb + "standoffTagHasStart")
+    val standoffTagHasEnd: Iri               = iri(kb + "standoffTagHasEnd")
 
     val hasTextValueType: Iri = iri(kb + "hasTextValueType")
 
