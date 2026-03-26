@@ -38,7 +38,7 @@ object AddCardinalitiesToClassQuerySpec extends ZIOSpecDefault {
       )
 
       val actual = AddCardinalitiesToClassQuery.build(
-        ontologyIri = testOntologyIri.smartIri,
+        ontologyIri = testOntologyIri,
         classIri = testClassIri,
         cardinalitiesToAdd = cardinalities,
         lastModificationDate = testLastModificationDate,
@@ -77,7 +77,7 @@ object AddCardinalitiesToClassQuerySpec extends ZIOSpecDefault {
       )
 
       val actual = AddCardinalitiesToClassQuery.build(
-        ontologyIri = testOntologyIri.smartIri,
+        ontologyIri = testOntologyIri,
         classIri = testClassIri,
         cardinalitiesToAdd = cardinalities,
         lastModificationDate = testLastModificationDate,

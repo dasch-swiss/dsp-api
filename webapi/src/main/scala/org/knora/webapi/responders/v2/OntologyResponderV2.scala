@@ -807,11 +807,14 @@ final case class OntologyResponderV2(
     val task = for {
       requestingUser <- ZIO.succeed(addCardinalitiesRequest.requestingUser)
 
-      classInfo           = addCardinalitiesRequest.classInfoContent
-      externalClassIri    = classInfo.classIri
-      internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
-      externalOntologyIri = externalClassIri.getOntologyFromEntity
-      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+      classInfo        = addCardinalitiesRequest.classInfoContent
+      resourceClassIri = classInfo.resourceClassIri
+      ontologyIri      = resourceClassIri.ontologyIri
+
+      externalClassIri    = resourceClassIri.toComplexSchema
+      internalClassIri    = resourceClassIri.toInternalSchema
+      externalOntologyIri = ontologyIri.toComplexSchema
+      internalOntologyIri = ontologyIri.toInternalSchema
 
       _ <-
         ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
@@ -925,7 +928,7 @@ final case class OntologyResponderV2(
         newInternalClassDefWithLinkValueProps.directCardinalities -- existingClassDef.directCardinalities.keySet
 
       updateQuery = AddCardinalitiesToClassQuery.build(
-                      ontologyIri = internalOntologyIri,
+                      ontologyIri,
                       classIri = internalClassIri,
                       cardinalitiesToAdd = cardinalitiesToAdd,
                       lastModificationDate = addCardinalitiesRequest.lastModificationDate,

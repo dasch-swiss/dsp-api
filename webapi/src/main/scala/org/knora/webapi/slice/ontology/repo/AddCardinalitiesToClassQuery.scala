@@ -28,14 +28,13 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 object AddCardinalitiesToClassQuery extends QueryBuilderHelper {
 
   def build(
-    ontologyIri: SmartIri,
+    ontologyIri: OntologyIri,
     classIri: SmartIri,
     cardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo],
     lastModificationDate: Instant,
     currentTime: Instant,
   ): Update = {
-    val ontoIri                = OntologyIri.unsafeFrom(ontologyIri)
-    val (ontology, ontologyNS) = ontologyAndNamespace(ontoIri)
+    val (ontology, ontologyNS) = ontologyAndNamespace(ontologyIri)
     val classRdfIri            = toRdfIri(classIri)
 
     val deletePattern = ontology.has(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
