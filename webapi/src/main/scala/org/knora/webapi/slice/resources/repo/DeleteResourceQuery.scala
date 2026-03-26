@@ -15,20 +15,23 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 import java.time.Instant
 
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 
 object DeleteResourceQuery extends QueryBuilderHelper {
 
   def build(
-    dataNamedGraph: String,
-    resourceIri: String,
+    project: Project,
+    resourceIri: ResourceIri,
     maybeDeleteComment: Option[String],
     currentTime: Instant,
-    requestingUser: String,
+    requestingUser: UserIri,
   ): ModifyQuery = {
-    val dataGraph                    = Rdf.iri(dataNamedGraph)
-    val resource                     = Rdf.iri(resourceIri)
+    val dataGraph                    = graphIri(project)
+    val resource                     = toRdfIri(resourceIri)
     val resourceClass                = variable("resourceClass")
     val resourceLastModificationDate = variable("resourceLastModificationDate")
     val currentTimeLiteral           = Rdf.literalOfType(currentTime.toString, XSD.DATETIME)
@@ -42,7 +45,7 @@ object DeleteResourceQuery extends QueryBuilderHelper {
     // INSERT patterns
     val insertBase: TriplePattern = resource
       .has(KB.isDeleted, Rdf.literalOf(true))
-      .andHas(KB.deletedBy, Rdf.iri(requestingUser))
+      .andHas(KB.deletedBy, Rdf.iri(requestingUser.value))
       .andHas(KB.deleteDate, currentTimeLiteral)
 
     val insertComment: List[TriplePattern] =

@@ -49,9 +49,9 @@ import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
-import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
@@ -294,16 +294,16 @@ final case class ResourcesResponderV2(
 
         _ <- canDeleteResource(deleteResourceV2, Some(resource)).map(_.assertGoodRequestEither).absolve
 
-        // Get the IRI of the named graph in which the resource is stored.
-        dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
-
         // Generate SPARQL for marking the resource as deleted.
+        requestingUserIri <-
+          ZIO.fromEither(UserIri.from(deleteResourceV2.requestingUser.id)).mapError(e => Exception(e)).orDie
+        resourceIri <- iriConverter.asResourceIri(deleteResourceV2.resourceIri).mapError(BadRequestException.apply)
         sparqlUpdate = DeleteResourceQuery.build(
-                         dataNamedGraph = dataNamedGraph,
-                         resourceIri = deleteResourceV2.resourceIri,
+                         project = resource.projectADM,
+                         resourceIri = resourceIri,
                          maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
                          currentTime = deleteResourceV2.maybeDeleteDate.getOrElse(Instant.now),
-                         requestingUser = deleteResourceV2.requestingUser.id,
+                         requestingUser = requestingUserIri,
                        )
         // Do the update.
         _ <- ZIO.logInfo(

@@ -9,12 +9,37 @@ import zio.test.*
 
 import java.time.Instant
 
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+
 object DeleteResourceQuerySpec extends ZIOSpecDefault {
 
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+
+  private val testProject = Project(
+    ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
+    Shortname.unsafeFrom("anything"),
+    Shortcode.unsafeFrom("0001"),
+    None,
+    Seq(StringLiteralV2.from("Test project")),
+    List.empty,
+    None,
+    Seq.empty,
+    Status.Active,
+    SelfJoin.CannotJoin,
+    Set.empty,
+    Set.empty,
+  )
+
   private val dataNamedGraph = "http://www.knora.org/data/0001/anything"
-  private val resourceIri    = "http://rdfh.ch/0001/thing-with-history"
+  private val resourceIri    = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri)
   private val currentTime    = Instant.parse("2024-01-01T10:00:00Z")
-  private val requestingUser = "http://rdfh.ch/users/root"
+  private val requestingUser = UserIri.unsafeFrom("http://rdfh.ch/users/root")
 
   private def normalize(s: String): String =
     s.trim.linesIterator.map(_.trim).filter(_.nonEmpty).mkString("\n")
@@ -24,7 +49,7 @@ object DeleteResourceQuerySpec extends ZIOSpecDefault {
       val actual = normalize(
         DeleteResourceQuery
           .build(
-            dataNamedGraph = dataNamedGraph,
+            project = testProject,
             resourceIri = resourceIri,
             maybeDeleteComment = None,
             currentTime = currentTime,
@@ -38,16 +63,16 @@ object DeleteResourceQuerySpec extends ZIOSpecDefault {
              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
              |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-             |DELETE { GRAPH <$dataNamedGraph> { <$resourceIri> knora-base:lastModificationDate ?resourceLastModificationDate .
-             |<$resourceIri> knora-base:isDeleted false . } }
-             |INSERT { GRAPH <$dataNamedGraph> { <$resourceIri> knora-base:isDeleted true ;
-             |knora-base:deletedBy <$requestingUser> ;
+             |DELETE { GRAPH <$dataNamedGraph> { <http://rdfh.ch/0001/thing-with-history> knora-base:lastModificationDate ?resourceLastModificationDate .
+             |<http://rdfh.ch/0001/thing-with-history> knora-base:isDeleted false . } }
+             |INSERT { GRAPH <$dataNamedGraph> { <http://rdfh.ch/0001/thing-with-history> knora-base:isDeleted true ;
+             |knora-base:deletedBy <http://rdfh.ch/users/root> ;
              |knora-base:deleteDate "$currentTime"^^xsd:dateTime .
-             |<$resourceIri> knora-base:lastModificationDate "$currentTime"^^xsd:dateTime . } }
-             |WHERE { { <$resourceIri> rdf:type ?resourceClass ;
+             |<http://rdfh.ch/0001/thing-with-history> knora-base:lastModificationDate "$currentTime"^^xsd:dateTime . } }
+             |WHERE { { <http://rdfh.ch/0001/thing-with-history> rdf:type ?resourceClass ;
              |knora-base:isDeleted false .
              |?resourceClass rdfs:subClassOf* knora-base:Resource . }
-             |OPTIONAL { <$resourceIri> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
+             |OPTIONAL { <http://rdfh.ch/0001/thing-with-history> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
         ),
       )
     },
@@ -55,7 +80,7 @@ object DeleteResourceQuerySpec extends ZIOSpecDefault {
       val actual = normalize(
         DeleteResourceQuery
           .build(
-            dataNamedGraph = dataNamedGraph,
+            project = testProject,
             resourceIri = resourceIri,
             maybeDeleteComment = Some("This resource is no longer needed"),
             currentTime = currentTime,
@@ -69,17 +94,17 @@ object DeleteResourceQuerySpec extends ZIOSpecDefault {
              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
              |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-             |DELETE { GRAPH <$dataNamedGraph> { <$resourceIri> knora-base:lastModificationDate ?resourceLastModificationDate .
-             |<$resourceIri> knora-base:isDeleted false . } }
-             |INSERT { GRAPH <$dataNamedGraph> { <$resourceIri> knora-base:isDeleted true ;
-             |knora-base:deletedBy <$requestingUser> ;
+             |DELETE { GRAPH <$dataNamedGraph> { <http://rdfh.ch/0001/thing-with-history> knora-base:lastModificationDate ?resourceLastModificationDate .
+             |<http://rdfh.ch/0001/thing-with-history> knora-base:isDeleted false . } }
+             |INSERT { GRAPH <$dataNamedGraph> { <http://rdfh.ch/0001/thing-with-history> knora-base:isDeleted true ;
+             |knora-base:deletedBy <http://rdfh.ch/users/root> ;
              |knora-base:deleteDate "$currentTime"^^xsd:dateTime .
-             |<$resourceIri> knora-base:deleteComment "This resource is no longer needed" .
-             |<$resourceIri> knora-base:lastModificationDate "$currentTime"^^xsd:dateTime . } }
-             |WHERE { { <$resourceIri> rdf:type ?resourceClass ;
+             |<http://rdfh.ch/0001/thing-with-history> knora-base:deleteComment "This resource is no longer needed" .
+             |<http://rdfh.ch/0001/thing-with-history> knora-base:lastModificationDate "$currentTime"^^xsd:dateTime . } }
+             |WHERE { { <http://rdfh.ch/0001/thing-with-history> rdf:type ?resourceClass ;
              |knora-base:isDeleted false .
              |?resourceClass rdfs:subClassOf* knora-base:Resource . }
-             |OPTIONAL { <$resourceIri> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
+             |OPTIONAL { <http://rdfh.ch/0001/thing-with-history> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
         ),
       )
     },
