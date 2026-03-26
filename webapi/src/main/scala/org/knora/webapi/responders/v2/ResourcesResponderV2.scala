@@ -29,7 +29,6 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
@@ -61,6 +60,7 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
+import org.knora.webapi.slice.resources.repo.DeleteResourceQuery
 import org.knora.webapi.slice.resources.repo.EraseResourceQuery
 import org.knora.webapi.slice.resources.repo.GetAllResourcesInProjectPrequery
 import org.knora.webapi.slice.resources.repo.GetGraphDataQuery
@@ -298,7 +298,7 @@ final case class ResourcesResponderV2(
         dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Generate SPARQL for marking the resource as deleted.
-        sparqlUpdate = sparql.v2.txt.deleteResource(
+        sparqlUpdate = DeleteResourceQuery.build(
                          dataNamedGraph = dataNamedGraph,
                          resourceIri = deleteResourceV2.resourceIri,
                          maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
