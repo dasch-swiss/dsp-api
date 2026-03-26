@@ -50,6 +50,7 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
+import org.knora.webapi.slice.ontology.repo.AddCardinalitiesToClassQuery
 import org.knora.webapi.slice.ontology.repo.ChangeClassLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
@@ -923,15 +924,14 @@ final case class OntologyResponderV2(
       cardinalitiesToAdd =
         newInternalClassDefWithLinkValueProps.directCardinalities -- existingClassDef.directCardinalities.keySet
 
-      updateSparql = sparql.v2.txt.addCardinalitiesToClass(
-                       ontologyNamedGraphIri = internalOntologyIri,
-                       ontologyIri = internalOntologyIri,
-                       classIri = internalClassIri,
-                       cardinalitiesToAdd = cardinalitiesToAdd,
-                       lastModificationDate = addCardinalitiesRequest.lastModificationDate,
-                       currentTime = currentTime,
-                     )
-      _ <- save(Update(updateSparql))
+      updateQuery = AddCardinalitiesToClassQuery.build(
+                      ontologyIri = internalOntologyIri,
+                      classIri = internalClassIri,
+                      cardinalitiesToAdd = cardinalitiesToAdd,
+                      lastModificationDate = addCardinalitiesRequest.lastModificationDate,
+                      currentTime = currentTime,
+                    )
+      _ <- save(updateQuery)
       // Read the data back from the cache.
       response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                     classIris = Set(internalClassIri),
