@@ -811,20 +811,14 @@ final case class OntologyResponderV2(
       resourceClassIri = classInfo.resourceClassIri
       ontologyIri      = resourceClassIri.ontologyIri
 
-      externalClassIri    = resourceClassIri.toComplexSchema
-      internalClassIri    = resourceClassIri.toInternalSchema
-      externalOntologyIri = ontologyIri.toComplexSchema
-      internalOntologyIri = ontologyIri.toInternalSchema
-
-      _ <-
-        ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
+      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(resourceClassIri, requestingUser)
 
       cacheData                           <- ontologyCache.getCacheData
       internalClassDef: ClassInfoContentV2 = classInfo.toOntologySchema(InternalSchema)
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
       _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-             internalOntologyIri,
+             ontologyIri,
              addCardinalitiesRequest.lastModificationDate,
            )
 
@@ -843,10 +837,10 @@ final case class OntologyResponderV2(
 
       // Check that the class exists, that it's a Knora resource class, and that the submitted cardinalities aren't for properties that already have cardinalities
       // directly defined on the class.
-      ontology               = cacheData.ontologies(internalOntologyIri)
+      ontology               = cacheData.ontologies(ontologyIri.toInternalSchema)
       existingReadClassInfo <-
         ZIO
-          .fromOption(ontology.classes.get(internalClassIri))
+          .fromOption(ontology.classes.get(resourceClassIri.toInternalSchema))
           .orElseFail(
             BadRequestException(s"Class ${classInfo.classIri} does not exist"),
           )
@@ -896,7 +890,7 @@ final case class OntologyResponderV2(
                                           )
                                         }
 
-      allBaseClassIris                       = internalClassIri +: allBaseClassIrisWithoutInternal
+      allBaseClassIris                       = resourceClassIri.toInternalSchema +: allBaseClassIrisWithoutInternal
       existingLinkPropsToKeep: Set[SmartIri] =
         existingReadClassInfo.entityInfoContent.directCardinalities.keySet
           .flatMap(p => cacheData.ontologies(p.getOntologyFromEntity).properties.get(p))
@@ -929,7 +923,7 @@ final case class OntologyResponderV2(
 
       updateQuery = AddCardinalitiesToClassQuery.build(
                       ontologyIri,
-                      classIri = internalClassIri,
+                      classIri = resourceClassIri.toInternalSchema,
                       cardinalitiesToAdd = cardinalitiesToAdd,
                       lastModificationDate = addCardinalitiesRequest.lastModificationDate,
                       currentTime = currentTime,
@@ -937,7 +931,7 @@ final case class OntologyResponderV2(
       _ <- save(updateQuery)
       // Read the data back from the cache.
       response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
-                    classIris = Set(internalClassIri),
+                    classIris = Set(resourceClassIri.toInternalSchema),
                     allLanguages = true,
                     requestingUser = addCardinalitiesRequest.requestingUser,
                   )
