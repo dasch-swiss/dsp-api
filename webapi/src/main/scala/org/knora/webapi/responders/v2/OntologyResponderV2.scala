@@ -60,6 +60,7 @@ import org.knora.webapi.slice.ontology.repo.DeleteOntologyCommentQuery
 import org.knora.webapi.slice.ontology.repo.DeleteOntologyQuery
 import org.knora.webapi.slice.ontology.repo.DeletePropertyCommentsQuery
 import org.knora.webapi.slice.ontology.repo.DeletePropertyQuery
+import org.knora.webapi.slice.ontology.repo.ReplaceClassCardinalitiesQuery
 import org.knora.webapi.slice.ontology.repo.UpdateOntologyMetadataQuery
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
@@ -760,15 +761,14 @@ final case class OntologyResponderV2(
 
         currentTime <- Clock.instant
 
-        updateSparql = sparql.v2.txt.replaceClassCardinalities(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         classIri = internalClassIri,
-                         newCardinalities = newReadClassInfo.entityInfoContent.directCardinalities,
-                         lastModificationDate = changeGuiOrderRequest.lastModificationDate,
-                         currentTime = currentTime,
-                       )
-        _ <- save(Update(updateSparql))
+        updateQuery = ReplaceClassCardinalitiesQuery.build(
+                        ontologyIri = OntologyIri.unsafeFrom(internalOntologyIri),
+                        classIri = internalClassIri,
+                        newCardinalities = newReadClassInfo.entityInfoContent.directCardinalities,
+                        lastModificationDate = changeGuiOrderRequest.lastModificationDate,
+                        currentTime = currentTime,
+                      )
+        _ <- save(updateQuery)
 
         // Read the data back from the cache.
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
@@ -1104,17 +1104,15 @@ final case class OntologyResponderV2(
     newReadClassInfo: ReadClassInfoV2,
     timeOfUpdate: Instant,
   ): Task[Unit] = {
-    val classIri     = request.classInfoContent.classIri.toOntologySchema(InternalSchema)
-    val ontologyIri  = classIri.getOntologyFromEntity
-    val updateSparql = sparql.v2.txt.replaceClassCardinalities(
-      ontologyNamedGraphIri = ontologyIri,
-      ontologyIri = ontologyIri,
+    val classIri    = request.classInfoContent.classIri.toOntologySchema(InternalSchema)
+    val updateQuery = ReplaceClassCardinalitiesQuery.build(
+      ontologyIri = classIri.ontologyIri,
       classIri = classIri,
       newCardinalities = newReadClassInfo.entityInfoContent.directCardinalities,
       lastModificationDate = request.lastModificationDate,
       currentTime = timeOfUpdate,
     )
-    save(Update(updateSparql)).unit
+    save(updateQuery).unit
   }
 
   /**

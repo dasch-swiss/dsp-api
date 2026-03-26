@@ -15,18 +15,18 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.repo.IsPropertyUsedInResourcesQuery
+import org.knora.webapi.slice.ontology.repo.ReplaceClassCardinalitiesQuery
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
  * Contains methods used for dealing with cardinalities on a class
@@ -279,16 +279,15 @@ final case class CardinalityHandler(
 
       // Add the cardinalities to the class definition in the triplestore.
       currentTime: Instant = Instant.now
-      updateSparql         = sparql.v2.txt.replaceClassCardinalities(
-                       ontologyNamedGraphIri = internalOntologyIri,
-                       ontologyIri = internalOntologyIri,
-                       classIri = internalClassIri,
-                       newCardinalities = newInternalClassDefWithLinkValueProps.directCardinalities,
-                       lastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
-                       currentTime = currentTime,
-                     )
+      updateQuery          = ReplaceClassCardinalitiesQuery.build(
+                      ontologyIri = OntologyIri.unsafeFrom(internalOntologyIri),
+                      classIri = internalClassIri,
+                      newCardinalities = newInternalClassDefWithLinkValueProps.directCardinalities,
+                      lastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
+                      currentTime = currentTime,
+                    )
 
-      _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
+      _ <- triplestoreService.query(updateQuery) *> ontologyCache.refreshCache()
 
       // Read the data back from the cache.
       response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
