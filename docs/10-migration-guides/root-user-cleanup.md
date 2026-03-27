@@ -41,6 +41,7 @@ WHERE {
 ```
 
 Replace:
+
 - `ROOT_USER_IRI` with the root user's IRI (e.g., `http://rdfh.ch/users/root`)
 - `DESIGNATED_USER_IRI` with a project member's IRI who should be the new owner
 - `SHORTCODE` with the project's shortcode (e.g., `0110`)
