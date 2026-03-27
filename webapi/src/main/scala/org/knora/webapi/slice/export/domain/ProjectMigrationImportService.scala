@@ -366,21 +366,36 @@ final class ProjectMigrationImportService(
     } yield ()
 
   private def logProfileDifferences(existing: KnoraUser, userResource: Resource, userIri: UserIri): Task[Unit] = {
-    val diffs = List.newBuilder[String]
-    userResource.objectStringOption(KnoraAdmin.FamilyName).toOption.flatten.foreach { v =>
-      if (v != existing.familyName.value) diffs += s"familyName: import='$v' existing='${existing.familyName.value}'"
+    val diffs    = List.newBuilder[String]
+    val warnings = List.newBuilder[String]
+
+    userResource.objectStringOption(KnoraAdmin.FamilyName) match {
+      case Right(Some(v)) =>
+        if (v != existing.familyName.value) diffs += s"familyName: import='$v' existing='${existing.familyName.value}'"
+      case Left(err) => warnings += s"familyName: $err"
+      case _         => ()
     }
-    userResource.objectStringOption(KnoraAdmin.GivenName).toOption.flatten.foreach { v =>
-      if (v != existing.givenName.value) diffs += s"givenName: import='$v' existing='${existing.givenName.value}'"
+    userResource.objectStringOption(KnoraAdmin.GivenName) match {
+      case Right(Some(v)) =>
+        if (v != existing.givenName.value) diffs += s"givenName: import='$v' existing='${existing.givenName.value}'"
+      case Left(err) => warnings += s"givenName: $err"
+      case _         => ()
     }
-    val result = diffs.result()
+
+    val diffResult    = diffs.result()
+    val warningResult = warnings.result()
     ZIO
-      .when(result.nonEmpty)(
-        ZIO.logWarning(
-          s"User '$userIri' profile differs from existing: ${result.mkString("; ")}. Keeping existing values.",
-        ),
+      .when(warningResult.nonEmpty)(
+        ZIO.logWarning(s"User '$userIri' has malformed profile fields in admin.nq: ${warningResult.mkString("; ")}"),
       )
-      .unit
+      .unit *>
+      ZIO
+        .when(diffResult.nonEmpty)(
+          ZIO.logWarning(
+            s"User '$userIri' profile differs from existing: ${diffResult.mkString("; ")}. Keeping existing values.",
+          ),
+        )
+        .unit
   }
 
   /**
