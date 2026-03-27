@@ -166,6 +166,12 @@ object Vocabulary {
     val subjectClassConstraint: Iri = iri(kb + "subjectClassConstraint")
     val objectClassConstraint: Iri  = iri(kb + "objectClassConstraint")
 
+    // mapping classes
+    val XMLToStandoffMapping: Iri         = iri(kb + "XMLToStandoffMapping")
+    val MappingElement: Iri               = iri(kb + "MappingElement")
+    val MappingXMLAttribute: Iri          = iri(kb + "MappingXMLAttribute")
+    val MappingStandoffDataTypeClass: Iri = iri(kb + "MappingStandoffDataTypeClass")
+
     // mapping properties
     val hasMappingElement: Iri                  = iri(kb + "hasMappingElement")
     val mappingHasDefaultXSLTransformation: Iri = iri(kb + "mappingHasDefaultXSLTransformation")
