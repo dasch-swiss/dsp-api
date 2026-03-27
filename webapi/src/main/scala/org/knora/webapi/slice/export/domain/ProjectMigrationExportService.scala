@@ -139,10 +139,34 @@ final class ProjectMigrationExportService(
       rdfStr  <- triplestore.queryRdf(Construct(queryStr))
 
       // Step 3: Parse result into Jena model, scope memberships, write as NQuads
+      model <- ZIO.attempt {
+                 val m = org.apache.jena.rdf.model.ModelFactory.createDefaultModel()
+                 RDFDataMgr.read(m, java.io.ByteArrayInputStream(rdfStr.getBytes(java.nio.charset.StandardCharsets.UTF_8)), JenaLang.TURTLE)
+                 AdminModelScoping.removeNonProjectMemberships(m, project.id.value)
+                 m
+               }
+
+      // Warn if root user is in the export
+      rootUserIri <- ZIO.attempt {
+                       import scala.jdk.CollectionConverters.*
+                       import org.knora.webapi.messages.OntologyConstants.KnoraAdmin as KAConst
+                       val userType     = org.apache.jena.rdf.model.ResourceFactory.createResource(KAConst.User)
+                       val usernameProp = org.apache.jena.rdf.model.ResourceFactory.createProperty(KAConst.Username)
+                       model.listSubjectsWithProperty(org.apache.jena.vocabulary.RDF.`type`, userType).asScala
+                         .find { user =>
+                           val stmt = user.getProperty(usernameProp)
+                           stmt != null && stmt.getObject.isLiteral && stmt.getLiteral.getString == "root"
+                         }
+                         .map(_.getURI)
+                     }
+      _ <- ZIO.foreachDiscard(rootUserIri)(iri =>
+             ZIO.logWarning(
+               s"$taskId: Export includes root user '$iri'. " +
+               "Resources referencing root require pre-migration cleanup before import."
+             )
+           )
+
       _ <- ZIO.attempt {
-             val model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel()
-             RDFDataMgr.read(model, java.io.ByteArrayInputStream(rdfStr.getBytes(java.nio.charset.StandardCharsets.UTF_8)), JenaLang.TURTLE)
-             AdminModelScoping.removeNonProjectMemberships(model, project.id.value)
              val dataset = DatasetFactory.create()
              dataset.addNamedModel(adminDataNamedGraph.value, model)
              val out = java.io.FileOutputStream(adminFile.toFile)
