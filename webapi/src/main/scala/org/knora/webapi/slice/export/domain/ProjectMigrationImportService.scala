@@ -109,7 +109,12 @@ final class ProjectMigrationImportService(
 
         _          <- ZIO.logInfo(s"$taskId: Starting admin data validation for project '$projectIri'")
         adminNqPath = bagRoot / "data" / "rdf" / "admin.nq"
-        shortcode  <- ZIO.scoped {
+        // First parse of admin.nq: validate project/group uniqueness before SHACL.
+        // This is intentionally separate from the second parse below because:
+        // 1. SHACL must validate the *original* admin.nq with all user type declarations present.
+        // 2. The second parse (prepareAdminModel) rewrites user triples, so it must run *after* SHACL.
+        // 3. Keeping them in separate scoped blocks lets Jena release the first dataset's memory.
+        shortcode <- ZIO.scoped {
                        for {
                          dataset   <- DatasetOps.from(adminNqPath, Lang.NQUADS)
                          model      = dataset.getNamedModel(adminDataNamedGraph.value)
@@ -126,7 +131,7 @@ final class ProjectMigrationImportService(
         _ <- projectShaclValidator.validate(ontologyFiles, dataFiles, projectIri)
         _ <- ZIO.logInfo(s"$taskId: SHACL validation passed for project '$projectIri'")
 
-        // Idempotent user handling: validate users and rewrite admin.nq
+        // Second parse of admin.nq: idempotent user handling rewrites user triples.
         _               <- ZIO.logInfo(s"$taskId: Starting user preparation for project '$projectIri'")
         rewrittenAdminNq = bagRoot / "data" / "rdf" / "admin-rewritten.nq"
         _               <- ZIO.scoped {

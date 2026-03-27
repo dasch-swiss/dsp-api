@@ -53,42 +53,47 @@ object AdminDataQuery extends QueryBuilderHelper {
    * SystemAdmin exclusion filter. Since SparqlBuilder does not support VALUES blocks,
    * the query is assembled via string interpolation.
    *
+   * Note: The referenced user IRIs are inlined in a VALUES clause. For projects with
+   * a very large number of distinct referenced users, this could produce a long query
+   * string. Fuseki handles this in practice, but if projects with thousands of distinct
+   * referenced users appear, consider batching or a subquery approach.
+   *
    * @return the SPARQL query string (callers must wrap in [[TriplestoreService.Queries.Construct]])
    */
-  def buildWithReferencedUsers(project: ProjectIri, referencedUserIris: Set[UserIri]): String = {
-    if (referencedUserIris.isEmpty) return build(project).getQueryString
+  def buildWithReferencedUsers(project: ProjectIri, referencedUserIris: Set[UserIri]): String =
+    if (referencedUserIris.isEmpty) build(project).getQueryString
+    else {
+      val ka           = KA.NS.getName
+      val adminGraph   = adminDataNamedGraph.value
+      val projectIri   = project.value
+      val valuesClause = referencedUserIris.map(iri => s"<${iri.value}>").mkString(" ")
 
-    val ka           = KA.NS.getName
-    val adminGraph   = adminDataNamedGraph.value
-    val projectIri   = project.value
-    val valuesClause = referencedUserIris.map(iri => s"<${iri.value}>").mkString(" ")
-
-    s"""PREFIX knora-admin: <$ka>
-       |CONSTRUCT {
-       |  <$projectIri> ?projectPred ?projectObj .
-       |  ?user ?userPred ?userObj .
-       |  ?group ?groupPred ?groupObj .
-       |}
-       |WHERE {
-       |  GRAPH <$adminGraph> {
-       |    {
-       |      <$projectIri> a knora-admin:KnoraProject ;
-       |        ?projectPred ?projectObj .
-       |    } UNION {
-       |      ?user a knora-admin:User ;
-       |        ?userPred ?userObj ;
-       |        knora-admin:isInProject <$projectIri> .
-       |      FILTER NOT EXISTS { ?user knora-admin:isInSystemAdminGroup "true"^^<${XSD.BOOLEAN}> . }
-       |    } UNION {
-       |      ?user a knora-admin:User ;
-       |        ?userPred ?userObj .
-       |      VALUES ?user { $valuesClause }
-       |    } UNION {
-       |      ?group a knora-admin:UserGroup ;
-       |        ?groupPred ?groupObj ;
-       |        knora-admin:belongsToProject <$projectIri> .
-       |    }
-       |  }
-       |}""".stripMargin
-  }
+      s"""PREFIX knora-admin: <$ka>
+         |CONSTRUCT {
+         |  <$projectIri> ?projectPred ?projectObj .
+         |  ?user ?userPred ?userObj .
+         |  ?group ?groupPred ?groupObj .
+         |}
+         |WHERE {
+         |  GRAPH <$adminGraph> {
+         |    {
+         |      <$projectIri> a knora-admin:KnoraProject ;
+         |        ?projectPred ?projectObj .
+         |    } UNION {
+         |      ?user a knora-admin:User ;
+         |        ?userPred ?userObj ;
+         |        knora-admin:isInProject <$projectIri> .
+         |      FILTER NOT EXISTS { ?user knora-admin:isInSystemAdminGroup "true"^^<${XSD.BOOLEAN}> . }
+         |    } UNION {
+         |      ?user a knora-admin:User ;
+         |        ?userPred ?userObj .
+         |      VALUES ?user { $valuesClause }
+         |    } UNION {
+         |      ?group a knora-admin:UserGroup ;
+         |        ?groupPred ?groupObj ;
+         |        knora-admin:belongsToProject <$projectIri> .
+         |    }
+         |  }
+         |}""".stripMargin
+    }
 }
