@@ -13,6 +13,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
 
@@ -42,5 +43,52 @@ object AdminDataQuery extends QueryBuilderHelper {
           .from(toRdfIri(adminDataNamedGraph)),
       )
       .prefix(KA.NS)
+  }
+
+  /**
+   * Builds the admin data CONSTRUCT query including an additional UNION branch for
+   * users referenced by attachedToUser in the project's data graph.
+   *
+   * The additional branch fetches all triples for the referenced users without the
+   * SystemAdmin exclusion filter. Since SparqlBuilder does not support VALUES blocks,
+   * the query is assembled via string interpolation.
+   *
+   * @return the SPARQL query string (callers must wrap in [[TriplestoreService.Queries.Construct]])
+   */
+  def buildWithReferencedUsers(project: ProjectIri, referencedUserIris: Set[UserIri]): String = {
+    if (referencedUserIris.isEmpty) return build(project).getQueryString
+
+    val ka           = KA.NS.getName
+    val adminGraph   = adminDataNamedGraph.value
+    val projectIri   = project.value
+    val valuesClause = referencedUserIris.map(iri => s"<${iri.value}>").mkString(" ")
+
+    s"""PREFIX knora-admin: <$ka>
+       |CONSTRUCT {
+       |  <$projectIri> ?projectPred ?projectObj .
+       |  ?user ?userPred ?userObj .
+       |  ?group ?groupPred ?groupObj .
+       |}
+       |WHERE {
+       |  GRAPH <$adminGraph> {
+       |    {
+       |      <$projectIri> a knora-admin:KnoraProject ;
+       |        ?projectPred ?projectObj .
+       |    } UNION {
+       |      ?user a knora-admin:User ;
+       |        ?userPred ?userObj ;
+       |        knora-admin:isInProject <$projectIri> .
+       |      FILTER NOT EXISTS { ?user knora-admin:isInSystemAdminGroup "true"^^<${XSD.BOOLEAN}> . }
+       |    } UNION {
+       |      ?user a knora-admin:User ;
+       |        ?userPred ?userObj .
+       |      VALUES ?user { $valuesClause }
+       |    } UNION {
+       |      ?group a knora-admin:UserGroup ;
+       |        ?groupPred ?groupObj ;
+       |        knora-admin:belongsToProject <$projectIri> .
+       |    }
+       |  }
+       |}""".stripMargin
   }
 }
