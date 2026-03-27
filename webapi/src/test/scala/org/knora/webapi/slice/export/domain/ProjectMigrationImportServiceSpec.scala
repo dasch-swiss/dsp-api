@@ -940,6 +940,57 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           } yield assertTrue(result.status == DataTaskStatus.Failed)
         }
       },
+      test("import fails when root user already exists on target (found by IRI)") {
+        val existingRoot = KnoraUser(
+          id = UserIri.unsafeFrom("http://rdfh.ch/users/rootuser"),
+          username = Username.unsafeFrom("root"),
+          email = Email.unsafeFrom("root@example.com"),
+          familyName = FamilyName.unsafeFrom("Root"),
+          givenName = GivenName.unsafeFrom("User"),
+          password = PasswordHash.unsafeFrom("hashedpw"),
+          preferredLanguage = LanguageCode.EN,
+          status = UserStatus.Active,
+          isInProject = Chunk.empty,
+          isInGroup = Chunk.empty,
+          isInSystemAdminGroup = SystemAdmin.IsSystemAdmin,
+          isInProjectAdminGroup = Chunk.empty,
+        )
+        val adminWithRoot =
+          s"""<http://rdfh.ch/projects/9999> <$RdfType> <${KnoraAdminPrefix}knoraProject> <$AdminGraph> .
+             |<http://rdfh.ch/projects/9999> <${KnoraAdminPrefix}projectShortcode> "9999" <$AdminGraph> .
+             |<http://rdfh.ch/users/rootuser> <$RdfType> <${KnoraAdminPrefix}User> <$AdminGraph> .
+             |<http://rdfh.ch/users/rootuser> <${KnoraAdminPrefix}email> "root@example.com" <$AdminGraph> .
+             |<http://rdfh.ch/users/rootuser> <${KnoraAdminPrefix}username> "root" <$AdminGraph> .
+             |<http://rdfh.ch/users/rootuser> <${KnoraAdminPrefix}isInProject> <http://rdfh.ch/projects/9999> <$AdminGraph> .
+             |<http://rdfh.ch/groups/9999/testgroup> <$RdfType> <${KnoraAdminPrefix}UserGroup> <$AdminGraph> .
+             |<http://rdfh.ch/groups/9999/testgroup> <${KnoraAdminPrefix}groupName> "TestImportGroup" <$AdminGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          for {
+            env <- makeTestEnv
+            // Root user already exists on target — found by IRI
+            _ <- env.userFindByIdRef.set(iri =>
+                   ZIO.succeed(if (iri.value == "http://rdfh.ch/users/rootuser") Some(existingRoot) else None),
+                 )
+            _ <- env.userFindByEmailRef.set(email =>
+                   ZIO.succeed(if (email.value == "root@example.com") Some(existingRoot) else None),
+                 )
+            _ <- env.userFindByUsernameRef.set(username =>
+                   ZIO.succeed(if (username.value == "root") Some(existingRoot) else None),
+                 )
+            stream <- buildBagItZip(payloadFiles =
+                        Map(
+                          "rdf/admin.nq"      -> adminWithRoot,
+                          "rdf/data.nq"       -> dataNq,
+                          "rdf/ontology-0.nq" -> ontologyNq,
+                        ),
+                      )
+            task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+            result <- pollUntilDone(env.service, task.id)
+            _      <- cleanupImport(env, task.id)
+          } yield assertTrue(result.status == DataTaskStatus.Failed)
+        }
+      },
       test("import with non-root SystemAdmin user strips isInSystemAdminGroup and succeeds") {
         val adminWithSysAdmin =
           s"""<http://rdfh.ch/projects/9999> <$RdfType> <${KnoraAdminPrefix}knoraProject> <$AdminGraph> .
