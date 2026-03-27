@@ -16,17 +16,23 @@ import org.knora.bagit.domain.PayloadEntry
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.version.BuildInfo
+import org.apache.jena.query.DatasetFactory
+import org.apache.jena.riot.Lang as JenaLang
+import org.apache.jena.riot.RDFDataMgr
+
 import org.knora.webapi.messages.util.rdf.NQuads
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 // This error is used to indicate that an export exists
 final case class ExportExistsError(t: CurrentDataTask)
@@ -119,8 +125,31 @@ final class ProjectMigrationExportService(
     for {
       _        <- ZIO.logInfo(s"$taskId: Collecting project admin data from graph '${adminDataNamedGraph.value}'")
       adminFile = rdfPath / "admin.nq"
-      _        <- Files.createFile(adminFile) *>
-             triplestore.queryToFile(AdminDataQuery.build(project.id), adminDataNamedGraph, adminFile, NQuads)
+
+      // Step 1: Find all user IRIs referenced by attachedToUser in the project's data graph
+      dataGraph        = projectService.getDataGraphForProject(project)
+      referencedResult <- triplestore.select(ReferencedUserIrisQuery.build(dataGraph))
+      referencedIris    = referencedResult.getCol("user").flatMap(UserIri.from(_).toOption).toSet
+      _ <- ZIO.when(referencedIris.nonEmpty)(
+             ZIO.logInfo(s"$taskId: Found ${referencedIris.size} users referenced by attachedToUser in data graph"),
+           )
+
+      // Step 2: Build and execute the CONSTRUCT query (with referenced users if any)
+      queryStr = AdminDataQuery.buildWithReferencedUsers(project.id, referencedIris)
+      rdfStr  <- triplestore.queryRdf(Construct(queryStr))
+
+      // Step 3: Parse result into Jena model, scope memberships, write as NQuads
+      _ <- ZIO.attempt {
+             val model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel()
+             RDFDataMgr.read(model, java.io.ByteArrayInputStream(rdfStr.getBytes(java.nio.charset.StandardCharsets.UTF_8)), JenaLang.TURTLE)
+             AdminModelScoping.removeNonProjectMemberships(model, project.id.value)
+             val dataset = DatasetFactory.create()
+             dataset.addNamedModel(adminDataNamedGraph.value, model)
+             val out = java.io.FileOutputStream(adminFile.toFile)
+             try RDFDataMgr.write(out, dataset, JenaLang.NQUADS)
+             finally out.close()
+             dataset.close()
+           }
     } yield ()
 
   private def collectPermissionsGraphData(taskId: DataTaskId, project: KnoraProject, rdfPath: Path) =
