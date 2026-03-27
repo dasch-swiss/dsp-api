@@ -7,6 +7,7 @@ package org.knora.webapi.slice.`export`.domain
 
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Resource
+import org.apache.jena.rdf.model.ResourceFactory
 import org.apache.jena.riot.Lang
 import org.apache.jena.vocabulary.RDF
 import zio.*
@@ -26,8 +27,6 @@ import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
-import org.apache.jena.rdf.model.ResourceFactory
-
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
@@ -37,10 +36,10 @@ import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.JenaConversions.given
@@ -108,12 +107,12 @@ final class ProjectMigrationImportService(
                s"$taskId: Payload file validation passed for project '$projectIri', found: ${nqFiles.mkString(", ")}",
              )
 
-        _         <- ZIO.logInfo(s"$taskId: Starting admin data validation for project '$projectIri'")
+        _          <- ZIO.logInfo(s"$taskId: Starting admin data validation for project '$projectIri'")
         adminNqPath = bagRoot / "data" / "rdf" / "admin.nq"
-        shortcode <- ZIO.scoped {
+        shortcode  <- ZIO.scoped {
                        for {
-                         dataset <- DatasetOps.from(adminNqPath, Lang.NQUADS)
-                         model    = dataset.getNamedModel(adminDataNamedGraph.value)
+                         dataset   <- DatasetOps.from(adminNqPath, Lang.NQUADS)
+                         model      = dataset.getNamedModel(adminDataNamedGraph.value)
                          shortcode <- validateProjectNotExists(bag, projectIri, model)
                          _         <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
                          _         <- validateGroupsNotExist(model)
@@ -128,20 +127,20 @@ final class ProjectMigrationImportService(
         _ <- ZIO.logInfo(s"$taskId: SHACL validation passed for project '$projectIri'")
 
         // Idempotent user handling: validate users and rewrite admin.nq
-        _ <- ZIO.logInfo(s"$taskId: Starting user preparation for project '$projectIri'")
+        _               <- ZIO.logInfo(s"$taskId: Starting user preparation for project '$projectIri'")
         rewrittenAdminNq = bagRoot / "data" / "rdf" / "admin-rewritten.nq"
-        _ <- ZIO.scoped {
+        _               <- ZIO.scoped {
                for {
                  dataset <- DatasetOps.from(adminNqPath, Lang.NQUADS)
                  model    = dataset.getNamedModel(adminDataNamedGraph.value)
                  _       <- prepareAdminModel(model, projectIri)
                  _       <- ZIO.attempt {
-                              val outDataset = org.apache.jena.query.DatasetFactory.create()
-                              outDataset.addNamedModel(adminDataNamedGraph.value, model)
-                              val out = java.io.FileOutputStream(rewrittenAdminNq.toFile)
-                              try org.apache.jena.riot.RDFDataMgr.write(out, outDataset, org.apache.jena.riot.Lang.NQUADS)
-                              finally { out.close(); outDataset.close() }
-                            }
+                        val outDataset = org.apache.jena.query.DatasetFactory.create()
+                        outDataset.addNamedModel(adminDataNamedGraph.value, model)
+                        val out = java.io.FileOutputStream(rewrittenAdminNq.toFile)
+                        try org.apache.jena.riot.RDFDataMgr.write(out, outDataset, org.apache.jena.riot.Lang.NQUADS)
+                        finally { out.close(); outDataset.close() }
+                      }
                } yield ()
              }
         _ <- ZIO.logInfo(s"$taskId: User preparation completed for project '$projectIri'")
@@ -304,46 +303,66 @@ final class ProjectMigrationImportService(
     ZIO.foreachDiscard(userResources) { userResource =>
       val userIriStr = userResource.getURI
       for {
-        userIri  <- ZIO.fromEither(UserIri.from(userIriStr)).mapError(e => new RuntimeException(s"Invalid user IRI '$userIriStr': $e"))
-        email    <- ZIO.fromEither(userResource.objectString(KnoraAdmin.Email, Email.from)).mapError(e => new RuntimeException(s"$e in admin.nq"))
-        username <- ZIO.fromEither(userResource.objectString(KnoraAdmin.Username, Username.from)).mapError(e => new RuntimeException(s"$e in admin.nq"))
+        userIri <- ZIO
+                     .fromEither(UserIri.from(userIriStr))
+                     .mapError(e => new RuntimeException(s"Invalid user IRI '$userIriStr': $e"))
+        email <- ZIO
+                   .fromEither(userResource.objectString(KnoraAdmin.Email, Email.from))
+                   .mapError(e => new RuntimeException(s"$e in admin.nq"))
+        username <- ZIO
+                      .fromEither(userResource.objectString(KnoraAdmin.Username, Username.from))
+                      .mapError(e => new RuntimeException(s"$e in admin.nq"))
         byIri      <- userService.findById(userIri)
         byEmail    <- userService.findByEmail(email)
-        byUsername  <- userService.findByUsername(username)
-        _ <- (byIri, byEmail, byUsername) match {
-          case (Some(existingUser), _, _) =>
-            // Found by IRI — verify identity match, log diffs, rewrite to scoped memberships
-            validateIdentityMatch(existingUser, email, username, userIri) *>
-            logProfileDifferences(existingUser, userResource, userIri) *>
-            ZIO.succeed(rewriteExistingUserTriples(model, userResource, projectIri))
-          case (None, None, None) =>
-            // Entirely new user
-            ZIO.attempt(rewriteNewUserTriples(model, userResource, projectIri, username))
-          case (None, Some(emailOwner), _) =>
-            ZIO.fail(new RuntimeException(
-              s"User '${userIri.value}' has email '${email.value}' which is already used by user '${emailOwner.id.value}'"
-            ))
-          case (None, _, Some(usernameOwner)) =>
-            ZIO.fail(new RuntimeException(
-              s"User '${userIri.value}' has username '${username.value}' which is already used by user '${usernameOwner.id.value}'"
-            ))
-        }
+        byUsername <- userService.findByUsername(username)
+        _          <- (byIri, byEmail, byUsername) match {
+               case (Some(existingUser), _, _) =>
+                 // Found by IRI — verify identity match, log diffs, rewrite to scoped memberships
+                 validateIdentityMatch(existingUser, email, username, userIri) *>
+                   logProfileDifferences(existingUser, userResource, userIri) *>
+                   ZIO.succeed(rewriteExistingUserTriples(model, userResource, projectIri))
+               case (None, None, None) =>
+                 // Entirely new user
+                 ZIO.attempt(rewriteNewUserTriples(model, userResource, projectIri, username))
+               case (None, Some(emailOwner), _) =>
+                 ZIO.fail(
+                   new RuntimeException(
+                     s"User '${userIri.value}' has email '${email.value}' which is already used by user '${emailOwner.id.value}'",
+                   ),
+                 )
+               case (None, _, Some(usernameOwner)) =>
+                 ZIO.fail(
+                   new RuntimeException(
+                     s"User '${userIri.value}' has username '${username.value}' which is already used by user '${usernameOwner.id.value}'",
+                   ),
+                 )
+             }
       } yield ()
     }
   }
 
-  private def validateIdentityMatch(existing: KnoraUser, email: Email, username: Username, userIri: UserIri): Task[Unit] =
+  private def validateIdentityMatch(
+    existing: KnoraUser,
+    email: Email,
+    username: Username,
+    userIri: UserIri,
+  ): Task[Unit] =
     for {
       _ <- ZIO.when(existing.email != email)(
-             ZIO.fail(new RuntimeException(
-               s"User '$userIri' has email '${email.value}' but existing user has email '${existing.email.value}'"
-             ))
+             ZIO.fail(
+               new RuntimeException(
+                 s"User '$userIri' has email '${email.value}' but existing user has email '${existing.email.value}'",
+               ),
+             ),
            )
-      _ <- ZIO.when(existing.username != username)(
-             ZIO.fail(new RuntimeException(
-               s"User '$userIri' has username '${username.value}' but existing user has username '${existing.username.value}'"
-             ))
-           )
+      _ <-
+        ZIO.when(existing.username != username)(
+          ZIO.fail(
+            new RuntimeException(
+              s"User '$userIri' has username '${username.value}' but existing user has username '${existing.username.value}'",
+            ),
+          ),
+        )
     } yield ()
 
   private def logProfileDifferences(existing: KnoraUser, userResource: Resource, userIri: UserIri): Task[Unit] = {
@@ -355,9 +374,13 @@ final class ProjectMigrationImportService(
       if (v != existing.givenName.value) diffs += s"givenName: import='$v' existing='${existing.givenName.value}'"
     }
     val result = diffs.result()
-    ZIO.when(result.nonEmpty)(
-      ZIO.logWarning(s"User '$userIri' profile differs from existing: ${result.mkString("; ")}. Keeping existing values.")
-    ).unit
+    ZIO
+      .when(result.nonEmpty)(
+        ZIO.logWarning(
+          s"User '$userIri' profile differs from existing: ${result.mkString("; ")}. Keeping existing values.",
+        ),
+      )
+      .unit
   }
 
   /**
@@ -366,7 +389,8 @@ final class ProjectMigrationImportService(
   private def rewriteExistingUserTriples(model: Model, userResource: Resource, projectIri: ProjectIri): Unit = {
     val projectRes = model.getResource(projectIri.value)
     // Collect scoped memberships before removing triples
-    val hasIsInProject = userResource.hasProperty(KnoraAdmin.IsInProject: org.apache.jena.rdf.model.Property, projectRes)
+    val hasIsInProject =
+      userResource.hasProperty(KnoraAdmin.IsInProject: org.apache.jena.rdf.model.Property, projectRes)
     val scopedGroups = userResource
       .listProperties(KnoraAdmin.IsInGroup: org.apache.jena.rdf.model.Property)
       .asScala
@@ -406,11 +430,13 @@ final class ProjectMigrationImportService(
   ): Unit = {
     // Fail on root user
     if (username.value == "root")
-      throw new RuntimeException(s"Import contains the root user '${userResource.getURI}'. Resources referencing root require pre-migration cleanup.")
+      throw new RuntimeException(
+        s"Import contains the root user '${userResource.getURI}'. Resources referencing root require pre-migration cleanup.",
+      )
 
     // Strip isInSystemAdminGroup
     val sysAdminProp: org.apache.jena.rdf.model.Property = KnoraAdmin.IsInSystemAdminGroup
-    val sysAdminStmt = userResource.getProperty(sysAdminProp)
+    val sysAdminStmt                                     = userResource.getProperty(sysAdminProp)
     if (sysAdminStmt != null && sysAdminStmt.getObject.isLiteral && sysAdminStmt.getLiteral.getBoolean)
       model.remove(sysAdminStmt)
       val _ = model.add(userResource, sysAdminProp, ResourceFactory.createTypedLiteral(false))

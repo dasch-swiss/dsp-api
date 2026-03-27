@@ -5,6 +5,9 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import org.apache.jena.query.DatasetFactory
+import org.apache.jena.riot.Lang as JenaLang
+import org.apache.jena.riot.RDFDataMgr
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -16,10 +19,6 @@ import org.knora.bagit.domain.PayloadEntry
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.version.BuildInfo
-import org.apache.jena.query.DatasetFactory
-import org.apache.jena.riot.Lang as JenaLang
-import org.apache.jena.riot.RDFDataMgr
-
 import org.knora.webapi.messages.util.rdf.NQuads
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
@@ -127,10 +126,10 @@ final class ProjectMigrationExportService(
       adminFile = rdfPath / "admin.nq"
 
       // Step 1: Find all user IRIs referenced by attachedToUser in the project's data graph
-      dataGraph        = projectService.getDataGraphForProject(project)
+      dataGraph         = projectService.getDataGraphForProject(project)
       referencedResult <- triplestore.select(ReferencedUserIrisQuery.build(dataGraph))
       referencedIris    = referencedResult.getCol("user").flatMap(UserIri.from(_).toOption).toSet
-      _ <- ZIO.when(referencedIris.nonEmpty)(
+      _                <- ZIO.when(referencedIris.nonEmpty)(
              ZIO.logInfo(s"$taskId: Found ${referencedIris.size} users referenced by attachedToUser in data graph"),
            )
 
@@ -141,7 +140,11 @@ final class ProjectMigrationExportService(
       // Step 3: Parse result into Jena model, scope memberships, write as NQuads
       model <- ZIO.attempt {
                  val m = org.apache.jena.rdf.model.ModelFactory.createDefaultModel()
-                 RDFDataMgr.read(m, java.io.ByteArrayInputStream(rdfStr.getBytes(java.nio.charset.StandardCharsets.UTF_8)), JenaLang.TURTLE)
+                 RDFDataMgr.read(
+                   m,
+                   java.io.ByteArrayInputStream(rdfStr.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                   JenaLang.TURTLE,
+                 )
                  AdminModelScoping.removeNonProjectMemberships(m, project.id.value)
                  m
                }
@@ -152,7 +155,9 @@ final class ProjectMigrationExportService(
                        import org.knora.webapi.messages.OntologyConstants.KnoraAdmin as KAConst
                        val userType     = org.apache.jena.rdf.model.ResourceFactory.createResource(KAConst.User)
                        val usernameProp = org.apache.jena.rdf.model.ResourceFactory.createProperty(KAConst.Username)
-                       model.listSubjectsWithProperty(org.apache.jena.vocabulary.RDF.`type`, userType).asScala
+                       model
+                         .listSubjectsWithProperty(org.apache.jena.vocabulary.RDF.`type`, userType)
+                         .asScala
                          .find { user =>
                            val stmt = user.getProperty(usernameProp)
                            stmt != null && stmt.getObject.isLiteral && stmt.getLiteral.getString == "root"
@@ -162,8 +167,8 @@ final class ProjectMigrationExportService(
       _ <- ZIO.foreachDiscard(rootUserIri)(iri =>
              ZIO.logWarning(
                s"$taskId: Export includes root user '$iri'. " +
-               "Resources referencing root require pre-migration cleanup before import."
-             )
+                 "Resources referencing root require pre-migration cleanup before import.",
+             ),
            )
 
       _ <- ZIO.attempt {

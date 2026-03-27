@@ -24,8 +24,8 @@ import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.service.*
-import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -894,17 +894,19 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
       test("import with built-in SystemUser in admin.nq strips their triples and succeeds") {
         val adminWithBuiltIn =
           adminNq + s"""<http://www.knora.org/ontology/knora-admin#SystemUser> <$RdfType> <${KnoraAdminPrefix}User> <$AdminGraph> .
-             |<http://www.knora.org/ontology/knora-admin#SystemUser> <${KnoraAdminPrefix}email> "system@localhost" <$AdminGraph> .
-             |<http://www.knora.org/ontology/knora-admin#SystemUser> <${KnoraAdminPrefix}username> "system" <$AdminGraph> .
-             |""".stripMargin
+                       |<http://www.knora.org/ontology/knora-admin#SystemUser> <${KnoraAdminPrefix}email> "system@localhost" <$AdminGraph> .
+                       |<http://www.knora.org/ontology/knora-admin#SystemUser> <${KnoraAdminPrefix}username> "system" <$AdminGraph> .
+                       |""".stripMargin
         ZIO.scoped {
           for {
             env    <- makeTestEnv
-            stream <- buildBagItZip(payloadFiles = Map(
-                        "rdf/admin.nq"      -> adminWithBuiltIn,
-                        "rdf/data.nq"       -> dataNq,
-                        "rdf/ontology-0.nq" -> ontologyNq,
-                      ))
+            stream <- buildBagItZip(payloadFiles =
+                        Map(
+                          "rdf/admin.nq"      -> adminWithBuiltIn,
+                          "rdf/data.nq"       -> dataNq,
+                          "rdf/ontology-0.nq" -> ontologyNq,
+                        ),
+                      )
             task   <- env.service.importDataExport(testProjectIri, testUser, stream)
             result <- pollUntilDone(env.service, task.id)
             _      <- cleanupImport(env, task.id)
@@ -925,11 +927,13 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         ZIO.scoped {
           for {
             env    <- makeTestEnv
-            stream <- buildBagItZip(payloadFiles = Map(
-                        "rdf/admin.nq"      -> adminWithRoot,
-                        "rdf/data.nq"       -> dataNq,
-                        "rdf/ontology-0.nq" -> ontologyNq,
-                      ))
+            stream <- buildBagItZip(payloadFiles =
+                        Map(
+                          "rdf/admin.nq"      -> adminWithRoot,
+                          "rdf/data.nq"       -> dataNq,
+                          "rdf/ontology-0.nq" -> ontologyNq,
+                        ),
+                      )
             task   <- env.service.importDataExport(testProjectIri, testUser, stream)
             result <- pollUntilDone(env.service, task.id)
             _      <- cleanupImport(env, task.id)
@@ -951,15 +955,17 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         ZIO.scoped {
           for {
             env    <- makeTestEnv
-            stream <- buildBagItZip(payloadFiles = Map(
-                        "rdf/admin.nq"      -> adminWithSysAdmin,
-                        "rdf/data.nq"       -> dataNq,
-                        "rdf/ontology-0.nq" -> ontologyNq,
-                      ))
-            task    <- env.service.importDataExport(testProjectIri, testUser, stream)
-            result  <- pollUntilDone(env.service, task.id)
-            uploaded <- env.uploadedBytesRef.get
-            _        <- cleanupImport(env, task.id)
+            stream <- buildBagItZip(payloadFiles =
+                        Map(
+                          "rdf/admin.nq"      -> adminWithSysAdmin,
+                          "rdf/data.nq"       -> dataNq,
+                          "rdf/ontology-0.nq" -> ontologyNq,
+                        ),
+                      )
+            task       <- env.service.importDataExport(testProjectIri, testUser, stream)
+            result     <- pollUntilDone(env.service, task.id)
+            uploaded   <- env.uploadedBytesRef.get
+            _          <- cleanupImport(env, task.id)
             uploadedStr = new String(uploaded.toArray, StandardCharsets.UTF_8)
           } yield assertTrue(
             result.status == DataTaskStatus.Completed,
@@ -985,14 +991,20 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         ZIO.scoped {
           for {
             env <- makeTestEnv
-            _   <- env.userFindByIdRef.set(iri => ZIO.succeed(if (iri.value == "http://rdfh.ch/users/test001") Some(existingUser) else None))
-            _   <- env.userFindByEmailRef.set(email => ZIO.succeed(if (email.value == "test@example.com") Some(existingUser) else None))
-            _   <- env.userFindByUsernameRef.set(username => ZIO.succeed(if (username.value == "testImportUser") Some(existingUser) else None))
-            stream <- buildBagItZip()
-            task    <- env.service.importDataExport(testProjectIri, testUser, stream)
-            result  <- pollUntilDone(env.service, task.id)
-            uploaded <- env.uploadedBytesRef.get
-            _        <- cleanupImport(env, task.id)
+            _   <- env.userFindByIdRef.set(iri =>
+                   ZIO.succeed(if (iri.value == "http://rdfh.ch/users/test001") Some(existingUser) else None),
+                 )
+            _ <- env.userFindByEmailRef.set(email =>
+                   ZIO.succeed(if (email.value == "test@example.com") Some(existingUser) else None),
+                 )
+            _ <- env.userFindByUsernameRef.set(username =>
+                   ZIO.succeed(if (username.value == "testImportUser") Some(existingUser) else None),
+                 )
+            stream     <- buildBagItZip()
+            task       <- env.service.importDataExport(testProjectIri, testUser, stream)
+            result     <- pollUntilDone(env.service, task.id)
+            uploaded   <- env.uploadedBytesRef.get
+            _          <- cleanupImport(env, task.id)
             uploadedStr = new String(uploaded.toArray, StandardCharsets.UTF_8)
           } yield assertTrue(
             result.status == DataTaskStatus.Completed,
@@ -1021,11 +1033,13 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         ZIO.scoped {
           for {
             env <- makeTestEnv
-            _   <- env.userFindByIdRef.set(iri => ZIO.succeed(if (iri.value == "http://rdfh.ch/users/test001") Some(existingUser) else None))
+            _   <- env.userFindByIdRef.set(iri =>
+                   ZIO.succeed(if (iri.value == "http://rdfh.ch/users/test001") Some(existingUser) else None),
+                 )
             stream <- buildBagItZip()
-            task    <- env.service.importDataExport(testProjectIri, testUser, stream)
-            result  <- pollUntilDone(env.service, task.id)
-            _       <- cleanupImport(env, task.id)
+            task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+            result <- pollUntilDone(env.service, task.id)
+            _      <- cleanupImport(env, task.id)
           } yield assertTrue(result.status == DataTaskStatus.Failed)
         }
       },
@@ -1048,11 +1062,13 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           for {
             env <- makeTestEnv
             // IRI not found, but email matches a different user
-            _   <- env.userFindByEmailRef.set(email => ZIO.succeed(if (email.value == "test@example.com") Some(otherUser) else None))
+            _ <- env.userFindByEmailRef.set(email =>
+                   ZIO.succeed(if (email.value == "test@example.com") Some(otherUser) else None),
+                 )
             stream <- buildBagItZip()
-            task    <- env.service.importDataExport(testProjectIri, testUser, stream)
-            result  <- pollUntilDone(env.service, task.id)
-            _       <- cleanupImport(env, task.id)
+            task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+            result <- pollUntilDone(env.service, task.id)
+            _      <- cleanupImport(env, task.id)
           } yield assertTrue(result.status == DataTaskStatus.Failed)
         }
       },

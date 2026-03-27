@@ -46,7 +46,7 @@ object AdminDataQuerySpec extends ZIOSpecDefault {
     ),
     suite("buildWithReferencedUsers")(
       test("with empty set returns same as build") {
-        val base   = AdminDataQuery.build(testProjectIri).getQueryString
+        val base    = AdminDataQuery.build(testProjectIri).getQueryString
         val withRef = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set.empty)
         assertTrue(base == withRef)
       },
