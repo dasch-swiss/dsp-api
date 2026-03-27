@@ -1,5 +1,25 @@
 # Changelog
 
+## [35.4.0](https://github.com/dasch-swiss/dsp-api/compare/v35.3.0...v35.4.0) (2026-03-27)
+
+
+### Maintenances
+
+* Migrate getResourceValueVersionHistory Twirl template to rdf4j (DEV-6137) ([#4026](https://github.com/dasch-swiss/dsp-api/issues/4026)) ([5c5a4bb](https://github.com/dasch-swiss/dsp-api/commit/5c5a4bbcd2ddf755a7b5ecb66c16b518e8820bbf))
+* Migrate to rdf4j addCardinalitiesToClass (DEV-6177) ([#4033](https://github.com/dasch-swiss/dsp-api/issues/4033)) ([e96949a](https://github.com/dasch-swiss/dsp-api/commit/e96949a4c47648531a6f71f97d4df0fbfc8c6ba4))
+* Migrate to rdf4j createNewMapping (DEV-6182) ([#4037](https://github.com/dasch-swiss/dsp-api/issues/4037)) ([d7c4f79](https://github.com/dasch-swiss/dsp-api/commit/d7c4f79f7f6e52b580733a09963956bb4f0583b6))
+* Migrate to rdf4j deleteResource (DEV-6181) ([#4036](https://github.com/dasch-swiss/dsp-api/issues/4036)) ([a25ddf6](https://github.com/dasch-swiss/dsp-api/commit/a25ddf65f43d5bb1a037a6e7e50e0880745c2d53))
+* Migrate to rdf4j eraseResource (DEV-6178) ([#4034](https://github.com/dasch-swiss/dsp-api/issues/4034)) ([7d976e1](https://github.com/dasch-swiss/dsp-api/commit/7d976e173f3573ebe40cf6cd20d7cad980e1426c))
+* Migrate to rdf4j getResourcePropertiesAndValues (DEV-6171) ([#4032](https://github.com/dasch-swiss/dsp-api/issues/4032)) ([d7ea73f](https://github.com/dasch-swiss/dsp-api/commit/d7ea73f2f7d4fdf15ded4a5b8a9e74fcfd05f0d9))
+* Migrate to rdf4j replaceClassCardinalities (DEV-6179) ([#4035](https://github.com/dasch-swiss/dsp-api/issues/4035)) ([d812983](https://github.com/dasch-swiss/dsp-api/commit/d812983c60ffef35671cf4dc3776a743afc9c9e1))
+
+
+### Enhancements
+
+* OAI record export (DEV-5946) ([#4030](https://github.com/dasch-swiss/dsp-api/issues/4030)) ([2679df9](https://github.com/dasch-swiss/dsp-api/commit/2679df9c02a626516231b73907c004db5f806800))
+* **ontology:** Add external ontology mapping endpoints (DEV-6011) ([#3998](https://github.com/dasch-swiss/dsp-api/issues/3998)) ([77f5021](https://github.com/dasch-swiss/dsp-api/commit/77f5021256f79a42f9a21c4dfdbd49716cf062e9))
+* revision of SHACL shapes (DEV-6158) ([#4029](https://github.com/dasch-swiss/dsp-api/issues/4029)) ([fd3d136](https://github.com/dasch-swiss/dsp-api/commit/fd3d136112b0c4662fdb0a7d0693f8cc6b7c69fb))
+
 ## [35.3.0](https://github.com/dasch-swiss/dsp-api/compare/v35.2.0...v35.3.0) (2026-03-23)
 
 
