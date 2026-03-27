@@ -254,8 +254,6 @@ final class ProjectMigrationImportService(
          )
   } yield shortcode
 
-  // validateUsersNotExist — removed, replaced by prepareAdminModel
-
   private def validateGroupsNotExist(model: Model): Task[Unit] = {
     val groupResources = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.UserGroup: Resource).asScala.toList
     ZIO.foreachDiscard(groupResources) { groupResource =>
@@ -278,10 +276,6 @@ final class ProjectMigrationImportService(
       } yield ()
     }
   }
-
-  // validateNoSystemAdminUsers — removed, replaced by prepareAdminModel (strips for non-root, fails for root)
-  // validateNoBuiltInSystemUser — removed, replaced by prepareAdminModel (strips built-in user triples)
-  // validateAllUsersInProject — removed, SHACL AttachedToUserExistsShape covers this
 
   /**
    * Validates users and rewrites the admin.nq Jena model in-place before the single bulk upload.
@@ -325,8 +319,15 @@ final class ProjectMigrationImportService(
              byUsername <- userService.findByUsername(username)
              _          <- (byIri, byEmail, byUsername) match {
                     case (Some(existingUser), _, _) =>
-                      // Found by IRI — verify identity match, log diffs, rewrite to scoped memberships
-                      validateIdentityMatch(existingUser, email, username, userIri) *>
+                      // Found by IRI — reject root, verify identity match, log diffs, rewrite to scoped memberships
+                      ZIO.when(username.value == "root")(
+                        ZIO.fail(
+                          new RuntimeException(
+                            s"Import contains the root user '${userIri.value}'. Resources referencing root require pre-migration cleanup.",
+                          ),
+                        ),
+                      ) *>
+                        validateIdentityMatch(existingUser, email, username, userIri) *>
                         logProfileDifferences(existingUser, userResource, userIri) *>
                         ZIO.attempt(rewriteExistingUserTriples(model, userResource, projectIri))
                     case (None, None, None) =>
@@ -412,21 +413,16 @@ final class ProjectMigrationImportService(
   private def rewriteExistingUserTriples(model: Model, userResource: Resource, projectIri: ProjectIri): Unit = {
     val projectRes = model.getResource(projectIri.value)
     // Collect scoped memberships before removing triples
-    val hasIsInProject =
-      userResource.hasProperty(KnoraAdmin.IsInProject: org.apache.jena.rdf.model.Property, projectRes)
-    val scopedGroups = userResource
-      .listProperties(KnoraAdmin.IsInGroup: org.apache.jena.rdf.model.Property)
+    import AdminModelScoping.{isInProjectProp, isInGroupProp, isInProjectAdminGroupProp, belongsToProjectProp}
+
+    val hasIsInProject = userResource.hasProperty(isInProjectProp, projectRes)
+    val scopedGroups   = userResource
+      .listProperties(isInGroupProp)
       .asScala
-      .filter { stmt =>
-        val groupRes = stmt.getObject.asResource()
-        groupRes.hasProperty(KnoraAdmin.BelongsToProject: org.apache.jena.rdf.model.Property, projectRes)
-      }
+      .filter(stmt => stmt.getObject.asResource().hasProperty(belongsToProjectProp, projectRes))
       .map(_.getObject.asResource().getURI)
       .toList
-    val hasProjectAdmin = userResource.hasProperty(
-      KnoraAdmin.IsInProjectAdminGroup: org.apache.jena.rdf.model.Property,
-      projectRes,
-    )
+    val hasProjectAdmin = userResource.hasProperty(isInProjectAdminGroupProp, projectRes)
 
     // Remove all user triples
     val stmts = userResource.listProperties().asScala.toList
@@ -434,12 +430,12 @@ final class ProjectMigrationImportService(
 
     // Add back only scoped membership triples
     if (hasIsInProject)
-      val _ = model.add(userResource, ResourceFactory.createProperty(KnoraAdmin.IsInProject), projectRes)
+      val _ = model.add(userResource, isInProjectProp, projectRes)
     scopedGroups.foreach { groupIri =>
-      val _ = model.add(userResource, ResourceFactory.createProperty(KnoraAdmin.IsInGroup), model.getResource(groupIri))
+      val _ = model.add(userResource, isInGroupProp, model.getResource(groupIri))
     }
     if (hasProjectAdmin)
-      val _ = model.add(userResource, ResourceFactory.createProperty(KnoraAdmin.IsInProjectAdminGroup), projectRes)
+      val _ = model.add(userResource, isInProjectAdminGroupProp, projectRes)
   }
 
   /**
@@ -458,8 +454,8 @@ final class ProjectMigrationImportService(
       )
 
     // Strip isInSystemAdminGroup
-    val sysAdminProp: org.apache.jena.rdf.model.Property = KnoraAdmin.IsInSystemAdminGroup
-    val sysAdminStmt                                     = userResource.getProperty(sysAdminProp)
+    val sysAdminProp = AdminModelScoping.isInSystemAdminGroupProp
+    val sysAdminStmt = userResource.getProperty(sysAdminProp)
     if (sysAdminStmt != null && sysAdminStmt.getObject.isLiteral && sysAdminStmt.getLiteral.getBoolean)
       model.remove(sysAdminStmt)
       val _ = model.add(userResource, sysAdminProp, ResourceFactory.createTypedLiteral(false))

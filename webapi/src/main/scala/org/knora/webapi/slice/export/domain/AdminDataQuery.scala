@@ -19,6 +19,7 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
 
 object AdminDataQuery extends QueryBuilderHelper {
 
+  // NOTE: If you change the query structure here, also update buildWithReferencedUsers below.
   def build(project: ProjectIri): ConstructQuery = {
     val projectIri                   = toRdfIri(project)
     val (projectPred, projectObj)    = (variable("projectPred"), variable("projectObj"))
@@ -57,6 +58,9 @@ object AdminDataQuery extends QueryBuilderHelper {
    * a very large number of distinct referenced users, this could produce a long query
    * string. Fuseki handles this in practice, but if projects with thousands of distinct
    * referenced users appear, consider batching or a subquery approach.
+   *
+   * NOTE: This duplicates the query structure from build() above as a raw string.
+   * If you change build(), update this method to match.
    *
    * @return the SPARQL query string (callers must wrap in [[TriplestoreService.Queries.Construct]])
    */

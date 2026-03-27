@@ -22,12 +22,27 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
  */
 object AdminModelScoping {
 
-  private val isInProjectProp           = ResourceFactory.createProperty(KnoraAdmin.IsInProject)
-  private val isInGroupProp             = ResourceFactory.createProperty(KnoraAdmin.IsInGroup)
-  private val isInProjectAdminGroupProp = ResourceFactory.createProperty(KnoraAdmin.IsInProjectAdminGroup)
-  private val belongsToProjectProp      = ResourceFactory.createProperty(KnoraAdmin.BelongsToProject)
-  private val userGroupType             = ResourceFactory.createResource(KnoraAdmin.UserGroup)
-  private val userType                  = ResourceFactory.createResource(KnoraAdmin.User)
+  // Shared Jena property/resource constants for admin model operations.
+  // Package-private so rewriteExistingUserTriples / rewriteNewUserTriples can reuse them.
+  private[domain] val isInProjectProp           = ResourceFactory.createProperty(KnoraAdmin.IsInProject)
+  private[domain] val isInGroupProp             = ResourceFactory.createProperty(KnoraAdmin.IsInGroup)
+  private[domain] val isInProjectAdminGroupProp = ResourceFactory.createProperty(KnoraAdmin.IsInProjectAdminGroup)
+  private[domain] val isInSystemAdminGroupProp  = ResourceFactory.createProperty(KnoraAdmin.IsInSystemAdminGroup)
+  private[domain] val belongsToProjectProp      = ResourceFactory.createProperty(KnoraAdmin.BelongsToProject)
+  private[domain] val userGroupType             = ResourceFactory.createResource(KnoraAdmin.UserGroup)
+  private[domain] val userType                  = ResourceFactory.createResource(KnoraAdmin.User)
+  private[domain] val usernameProp              = ResourceFactory.createProperty(KnoraAdmin.Username)
+
+  /** Finds the IRI of the root user (username "root") in the model, if present. */
+  def findRootUserIri(model: Model): Option[String] =
+    model
+      .listSubjectsWithProperty(RDF.`type`, userType)
+      .asScala
+      .find { user =>
+        val stmt = user.getProperty(usernameProp)
+        stmt != null && stmt.getObject.isLiteral && stmt.getLiteral.getString == "root"
+      }
+      .map(_.getURI)
 
   /**
    * Removes cross-project membership triples from the model in-place.

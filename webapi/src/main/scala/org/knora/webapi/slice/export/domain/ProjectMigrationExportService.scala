@@ -150,21 +150,7 @@ final class ProjectMigrationExportService(
                }
 
       // Warn if root user is in the export
-      rootUserIri <- ZIO.attempt {
-                       import scala.jdk.CollectionConverters.*
-                       import org.knora.webapi.messages.OntologyConstants.KnoraAdmin as KAConst
-                       val userType     = org.apache.jena.rdf.model.ResourceFactory.createResource(KAConst.User)
-                       val usernameProp = org.apache.jena.rdf.model.ResourceFactory.createProperty(KAConst.Username)
-                       model
-                         .listSubjectsWithProperty(org.apache.jena.vocabulary.RDF.`type`, userType)
-                         .asScala
-                         .find { user =>
-                           val stmt = user.getProperty(usernameProp)
-                           stmt != null && stmt.getObject.isLiteral && stmt.getLiteral.getString == "root"
-                         }
-                         .map(_.getURI)
-                     }
-      _ <- ZIO.foreachDiscard(rootUserIri)(iri =>
+      _ <- ZIO.foreachDiscard(AdminModelScoping.findRootUserIri(model))(iri =>
              ZIO.logWarning(
                s"$taskId: Export includes root user '$iri'. " +
                  "Resources referencing root require pre-migration cleanup before import.",

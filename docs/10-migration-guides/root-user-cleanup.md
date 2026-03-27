@@ -3,8 +3,9 @@
 ## Problem
 
 Some projects have resources where `knora-base:attachedToUser` references the `root` user (username `root`).
-The root user must never be imported into another DSP instance. The project migration import rejects any
-admin.nq containing the root user.
+The root user must never be imported into another DSP instance. The project migration import
+fails if admin.nq contains the root user, whether the root user already exists on the target
+instance or not.
 
 ## Detection
 
