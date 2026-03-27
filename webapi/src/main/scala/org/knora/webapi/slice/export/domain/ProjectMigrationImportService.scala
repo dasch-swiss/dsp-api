@@ -141,10 +141,12 @@ final class ProjectMigrationImportService(
                  _       <- prepareAdminModel(model, projectIri)
                  _       <- ZIO.attempt {
                         val outDataset = org.apache.jena.query.DatasetFactory.create()
-                        outDataset.addNamedModel(adminDataNamedGraph.value, model)
-                        val out = java.io.FileOutputStream(rewrittenAdminNq.toFile)
-                        try org.apache.jena.riot.RDFDataMgr.write(out, outDataset, org.apache.jena.riot.Lang.NQUADS)
-                        finally { out.close(); outDataset.close() }
+                        try {
+                          outDataset.addNamedModel(adminDataNamedGraph.value, model)
+                          val out = java.io.FileOutputStream(rewrittenAdminNq.toFile)
+                          try org.apache.jena.riot.RDFDataMgr.write(out, outDataset, org.apache.jena.riot.Lang.NQUADS)
+                          finally out.close()
+                        } finally outDataset.close()
                       }
                } yield ()
              }
@@ -290,61 +292,62 @@ final class ProjectMigrationImportService(
    *    - Not found at all: fail on root user, strip SystemAdmin, scope memberships.
    *    - No IRI match but email/username collision: fail with details.
    */
-  private def prepareAdminModel(model: Model, projectIri: ProjectIri): Task[Unit] = {
+  private def prepareAdminModel(model: Model, projectIri: ProjectIri): Task[Unit] = for {
     // Step 1: Strip built-in user triples
-    val builtInIris = KnoraUserRepo.builtIn.all.map(_.id.value)
-    builtInIris.foreach { iri =>
-      val resource = model.getResource(iri)
-      if (resource.listProperties().hasNext) {
-        val stmts = resource.listProperties().asScala.toList
-        stmts.foreach(model.remove)
-        // Also remove triples where built-in user is an object (e.g., references from other subjects)
-        model.listStatements(null, null, resource).asScala.toList.foreach(model.remove)
-      }
-    }
+    _ <- ZIO.attempt {
+           val builtInIris = KnoraUserRepo.builtIn.all.map(_.id.value)
+           builtInIris.foreach { iri =>
+             val resource = model.getResource(iri)
+             if (resource.listProperties().hasNext) {
+               val stmts = resource.listProperties().asScala.toList
+               stmts.foreach(model.remove)
+               model.listStatements(null, null, resource).asScala.toList.foreach(model.remove)
+             }
+           }
+         }
 
     // Step 2: Process remaining users
-    val userResources = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.User: Resource).asScala.toList
-    ZIO.foreachDiscard(userResources) { userResource =>
-      val userIriStr = userResource.getURI
-      for {
-        userIri <- ZIO
-                     .fromEither(UserIri.from(userIriStr))
-                     .mapError(e => new RuntimeException(s"Invalid user IRI '$userIriStr': $e"))
-        email <- ZIO
-                   .fromEither(userResource.objectString(KnoraAdmin.Email, Email.from))
-                   .mapError(e => new RuntimeException(s"$e in admin.nq"))
-        username <- ZIO
-                      .fromEither(userResource.objectString(KnoraAdmin.Username, Username.from))
-                      .mapError(e => new RuntimeException(s"$e in admin.nq"))
-        byIri      <- userService.findById(userIri)
-        byEmail    <- userService.findByEmail(email)
-        byUsername <- userService.findByUsername(username)
-        _          <- (byIri, byEmail, byUsername) match {
-               case (Some(existingUser), _, _) =>
-                 // Found by IRI — verify identity match, log diffs, rewrite to scoped memberships
-                 validateIdentityMatch(existingUser, email, username, userIri) *>
-                   logProfileDifferences(existingUser, userResource, userIri) *>
-                   ZIO.attempt(rewriteExistingUserTriples(model, userResource, projectIri))
-               case (None, None, None) =>
-                 // Entirely new user
-                 ZIO.attempt(rewriteNewUserTriples(model, userResource, projectIri, username))
-               case (None, Some(emailOwner), _) =>
-                 ZIO.fail(
-                   new RuntimeException(
-                     s"User '${userIri.value}' has email '${email.value}' which is already used by user '${emailOwner.id.value}'",
-                   ),
-                 )
-               case (None, _, Some(usernameOwner)) =>
-                 ZIO.fail(
-                   new RuntimeException(
-                     s"User '${userIri.value}' has username '${username.value}' which is already used by user '${usernameOwner.id.value}'",
-                   ),
-                 )
-             }
-      } yield ()
-    }
-  }
+    userResources = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.User: Resource).asScala.toList
+    _            <- ZIO.foreachDiscard(userResources) { userResource =>
+           val userIriStr = userResource.getURI
+           for {
+             userIri <- ZIO
+                          .fromEither(UserIri.from(userIriStr))
+                          .mapError(e => new RuntimeException(s"Invalid user IRI '$userIriStr': $e"))
+             email <- ZIO
+                        .fromEither(userResource.objectString(KnoraAdmin.Email, Email.from))
+                        .mapError(e => new RuntimeException(s"$e in admin.nq"))
+             username <- ZIO
+                           .fromEither(userResource.objectString(KnoraAdmin.Username, Username.from))
+                           .mapError(e => new RuntimeException(s"$e in admin.nq"))
+             byIri      <- userService.findById(userIri)
+             byEmail    <- userService.findByEmail(email)
+             byUsername <- userService.findByUsername(username)
+             _          <- (byIri, byEmail, byUsername) match {
+                    case (Some(existingUser), _, _) =>
+                      // Found by IRI — verify identity match, log diffs, rewrite to scoped memberships
+                      validateIdentityMatch(existingUser, email, username, userIri) *>
+                        logProfileDifferences(existingUser, userResource, userIri) *>
+                        ZIO.attempt(rewriteExistingUserTriples(model, userResource, projectIri))
+                    case (None, None, None) =>
+                      // Entirely new user
+                      ZIO.attempt(rewriteNewUserTriples(model, userResource, projectIri, username))
+                    case (None, Some(emailOwner), _) =>
+                      ZIO.fail(
+                        new RuntimeException(
+                          s"User '${userIri.value}' has email '${email.value}' which is already used by user '${emailOwner.id.value}'",
+                        ),
+                      )
+                    case (None, _, Some(usernameOwner)) =>
+                      ZIO.fail(
+                        new RuntimeException(
+                          s"User '${userIri.value}' has username '${username.value}' which is already used by user '${usernameOwner.id.value}'",
+                        ),
+                      )
+                  }
+           } yield ()
+         }
+  } yield ()
 
   private def validateIdentityMatch(
     existing: KnoraUser,

@@ -8,10 +8,11 @@ admin.nq containing the root user.
 
 ## Detection
 
-When exporting a project, the export service logs a warning if the root user is referenced:
+When exporting a project, the export service logs a warning if the root user is referenced.
+Search the export logs for the following pattern:
 
 ```
-WARNING: Export includes root user '<root-iri>'. Resources referencing root require pre-migration cleanup before import.
+Export includes root user 'http://rdfh.ch/users/...' Resources referencing root require pre-migration cleanup before import.
 ```
 
 ## Cleanup Procedure

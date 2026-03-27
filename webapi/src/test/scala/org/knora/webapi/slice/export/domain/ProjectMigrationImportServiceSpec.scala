@@ -521,7 +521,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
-    test("rejects existing user by email") {
+    test("fails when email collides with a different existing user") {
       ZIO.scoped {
         for {
           env <- makeTestEnv
@@ -534,7 +534,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
-    test("rejects existing user by username") {
+    test("fails when username collides with a different existing user") {
       ZIO.scoped {
         for {
           env <- makeTestEnv

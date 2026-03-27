@@ -173,11 +173,12 @@ final class ProjectMigrationExportService(
 
       _ <- ZIO.attempt {
              val dataset = DatasetFactory.create()
-             dataset.addNamedModel(adminDataNamedGraph.value, model)
-             val out = java.io.FileOutputStream(adminFile.toFile)
-             try RDFDataMgr.write(out, dataset, JenaLang.NQUADS)
-             finally out.close()
-             dataset.close()
+             try {
+               dataset.addNamedModel(adminDataNamedGraph.value, model)
+               val out = java.io.FileOutputStream(adminFile.toFile)
+               try RDFDataMgr.write(out, dataset, JenaLang.NQUADS)
+               finally out.close()
+             } finally dataset.close()
            }
     } yield ()
 
