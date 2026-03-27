@@ -509,7 +509,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
-    test("rejects existing user by IRI") {
+    test("fails when found-by-IRI user has mismatched email or username") {
       ZIO.scoped {
         for {
           env    <- makeTestEnv
