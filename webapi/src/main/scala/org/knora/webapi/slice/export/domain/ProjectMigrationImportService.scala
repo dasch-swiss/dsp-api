@@ -320,7 +320,7 @@ final class ProjectMigrationImportService(
                  // Found by IRI — verify identity match, log diffs, rewrite to scoped memberships
                  validateIdentityMatch(existingUser, email, username, userIri) *>
                    logProfileDifferences(existingUser, userResource, userIri) *>
-                   ZIO.succeed(rewriteExistingUserTriples(model, userResource, projectIri))
+                   ZIO.attempt(rewriteExistingUserTriples(model, userResource, projectIri))
                case (None, None, None) =>
                  // Entirely new user
                  ZIO.attempt(rewriteNewUserTriples(model, userResource, projectIri, username))
