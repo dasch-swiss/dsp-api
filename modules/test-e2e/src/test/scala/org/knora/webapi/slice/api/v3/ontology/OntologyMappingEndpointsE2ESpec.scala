@@ -124,7 +124,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             anythingAdminUser,
           )
           .flatMap(_.assert400)
-          .map(body => assertTrue(body.contains("external IRI")))
+          .map(body => assertTrue(body.contains("knora_ontology_mapping_iri")))
       },
       test("ontology not found returns 404") {
         TestApiClient
@@ -200,7 +200,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             anythingAdminUser,
           )
           .flatMap(_.assert400)
-          .map(body => assertTrue(body.contains("external IRI")))
+          .map(body => assertTrue(body.contains("knora_ontology_mapping_iri")))
       },
       test("ontology not found returns 404") {
         TestApiClient
@@ -269,7 +269,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             anythingAdminUser,
           )
           .flatMap(_.assert400)
-          .map(body => assertTrue(body.contains("external IRI")))
+          .map(body => assertTrue(body.contains("knora_ontology_mapping_iri")))
       },
       test("ontology not found returns 404") {
         TestApiClient
@@ -375,7 +375,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             anythingAdminUser,
           )
           .flatMap(_.assert400)
-          .map(body => assertTrue(body.contains("external IRI")))
+          .map(body => assertTrue(body.contains("knora_ontology_mapping_iri")))
       },
       test("ontology not found returns 404") {
         TestApiClient
