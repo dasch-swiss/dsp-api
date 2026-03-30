@@ -275,6 +275,7 @@ object ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
           query.isDefined,
           query.get.contains("VALUES"),
           query.get.contains(referencedUserIri),
+          query.get.contains("knora-admin:knoraProject"),
         )
       },
       test("export without referenced users does not use VALUES") {

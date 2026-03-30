@@ -133,7 +133,7 @@ services:
       - DSP_API_LOG_LEVEL=INFO
       - ALLOW_ERASE_PROJECTS=true
       # - DSP_API_LOG_APPENDER=JSON # if this variable is set, JSON logs are activated locally
-      - 'JAVA_TOOL_OPTIONS="-javaagent:/usr/local/lib/opentelemetry-javaagent.jar"'
+      - 'JAVA_TOOL_OPTIONS=-javaagent:/usr/local/lib/opentelemetry-javaagent.jar -Xmx8G'
       - 'PYROSCOPE_SERVER_ADDRESS=http://alloy:4040'
       - 'PYROSCOPE_APPLICATION_NAME=DSP_svc_api'
       - 'PYROSCOPE_FORMAT=jfr'
@@ -147,7 +147,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 6G
+          memory: 12G
 
   alloy:
     container_name: alloy
