@@ -7,6 +7,7 @@ package org.knora.webapi.slice.`export`.domain
 
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Resource
+import org.apache.jena.rdf.model.ResourceFactory
 import org.apache.jena.riot.Lang
 import org.apache.jena.vocabulary.RDF
 import zio.*
@@ -31,12 +32,14 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.JenaConversions.given
@@ -104,31 +107,54 @@ final class ProjectMigrationImportService(
                s"$taskId: Payload file validation passed for project '$projectIri', found: ${nqFiles.mkString(", ")}",
              )
 
-        _         <- ZIO.logInfo(s"$taskId: Starting admin data validation for project '$projectIri'")
-        shortcode <- ZIO.scoped { // rdf validation, close scope for model right after validation to free up memory
+        _          <- ZIO.logInfo(s"$taskId: Starting admin data validation for project '$projectIri'")
+        adminNqPath = bagRoot / "data" / "rdf" / "admin.nq"
+        // First parse of admin.nq: validate project/group uniqueness before SHACL.
+        // This is intentionally separate from the second parse below because:
+        // 1. SHACL must validate the *original* admin.nq with all user type declarations present.
+        // 2. The second parse (prepareAdminModel) rewrites user triples, so it must run *after* SHACL.
+        // 3. Keeping them in separate scoped blocks lets Jena release the first dataset's memory.
+        shortcode <- ZIO.scoped {
                        for {
-                         model <- DatasetOps
-                                    .from(bagRoot / "data" / "rdf" / "admin.nq", Lang.NQUADS)
-                                    .map(_.getNamedModel(adminDataNamedGraph.value))
+                         dataset   <- DatasetOps.from(adminNqPath, Lang.NQUADS)
+                         model      = dataset.getNamedModel(adminDataNamedGraph.value)
                          shortcode <- validateProjectNotExists(bag, projectIri, model)
                          _         <- ZIO.logInfo(s"$taskId: Project conflict checks passed for project '$projectIri'")
-                         _         <- validateUsersNotExist(model)
-                         _         <- ZIO.logInfo(s"$taskId: User conflict checks passed for project '$projectIri'")
-                         _         <- validateNoSystemAdminUsers(model)
-                         _         <- ZIO.logInfo(s"$taskId: System admin user checks passed for project '$projectIri'")
-                         _         <- validateNoBuiltInSystemUser(model)
-                         _         <- ZIO.logInfo(s"$taskId: Built-in system user checks passed for project '$projectIri'")
-                         _         <- validateAllUsersInProject(model, projectIri)
-                         _         <- ZIO.logInfo(s"$taskId: All users in project checks passed for project '$projectIri'")
                          _         <- validateGroupsNotExist(model)
                          _         <- ZIO.logInfo(s"$taskId: Group conflict checks passed for project '$projectIri'")
                        } yield shortcode
                      }
         _ <- ZIO.logInfo(s"$taskId: Admin data validation passed for project '$projectIri'")
 
+        // SHACL validates the original admin.nq (all user type declarations present)
         _ <- ZIO.logInfo(s"$taskId: Starting shacl validation '$projectIri'")
         _ <- projectShaclValidator.validate(ontologyFiles, dataFiles, projectIri)
         _ <- ZIO.logInfo(s"$taskId: SHACL validation passed for project '$projectIri'")
+
+        // Second parse of admin.nq: idempotent user handling rewrites user triples.
+        _               <- ZIO.logInfo(s"$taskId: Starting user preparation for project '$projectIri'")
+        rewrittenAdminNq = bagRoot / "data" / "rdf" / "admin-rewritten.nq"
+        _               <- ZIO.scoped {
+               for {
+                 dataset <- DatasetOps.from(adminNqPath, Lang.NQUADS)
+                 model    = dataset.getNamedModel(adminDataNamedGraph.value)
+                 _       <- prepareAdminModel(model, projectIri)
+                 _       <- ZIO.attempt {
+                        val outDataset = org.apache.jena.query.DatasetFactory.create()
+                        try {
+                          outDataset.addNamedModel(adminDataNamedGraph.value, model)
+                          val out = java.io.FileOutputStream(rewrittenAdminNq.toFile)
+                          try org.apache.jena.riot.RDFDataMgr.write(out, outDataset, org.apache.jena.riot.Lang.NQUADS)
+                          finally out.close()
+                        } finally outDataset.close()
+                      }
+               } yield ()
+             }
+        _ <- ZIO.logInfo(s"$taskId: User preparation completed for project '$projectIri'")
+
+        // Replace admin.nq with rewritten version in the NQuad upload
+        rewrittenDataFiles = dataFiles.map(p => if (p == adminNqPath) rewrittenAdminNq else p)
+        rewrittenNqFiles   = ontologyFiles ++ rewrittenDataFiles
 
         // import assets from ingest if present
         assetZipPath = bagRoot / "data" / "assets" / "assets.zip"
@@ -139,8 +165,8 @@ final class ProjectMigrationImportService(
                ZIO.logInfo(s"$taskId: No assets/assets.zip found, skipping asset import for project '$projectIri'"),
              )
 
-        // upload data
-        _ <- uploadRdfDataToTriplestore(nqFiles)
+        // upload data (using rewritten admin.nq)
+        _ <- uploadRdfDataToTriplestore(rewrittenNqFiles)
         _ <- ZIO.logInfo(s"$taskId: RDF data uploaded to triplestore for project '$projectIri'")
         _ <- state.complete(taskId).ignore
         _ <- ZIO.logInfo(s"$taskId: Import completed for project '$projectIri'")
@@ -228,36 +254,6 @@ final class ProjectMigrationImportService(
          )
   } yield shortcode
 
-  private def validateUsersNotExist(model: Model): Task[Unit] = {
-    val userResources = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.User: Resource).asScala.toList
-    ZIO.foreachDiscard(userResources) { userResource =>
-      val userIriStr = userResource.getURI
-      for {
-        userIri <- ZIO
-                     .fromEither(UserIri.from(userIriStr))
-                     .mapError(e => new RuntimeException(s"Invalid user IRI '$userIriStr' in admin.nq: $e"))
-        existsById <- userService.findById(userIri)
-        _          <- ZIO.when(existsById.isDefined)(
-               ZIO.fail(new RuntimeException(s"User with IRI '$userIri' already exists")),
-             )
-        email <- ZIO
-                   .fromEither(userResource.objectString(KnoraAdmin.Email, Email.from))
-                   .mapError(e => new RuntimeException(s"$e in admin.nq"))
-        existsByEmail <- userService.findByEmail(email)
-        _             <- ZIO.when(existsByEmail.isDefined)(
-               ZIO.fail(new RuntimeException(s"User with email '$email' already exists")),
-             )
-        username <- ZIO
-                      .fromEither(userResource.objectString(KnoraAdmin.Username, Username.from))
-                      .mapError(e => new RuntimeException(s"$e in admin.nq"))
-        existsByUsername <- userService.findByUsername(username)
-        _                <- ZIO.when(existsByUsername.isDefined)(
-               ZIO.fail(new RuntimeException(s"User with username '$username' already exists")),
-             )
-      } yield ()
-    }
-  }
-
   private def validateGroupsNotExist(model: Model): Task[Unit] = {
     val groupResources = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.UserGroup: Resource).asScala.toList
     ZIO.foreachDiscard(groupResources) { groupResource =>
@@ -281,46 +277,191 @@ final class ProjectMigrationImportService(
     }
   }
 
-  private def validateNoSystemAdminUsers(model: Model): Task[Unit] = {
-    val userResources    = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.User: Resource).asScala.toList
-    val systemAdminUsers = userResources.filter { userResource =>
-      val prop: org.apache.jena.rdf.model.Property = KnoraAdmin.IsInSystemAdminGroup
-      val stmt                                     = userResource.getProperty(prop)
-      stmt != null && stmt.getObject.isLiteral && stmt.getLiteral.getBoolean
-    }
-    ZIO
-      .when(systemAdminUsers.nonEmpty) {
-        val iris = systemAdminUsers.map(_.getURI).mkString(", ")
-        ZIO.fail(new RuntimeException(s"Import contains system admin user(s): $iris"))
-      }
-      .unit
-  }
+  /**
+   * Validates users and rewrites the admin.nq Jena model in-place before the single bulk upload.
+   *
+   * 1. Strips built-in user triples (SystemUser, AnonymousUser) — they already exist on every instance.
+   * 2. For each remaining user, looks up by IRI, email, and username:
+   *    - Found by IRI: verify identity match, log profile diffs, rewrite to scoped memberships only.
+   *    - Not found at all: fail on root user, strip SystemAdmin, scope memberships.
+   *    - No IRI match but email/username collision: fail with details.
+   */
+  private def prepareAdminModel(model: Model, projectIri: ProjectIri): Task[Unit] = for {
+    // Step 1: Strip built-in user triples
+    _ <- ZIO.attempt {
+           val builtInIris = KnoraUserRepo.builtIn.all.map(_.id.value)
+           builtInIris.foreach { iri =>
+             val resource = model.getResource(iri)
+             if (resource.listProperties().hasNext) {
+               val stmts = resource.listProperties().asScala.toList
+               stmts.foreach(model.remove)
+               model.listStatements(null, null, resource).asScala.toList.foreach(model.remove)
+             }
+           }
+         }
 
-  private def validateNoBuiltInSystemUser(model: Model): Task[Unit] = {
-    val systemUserIri = "http://www.knora.org/ontology/knora-admin#SystemUser"
-    val resource      = model.getResource(systemUserIri)
-    ZIO
-      .when(resource.listProperties().hasNext) {
-        ZIO.fail(new RuntimeException(s"Import contains the built-in SystemUser ($systemUserIri)"))
-      }
-      .unit
-  }
+    // Step 2: Process remaining users
+    userResources = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.User: Resource).asScala.toList
+    _            <- ZIO.foreachDiscard(userResources) { userResource =>
+           val userIriStr = userResource.getURI
+           for {
+             userIri <- ZIO
+                          .fromEither(UserIri.from(userIriStr))
+                          .mapError(e => new RuntimeException(s"Invalid user IRI '$userIriStr': $e"))
+             email <- ZIO
+                        .fromEither(userResource.objectString(KnoraAdmin.Email, Email.from))
+                        .mapError(e => new RuntimeException(s"$e in admin.nq"))
+             username <- ZIO
+                           .fromEither(userResource.objectString(KnoraAdmin.Username, Username.from))
+                           .mapError(e => new RuntimeException(s"$e in admin.nq"))
+             byIri      <- userService.findById(userIri)
+             byEmail    <- userService.findByEmail(email)
+             byUsername <- userService.findByUsername(username)
+             _          <- (byIri, byEmail, byUsername) match {
+                    case (Some(existingUser), _, _) =>
+                      // Found by IRI — reject root, verify identity match, log diffs, rewrite to scoped memberships
+                      ZIO.when(username.value == "root")(
+                        ZIO.fail(
+                          new RuntimeException(
+                            s"Import contains the root user '${userIri.value}'. Resources referencing root require pre-migration cleanup.",
+                          ),
+                        ),
+                      ) *>
+                        validateIdentityMatch(existingUser, email, username, userIri) *>
+                        logProfileDifferences(existingUser, userResource, userIri) *>
+                        ZIO.attempt(rewriteExistingUserTriples(model, userResource, projectIri))
+                    case (None, None, None) =>
+                      // Entirely new user
+                      ZIO.attempt(rewriteNewUserTriples(model, userResource, projectIri, username))
+                    case (None, Some(emailOwner), _) =>
+                      ZIO.fail(
+                        new RuntimeException(
+                          s"User '${userIri.value}' has email '${email.value}' which is already used by user '${emailOwner.id.value}'",
+                        ),
+                      )
+                    case (None, _, Some(usernameOwner)) =>
+                      ZIO.fail(
+                        new RuntimeException(
+                          s"User '${userIri.value}' has username '${username.value}' which is already used by user '${usernameOwner.id.value}'",
+                        ),
+                      )
+                  }
+           } yield ()
+         }
+  } yield ()
 
-  private def validateAllUsersInProject(model: Model, projectIri: ProjectIri): Task[Unit] = {
-    val userResources     = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.User: Resource).asScala.toList
-    val projectResource   = model.getResource(projectIri.value)
-    val usersNotInProject = userResources.filter { userResource =>
-      val prop: org.apache.jena.rdf.model.Property = KnoraAdmin.IsInProject
-      !userResource.hasProperty(prop, projectResource)
-    }
-    ZIO
-      .when(usersNotInProject.nonEmpty) {
-        val iris = usersNotInProject.map(_.getURI).mkString(", ")
-        ZIO.fail(
-          new RuntimeException(s"Import contains user(s) not in project $projectIri: $iris"),
+  private def validateIdentityMatch(
+    existing: KnoraUser,
+    email: Email,
+    username: Username,
+    userIri: UserIri,
+  ): Task[Unit] =
+    for {
+      _ <- ZIO.when(existing.email != email)(
+             ZIO.fail(
+               new RuntimeException(
+                 s"User '$userIri' has email '${email.value}' but existing user has email '${existing.email.value}'",
+               ),
+             ),
+           )
+      _ <-
+        ZIO.when(existing.username != username)(
+          ZIO.fail(
+            new RuntimeException(
+              s"User '$userIri' has username '${username.value}' but existing user has username '${existing.username.value}'",
+            ),
+          ),
         )
-      }
-      .unit
+    } yield ()
+
+  private def logProfileDifferences(existing: KnoraUser, userResource: Resource, userIri: UserIri): Task[Unit] = {
+    val diffs    = List.newBuilder[String]
+    val warnings = List.newBuilder[String]
+
+    userResource.objectStringOption(KnoraAdmin.FamilyName) match {
+      case Right(Some(v)) =>
+        if (v != existing.familyName.value) diffs += s"familyName: import='$v' existing='${existing.familyName.value}'"
+      case Left(err) => warnings += s"familyName: $err"
+      case _         => ()
+    }
+    userResource.objectStringOption(KnoraAdmin.GivenName) match {
+      case Right(Some(v)) =>
+        if (v != existing.givenName.value) diffs += s"givenName: import='$v' existing='${existing.givenName.value}'"
+      case Left(err) => warnings += s"givenName: $err"
+      case _         => ()
+    }
+
+    val diffResult    = diffs.result()
+    val warningResult = warnings.result()
+    ZIO
+      .when(warningResult.nonEmpty)(
+        ZIO.logWarning(s"User '$userIri' has malformed profile fields in admin.nq: ${warningResult.mkString("; ")}"),
+      )
+      .unit *>
+      ZIO
+        .when(diffResult.nonEmpty)(
+          ZIO.logWarning(
+            s"User '$userIri' profile differs from existing: ${diffResult.mkString("; ")}. Keeping existing values.",
+          ),
+        )
+        .unit
+  }
+
+  /**
+   * For an existing user: remove all triples, add back only scoped membership triples.
+   */
+  private def rewriteExistingUserTriples(model: Model, userResource: Resource, projectIri: ProjectIri): Unit = {
+    val projectRes = model.getResource(projectIri.value)
+    // Collect scoped memberships before removing triples
+    import AdminModelScoping.{isInProjectProp, isInGroupProp, isInProjectAdminGroupProp, belongsToProjectProp}
+
+    val hasIsInProject = userResource.hasProperty(isInProjectProp, projectRes)
+    val scopedGroups   = userResource
+      .listProperties(isInGroupProp)
+      .asScala
+      .filter(stmt => stmt.getObject.asResource().hasProperty(belongsToProjectProp, projectRes))
+      .map(_.getObject.asResource().getURI)
+      .toList
+    val hasProjectAdmin = userResource.hasProperty(isInProjectAdminGroupProp, projectRes)
+
+    // Remove all user triples
+    val stmts = userResource.listProperties().asScala.toList
+    stmts.foreach(model.remove)
+
+    // Add back only scoped membership triples
+    if (hasIsInProject)
+      val _ = model.add(userResource, isInProjectProp, projectRes)
+    scopedGroups.foreach { groupIri =>
+      val _ = model.add(userResource, isInGroupProp, model.getResource(groupIri))
+    }
+    if (hasProjectAdmin)
+      val _ = model.add(userResource, isInProjectAdminGroupProp, projectRes)
+  }
+
+  /**
+   * For a new user: fail on root, strip cross-project memberships and SystemAdmin.
+   */
+  private def rewriteNewUserTriples(
+    model: Model,
+    userResource: Resource,
+    projectIri: ProjectIri,
+    username: Username,
+  ): Unit = {
+    // Fail on root user
+    if (username.value == "root")
+      throw new RuntimeException(
+        s"Import contains the root user '${userResource.getURI}'. Resources referencing root require pre-migration cleanup.",
+      )
+
+    // Strip isInSystemAdminGroup
+    val sysAdminProp = AdminModelScoping.isInSystemAdminGroupProp
+    val sysAdminStmt = userResource.getProperty(sysAdminProp)
+    if (sysAdminStmt != null && sysAdminStmt.getObject.isLiteral && sysAdminStmt.getLiteral.getBoolean)
+      model.remove(sysAdminStmt)
+      val _ = model.add(userResource, sysAdminProp, ResourceFactory.createTypedLiteral(false))
+
+    // Strip cross-project memberships (defense-in-depth)
+    AdminModelScoping.removeNonProjectMemberships(model, projectIri.value)
   }
 
   private def validateRdfPayloadFiles(bagRoot: Path): Task[(NonEmptyChunk[Path], NonEmptyChunk[Path])] = {
