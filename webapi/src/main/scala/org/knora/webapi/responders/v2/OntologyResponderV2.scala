@@ -1253,11 +1253,11 @@ final case class OntologyResponderV2(
       (currentTime, query) = currentTimeAndQuery
       _                   <- save(Update(query))
       updatedOntology      = ontology.copy(
-                               ontologyMetadata = ontology.ontologyMetadata.copy(
-                                 lastModificationDate = Some(currentTime.value),
-                               ),
-                               classes = ontology.classes - internalClassIri,
-                             )
+                          ontologyMetadata = ontology.ontologyMetadata.copy(
+                            lastModificationDate = Some(currentTime.value),
+                          ),
+                          classes = ontology.classes - internalClassIri,
+                        )
     } yield ReadOntologyMetadataV2(Set(updatedOntology.ontologyMetadata))
 
     IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteClassTask)
