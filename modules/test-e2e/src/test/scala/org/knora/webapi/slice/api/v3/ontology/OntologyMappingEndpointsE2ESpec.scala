@@ -13,6 +13,7 @@ import zio.test.*
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.api.v3.V3ErrorCode
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 
@@ -113,8 +114,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddClassMappingsRequest(List.empty),
             anythingAdminUser,
           )
-          .flatMap(_.assert400)
-          .map(body => assertTrue(body.contains("at least one")))
+          .flatMap(_.assert400V3)
+          .map(err => assertTrue(err.message.contains("at least one")))
       },
       test("Knora IRI in mappings returns 400") {
         TestApiClient
@@ -123,8 +124,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddClassMappingsRequest(List("http://www.knora.org/ontology/0001/anything#Thing")),
             anythingAdminUser,
           )
-          .flatMap(_.assert400)
-          .map(body => assertTrue(body.contains("external IRI")))
+          .flatMap(_.assert400V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
       },
       test("ontology not found returns 404") {
         TestApiClient
@@ -133,8 +134,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddClassMappingsRequest(List(extSchemaOrg)),
             anythingAdminUser,
           )
-          .flatMap(_.assert404)
-          .map(body => assertTrue(body.nonEmpty))
+          .flatMap(_.assert404V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.ontology_not_found))
       },
       test("class not found in ontology returns 404") {
         TestApiClient
@@ -143,8 +144,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddClassMappingsRequest(List(extSchemaOrg)),
             anythingAdminUser,
           )
-          .flatMap(_.assert404)
-          .map(body => assertTrue(body.nonEmpty))
+          .flatMap(_.assert404V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.class_not_found))
       },
       test("user without project admin rights returns 403") {
         TestApiClient
@@ -199,8 +200,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             deleteClassMappingUri(anythingOntIri, thingClassIri, "http://www.knora.org/ontology/0001/anything#Thing"),
             anythingAdminUser,
           )
-          .flatMap(_.assert400)
-          .map(body => assertTrue(body.contains("external IRI")))
+          .flatMap(_.assert400V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
       },
       test("ontology not found returns 404") {
         TestApiClient
@@ -208,8 +209,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             deleteClassMappingUri(unknownOntIri, s"$unknownOntIri#Thing", extSchemaOrg),
             anythingAdminUser,
           )
-          .flatMap(_.assert404)
-          .map(body => assertTrue(body.nonEmpty))
+          .flatMap(_.assert404V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.ontology_not_found))
       },
       test("class not found in ontology returns 404") {
         TestApiClient
@@ -217,8 +218,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             deleteClassMappingUri(anythingOntIri, unknownClassIri, extSchemaOrg),
             anythingAdminUser,
           )
-          .flatMap(_.assert404)
-          .map(body => assertTrue(body.nonEmpty))
+          .flatMap(_.assert404V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.class_not_found))
       },
       test("user without project admin rights returns 403") {
         TestApiClient
@@ -258,8 +259,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddPropertyMappingsRequest(List.empty),
             anythingAdminUser,
           )
-          .flatMap(_.assert400)
-          .map(body => assertTrue(body.contains("at least one")))
+          .flatMap(_.assert400V3)
+          .map(err => assertTrue(err.message.contains("at least one")))
       },
       test("Knora IRI in mappings returns 400") {
         TestApiClient
@@ -268,8 +269,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddPropertyMappingsRequest(List("http://www.knora.org/ontology/0001/anything#hasInteger")),
             anythingAdminUser,
           )
-          .flatMap(_.assert400)
-          .map(body => assertTrue(body.contains("external IRI")))
+          .flatMap(_.assert400V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
       },
       test("ontology not found returns 404") {
         TestApiClient
@@ -278,8 +279,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddPropertyMappingsRequest(List(extSchemaOrgName)),
             anythingAdminUser,
           )
-          .flatMap(_.assert404)
-          .map(body => assertTrue(body.nonEmpty))
+          .flatMap(_.assert404V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.ontology_not_found))
       },
       test("property not found returns 404") {
         TestApiClient
@@ -288,8 +289,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddPropertyMappingsRequest(List(extSchemaOrgName)),
             anythingAdminUser,
           )
-          .flatMap(_.assert404)
-          .map(body => assertTrue(body.nonEmpty))
+          .flatMap(_.assert404V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.property_not_found))
       },
       test("user without project admin rights returns 403") {
         TestApiClient
@@ -374,8 +375,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             ),
             anythingAdminUser,
           )
-          .flatMap(_.assert400)
-          .map(body => assertTrue(body.contains("external IRI")))
+          .flatMap(_.assert400V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
       },
       test("ontology not found returns 404") {
         TestApiClient
@@ -383,8 +384,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             deletePropertyMappingUri(unknownOntIri, s"$unknownOntIri#hasInteger", extSchemaOrgName),
             anythingAdminUser,
           )
-          .flatMap(_.assert404)
-          .map(body => assertTrue(body.nonEmpty))
+          .flatMap(_.assert404V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.ontology_not_found))
       },
       test("property not found returns 404") {
         TestApiClient
@@ -392,8 +393,8 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             deletePropertyMappingUri(anythingOntIri, unknownPropIri, extSchemaOrgName),
             anythingAdminUser,
           )
-          .flatMap(_.assert404)
-          .map(body => assertTrue(body.nonEmpty))
+          .flatMap(_.assert404V3)
+          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.property_not_found))
       },
       test("user without project admin rights returns 403") {
         TestApiClient

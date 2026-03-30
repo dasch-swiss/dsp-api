@@ -62,6 +62,9 @@ object NotFound:
 case class BadRequest(message: String = "Bad Request", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
 object BadRequest {
   given JsonCodec[BadRequest] = DeriveJsonCodec.gen[BadRequest]
+
+  def apply(code: V3ErrorCode, message: String, details: Map[String, String]): BadRequest =
+    BadRequest(message, Chunk(ErrorDetail(code, message, details)))
 }
 
 final case class Conflict(message: String = "", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
