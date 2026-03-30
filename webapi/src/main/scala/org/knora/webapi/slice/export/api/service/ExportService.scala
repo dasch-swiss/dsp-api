@@ -133,7 +133,6 @@ final case class ExportService(
       case _: TextValueContentV2                                                     => "Text"
     }
 
-
   def exportResources(
     project: KnoraProject,
     classIri: ResourceClassIri,
