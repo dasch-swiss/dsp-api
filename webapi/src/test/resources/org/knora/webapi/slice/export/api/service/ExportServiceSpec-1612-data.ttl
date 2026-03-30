@@ -375,7 +375,7 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
         knora-base:standoffTagHasStartParent
                 <http://rdfh.ch/1612/FootnoteResource/values/FootnoteTextVal/standoff/0>;
         knora-base:standoffTagHasUUID   "FootnoteTag00001UUID0";
-        standoff:standoffFootnoteTagHasContent "a note on hello" .
+        standoff:standoffFootnoteTagHasContent "a note on <b>hello</b>" .
 
 <http://rdfh.ch/1612/FootnoteResource/values/FootnoteTextVal/standoff/2>
         rdf:type                        standoff:StandoffFootnoteTag;

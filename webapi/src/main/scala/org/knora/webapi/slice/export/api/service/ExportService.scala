@@ -287,12 +287,12 @@ final case class ExportService(
         text.patch(tag.endPosition, s"[${i + 1}]", 0)
       }
       val footnoteList = footnoteContents.zipWithIndex.map { case (fn, i) => s"[${i + 1}] $fn" }.mkString("\n")
-      RegularValue(List(stringFormat(s"$textWithMarkers\n\n$footnoteList")))
+      RegularValue(List(stringFormat(s"$textWithMarkers\n$footnoteList")))
     }
   }
 
   private def stringFormat(s: String): String =
-    s.replaceAll("\n", "\\\\n").replaceAll("\u001e", " ")
+    s.replaceAll("<[^>]+>", "").replaceAll("\u001e", " ")
 }
 
 object ExportService {
