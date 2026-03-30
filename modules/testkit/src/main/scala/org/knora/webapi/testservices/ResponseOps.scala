@@ -7,6 +7,10 @@ package org.knora.webapi.testservices
 import sttp.client4.*
 import sttp.model.*
 import zio.*
+import zio.json.*
+
+import org.knora.webapi.slice.api.v3.BadRequest
+import org.knora.webapi.slice.api.v3.NotFound
 
 final case class ResponseError(message: String) extends Exception(message)
 object ResponseError {
@@ -44,6 +48,12 @@ object ResponseOps {
         case (Right(_), StatusCode.NotFound)    =>
           ZIO.fail(ResponseError("Expected 404 Not Found but got a successful response"))
         case _ => ZIO.fail(ResponseError.from(StatusCode.NotFound, r))
+
+    def assertBadRequest: IO[ResponseError, BadRequest] =
+      assert400.flatMap(body => ZIO.fromEither(body.fromJson[BadRequest]).mapError(ResponseError(_)))
+
+    def assertNotFound: IO[ResponseError, NotFound] =
+      assert404.flatMap(body => ZIO.fromEither(body.fromJson[NotFound]).mapError(ResponseError(_)))
 
   }
 }
