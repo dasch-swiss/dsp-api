@@ -29,7 +29,6 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
@@ -265,13 +264,6 @@ final class ProjectMigrationImportService(
         existsById <- groupService.findById(groupIri)
         _          <- ZIO.when(existsById.isDefined)(
                ZIO.fail(new RuntimeException(s"Group with IRI '$groupIri' already exists")),
-             )
-        groupName <- ZIO
-                       .fromEither(groupResource.objectString(KnoraAdmin.GroupName, GroupName.from))
-                       .mapError(e => new RuntimeException(s"$e in admin.nq"))
-        existsByName <- groupService.findByName(groupName)
-        _            <- ZIO.when(existsByName.isDefined)(
-               ZIO.fail(new RuntimeException(s"Group with name '$groupName' already exists")),
              )
       } yield ()
     }
