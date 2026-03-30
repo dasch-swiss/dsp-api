@@ -255,6 +255,52 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           )
         },
       ),
+      suite("IRI validation -- project-ontology IRI rejected by DELETE")(
+        test("deleteClassMapping rejects a project-ontology IRI as mapping") {
+          val projectIri = "https://schema.org/Thing"
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheDataWithExtBase)
+            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
+                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
+                 )
+            result <- deleteClass(anythingOntologyIri, anythingClassIri, projectIri)
+          } yield assertTrue(
+            result match {
+              case Exit.Failure(cause) =>
+                cause.failureOption match {
+                  case Some(BadRequest(_, errors)) =>
+                    errors.size == 1 &&
+                    errors.head.code == V3ErrorCode.project_ontology_mapping_iri &&
+                    errors.head.details.get("iri").contains(projectIri)
+                  case _ => false
+                }
+              case _ => false
+            },
+          )
+        },
+        test("deletePropertyMapping rejects a project-ontology IRI as mapping") {
+          val projectIri = "https://schema.org/name"
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheDataWithExtBase)
+            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
+                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
+                 )
+            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, projectIri)
+          } yield assertTrue(
+            result match {
+              case Exit.Failure(cause) =>
+                cause.failureOption match {
+                  case Some(BadRequest(_, errors)) =>
+                    errors.size == 1 &&
+                    errors.head.code == V3ErrorCode.project_ontology_mapping_iri &&
+                    errors.head.details.get("iri").contains(projectIri)
+                  case _ => false
+                }
+              case _ => false
+            },
+          )
+        },
+      ),
       suite("IRI validation -- Knora IRI must not be used as a mapping target")(
         test("putClassMapping rejects a Knora entity IRI as mapping") {
           val knoraIri = "http://www.knora.org/ontology/knora-base#TextValue"
