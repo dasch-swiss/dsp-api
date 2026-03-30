@@ -64,6 +64,19 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
     )
     .build
 
+  // Like projectOntologyCacheData but with an additional external-domain ontology base ("https://schema.org")
+  // so that IRIs under that base trigger project_ontology_mapping_iri validation.
+  private val projectOntologyCacheDataWithExtBase = OntologyCacheDataBuilder.builder
+    .addOntology(
+      ReadOntologyV2Builder
+        .builder(anythingOntologyIriInternal.smartIri)
+        .addClassInfo(ReadClassInfoV2Builder.builder(anythingClassIriInternal.smartIri))
+        .addPropertyInfo(ReadPropertyInfoV2Builder.builder(anythingPropertyIriInternal.smartIri))
+        .assignToProject(testProjectIri),
+    )
+    .addOntology(ReadOntologyV2Builder.builder("https://schema.org".smartIri))
+    .build
+
   // Helper: run putClassMapping and return the Exit
   private def putClass(
     ontologyIri: String,
@@ -209,8 +222,11 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
             result match {
               case Exit.Failure(cause) =>
                 cause.failureOption match {
-                  case Some(BadRequest(msg, _)) => msg.contains("Mapping IRI must be an external IRI")
-                  case _                        => false
+                  case Some(BadRequest(_, errors)) =>
+                    errors.size == 1 &&
+                    errors.head.code == V3ErrorCode.knora_ontology_mapping_iri &&
+                    errors.head.details.get("iri").contains(knoraIri)
+                  case _ => false
                 }
               case _ => false
             },
@@ -228,8 +244,57 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
             result match {
               case Exit.Failure(cause) =>
                 cause.failureOption match {
-                  case Some(BadRequest(msg, _)) => msg.contains("Mapping IRI must be an external IRI")
-                  case _                        => false
+                  case Some(BadRequest(_, errors)) =>
+                    errors.size == 1 &&
+                    errors.head.code == V3ErrorCode.knora_ontology_mapping_iri &&
+                    errors.head.details.get("iri").contains(knoraIri)
+                  case _ => false
+                }
+              case _ => false
+            },
+          )
+        },
+      ),
+      suite("IRI validation -- project-ontology IRI rejected by DELETE")(
+        test("deleteClassMapping rejects a project-ontology IRI as mapping") {
+          val projectIri = "https://schema.org/Thing"
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheDataWithExtBase)
+            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
+                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
+                 )
+            result <- deleteClass(anythingOntologyIri, anythingClassIri, projectIri)
+          } yield assertTrue(
+            result match {
+              case Exit.Failure(cause) =>
+                cause.failureOption match {
+                  case Some(BadRequest(_, errors)) =>
+                    errors.size == 1 &&
+                    errors.head.code == V3ErrorCode.project_ontology_mapping_iri &&
+                    errors.head.details.get("iri").contains(projectIri)
+                  case _ => false
+                }
+              case _ => false
+            },
+          )
+        },
+        test("deletePropertyMapping rejects a project-ontology IRI as mapping") {
+          val projectIri = "https://schema.org/name"
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheDataWithExtBase)
+            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
+                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
+                 )
+            result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, projectIri)
+          } yield assertTrue(
+            result match {
+              case Exit.Failure(cause) =>
+                cause.failureOption match {
+                  case Some(BadRequest(_, errors)) =>
+                    errors.size == 1 &&
+                    errors.head.code == V3ErrorCode.project_ontology_mapping_iri &&
+                    errors.head.details.get("iri").contains(projectIri)
+                  case _ => false
                 }
               case _ => false
             },
@@ -241,7 +306,6 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           val knoraIri = "http://www.knora.org/ontology/knora-base#TextValue"
           for {
             _ <- OntologyCacheFake.set(projectOntologyCacheData)
-            // Populate the project repo so auth passes
             _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
                    _.save(
                      org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri),
@@ -252,8 +316,12 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
             result match {
               case Exit.Failure(cause) =>
                 cause.failureOption match {
-                  case Some(BadRequest(msg, _)) => msg.contains("Mapping IRI must be an external IRI")
-                  case _                        => false
+                  case Some(BadRequest(msg, errors)) =>
+                    msg == "1 mapping IRI(s) failed validation." &&
+                    errors.size == 1 &&
+                    errors.head.code == V3ErrorCode.knora_ontology_mapping_iri &&
+                    errors.head.details.get("iri").contains(knoraIri)
+                  case _ => false
                 }
               case _ => false
             },
@@ -273,8 +341,78 @@ object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
             result match {
               case Exit.Failure(cause) =>
                 cause.failureOption match {
-                  case Some(BadRequest(msg, _)) => msg.contains("Mapping IRI must be an external IRI")
-                  case _                        => false
+                  case Some(BadRequest(msg, errors)) =>
+                    msg == "1 mapping IRI(s) failed validation." &&
+                    errors.size == 1 &&
+                    errors.head.code == V3ErrorCode.knora_ontology_mapping_iri &&
+                    errors.head.details.get("iri").contains(knoraIri)
+                  case _ => false
+                }
+              case _ => false
+            },
+          )
+        },
+      ),
+      suite("IRI validation -- mixed failures in a single PUT request")(
+        test("putClassMapping returns one ErrorDetail per failing IRI with distinct codes") {
+          // malformed + knora-managed + project-ontology, one valid → 3 errors with 3 distinct codes
+          val malformedIri     = "notAnIri"
+          val knoraIri         = "http://www.knora.org/ontology/knora-base#TextValue"
+          val projectIri       = "https://schema.org/Thing" // matches the extra schema.org ontology base
+          val validExternalIri = "https://example.com/valid"
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheDataWithExtBase)
+            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
+                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
+                 )
+            result <- putClass(
+                        anythingOntologyIri,
+                        anythingClassIri,
+                        List(malformedIri, knoraIri, projectIri, validExternalIri),
+                      )
+          } yield assertTrue(
+            result match {
+              case Exit.Failure(cause) =>
+                cause.failureOption match {
+                  case Some(BadRequest(msg, errors)) =>
+                    msg == "3 mapping IRI(s) failed validation." &&
+                    errors.size == 3 &&
+                    errors.exists(_.code == V3ErrorCode.malformed_mapping_iri) &&
+                    errors.exists(_.code == V3ErrorCode.knora_ontology_mapping_iri) &&
+                    errors.exists(_.code == V3ErrorCode.project_ontology_mapping_iri)
+                  case _ => false
+                }
+              case _ => false
+            },
+          )
+        },
+        test("putPropertyMapping returns one ErrorDetail per failing IRI with distinct codes") {
+          // malformed + knora-managed + project-ontology, one valid → 3 errors with 3 distinct codes
+          val malformedIri     = "notAnIri"
+          val knoraIri         = "http://www.knora.org/ontology/knora-base#TextValue"
+          val projectIri       = "https://schema.org/name" // matches the extra schema.org ontology base
+          val validExternalIri = "https://example.com/valid"
+          for {
+            _ <- OntologyCacheFake.set(projectOntologyCacheDataWithExtBase)
+            _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](
+                   _.save(org.knora.webapi.TestDataFactory.someProject.copy(id = testProjectIri)),
+                 )
+            result <- putProperty(
+                        anythingOntologyIri,
+                        anythingPropertyIri,
+                        List(malformedIri, knoraIri, projectIri, validExternalIri),
+                      )
+          } yield assertTrue(
+            result match {
+              case Exit.Failure(cause) =>
+                cause.failureOption match {
+                  case Some(BadRequest(msg, errors)) =>
+                    msg == "3 mapping IRI(s) failed validation." &&
+                    errors.size == 3 &&
+                    errors.exists(_.code == V3ErrorCode.malformed_mapping_iri) &&
+                    errors.exists(_.code == V3ErrorCode.knora_ontology_mapping_iri) &&
+                    errors.exists(_.code == V3ErrorCode.project_ontology_mapping_iri)
+                  case _ => false
                 }
               case _ => false
             },

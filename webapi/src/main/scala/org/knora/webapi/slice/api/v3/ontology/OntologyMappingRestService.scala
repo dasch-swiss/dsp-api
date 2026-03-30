@@ -80,7 +80,8 @@ final class OntologyMappingRestService(
                                   .validate(request.mappings)(validateExternalIri(projectOntologyBases, _))
                                   .mapError(errors =>
                                     BadRequest(
-                                      s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}",
+                                      s"${errors.size} mapping IRI(s) failed validation.",
+                                      Chunk.fromIterable(errors),
                                     ),
                                   )
                     update <-
@@ -112,8 +113,9 @@ final class OntologyMappingRestService(
                     _                   <- lookupClass(classIri, ontologyIri)
                     projectIris         <- projectOntologyIris
                     projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
-                    extIri              <- validateExternalIri(projectOntologyBases, mappingIriDto.value).mapError(BadRequest(_))
-                    update              <-
+                    extIri              <- validateExternalIri(projectOntologyBases, mappingIriDto.value)
+                                .mapError(detail => BadRequest(detail.code, detail.message, detail.details))
+                    update <-
                       RemoveMappingQuery.build(ontologyIri, classIri.smartIri, MappingPredicate.SubClassOf, extIri)
                     _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
                            .tapError(e =>
@@ -161,7 +163,8 @@ final class OntologyMappingRestService(
                                   .validate(request.mappings)(validateExternalIri(projectOntologyBases, _))
                                   .mapError(errors =>
                                     BadRequest(
-                                      s"${errors.size} mapping IRI(s) failed validation: ${errors.mkString("; ")}",
+                                      s"${errors.size} mapping IRI(s) failed validation.",
+                                      Chunk.fromIterable(errors),
                                     ),
                                   )
                     // TODO DEV-5887: validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty).
@@ -199,8 +202,9 @@ final class OntologyMappingRestService(
                     _                   <- lookupProperty(propertyIri, ontologyIri)
                     projectIris         <- projectOntologyIris
                     projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
-                    extIri              <- validateExternalIri(projectOntologyBases, mappingIriDto.value).mapError(BadRequest(_))
-                    update              <-
+                    extIri              <- validateExternalIri(projectOntologyBases, mappingIriDto.value)
+                                .mapError(detail => BadRequest(detail.code, detail.message, detail.details))
+                    update <-
                       RemoveMappingQuery
                         .build(ontologyIri, propertyIri.smartIri, MappingPredicate.SubPropertyOf, extIri)
                     _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
@@ -228,15 +232,36 @@ final class OntologyMappingRestService(
       cacheData.ontologies.keySet.filter(iri => !iri.isKnoraBuiltInDefinitionIri && !iri.isKnoraSharedDefinitionIri)
     }
 
-  private def validateExternalIri(projectOntologyBases: Set[String], iriStr: String): IO[String, SmartIri] =
+  private def validateExternalIri(projectOntologyBases: Set[String], iriStr: String): IO[ErrorDetail, SmartIri] =
     // projectOntologyBases is pre-computed by the caller (once per request, not once per IRI).
-    iriConverter.asSmartIri(iriStr).mapError(_.getMessage).flatMap { iri =>
-      if iri.isKnoraOntologyIri || iri.isKnoraEntityIri then
-        ZIO.fail(s"Mapping IRI must be an external IRI, not a Knora-managed IRI: $iriStr")
-      else if isProjectOntologyIri(iri, projectOntologyBases) then
-        ZIO.fail(s"Mapping IRI belongs to a DSP project ontology and cannot be used as a mapping: $iriStr")
-      else ZIO.succeed(iri)
-    }
+    iriConverter
+      .asSmartIri(iriStr)
+      .mapError(_ =>
+        ErrorDetail(
+          V3ErrorCode.malformed_mapping_iri,
+          s"Couldn't parse IRI: '$iriStr'.",
+          Map("iri" -> iriStr),
+        ),
+      )
+      .flatMap { iri =>
+        if iri.isKnoraOntologyIri || iri.isKnoraEntityIri then
+          ZIO.fail(
+            ErrorDetail(
+              V3ErrorCode.knora_ontology_mapping_iri,
+              s"Mapping IRI '$iriStr' is a Knora-managed IRI and cannot be used as a mapping.",
+              Map("iri" -> iriStr),
+            ),
+          )
+        else if isProjectOntologyIri(iri, projectOntologyBases) then
+          ZIO.fail(
+            ErrorDetail(
+              V3ErrorCode.project_ontology_mapping_iri,
+              s"Mapping IRI '$iriStr' belongs to a DSP project ontology and cannot be used as a mapping.",
+              Map("iri" -> iriStr),
+            ),
+          )
+        else ZIO.succeed(iri)
+      }
 
   private def isProjectOntologyIri(iri: SmartIri, projectOntologyBases: Set[String]): Boolean = {
     val iriStr = iri.toIri

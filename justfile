@@ -88,6 +88,9 @@ run-with-dev-db:
     export KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PORT=443
     export KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME=admin
     export KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD=$DEV_DB_PASSWORD
+    export KNORA_WEBAPI_SIPI_INTERNAL_HOST=iiif.dev.dasch.swiss                                                             
+    export KNORA_WEBAPI_SIPI_INTERNAL_PROTOCOL=https                                                                        
+    export KNORA_WEBAPI_SIPI_INTERNAL_PORT=443
     ./sbtx "webapi/run"
 
 ## Documentation
