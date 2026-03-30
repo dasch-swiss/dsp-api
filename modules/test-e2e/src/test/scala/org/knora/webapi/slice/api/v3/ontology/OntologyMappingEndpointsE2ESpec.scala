@@ -114,7 +114,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddClassMappingsRequest(List.empty),
             anythingAdminUser,
           )
-          .flatMap(_.assertBadRequest)
+          .flatMap(_.assert400V3)
           .map(err => assertTrue(err.message.contains("at least one")))
       },
       test("Knora IRI in mappings returns 400") {
@@ -124,7 +124,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddClassMappingsRequest(List("http://www.knora.org/ontology/0001/anything#Thing")),
             anythingAdminUser,
           )
-          .flatMap(_.assertBadRequest)
+          .flatMap(_.assert400V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
       },
       test("ontology not found returns 404") {
@@ -134,7 +134,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddClassMappingsRequest(List(extSchemaOrg)),
             anythingAdminUser,
           )
-          .flatMap(_.assertNotFound)
+          .flatMap(_.assert404V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.ontology_not_found))
       },
       test("class not found in ontology returns 404") {
@@ -144,7 +144,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddClassMappingsRequest(List(extSchemaOrg)),
             anythingAdminUser,
           )
-          .flatMap(_.assertNotFound)
+          .flatMap(_.assert404V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.class_not_found))
       },
       test("user without project admin rights returns 403") {
@@ -200,7 +200,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             deleteClassMappingUri(anythingOntIri, thingClassIri, "http://www.knora.org/ontology/0001/anything#Thing"),
             anythingAdminUser,
           )
-          .flatMap(_.assertBadRequest)
+          .flatMap(_.assert400V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
       },
       test("ontology not found returns 404") {
@@ -209,7 +209,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             deleteClassMappingUri(unknownOntIri, s"$unknownOntIri#Thing", extSchemaOrg),
             anythingAdminUser,
           )
-          .flatMap(_.assertNotFound)
+          .flatMap(_.assert404V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.ontology_not_found))
       },
       test("class not found in ontology returns 404") {
@@ -218,7 +218,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             deleteClassMappingUri(anythingOntIri, unknownClassIri, extSchemaOrg),
             anythingAdminUser,
           )
-          .flatMap(_.assertNotFound)
+          .flatMap(_.assert404V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.class_not_found))
       },
       test("user without project admin rights returns 403") {
@@ -259,7 +259,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddPropertyMappingsRequest(List.empty),
             anythingAdminUser,
           )
-          .flatMap(_.assertBadRequest)
+          .flatMap(_.assert400V3)
           .map(err => assertTrue(err.message.contains("at least one")))
       },
       test("Knora IRI in mappings returns 400") {
@@ -269,7 +269,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddPropertyMappingsRequest(List("http://www.knora.org/ontology/0001/anything#hasInteger")),
             anythingAdminUser,
           )
-          .flatMap(_.assertBadRequest)
+          .flatMap(_.assert400V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
       },
       test("ontology not found returns 404") {
@@ -279,7 +279,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddPropertyMappingsRequest(List(extSchemaOrgName)),
             anythingAdminUser,
           )
-          .flatMap(_.assertNotFound)
+          .flatMap(_.assert404V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.ontology_not_found))
       },
       test("property not found returns 404") {
@@ -289,7 +289,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             AddPropertyMappingsRequest(List(extSchemaOrgName)),
             anythingAdminUser,
           )
-          .flatMap(_.assertNotFound)
+          .flatMap(_.assert404V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.property_not_found))
       },
       test("user without project admin rights returns 403") {
@@ -375,7 +375,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             ),
             anythingAdminUser,
           )
-          .flatMap(_.assertBadRequest)
+          .flatMap(_.assert400V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
       },
       test("ontology not found returns 404") {
@@ -384,7 +384,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             deletePropertyMappingUri(unknownOntIri, s"$unknownOntIri#hasInteger", extSchemaOrgName),
             anythingAdminUser,
           )
-          .flatMap(_.assertNotFound)
+          .flatMap(_.assert404V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.ontology_not_found))
       },
       test("property not found returns 404") {
@@ -393,7 +393,7 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             deletePropertyMappingUri(anythingOntIri, unknownPropIri, extSchemaOrgName),
             anythingAdminUser,
           )
-          .flatMap(_.assertNotFound)
+          .flatMap(_.assert404V3)
           .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.property_not_found))
       },
       test("user without project admin rights returns 403") {
