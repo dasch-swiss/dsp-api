@@ -10,7 +10,6 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyP
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 import zio.ZLayer
@@ -25,6 +24,7 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 trait FindResourcesService {
@@ -51,9 +51,12 @@ final case class FindResourcesServiceLive(
     classIri: Option[ResourceClassIri],
   ): Task[Seq[SmartIri]] =
     for {
-      query <- ZIO.succeed(resourceQuery(project, classIri))
-      rows  <- triplestore.selectWithTimeout(query, SparqlTimeout.Gravsearch).map(_.results.bindings)
-      rows  <- ZIO.foreach(rows) { row =>
+      sparql <- classIri match {
+                  case Some(iri) => buildClassQuery(project, iri)
+                  case None      => ZIO.succeed(buildAllResourcesQuery(project))
+                }
+      rows <- triplestore.query(sparql).map(_.results.bindings)
+      rows <- ZIO.foreach(rows) { row =>
                 for {
                   value    <- ZIO.attempt(row.rowMap.getOrElse(resourceIriVar, throw new InconsistentDataException("")))
                   smartIri <- iriConverter.asSmartIri(value)
@@ -63,10 +66,25 @@ final case class FindResourcesServiceLive(
 
   private val (classIriVar, resourceIriVar) = ("classIri", "resourceIri")
 
-  private def resourceQuery(
-    project: KnoraProject,
-    classIri: Option[ResourceClassIri],
-  ): SelectQuery = {
+  // Resolves subclasses from the ontology cache and builds a VALUES-based SPARQL query.
+  // This avoids expensive rdfs:subClassOf* triplestore traversal, which times out
+  // for projects like BEOL where basicLetter has subclasses across multiple ontologies.
+  private def buildClassQuery(project: KnoraProject, classIri: ResourceClassIri): Task[Select] =
+    ontologyRepo.findAllSubclassesBy(classIri).map { subclasses =>
+      val projectGraph = projectService.getDataGraphForProject(project)
+      val allClassIris = classIri.toInternalSchema.toIri +: subclasses.map(_.entityInfoContent.classIri.toIri)
+      val valuesClause = allClassIris.map(iri => s"<$iri>").mkString(" ")
+      // String interpolation is used here because rdf4j SparqlBuilder does not support VALUES blocks.
+      Select.gravsearch(
+        s"""PREFIX knora-base: <${KB.NS.getName}>
+           |SELECT DISTINCT ?$resourceIriVar WHERE {
+           |  GRAPH <${projectGraph.value}> { ?$resourceIriVar a ?$classIriVar }
+           |  VALUES ?$classIriVar { $valuesClause }
+           |}""".stripMargin,
+      )
+    }
+
+  private def buildAllResourcesQuery(project: KnoraProject): Select = {
     val selectPattern = SparqlBuilder
       .select(variable(resourceIriVar))
       .distinct()
@@ -80,24 +98,12 @@ final case class FindResourcesServiceLive(
     val classSubclassOfResource =
       variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
 
-    classIri match {
-      case Some(iri) =>
-        val classSubclassOfRequested =
-          variable(classIriVar).has(
-            PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(),
-            Rdf.iri(iri.toInternalSchema.toIri),
-          )
+    val query = Queries
+      .SELECT(selectPattern)
+      .where(resourceWhere, classSubclassOfResource)
+      .prefix(KB.NS, RDFS.NS)
 
-        Queries
-          .SELECT(selectPattern)
-          .where(resourceWhere, classSubclassOfRequested, classSubclassOfResource)
-          .prefix(KB.NS, RDFS.NS)
-      case None =>
-        Queries
-          .SELECT(selectPattern)
-          .where(resourceWhere, classSubclassOfResource)
-          .prefix(KB.NS, RDFS.NS)
-    }
+    Select(query, SparqlTimeout.Gravsearch)
   }
 }
 
