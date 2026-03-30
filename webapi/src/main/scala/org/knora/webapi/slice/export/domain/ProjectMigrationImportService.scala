@@ -165,6 +165,7 @@ final class ProjectMigrationImportService(
              )
 
         // upload data (using rewritten admin.nq)
+        _ <- ZIO.logInfo(s"$taskId: Uploading RDF data to triplestore for project '$projectIri'")
         _ <- uploadRdfDataToTriplestore(rewrittenNqFiles)
         _ <- ZIO.logInfo(s"$taskId: RDF data uploaded to triplestore for project '$projectIri'")
         _ <- state.complete(taskId).ignore
