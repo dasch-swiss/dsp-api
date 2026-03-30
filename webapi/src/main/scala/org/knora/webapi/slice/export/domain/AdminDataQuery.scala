@@ -81,7 +81,7 @@ object AdminDataQuery extends QueryBuilderHelper {
          |WHERE {
          |  GRAPH <$adminGraph> {
          |    {
-         |      <$projectIri> a knora-admin:KnoraProject ;
+         |      <$projectIri> a knora-admin:knoraProject ;
          |        ?projectPred ?projectObj .
          |    } UNION {
          |      ?user a knora-admin:User ;
