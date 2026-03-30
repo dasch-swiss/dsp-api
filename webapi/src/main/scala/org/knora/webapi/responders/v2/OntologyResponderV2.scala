@@ -56,6 +56,7 @@ import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
 import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
 import org.knora.webapi.slice.ontology.repo.DeleteClassCommentsQuery
+import org.knora.webapi.slice.ontology.repo.DeleteClassQuery
 import org.knora.webapi.slice.ontology.repo.DeleteOntologyCommentQuery
 import org.knora.webapi.slice.ontology.repo.DeleteOntologyQuery
 import org.knora.webapi.slice.ontology.repo.DeletePropertyCommentsQuery
@@ -1248,19 +1249,12 @@ final case class OntologyResponderV2(
 
       // Delete the class from the triplestore.
 
-      currentTime <- Clock.instant
-
-      updateSparql = sparql.v2.txt.deleteClass(
-                       ontologyNamedGraphIri = internalOntologyIri,
-                       ontologyIri = internalOntologyIri,
-                       classIri = internalClassIri,
-                       lastModificationDate = lastModificationDate,
-                       currentTime = currentTime,
-                     )
-      _              <- save(Update(updateSparql))
-      updatedOntology = ontology.copy(
+      currentTimeAndQuery <- DeleteClassQuery.build(classIri, LastModificationDate.from(lastModificationDate))
+      (currentTime, query) = currentTimeAndQuery
+      _                   <- save(Update(query))
+      updatedOntology      = ontology.copy(
                           ontologyMetadata = ontology.ontologyMetadata.copy(
-                            lastModificationDate = Some(currentTime),
+                            lastModificationDate = Some(currentTime.value),
                           ),
                           classes = ontology.classes - internalClassIri,
                         )
