@@ -5,9 +5,15 @@
 
 package org.knora.webapi.slice.ontology.domain.model
 
+import sttp.tapir.Codec
+import sttp.tapir.CodecFormat
+import zio.json.JsonCodec
+
 import java.net.URI
 
 import dsp.valueobjects.Iri
+import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
+import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
@@ -15,6 +21,9 @@ import org.knora.webapi.slice.common.Value.StringValue
 final case class ExternalIri private (value: String) extends StringValue
 
 object ExternalIri extends StringValueCompanion[ExternalIri] {
+
+  given JsonCodec[ExternalIri]                            = ZioJsonCodec.stringCodec(from)
+  given Codec[String, ExternalIri, CodecFormat.TextPlain] = TapirCodec.stringCodec(from)
 
   private val forbiddenHosts = List("knora.org", "dasch.swiss")
 
