@@ -1695,8 +1695,7 @@ final case class OntologyResponderV2(
       newGuiAttributeIris =
         changePropertyGuiElementRequest.newGuiObject.guiAttributes.map(guiAttribute => guiAttribute.value)
       updateSparql = ChangePropertyGuiElementQuery.build(
-                       ontologyNamedGraphIri = internalOntologyIri,
-                       ontologyIri = internalOntologyIri,
+                       ontologyIri = OntologyIri.unsafeFrom(internalOntologyIri),
                        propertyIri = internalPropertyIri,
                        maybeLinkValuePropertyIri =
                          maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),

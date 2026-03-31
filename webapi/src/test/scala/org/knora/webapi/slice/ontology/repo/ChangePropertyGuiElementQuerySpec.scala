@@ -11,12 +11,14 @@ import java.time.Instant
 
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 
 object ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private val ontologyIri          = "http://www.knora.org/ontology/0001/anything".toSmartIri
+  private val ontologyIri =
+    OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
   private val propertyIri          = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri
   private val linkValuePropertyIri = "http://www.knora.org/ontology/0001/anything#hasTextValue".toSmartIri
   private val guiElementIri        = "http://www.knora.org/ontology/salsah-gui#SimpleText".toSmartIri
@@ -41,7 +43,6 @@ object ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
   override val spec: Spec[Any, Nothing] = suite("ChangePropertyGuiElementQuery")(
     test("with guiElement and guiAttributes, no link value property") {
       val actual = ChangePropertyGuiElementQuery.build(
-        ontologyNamedGraphIri = ontologyIri,
         ontologyIri = ontologyIri,
         propertyIri = propertyIri,
         maybeLinkValuePropertyIri = None,
@@ -72,7 +73,6 @@ object ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
     },
     test("with guiElement and guiAttributes, with link value property") {
       val actual = ChangePropertyGuiElementQuery.build(
-        ontologyNamedGraphIri = ontologyIri,
         ontologyIri = ontologyIri,
         propertyIri = propertyIri,
         maybeLinkValuePropertyIri = Some(linkValuePropertyIri),
@@ -109,7 +109,6 @@ object ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
     },
     test("no guiElement, no guiAttributes (delete only)") {
       val actual = ChangePropertyGuiElementQuery.build(
-        ontologyNamedGraphIri = ontologyIri,
         ontologyIri = ontologyIri,
         propertyIri = propertyIri,
         maybeLinkValuePropertyIri = None,

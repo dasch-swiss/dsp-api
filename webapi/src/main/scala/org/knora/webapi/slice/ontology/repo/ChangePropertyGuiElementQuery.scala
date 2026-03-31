@@ -16,6 +16,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import java.time.Instant
 
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.SalsahGui
@@ -24,8 +25,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
 
   def build(
-    ontologyNamedGraphIri: SmartIri,
-    ontologyIri: SmartIri,
+    ontologyIri: OntologyIri,
     propertyIri: SmartIri,
     maybeLinkValuePropertyIri: Option[SmartIri],
     maybeNewGuiElement: Option[SmartIri],
@@ -34,13 +34,11 @@ object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
     currentTime: Instant,
   ): Update = {
     val ontology = toRdfIri(ontologyIri)
-    val graph    = toRdfIri(ontologyNamedGraphIri)
     val property = toRdfIri(propertyIri)
     val linkProp = maybeLinkValuePropertyIri.map(toRdfIri)
 
-    val deleteOld = buildDeleteOldQuery(graph, ontology, property, linkProp, lastModificationDate)
+    val deleteOld = buildDeleteOldQuery(ontology, property, linkProp, lastModificationDate)
     val insertNew = buildInsertNewQuery(
-      graph,
       ontology,
       property,
       linkProp,
@@ -48,13 +46,12 @@ object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
       newGuiAttributes,
       lastModificationDate,
     )
-    val updateTimestamp = buildUpdateTimestampQuery(graph, ontology, lastModificationDate, currentTime)
+    val updateTimestamp = buildUpdateTimestampQuery(ontology, lastModificationDate, currentTime)
 
     Update(deleteOld.getQueryString + ";\n" + insertNew.getQueryString + ";\n" + updateTimestamp.getQueryString)
   }
 
   private def buildDeleteOldQuery(
-    graph: Iri,
     ontology: Iri,
     property: Iri,
     maybeLinkProp: Option[Iri],
@@ -93,13 +90,12 @@ object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
     Queries
       .MODIFY()
       .prefix(RDF.NS, XSD.NS, OWL.NS, KB.NS, SalsahGui.NS)
-      .from(graph)
+      .from(ontology)
       .delete(deletePatterns*)
-      .where(wherePatterns.reduceLeft(_.and(_)).from(graph))
+      .where(wherePatterns.reduceLeft(_.and(_)).from(ontology))
   }
 
   private def buildInsertNewQuery(
-    graph: Iri,
     ontology: Iri,
     property: Iri,
     maybeLinkProp: Option[Iri],
@@ -120,21 +116,20 @@ object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
     val wherePattern = ontology
       .isA(OWL.ONTOLOGY)
       .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
-      .from(graph)
+      .from(ontology)
 
     val query = Queries
       .MODIFY()
       .prefix(RDF.NS, XSD.NS, OWL.NS, KB.NS, SalsahGui.NS)
 
     val withInsert =
-      if (insertPatterns.nonEmpty) query.into(graph).insert(insertPatterns*)
+      if (insertPatterns.nonEmpty) query.into(ontology).insert(insertPatterns*)
       else query
 
     withInsert.where(wherePattern)
   }
 
   private def buildUpdateTimestampQuery(
-    graph: Iri,
     ontology: Iri,
     lastModificationDate: Instant,
     currentTime: Instant,
@@ -145,14 +140,14 @@ object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
     val wherePattern = ontology
       .isA(OWL.ONTOLOGY)
       .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
-      .from(graph)
+      .from(ontology)
 
     Queries
       .MODIFY()
       .prefix(RDF.NS, XSD.NS, OWL.NS, KB.NS, SalsahGui.NS)
-      .from(graph)
+      .from(ontology)
       .delete(deletePattern)
-      .into(graph)
+      .into(ontology)
       .insert(insertPattern)
       .where(wherePattern)
   }
