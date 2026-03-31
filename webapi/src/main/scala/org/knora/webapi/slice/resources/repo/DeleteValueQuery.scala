@@ -85,6 +85,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
 
         // --- DELETE patterns ---
         val deleteBase = Seq(
+          // Delete the resource's last modification date so we can update it
           resource.has(KB.lastModificationDate, resourceLastModificationDate),
           value.has(KB.isDeleted, Rdf.literalOf(false)),
         )
@@ -94,10 +95,12 @@ object DeleteValueQuery extends QueryBuilderHelper {
           val linkValueProperty = Rdf.iri(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
           val linkTarget        = Rdf.iri(lu.linkTargetIri)
 
+          // Delete direct links for standoff resource references that no longer exist
           val deleteDirectLink =
             if (lu.deleteDirectLink) Seq(resource.has(linkProperty, linkTarget))
             else Seq.empty
 
+          // Detach the current LinkValue from the resource and delete its UUID (the new version will store it)
           val detachLinkValue = Seq(
             resource.has(linkValueProperty, linkValueVars(i)),
             linkValueVars(i).has(KB.valueHasUUID, linkUUIDVars(i)),
@@ -119,6 +122,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
         val insertComment =
           maybeDeleteComment.map(c => value.has(KB.deleteComment, Rdf.literalOf(c))).toSeq
 
+        // Update LinkValues for resource references in standoff markup
         val insertLinkPatterns = linkUpdates.zipWithIndex.flatMap { case (lu, i) =>
           val linkProperty      = toRdfIri(lu.linkPropertyIri)
           val linkValueProperty = Rdf.iri(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
@@ -135,6 +139,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
             else
               Seq(newLinkValue.has(KB.isDeleted, Rdf.literalOf(false)))
 
+          // Add a new LinkValue version for the resource reference
           Seq(
             newLinkValue.isA(KB.linkValue),
             newLinkValue.has(RDF.SUBJECT, resource),
@@ -153,6 +158,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
           )
         }
 
+        // Update the resource's last modification date
         val insertLastMod = Seq(resource.has(KB.lastModificationDate, currentTimeLiteral))
 
         val insertPatterns = insertBase ++ insertComment ++ insertLinkPatterns ++ insertLastMod
@@ -166,6 +172,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
           valueClass.has(zeroOrMore(RDFS.SUBCLASSOF), KB.Value),
         )
 
+        // Check the state of any LinkValues to be updated for resource references
         val whereLinkPatterns: Seq[GraphPattern] = linkUpdates.zipWithIndex.flatMap { case (lu, i) =>
           val linkProperty      = toRdfIri(lu.linkPropertyIri)
           val linkValueProperty = Rdf.iri(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
@@ -174,7 +181,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
           Seq(
             // Make sure the relevant direct link exists between the two resources
             resource.has(linkProperty, linkTarget),
-            // Make sure a LinkValue exists describing the direct link
+            // Make sure a LinkValue exists describing the direct link with the correct reference count
             resource.has(linkValueProperty, linkValueVars(i)),
             linkValueVars(i)
               .isA(KB.linkValue)
@@ -187,6 +194,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
           )
         }
 
+        // Get the resource's last modification date, if it has one, so we can update it
         val whereOptional: Seq[GraphPattern] = Seq(
           resource.has(KB.lastModificationDate, resourceLastModificationDate).optional(),
         )
