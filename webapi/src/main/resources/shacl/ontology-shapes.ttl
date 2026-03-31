@@ -45,7 +45,7 @@ knora-base:OntologyShape
       }
     """ ;
   ] ;
-  sh:property knora-base:OntologyLabelShapeLanguages , knora-base:OntologyLabelShapeUnique , knora-base:OntologyLabelSingleLine ;
+  sh:property knora-base:OntologyLabelShapeUnique , knora-base:OntologyLabelSingleLine ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;

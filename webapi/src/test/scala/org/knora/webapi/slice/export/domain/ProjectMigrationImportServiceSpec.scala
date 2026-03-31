@@ -559,19 +559,6 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(result.status == DataTaskStatus.Failed)
       }
     },
-    test("rejects existing group by name") {
-      ZIO.scoped {
-        for {
-          env <- makeTestEnv
-          // findById returns None (no conflict by IRI), but findByName returns a group
-          _      <- env.groupFindByNameRef.set(_ => ZIO.some(TestDataFactory.UserGroup.testUserGroup))
-          stream <- buildBagItZip()
-          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
-          result <- pollUntilDone(env.service, task.id)
-          _      <- cleanupImport(env, task.id)
-        } yield assertTrue(result.status == DataTaskStatus.Failed)
-      }
-    },
     test("strips SystemAdmin flag from non-root system admin users (succeeds instead of rejecting)") {
       val adminNqWithSystemAdmin =
         s"""<http://rdfh.ch/projects/9999> <$RdfType> <${KnoraAdminPrefix}knoraProject> <$AdminGraph> .

@@ -82,6 +82,12 @@ object AdminDataQuerySpec extends ZIOSpecDefault {
           queryStr.contains("knora-admin:belongsToProject"),
         )
       },
+      test("uses correct knoraProject type IRI") {
+        val queryStr = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set(testUser1))
+        assertTrue(
+          queryStr.contains("knora-admin:knoraProject"),
+        )
+      },
     ),
   )
 }
