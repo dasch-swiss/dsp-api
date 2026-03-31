@@ -9,8 +9,8 @@ import zio.test.*
 
 import org.knora.webapi.slice.api.v2.IriDto
 
-object ExternalIriSpec extends ZIOSpecDefault {
-  val spec = suite("ExternalIri")(
+object OntologyMappingExternalIriSpec extends ZIOSpecDefault {
+  val spec = suite("OntologyMappingExternalIri")(
     suite("from(String)")(
       test("should accept valid external IRIs") {
         val validIris = List(
@@ -22,13 +22,13 @@ object ExternalIriSpec extends ZIOSpecDefault {
           "http://www.cidoc-crm.org/cidoc-crm/E21_Person",
         )
         check(Gen.fromIterable(validIris)) { iri =>
-          assertTrue(ExternalIri.from(iri).map(_.value) == Right(iri))
+          assertTrue(OntologyMappingExternalIri.from(iri).map(_.value) == Right(iri))
         }
       },
       test("should reject non-IRI strings") {
         val invalidIris = List("not-an-iri", "", "just some text", "ftp://")
         check(Gen.fromIterable(invalidIris)) { iri =>
-          assertTrue(ExternalIri.from(iri).isLeft)
+          assertTrue(OntologyMappingExternalIri.from(iri).isLeft)
         }
       },
       test("should reject IRIs with knora.org host") {
@@ -39,7 +39,11 @@ object ExternalIriSpec extends ZIOSpecDefault {
           "http://knora.org/something",
         )
         check(Gen.fromIterable(knoraIris)) { iri =>
-          assertTrue(ExternalIri.from(iri) == Left(s"ExternalIri must not contain host 'knora.org': $iri"))
+          assertTrue(
+            OntologyMappingExternalIri.from(iri) == Left(
+              s"OntologyMappingExternalIri must not contain host 'knora.org': $iri",
+            ),
+          )
         }
       },
       test("should reject IRIs with dasch.swiss host") {
@@ -49,7 +53,11 @@ object ExternalIriSpec extends ZIOSpecDefault {
           "http://dasch.swiss/something",
         )
         check(Gen.fromIterable(daschIris)) { iri =>
-          assertTrue(ExternalIri.from(iri) == Left(s"ExternalIri must not contain host 'dasch.swiss': $iri"))
+          assertTrue(
+            OntologyMappingExternalIri.from(iri) == Left(
+              s"OntologyMappingExternalIri must not contain host 'dasch.swiss': $iri",
+            ),
+          )
         }
       },
     ),
@@ -62,16 +70,16 @@ object ExternalIriSpec extends ZIOSpecDefault {
         )
         check(Gen.fromIterable(validIris)) { iri =>
           val dto = IriDto.unsafeFrom(iri)
-          assertTrue(ExternalIri.from(dto).map(_.value) == Right(iri))
+          assertTrue(OntologyMappingExternalIri.from(dto).map(_.value) == Right(iri))
         }
       },
       test("should reject IRIs with knora.org host") {
         val dto = IriDto.unsafeFrom("http://www.knora.org/ontology/knora-base")
-        assertTrue(ExternalIri.from(dto).isLeft)
+        assertTrue(OntologyMappingExternalIri.from(dto).isLeft)
       },
       test("should reject IRIs with dasch.swiss host") {
         val dto = IriDto.unsafeFrom("http://api.dasch.swiss/ontology/0001/anything/v2")
-        assertTrue(ExternalIri.from(dto).isLeft)
+        assertTrue(OntologyMappingExternalIri.from(dto).isLeft)
       },
     ),
   )

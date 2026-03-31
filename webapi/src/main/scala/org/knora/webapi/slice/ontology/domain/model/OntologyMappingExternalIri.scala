@@ -18,27 +18,27 @@ import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 
-final case class ExternalIri private (value: String) extends StringValue
+final case class OntologyMappingExternalIri private (value: String) extends StringValue
 
-object ExternalIri extends StringValueCompanion[ExternalIri] {
+object OntologyMappingExternalIri extends StringValueCompanion[OntologyMappingExternalIri] {
 
-  given JsonCodec[ExternalIri]                            = ZioJsonCodec.stringCodec(from)
-  given Codec[String, ExternalIri, CodecFormat.TextPlain] = TapirCodec.stringCodec(from)
+  given JsonCodec[OntologyMappingExternalIri]                            = ZioJsonCodec.stringCodec(from)
+  given Codec[String, OntologyMappingExternalIri, CodecFormat.TextPlain] = TapirCodec.stringCodec(from)
 
   private val forbiddenHosts = List("knora.org", "dasch.swiss")
 
-  private def checkHost(value: String): Either[String, ExternalIri] = {
+  private def checkHost(value: String): Either[String, OntologyMappingExternalIri] = {
     val host = URI.create(value).getHost
     forbiddenHosts.find(h => host != null && host.contains(h)) match {
-      case Some(h) => Left(s"ExternalIri must not contain host '$h': $value")
-      case None    => Right(ExternalIri(value))
+      case Some(h) => Left(s"OntologyMappingExternalIri must not contain host '$h': $value")
+      case None    => Right(OntologyMappingExternalIri(value))
     }
   }
 
-  def from(value: String): Either[String, ExternalIri] =
-    if (!Iri.isIri(value)) Left(s"ExternalIri is not a valid IRI: $value")
+  def from(value: String): Either[String, OntologyMappingExternalIri] =
+    if (!Iri.isIri(value)) Left(s"OntologyMappingExternalIri is not a valid IRI: $value")
     else checkHost(value)
 
-  def from(iriDto: IriDto): Either[String, ExternalIri] =
+  def from(iriDto: IriDto): Either[String, OntologyMappingExternalIri] =
     checkHost(iriDto.value)
 }
