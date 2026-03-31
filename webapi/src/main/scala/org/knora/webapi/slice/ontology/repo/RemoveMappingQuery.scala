@@ -15,6 +15,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.ontology.domain.model.OntologyMappingExternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
@@ -33,7 +34,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  * (no-op deletion). This is intentional -- it keeps the SPARQL pattern uniform and avoids
  * a read-before-write.
  *
- * Primary validation: IriDto ensures IRI syntax, SmartIri construction validates RFC 3987 structure
+ * Primary validation: [[OntologyMappingExternalIri]] ensures IRI syntax and forbidden namespace/host checks.
  */
 object RemoveMappingQuery extends QueryBuilderHelper {
 
@@ -41,7 +42,7 @@ object RemoveMappingQuery extends QueryBuilderHelper {
     ontologyIri: OntologyIri,
     subjectIri: SmartIri,
     predicate: MappingPredicate,
-    externalObjectIri: SmartIri,
+    externalObjectIri: OntologyMappingExternalIri,
   ): UIO[Update] =
     Clock.instant.map(buildUpdate(ontologyIri, subjectIri, predicate, externalObjectIri, _))
 
@@ -49,7 +50,7 @@ object RemoveMappingQuery extends QueryBuilderHelper {
     ontologyIri: OntologyIri,
     subjectIri: SmartIri,
     predicate: MappingPredicate,
-    externalObjectIri: SmartIri,
+    externalObjectIri: OntologyMappingExternalIri,
     now: java.time.Instant,
   ): Update = {
     val ontology   = toRdfIri(ontologyIri)
