@@ -45,6 +45,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -54,6 +55,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.DeleteLinkQuery
+import org.knora.webapi.slice.resources.repo.DeleteValueQuery
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
@@ -1309,7 +1311,6 @@ final case class ValuesResponderV2(
 
       case _ =>
         deleteOrdinaryValueV2AfterChecks(
-          dataNamedGraph = dataNamedGraph,
           resourceInfo = resourceInfo,
           propertyIri = propertyIri,
           currentValue = currentValue,
@@ -1380,7 +1381,6 @@ final case class ValuesResponderV2(
   /**
    * Deletes an ordinary value after checks.
    *
-   * @param dataNamedGraph the named graph in which the value is to be deleted.
    * @param resourceInfo   information about the the resource in which to create the value.
    * @param propertyIri    the IRI of the property that points from the resource to the value.
    * @param currentValue   the value to be deleted.
@@ -1390,7 +1390,6 @@ final case class ValuesResponderV2(
    * @return the IRI of the value that was marked as deleted.
    */
   private def deleteOrdinaryValueV2AfterChecks(
-    dataNamedGraph: IRI,
     resourceInfo: ReadResourceV2,
     propertyIri: SmartIri,
     currentValue: ReadValueV2,
@@ -1420,18 +1419,17 @@ final case class ValuesResponderV2(
     // If no custom delete date was provided, make a timestamp to indicate when the value was
     // marked as deleted.
     for {
-      linkUpdates <- ZIO.collectAll(linkUpdateTasks)
-      sparqlUpdate = sparql.v2.txt.deleteValue(
-                       dataNamedGraph = dataNamedGraph,
-                       resourceIri = resourceInfo.resourceIri,
-                       propertyIri = propertyIri,
-                       valueIri = currentValue.valueIri,
-                       maybeDeleteComment = deleteComment,
-                       linkUpdates = linkUpdates,
-                       currentTime = deleteDate.getOrElse(Instant.now),
-                       requestingUser = requestingUser.id,
-                     )
-
+      linkUpdates  <- ZIO.collectAll(linkUpdateTasks)
+      sparqlUpdate <- DeleteValueQuery.build(
+                        project = resourceInfo.projectADM,
+                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                        propertyIri = PropertyIri.unsafeFrom(propertyIri),
+                        valueIri = ValueIri.unsafeFrom(currentValue.valueIri.toSmartIri),
+                        maybeDeleteComment = deleteComment,
+                        linkUpdates = linkUpdates,
+                        currentTime = deleteDate.getOrElse(Instant.now),
+                        requestingUser = requestingUser.userIri,
+                      )
       _ <- triplestoreService.query(Update(sparqlUpdate))
     } yield currentValue.valueIri
   }
