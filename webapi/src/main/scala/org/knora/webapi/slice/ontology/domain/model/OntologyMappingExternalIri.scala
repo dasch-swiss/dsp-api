@@ -27,18 +27,39 @@ object OntologyMappingExternalIri extends StringValueCompanion[OntologyMappingEx
 
   private val forbiddenHosts = List("knora.org", "dasch.swiss")
 
-  private def checkHost(value: String): Either[String, OntologyMappingExternalIri] = {
+  private val forbiddenNamespaces = List(
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "http://www.w3.org/2000/01/rdf-schema#",
+    "http://www.w3.org/2002/07/owl#",
+    "http://www.w3.org/2001/XMLSchema#",
+    "https://www.w3.org/ns/shacl#",
+    "http://datashapes.org/dash#",
+  )
+
+  private def validate(value: String): Either[String, OntologyMappingExternalIri] =
+    for {
+      _ <- checkHost(value)
+      _ <- checkNamespace(value)
+    } yield OntologyMappingExternalIri(value)
+
+  private def checkHost(value: String): Either[String, Unit] = {
     val host = URI.create(value).getHost
     forbiddenHosts.find(h => host != null && host.contains(h)) match {
       case Some(h) => Left(s"OntologyMappingExternalIri must not contain host '$h': $value")
-      case None    => Right(OntologyMappingExternalIri(value))
+      case None    => Right(())
     }
   }
 
+  private def checkNamespace(value: String): Either[String, Unit] =
+    forbiddenNamespaces.find(ns => value.startsWith(ns)) match {
+      case Some(ns) => Left(s"OntologyMappingExternalIri must not start with namespace '$ns': $value")
+      case None     => Right(())
+    }
+
   def from(value: String): Either[String, OntologyMappingExternalIri] =
     if (!Iri.isIri(value)) Left(s"OntologyMappingExternalIri is not a valid IRI: $value")
-    else checkHost(value)
+    else validate(value)
 
   def from(iriDto: IriDto): Either[String, OntologyMappingExternalIri] =
-    checkHost(iriDto.value)
+    validate(iriDto.value)
 }
