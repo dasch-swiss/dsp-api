@@ -18,9 +18,12 @@ import zio.ZIO
 import java.time.Instant
 
 import dsp.errors.SparqlGenerationException
-import org.knora.webapi.IRI
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 
@@ -35,7 +38,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
   /**
    * Builds a SPARQL UPDATE query to mark a value as deleted.
    *
-   * @param dataNamedGraph    the named graph to update.
+   * @param project            the project the resource belongs to (used to determine the named graph).
    * @param resourceIri       the IRI of the resource containing the value.
    * @param propertyIri       the IRI of the property that points from the resource to the value.
    * @param valueIri          the IRI of the value to be marked as deleted.
@@ -46,14 +49,14 @@ object DeleteValueQuery extends QueryBuilderHelper {
    * @param requestingUser    the IRI of the user making the request.
    */
   def build(
-    dataNamedGraph: IRI,
-    resourceIri: IRI,
-    propertyIri: SmartIri,
-    valueIri: IRI,
+    project: Project,
+    resourceIri: ResourceIri,
+    propertyIri: PropertyIri,
+    valueIri: ValueIri,
     maybeDeleteComment: Option[String],
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     currentTime: Instant,
-    requestingUser: IRI,
+    requestingUser: UserIri,
   ): IO[SparqlGenerationException, ModifyQuery] = {
     // Validate preconditions for all link updates
     inline def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
@@ -68,10 +71,10 @@ object DeleteValueQuery extends QueryBuilderHelper {
         } yield ()
       }
       .as {
-        val dataGraph                    = Rdf.iri(dataNamedGraph)
-        val resource                     = Rdf.iri(resourceIri)
+        val dataGraph                    = graphIri(project)
+        val resource                     = toRdfIri(resourceIri)
         val property                     = toRdfIri(propertyIri)
-        val value                        = Rdf.iri(valueIri)
+        val value                        = toRdfIri(valueIri)
         val valueClass                   = variable("valueClass")
         val resourceLastModificationDate = variable("resourceLastModificationDate")
         val currentTimeLiteral           = Rdf.literalOfType(currentTime.toString, XSD.DATETIME)
@@ -109,7 +112,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
         val insertBase = Seq(
           value
             .has(KB.isDeleted, Rdf.literalOf(true))
-            .andHas(KB.deletedBy, Rdf.iri(requestingUser))
+            .andHas(KB.deletedBy, toRdfIri(requestingUser))
             .andHas(KB.deleteDate, currentTimeLiteral),
         )
 

@@ -14,18 +14,38 @@ import dsp.errors.SparqlGenerationException
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.KnoraIris.ValueIri
 
 object DeleteValueQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private val testDataNamedGraph = "http://www.knora.org/data/0001/anything"
-  private val testResourceIri    = "http://rdfh.ch/0001/thing1"
-  private val testPropertyIri    = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri
-  private val testValueIri       = "http://rdfh.ch/0001/thing1/values/value1"
+  private val testProject = Project(
+    ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
+    Shortname.unsafeFrom("anything"),
+    Shortcode.unsafeFrom("0001"),
+    None,
+    Seq(StringLiteralV2.from("Test project")),
+    List.empty,
+    None,
+    Seq.empty,
+    Status.Active,
+    SelfJoin.CannotJoin,
+    Set.empty,
+    Set.empty,
+  )
+  private val testResourceIri    = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing1".toSmartIri)
+  private val testPropertyIri    = PropertyIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri)
+  private val testValueIri       = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing1/values/value1".toSmartIri)
   private val testCurrentTime    = Instant.parse("2024-01-15T10:30:00Z")
-  private val testRequestingUser = "http://rdfh.ch/users/root"
+  private val testRequestingUser = UserIri.unsafeFrom("http://rdfh.ch/users/root")
 
   private val testLinkPropertyIri     = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo".toSmartIri
   private val testLinkTargetIri       = "http://rdfh.ch/0001/thing2"
@@ -61,7 +81,7 @@ object DeleteValueQuerySpec extends ZIOSpecDefault {
       test("should produce correct query for deleting a value without link updates or comment") {
         for {
           query <- DeleteValueQuery.build(
-                     testDataNamedGraph,
+                     testProject,
                      testResourceIri,
                      testPropertyIri,
                      testValueIri,
@@ -92,7 +112,7 @@ object DeleteValueQuerySpec extends ZIOSpecDefault {
       test("should produce correct query with a delete comment") {
         for {
           query <- DeleteValueQuery.build(
-                     testDataNamedGraph,
+                     testProject,
                      testResourceIri,
                      testPropertyIri,
                      testValueIri,
@@ -125,7 +145,7 @@ object DeleteValueQuerySpec extends ZIOSpecDefault {
         val linkUpdate = createValidLinkUpdate(currentReferenceCount = 2, newReferenceCount = 1)
         for {
           query <- DeleteValueQuery.build(
-                     testDataNamedGraph,
+                     testProject,
                      testResourceIri,
                      testPropertyIri,
                      testValueIri,
@@ -184,7 +204,7 @@ object DeleteValueQuerySpec extends ZIOSpecDefault {
         ).copy(deleteDirectLink = true)
         for {
           query <- DeleteValueQuery.build(
-                     testDataNamedGraph,
+                     testProject,
                      testResourceIri,
                      testPropertyIri,
                      testValueIri,
@@ -244,7 +264,7 @@ object DeleteValueQuerySpec extends ZIOSpecDefault {
       test("should fail when insertDirectLink is true") {
         val invalidLinkUpdate = createValidLinkUpdate().copy(insertDirectLink = true)
         val effect            = DeleteValueQuery.build(
-          testDataNamedGraph,
+          testProject,
           testResourceIri,
           testPropertyIri,
           testValueIri,
@@ -261,7 +281,7 @@ object DeleteValueQuerySpec extends ZIOSpecDefault {
       test("should fail when directLinkExists is false") {
         val invalidLinkUpdate = createValidLinkUpdate().copy(directLinkExists = false)
         val effect            = DeleteValueQuery.build(
-          testDataNamedGraph,
+          testProject,
           testResourceIri,
           testPropertyIri,
           testValueIri,
@@ -278,7 +298,7 @@ object DeleteValueQuerySpec extends ZIOSpecDefault {
       test("should fail when linkValueExists is false") {
         val invalidLinkUpdate = createValidLinkUpdate().copy(linkValueExists = false)
         val effect            = DeleteValueQuery.build(
-          testDataNamedGraph,
+          testProject,
           testResourceIri,
           testPropertyIri,
           testValueIri,

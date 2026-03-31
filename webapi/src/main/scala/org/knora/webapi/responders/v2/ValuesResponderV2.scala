@@ -45,6 +45,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -1310,7 +1311,6 @@ final case class ValuesResponderV2(
 
       case _ =>
         deleteOrdinaryValueV2AfterChecks(
-          dataNamedGraph = dataNamedGraph,
           resourceInfo = resourceInfo,
           propertyIri = propertyIri,
           currentValue = currentValue,
@@ -1381,7 +1381,6 @@ final case class ValuesResponderV2(
   /**
    * Deletes an ordinary value after checks.
    *
-   * @param dataNamedGraph the named graph in which the value is to be deleted.
    * @param resourceInfo   information about the the resource in which to create the value.
    * @param propertyIri    the IRI of the property that points from the resource to the value.
    * @param currentValue   the value to be deleted.
@@ -1391,7 +1390,6 @@ final case class ValuesResponderV2(
    * @return the IRI of the value that was marked as deleted.
    */
   private def deleteOrdinaryValueV2AfterChecks(
-    dataNamedGraph: IRI,
     resourceInfo: ReadResourceV2,
     propertyIri: SmartIri,
     currentValue: ReadValueV2,
@@ -1423,14 +1421,14 @@ final case class ValuesResponderV2(
     for {
       linkUpdates  <- ZIO.collectAll(linkUpdateTasks)
       sparqlUpdate <- DeleteValueQuery.build(
-                        dataNamedGraph = dataNamedGraph,
-                        resourceIri = resourceInfo.resourceIri,
-                        propertyIri = propertyIri,
-                        valueIri = currentValue.valueIri,
+                        project = resourceInfo.projectADM,
+                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                        propertyIri = PropertyIri.unsafeFrom(propertyIri),
+                        valueIri = ValueIri.unsafeFrom(currentValue.valueIri.toSmartIri),
                         maybeDeleteComment = deleteComment,
                         linkUpdates = linkUpdates,
                         currentTime = deleteDate.getOrElse(Instant.now),
-                        requestingUser = requestingUser.id,
+                        requestingUser = requestingUser.userIri,
                       )
       _ <- triplestoreService.query(Update(sparqlUpdate))
     } yield currentValue.valueIri
