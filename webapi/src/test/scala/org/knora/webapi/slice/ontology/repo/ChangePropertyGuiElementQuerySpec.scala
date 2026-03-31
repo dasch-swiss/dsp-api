@@ -129,12 +129,7 @@ object ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
           |OPTIONAL { <http://www.knora.org/ontology/0001/anything#hasText> salsah-gui:guiElement ?oldGuiElement . }
           |OPTIONAL { <http://www.knora.org/ontology/0001/anything#hasText> salsah-gui:guiAttribute ?oldGuiAttribute . } } }""".stripMargin
 
-      val noOpInsertQuery = prefixes +
-        """
-          |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
-          |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }""".stripMargin
-
-      val expected = deleteOldQuery + ";\n" + noOpInsertQuery + ";\n" + updateTimestampQuery
+      val expected = deleteOldQuery + ";\n" + updateTimestampQuery
       assertTrue(actual.sparql == expected)
     },
   )

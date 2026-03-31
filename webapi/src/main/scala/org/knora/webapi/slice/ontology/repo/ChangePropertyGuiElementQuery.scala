@@ -38,8 +38,8 @@ object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
     val property = toRdfIri(propertyIri)
     val linkProp = maybeLinkValuePropertyIri.map(toRdfIri)
 
-    val deleteOld = buildDeleteOldQuery(ontology, property, linkProp, lastModificationDate)
-    val insertNew = buildInsertNewQuery(
+    val deleteOld      = buildDeleteOldQuery(ontology, property, linkProp, lastModificationDate)
+    val maybeInsertNew = buildInsertNewQuery(
       ontology,
       property,
       linkProp,
@@ -49,7 +49,8 @@ object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
     )
     val updateTimestamp = buildUpdateTimestampQuery(ontology, lastModificationDate, currentTime)
 
-    Update(deleteOld.getQueryString + ";\n" + insertNew.getQueryString + ";\n" + updateTimestamp.getQueryString)
+    val queries = List(Some(deleteOld.getQueryString), maybeInsertNew, Some(updateTimestamp.getQueryString)).flatten
+    Update(queries.mkString(";\n"))
   }
 
   private def buildDeleteOldQuery(
@@ -103,7 +104,7 @@ object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
     maybeNewGuiElement: Option[SmartIri],
     newGuiAttributes: Set[String],
     lastModificationDate: Instant,
-  ) = {
+  ): Option[String] = {
     val newGuiElementIri = maybeNewGuiElement.map(toRdfIri)
 
     val insertPatterns: List[TriplePattern] =
@@ -114,20 +115,20 @@ object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
             newGuiAttributes.toList.map(attr => lp.has(SalsahGui.guiAttribute, Rdf.literalOf(attr)))
         }
 
-    val wherePattern = ontology
-      .isA(OWL.ONTOLOGY)
-      .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
-      .from(ontology)
+    Option.when(insertPatterns.nonEmpty) {
+      val wherePattern = ontology
+        .isA(OWL.ONTOLOGY)
+        .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
+        .from(ontology)
 
-    val query = Queries
-      .MODIFY()
-      .prefix(RDF.NS, XSD.NS, OWL.NS, KB.NS, SalsahGui.NS)
-
-    val withInsert =
-      if (insertPatterns.nonEmpty) query.into(ontology).insert(insertPatterns*)
-      else query
-
-    withInsert.where(wherePattern)
+      Queries
+        .MODIFY()
+        .prefix(RDF.NS, XSD.NS, OWL.NS, KB.NS, SalsahGui.NS)
+        .into(ontology)
+        .insert(insertPatterns*)
+        .where(wherePattern)
+        .getQueryString
+    }
   }
 
   private def buildUpdateTimestampQuery(
