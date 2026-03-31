@@ -407,7 +407,7 @@ final case class OntologyResponderV2(
       for {
         _ <- ontologyRepo
                .findById(ontologyIri)
-               .someOrFail(
+               .filterOrFail(_.isEmpty)(
                  BadRequestException(
                    s"Ontology ${ontologyIri.toComplexSchema.toIri} cannot be created, because it already exists",
                  ),
