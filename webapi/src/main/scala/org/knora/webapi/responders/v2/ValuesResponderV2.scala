@@ -54,6 +54,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.DeleteLinkQuery
+import org.knora.webapi.slice.resources.repo.DeleteValueQuery
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
@@ -1420,18 +1421,17 @@ final case class ValuesResponderV2(
     // If no custom delete date was provided, make a timestamp to indicate when the value was
     // marked as deleted.
     for {
-      linkUpdates <- ZIO.collectAll(linkUpdateTasks)
-      sparqlUpdate = sparql.v2.txt.deleteValue(
-                       dataNamedGraph = dataNamedGraph,
-                       resourceIri = resourceInfo.resourceIri,
-                       propertyIri = propertyIri,
-                       valueIri = currentValue.valueIri,
-                       maybeDeleteComment = deleteComment,
-                       linkUpdates = linkUpdates,
-                       currentTime = deleteDate.getOrElse(Instant.now),
-                       requestingUser = requestingUser.id,
-                     )
-
+      linkUpdates  <- ZIO.collectAll(linkUpdateTasks)
+      sparqlUpdate <- DeleteValueQuery.build(
+                        dataNamedGraph = dataNamedGraph,
+                        resourceIri = resourceInfo.resourceIri,
+                        propertyIri = propertyIri,
+                        valueIri = currentValue.valueIri,
+                        maybeDeleteComment = deleteComment,
+                        linkUpdates = linkUpdates,
+                        currentTime = deleteDate.getOrElse(Instant.now),
+                        requestingUser = requestingUser.id,
+                      )
       _ <- triplestoreService.query(Update(sparqlUpdate))
     } yield currentValue.valueIri
   }
