@@ -12,6 +12,7 @@ import java.time.Instant
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 
 object ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
 
@@ -19,11 +20,12 @@ object ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
 
   private val ontologyIri =
     OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-  private val propertyIri          = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri
-  private val linkValuePropertyIri = "http://www.knora.org/ontology/0001/anything#hasTextValue".toSmartIri
-  private val guiElementIri        = "http://www.knora.org/ontology/salsah-gui#SimpleText".toSmartIri
-  private val lastModDate          = Instant.parse("2023-08-01T10:30:00Z")
-  private val currentTime          = Instant.parse("2023-08-02T12:00:00Z")
+  private val propertyIri          = PropertyIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri)
+  private val linkValuePropertyIri =
+    PropertyIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#hasTextValue".toSmartIri)
+  private val guiElementIri = "http://www.knora.org/ontology/salsah-gui#SimpleText".toSmartIri
+  private val lastModDate   = Instant.parse("2023-08-01T10:30:00Z")
+  private val currentTime   = Instant.parse("2023-08-02T12:00:00Z")
 
   private val prefixes =
     """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

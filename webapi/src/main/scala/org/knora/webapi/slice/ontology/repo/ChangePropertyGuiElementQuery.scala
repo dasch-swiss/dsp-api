@@ -17,6 +17,7 @@ import java.time.Instant
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.SalsahGui
@@ -26,8 +27,8 @@ object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
 
   def build(
     ontologyIri: OntologyIri,
-    propertyIri: SmartIri,
-    maybeLinkValuePropertyIri: Option[SmartIri],
+    propertyIri: PropertyIri,
+    maybeLinkValuePropertyIri: Option[PropertyIri],
     maybeNewGuiElement: Option[SmartIri],
     newGuiAttributes: Set[String],
     lastModificationDate: Instant,

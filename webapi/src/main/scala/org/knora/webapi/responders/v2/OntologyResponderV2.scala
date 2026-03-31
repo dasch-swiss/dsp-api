@@ -1696,9 +1696,10 @@ final case class OntologyResponderV2(
         changePropertyGuiElementRequest.newGuiObject.guiAttributes.map(guiAttribute => guiAttribute.value)
       updateSparql = ChangePropertyGuiElementQuery.build(
                        ontologyIri = OntologyIri.unsafeFrom(internalOntologyIri),
-                       propertyIri = internalPropertyIri,
-                       maybeLinkValuePropertyIri =
-                         maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
+                       propertyIri = PropertyIri.unsafeFrom(internalPropertyIri),
+                       maybeLinkValuePropertyIri = maybeCurrentLinkValueReadPropertyInfo.map(p =>
+                         PropertyIri.unsafeFrom(p.entityInfoContent.propertyIri),
+                       ),
                        maybeNewGuiElement = newGuiElementIri,
                        newGuiAttributes = newGuiAttributeIris,
                        lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
