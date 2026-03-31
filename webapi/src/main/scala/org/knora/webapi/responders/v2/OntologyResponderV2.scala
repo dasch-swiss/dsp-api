@@ -20,7 +20,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.Rdfs
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -52,6 +51,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.repo.AddCardinalitiesToClassQuery
 import org.knora.webapi.slice.ontology.repo.ChangeClassLabelsOrCommentsQuery
+import org.knora.webapi.slice.ontology.repo.ChangePropertyGuiElementQuery
 import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
 import org.knora.webapi.slice.ontology.repo.CreateOntologyQuery
@@ -1694,7 +1694,7 @@ final case class OntologyResponderV2(
         changePropertyGuiElementRequest.newGuiObject.guiElement.map(guiElement => guiElement.value.toSmartIri)
       newGuiAttributeIris =
         changePropertyGuiElementRequest.newGuiObject.guiAttributes.map(guiAttribute => guiAttribute.value)
-      updateSparql = sparql.v2.txt.changePropertyGuiElement(
+      updateSparql = ChangePropertyGuiElementQuery.build(
                        ontologyNamedGraphIri = internalOntologyIri,
                        ontologyIri = internalOntologyIri,
                        propertyIri = internalPropertyIri,
@@ -1705,7 +1705,7 @@ final case class OntologyResponderV2(
                        lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
                        currentTime = currentTime,
                      )
-      _ <- save(Update(updateSparql))
+      _ <- save(updateSparql)
 
       // Read the data back from the cache.
       response <- getPropertyDefinitionsFromOntologyV2(
