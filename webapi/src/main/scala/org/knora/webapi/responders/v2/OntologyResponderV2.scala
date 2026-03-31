@@ -407,7 +407,7 @@ final case class OntologyResponderV2(
       for {
         _ <- ontologyRepo
                .findById(ontologyIri)
-               .filterOrFail(_.isEmpty)(
+               .someOrFail(
                  BadRequestException(
                    s"Ontology ${ontologyIri.toComplexSchema.toIri} cannot be created, because it already exists",
                  ),
@@ -434,16 +434,15 @@ final case class OntologyResponderV2(
           }
 
         // Create the ontology.
-        currentTime         <- Clock.instant
-        createOntologySparql = CreateOntologyQuery.build(
-                                 ontologyIri = ontologyIri,
-                                 projectIri = createOntologyRequest.projectIri,
-                                 isShared = createOntologyRequest.isShared,
-                                 ontologyLabel = createOntologyRequest.label,
-                                 ontologyComment = createOntologyRequest.comment,
-                                 currentTime = currentTime,
-                               )
-        _ <- save(Update(createOntologySparql))
+        result <- CreateOntologyQuery.build(
+                    ontologyIri = ontologyIri,
+                    projectIri = createOntologyRequest.projectIri,
+                    isShared = createOntologyRequest.isShared,
+                    ontologyLabel = createOntologyRequest.label,
+                    ontologyComment = createOntologyRequest.comment,
+                  )
+        (lastModDate, sparql) = result
+        _                    <- save(sparql)
       } yield ReadOntologyMetadataV2(ontologies =
         Set(
           OntologyMetadataV2(
@@ -451,7 +450,7 @@ final case class OntologyResponderV2(
             projectIri = Some(createOntologyRequest.projectIri),
             label = Some(createOntologyRequest.label),
             comment = createOntologyRequest.comment,
-            lastModificationDate = Some(currentTime),
+            lastModificationDate = Some(lastModDate.value),
           ).unescape,
         ),
       )

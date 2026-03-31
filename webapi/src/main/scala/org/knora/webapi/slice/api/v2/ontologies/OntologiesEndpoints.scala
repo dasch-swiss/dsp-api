@@ -6,6 +6,8 @@
 package org.knora.webapi.slice.api.v2.ontologies
 
 import sttp.tapir.*
+import zio.Clock
+import zio.UIO
 import zio.ZLayer
 
 import java.time.Instant
@@ -28,6 +30,8 @@ object LastModificationDate {
   def from(value: Instant): LastModificationDate                = LastModificationDate(value)
   def from(value: String): Either[String, LastModificationDate] =
     ValuesValidator.parseXsdDateTimeStamp(value).map(LastModificationDate.apply)
+
+  def instant: UIO[LastModificationDate] = Clock.instant.map(LastModificationDate(_))
 }
 
 final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
