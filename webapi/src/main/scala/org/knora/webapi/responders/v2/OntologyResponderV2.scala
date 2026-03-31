@@ -54,6 +54,7 @@ import org.knora.webapi.slice.ontology.repo.AddCardinalitiesToClassQuery
 import org.knora.webapi.slice.ontology.repo.ChangeClassLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
+import org.knora.webapi.slice.ontology.repo.CreateOntologyQuery
 import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
 import org.knora.webapi.slice.ontology.repo.DeleteClassCommentsQuery
 import org.knora.webapi.slice.ontology.repo.DeleteClassQuery
@@ -434,16 +435,14 @@ final case class OntologyResponderV2(
 
         // Create the ontology.
         currentTime         <- Clock.instant
-        createOntologySparql = sparql.v2.txt
-                                 .createOntology(
-                                   ontologyNamedGraphIri = ontologyIri.toInternalSchema,
-                                   ontologyIri = ontologyIri.toInternalSchema,
-                                   projectIri = createOntologyRequest.projectIri,
-                                   isShared = createOntologyRequest.isShared,
-                                   ontologyLabel = createOntologyRequest.label,
-                                   ontologyComment = createOntologyRequest.comment,
-                                   currentTime = currentTime,
-                                 )
+        createOntologySparql = CreateOntologyQuery.build(
+                                 ontologyIri = ontologyIri,
+                                 projectIri = createOntologyRequest.projectIri,
+                                 isShared = createOntologyRequest.isShared,
+                                 ontologyLabel = createOntologyRequest.label,
+                                 ontologyComment = createOntologyRequest.comment,
+                                 currentTime = currentTime,
+                               )
         _ <- save(Update(createOntologySparql))
       } yield ReadOntologyMetadataV2(ontologies =
         Set(

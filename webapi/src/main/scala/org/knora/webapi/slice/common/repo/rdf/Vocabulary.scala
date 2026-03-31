@@ -95,6 +95,7 @@ object Vocabulary {
     val isDeleted: Iri              = iri(kb + "isDeleted")
     val attachedToUser: Iri         = iri(kb + "attachedToUser")
     val attachedToProject: Iri      = iri(kb + "attachedToProject")
+    val isShared: Iri               = iri(kb + "isShared")
     val hasPermissions: Iri         = iri(kb + "hasPermissions")
     val creationDate: Iri           = iri(kb + "creationDate")
     val lastModificationDate: Iri   = iri(kb + "lastModificationDate")
