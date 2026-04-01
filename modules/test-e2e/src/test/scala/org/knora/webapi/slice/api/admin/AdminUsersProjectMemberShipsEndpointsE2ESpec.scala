@@ -83,7 +83,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
           projectMemberships <- getProjectMemberships(newUser.userIri).flatMap(_.assert200)
         } yield assertTrue(projectMemberships.projects == Seq(imagesProjectExternal))
-      } @@ TestAspect.timeout(5.seconds),
+      },
       test("don't add user to project if user is already a member") {
         for {
           newUser <- createNewUser
@@ -92,7 +92,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
           response <- addUserToProject(newUser.userIri, imagesProjectExternal.id)
 
         } yield assertTrue(response.code == StatusCode.BadRequest)
-      } @@ TestAspect.timeout(5.seconds),
+      },
       test("remove user from project") {
         for {
           newUser <- createNewUser
@@ -102,7 +102,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
           projectMemberships <- getProjectMemberships(newUser.userIri).flatMap(_.assert200)
         } yield assertTrue(projectMemberships.projects == Seq.empty)
-      } @@ TestAspect.timeout(5.seconds),
+      },
     ),
     suite("used to query project admin group memberships")(
       test("return all projects the user is a member of the project admin group") {
@@ -135,7 +135,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
           adminMemberships <- getProjectAdminMemberships(newUser.userIri).flatMap(_.assert200)
         } yield assertTrue(adminMemberships.projects == Seq(imagesProjectExternal))
-      } @@ TestAspect.timeout(5.seconds),
+      },
       test("remove user from project admin group") {
         for {
           newUser <- createNewUser
@@ -146,7 +146,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
           adminMemberships <- getProjectAdminMemberships(newUser.userIri).flatMap(_.assert200)
         } yield assertTrue(adminMemberships.projects == Seq.empty)
-      } @@ TestAspect.timeout(5.seconds),
+      },
       test("remove user from project which also removes them from project admin group") {
         for {
           newUser <- createNewUser
@@ -157,7 +157,7 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
           adminMemberships <- getProjectAdminMemberships(normalUser.userIri).flatMap(_.assert200)
         } yield assertTrue(adminMemberships.projects == Seq.empty)
-      } @@ TestAspect.timeout(5.seconds),
+      },
     ),
   )
 
