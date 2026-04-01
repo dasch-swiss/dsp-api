@@ -14,7 +14,6 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.IO
-import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
@@ -61,10 +60,7 @@ object ChangeLinkTargetQuery extends QueryBuilderHelper {
     maybeComment: Option[String],
     currentTime: Instant,
     requestingUser: UserIri,
-  ): IO[SparqlGenerationException, ModifyQuery] = {
-    inline def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
-      ZIO.fail(SparqlGenerationException(message)).when(condition).unit
-
+  ): IO[SparqlGenerationException, ModifyQuery] =
     for {
       _ <- failIf(
              !linkUpdateForCurrentLink.deleteDirectLink,
@@ -242,5 +238,4 @@ object ChangeLinkTargetQuery extends QueryBuilderHelper {
         .insert(insertPatterns*)
         .where(wherePatterns*)
     }
-  }
 }
