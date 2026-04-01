@@ -15,6 +15,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.ontology.domain.model.OntologyMappingExternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
@@ -30,7 +31,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  * The WHERE clause uses OPTIONAL so the query always produces one solution even when the
  * ontology has no existing lastModificationDate.
  *
- * Primary validation: IriDto ensures IRI syntax, SmartIri construction validates RFC 3987 structure
+ * Primary validation: [[OntologyMappingExternalIri]] ensures IRI syntax and forbidden namespace/host checks.
  */
 object AddMappingQuery extends QueryBuilderHelper {
 
@@ -38,7 +39,7 @@ object AddMappingQuery extends QueryBuilderHelper {
     ontologyIri: OntologyIri,
     subjectIri: SmartIri,
     predicate: MappingPredicate,
-    externalObjectIris: List[SmartIri],
+    externalObjectIris: List[OntologyMappingExternalIri],
   ): UIO[Update] =
     Clock.instant.map(buildUpdate(ontologyIri, subjectIri, predicate, externalObjectIris, _))
 
@@ -46,7 +47,7 @@ object AddMappingQuery extends QueryBuilderHelper {
     ontologyIri: OntologyIri,
     subjectIri: SmartIri,
     predicate: MappingPredicate,
-    externalObjectIris: List[SmartIri],
+    externalObjectIris: List[OntologyMappingExternalIri],
     now: java.time.Instant,
   ): Update = {
     val ontology   = toRdfIri(ontologyIri)
