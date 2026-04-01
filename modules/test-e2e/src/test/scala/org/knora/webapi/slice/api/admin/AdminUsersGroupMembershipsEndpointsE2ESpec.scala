@@ -67,7 +67,7 @@ object AdminUsersGroupMembershipsEndpointsE2ESpec extends E2EZSpec {
           _                 <- addUserToGroup(newUser, imagesReviewerGroupExternal)
           actualMemberships <- getGroupMemberships(newUser)
         } yield assertTrue(actualMemberships.groups == Seq(imagesReviewerGroupExternal))
-      } @@ TestAspect.timeout(5.seconds) @@ TestAspect.flaky,
+      } @@ TestAspect.timeout(5.seconds),
       test("remove user from group") {
         for {
           newUser           <- createNewUser
@@ -75,7 +75,7 @@ object AdminUsersGroupMembershipsEndpointsE2ESpec extends E2EZSpec {
           _                 <- removeUserFromGroup(newUser, imagesReviewerGroupExternal)
           actualMemberships <- getGroupMemberships(newUser)
         } yield assertTrue(actualMemberships.groups == Seq.empty)
-      } @@ TestAspect.timeout(5.seconds) @@ TestAspect.flaky,
+      } @@ TestAspect.timeout(5.seconds),
     ),
   )
 
