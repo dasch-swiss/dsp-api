@@ -197,6 +197,7 @@ object Vocabulary {
     val NS: Namespace            = new SimpleNamespace("salsah-gui", salsahGuiPrefixExpansion)
 
     val guiOrder: Iri     = Rdf.iri(salsahGuiPrefixExpansion, "guiOrder")
+    val guiElement: Iri   = Rdf.iri(salsahGuiPrefixExpansion, "guiElement")
     val guiAttribute: Iri = Rdf.iri(salsahGuiPrefixExpansion, "guiAttribute")
   }
 }
