@@ -93,6 +93,10 @@ Each slice typically contains:
 
 ## Testing Guidelines
 
+**If the implementation plan involves adding test data**, apply this check before choosing where to add it:
+1. **Verify instances, not just schema.** Confirm whether existing test data instances already exercise the scenario — finding that the schema supports a case is not sufficient.
+2. **Discover self-contained fixtures first.** Check if the component under test has its own fixture files before adding to a shared dataset. Shared datasets are loaded by many tests; a single new record can cause cascading failures across unrelated specs.
+
 ### Test Organization
 - Unit tests: `webapi/src/test/scala/`
 - Integration tests: `modules/test-it/src/test/scala/`
