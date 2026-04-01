@@ -177,7 +177,7 @@ object Dependencies {
   val bagitDependencies     = Seq(zio, "dev.zio" %% "zio-streams" % ZioVersion, zioNio)
   val bagitTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
 
-  val TopbraidShaclVersion = "1.4.4"
+  val TopbraidShaclVersion = "1.5.0"
   val topbraidShacl        = "org.topbraid" % "shacl" % TopbraidShaclVersion
 
   val shaclValidatorDependencies     = Seq(topbraidShacl, zio)
