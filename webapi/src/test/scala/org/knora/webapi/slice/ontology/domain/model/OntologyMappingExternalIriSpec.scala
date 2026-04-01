@@ -32,10 +32,10 @@ object OntologyMappingExternalIriSpec extends ZIOSpecDefault {
       },
       test("should reject IRIs with knora.org host") {
         val knoraIris = List(
-          "http://www.knora.org/ontology/knora-base",
-          "http://www.knora.org/ontology/knora-admin",
-          "http://api.knora.org/ontology/shared/v2",
-          "http://knora.org/something",
+          "http://www.knora.org/ontology/knora-base#TextValue",
+          "http://www.knora.org/ontology/knora-admin#User",
+          "http://api.knora.org/ontology/shared/v2#hasName",
+          "http://knora.org/something/v2#isPartOf",
         )
         check(Gen.fromIterable(knoraIris)) { iri =>
           assertTrue(
@@ -47,9 +47,9 @@ object OntologyMappingExternalIriSpec extends ZIOSpecDefault {
       },
       test("should reject IRIs with dasch.swiss host") {
         val daschIris = List(
-          "http://api.dasch.swiss/ontology/0001/anything/v2",
-          "https://app.dasch.swiss/project/001",
-          "http://dasch.swiss/something",
+          "http://api.dasch.swiss/ontology/0001/anything/v2#hasTitle",
+          "https://app.dasch.swiss/project/001#isAdmin",
+          "http://dasch.swiss/something/v2#hasDescription",
         )
         check(Gen.fromIterable(daschIris)) { iri =>
           assertTrue(
@@ -150,11 +150,11 @@ object OntologyMappingExternalIriSpec extends ZIOSpecDefault {
         }
       },
       test("should reject IRIs with knora.org host") {
-        val dto = IriDto.unsafeFrom("http://www.knora.org/ontology/knora-base")
+        val dto = IriDto.unsafeFrom("http://www.knora.org/ontology/knora-base#TextValue")
         assertTrue(OntologyMappingExternalIri.from(dto).isLeft)
       },
       test("should reject IRIs with dasch.swiss host") {
-        val dto = IriDto.unsafeFrom("http://api.dasch.swiss/ontology/0001/anything/v2")
+        val dto = IriDto.unsafeFrom("http://api.dasch.swiss/ontology/0001/anything/v2#hasTitle")
         assertTrue(OntologyMappingExternalIri.from(dto).isLeft)
       },
       test("should reject IRIs in forbidden namespaces") {
