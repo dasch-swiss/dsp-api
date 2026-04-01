@@ -1030,21 +1030,18 @@ final case class ValuesResponderV2(
         // was updated.
         currentTime: Instant = valueCreationDate.getOrElse(Instant.now)
 
-        // Make a new UUID for the new link value.
-        newLinkValueUUID = UUID.randomUUID
+        result <- ChangeLinkTargetQuery.build(
+                    project = resourceInfo.projectADM,
+                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                    linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
+                    linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
+                    maybeComment = newLinkValue.comment,
+                    currentTime = currentTime,
+                    requestingUser = requestingUser.userIri,
+                  )
+        (newLinkValueUUID, sparqlUpdate) = result
 
-        sparqlUpdate <- ChangeLinkTargetQuery.build(
-                          project = resourceInfo.projectADM,
-                          linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
-                          linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
-                          linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
-                          newLinkValueUUID = newLinkValueUUID,
-                          maybeComment = newLinkValue.comment,
-                          currentTime = currentTime,
-                          requestingUser = requestingUser.userIri,
-                        )
-
-        _ <- triplestoreService.query(Update(sparqlUpdate))
+        _ <- triplestoreService.query(sparqlUpdate)
       } yield UnverifiedValueV2(
         newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
         newValueUUID = newLinkValueUUID,

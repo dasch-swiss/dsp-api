@@ -8,12 +8,12 @@ package org.knora.webapi.slice.resources.repo
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.IO
+import zio.Random
 
 import java.time.Instant
 import java.util.UUID
@@ -26,6 +26,7 @@ import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
  * Deletes an existing link between two resources and replaces it with a link to a different target resource.
@@ -46,7 +47,6 @@ object ChangeLinkTargetQuery extends QueryBuilderHelper {
    * @param linkSourceIri           the resource that is the source of the links
    * @param linkUpdateForCurrentLink a [[SparqlTemplateLinkUpdate]] specifying how to update the current link
    * @param linkUpdateForNewLink    a [[SparqlTemplateLinkUpdate]] specifying how to update the new link
-   * @param newLinkValueUUID        the UUID for the new link value
    * @param maybeComment            an optional comment on the new link value
    * @param currentTime             an xsd:dateTimeStamp that will be attached to the resources
    * @param requestingUser          the IRI of the user making the request
@@ -56,13 +56,13 @@ object ChangeLinkTargetQuery extends QueryBuilderHelper {
     linkSourceIri: ResourceIri,
     linkUpdateForCurrentLink: SparqlTemplateLinkUpdate,
     linkUpdateForNewLink: SparqlTemplateLinkUpdate,
-    newLinkValueUUID: UUID,
     maybeComment: Option[String],
     currentTime: Instant,
     requestingUser: UserIri,
-  ): IO[SparqlGenerationException, ModifyQuery] =
+  ): IO[SparqlGenerationException, (UUID, Update)] =
     for {
-      _ <- failIf(
+      newLinkValueUUID <- Random.nextUUID
+      _                <- failIf(
              !linkUpdateForCurrentLink.deleteDirectLink,
              "linkUpdateForCurrentLink.deleteDirectLink must be true in this SPARQL template",
            )
@@ -229,13 +229,17 @@ object ChangeLinkTargetQuery extends QueryBuilderHelper {
         linkSource.has(KB.lastModificationDate, linkSourceLastModificationDate).optional(),
       )
 
-      Queries
-        .MODIFY()
-        .prefix(RDF.NS, RDFS.NS, XSD.NS, KB.NS)
-        .from(dataGraph)
-        .delete(deletePatterns*)
-        .into(dataGraph)
-        .insert(insertPatterns*)
-        .where(wherePatterns*)
+      val query = Update(
+        Queries
+          .MODIFY()
+          .prefix(RDF.NS, RDFS.NS, XSD.NS, KB.NS)
+          .from(dataGraph)
+          .delete(deletePatterns*)
+          .into(dataGraph)
+          .insert(insertPatterns*)
+          .where(wherePatterns*),
+      )
+
+      (newLinkValueUUID, query)
     }
 }

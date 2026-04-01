@@ -9,7 +9,6 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import java.time.Instant
-import java.util.UUID
 
 import dsp.errors.SparqlGenerationException
 import dsp.valueobjects.UuidUtil
@@ -52,8 +51,6 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
   private val testNewLinkValuePerms         = "CR knora-admin:Creator"
   private val testCurrentTime               = Instant.parse("2024-01-15T10:30:00Z")
   private val testRequestingUser            = UserIri.unsafeFrom("http://rdfh.ch/users/root")
-  private val testNewLinkValueUUID          = UUID.fromString("4b3f3e0a-1b6c-4d5e-8f9a-0c1d2e3f4a5b")
-  private val testNewLinkValueUUIDEncoded   = UuidUtil.base64Encode(testNewLinkValueUUID)
 
   private def createCurrentLinkUpdate(
     linkPropertyIri: SmartIri = testLinkPropertyIri,
@@ -103,18 +100,19 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
     suite("build")(
       test("should produce correct query for changing link target without comment") {
         for {
-          query <- ChangeLinkTargetQuery.build(
-                     testProject,
-                     testLinkSourceIri,
-                     createCurrentLinkUpdate(),
-                     createNewLinkUpdate(),
-                     testNewLinkValueUUID,
-                     None,
-                     testCurrentTime,
-                     testRequestingUser,
-                   )
+          result <- ChangeLinkTargetQuery.build(
+                      testProject,
+                      testLinkSourceIri,
+                      createCurrentLinkUpdate(),
+                      createNewLinkUpdate(),
+                      None,
+                      testCurrentTime,
+                      testRequestingUser,
+                    )
+          (uuid, query) = result
         } yield {
-          val expected =
+          val uuidEncoded = UuidUtil.base64Encode(uuid)
+          val expected    =
             s"""PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -148,7 +146,7 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasRefCount 1 .
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasOrder ?order .
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:isDeleted false .
-               |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasUUID "$testNewLinkValueUUIDEncoded" .
+               |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasUUID "$uuidEncoded" .
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueCreationDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:attachedToUser <http://rdfh.ch/users/creator1> .
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:hasPermissions "CR knora-admin:Creator"^^xsd:string .
@@ -181,23 +179,24 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
                |<http://www.knora.org/ontology/0001/anything#hasOtherThing> knora-base:objectClassConstraint ?expectedTargetClass .
                |?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
                |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?linkSourceLastModificationDate . } }""".stripMargin
-          assertTrue(query.getQueryString == expected)
+          assertTrue(query.sparql == expected)
         }
       },
       test("should produce correct query for changing link target with comment") {
         for {
-          query <- ChangeLinkTargetQuery.build(
-                     testProject,
-                     testLinkSourceIri,
-                     createCurrentLinkUpdate(),
-                     createNewLinkUpdate(),
-                     testNewLinkValueUUID,
-                     Some("Updated link target"),
-                     testCurrentTime,
-                     testRequestingUser,
-                   )
+          result <- ChangeLinkTargetQuery.build(
+                      testProject,
+                      testLinkSourceIri,
+                      createCurrentLinkUpdate(),
+                      createNewLinkUpdate(),
+                      Some("Updated link target"),
+                      testCurrentTime,
+                      testRequestingUser,
+                    )
+          (uuid, query) = result
         } yield {
-          val expected =
+          val uuidEncoded = UuidUtil.base64Encode(uuid)
+          val expected    =
             s"""PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -232,7 +231,7 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasRefCount 1 .
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasOrder ?order .
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:isDeleted false .
-               |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasUUID "$testNewLinkValueUUIDEncoded" .
+               |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasUUID "$uuidEncoded" .
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueCreationDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:attachedToUser <http://rdfh.ch/users/creator1> .
                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:hasPermissions "CR knora-admin:Creator"^^xsd:string .
@@ -265,7 +264,7 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
                |<http://www.knora.org/ontology/0001/anything#hasOtherThing> knora-base:objectClassConstraint ?expectedTargetClass .
                |?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
                |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?linkSourceLastModificationDate . } }""".stripMargin
-          assertTrue(query.getQueryString == expected)
+          assertTrue(query.sparql == expected)
         }
       },
     ),
@@ -290,7 +289,6 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
           testLinkSourceIri,
           invalidUpdate,
           createNewLinkUpdate(),
-          testNewLinkValueUUID,
           None,
           testCurrentTime,
           testRequestingUser,
@@ -320,7 +318,6 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
           testLinkSourceIri,
           invalidUpdate,
           createNewLinkUpdate(),
-          testNewLinkValueUUID,
           None,
           testCurrentTime,
           testRequestingUser,
@@ -350,7 +347,6 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
           testLinkSourceIri,
           invalidUpdate,
           createNewLinkUpdate(),
-          testNewLinkValueUUID,
           None,
           testCurrentTime,
           testRequestingUser,
@@ -367,7 +363,6 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
           testLinkSourceIri,
           createCurrentLinkUpdate(),
           createNewLinkUpdate(linkPropertyIri = differentProperty),
-          testNewLinkValueUUID,
           None,
           testCurrentTime,
           testRequestingUser,
@@ -397,7 +392,6 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
           testLinkSourceIri,
           createCurrentLinkUpdate(),
           invalidUpdate,
-          testNewLinkValueUUID,
           None,
           testCurrentTime,
           testRequestingUser,
@@ -427,7 +421,6 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
           testLinkSourceIri,
           createCurrentLinkUpdate(),
           invalidUpdate,
-          testNewLinkValueUUID,
           None,
           testCurrentTime,
           testRequestingUser,
@@ -457,7 +450,6 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
           testLinkSourceIri,
           createCurrentLinkUpdate(),
           invalidUpdate,
-          testNewLinkValueUUID,
           None,
           testCurrentTime,
           testRequestingUser,
