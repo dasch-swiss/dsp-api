@@ -20,7 +20,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.Rdfs
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -52,8 +51,10 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.repo.AddCardinalitiesToClassQuery
 import org.knora.webapi.slice.ontology.repo.ChangeClassLabelsOrCommentsQuery
+import org.knora.webapi.slice.ontology.repo.ChangePropertyGuiElementQuery
 import org.knora.webapi.slice.ontology.repo.ChangePropertyLabelsOrCommentsQuery
 import org.knora.webapi.slice.ontology.repo.CreateClassQuery
+import org.knora.webapi.slice.ontology.repo.CreateOntologyQuery
 import org.knora.webapi.slice.ontology.repo.CreatePropertyQuery
 import org.knora.webapi.slice.ontology.repo.DeleteClassCommentsQuery
 import org.knora.webapi.slice.ontology.repo.DeleteClassQuery
@@ -433,18 +434,15 @@ final case class OntologyResponderV2(
           }
 
         // Create the ontology.
-        currentTime         <- Clock.instant
-        createOntologySparql = sparql.v2.txt
-                                 .createOntology(
-                                   ontologyNamedGraphIri = ontologyIri.toInternalSchema,
-                                   ontologyIri = ontologyIri.toInternalSchema,
-                                   projectIri = createOntologyRequest.projectIri,
-                                   isShared = createOntologyRequest.isShared,
-                                   ontologyLabel = createOntologyRequest.label,
-                                   ontologyComment = createOntologyRequest.comment,
-                                   currentTime = currentTime,
-                                 )
-        _ <- save(Update(createOntologySparql))
+        result <- CreateOntologyQuery.build(
+                    ontologyIri = ontologyIri,
+                    projectIri = createOntologyRequest.projectIri,
+                    isShared = createOntologyRequest.isShared,
+                    ontologyLabel = createOntologyRequest.label,
+                    ontologyComment = createOntologyRequest.comment,
+                  )
+        (lastModDate, sparql) = result
+        _                    <- save(sparql)
       } yield ReadOntologyMetadataV2(ontologies =
         Set(
           OntologyMetadataV2(
@@ -452,7 +450,7 @@ final case class OntologyResponderV2(
             projectIri = Some(createOntologyRequest.projectIri),
             label = Some(createOntologyRequest.label),
             comment = createOntologyRequest.comment,
-            lastModificationDate = Some(currentTime),
+            lastModificationDate = Some(lastModDate.value),
           ).unescape,
         ),
       )
@@ -1696,18 +1694,18 @@ final case class OntologyResponderV2(
         changePropertyGuiElementRequest.newGuiObject.guiElement.map(guiElement => guiElement.value.toSmartIri)
       newGuiAttributeIris =
         changePropertyGuiElementRequest.newGuiObject.guiAttributes.map(guiAttribute => guiAttribute.value)
-      updateSparql = sparql.v2.txt.changePropertyGuiElement(
-                       ontologyNamedGraphIri = internalOntologyIri,
-                       ontologyIri = internalOntologyIri,
-                       propertyIri = internalPropertyIri,
-                       maybeLinkValuePropertyIri =
-                         maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
+      updateSparql = ChangePropertyGuiElementQuery.build(
+                       ontologyIri = OntologyIri.unsafeFrom(internalOntologyIri),
+                       propertyIri = PropertyIri.unsafeFrom(internalPropertyIri),
+                       maybeLinkValuePropertyIri = maybeCurrentLinkValueReadPropertyInfo.map(p =>
+                         PropertyIri.unsafeFrom(p.entityInfoContent.propertyIri),
+                       ),
                        maybeNewGuiElement = newGuiElementIri,
                        newGuiAttributes = newGuiAttributeIris,
                        lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
                        currentTime = currentTime,
                      )
-      _ <- save(Update(updateSparql))
+      _ <- save(updateSparql)
 
       // Read the data back from the cache.
       response <- getPropertyDefinitionsFromOntologyV2(

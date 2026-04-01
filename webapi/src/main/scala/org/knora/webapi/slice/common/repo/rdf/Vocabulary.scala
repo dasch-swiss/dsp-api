@@ -95,6 +95,7 @@ object Vocabulary {
     val isDeleted: Iri              = iri(kb + "isDeleted")
     val attachedToUser: Iri         = iri(kb + "attachedToUser")
     val attachedToProject: Iri      = iri(kb + "attachedToProject")
+    val isShared: Iri               = iri(kb + "isShared")
     val hasPermissions: Iri         = iri(kb + "hasPermissions")
     val creationDate: Iri           = iri(kb + "creationDate")
     val lastModificationDate: Iri   = iri(kb + "lastModificationDate")
@@ -196,6 +197,7 @@ object Vocabulary {
     val NS: Namespace            = new SimpleNamespace("salsah-gui", salsahGuiPrefixExpansion)
 
     val guiOrder: Iri     = Rdf.iri(salsahGuiPrefixExpansion, "guiOrder")
+    val guiElement: Iri   = Rdf.iri(salsahGuiPrefixExpansion, "guiElement")
     val guiAttribute: Iri = Rdf.iri(salsahGuiPrefixExpansion, "guiAttribute")
   }
 }

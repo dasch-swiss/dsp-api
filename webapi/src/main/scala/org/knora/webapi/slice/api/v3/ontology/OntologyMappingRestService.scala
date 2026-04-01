@@ -9,7 +9,6 @@ import zio.*
 
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants.Rdfs
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
@@ -23,6 +22,7 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.ontology.domain.model.OntologyMappingExternalIri
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.AddMappingQuery
 import org.knora.webapi.slice.ontology.repo.MappingPredicate
@@ -70,14 +70,12 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
-      // lookupClass, projectOntologyIris, and IRI validation all run inside the lock so
+      // lookupClass and IRI validation all run inside the lock so
       // the entity-existence check and validation snapshot are atomic with the write.
       response <- withOntologyLock(for
-                    _                   <- lookupClass(classIri, ontologyIri)
-                    projectIris         <- projectOntologyIris
-                    projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
-                    mappings            <- ZIO
-                                  .validate(request.mappings)(validateExternalIri(projectOntologyBases, _))
+                    _        <- lookupClass(classIri, ontologyIri)
+                    mappings <- ZIO
+                                  .validate(request.mappings)(validateExternalIri)
                                   .mapError(errors =>
                                     BadRequest(
                                       s"${errors.size} mapping IRI(s) failed validation.",
@@ -107,13 +105,11 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
-      // lookupClass, projectOntologyIris, and IRI validation all run inside the lock so
+      // lookupClass and IRI validation all run inside the lock so
       // the entity-existence check and validation snapshot are atomic with the write.
       response <- withOntologyLock(for
-                    _                   <- lookupClass(classIri, ontologyIri)
-                    projectIris         <- projectOntologyIris
-                    projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
-                    extIri              <- validateExternalIri(projectOntologyBases, mappingIriDto.value)
+                    _      <- lookupClass(classIri, ontologyIri)
+                    extIri <- validateExternalIri(mappingIriDto.value)
                                 .mapError(detail => BadRequest(detail.code, detail.message, detail.details))
                     update <-
                       RemoveMappingQuery.build(ontologyIri, classIri.smartIri, MappingPredicate.SubClassOf, extIri)
@@ -153,22 +149,18 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
-      // lookupProperty, projectOntologyIris, and IRI validation all run inside the lock so
+      // lookupProperty and IRI validation all run inside the lock so
       // the entity-existence check and validation snapshot are atomic with the write.
       response <- withOntologyLock(for
-                    _                   <- lookupProperty(propertyIri, ontologyIri)
-                    projectIris         <- projectOntologyIris
-                    projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
-                    mappings            <- ZIO
-                                  .validate(request.mappings)(validateExternalIri(projectOntologyBases, _))
+                    _        <- lookupProperty(propertyIri, ontologyIri)
+                    mappings <- ZIO
+                                  .validate(request.mappings)(validateExternalIri)
                                   .mapError(errors =>
                                     BadRequest(
                                       s"${errors.size} mapping IRI(s) failed validation.",
                                       Chunk.fromIterable(errors),
                                     ),
                                   )
-                    // TODO DEV-5887: validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty).
-                    // TODO DEV-5887: validate OWL DL property type compatibility (ObjectProperty vs DatatypeProperty).
                     update <-
                       AddMappingQuery.build(ontologyIri, propertyIri.smartIri, MappingPredicate.SubPropertyOf, mappings)
                     _ <- (triplestore.query(update) *> ontologyCache.refreshCache())
@@ -196,13 +188,11 @@ final class OntologyMappingRestService(
       ontology    <- lookupOntology(ontologyIri)
       _           <- authorizeByProject(user, ontology)
       _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
-      // lookupProperty, projectOntologyIris, and IRI validation all run inside the lock so
+      // lookupProperty and IRI validation all run inside the lock so
       // the entity-existence check and validation snapshot are atomic with the write.
       response <- withOntologyLock(for
-                    _                   <- lookupProperty(propertyIri, ontologyIri)
-                    projectIris         <- projectOntologyIris
-                    projectOntologyBases = projectIris.map(_.toIri.stripSuffix("/"))
-                    extIri              <- validateExternalIri(projectOntologyBases, mappingIriDto.value)
+                    _      <- lookupProperty(propertyIri, ontologyIri)
+                    extIri <- validateExternalIri(mappingIriDto.value)
                                 .mapError(detail => BadRequest(detail.code, detail.message, detail.details))
                     update <-
                       RemoveMappingQuery
@@ -227,48 +217,10 @@ final class OntologyMappingRestService(
         .flatMap(ZIO.fromEither(_))
     }
 
-  private def projectOntologyIris: UIO[Set[SmartIri]] =
-    ontologyCache.getCacheData.map { cacheData =>
-      cacheData.ontologies.keySet.filter(iri => !iri.isKnoraBuiltInDefinitionIri && !iri.isKnoraSharedDefinitionIri)
-    }
-
-  private def validateExternalIri(projectOntologyBases: Set[String], iriStr: String): IO[ErrorDetail, SmartIri] =
-    // projectOntologyBases is pre-computed by the caller (once per request, not once per IRI).
-    iriConverter
-      .asSmartIri(iriStr)
-      .mapError(_ =>
-        ErrorDetail(
-          V3ErrorCode.malformed_mapping_iri,
-          s"Couldn't parse IRI: '$iriStr'.",
-          Map("iri" -> iriStr),
-        ),
-      )
-      .flatMap { iri =>
-        if iri.isKnoraOntologyIri || iri.isKnoraEntityIri then
-          ZIO.fail(
-            ErrorDetail(
-              V3ErrorCode.knora_ontology_mapping_iri,
-              s"Mapping IRI '$iriStr' is a Knora-managed IRI and cannot be used as a mapping.",
-              Map("iri" -> iriStr),
-            ),
-          )
-        else if isProjectOntologyIri(iri, projectOntologyBases) then
-          ZIO.fail(
-            ErrorDetail(
-              V3ErrorCode.project_ontology_mapping_iri,
-              s"Mapping IRI '$iriStr' belongs to a DSP project ontology and cannot be used as a mapping.",
-              Map("iri" -> iriStr),
-            ),
-          )
-        else ZIO.succeed(iri)
-      }
-
-  private def isProjectOntologyIri(iri: SmartIri, projectOntologyBases: Set[String]): Boolean = {
-    val iriStr = iri.toIri
-    projectOntologyBases.exists(base =>
-      iriStr == base || iriStr.startsWith(base + "/") || iriStr.startsWith(base + "#"),
-    )
-  }
+  private def validateExternalIri(iriStr: String): IO[ErrorDetail, OntologyMappingExternalIri] =
+    ZIO
+      .fromEither(OntologyMappingExternalIri.from(iriStr))
+      .mapError(msg => ErrorDetail(V3ErrorCode.invalid_ontology_mapping_iri, msg, Map("iri" -> iriStr)))
 
   private def lookupOntology(ontologyIri: OntologyIri): IO[NotFound, ReadOntologyV2] =
     // Repository failures are infrastructure errors; escalate to fiber defect (HTTP 500).
