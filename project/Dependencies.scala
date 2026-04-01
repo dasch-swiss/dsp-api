@@ -220,7 +220,7 @@ object Dependencies {
   val otelAgentVersion     = "v2.18.1"
   val otelPyroscopeVersion = "v1.0.4"
   val hikariVersion        = "7.0.2"
-  val sqliteVersion        = "3.51.2.0"
+  val sqliteVersion        = "3.51.3.0"
 
   val db = Seq(
     "org.xerial"   % "sqlite-jdbc" % sqliteVersion,
