@@ -54,6 +54,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.repo.ChangeLinkTargetQuery
 import org.knora.webapi.slice.resources.repo.DeleteLinkQuery
 import org.knora.webapi.slice.resources.repo.DeleteValueQuery
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
@@ -1032,16 +1033,16 @@ final case class ValuesResponderV2(
         // Make a new UUID for the new link value.
         newLinkValueUUID = UUID.randomUUID
 
-        sparqlUpdate = sparql.v2.txt.changeLinkTarget(
-                         dataNamedGraph = dataNamedGraph,
-                         linkSourceIri = resourceInfo.resourceIri,
-                         linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
-                         linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
-                         newLinkValueUUID = newLinkValueUUID,
-                         maybeComment = newLinkValue.comment,
-                         currentTime = currentTime,
-                         requestingUser = requestingUser.id,
-                       )
+        sparqlUpdate <- ChangeLinkTargetQuery.build(
+                          project = resourceInfo.projectADM,
+                          linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                          linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
+                          linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
+                          newLinkValueUUID = newLinkValueUUID,
+                          maybeComment = newLinkValue.comment,
+                          currentTime = currentTime,
+                          requestingUser = requestingUser.userIri,
+                        )
 
         _ <- triplestoreService.query(Update(sparqlUpdate))
       } yield UnverifiedValueV2(
