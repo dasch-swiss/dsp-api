@@ -1625,7 +1625,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       ) {
         val deleteDate: Instant = aThingLastModificationDate.minus(1, ChronoUnit.DAYS)
         val deleteRequest       = DeleteOrEraseResourceRequestV2(
-          resourceIri = aThingIri,
+          resourceIri = ResourceIri.unsafeFrom(aThingIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeDeleteComment = Some("This resource is too boring."),
           maybeDeleteDate = Some(deleteDate),
@@ -1655,7 +1655,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           createdResourceIri          = response.resources.head.resourceIri
           createdResourceCreationDate = response.resources.head.creationDate
           deleteRequest               = DeleteOrEraseResourceRequestV2(
-                            resourceIri = createdResourceIri,
+                            resourceIri = ResourceIri.unsafeFrom(createdResourceIri),
                             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                             maybeDeleteComment = Some("This resource is too boring."),
                             maybeLastModificationDate = Some(createdResourceCreationDate),
@@ -1684,7 +1684,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         val resourceIri         = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
         val deleteDate: Instant = Instant.now
         val deleteRequest       = DeleteOrEraseResourceRequestV2(
-          resourceIri = resourceIri,
+          resourceIri = ResourceIri.unsafeFrom(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeDeleteComment = Some("This resource is too boring."),
           maybeDeleteDate = Some(deleteDate),
@@ -1910,7 +1910,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not erase a resource if the user is not a system/project admin") {
         val eraseRequest = DeleteOrEraseResourceRequestV2(
-          resourceIri = resourceIriToErase.get,
+          resourceIri = ResourceIri.unsafeFrom(resourceIriToErase.get),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
           requestingUser = anythingUser2,
@@ -1950,7 +1950,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           linkValue       = outputResource.findLinkValues(linkValuePropertyIri).head
           // Try to erase the first resource.
           eraseRequest = DeleteOrEraseResourceRequestV2(
-                           resourceIri = resourceIriToErase.get,
+                           resourceIri = ResourceIri.unsafeFrom(resourceIriToErase.get),
                            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                            maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
                            requestingUser = anythingAdminUser,
@@ -1976,7 +1976,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test("erase a resource") {
         // Erase the resource.
         val eraseRequest = DeleteOrEraseResourceRequestV2(
-          resourceIri = resourceIriToErase.get,
+          resourceIri = ResourceIri.unsafeFrom(resourceIriToErase.get),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
           requestingUser = anythingAdminUser,
@@ -2016,7 +2016,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           createdResourceCreationDate = createResponse.resources.head.creationDate
           // First, mark the resource as deleted.
           deleteRequest = DeleteOrEraseResourceRequestV2(
-                            resourceIri = createdResourceIri,
+                            resourceIri = ResourceIri.unsafeFrom(createdResourceIri),
                             resourceClassIri =
                               "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri, // External schema IRI
                             maybeDeleteComment = Some("This resource will be deleted first, then erased."),
@@ -2037,7 +2037,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           deletedResource = getDeletedResponse.resources.head
           // Now, erase the deleted resource. This should work without schema validation errors.
           eraseRequest = DeleteOrEraseResourceRequestV2(
-                           resourceIri = createdResourceIri,
+                           resourceIri = ResourceIri.unsafeFrom(createdResourceIri),
                            resourceClassIri =
                              "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri, // Same external schema IRI
                            maybeLastModificationDate = deletedResource.lastModificationDate,

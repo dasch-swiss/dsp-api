@@ -707,7 +707,7 @@ case class UpdateResourceMetadataResponseV2(
  * @param maybeLastModificationDate the resource's last modification date, if any.
  */
 case class DeleteOrEraseResourceRequestV2(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   maybeDeleteComment: Option[String] = None,
   maybeDeleteDate: Option[Instant] = None,

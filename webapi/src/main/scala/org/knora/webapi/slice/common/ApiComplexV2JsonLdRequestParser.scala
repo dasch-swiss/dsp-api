@@ -160,7 +160,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       deleteDate           <- r.deleteDateOption
       lastModificationDate <- r.lastModificationDateOption
     } yield DeleteOrEraseResourceRequestV2(
-      resourceIri.value,
+      resourceIri,
       r.resourceClassSmartIri,
       deleteComment,
       deleteDate,

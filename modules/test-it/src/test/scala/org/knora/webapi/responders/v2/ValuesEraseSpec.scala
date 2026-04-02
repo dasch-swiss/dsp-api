@@ -586,7 +586,7 @@ final case class TestHelper(
   def deleteResource(resource: ActiveResource): Task[Unit] = for {
     uuid     <- Random.nextUUID
     deleteReq = DeleteOrEraseResourceRequestV2(
-                  resourceIri = resource.iri.toString,
+                  resourceIri = resource.iri,
                   resourceClassIri = resource.resourceClassIri.toComplexSchema,
                   maybeDeleteComment = Some("Test deletion for value erase test"),
                   maybeLastModificationDate = resource.lastModificationDate,

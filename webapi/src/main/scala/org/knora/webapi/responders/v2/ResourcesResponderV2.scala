@@ -286,21 +286,20 @@ final case class ResourcesResponderV2(
       for {
         resource <- readResources
                       .getResourcePreviewWithDeletedResource(
-                        resourceIris = Seq(deleteResourceV2.resourceIri),
+                        resourceIris = Seq(deleteResourceV2.resourceIri.value),
                         targetSchema = ApiV2Complex,
                         requestingUser = deleteResourceV2.requestingUser,
                       )
-                      .flatMap(_.toResource(deleteResourceV2.resourceIri))
+                      .flatMap(_.toResource(deleteResourceV2.resourceIri.value))
 
         _ <- canDeleteResource(deleteResourceV2, Some(resource)).map(_.assertGoodRequestEither).absolve
 
         // Generate SPARQL for marking the resource as deleted.
         requestingUserIri <-
           ZIO.fromEither(UserIri.from(deleteResourceV2.requestingUser.id)).mapError(e => Exception(e)).orDie
-        resourceIri <- iriConverter.asResourceIri(deleteResourceV2.resourceIri).mapError(BadRequestException.apply)
         sparqlUpdate = DeleteResourceQuery.build(
                          project = resource.projectADM,
-                         resourceIri = resourceIri,
+                         resourceIri = deleteResourceV2.resourceIri,
                          maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
                          currentTime = deleteResourceV2.maybeDeleteDate.getOrElse(Instant.now),
                          requestingUser = requestingUserIri,
@@ -372,11 +371,11 @@ final case class ResourcesResponderV2(
       resource       <- ZIO.fromOption(resource).orElse {
                     readResources
                       .getResourcePreviewWithDeletedResource(
-                        resourceIris = Seq(deleteResourceV2.resourceIri),
+                        resourceIris = Seq(deleteResourceV2.resourceIri.value),
                         targetSchema = ApiV2Complex,
                         requestingUser = requestingUser,
                       )
-                      .flatMap(_.toResource(deleteResourceV2.resourceIri))
+                      .flatMap(_.toResource(deleteResourceV2.resourceIri.value))
                   }
 
       internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
@@ -389,8 +388,7 @@ final case class ResourcesResponderV2(
 
       _ <- ensureNoConflictingChange(resource, deleteResourceV2.maybeLastModificationDate)
 
-      resourceIri <- iriConverter.asResourceIri(deleteResourceV2.resourceIri).mapError(BadRequestException.apply)
-      _           <- ensureResourceIsNotInUse(resourceIri)
+      _ <- ensureResourceIsNotInUse(deleteResourceV2.resourceIri)
 
       lastModificationDate = resource.lastModificationDate.getOrElse(resource.creationDate)
       _                   <- ZIO.when(deleteResourceV2.maybeDeleteDate.exists(!_.isAfter(lastModificationDate))) {
@@ -428,11 +426,11 @@ final case class ResourcesResponderV2(
         resource <-
           readResources
             .getResourcePreview(
-              resourceIris = Seq(eraseResourceV2.resourceIri),
+              resourceIris = Seq(eraseResourceV2.resourceIri.value),
               targetSchema = ApiV2Complex,
               requestingUser = eraseResourceV2.requestingUser,
             )
-            .flatMap(_.toResource(eraseResourceV2.resourceIri))
+            .flatMap(_.toResource(eraseResourceV2.resourceIri.value))
 
         // Ensure that the requesting user is a system admin, or an admin of this project.
         _ <- ZIO.when(
@@ -453,14 +451,13 @@ final case class ResourcesResponderV2(
 
         _ <- ensureNoConflictingChange(resource, eraseResourceV2.maybeLastModificationDate)
 
-        resourceIri <- iriConverter.asResourceIri(eraseResourceV2.resourceIri).mapError(BadRequestException.apply)
-        _           <- ensureResourceIsNotInUse(resourceIri)
+        _ <- ensureResourceIsNotInUse(eraseResourceV2.resourceIri)
 
         // Do the update.
         _ <- ZIO.logInfo(
                s"User ${eraseResourceV2.requestingUser.id} is erasing resource ${eraseResourceV2.resourceIri}",
              )
-        _ <- triplestore.query(Update(EraseResourceQuery.build(resource.projectADM, resourceIri)))
+        _ <- triplestore.query(Update(EraseResourceQuery.build(resource.projectADM, eraseResourceV2.resourceIri)))
 
         _ <- // Verify that the resource was erased correctly.
           ZIO
@@ -469,7 +466,7 @@ final case class ResourcesResponderV2(
                 s"Resource <${eraseResourceV2.resourceIri}> was not erased. Please report this as a possible bug.",
               ),
             )
-            .whenZIO(iriService.checkIriExists(resourceIri))
+            .whenZIO(iriService.checkIriExists(eraseResourceV2.resourceIri))
       } yield SuccessResponseV2("Resource erased")
     IriLocker.runWithIriLock(eraseResourceV2.apiRequestID, eraseResourceV2.resourceIri)(eraseTask)
   }
