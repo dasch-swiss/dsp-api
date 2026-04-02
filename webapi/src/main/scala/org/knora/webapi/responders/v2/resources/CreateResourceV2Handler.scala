@@ -40,6 +40,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.model.*
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -92,7 +93,7 @@ final case class CreateResourceV2Handler(
 
       resourceIri <- iriService.checkOrCreateEntityIriStr(
                        createResourceRequestV2.createResource.resourceIri.map(_.value),
-                       stringFormatter.makeRandomResourceIri(shortcode),
+                       ResourceIri.makeNew(shortcode).value,
                      )
       taskResult <- IriLocker.runWithIriLock(createResourceRequestV2.apiRequestID, resourceIri)(
                       makeTask(createResourceRequestV2, resourceIri),

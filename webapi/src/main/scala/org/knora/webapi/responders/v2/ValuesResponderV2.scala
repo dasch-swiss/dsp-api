@@ -1032,7 +1032,7 @@ final case class ValuesResponderV2(
 
         result <- ChangeLinkTargetQuery.build(
                     project = resourceInfo.projectADM,
-                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                     linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                     linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                     maybeComment = newLinkValue.comment,

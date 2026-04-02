@@ -124,12 +124,10 @@ sealed abstract case class UploadFileRequest private (
     valuePropertyIRI: Option[SmartIri] = None,
     project: Option[Project] = None,
   ): CreateResourceV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
     val projectOrDefault =
       project.getOrElse(SharedTestDataADM.anythingProject)
     val resourceIRIOrDefault =
-      resourceIri.getOrElse(stringFormatter.makeRandomResourceIri(projectOrDefault.shortcode))
+      resourceIri.getOrElse(ResourceIri.makeNew(projectOrDefault.shortcode).value)
     val resourceClassIRIOrDefault: SmartIri =
       resourceClassIRI.getOrElse(FileModelUtil.getFileRepresentationClassIri(fileType))
     val fileValuePropertyIRIOrDefault: SmartIri =

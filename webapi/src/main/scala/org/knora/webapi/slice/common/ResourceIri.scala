@@ -9,7 +9,9 @@ import eu.timepit.refined.types.string.NonEmptyString
 
 import scala.util.matching.Regex
 
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.Value.StringValue
 
@@ -32,4 +34,9 @@ object ResourceIri extends StringValueCompanion[ResourceIri] {
   }
 
   def from(iri: SmartIri): Either[String, ResourceIri] = from(iri.toString)
+
+  def makeNew(shortcode: Shortcode): ResourceIri = {
+    val uuid = UuidUtil.makeRandomBase64EncodedUuid
+    unsafeFrom(s"http://$IriDomain/$shortcode/$uuid")
+  }
 }
