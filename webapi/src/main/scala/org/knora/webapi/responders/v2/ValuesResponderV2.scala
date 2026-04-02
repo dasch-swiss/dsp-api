@@ -55,6 +55,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.ChangeLinkTargetQuery
+import org.knora.webapi.slice.resources.repo.CreateLinkQuery
 import org.knora.webapi.slice.resources.repo.DeleteLinkQuery
 import org.knora.webapi.slice.resources.repo.DeleteValueQuery
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
@@ -370,7 +371,6 @@ final case class ValuesResponderV2(
     value match {
       case linkValueContent: LinkValueContentV2 =>
         createLinkValueV2AfterChecks(
-          dataNamedGraph = dataNamedGraph,
           resourceInfo = resourceInfo,
           linkPropertyIri = propertyIri,
           linkValueContent = linkValueContent,
@@ -488,7 +488,6 @@ final case class ValuesResponderV2(
   /**
    * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
    *
-   * @param dataNamedGraph   the named graph in which the link is to be created.
    * @param resourceInfo     information about the the resource in which to create the value.
    * @param linkPropertyIri  the link property.
    * @param linkValueContent a [[LinkValueContentV2]] specifying the target resource.
@@ -499,7 +498,6 @@ final case class ValuesResponderV2(
    * @return an [[UnverifiedValueV2]].
    */
   private def createLinkValueV2AfterChecks(
-    dataNamedGraph: IRI,
     resourceInfo: ReadResourceV2,
     linkPropertyIri: SmartIri,
     linkValueContent: LinkValueContentV2,
@@ -529,16 +527,15 @@ final case class ValuesResponderV2(
           case None                          => Instant.now
         }
 
-      // Generate a SPARQL update string.
-      sparqlUpdate = sparql.v2.txt.createLink(
-                       dataNamedGraph = dataNamedGraph,
-                       resourceIri = resourceInfo.resourceIri,
-                       linkUpdate = sparqlTemplateLinkUpdate,
-                       newValueUUID = newValueUUID,
-                       creationDate = creationDate,
-                       maybeComment = linkValueContent.comment,
-                       stringFormatter = stringFormatter,
-                     )
+      // Generate a SPARQL update.
+      sparqlUpdate <- CreateLinkQuery.build(
+                        project = resourceInfo.projectADM,
+                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                        linkUpdate = sparqlTemplateLinkUpdate,
+                        newValueUUID = newValueUUID,
+                        creationDate = creationDate,
+                        maybeComment = linkValueContent.comment,
+                      )
 
       _ <- triplestoreService.query(Update(sparqlUpdate))
     } yield UnverifiedValueV2(
