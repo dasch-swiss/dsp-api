@@ -16,7 +16,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.InternalIri
 
@@ -50,7 +50,7 @@ final case class IriConverter(sf: StringFormatter) {
     asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(PropertyIri.from(sIri)))
 
   def asResourceIri(iri: String): IO[String, ResourceIri] =
-    asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(ResourceIri.from(sIri)))
+    ZIO.fromEither(ResourceIri.from(iri))
 
   def asOntologyIriApiV2Complex(iri: String): IO[String, OntologyIri] =
     asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(OntologyIri.fromApiV2Complex(sIri)))

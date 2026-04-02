@@ -45,7 +45,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -1422,7 +1422,7 @@ final case class ValuesResponderV2(
       linkUpdates  <- ZIO.collectAll(linkUpdateTasks)
       sparqlUpdate <- DeleteValueQuery.build(
                         project = resourceInfo.projectADM,
-                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                         propertyIri = PropertyIri.unsafeFrom(propertyIri),
                         valueIri = ValueIri.unsafeFrom(currentValue.valueIri.toSmartIri),
                         maybeDeleteComment = deleteComment,

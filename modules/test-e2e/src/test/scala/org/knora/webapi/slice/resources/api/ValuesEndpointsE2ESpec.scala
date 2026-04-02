@@ -36,7 +36,7 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.api.v2.values.ReorderValuesRequest
 import org.knora.webapi.slice.api.v2.values.ReorderValuesResponse
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
@@ -641,7 +641,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       }
     },
     test("get a past version of a value, given its UUID and a timestamp") {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
       val valueUuid   = "pLlW4ODASumZfZFbJdpw1g"
       val timestamp   = "20190212T090510Z"
       for {
@@ -3550,7 +3550,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         assertCompletes
     },
     test("update a TextValue comment containing linebreaks should store linebreaks as Unicode") {
-      val resourceIri     = ResourceIri.unsafeFrom(AThing.iri.toSmartIri)
+      val resourceIri     = ResourceIri.unsafeFrom(AThing.iri)
       val anythingHasText = anythingOntologyIri.makeProperty("hasText").toComplexSchema.toString
       val anythingThing   = anythingOntologyIri.makeClass("Thing").toComplexSchema.toString
 
@@ -3655,7 +3655,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                .flatMap(_.assert200)
 
         // 3. Read the resource and extract the value IRIs in their current order
-        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
         resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
         valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
         valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
@@ -3718,7 +3718,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                             .flatMap(_.assert200)
         resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
 
-        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
         resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
         valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
         valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
@@ -3757,7 +3757,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                             .flatMap(_.assert200)
         resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
 
-        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
         resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
         valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
         valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
@@ -3794,7 +3794,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                             .flatMap(_.assert200)
         resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
 
-        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
         resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
         valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
         valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
@@ -3832,7 +3832,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                             .flatMap(_.assert200)
         resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
 
-        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
         resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
         valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
         valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
@@ -3869,7 +3869,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                             .flatMap(_.assert200)
         resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
 
-        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+        resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
         resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
         valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
         valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
@@ -3930,7 +3930,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                  .flatMap(_.assert200)
 
           // Get the resource to read value IRIs
-          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
@@ -4010,7 +4010,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                  .flatMap(_.assert200)
 
           // Get the value IRIs
-          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
@@ -4058,7 +4058,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
 
           // Get the value IRIs
-          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
@@ -4152,7 +4152,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
 
           // Read the value IRIs
-          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
@@ -4201,7 +4201,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
 
           // Get the value IRIs (they belong to hasText, not hasInteger)
-          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
@@ -4249,7 +4249,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
 
           // Get the single value IRI
-          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+          resIri       <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }

@@ -24,9 +24,7 @@ import scala.language.implicitConversions
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.it.v2.LegalInfoE2ESpec.suite
-import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.*
@@ -34,7 +32,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
@@ -49,8 +47,6 @@ import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 import org.knora.webapi.testservices.TestResourcesApiClient
 
 object LegalInfoE2ESpec extends E2EZSpec {
-
-  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 
@@ -322,7 +318,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
   }
 
   private def getResourceFromApi(resourceId: ResourceIri) = for {
-    responseBody <- TestApiClient.getJsonLd(uri"/v2/resources/${resourceId.toComplexSchema}").flatMap(_.assert200)
+    responseBody <- TestApiClient.getJsonLd(uri"/v2/resources/${resourceId.value}").flatMap(_.assert200)
     model        <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 
@@ -334,7 +330,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
 
   private def getValueFromApi(valueId: ValueIri, resourceId: ResourceIri): ZIO[env, Throwable, Model] = for {
     responseBody <-
-      TestApiClient.getJsonLd(uri"/v2/values/${resourceId.toComplexSchema}/${valueId.valueId}").flatMap(_.assert200)
+      TestApiClient.getJsonLd(uri"/v2/values/${resourceId.value}/${valueId.valueId}").flatMap(_.assert200)
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 
@@ -346,7 +342,6 @@ object LegalInfoE2ESpec extends E2EZSpec {
           id   <- root.uri.toRight("No URI found for root resource")
         } yield id,
       )
-      .map(_.toSmartIri)
       .mapBoth(Exception(_), ResourceIri.unsafeFrom)
 
   private def valueId(model: Model): ZIO[IriConverter, Throwable, ValueIri] = {

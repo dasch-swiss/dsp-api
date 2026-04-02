@@ -46,6 +46,7 @@ import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.api.v2.ontologies.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -4692,7 +4693,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
                         ),
                       )
         inputResource = CreateResourceV2(
-                          resourceIri = Some(resourceIri.toSmartIri),
+                          resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
                           resourceClassIri =
                             "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
                           label = "my blue test class thing instance",

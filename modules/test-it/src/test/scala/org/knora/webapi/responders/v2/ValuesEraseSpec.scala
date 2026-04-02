@@ -30,7 +30,7 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.resources.repo.service.ActiveValue
 import org.knora.webapi.slice.resources.repo.service.ResourceModel
@@ -548,7 +548,7 @@ final case class TestHelper(
     createReq = CreateResourceRequestV2(createRes, rootUser, uuid)
     res      <- resourcesResponderV2.createResource(createReq)
     created  <- resourceRepo
-                 .findActiveById(ResourceIri.unsafeFrom(res.resources.head.resourceIri.toSmartIri))
+                 .findActiveById(ResourceIri.unsafeFrom(res.resources.head.resourceIri))
                  .someOrFail(IllegalStateException("Resource not found"))
   } yield created
 
@@ -562,7 +562,7 @@ final case class TestHelper(
     createReq = CreateResourceRequestV2(createRes, rootUser, uuid)
     resource <- resourcesResponderV2.createResource(createReq).map(_.resources.head)
     created  <- resourceRepo
-                 .findActiveById(ResourceIri.unsafeFrom(resource.resourceIri.toSmartIri))
+                 .findActiveById(ResourceIri.unsafeFrom(resource.resourceIri))
                  .someOrFail(IllegalStateException("Resource not found"))
     values <- ZIO
                 .foreach(resource.values.toList) { (s, vs) =>
