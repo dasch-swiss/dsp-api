@@ -21,7 +21,9 @@ object ResourceId {
 }
 
 final case class ResourceIri private (override val value: String, shortcode: Shortcode, resourceId: ResourceId)
-    extends StringValue
+    extends StringValue {
+  override def toString: String = value
+}
 
 object ResourceIri extends StringValueCompanion[ResourceIri] {
   private val ResourceIriRegex: Regex =
