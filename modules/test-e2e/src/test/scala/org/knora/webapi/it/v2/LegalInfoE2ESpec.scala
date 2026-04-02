@@ -318,7 +318,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
   }
 
   private def getResourceFromApi(resourceId: ResourceIri) = for {
-    responseBody <- TestApiClient.getJsonLd(uri"/v2/resources/${resourceId.value}").flatMap(_.assert200)
+    responseBody <- TestApiClient.getJsonLd(uri"/v2/resources/$resourceId").flatMap(_.assert200)
     model        <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 
@@ -330,7 +330,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
 
   private def getValueFromApi(valueId: ValueIri, resourceId: ResourceIri): ZIO[env, Throwable, Model] = for {
     responseBody <-
-      TestApiClient.getJsonLd(uri"/v2/values/${resourceId.value}/${valueId.valueId}").flatMap(_.assert200)
+      TestApiClient.getJsonLd(uri"/v2/values/$resourceId/${valueId.valueId}").flatMap(_.assert200)
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 
