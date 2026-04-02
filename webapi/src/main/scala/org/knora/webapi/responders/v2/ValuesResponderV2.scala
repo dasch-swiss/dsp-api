@@ -54,6 +54,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.repo.CreateLinkQuery
 import org.knora.webapi.slice.resources.repo.DeleteLinkQuery
 import org.knora.webapi.slice.resources.repo.DeleteValueQuery
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
@@ -528,16 +529,15 @@ final case class ValuesResponderV2(
           case None                          => Instant.now
         }
 
-      // Generate a SPARQL update string.
-      sparqlUpdate = sparql.v2.txt.createLink(
-                       dataNamedGraph = dataNamedGraph,
-                       resourceIri = resourceInfo.resourceIri,
-                       linkUpdate = sparqlTemplateLinkUpdate,
-                       newValueUUID = newValueUUID,
-                       creationDate = creationDate,
-                       maybeComment = linkValueContent.comment,
-                       stringFormatter = stringFormatter,
-                     )
+      // Generate a SPARQL update.
+      sparqlUpdate <- CreateLinkQuery.build(
+                        dataNamedGraph = dataNamedGraph,
+                        resourceIri = resourceInfo.resourceIri,
+                        linkUpdate = sparqlTemplateLinkUpdate,
+                        newValueUUID = newValueUUID,
+                        creationDate = creationDate,
+                        maybeComment = linkValueContent.comment,
+                      )
 
       _ <- triplestoreService.query(Update(sparqlUpdate))
     } yield UnverifiedValueV2(
