@@ -2964,7 +2964,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test(
       "not accept custom value permissions that would give the requesting user a higher permission on a value than the default",
     ) {
-      val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
+      val resourceIri   = ResourceIri.makeNew(imagesProject.shortcode).value
       val inputResource = CreateResourceV2(
         resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
@@ -3001,7 +3001,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test(
       "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin",
     ) {
-      val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
+      val resourceIri   = ResourceIri.makeNew(imagesProject.shortcode).value
       val inputResource = CreateResourceV2(
         resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
@@ -3037,7 +3037,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test(
       "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin",
     ) {
-      val resourceIri = sf.makeRandomResourceIri(imagesProject.shortcode)
+      val resourceIri = ResourceIri.makeNew(imagesProject.shortcode).value
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),

@@ -1514,17 +1514,6 @@ class StringFormatter private (
   }
 
   /**
-   * Creates a new resource IRI based on a UUID.
-   *
-   * @param shortcode the project's shortcode.
-   * @return a new resource IRI.
-   */
-  def makeRandomResourceIri(shortcode: Shortcode): IRI = {
-    val knoraResourceID = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/$shortcode/$knoraResourceID"
-  }
-
-  /**
    * Creates a new value IRI based on a UUID.
    *
    * @param resourceIri the IRI of the resource that will contain the value.

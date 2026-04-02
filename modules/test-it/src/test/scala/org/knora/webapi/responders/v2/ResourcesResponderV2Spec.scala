@@ -839,7 +839,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertTrue(response == GraphTestData.graphWithOneNode)
       },
       test("create a resource with no values") {
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputResource = CreateResourceV2(
           resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
@@ -874,7 +874,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not create a resource when empty list for required property is provided") {
         val createThis = CreateResourceV2(
-          Some(ResourceIri.unsafeFrom(sf.makeRandomResourceIri(anythingProject.shortcode))),
+          Some(ResourceIri.makeNew(anythingProject.shortcode)),
           "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
           "test book",
           Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Seq.empty),
@@ -886,7 +886,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("create a resource with no values and custom permissions") {
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputResource = CreateResourceV2(
           resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
@@ -910,7 +910,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with values") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1057,7 +1057,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with a still image file value") {
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputResource = UploadFileRequest
           .make(
             fileType = FileType.StillImageFile(
@@ -1081,7 +1081,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with an external still image file value") {
-        val resourceIri     = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri     = ResourceIri.makeNew(anythingProject.shortcode).value
         val imageRequestUrl = IiifImageRequestUrl.unsafeFrom(
           "https://iiif.ub.unibe.ch/image/v2.1/632664f2-20cb-43e4-8584-2fa3988c63a2/full/max/0/default.jpg",
         )
@@ -1106,7 +1106,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with document representation") {
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputResource = UploadFileRequest
           .make(
             fileType = FileType.DocumentFile(),
@@ -1128,7 +1128,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with archive representation") {
-        val resourceIri: String = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri: String = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputResource       = UploadFileRequest
           .make(
             fileType = FileType.ArchiveFile,
@@ -1152,7 +1152,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("not create a resource with missing required values") {
-        val resourceIri   = sf.makeRandomResourceIri(incunabulaProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(incunabulaProject.shortcode).value
         val inputResource = CreateResourceV2(
           Some(ResourceIri.unsafeFrom(resourceIri)),
           "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
@@ -1165,7 +1165,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         ).exit.map(actual => assert(actual)(failsWithA[OntologyConstraintException]))
       },
       test("not create a resource with too many values for the cardinality of a property") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(incunabulaProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(incunabulaProject.shortcode).value
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1206,7 +1206,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         ).exit.map(actual => assert(actual)(failsWithA[OntologyConstraintException]))
       },
       test("not create a resource with a property for which there is no cardinality in the resource class") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(incunabulaProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(incunabulaProject.shortcode).value
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1239,7 +1239,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         ).exit.map(actual => assert(actual)(failsWithA[OntologyConstraintException]))
       },
       test("not create a resource if the user doesn't have permission to create resources in the project") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(incunabulaProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(incunabulaProject.shortcode).value
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1264,7 +1264,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with a link to a nonexistent other resource") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1287,7 +1287,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with a standoff link to a nonexistent other resource") {
-        val resourceIri                                    = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                    = ResourceIri.makeNew(anythingProject.shortcode).value
         val standoffWithInvalidLink: Vector[StandoffTagV2] = Vector(
           StandoffTagV2(
             standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
@@ -1350,7 +1350,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with a list value referring to a nonexistent list node") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1376,7 +1376,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with a value that's the wrong type for the property") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1402,7 +1402,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not create a resource with a link to a resource in a different project") {
         // The new resource should be created in the Anything project 0001
-        val resourceIri = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri = ResourceIri.makeNew(anythingProject.shortcode).value
         // This resource is present in the Incunabula project 0803
         val linkedResourceIri = zeitgloeckleinIri
 
@@ -1432,7 +1432,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         // subjectClassConstraint for hasOtherThingValue is anything:Thing
         val linkProperty = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri
 
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputResource = CreateResourceV2(
           resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
@@ -1447,7 +1447,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with invalid custom permissions") {
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputResource = CreateResourceV2(
           resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
@@ -1461,7 +1461,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with a value that has invalid custom permissions") {
-        val resourceIri                                            = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                            = ResourceIri.makeNew(anythingProject.shortcode).value
         val values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1487,7 +1487,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource that uses a class from another non-shared project") {
-        val resourceIri   = sf.makeRandomResourceIri(incunabulaProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(incunabulaProject.shortcode).value
         val inputResource = CreateResourceV2(
           resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
@@ -1637,7 +1637,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           .map(actual => assert(actual)(failsWithA[BadRequestException]))
       },
       test("mark a resource as deleted") {
-        val resourceIri = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri = ResourceIri.makeNew(anythingProject.shortcode).value
         val createReq   = CreateResourceRequestV2(
           CreateResourceV2(
             Some(ResourceIri.unsafeFrom(resourceIri)),
@@ -1713,7 +1713,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "not accept custom resource permissions that would give the requesting user a higher permission on a resource than the default",
       ) {
-        val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(imagesProject.shortcode).value
         val inputResource = CreateResourceV2(
           resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
           resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
@@ -1728,7 +1728,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a system admin",
       ) {
-        val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(imagesProject.shortcode).value
         val inputResource = CreateResourceV2(
           resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
           resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
@@ -1743,7 +1743,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a project admin",
       ) {
-        val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(imagesProject.shortcode).value
         val inputResource = CreateResourceV2(
           resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
           resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
@@ -1758,7 +1758,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "not accept custom value permissions that would give the requesting user a higher permission on a value than the default",
       ) {
-        val resourceIri                                                 = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(imagesProject.shortcode).value
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1785,7 +1785,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin",
       ) {
-        val resourceIri                                                 = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(imagesProject.shortcode).value
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1812,7 +1812,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin",
       ) {
-        val resourceIri                                                 = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(imagesProject.shortcode).value
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1837,7 +1837,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           .as(assertCompletes)
       },
       test("create a resource with version history so we can test erasing it") {
-        val resourceIri = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri = ResourceIri.makeNew(anythingProject.shortcode).value
         resourceIriToErase.set(resourceIri)
         val resourceClassIri: SmartIri                                  = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
         val propertyIri: SmartIri                                       = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
@@ -1921,9 +1921,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not erase a resource if another resource has a link to it") {
-        val resourceWithLinkIri = ResourceIri.unsafeFrom(
-          sf.makeRandomResourceIri(anythingProject.shortcode),
-        )
+        val resourceWithLinkIri = ResourceIri.makeNew(anythingProject.shortcode)
         val resourceClassIri =
           ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
         val linkValuePropertyIri =
@@ -1999,7 +1997,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("erase a deleted resource") {
-        val resourceIri = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri = ResourceIri.makeNew(anythingProject.shortcode).value
         val createReq   = CreateResourceRequestV2(
           CreateResourceV2(
             Some(ResourceIri.unsafeFrom(resourceIri)),
@@ -2094,7 +2092,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with a value that has custom UUID") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(anythingProject.shortcode).value
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
