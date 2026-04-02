@@ -54,6 +54,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.repo.ChangeLinkTargetQuery
 import org.knora.webapi.slice.resources.repo.DeleteLinkQuery
 import org.knora.webapi.slice.resources.repo.DeleteValueQuery
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
@@ -1029,21 +1030,18 @@ final case class ValuesResponderV2(
         // was updated.
         currentTime: Instant = valueCreationDate.getOrElse(Instant.now)
 
-        // Make a new UUID for the new link value.
-        newLinkValueUUID = UUID.randomUUID
+        result <- ChangeLinkTargetQuery.build(
+                    project = resourceInfo.projectADM,
+                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                    linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
+                    linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
+                    maybeComment = newLinkValue.comment,
+                    currentTime = currentTime,
+                    requestingUser = requestingUser.userIri,
+                  )
+        (newLinkValueUUID, sparqlUpdate) = result
 
-        sparqlUpdate = sparql.v2.txt.changeLinkTarget(
-                         dataNamedGraph = dataNamedGraph,
-                         linkSourceIri = resourceInfo.resourceIri,
-                         linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
-                         linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
-                         newLinkValueUUID = newLinkValueUUID,
-                         maybeComment = newLinkValue.comment,
-                         currentTime = currentTime,
-                         requestingUser = requestingUser.id,
-                       )
-
-        _ <- triplestoreService.query(Update(sparqlUpdate))
+        _ <- triplestoreService.query(sparqlUpdate)
       } yield UnverifiedValueV2(
         newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
         newValueUUID = newLinkValueUUID,
