@@ -109,6 +109,57 @@ object {QueryName}Query extends QueryBuilderHelper {
 }
 ```
 
+#### Prefer typed IRI parameters over raw `IRI` (String)
+
+When translating Twirl template parameters to the `build` method signature, replace raw `IRI` (`String`) parameters with their typed equivalents wherever possible:
+
+| Twirl parameter type | Preferred `build` parameter type | Conversion in body |
+|----------------------|----------------------------------|--------------------|
+| `dataNamedGraph: IRI` | `project: Project` (or `KnoraProject`) | `graphIri(project)` |
+| link/resource source IRI | `ResourceIri` | `toRdfIri(resourceIri)` |
+| user IRI | `UserIri` | `toRdfIri(userIri)` |
+| project IRI | `ProjectIri` | `toRdfIri(projectIri)` |
+| property IRI        | `PropertyIri` | `toRdfIri(propertyIri)` |
+| value IRI | `ValueIri` | `toRdfIri(valueIri)` |
+| list IRI | `ListIri` | `toRdfIri(listIri)` |
+| resource IRI | `ResourceIri` | `toRdfIri(resourceIri)` |
+
+The caller may need minor adjustments (e.g. `resourceInfo.projectADM` instead of `dataNamedGraph`, `requestingUser.userIri` instead of `requestingUser.id`). Check the caller context to determine the right typed wrapper and the conversion needed at the call site.
+
+#### Handling `Instant` / `currentTime` parameters
+
+Check whether the `Instant` value is **only** used inside the query, or also returned/reused by the caller after the query is built, and whether it is always generated or sometimes caller-supplied.
+
+- **Used only inside the query**: move the timestamp into `build` using `zio.Clock.instant`, removing the parameter.
+- **Passed in unconditionally (always `Instant.now`) and reused after building**: move the timestamp into `build` using `zio.Clock.instant` and return it alongside the query as a tuple `(Instant, QueryType)`. This keeps timestamp creation inside the builder while giving the caller access.
+- **Conditionally provided by the caller** (e.g. a custom creation date via `Option[Instant]`): keep it as a parameter. The caller owns the decision of which instant to use.
+
+To decide, **always read the actual call site** — do not guess from the template signature alone. Check:
+1. How is the instant created? Look for `Instant.now`, `Clock.instant`, or a conditional like `customDate.getOrElse(Instant.now)`. If it is conditional or derived from a caller-supplied `Option[Instant]`, it must stay as a parameter.
+2. Does the instant appear after the query-building line (e.g. in a return value, a result object, or another query)?
+
+If (1) is always unconditionally generated and (2) is yes → return a tuple.
+If (1) is always unconditionally generated and (2) is no → generate inside `build`, no need to return it.
+If (1) is conditionally provided → keep as a parameter.
+
+```scala
+// Example: Instant generated inside build and returned as a tuple
+def build(...): IO[SparqlGenerationException, (Instant, ModifyQuery)] =
+  for {
+    ...
+    now <- Clock.instant
+  } yield {
+    val currentTimeLiteral = Rdf.literalOfType(now.toString, XSD.DATETIME)
+    // ... build query using currentTimeLiteral ...
+    (now, query)
+  }
+
+// Caller destructures the tuple
+(createdAt, sparqlUpdate) <- MyQuery.build(...)
+_ <- triplestoreService.query(Update(sparqlUpdate))
+// ... use createdAt in the return value ...
+```
+
 **Query type mapping:**
 
 | Twirl query type | rdf4j return type | Execution wrapper |
@@ -139,6 +190,34 @@ Use IRIs from `Vocabulary.scala` (`KnoraBase`, `KnoraAdmin`, `SalsahGui`) and rd
 Read `webapi/src/main/scala/org/knora/webapi/slice/common/QueryBuilderHelper.scala` for available helper methods.
 Read `docs/development/dsp-api-sparql-builder.md` for the full SparqlBuilder API reference.
 
+#### Precondition validation with `failIf`
+
+Many Twirl templates contain `@if` / `@else` blocks that throw `SparqlGenerationException` when a boolean flag has an unexpected value. Translate these to `failIf` calls from `QueryBuilderHelper`:
+
+```scala
+// failIf is defined in QueryBuilderHelper — no need for a local definition
+for {
+  _ <- failIf(!linkUpdate.deleteDirectLink, "linkUpdate.deleteDirectLink must be true in this SPARQL template")
+  _ <- failIf(linkUpdate.newReferenceCount != 0, "linkUpdate.newReferenceCount must be 0 in this SPARQL template")
+} yield {
+  // build the query ...
+}
+```
+
+When the `build` method uses `failIf`, its return type must be `IO[SparqlGenerationException, QueryType]` (e.g. `IO[SparqlGenerationException, ModifyQuery]`). Structure the method as a `for / yield` comprehension: validations in the `for` block, query construction in the `yield` block.
+
+Also write validation tests that assert each precondition failure:
+
+```scala
+test("should fail when deleteDirectLink is false") {
+  val effect = MyQuery.build(invalidParams)
+  assertZIO(effect.exit)(
+    failsWithA[SparqlGenerationException] &&
+      fails(hasMessage(containsString("deleteDirectLink must be true"))),
+  )
+}
+```
+
 ### Step 5 — Update tests and verify
 
 Repoint the tests to call the new `{QueryName}Query.build(...)` method instead of the Twirl template.
@@ -160,13 +239,17 @@ Find the code that calls the Twirl template (identified in Step 1) and replace i
 
 ```scala
 // Before (Twirl)
-triplestoreService.query(Select(queries.sparql.module.queryName(param1, param2).toString()))
+sparqlUpdate = sparql.v2.txt.queryName(dataNamedGraph, linkSourceIri, ..., currentTime, requestingUser.id)
+_ <- triplestoreService.query(Update(sparqlUpdate))
 
-// After (rdf4j)
-triplestoreService.query(Select({QueryName}Query.build(param1, param2)))
+// After (rdf4j) — note typed parameters and effectful build
+sparqlUpdate <- QueryNameQuery.build(resourceInfo.projectADM, ResourceIri.unsafeFrom(iri.toSmartIri), ..., currentTime, requestingUser.userIri)
+_ <- triplestoreService.query(Update(sparqlUpdate))
 ```
 
 Wrap the query in the appropriate execution wrapper: `Select()`, `Construct()`, `Update()`, or pass `Ask` directly.
+
+When the `build` method returns an effect (`IO[SparqlGenerationException, QueryType]`), use `<-` instead of `=` in the caller's for-comprehension.
 
 ### Step 7 — Delete the Twirl template
 
