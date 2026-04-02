@@ -472,7 +472,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                  |
                  |INSERT DATA {
                  |    GRAPH <${graphIri.value}> {
-                 |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+                 |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
                  |            rdfs:label "$label" ;
                  |            knora-base:isDeleted false ;
                  |            knora-base:attachedToUser <${userIri.value}> ;
@@ -498,7 +498,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -514,8 +514,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime .
-            |        <${resourceIri.value}> <foo:hasLinkTo> <foo:LinkTargetIri> .
-            |        <foo:LinkValueIri> rdf:subject <${resourceIri.value}> ;
+            |        <$resourceIri> <foo:hasLinkTo> <foo:LinkTargetIri> .
+            |        <foo:LinkValueIri> rdf:subject <$resourceIri> ;
             |            rdf:predicate <foo:hasLinkTo> ;
             |            rdf:object <foo:LinkTargetIri> ;
             |            knora-base:valueHasRefCount 1 .
@@ -537,7 +537,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -573,7 +573,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -629,7 +629,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -664,7 +664,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -699,7 +699,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -734,7 +734,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -769,7 +769,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -808,7 +808,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -844,7 +844,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -879,7 +879,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -920,7 +920,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -957,7 +957,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -998,7 +998,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -1036,7 +1036,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -1071,7 +1071,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -1108,7 +1108,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -1144,7 +1144,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -1182,7 +1182,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |
           |INSERT DATA {
           |    GRAPH <${graphIri.value}> {
-          |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+          |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
           |            rdfs:label "$label" ;
           |            knora-base:isDeleted false ;
           |            knora-base:attachedToUser <${userIri.value}> ;
@@ -1199,7 +1199,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |            knora-base:valueHasOrder 1 ;
           |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
           |            knora-base:valueHasInteger 42 .
-          |        <${resourceIri.value}> <foo:hasBoolean> <foo:BooleanValueIri> .
+          |        <$resourceIri> <foo:hasBoolean> <foo:BooleanValueIri> .
           |        <foo:BooleanValueIri> rdf:type <http://www.knora.org/ontology/knora-base#BooleanValue> ;
           |            knora-base:isDeleted false  ;
           |            knora-base:valueHasString "true" ;
@@ -1229,7 +1229,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |
           |INSERT DATA {
           |    GRAPH <${graphIri.value}> {
-          |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+          |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
           |            rdfs:label "$label" ;
           |            knora-base:isDeleted false ;
           |            knora-base:attachedToUser <${userIri.value}> ;
@@ -1239,7 +1239,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |            <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
           |            <foo:hasStandoffLinkToValue> <foo:StandoffLinkValueIri> .
           |        <foo:StandoffLinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
-          |            rdf:subject <${resourceIri.value}> ;
+          |            rdf:subject <$resourceIri> ;
           |            rdf:predicate <foo:hasStandoffLinkTo> ;
           |            rdf:object <foo:StandoffLinkTargetIri> ;
           |            knora-base:valueHasString "foo:StandoffLinkTargetIri" ;
@@ -1272,7 +1272,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |        <$resourceIri> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
             |            knora-base:attachedToUser <${userIri.value}> ;
@@ -1289,10 +1289,10 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
             |            knora-base:valueHasInteger 42 .
-            |        <${resourceIri.value}> <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
+            |        <$resourceIri> <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
             |            <foo:hasStandoffLinkToValue> <foo:StandoffLinkValueIri> .
             |        <foo:StandoffLinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
-            |            rdf:subject <${resourceIri.value}> ;
+            |            rdf:subject <$resourceIri> ;
             |            rdf:predicate <foo:hasStandoffLinkTo> ;
             |            rdf:object <foo:StandoffLinkTargetIri> ;
             |            knora-base:valueHasString "foo:StandoffLinkTargetIri" ;
