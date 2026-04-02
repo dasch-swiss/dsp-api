@@ -30,8 +30,8 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.repo.service.ActiveValue
 import org.knora.webapi.slice.resources.repo.service.ResourceModel
 import org.knora.webapi.slice.resources.repo.service.ResourceModel.ActiveResource
@@ -287,7 +287,7 @@ final case class TestHelper(
                   )
       value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -308,7 +308,7 @@ final case class TestHelper(
     for {
       response <- valuesResponder.updateValueV2(update, rootUser, UUID.randomUUID())
       updated  <- valueRepo
-                   .findActiveById(ValueIri.unsafeFrom(response.valueIri.toSmartIri))
+                   .findActiveById(ValueIri.unsafeFrom(response.valueIri))
                    .someOrFail(IllegalStateException("Value not found"))
     } yield updated
 
@@ -324,7 +324,7 @@ final case class TestHelper(
                   )
       value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -340,7 +340,7 @@ final case class TestHelper(
                   )
       value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -361,7 +361,7 @@ final case class TestHelper(
     for {
       response <- valuesResponder.updateValueV2(update, rootUser, UUID.randomUUID())
       updated  <- valueRepo
-                   .findActiveById(ValueIri.unsafeFrom(response.valueIri.toSmartIri))
+                   .findActiveById(ValueIri.unsafeFrom(response.valueIri))
                    .someOrFail(IllegalStateException("Value not found"))
     } yield updated
 
@@ -422,7 +422,7 @@ final case class TestHelper(
       uuid      <- Random.nextUUID
       value     <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value     <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -435,7 +435,7 @@ final case class TestHelper(
       "@id"              -> Json.Str(resource.iri.toString),
       "@type"            -> Json.Str(ontologyIri.makeClass("Thing").toComplexSchema.toIri),
       "anything:hasText" -> Json.Obj(
-        "@id"                           -> Json.Str(value.iri.toComplexSchema.toIri),
+        "@id"                           -> Json.Str(value.iri.value),
         "@type"                         -> Json.Str("knora-api:TextValue"),
         "knora-api:textValueAsXml"      -> Json.Str(textValueAsXml),
         "knora-api:textValueHasMapping" -> Json.Obj(
@@ -452,7 +452,7 @@ final case class TestHelper(
       uuid      <- Random.nextUUID
       value     <- valuesResponder.updateValueV2(updateVal, rootUser, uuid)
       value     <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -569,7 +569,7 @@ final case class TestHelper(
                   ZIO
                     .foreach(vs) { v =>
                       valueRepo
-                        .findActiveById(ValueIri.unsafeFrom(v.valueIri.toSmartIri))
+                        .findActiveById(ValueIri.unsafeFrom(v.valueIri))
                         .someOrFail(IllegalStateException("Value not found"))
                     }
                     .map((s, _))

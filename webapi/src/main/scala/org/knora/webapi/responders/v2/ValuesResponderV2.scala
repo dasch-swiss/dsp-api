@@ -45,8 +45,8 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
@@ -429,7 +429,7 @@ final case class ValuesResponderV2(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           maybeValueIri,
-          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID)),
+          ValueIri.makeNew(resourceInfo.resourceIri, newValueUUID).value,
         )
 
       // Make a creation date for the new value
@@ -596,7 +596,7 @@ final case class ValuesResponderV2(
       _ <- valueRepo.updateValuePermissions(
              projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM),
              resourceIri = InternalIri(resourceInfo.resourceIri),
-             valueIri = ValueIri.unsafeFrom(currentValue.valueIri.toSmartIri),
+             valueIri = ValueIri.unsafeFrom(currentValue.valueIri),
              newPermissions = newValuePermissionLiteral,
              currentTime = Instant.now,
            )
@@ -886,7 +886,7 @@ final case class ValuesResponderV2(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           newValueVersionIri,
-          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri),
+          ValueIri.makeNew(resourceInfo.resourceIri).value,
         )
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
@@ -1092,7 +1092,7 @@ final case class ValuesResponderV2(
   ): Task[SuccessResponseV2] =
     canRemoveValue(req, requestingUser, onlyHistory).flatMap { case (_, _, value) =>
       for {
-        valueIri         <- ZIO.succeed(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+        valueIri         <- ZIO.succeed(ValueIri.unsafeFrom(value.valueIri))
         _                <- failBadRequestForStandoffWithLinks(value)
         allPrevious      <- valueRepo.findAllPrevious(valueIri)
         isLink            = cond(value) { case _: ReadLinkValueV2 => true }
@@ -1422,7 +1422,7 @@ final case class ValuesResponderV2(
                         project = resourceInfo.projectADM,
                         resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                         propertyIri = PropertyIri.unsafeFrom(propertyIri),
-                        valueIri = ValueIri.unsafeFrom(currentValue.valueIri.toSmartIri),
+                        valueIri = ValueIri.unsafeFrom(currentValue.valueIri),
                         maybeDeleteComment = deleteComment,
                         linkUpdates = linkUpdates,
                         currentTime = deleteDate.getOrElse(Instant.now),
@@ -1766,7 +1766,7 @@ final case class ValuesResponderV2(
       newLinkValueIri <-
         iriService.checkOrCreateEntityIri(
           customNewLinkValueIri,
-          stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri),
+          ValueIri.makeNew(sourceResourceInfo.resourceIri).value,
         )
 
       linkUpdate =
@@ -1922,7 +1922,7 @@ final case class ValuesResponderV2(
           newLinkValueIri <-
             iriService.checkOrCreateEntityIri(
               customNewLinkValueIri,
-              stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri),
+              ValueIri.makeNew(sourceResourceInfo.resourceIri).value,
             )
 
         } yield SparqlTemplateLinkUpdate(
@@ -1969,7 +1969,7 @@ final case class ValuesResponderV2(
    * @return the new value IRI.
    */
   private def makeUnusedValueIri(resourceIri: IRI): Task[IRI] =
-    iriService.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri))
+    iriService.makeUnusedIri(ValueIri.makeNew(resourceIri).value)
 }
 
 object ValuesResponderV2 {

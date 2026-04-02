@@ -1514,21 +1514,6 @@ class StringFormatter private (
   }
 
   /**
-   * Creates a new value IRI based on a UUID.
-   *
-   * @param resourceIri the IRI of the resource that will contain the value.
-   * @param givenUUID   the optional given UUID of the value. If not provided, create a random one.
-   * @return a new value IRI.
-   */
-  def makeRandomValueIri(resourceIri: IRI, givenUUID: Option[UUID] = None): IRI = {
-    val valueUUID = givenUUID match {
-      case Some(uuid: UUID) => UuidUtil.base64Encode(uuid)
-      case _                => UuidUtil.makeRandomBase64EncodedUuid
-    }
-    s"$resourceIri/values/$valueUUID"
-  }
-
-  /**
    * Creates a mapping IRI based on a project IRI and a mapping name.
    *
    * @param projectIri the IRI of the project the mapping will belong to.

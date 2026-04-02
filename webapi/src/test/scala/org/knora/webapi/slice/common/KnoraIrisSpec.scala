@@ -11,8 +11,8 @@ import zio.test.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.KnoraIrisSpec.test
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.service.IriConverter
 object KnoraIrisSpec extends ZIOSpecDefault {
 
@@ -103,7 +103,7 @@ object KnoraIrisSpec extends ZIOSpecDefault {
           for {
             sIri  <- converter(_.asSmartIri(iri))
             actual = ValueIri.from(sIri)
-          } yield assertTrue(actual.map(_.smartIri) == Right(sIri))
+          } yield assertTrue(actual.map(_.value) == Right(sIri.toString))
         }
       },
       test("should fail for an invalid ValueIri") {

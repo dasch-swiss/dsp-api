@@ -14,6 +14,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 
 /**
  * Holds an optional, mutable IRI for use in tests.
@@ -45,7 +46,7 @@ class MutableTestIri { self =>
   def asUserIri: UserIri                                       = UserIri.unsafeFrom(self.get)
   def asGroupIri: GroupIri                                     = GroupIri.unsafeFrom(self.get)
   def asResourceIri: ResourceIri                               = ResourceIri.unsafeFrom(self.get)
-  def asValueIri(implicit sf: StringFormatter): ValueIri       = ValueIri.unsafeFrom(self.get.toSmartIri)
+  def asValueIri: ValueIri                                     = ValueIri.unsafeFrom(self.get)
 
   override def toString: String = maybeIri match {
     case Some(iri) => iri

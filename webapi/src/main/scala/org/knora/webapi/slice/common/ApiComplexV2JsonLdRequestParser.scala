@@ -41,6 +41,7 @@ import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.mapping.CreateStandoffMappingForm
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
@@ -400,9 +401,10 @@ final case class ApiComplexV2JsonLdRequestParser(
       customValueUuid         <- v.valueHasUuidOption
       customValueCreationDate <- v.valueCreationDateOption
       permissions             <- v.hasPermissionsOption
+      valueSmartIri           <- ZIO.foreach(v.valueIri)(vi => converter.asSmartIri(vi).mapError(_.getMessage))
     } yield (
       v.propertyIri,
-      CreateValueInNewResourceV2(cnt, v.valueIri.map(_.smartIri), customValueUuid, customValueCreationDate, permissions),
+      CreateValueInNewResourceV2(cnt, valueSmartIri, customValueUuid, customValueCreationDate, permissions),
     )
 
   def attachedToUser(r: Resource, requestingUser: User, projectIri: ProjectIri): IO[String, User] =
@@ -450,26 +452,28 @@ final case class ApiComplexV2JsonLdRequestParser(
   def updateValueV2fromJsonLd(str: String): IO[String, UpdateValueV2] =
     ZIO.scoped {
       for {
-        r                  <- RootResource.fromJsonLd(str)
-        resourceIri        <- r.resourceIriOrFail
-        v                  <- ValueResource.from(r)
-        valueIri           <- v.valueIriOrFail
-        valueCreationDate  <- v.valueCreationDateOption
-        valuePermissions   <- v.hasPermissionsOption
-        newValueVersionIri <- newValueVersionIri(v, valueIri)
-        valueContent       <- getValueContent(v, resourceIri.shortcode).map(Some(_)).orElse(ZIO.none)
-        updateValue        <- (valueContent, valuePermissions) match
+        r                       <- RootResource.fromJsonLd(str)
+        resourceIri             <- r.resourceIriOrFail
+        v                       <- ValueResource.from(r)
+        valueIri                <- v.valueIriOrFail
+        valueCreationDate       <- v.valueCreationDateOption
+        valuePermissions        <- v.hasPermissionsOption
+        newValueVersionIri      <- newValueVersionIri(v, valueIri)
+        newValueVersionSmartIri <-
+          ZIO.foreach(newValueVersionIri)(v => converter.asSmartIri(v).mapError(_.getMessage))
+        valueContent <- getValueContent(v, resourceIri.shortcode).map(Some(_)).orElse(ZIO.none)
+        updateValue  <- (valueContent, valuePermissions) match
                          case (Some(valueContentV2), _) =>
                            ZIO.succeed(
                              UpdateValueContentV2(
                                resourceIri.value,
                                r.resourceClassSmartIri,
                                v.propertySmartIri,
-                               valueIri.smartIri.toString,
+                               valueIri.value,
                                valueContentV2,
                                valuePermissions,
                                valueCreationDate,
-                               newValueVersionIri.map(_.smartIri),
+                               newValueVersionSmartIri,
                              ),
                            )
                          case (_, Some(permissions)) =>
@@ -478,11 +482,11 @@ final case class ApiComplexV2JsonLdRequestParser(
                                resourceIri.value,
                                r.resourceClassSmartIri,
                                v.propertySmartIri,
-                               valueIri.smartIri.toString,
+                               valueIri.value,
                                v.valueType,
                                permissions,
                                valueCreationDate,
-                               newValueVersionIri.map(_.smartIri),
+                               newValueVersionSmartIri,
                              ),
                            )
                          case _ => ZIO.fail("No value content or permissions provided")
@@ -502,12 +506,13 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueCreationDate <- v.valueCreationDateOption
         valuePermissions  <- v.hasPermissionsOption
         valueContent      <- getValueContent(v, resourceIri.shortcode)
+        valueSmartIri     <- ZIO.foreach(v.valueIri)(vi => converter.asSmartIri(vi).mapError(_.getMessage))
       } yield CreateValueV2(
         resourceIri.value,
         r.resourceClassSmartIri,
         v.propertyIri.smartIri,
         valueContent,
-        v.valueIri.map(_.smartIri),
+        valueSmartIri,
         valueUuid,
         valueCreationDate,
         valuePermissions,

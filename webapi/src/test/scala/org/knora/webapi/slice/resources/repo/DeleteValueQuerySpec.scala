@@ -20,8 +20,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 
 object DeleteValueQuerySpec extends ZIOSpecDefault {
 
@@ -43,7 +43,7 @@ object DeleteValueQuerySpec extends ZIOSpecDefault {
   )
   private val testResourceIri    = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing1")
   private val testPropertyIri    = PropertyIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri)
-  private val testValueIri       = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing1/values/value1".toSmartIri)
+  private val testValueIri       = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing1/values/value1")
   private val testCurrentTime    = Instant.parse("2024-01-15T10:30:00Z")
   private val testRequestingUser = UserIri.unsafeFrom("http://rdfh.ch/users/root")
 

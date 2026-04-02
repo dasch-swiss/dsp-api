@@ -26,8 +26,8 @@ import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_String_Property
 import org.knora.webapi.slice.common.jena.ResourceOps.*
@@ -126,7 +126,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     triplestore
       .query(Select(query))
       .map(_.getFirstRow)
-      .map(_.flatMap(row => row.rowMap.get("previous").map(_.toSmartIri).map(ValueIri.unsafeFrom)))
+      .map(_.flatMap(row => row.rowMap.get("previous").map(ValueIri.unsafeFrom)))
   }
 
   def eraseValue(project: KnoraProject)(valueIri: ValueIri): Task[Unit] = {
