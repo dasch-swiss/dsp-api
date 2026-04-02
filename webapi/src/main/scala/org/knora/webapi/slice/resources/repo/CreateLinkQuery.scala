@@ -17,7 +17,6 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf
 import zio.IO
-import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
@@ -58,10 +57,7 @@ object CreateLinkQuery extends QueryBuilderHelper {
     newValueUUID: UUID,
     creationDate: Instant,
     maybeComment: Option[String],
-  ): IO[SparqlGenerationException, ModifyQuery] = {
-    inline def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
-      ZIO.fail(SparqlGenerationException(message)).when(condition).unit
-
+  ): IO[SparqlGenerationException, ModifyQuery] =
     for {
       _ <- failIf(!linkUpdate.insertDirectLink, "linkUpdate.insertDirectLink must be true in this SPARQL template")
       _ <- failIf(linkUpdate.directLinkExists, "linkUpdate.directLinkExists must be false in this SPARQL template")
@@ -178,5 +174,4 @@ object CreateLinkQuery extends QueryBuilderHelper {
         .insert(insertPatterns*)
         .where(wherePatterns*)
     }
-  }
 }
