@@ -127,7 +127,7 @@ jobs:
 
   test-e2e:
     name: Build and E2E test
-    runs-on: ubuntu-latest # previously: buildjet-32vcpu-ubuntu-2204
+    runs-on: ubuntu-latest-large-runner
     concurrency:
       group: ${{ github.ref }}-e2e
       cancel-in-progress: true

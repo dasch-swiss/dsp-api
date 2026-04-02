@@ -57,11 +57,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     currentTime: Instant,
     requestingUser: UserIri,
-  ): IO[SparqlGenerationException, ModifyQuery] = {
-    // Validate preconditions for all link updates
-    inline def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
-      ZIO.fail(SparqlGenerationException(message)).when(condition).unit
-
+  ): IO[SparqlGenerationException, ModifyQuery] =
     ZIO
       .foreach(linkUpdates.zipWithIndex) { case (lu, _) =>
         for {
@@ -210,5 +206,4 @@ object DeleteValueQuery extends QueryBuilderHelper {
           .insert(insertPatterns*)
           .where(wherePatterns*)
       }
-  }
 }
