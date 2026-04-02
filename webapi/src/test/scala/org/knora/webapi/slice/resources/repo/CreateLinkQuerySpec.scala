@@ -15,13 +15,30 @@ import dsp.errors.SparqlGenerationException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.api.admin.model.Project
 
 object CreateLinkQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private val testDataNamedGraph      = "http://www.knora.org/data/0001/anything"
+  private val testProject = Project(
+    ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
+    Shortname.unsafeFrom("anything"),
+    Shortcode.unsafeFrom("0001"),
+    None,
+    Seq(StringLiteralV2.from("Test project")),
+    List.empty,
+    None,
+    Seq.empty,
+    Status.Active,
+    SelfJoin.CannotJoin,
+    Set.empty,
+    Set.empty,
+  )
+
   private val testResourceIri         = "http://rdfh.ch/0001/thing1"
   private val testLinkPropertyIri     = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri
   private val testLinkTargetIri       = "http://rdfh.ch/0001/thing2"
@@ -55,7 +72,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
       test("should produce correct query when linkTargetExists and no comment") {
         for {
           query <- CreateLinkQuery.build(
-                     testDataNamedGraph,
+                     testProject,
                      testResourceIri,
                      createValidLinkUpdate(),
                      testNewValueUUID,
@@ -107,7 +124,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
       test("should produce correct query when linkTargetExists with comment") {
         for {
           query <- CreateLinkQuery.build(
-                     testDataNamedGraph,
+                     testProject,
                      testResourceIri,
                      createValidLinkUpdate(),
                      testNewValueUUID,
@@ -160,7 +177,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
       test("should produce correct query when linkTargetExists is false") {
         for {
           query <- CreateLinkQuery.build(
-                     testDataNamedGraph,
+                     testProject,
                      testResourceIri,
                      createValidLinkUpdate(linkTargetExists = false),
                      testNewValueUUID,
@@ -219,7 +236,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
           newLinkValuePermissions = testNewLinkValuePerms,
         )
         val effect = CreateLinkQuery.build(
-          testDataNamedGraph,
+          testProject,
           testResourceIri,
           invalidLinkUpdate,
           testNewValueUUID,
@@ -247,7 +264,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
           newLinkValuePermissions = testNewLinkValuePerms,
         )
         val effect = CreateLinkQuery.build(
-          testDataNamedGraph,
+          testProject,
           testResourceIri,
           invalidLinkUpdate,
           testNewValueUUID,
@@ -275,7 +292,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
           newLinkValuePermissions = testNewLinkValuePerms,
         )
         val effect = CreateLinkQuery.build(
-          testDataNamedGraph,
+          testProject,
           testResourceIri,
           invalidLinkUpdate,
           testNewValueUUID,

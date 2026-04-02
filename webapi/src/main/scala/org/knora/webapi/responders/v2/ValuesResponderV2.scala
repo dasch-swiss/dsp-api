@@ -370,7 +370,6 @@ final case class ValuesResponderV2(
     value match {
       case linkValueContent: LinkValueContentV2 =>
         createLinkValueV2AfterChecks(
-          dataNamedGraph = dataNamedGraph,
           resourceInfo = resourceInfo,
           linkPropertyIri = propertyIri,
           linkValueContent = linkValueContent,
@@ -488,7 +487,6 @@ final case class ValuesResponderV2(
   /**
    * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
    *
-   * @param dataNamedGraph   the named graph in which the link is to be created.
    * @param resourceInfo     information about the the resource in which to create the value.
    * @param linkPropertyIri  the link property.
    * @param linkValueContent a [[LinkValueContentV2]] specifying the target resource.
@@ -499,7 +497,6 @@ final case class ValuesResponderV2(
    * @return an [[UnverifiedValueV2]].
    */
   private def createLinkValueV2AfterChecks(
-    dataNamedGraph: IRI,
     resourceInfo: ReadResourceV2,
     linkPropertyIri: SmartIri,
     linkValueContent: LinkValueContentV2,
@@ -531,7 +528,7 @@ final case class ValuesResponderV2(
 
       // Generate a SPARQL update.
       sparqlUpdate <- CreateLinkQuery.build(
-                        dataNamedGraph = dataNamedGraph,
+                        project = resourceInfo.projectADM,
                         resourceIri = resourceInfo.resourceIri,
                         linkUpdate = sparqlTemplateLinkUpdate,
                         newValueUUID = newValueUUID,

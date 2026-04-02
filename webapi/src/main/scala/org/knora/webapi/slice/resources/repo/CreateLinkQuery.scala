@@ -26,6 +26,7 @@ import dsp.errors.SparqlGenerationException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 
@@ -43,7 +44,7 @@ object CreateLinkQuery extends QueryBuilderHelper {
   /**
    * Builds a SPARQL UPDATE query to create a link between two resources.
    *
-   * @param dataNamedGraph the named graph in which the project stores its data
+   * @param project        the project that owns the data graph
    * @param resourceIri    the resource that is the source of the link
    * @param linkUpdate     a [[SparqlTemplateLinkUpdate]] specifying the link to create
    * @param newValueUUID   the UUID to be attached to the value
@@ -51,7 +52,7 @@ object CreateLinkQuery extends QueryBuilderHelper {
    * @param maybeComment   an optional comment on the link
    */
   def build(
-    dataNamedGraph: IRI,
+    project: Project,
     resourceIri: IRI,
     linkUpdate: SparqlTemplateLinkUpdate,
     newValueUUID: UUID,
@@ -66,7 +67,7 @@ object CreateLinkQuery extends QueryBuilderHelper {
       _ <- failIf(linkUpdate.directLinkExists, "linkUpdate.directLinkExists must be false in this SPARQL template")
       _ <- failIf(linkUpdate.linkValueExists, "linkUpdate.linkValueExists must be false in this SPARQL template")
     } yield {
-      val dataGraph         = Rdf.iri(dataNamedGraph)
+      val dataGraph         = graphIri(project)
       val resource          = Rdf.iri(resourceIri)
       val linkProperty      = toRdfIri(linkUpdate.linkPropertyIri)
       val linkValueProperty = Rdf.iri(linkUpdate.linkPropertyIri.toInternalSchema.toIri + "Value")
