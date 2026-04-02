@@ -1501,7 +1501,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not update a resource's metadata if the user does not have permission to update the resource") {
         val updateRequest = UpdateResourceMetadataRequestV2(
-          resourceIri = aThingIri,
+          resourceIri = ResourceIri.unsafeFrom(aThingIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLabel = Some("new test label"),
           requestingUser = incunabulaProjectAdminUser,
@@ -1512,7 +1512,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not update a resource's metadata if the user does not supply the correct resource class") {
         val updateRequest = UpdateResourceMetadataRequestV2(
-          resourceIri = aThingIri,
+          resourceIri = ResourceIri.unsafeFrom(aThingIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing".toSmartIri,
           maybeLabel = Some("new test label"),
           requestingUser = anythingUser2,
@@ -1526,7 +1526,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         val newLabel                  = "new test label"
         val newPermissions            = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
         val updateRequest             = UpdateResourceMetadataRequestV2(
-          resourceIri = aThingIri,
+          resourceIri = ResourceIri.unsafeFrom(aThingIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLabel = Some(newLabel),
           maybePermissions = Some(newPermissions),
@@ -1547,7 +1547,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not update a resource's metadata if its knora-base:lastModificationDate exists but is not submitted") {
         val updateRequest = UpdateResourceMetadataRequestV2(
-          resourceIri = aThingIri,
+          resourceIri = ResourceIri.unsafeFrom(aThingIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLabel = Some("another new test label"),
           requestingUser = anythingUser2,
@@ -1558,7 +1558,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not update a resource's metadata if the wrong knora-base:lastModificationDate is submitted") {
         val updateRequest = UpdateResourceMetadataRequestV2(
-          resourceIri = aThingIri,
+          resourceIri = ResourceIri.unsafeFrom(aThingIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLastModificationDate = Some(Instant.MIN),
           maybeLabel = Some("another new test label"),
@@ -1571,7 +1571,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test("update a resource's metadata when it has a knora-base:lastModificationDate") {
         val newLabel      = "another new test label"
         val updateRequest = UpdateResourceMetadataRequestV2(
-          resourceIri = aThingIri,
+          resourceIri = ResourceIri.unsafeFrom(aThingIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLastModificationDate = Some(aThingLastModificationDate),
           maybeLabel = Some(newLabel),
@@ -1593,7 +1593,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         "not update a resource's knora-base:lastModificationDate with a value that's earlier than the current value",
       ) {
         val updateRequest = UpdateResourceMetadataRequestV2(
-          resourceIri = aThingIri,
+          resourceIri = ResourceIri.unsafeFrom(aThingIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLastModificationDate = Some(aThingLastModificationDate),
           maybeNewModificationDate = Some(Instant.MIN),
@@ -1606,7 +1606,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test("update a resource's knora-base:lastModificationDate") {
         val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
         val updateRequest       = UpdateResourceMetadataRequestV2(
-          resourceIri = aThingIri,
+          resourceIri = ResourceIri.unsafeFrom(aThingIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLastModificationDate = Some(aThingLastModificationDate),
           maybeNewModificationDate = Some(newModificationDate),
@@ -2245,7 +2245,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test("update resource's metadata to test update resource metadata event") {
         val resourceIri   = "http://rdfh.ch/0001/thing_with_BCE_date2"
         val updateRequest = UpdateResourceMetadataRequestV2(
-          resourceIri = resourceIri,
+          resourceIri = ResourceIri.unsafeFrom(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLabel = Some("a new label"),
           requestingUser = anythingUser2,

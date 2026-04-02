@@ -186,12 +186,12 @@ final case class ResourcesResponderV2(
       for {
         // Get the metadata of the resource to be updated.
         resourcesSeq <- getResourcePreviewWithDeletedResource(
-                          resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
+                          resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri.value),
                           targetSchema = ApiV2Complex,
                           requestingUser = updateResourceMetadataRequestV2.requestingUser,
                         )
 
-        resource: ReadResourceV2 <- resourcesSeq.toResource(updateResourceMetadataRequestV2.resourceIri)
+        resource: ReadResourceV2 <- resourcesSeq.toResource(updateResourceMetadataRequestV2.resourceIri.value)
         internalResourceClassIri  = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
 
         // Make sure that the resource's class is what the client thinks it is.
@@ -214,15 +214,12 @@ final case class ResourcesResponderV2(
         project <- projectService
                      .findById(resource.projectADM.id)
                      .someOrFail(NotFoundException.notFound(resource.projectADM.id))
-        resourceIri <- iriConverter
-                         .asResourceIri(updateResourceMetadataRequestV2.resourceIri)
-                         .mapError(BadRequestException.apply)
         resourceClassIri <- iriConverter
                               .asResourceClassIri(internalResourceClassIri)
                               .mapError(BadRequestException.apply)
         lmdAndUpdate <- ChangeResourceMetadataQuery.build(
                           project,
-                          resourceIri,
+                          updateResourceMetadataRequestV2.resourceIri,
                           resourceClassIri,
                           updateResourceMetadataRequestV2.maybeLastModificationDate.map(LastModificationDate.from),
                           updateResourceMetadataRequestV2.maybeNewModificationDate.map(LastModificationDate.from),
@@ -236,7 +233,7 @@ final case class ResourcesResponderV2(
 
         updatedResourcesSeq <-
           getResourcePreviewWithDeletedResource(
-            resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
+            resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri.value),
             targetSchema = ApiV2Complex,
             requestingUser = updateResourceMetadataRequestV2.requestingUser,
           )
@@ -268,7 +265,7 @@ final case class ResourcesResponderV2(
              }
 
       } yield UpdateResourceMetadataResponseV2(
-        resourceIri = updateResourceMetadataRequestV2.resourceIri,
+        resourceIri = updateResourceMetadataRequestV2.resourceIri.value,
         resourceClassIri = updateResourceMetadataRequestV2.resourceClassIri,
         maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
         maybePermissions = updateResourceMetadataRequestV2.maybePermissions,

@@ -602,7 +602,7 @@ case class CreateResourceRequestV2(
  * @param maybeNewModificationDate  the resource's new last modification date, if any.
  */
 case class UpdateResourceMetadataRequestV2(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   maybeLastModificationDate: Option[Instant] = None,
   maybeLabel: Option[String] = None,

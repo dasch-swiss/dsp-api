@@ -137,7 +137,7 @@ final case class ApiComplexV2JsonLdRequestParser(
              .fail("No updated resource metadata provided")
              .when(label.isEmpty && permissions.isEmpty && newModificationDate.isEmpty)
     } yield UpdateResourceMetadataRequestV2(
-      resourceIri.value,
+      resourceIri,
       r.resourceClassSmartIri,
       lastModificationDate,
       label,
