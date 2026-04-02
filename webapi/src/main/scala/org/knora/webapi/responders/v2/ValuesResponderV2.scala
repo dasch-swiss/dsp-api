@@ -529,7 +529,7 @@ final case class ValuesResponderV2(
       // Generate a SPARQL update.
       sparqlUpdate <- CreateLinkQuery.build(
                         project = resourceInfo.projectADM,
-                        resourceIri = resourceInfo.resourceIri,
+                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
                         linkUpdate = sparqlTemplateLinkUpdate,
                         newValueUUID = newValueUUID,
                         creationDate = creationDate,

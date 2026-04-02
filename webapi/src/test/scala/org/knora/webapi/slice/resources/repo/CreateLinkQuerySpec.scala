@@ -19,6 +19,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 
 object CreateLinkQuerySpec extends ZIOSpecDefault {
 
@@ -39,7 +40,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
     Set.empty,
   )
 
-  private val testResourceIri         = "http://rdfh.ch/0001/thing1"
+  private val testResourceIri         = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing1".toSmartIri)
   private val testLinkPropertyIri     = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri
   private val testLinkTargetIri       = "http://rdfh.ch/0001/thing2"
   private val testNewLinkValueIri     = "http://rdfh.ch/0001/thing1/values/newLinkValue"

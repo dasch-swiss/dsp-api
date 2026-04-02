@@ -24,9 +24,9 @@ import java.util.UUID
 
 import dsp.errors.SparqlGenerationException
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 
@@ -53,7 +53,7 @@ object CreateLinkQuery extends QueryBuilderHelper {
    */
   def build(
     project: Project,
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     linkUpdate: SparqlTemplateLinkUpdate,
     newValueUUID: UUID,
     creationDate: Instant,
@@ -68,7 +68,7 @@ object CreateLinkQuery extends QueryBuilderHelper {
       _ <- failIf(linkUpdate.linkValueExists, "linkUpdate.linkValueExists must be false in this SPARQL template")
     } yield {
       val dataGraph         = graphIri(project)
-      val resource          = Rdf.iri(resourceIri)
+      val resource          = toRdfIri(resourceIri)
       val linkProperty      = toRdfIri(linkUpdate.linkPropertyIri)
       val linkValueProperty = Rdf.iri(linkUpdate.linkPropertyIri.toInternalSchema.toIri + "Value")
       val linkTarget        = Rdf.iri(linkUpdate.linkTargetIri)
