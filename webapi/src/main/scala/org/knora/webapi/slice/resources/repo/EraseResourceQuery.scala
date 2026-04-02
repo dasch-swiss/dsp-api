@@ -12,8 +12,8 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 
 import org.knora.webapi.slice.api.admin.model.Project
-import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 
 object EraseResourceQuery extends QueryBuilderHelper {

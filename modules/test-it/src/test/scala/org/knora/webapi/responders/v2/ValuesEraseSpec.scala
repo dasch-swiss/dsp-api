@@ -30,8 +30,8 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.resources.repo.service.ActiveValue
 import org.knora.webapi.slice.resources.repo.service.ResourceModel
 import org.knora.webapi.slice.resources.repo.service.ResourceModel.ActiveResource

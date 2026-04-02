@@ -43,8 +43,8 @@ import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.resources.repo.GetStandoffTagByUUIDQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -1922,7 +1922,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not erase a resource if another resource has a link to it") {
         val resourceWithLinkIri = ResourceIri.makeNew(anythingProject.shortcode)
-        val resourceClassIri =
+        val resourceClassIri    =
           ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
         val linkValuePropertyIri =
           PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri)

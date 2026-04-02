@@ -17,8 +17,8 @@ import java.time.Instant
 
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.model.Project
-import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 
 object DeleteResourceQuery extends QueryBuilderHelper {
