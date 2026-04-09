@@ -1206,7 +1206,7 @@ final case class ResourcesResponderV2(
 
     for {
       // Make a Gravsearch query.
-      resIri                         <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri.toSmartIri))
+      resIri                         <- ZIO.fromEither(ResourceIri.from(resourceIri.toSmartIri)).mapError(BadRequestException(_))
       gravsearchQueryForIncomingLinks = GetIncomingImageLinksGravsearchQuery.build(resIri)
 
       // Run the query.
