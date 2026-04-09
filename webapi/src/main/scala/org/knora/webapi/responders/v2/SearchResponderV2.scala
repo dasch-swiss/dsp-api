@@ -20,7 +20,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.ErrorHandlingMap
@@ -57,6 +56,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.slice.resources.repo.GetResourcesByClassInProjectPrequery
+import org.knora.webapi.slice.search.repo.SearchFulltextQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -517,19 +517,16 @@ final case class SearchResponderV2Live(
       _                    <- ensureIsFulltextSearch(searchValue)
       searchValue          <- validateSearchString(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
-      countSparql          <- ZIO.attempt(
-                       sparql.v2.txt
-                         .searchFulltext(
-                           searchTerms = LuceneQueryString(searchValue),
-                           limitToProject = limitToProject.map(_.value),
-                           limitToResourceClass = limitToResourceClass.map(_.toInternalSchema.toString),
-                           limitToStandoffClass = limitToStandoffClass.map(_.toString),
-                           returnFiles = false, // not relevant for a count query
-                           separator = None,    // no separator needed for count query
-                           limit = 1,
-                           offset = 0,
-                           countQuery = true, // do not get the resources themselves, but the sum of results
-                         ),
+      countSparql          <- SearchFulltextQuery.build(
+                       searchTerms = LuceneQueryString(searchValue),
+                       limitToProject = limitToProject,
+                       limitToResourceClass = limitToResourceClass,
+                       limitToStandoffClass = limitToStandoffClass,
+                       returnFiles = false, // not relevant for a count query
+                       separator = None,    // no separator needed for count query
+                       limit = 1,
+                       offset = 0,
+                       countQuery = true, // do not get the resources themselves, but the sum of results
                      )
       bindings <- triplestore.query(Select(countSparql)).map(_.results.bindings)
       count    <- // query response should contain one result with one row with the name "count"
@@ -569,21 +566,17 @@ final case class SearchResponderV2Live(
       _                    <- ensureIsFulltextSearch(searchValue)
       searchValue          <- validateSearchString(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
-      searchSparql         <-
-        ZIO.attempt(
-          sparql.v2.txt
-            .searchFulltext(
-              searchTerms = LuceneQueryString(searchValue),
-              limitToProject = limitToProject.map(_.value),
-              limitToResourceClass = limitToResourceClass.map(_.toInternalSchema.toString),
-              limitToStandoffClass = limitToStandoffClass.map(_.toString),
-              returnFiles = returnFiles,
-              separator = Some(StringFormatter.INFORMATION_SEPARATOR_ONE),
-              limit = appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage, // determine the actual offset
-              countQuery = false,
-            ),
-        )
+      searchSparql         <- SearchFulltextQuery.build(
+                        searchTerms = LuceneQueryString(searchValue),
+                        limitToProject = limitToProject,
+                        limitToResourceClass = limitToResourceClass,
+                        limitToStandoffClass = limitToStandoffClass,
+                        returnFiles = returnFiles,
+                        separator = Some(StringFormatter.INFORMATION_SEPARATOR_ONE),
+                        limit = appConfig.v2.resourcesSequence.resultsPerPage,
+                        offset = offset * appConfig.v2.resourcesSequence.resultsPerPage, // determine the actual offset
+                        countQuery = false,
+                      )
 
       prequeryResponseNotMerged <- triplestore.query(Select(searchSparql))
 
