@@ -46,7 +46,7 @@ object SearchFulltextQuerySpec extends ZIOSpecDefault {
               |WHERE {
               |    {
               |        SELECT DISTINCT ?matchingSubject WHERE {
-              |            ?matchingSubject <http://jena.apache.org/text#query> 'test' .
+              |            ?matchingSubject <http://jena.apache.org/text#query> "test" .
               |        }
               |    }
               |    OPTIONAL {
@@ -103,7 +103,7 @@ object SearchFulltextQuerySpec extends ZIOSpecDefault {
               |WHERE {
               |    {
               |        SELECT DISTINCT ?matchingSubject WHERE {
-              |            ?matchingSubject <http://jena.apache.org/text#query> 'test' .
+              |            ?matchingSubject <http://jena.apache.org/text#query> "test" .
               |        }
               |    }
               |    OPTIONAL {
@@ -165,7 +165,7 @@ object SearchFulltextQuerySpec extends ZIOSpecDefault {
                |WHERE {
                |    {
                |        SELECT DISTINCT ?matchingSubject WHERE {
-               |            ?matchingSubject <http://jena.apache.org/text#query> 'test' .
+               |            ?matchingSubject <http://jena.apache.org/text#query> "test" .
                |        }
                |    }
                |    OPTIONAL {
@@ -226,7 +226,7 @@ object SearchFulltextQuerySpec extends ZIOSpecDefault {
                |WHERE {
                |    {
                |        SELECT DISTINCT ?matchingSubject WHERE {
-               |            ?matchingSubject <http://jena.apache.org/text#query> 'test search' .
+               |            ?matchingSubject <http://jena.apache.org/text#query> "test search" .
                |    ?matchingSubject a knora-base:TextValue ;
                |        knora-base:valueHasString ?literal ;
                |        knora-base:valueHasStandoff ?standoffNode .
@@ -234,8 +234,8 @@ object SearchFulltextQuerySpec extends ZIOSpecDefault {
                |        knora-base:standoffTagHasStart ?start ;
                |        knora-base:standoffTagHasEnd ?end .
                |    BIND(SUBSTR(?literal, ?start+1, ?end - ?start) AS ?markedup)
-               |    FILTER REGEX(?markedup, 'test', "i")
-               |    FILTER REGEX(?markedup, 'search', "i")
+               |    FILTER REGEX(?markedup, "test", "i")
+               |    FILTER REGEX(?markedup, "search", "i")
                |        }
                |    }
                |    OPTIONAL {

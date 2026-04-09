@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.search.repo
 
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.IO
 
 import dsp.errors.SparqlGenerationException
@@ -16,8 +17,11 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 object SearchFulltextQuery extends QueryBuilderHelper {
 
-  // Built via string interpolation because the query uses GROUP_CONCAT, subqueries,
-  // BIND/COALESCE, SUBSTR, and REGEX — none of which are supported by the rdf4j SparqlBuilder.
+  // The overall query structure (SELECT with GROUP_CONCAT, subqueries, BIND/COALESCE, SUBSTR)
+  // is assembled via string interpolation because these features are not supported by the
+  // rdf4j SparqlBuilder. Individual values — especially user-supplied search terms and dynamic
+  // IRIs — are built through rdf4j's Rdf.literalOf / Rdf.iri to ensure proper escaping and
+  // guard against SPARQL injection.
   def build(
     searchTerms: LuceneQueryString,
     limitToProject: Option[ProjectIri],
@@ -39,16 +43,22 @@ object SearchFulltextQuery extends QueryBuilderHelper {
           s"""SELECT DISTINCT ?resource
              |       (GROUP_CONCAT(IF(BOUND(?valueObject), STR(?valueObject), ""); SEPARATOR="${separator.get}") AS ?valueObjectConcat)""".stripMargin
 
+      // Escape user-supplied search terms via rdf4j to prevent SPARQL injection
+      val searchLiteral = Rdf.literalOf(searchTerms.getQueryString).getQueryString
+
       val standoffFilter = limitToStandoffClass.fold("") { standoffClassIri =>
+        val standoffIri = toRdfIri(standoffClassIri).getQueryString
+        // Escape each individual term via rdf4j before embedding in REGEX
         val regexFilters = searchTerms.getSingleTerms.map { term =>
-          s"""    FILTER REGEX(?markedup, '$term', "i")"""
+          val termLiteral = Rdf.literalOf(term).getQueryString
+          s"""    FILTER REGEX(?markedup, $termLiteral, "i")"""
         }.mkString("\n")
 
         s"""
            |    ?matchingSubject a knora-base:TextValue ;
            |        knora-base:valueHasString ?literal ;
            |        knora-base:valueHasStandoff ?standoffNode .
-           |    ?standoffNode a <$standoffClassIri> ;
+           |    ?standoffNode a $standoffIri ;
            |        knora-base:standoffTagHasStart ?start ;
            |        knora-base:standoffTagHasEnd ?end .
            |    BIND(SUBSTR(?literal, ?start+1, ?end - ?start) AS ?markedup)
@@ -56,12 +66,13 @@ object SearchFulltextQuery extends QueryBuilderHelper {
       }
 
       val resourceClassFilter = limitToResourceClass.fold("") { rc =>
-        val iri = rc.smartIri.toInternalSchema.toIri
-        s"\n    ?resourceClass rdfs:subClassOf* <$iri> ."
+        val iri = toRdfIri(rc).getQueryString
+        s"\n    ?resourceClass rdfs:subClassOf* $iri ."
       }
 
       val projectFilter = limitToProject.fold("") { p =>
-        s"\n    ?resource knora-base:attachedToProject <${p.value}> ."
+        val iri = toRdfIri(p).getQueryString
+        s"\n    ?resource knora-base:attachedToProject $iri ."
       }
 
       val fileValuesBlock =
@@ -87,7 +98,7 @@ object SearchFulltextQuery extends QueryBuilderHelper {
          |WHERE {
          |    {
          |        SELECT DISTINCT ?matchingSubject WHERE {
-         |            ?matchingSubject <http://jena.apache.org/text#query> '${searchTerms.getQueryString}' .$standoffFilter
+         |            ?matchingSubject <http://jena.apache.org/text#query> $searchLiteral .$standoffFilter
          |        }
          |    }
          |    OPTIONAL {
