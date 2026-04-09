@@ -68,6 +68,7 @@ import org.knora.webapi.slice.resources.repo.GetResourceValueVersionHistoryQuery
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
+import org.knora.webapi.slice.search.repo.GetIncomingImageLinksGravsearchQuery
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -1204,12 +1205,9 @@ final case class ResourcesResponderV2(
     // in the manifest should be.
 
     for {
-      // Make a Gravsearch query from a template.
-      gravsearchQueryForIncomingLinks <- ZIO.attempt(
-                                           org.knora.webapi.messages.twirl.queries.gravsearch.txt
-                                             .getIncomingImageLinks(resourceIri)
-                                             .toString(),
-                                         )
+      // Make a Gravsearch query.
+      resIri                         <- ZIO.fromEither(ResourceIri.from(resourceIri.toSmartIri)).mapError(BadRequestException(_))
+      gravsearchQueryForIncomingLinks = GetIncomingImageLinksGravsearchQuery.build(resIri)
 
       // Run the query.
 
