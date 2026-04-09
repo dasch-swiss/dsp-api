@@ -282,6 +282,39 @@ object SearchFulltextQuerySpec extends ZIOSpecDefault {
         )
       },
     ),
+    suite("escaping of user input")(
+      test("apostrophe in search term is correctly escaped") {
+        // The caller passes the raw user input — Rdf.literalOf handles SPARQL escaping.
+        val actual = SearchFulltextQuery.build(
+          searchTerms = LuceneQueryString("Knight's"),
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          separator = None,
+          limit = 1,
+          offset = 0,
+          countQuery = true,
+        )
+        // rdf4j escapes ' even in double-quoted literals (valid SPARQL, just conservative)
+        assertZIO(actual)(Assertion.containsString(""""Knight\'s""""))
+      },
+      test("double quote in search term is correctly escaped") {
+        val actual = SearchFulltextQuery.build(
+          searchTerms = LuceneQueryString("""say "hello""""),
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          separator = None,
+          limit = 1,
+          offset = 0,
+          countQuery = true,
+        )
+        // " is escaped to \" by Rdf.literalOf for the SPARQL double-quoted literal
+        assertZIO(actual)(Assertion.containsString(""""say \"hello\"""""))
+      },
+    ),
     suite("validation")(
       test("should fail when separator is missing for non-count query") {
         val effect = SearchFulltextQuery.build(

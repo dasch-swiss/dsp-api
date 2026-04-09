@@ -11,7 +11,6 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
-import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -515,7 +514,7 @@ final case class SearchResponderV2Live(
   ): Task[ResourceCountV2] =
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
-      searchValue          <- validateSearchString(searchValue)
+      _                    <- validateSearchString(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       countSparql          <- SearchFulltextQuery.build(
                        searchTerms = LuceneQueryString(searchValue),
@@ -564,7 +563,7 @@ final case class SearchResponderV2Live(
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
-      searchValue          <- validateSearchString(searchValue)
+      _                    <- validateSearchString(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       searchSparql         <- SearchFulltextQuery.build(
                         searchTerms = LuceneQueryString(searchValue),
@@ -1124,9 +1123,9 @@ final case class SearchResponderV2Live(
     limitToResourceClass: Option[ResourceClassIri],
   ): Task[ResourceCountV2] =
     for {
-      searchValue <- validateSearchString(searchValue)
-      _           <- ensureIsFulltextSearch(searchValue)
-      searchTerm  <- ApacheLuceneSupport
+      _          <- validateSearchString(searchValue)
+      _          <- ensureIsFulltextSearch(searchValue)
+      searchTerm <- ApacheLuceneSupport
                       .asLuceneQueryForSearchByLabel(searchValue)
                       .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
       countSparql    = SearchQueries.selectCountByLabel(searchTerm, limitToProject, limitToResourceClass)
@@ -1156,16 +1155,21 @@ final case class SearchResponderV2Live(
       .fail(BadRequestException("It looks like you are submitting a Gravsearch request to a full-text search route"))
       .when(searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname))
 
-  private def validateSearchString(searchStr: String) = {
+  private def validateSearchString(searchStr: String): Task[Unit] = {
     val searchValueMinLength = appConfig.v2.fulltextSearch.searchValueMinLength
-    ZIO
-      .fromOption(Iri.toSparqlEncodedString(searchStr))
-      .orElseFail(throw BadRequestException(s"Invalid search string: '$searchStr'"))
-      .filterOrElseWith(_.length >= searchValueMinLength) { it =>
-        val errorMsg =
-          s"A search value is expected to have at least length of $searchValueMinLength, but '$it' given of length ${it.length}."
-        ZIO.fail(BadRequestException(errorMsg))
-      }
+    for {
+      _ <- ZIO
+             .fail(BadRequestException(s"Invalid search string: '$searchStr'"))
+             .when(searchStr.isEmpty || searchStr.contains("\r"))
+      _ <-
+        ZIO
+          .fail(
+            BadRequestException(
+              s"A search value is expected to have at least length of $searchValueMinLength, but '$searchStr' given of length ${searchStr.length}.",
+            ),
+          )
+          .when(searchStr.length < searchValueMinLength)
+    } yield ()
   }
 
   override def searchResourcesByLabelV2(
@@ -1179,9 +1183,9 @@ final case class SearchResponderV2Live(
     val searchLimit  = appConfig.v2.resourcesSequence.resultsPerPage
     val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage
     for {
-      searchValue <- validateSearchString(searchValue)
-      _           <- ensureIsFulltextSearch(searchValue)
-      searchTerm  <- ApacheLuceneSupport
+      _          <- validateSearchString(searchValue)
+      _          <- ensureIsFulltextSearch(searchValue)
+      searchTerm <- ApacheLuceneSupport
                       .asLuceneQueryForSearchByLabel(searchValue)
                       .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
       searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(
