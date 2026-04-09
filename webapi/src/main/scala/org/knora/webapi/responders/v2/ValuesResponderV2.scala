@@ -61,6 +61,7 @@ import org.knora.webapi.slice.resources.repo.DeleteValueQuery
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
+import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGravsearchQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -1528,19 +1529,19 @@ final case class ValuesResponderV2(
           None
         }
 
-      // Convert the property IRIs to be queried to the API v2 complex schema for Gravsearch.
-      propertyIrisForGravsearchQuery =
-        (Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri)
-          .map(_.toOntologySchema(ApiV2Complex))
+      propertyIrisForGravsearchQuery <-
+        ZIO.foreach(
+          Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri,
+        )(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(BadRequestException(_)))
 
-      // Make a Gravsearch query from a template.
-      gravsearchQuery: String =
-        org.knora.webapi.messages.twirl.queries.gravsearch.txt
-          .getResourceWithSpecifiedProperties(
-            resourceIri = resourceIri,
-            propertyIris = propertyIrisForGravsearchQuery,
-          )
-          .toString()
+      resIri <- ZIO.fromEither(ResourceIri.from(resourceIri.toSmartIri)).mapError(BadRequestException(_))
+
+      // Make a Gravsearch query.
+      gravsearchQuery =
+        GetResourceWithSpecifiedPropertiesGravsearchQuery.build(
+          resourceIri = resIri,
+          propertyIris = propertyIrisForGravsearchQuery,
+        )
 
       // Run the query.
       query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))

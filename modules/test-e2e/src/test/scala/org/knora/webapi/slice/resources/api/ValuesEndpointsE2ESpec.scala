@@ -36,7 +36,9 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.api.v2.values.ReorderValuesRequest
 import org.knora.webapi.slice.api.v2.values.ReorderValuesResponse
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGravsearchQuery
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
@@ -116,13 +118,11 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
   }
 
   private def getResourceWithValues(resourceIri: IRI, propertyIrisForGravsearch: Seq[SmartIri]) = {
-    // Make a Gravsearch query from a template.
-    val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
-      .getResourceWithSpecifiedProperties(
-        resourceIri = resourceIri,
-        propertyIris = propertyIrisForGravsearch,
+    val gravsearchQuery: String =
+      GetResourceWithSpecifiedPropertiesGravsearchQuery.build(
+        resourceIri = ResourceIri.unsafeFrom(resourceIri.toSmartIri),
+        propertyIris = propertyIrisForGravsearch.map(PropertyIri.unsafeFrom),
       )
-      .toString()
     TestApiClient
       .postSparql(uri"/v2/searchextended", gravsearchQuery, anythingUser1)
       .flatMap(_.assert200)
