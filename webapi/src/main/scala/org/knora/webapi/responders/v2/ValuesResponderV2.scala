@@ -25,7 +25,6 @@ import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageVectorFil
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.*
@@ -54,6 +53,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.repo.ChangeLinkMetadataQuery
 import org.knora.webapi.slice.resources.repo.ChangeLinkTargetQuery
 import org.knora.webapi.slice.resources.repo.CreateLinkQuery
 import org.knora.webapi.slice.resources.repo.DeleteLinkQuery
@@ -700,7 +700,6 @@ final case class ValuesResponderV2(
                 newLinkValue: LinkValueContentV2,
               ) =>
             updateLinkValueV2AfterChecks(
-              dataNamedGraph = dataNamedGraph,
               resourceInfo = resourceInfo,
               linkPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
               currentLinkValue = currentLinkValue,
@@ -975,7 +974,6 @@ final case class ValuesResponderV2(
   /**
    * Changes a link, assuming that pre-update checks have already been done.
    *
-   * @param dataNamedGraph     the IRI of the named graph to be updated.
    * @param resourceInfo       information about the resource containing the link.
    * @param linkPropertyIri    the IRI of the link property.
    * @param currentLinkValue   a [[ReadLinkValueV2]] representing the `knora-base:LinkValue` for the existing link.
@@ -988,7 +986,6 @@ final case class ValuesResponderV2(
    * @return an [[UnverifiedValueV2]].
    */
   private def updateLinkValueV2AfterChecks(
-    dataNamedGraph: IRI,
     resourceInfo: ReadResourceV2,
     linkPropertyIri: SmartIri,
     currentLinkValue: ReadLinkValueV2,
@@ -1059,19 +1056,15 @@ final case class ValuesResponderV2(
             valuePermissions = valuePermissions,
           )
 
-        // Make a timestamp to indicate when the link value was updated.
-        currentTime: Instant = Instant.now
+        result <- ChangeLinkMetadataQuery.build(
+                    project = resourceInfo.projectADM,
+                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                    linkUpdate = sparqlTemplateLinkUpdate,
+                    maybeComment = newLinkValue.comment,
+                  )
+        (currentTime, sparqlUpdate) = result
 
-        sparqlUpdate = sparql.v2.txt.changeLinkMetadata(
-                         dataNamedGraph = dataNamedGraph,
-                         linkSourceIri = resourceInfo.resourceIri,
-                         linkUpdate = sparqlTemplateLinkUpdate,
-                         maybeComment = newLinkValue.comment,
-                         currentTime = currentTime,
-                         requestingUser = requestingUser.id,
-                       )
-
-        _ <- triplestoreService.query(Update(sparqlUpdate))
+        _ <- triplestoreService.query(sparqlUpdate)
       } yield UnverifiedValueV2(
         newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
         newValueUUID = currentLinkValue.valueHasUUID,
