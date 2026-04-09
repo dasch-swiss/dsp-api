@@ -16,6 +16,8 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 object SearchFulltextQuery extends QueryBuilderHelper {
 
+  // Built via string interpolation because the query uses GROUP_CONCAT, subqueries,
+  // BIND/COALESCE, SUBSTR, and REGEX — none of which are supported by the rdf4j SparqlBuilder.
   def build(
     searchTerms: LuceneQueryString,
     limitToProject: Option[ProjectIri],
