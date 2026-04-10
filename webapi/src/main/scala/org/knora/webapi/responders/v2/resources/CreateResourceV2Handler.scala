@@ -420,7 +420,7 @@ final case class CreateResourceV2Handler(
             newValueIri <-
               iriService.checkOrCreateEntityIri(
                 valueToCreate.customValueIri,
-                StringFormatter.makeValueIri(resourceIri, newValueUUID),
+                ValueIri.from(ResourceIri.unsafeFrom(resourceIri), newValueUUID).value,
               )
 
             // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
