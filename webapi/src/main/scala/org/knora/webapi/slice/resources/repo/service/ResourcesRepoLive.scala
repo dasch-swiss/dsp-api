@@ -202,7 +202,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     .asScala
     .map { stmt =>
       val p = PropertyIri.unsafeFrom(stmt.getPredicate.toString.toSmartIri)
-      val v = ValueIri.unsafeFrom(stmt.getObject.toString.toSmartIri)
+      val v = ValueIri.unsafeFrom(stmt.getObject.toString)
       (p, v)
     }
     .toList
@@ -237,7 +237,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val label                  = row.getRequired("label")
     val resourceClassIri       = row.getRequired("clazz", s => ResourceClassIri.from(s.toSmartIri))
     val hasStandoffLinkTo      = row.get("hasStandoffLinkTo", s => ResourceIri.from(s))
-    val hasStandoffLinkToValue = row.get("hasStandoffLinkToValue", s => ValueIri.from(s.toSmartIri))
+    val hasStandoffLinkToValue = row.get("hasStandoffLinkToValue", s => ValueIri.from(s))
     val attachedToUser         = row.getRequired("attachedToUser", UserIri.from)
     val creationDate           = row.getRequired("creationDate", s => Try(Instant.parse(s)).toEither.left.map(_.getMessage))
     val attachedToProject      = row.getRequired("attachedToProject", ProjectIri.from)

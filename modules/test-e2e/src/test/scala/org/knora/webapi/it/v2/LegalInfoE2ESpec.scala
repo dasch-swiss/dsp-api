@@ -355,8 +355,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
         ZIO
           .fromEither(s.uri.toRight("No URI found for value"))
           .mapError(Exception(_))
-          .flatMap(str => ZIO.serviceWithZIO[IriConverter](_.asSmartIri(str)))
-          .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).mapError(Exception(_)))
+          .flatMap(str => ZIO.fromEither(ValueIri.from(str)).mapError(Exception(_)))
       case Nil => ZIO.fail(Exception("No value found"))
       case _   => ZIO.fail(Exception("Multiple values found"))
   }
