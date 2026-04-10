@@ -5,12 +5,15 @@ description: "Write SPARQL and Gravsearch queries in Scala using RDF4J SparqlBui
 
 # SPARQL and Gravsearch Queries in Scala
 
-Build type-safe SPARQL queries in Scala using the [RDF4J SparqlBuilder](https://rdf4j.org/documentation/tutorials/sparqlbuilder/) fluent API, and Gravsearch queries via string interpolation.
+Build type-safe SPARQL queries in Scala using the
+[RDF4J SparqlBuilder](https://rdf4j.org/documentation/tutorials/sparqlbuilder/)
+fluent API, and Gravsearch queries via string interpolation.
 
 ## Reference Implementation
 
 The dps-api project contains a helper trait and many real-world examples.
-Read `webapi/src/main/scala/org/knora/webapi/slice/common/QueryBuilderHelper.scala` for the base trait — your query builders should extend or mix in `QueryBuilderHelper`.
+Read `webapi/src/main/scala/org/knora/webapi/slice/common/QueryBuilderHelper.scala`
+for the base trait — your query builders should extend or mix in `QueryBuilderHelper`.
 
 ## Dependency
 
@@ -55,8 +58,8 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.SalsahGui
 | Object        | Prefix         | Example terms                                          |
 |---------------|----------------|--------------------------------------------------------|
 | `KnoraBase`   | `knora-base:`  | `KB.Resource`, `KB.isDeleted`, `KB.linkValue`          |
-| `KnoraAdmin`  | `knora-admin:` | `KA.User`, `KA.KnoraProject`, `KA.forProject`         |
-| `NamedGraphs` | —              | `NamedGraphs.dataAdmin`, `NamedGraphs.dataPermissions` |
+| `KnoraAdmin`  | `knora-admin:` | `KA.User`, `KA.KnoraProject`, `KA.forProject`          |
+| `NamedGraphs` | (none)         | `NamedGraphs.dataAdmin`, `NamedGraphs.dataPermissions` |
 | `SalsahGui`   | `salsah-gui:`  | `SalsahGui.guiOrder`, `SalsahGui.guiElement`           |
 
 Each vocabulary object provides a `.NS` namespace for use with `.prefix()`.
@@ -149,7 +152,9 @@ Queries.DELETE(pattern).prefix(RDFS.NS).from(graph).where(pattern.from(graph))
 This is distinct from `Queries.MODIFY()` which supports combined DELETE/INSERT.
 
 Note the named graph methods on `MODIFY`:
-- `` .`with`(graphIri) `` — produces `WITH <graph>`, setting the default graph for both DELETE and INSERT clauses. Triples appear without a GRAPH wrapper.
+
+- `` .`with`(graphIri) `` — produces `WITH <graph>`, setting the default graph
+  for both DELETE and INSERT clauses. Triples appear without a GRAPH wrapper.
 - `.from(graphIri)` — wraps the DELETE clause in `DELETE { GRAPH <graph> { ... } }`
 - `.into(graphIri)` — wraps the INSERT clause in `INSERT { GRAPH <graph> { ... } }`
 
@@ -446,7 +451,8 @@ val sparql = s"$builderPart\nWHERE { $filterClause }"
 
 1. **One query builder object per file** — keep query construction in dedicated `*Query.scala` objects
 2. **Extend QueryBuilderHelper** — use the trait for consistent IRI/literal conversions
-3. **Separate concerns** — split complex MODIFY queries into `buildDeletePatterns()`, `buildInsertPatterns()`, `buildWhereClause()` methods
+3. **Separate concerns** — split complex MODIFY queries into `buildDeletePatterns()`,
+   `buildInsertPatterns()`, `buildWhereClause()` methods
 4. **Use `.andHas()` for readability** — chain multiple predicates on the same subject
 5. **Use `.and()` for combining** — join independent graph patterns
 6. **Use `.optional()` on patterns** that may not match
