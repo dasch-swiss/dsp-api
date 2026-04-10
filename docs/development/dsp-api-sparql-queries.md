@@ -31,6 +31,38 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyP
 import org.eclipse.rdf4j.model.vocabulary.{RDF, RDFS, XSD, OWL}
 ```
 
+## Vocabularies
+
+Standard RDF vocabularies are available from `org.eclipse.rdf4j.model.vocabulary`:
+
+| Import   | Prefix        | Namespace                                        |
+|----------|---------------|--------------------------------------------------|
+| `RDF`    | `rdf:`        | `http://www.w3.org/1999/02/22-rdf-syntax-ns#`    |
+| `RDFS`   | `rdfs:`       | `http://www.w3.org/2000/01/rdf-schema#`          |
+| `XSD`    | `xsd:`        | `http://www.w3.org/2001/XMLSchema#`              |
+| `OWL`    | `owl:`        | `http://www.w3.org/2002/07/owl#`                 |
+
+The dsp-api project vocabularies are defined in
+`webapi/src/main/scala/org/knora/webapi/slice/common/repo/rdf/Vocabulary.scala`:
+
+```scala
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.NamedGraphs
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.SalsahGui
+```
+
+| Object        | Prefix         | Example terms                                          |
+|---------------|----------------|--------------------------------------------------------|
+| `KnoraBase`   | `knora-base:`  | `KB.Resource`, `KB.isDeleted`, `KB.linkValue`          |
+| `KnoraAdmin`  | `knora-admin:` | `KA.User`, `KA.KnoraProject`, `KA.forProject`         |
+| `NamedGraphs` | —              | `NamedGraphs.dataAdmin`, `NamedGraphs.dataPermissions` |
+| `SalsahGui`   | `salsah-gui:`  | `SalsahGui.guiOrder`, `SalsahGui.guiElement`           |
+
+Each vocabulary object provides a `.NS` namespace for use with `.prefix()`.
+There is no `knora-api` vocabulary object — the `knora-api:` prefix is only used in
+Gravsearch queries via string interpolation (see [Gravsearch Queries](#gravsearch-queries)).
+
 ## Factory Classes
 
 | Class            | Purpose                                                                                             |
