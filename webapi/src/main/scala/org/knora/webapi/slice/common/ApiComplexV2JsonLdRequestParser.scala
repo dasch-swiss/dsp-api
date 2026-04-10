@@ -40,6 +40,7 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.mapping.CreateStandoffMappingForm
 import org.knora.webapi.slice.common.KnoraIris.*
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
@@ -110,14 +111,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       for {
         model             <- ModelOps.fromJsonLd(injectedStr)
         resource          <- ZIO.fromEither(model.singleRootResource)
-        resourceIriOption <-
-          ZIO
-            .foreach(resource.uri)(
-              converter
-                .asSmartIri(_)
-                .mapError(_.getMessage)
-                .flatMap(iri => ZIO.fromEither(KnoraIris.ResourceIri.from(iri))),
-            )
+        resourceIriOption <- ZIO.foreach(resource.uri)(uri => ZIO.fromEither(ResourceIri.from(uri)))
         resourceClassIri <- resourceClassIri(resource)
       } yield RootResource(resource, resourceIriOption, resourceClassIri)
 
@@ -143,7 +137,7 @@ final case class ApiComplexV2JsonLdRequestParser(
              .fail("No updated resource metadata provided")
              .when(label.isEmpty && permissions.isEmpty && newModificationDate.isEmpty)
     } yield UpdateResourceMetadataRequestV2(
-      resourceIri.smartIri.toString,
+      resourceIri.value,
       r.resourceClassSmartIri,
       lastModificationDate,
       label,
@@ -166,7 +160,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       deleteDate           <- r.deleteDateOption
       lastModificationDate <- r.lastModificationDateOption
     } yield DeleteOrEraseResourceRequestV2(
-      resourceIri.smartIri.toString,
+      resourceIri.value,
       r.resourceClassSmartIri,
       deleteComment,
       deleteDate,
@@ -314,7 +308,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       attachedToUser <- attachedToUser(r.resource, requestingUser, project.id)
       values         <- extractValues(r.resource, project.shortcode)
       createResource  = CreateResourceV2(
-                         r.resourceIri.map(_.smartIri),
+                         r.resourceIri,
                          r.resourceClassSmartIri,
                          label,
                          values,
@@ -468,7 +462,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                          case (Some(valueContentV2), _) =>
                            ZIO.succeed(
                              UpdateValueContentV2(
-                               resourceIri.smartIri.toString,
+                               resourceIri.value,
                                r.resourceClassSmartIri,
                                v.propertySmartIri,
                                valueIri.smartIri.toString,
@@ -481,7 +475,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                          case (_, Some(permissions)) =>
                            ZIO.succeed(
                              UpdateValuePermissionsV2(
-                               resourceIri.smartIri.toString,
+                               resourceIri.value,
                                r.resourceClassSmartIri,
                                v.propertySmartIri,
                                valueIri.smartIri.toString,
@@ -509,7 +503,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         valuePermissions  <- v.hasPermissionsOption
         valueContent      <- getValueContent(v, resourceIri.shortcode)
       } yield CreateValueV2(
-        resourceIri.smartIri.toString,
+        resourceIri.value,
         r.resourceClassSmartIri,
         v.propertyIri.smartIri,
         valueContent,

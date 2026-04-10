@@ -43,7 +43,7 @@ import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.resources.repo.GetStandoffTagByUUIDQuery
@@ -874,7 +874,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not create a resource when empty list for required property is provided") {
         val createThis = CreateResourceV2(
-          Some(sf.makeRandomResourceIri(anythingProject.shortcode).toSmartIri),
+          Some(ResourceIri.unsafeFrom(sf.makeRandomResourceIri(anythingProject.shortcode))),
           "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
           "test book",
           Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Seq.empty),
@@ -1922,7 +1922,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not erase a resource if another resource has a link to it") {
         val resourceWithLinkIri = ResourceIri.unsafeFrom(
-          sf.makeRandomResourceIri(anythingProject.shortcode).toSmartIri,
+          sf.makeRandomResourceIri(anythingProject.shortcode),
         )
         val resourceClassIri =
           ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
@@ -2198,7 +2198,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("delete the newly created value to check the delete value event of resource history") {
-        val resourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri)
+        val resourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
         val valueToDelete =
           ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A".toSmartIri)
         val resourceClassIri =

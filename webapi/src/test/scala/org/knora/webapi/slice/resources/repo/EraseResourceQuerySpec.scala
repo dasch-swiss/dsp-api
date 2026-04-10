@@ -12,7 +12,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.api.admin.model.Project
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 
 object EraseResourceQuerySpec extends ZIOSpecDefault {
 
@@ -33,7 +33,7 @@ object EraseResourceQuerySpec extends ZIOSpecDefault {
     Set.empty,
   )
 
-  private val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_history".toSmartIri)
+  private val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_history")
 
   override def spec: Spec[TestEnvironment, Any] = suite("EraseResourceQuery")(
     test("build should produce the expected SPARQL query") {

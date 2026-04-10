@@ -6,7 +6,7 @@
 package org.knora.webapi.slice.search.repo
 
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 
 object GetResourceWithSpecifiedPropertiesGravsearchQuery extends QueryBuilderHelper {

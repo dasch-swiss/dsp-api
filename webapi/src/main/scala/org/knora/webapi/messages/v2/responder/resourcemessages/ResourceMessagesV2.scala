@@ -32,6 +32,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.ResourceIri
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -548,7 +549,7 @@ case class CreateValueInNewResourceV2(
  * @param creationDate     the optional creation date of the resource.
  */
 case class CreateResourceV2(
-  resourceIri: Option[SmartIri],
+  resourceIri: Option[ResourceIri],
   resourceClassIri: SmartIri,
   label: String,
   values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
