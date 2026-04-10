@@ -435,7 +435,7 @@ final case class TestHelper(
       "@id"              -> Json.Str(resource.iri.toString),
       "@type"            -> Json.Str(ontologyIri.makeClass("Thing").toComplexSchema.toIri),
       "anything:hasText" -> Json.Obj(
-        "@id"                           -> Json.Str(value.iri.toComplexSchema.toIri),
+        "@id"                           -> Json.Str(value.iri.value),
         "@type"                         -> Json.Str("knora-api:TextValue"),
         "knora-api:textValueAsXml"      -> Json.Str(textValueAsXml),
         "knora-api:textValueHasMapping" -> Json.Obj(
