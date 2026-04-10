@@ -91,12 +91,11 @@ final case class CreateResourceV2Handler(
       shortcode  = createResourceRequestV2.createResource.projectADM.shortcode
       _         <- ensureUserHasPermission(createResourceRequestV2, projectIri)
 
-      resourceIri <- iriService.checkOrCreateEntityIri(
-                       createResourceRequestV2.createResource.resourceIri.map(ri =>
-                         stringFormatter.toSmartIri(ri.value),
-                       ),
-                       ResourceIri.makeNew(shortcode).value,
-                     )
+      resourceIri <-
+        iriService.checkOrCreateEntityIri(
+          createResourceRequestV2.createResource.resourceIri.map(ri => stringFormatter.toSmartIri(ri.value)),
+          ResourceIri.makeNew(shortcode).value,
+        )
       taskResult <- IriLocker.runWithIriLock(createResourceRequestV2.apiRequestID, resourceIri)(
                       makeTask(createResourceRequestV2, resourceIri),
                     )

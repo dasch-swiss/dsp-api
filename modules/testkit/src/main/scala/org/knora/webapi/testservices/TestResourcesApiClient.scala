@@ -69,7 +69,9 @@ object TestResourcesApiClient {
       ),
     )
 
-  def getResource(resourceIri: String): ZIO[TestResourcesApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
+  def getResource(
+    resourceIri: String,
+  ): ZIO[TestResourcesApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
     ZIO.attempt(ResourceIri.unsafeFrom(resourceIri)).flatMap(getResource)
 
   def getResource(
