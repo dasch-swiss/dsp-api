@@ -589,7 +589,7 @@ final class ValuesResponderV2(
       _ <- valueRepo.updateValuePermissions(
              projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM),
              resourceIri = InternalIri(resourceInfo.resourceIri),
-             valueIri = ValueIri.unsafeFrom(currentValue.valueIri.toSmartIri),
+             valueIri = ValueIri.unsafeFrom(currentValue.valueIri),
              newPermissions = newValuePermissionLiteral,
              currentTime = Instant.now,
            )
@@ -1078,7 +1078,7 @@ final class ValuesResponderV2(
   ): Task[SuccessResponseV2] =
     canRemoveValue(req, requestingUser, onlyHistory).flatMap { case (_, _, value) =>
       for {
-        valueIri         <- ZIO.succeed(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+        valueIri         <- ZIO.succeed(ValueIri.unsafeFrom(value.valueIri))
         _                <- failBadRequestForStandoffWithLinks(value)
         allPrevious      <- valueRepo.findAllPrevious(valueIri)
         isLink            = cond(value) { case _: ReadLinkValueV2 => true }
@@ -1175,7 +1175,7 @@ final class ValuesResponderV2(
       ZIO
         .fromOption(for {
           values <- resourceInfo.values.get(submittedInternalPropertyIri)
-          curVal <- values.find(_.valueIri == deleteValue.valueIri.toString)
+          curVal <- values.find(_.valueIri == deleteValue.valueIri.value)
         } yield curVal)
         .orElseFail(
           NotFoundException(
@@ -1408,7 +1408,7 @@ final class ValuesResponderV2(
                         project = resourceInfo.projectADM,
                         resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                         propertyIri = PropertyIri.unsafeFrom(propertyIri),
-                        valueIri = ValueIri.unsafeFrom(currentValue.valueIri.toSmartIri),
+                        valueIri = ValueIri.unsafeFrom(currentValue.valueIri),
                         maybeDeleteComment = deleteComment,
                         linkUpdates = linkUpdates,
                         currentTime = deleteDate.getOrElse(Instant.now),

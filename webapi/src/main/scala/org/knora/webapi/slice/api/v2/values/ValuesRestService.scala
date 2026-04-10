@@ -143,7 +143,7 @@ final class ValuesRestService(
            )
       requestedValueIris <- ZIO.foreach(request.orderedValueIris) { iriStr =>
                               ZIO
-                                .fromEither(ValueIri.from(iriStr.toSmartIri))
+                                .fromEither(ValueIri.from(iriStr))
                                 .mapError(e => BadRequestException(s"Invalid value IRI: $e"))
                             }
     } yield (propertySmartIri, requestedValueIris)
