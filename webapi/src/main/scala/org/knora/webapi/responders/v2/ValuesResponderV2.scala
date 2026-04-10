@@ -14,7 +14,6 @@ import scala.PartialFunction.cond
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
@@ -40,7 +39,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
@@ -67,7 +65,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final class ValuesResponderV2(
-  appConfig: AppConfig,
   auth: AuthorizationRestService,
   iriConverter: IriConverter,
   iriService: IriService,
@@ -75,9 +72,7 @@ final class ValuesResponderV2(
   ontologyRepo: OntologyRepo,
   permissionUtilADM: PermissionUtilADM,
   permissionsResponder: PermissionsResponder,
-  projectService: KnoraProjectService,
   resourceUtilV2: ResourceUtilV2,
-  resourcesResponder: ResourcesResponderV2,
   searchResponderV2: SearchResponderV2,
   triplestoreService: TriplestoreService,
   valueRepo: ValueRepo,
