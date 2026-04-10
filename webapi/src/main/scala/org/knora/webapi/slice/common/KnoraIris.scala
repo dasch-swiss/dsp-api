@@ -17,7 +17,6 @@ import org.knora.webapi.slice.ontology.domain.model.OntologyName
 
 object KnoraIris {
 
-  opaque type ValueId    = NonEmptyString
   opaque type EntityName = NonEmptyString
 
   trait KnoraIri { self =>
@@ -70,19 +69,6 @@ object KnoraIris {
     def from(iri: SmartIri): Either[String, PropertyIri] = Right(PropertyIri(iri))
   }
 
-  final case class ValueIri private (
-    smartIri: SmartIri,
-    shortcode: Shortcode,
-    resourceId: ResourceId,
-    valueId: ValueId,
-  ) extends KnoraIri {
-    def sameResourceAs(other: ValueIri): Boolean =
-      this.shortcode == other.shortcode && this.resourceId == other.resourceId
-
-    override def equals(other: Any): Boolean = super.equals(other)
-    override def hashCode(): Int             = super.hashCode()
-  }
-
   final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri {
     def ontologyIri: OntologyIri = OntologyIri.unsafeFrom(smartIri.getOntologyFromEntity)
     def name: String             = smartIri.getEntityName
@@ -100,21 +86,6 @@ object KnoraIris {
       else Left(s"Not an API v2 complex IRI ${iri.toString}")
 
     def from(iri: SmartIri): Either[String, ResourceClassIri] = Right(ResourceClassIri(iri))
-  }
-
-  object ValueIri {
-
-    def unsafeFrom(iri: SmartIri): ValueIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
-
-    def from(iri: SmartIri): Either[String, ValueIri] =
-      if iri.isKnoraValueIri then
-        // the following three calls are safe because we checked that the
-        // shortcode, resourceId and valueId are present in isKnoraValueIri
-        val shortcode  = iri.getProjectShortcode.getOrElse(throw Exception())
-        val resourceId = ResourceId.unsafeFrom(iri.getResourceID.getOrElse(throw Exception()))
-        val valueId    = NonEmptyString.unsafeFrom(iri.getValueID.getOrElse(throw Exception()))
-        Right(ValueIri(iri, shortcode, resourceId, valueId))
-      else Left(s"<$iri> is not a Knora value IRI")
   }
 
   final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri { self =>
