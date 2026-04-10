@@ -25,7 +25,6 @@ import scala.language.implicitConversions
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.it.v2.LegalInfoE2ESpec.suite
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.*
@@ -48,8 +47,6 @@ import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 import org.knora.webapi.testservices.TestResourcesApiClient
 
 object LegalInfoE2ESpec extends E2EZSpec {
-
-  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 
