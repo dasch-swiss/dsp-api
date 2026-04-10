@@ -117,14 +117,15 @@ object Dependencies {
   val ehcache = "org.ehcache" % "ehcache" % "3.11.1"
 
   // other
-  val gwtServlet     = "com.google.gwt"        % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"           % "icu4j"            % "78.3"
-  val jakartaJSON    = "org.glassfish"         % "jakarta.json"     % "2.0.1"
-  val saxonHE        = "net.sf.saxon"          % "Saxon-HE"         % "12.9"
-  val scalaGraph     = "org.scala-graph"      %% "graph-core"       % "2.0.2"
-  val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.7.0"
-  val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.11.0"
-  val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
+  val gwtServlet     = "com.google.gwt"          % "gwt-servlet"      % "2.10.0"
+  val icu4j          = "com.ibm.icu"             % "icu4j"            % "78.3"
+  val jakartaJSON    = "org.glassfish"           % "jakarta.json"     % "2.0.1"
+  val saxonHE        = "net.sf.saxon"            % "Saxon-HE"         % "12.9"
+  val scalaGraph     = "org.scala-graph"        %% "graph-core"       % "2.0.2"
+  val titaniumJSONLD = "com.apicatalog"          % "titanium-json-ld" % "1.7.0"
+  val xmlunitCore    = "org.xmlunit"             % "xmlunit-core"     % "2.11.0"
+  val scalaCsv       = "com.github.tototoshi"   %% "scala-csv"        % "2.0.0"
+  val scalaXml       = "org.scala-lang.modules" %% "scala-xml"        % "2.3.0"
 
   // test
   val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
@@ -201,6 +202,7 @@ object Dependencies {
     saxonHE,
     scalaCsv,
     scalaGraph,
+    scalaXml,
     slf4jApi,
     springSecurityCore,
     titaniumJSONLD,

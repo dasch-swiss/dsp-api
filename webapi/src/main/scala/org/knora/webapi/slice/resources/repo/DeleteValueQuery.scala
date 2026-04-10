@@ -18,7 +18,6 @@ import zio.ZIO
 import java.time.Instant
 
 import dsp.errors.SparqlGenerationException
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
@@ -26,6 +25,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 /**
  * Marks a value as deleted. This query is used for all value types except links.

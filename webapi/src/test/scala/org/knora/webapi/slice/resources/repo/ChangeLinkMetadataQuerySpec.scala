@@ -14,10 +14,10 @@ import dsp.errors.SparqlGenerationException
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 object ChangeLinkMetadataQuerySpec extends ZIOSpecDefault {
 

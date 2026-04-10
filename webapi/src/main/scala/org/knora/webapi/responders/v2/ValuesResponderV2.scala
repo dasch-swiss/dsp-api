@@ -23,7 +23,6 @@ import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageFileValue
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageVectorFileValue
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.*
@@ -56,6 +55,7 @@ import org.knora.webapi.slice.resources.repo.ChangeLinkTargetQuery
 import org.knora.webapi.slice.resources.repo.CreateLinkQuery
 import org.knora.webapi.slice.resources.repo.DeleteLinkQuery
 import org.knora.webapi.slice.resources.repo.DeleteValueQuery
+import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator

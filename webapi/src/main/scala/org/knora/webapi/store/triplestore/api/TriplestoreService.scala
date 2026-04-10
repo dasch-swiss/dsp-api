@@ -10,7 +10,6 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import play.twirl.api.TxtFormat
 import zio.*
 import zio.stream.ZStream
 
@@ -198,36 +197,28 @@ object TriplestoreService {
     }
 
     case class Ask(sparql: String) extends SparqlQuery
-    object Ask {
-      def apply(sparql: TxtFormat.Appendable): Ask = Ask(sparql.toString)
-    }
 
     case class Select(sparql: String, override val timeout: SparqlTimeout = SparqlTimeout.Standard) extends SparqlQuery
     object Select {
       def apply(sparql: SelectQuery): Select                         = Select(sparql.getQueryString)
       def apply(sparql: SelectQuery, timeout: SparqlTimeout): Select = Select(sparql.getQueryString, timeout)
-      def apply(sparql: TxtFormat.Appendable): Select                = Select(sparql.toString)
 
-      def gravsearch(sparql: TxtFormat.Appendable): Select = Select.gravsearch(sparql.toString)
-      def gravsearch(sparql: String): Select               = Select(sparql, SparqlTimeout.Gravsearch)
+      def gravsearch(sparql: String): Select = Select(sparql, SparqlTimeout.Gravsearch)
     }
 
     case class Construct(sparql: String, override val timeout: SparqlTimeout = SparqlTimeout.Standard)
         extends SparqlQuery
     object Construct {
-      def apply(query: ConstructQuery): Construct        = Construct(query.getQueryString)
-      def apply(sparql: TxtFormat.Appendable): Construct = Construct(sparql.toString)
+      def apply(query: ConstructQuery): Construct = Construct(query.getQueryString)
 
-      def gravsearch(query: ConstructQuery): Construct       = Construct.gravsearch(query.getQueryString)
-      def gravsearch(query: TxtFormat.Appendable): Construct = Construct.gravsearch(query.toString)
-      def gravsearch(query: String): Construct               = Construct(query, SparqlTimeout.Gravsearch)
+      def gravsearch(query: ConstructQuery): Construct = Construct.gravsearch(query.getQueryString)
+      def gravsearch(query: String): Construct         = Construct(query, SparqlTimeout.Gravsearch)
     }
 
     case class Update(sparql: String) extends SparqlQuery
     object Update {
-      def apply(sparql: TxtFormat.Appendable): Update = Update(sparql.toString())
-      def apply(query: ModifyQuery): Update           = Update(query.getQueryString)
-      def apply(query: InsertDataQuery): Update       = Update(query.getQueryString)
+      def apply(query: ModifyQuery): Update     = Update(query.getQueryString)
+      def apply(query: InsertDataQuery): Update = Update(query.getQueryString)
     }
   }
 }

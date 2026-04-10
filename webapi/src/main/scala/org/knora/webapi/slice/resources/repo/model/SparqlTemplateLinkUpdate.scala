@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.twirl
+package org.knora.webapi.slice.resources.repo.model
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 
 /**
- * Contains instructions that can be given to a SPARQL template for updating direct links and `knora-base:LinkValue`
+ * Contains instructions for updating direct links and `knora-base:LinkValue`
  * objects representing references to resources.
  *
  * @param linkPropertyIri         the IRI of the direct link property.

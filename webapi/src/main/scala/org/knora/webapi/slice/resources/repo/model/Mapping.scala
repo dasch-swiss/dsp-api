@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.twirl
+package org.knora.webapi.slice.resources.repo.model
 
 import org.knora.webapi.IRI
 
