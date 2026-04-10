@@ -66,23 +66,23 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-final case class ValuesResponderV2(
-  private val appConfig: AppConfig,
-  private val auth: AuthorizationRestService,
-  private val iriConverter: IriConverter,
-  private val iriService: IriService,
-  private val messageRelay: MessageRelay,
-  private val ontologyRepo: OntologyRepo,
-  private val permissionUtilADM: PermissionUtilADM,
-  private val permissionsResponder: PermissionsResponder,
-  private val projectService: KnoraProjectService,
-  private val resourceUtilV2: ResourceUtilV2,
-  private val resourcesResponder: ResourcesResponderV2,
-  private val searchResponderV2: SearchResponderV2,
-  private val triplestoreService: TriplestoreService,
-  private val valueRepo: ValueRepo,
-  private val valueValidator: ValueContentValidator,
-  private val readResources: ReadResourcesService,
+final class ValuesResponderV2(
+  appConfig: AppConfig,
+  auth: AuthorizationRestService,
+  iriConverter: IriConverter,
+  iriService: IriService,
+  messageRelay: MessageRelay,
+  ontologyRepo: OntologyRepo,
+  permissionUtilADM: PermissionUtilADM,
+  permissionsResponder: PermissionsResponder,
+  projectService: KnoraProjectService,
+  resourceUtilV2: ResourceUtilV2,
+  resourcesResponder: ResourcesResponderV2,
+  searchResponderV2: SearchResponderV2,
+  triplestoreService: TriplestoreService,
+  valueRepo: ValueRepo,
+  valueValidator: ValueContentValidator,
+  readResources: ReadResourcesService,
 )(implicit private val stringFormatter: StringFormatter) {
 
   /**
