@@ -293,7 +293,7 @@ Order: stdlib/ZIO → third-party → internal `org.knora` (alphabetical). Singl
 
 ## Writing SPARQL queries
 
-When writing SPARQL queries do not use Twirl templates or String concatenation.
+When writing SPARQL queries do not use String concatenation.
 Instead use rdf4j and the query helper in dsp-api.
 For more details see `dsp-api-sparql-builder.md`.
 
