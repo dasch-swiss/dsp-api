@@ -5,26 +5,29 @@
 
 package org.knora.webapi.slice.common
 
-import eu.timepit.refined.types.string.NonEmptyString
-
 import java.util.UUID
 import scala.util.matching.Regex
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.common.ResourceIri.ResourceId
 import org.knora.webapi.slice.common.Value.StringValue
+
+final case class ResourceId private (override val value: String) extends StringValue
+
+object ResourceId extends StringValueCompanion[ResourceId] {
+  private val ResourceIdRegex: Regex = """^[A-Za-z0-9_-]+$""".r
+
+  def from(value: String): Either[String, ResourceId] = value match {
+    case ResourceIdRegex() => Right(ResourceId(value))
+    case _                 => Left(s"<$value> is not a valid resource ID")
+  }
+}
 
 final case class ResourceIri private (override val value: String, shortcode: Shortcode, resourceId: ResourceId)
     extends StringValue
 
 object ResourceIri extends StringValueCompanion[ResourceIri] {
-
-  opaque type ResourceId = NonEmptyString
-  object ResourceId {
-    def unsafeFrom(value: String): ResourceId = NonEmptyString.unsafeFrom(value)
-  }
 
   private val ResourceIriRegex: Regex =
     """^http://rdfh\.ch/(\p{XDigit}{4})/([A-Za-z0-9_-]+)$""".r
@@ -36,7 +39,7 @@ object ResourceIri extends StringValueCompanion[ResourceIri] {
 
   def from(value: String): Either[String, ResourceIri] = value match {
     case ResourceIriRegex(sc, id) =>
-      Shortcode.from(sc).map(shortcode => ResourceIri(value, shortcode, NonEmptyString.unsafeFrom(id)))
+      Shortcode.from(sc).map(shortcode => ResourceIri(value, shortcode, ResourceId.unsafeFrom(id)))
     case _ => Left(s"<$value> is not a Knora resource IRI")
   }
 
