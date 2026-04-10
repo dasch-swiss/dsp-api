@@ -48,6 +48,25 @@ object GetResourceWithSpecifiedPropertiesGravsearchQuerySpec extends ZIOSpecDefa
              |""".stripMargin,
       )
     },
+    test("build should produce the expected Gravsearch CONSTRUCT query with no properties") {
+      val actual = GetResourceWithSpecifiedPropertiesGravsearchQuery.build(resourceIri, Seq.empty)
+      assertTrue(
+        actual ==
+          """|PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+             |
+             |CONSTRUCT {
+             |  ?resource knora-api:isMainResource true .
+             |
+             |} WHERE {
+             |  BIND(<http://rdfh.ch/0001/a-thing> AS ?resource)
+             |
+             |  ?resource a knora-api:Resource .
+             |
+             |
+             |}
+             |""".stripMargin,
+      )
+    },
     test("build should produce the expected Gravsearch CONSTRUCT query with a single property") {
       val singlePropertyIri = Seq(
         PropertyIri.unsafeFrom("http://www.knora.org/ontology/knora-base#hasStillImageFileValue".toSmartIri),
