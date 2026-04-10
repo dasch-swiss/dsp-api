@@ -2966,7 +2966,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     ) {
       val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
       val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
+        resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = Map.empty,
@@ -3003,7 +3003,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     ) {
       val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
       val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
+        resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = Map.empty,
@@ -3040,7 +3040,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       val resourceIri = sf.makeRandomResourceIri(imagesProject.shortcode)
 
       val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
+        resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = Map.empty,

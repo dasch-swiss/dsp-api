@@ -9,8 +9,6 @@ import zio.test.*
 
 import java.time.Instant
 
-import org.knora.webapi.messages.IriConversions.ConvertibleIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -18,8 +16,6 @@ import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.ResourceIri
 
 object DeleteResourceQuerySpec extends ZIOSpecDefault {
-
-  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val testProject = Project(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),

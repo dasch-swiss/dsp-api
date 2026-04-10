@@ -24,7 +24,6 @@ import scala.language.implicitConversions
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.it.v2.LegalInfoE2ESpec.suite
-import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -322,7 +321,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
   }
 
   private def getResourceFromApi(resourceId: ResourceIri) = for {
-    responseBody <- TestApiClient.getJsonLd(uri"/v2/resources/${resourceId.toComplexSchema}").flatMap(_.assert200)
+    responseBody <- TestApiClient.getJsonLd(uri"/v2/resources/${resourceId.value}").flatMap(_.assert200)
     model        <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 
@@ -334,7 +333,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
 
   private def getValueFromApi(valueId: ValueIri, resourceId: ResourceIri): ZIO[env, Throwable, Model] = for {
     responseBody <-
-      TestApiClient.getJsonLd(uri"/v2/values/${resourceId.toComplexSchema}/${valueId.valueId}").flatMap(_.assert200)
+      TestApiClient.getJsonLd(uri"/v2/values/${resourceId.value}/${valueId.valueId}").flatMap(_.assert200)
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 
@@ -346,7 +345,6 @@ object LegalInfoE2ESpec extends E2EZSpec {
           id   <- root.uri.toRight("No URI found for root resource")
         } yield id,
       )
-      .map(_.toSmartIri)
       .mapBoth(Exception(_), ResourceIri.unsafeFrom)
 
   private def valueId(model: Model): ZIO[IriConverter, Throwable, ValueIri] = {
