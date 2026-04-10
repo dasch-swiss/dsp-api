@@ -15,7 +15,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.model.Project
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 
 object DeleteResourceQuerySpec extends ZIOSpecDefault {
 
@@ -37,7 +37,7 @@ object DeleteResourceQuerySpec extends ZIOSpecDefault {
   )
 
   private val dataNamedGraph = "http://www.knora.org/data/0001/anything"
-  private val resourceIri    = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri)
+  private val resourceIri    = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
   private val currentTime    = Instant.parse("2024-01-01T10:00:00Z")
   private val requestingUser = UserIri.unsafeFrom("http://rdfh.ch/users/root")
 

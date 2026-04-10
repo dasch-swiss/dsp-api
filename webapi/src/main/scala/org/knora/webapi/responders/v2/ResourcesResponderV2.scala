@@ -55,7 +55,7 @@ import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -1206,7 +1206,7 @@ final case class ResourcesResponderV2(
 
     for {
       // Make a Gravsearch query.
-      resIri                         <- ZIO.fromEither(ResourceIri.from(resourceIri.toSmartIri)).mapError(BadRequestException(_))
+      resIri                         <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException(_))
       gravsearchQueryForIncomingLinks = GetIncomingImageLinksGravsearchQuery.build(resIri)
 
       // Run the query.

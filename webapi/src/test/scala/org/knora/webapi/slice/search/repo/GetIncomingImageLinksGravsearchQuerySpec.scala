@@ -9,13 +9,13 @@ import zio.test.*
 
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 
 object GetIncomingImageLinksGravsearchQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing".toSmartIri)
+  private val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing")
 
   override val spec: Spec[Any, Nothing] = suite("GetIncomingImageLinksGravsearchQuery")(
     test("build should produce the expected Gravsearch CONSTRUCT query") {

@@ -41,7 +41,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -526,7 +526,7 @@ final class ValuesResponderV2(
       // Generate a SPARQL update.
       sparqlUpdate <- CreateLinkQuery.build(
                         project = resourceInfo.projectADM,
-                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                         linkUpdate = sparqlTemplateLinkUpdate,
                         newValueUUID = newValueUUID,
                         creationDate = creationDate,
@@ -1022,7 +1022,7 @@ final class ValuesResponderV2(
 
         result <- ChangeLinkTargetQuery.build(
                     project = resourceInfo.projectADM,
-                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                     linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                     linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                     maybeComment = newLinkValue.comment,
@@ -1054,7 +1054,7 @@ final class ValuesResponderV2(
 
         result <- ChangeLinkMetadataQuery.build(
                     project = resourceInfo.projectADM,
-                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                     linkUpdate = sparqlTemplateLinkUpdate,
                     maybeComment = newLinkValue.comment,
                   )
@@ -1406,7 +1406,7 @@ final class ValuesResponderV2(
       linkUpdates  <- ZIO.collectAll(linkUpdateTasks)
       sparqlUpdate <- DeleteValueQuery.build(
                         project = resourceInfo.projectADM,
-                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                         propertyIri = PropertyIri.unsafeFrom(propertyIri),
                         valueIri = ValueIri.unsafeFrom(currentValue.valueIri.toSmartIri),
                         maybeDeleteComment = deleteComment,
@@ -1529,7 +1529,7 @@ final class ValuesResponderV2(
           Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri,
         )(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(BadRequestException(_)))
 
-      resIri <- ZIO.fromEither(ResourceIri.from(resourceIri.toSmartIri)).mapError(BadRequestException(_))
+      resIri <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException(_))
 
       // Make a Gravsearch query.
       gravsearchQuery =

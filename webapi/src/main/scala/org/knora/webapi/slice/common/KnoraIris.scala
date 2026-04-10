@@ -7,8 +7,6 @@ package org.knora.webapi.slice.common
 
 import eu.timepit.refined.types.string.NonEmptyString
 
-import java.net.URI
-
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -105,9 +103,6 @@ object KnoraIris {
     def from(iri: SmartIri): Either[String, ResourceClassIri] = Right(ResourceClassIri(iri))
   }
 
-  // `ValueIri` and `ResourceIri` have no different internal representation.
-  // Thus, we only provide functions which create these from a `SmartIri`.
-  // The `fromApiV2Complex` is not required as these Iris are not part of the API v2 complex schema.
   object ValueIri {
 
     def unsafeFrom(iri: SmartIri): ValueIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
@@ -121,26 +116,6 @@ object KnoraIris {
         val valueId    = NonEmptyString.unsafeFrom(iri.getValueID.getOrElse(throw Exception()))
         Right(ValueIri(iri, shortcode, resourceId, valueId))
       else Left(s"<$iri> is not a Knora value IRI")
-  }
-
-  final case class ResourceIri private (smartIri: SmartIri, shortcode: Shortcode, resourceId: ResourceId)
-      extends KnoraIri {
-    override def equals(other: Any): Boolean = super.equals(other)
-    override def hashCode(): Int             = super.hashCode()
-    val latestArkUrl: URI                    = URI.create(smartIri.fromResourceIriToArkUrl(None))
-  }
-  object ResourceIri {
-
-    def unsafeFrom(iri: SmartIri): ResourceIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
-
-    def from(iri: SmartIri): Either[String, ResourceIri] =
-      if iri.isKnoraResourceIri then
-        // the following two calls are safe because we checked that the
-        // shortcode and resourceId are present in isKnoraResourceIri
-        val shortcode  = iri.getProjectShortcode.getOrElse(throw Exception())
-        val resourceId = NonEmptyString.unsafeFrom(iri.getResourceID.getOrElse(throw Exception()))
-        Right(ResourceIri(iri, shortcode, resourceId))
-      else Left(s"<$iri> is not a Knora resource IRI")
   }
 
   final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri { self =>
