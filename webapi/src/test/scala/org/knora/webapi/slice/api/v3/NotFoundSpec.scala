@@ -4,20 +4,17 @@
  */
 
 package org.knora.webapi.slice.api.v3
-import zio.*
 import zio.json.*
 import zio.test.*
 
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.common.ResourceIri
 
 object NotFoundSpec extends ZIOSpecDefault {
   override val spec = suite("NotFoundSpec")(
     test("NotFound.from(ResourceIri) should create a NotFound instance with the correct message and error details") {
-      for {
-        resourceIri <- ZIO.serviceWithZIO[IriConverter](_.asResourceIri("http://rdfh.ch/0001/abcd1234"))
-        actual       = NotFound.from(resourceIri)
-      } yield assertTrue(
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/abcd1234")
+      val actual      = NotFound.from(resourceIri)
+      assertTrue(
         actual.toJsonPretty == """{
                                  |  "message" : "The resource with IRI 'http://rdfh.ch/0001/abcd1234' was not found.",
                                  |  "errors" : [
@@ -32,5 +29,5 @@ object NotFoundSpec extends ZIOSpecDefault {
                                  |}""".stripMargin,
       )
     },
-  ).provide(IriConverter.layer, StringFormatter.test)
+  )
 }
