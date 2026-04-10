@@ -1966,7 +1966,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                      resourceWithLinkIri,
                      ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
                      linkValuePropertyIri,
-                     ValueIri.unsafeFrom(linkValue.valueIri.toSmartIri),
+                     ValueIri.unsafeFrom(linkValue.valueIri),
                      valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
                      apiRequestId = randomUUID,
                    ),
@@ -2200,7 +2200,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test("delete the newly created value to check the delete value event of resource history") {
         val resourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
         val valueToDelete =
-          ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A".toSmartIri)
+          ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A")
         val resourceClassIri =
           ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
         val propertyIri   = PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri)
