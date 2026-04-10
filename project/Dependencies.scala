@@ -125,7 +125,7 @@ object Dependencies {
   val titaniumJSONLD = "com.apicatalog"          % "titanium-json-ld" % "1.7.0"
   val xmlunitCore    = "org.xmlunit"             % "xmlunit-core"     % "2.11.0"
   val scalaCsv       = "com.github.tototoshi"   %% "scala-csv"        % "2.0.0"
-  val scalaXml       = "org.scala-lang.modules" %% "scala-xml"        % "2.3.0"
+  val scalaXml       = "org.scala-lang.modules" %% "scala-xml"        % "2.4.0"
 
   // test
   val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
