@@ -867,7 +867,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         val resourceIri        = aThingIri
         val propertyIri        = Anything.hasInteger.smartIri
         val intValue           = 1000
-        val newValueVersionIri = sf.makeRandomValueIri(resourceIri)
+        val newValueVersionIri = ValueIri.makeNew(ResourceIri.unsafeFrom(resourceIri)).value
 
         val updateParams = UpdateValueContentV2(
           resourceIri = resourceIri,
@@ -1183,7 +1183,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri,
           resourceClassIri,
           propertyIri,
-          ValueIri.unsafeFrom(intValueForRsyncIri.get.toSmartIri),
+          ValueIri.unsafeFrom(intValueForRsyncIri.get),
           valueTypeIri = KA.IntValue.toSmartIri,
           deleteComment = deleteComment,
           deleteDate = Some(deleteDate),
@@ -1195,7 +1195,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           _                        <- checkValueIsDeleted(
                  resourceIri,
                  maybeResourceLastModDate,
-                 ValueIri.unsafeFrom(intValueForRsyncIri.get.toSmartIri),
+                 ValueIri.unsafeFrom(intValueForRsyncIri.get),
                  customDeleteDate = Some(deleteDate),
                  deleteComment = deleteComment,
                  requestingUser = anythingUser1,
@@ -2903,7 +2903,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         ResourceIri.unsafeFrom(zeitgloeckleinIri),
         ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri),
         PropertyIri.unsafeFrom(propertyIri),
-        ValueIri.unsafeFrom(zeitgloeckleinCommentWithStandoffIri.get.toSmartIri),
+        ValueIri.unsafeFrom(zeitgloeckleinCommentWithStandoffIri.get),
         valueTypeIri = KA.TextValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
         apiRequestId = randomUUID,
@@ -2914,7 +2914,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         _                        <- checkValueIsDeleted(
                ResourceIri.unsafeFrom(zeitgloeckleinIri),
                maybeResourceLastModDate,
-               ValueIri.unsafeFrom(zeitgloeckleinCommentWithStandoffIri.get.toSmartIri),
+               ValueIri.unsafeFrom(zeitgloeckleinCommentWithStandoffIri.get),
                requestingUser = incunabulaMemberUser,
              )
         // There==  no standoff link values left in the resource.
@@ -2928,7 +2928,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test("delete a link between two resources") {
       val resourceIri          = ResourceIri.unsafeFrom("http://rdfh.ch/0803/cb1a74e3e2f6")
       val linkValuePropertyIri = PropertyIri.unsafeFrom(KA.HasLinkToValue.toSmartIri)
-      val linkValueIRI         = ValueIri.unsafeFrom(linkValueIri.get.toSmartIri)
+      val linkValueIRI         = ValueIri.unsafeFrom(linkValueIri.get)
       val deleteParams         = DeleteValueV2(
         resourceIri,
         ResourceClassIri.unsafeFrom(KA.LinkObj.toSmartIri),
@@ -2955,7 +2955,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         ResourceIri.unsafeFrom(zeitgloeckleinIri),
         ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri),
         propertyIri,
-        ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/c3295339".toSmartIri),
+        ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/c3295339"),
         valueTypeIri = KA.TextValue.toSmartIri,
         apiRequestId = randomUUID,
       )
