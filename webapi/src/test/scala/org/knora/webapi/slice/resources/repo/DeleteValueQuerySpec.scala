@@ -19,7 +19,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
