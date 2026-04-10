@@ -112,7 +112,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         model             <- ModelOps.fromJsonLd(injectedStr)
         resource          <- ZIO.fromEither(model.singleRootResource)
         resourceIriOption <- ZIO.foreach(resource.uri)(uri => ZIO.fromEither(ResourceIri.from(uri)))
-        resourceClassIri <- resourceClassIri(resource)
+        resourceClassIri  <- resourceClassIri(resource)
       } yield RootResource(resource, resourceIriOption, resourceClassIri)
 
     private def resourceClassIri(r: Resource): IO[String, ResourceClassIri] = ZIO
