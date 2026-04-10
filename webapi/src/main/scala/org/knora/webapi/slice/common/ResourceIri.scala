@@ -39,7 +39,11 @@ object ResourceIri extends StringValueCompanion[ResourceIri] {
 
   def from(value: String): Either[String, ResourceIri] = value match {
     case ResourceIriRegex(sc, id) =>
-      Shortcode.from(sc).map(shortcode => ResourceIri(value, shortcode, ResourceId.unsafeFrom(id)))
+      // unsafe is safe here since the regex already ensures
+      // the constraints for both code and id
+      val shortcode  = Shortcode.unsafeFrom(sc)
+      val resourceId = ResourceId.unsafeFrom(id)
+      Right(ResourceIri(value, shortcode, resourceId))
     case _ => Left(s"<$value> is not a Knora resource IRI")
   }
 
