@@ -22,6 +22,9 @@ final case class ResourceIri private (override val value: String, shortcode: Sho
 object ResourceIri extends StringValueCompanion[ResourceIri] {
 
   opaque type ResourceId = NonEmptyString
+  object ResourceId {
+    def unsafeFrom(value: String): ResourceId = NonEmptyString.unsafeFrom(value)
+  }
 
   private val ResourceIriRegex: Regex =
     """^http://rdfh\.ch/(\p{XDigit}{4})/([A-Za-z0-9_-]+)$""".r

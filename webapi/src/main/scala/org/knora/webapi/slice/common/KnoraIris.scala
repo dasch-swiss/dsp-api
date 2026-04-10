@@ -12,12 +12,12 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.common.ResourceIri.ResourceId
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 
 object KnoraIris {
 
-  opaque type ResourceId = NonEmptyString
   opaque type ValueId    = NonEmptyString
   opaque type EntityName = NonEmptyString
 
@@ -112,7 +112,7 @@ object KnoraIris {
         // the following three calls are safe because we checked that the
         // shortcode, resourceId and valueId are present in isKnoraValueIri
         val shortcode  = iri.getProjectShortcode.getOrElse(throw Exception())
-        val resourceId = NonEmptyString.unsafeFrom(iri.getResourceID.getOrElse(throw Exception()))
+        val resourceId = ResourceId.unsafeFrom(iri.getResourceID.getOrElse(throw Exception()))
         val valueId    = NonEmptyString.unsafeFrom(iri.getValueID.getOrElse(throw Exception()))
         Right(ValueIri(iri, shortcode, resourceId, valueId))
       else Left(s"<$iri> is not a Knora value IRI")
