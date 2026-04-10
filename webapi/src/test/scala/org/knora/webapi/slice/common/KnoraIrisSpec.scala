@@ -21,11 +21,6 @@ object KnoraIrisSpec extends ZIOSpecDefault {
   private val internalPropertyIri     = "http://www.knora.org/ontology/0001/anything#hasListItem"
   private val apiV2ComplexPropertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem"
 
-  private val internalResourceClassIri     = "http://www.knora.org/ontology/0001/anything#Thing"
-  private val apiV2ComplexResourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
-
-  private val resourceIri = "http://rdfh.ch/080C/Ef9heHjPWDS7dMR_gGax2Q"
-
   private val propertyIriSuite = suite("PropertyIri")(
     suite("from")(
       test("should return a PropertyIri") {
