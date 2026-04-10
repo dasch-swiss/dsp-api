@@ -425,7 +425,7 @@ final class ValuesResponderV2(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           maybeValueIri,
-          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID)),
+          ValueIri.from(ResourceIri.unsafeFrom(resourceInfo.resourceIri), newValueUUID).value,
         )
 
       // Make a creation date for the new value
@@ -878,7 +878,7 @@ final class ValuesResponderV2(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           newValueVersionIri,
-          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri),
+          ValueIri.makeNew(ResourceIri.unsafeFrom(resourceInfo.resourceIri)).value,
         )
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
@@ -1752,7 +1752,7 @@ final class ValuesResponderV2(
       newLinkValueIri <-
         iriService.checkOrCreateEntityIri(
           customNewLinkValueIri,
-          stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri),
+          ValueIri.makeNew(ResourceIri.unsafeFrom(sourceResourceInfo.resourceIri)).value,
         )
 
       linkUpdate =
@@ -1908,7 +1908,7 @@ final class ValuesResponderV2(
           newLinkValueIri <-
             iriService.checkOrCreateEntityIri(
               customNewLinkValueIri,
-              stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri),
+              ValueIri.makeNew(ResourceIri.unsafeFrom(sourceResourceInfo.resourceIri)).value,
             )
 
         } yield SparqlTemplateLinkUpdate(
@@ -1955,7 +1955,7 @@ final class ValuesResponderV2(
    * @return the new value IRI.
    */
   private def makeUnusedValueIri(resourceIri: IRI): Task[IRI] =
-    iriService.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri))
+    iriService.makeUnusedIri(ValueIri.makeNew(ResourceIri.unsafeFrom(resourceIri)).value)
 }
 
 object ValuesResponderV2 {
