@@ -35,6 +35,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
+import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGravsearchQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
@@ -172,12 +173,11 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     propertyIrisForGravsearch: Seq[SmartIri],
     requestingUser: User,
   ): ZIO[SearchResponderV2, Throwable, ReadResourceV2] = {
-    val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
-      .getResourceWithSpecifiedProperties(
-        resourceIri = resourceIri,
-        propertyIris = propertyIrisForGravsearch,
+    val gravsearchQuery: String =
+      GetResourceWithSpecifiedPropertiesGravsearchQuery.build(
+        resourceIri = ResourceIri.unsafeFrom(resourceIri.toSmartIri),
+        propertyIris = propertyIrisForGravsearch.map(PropertyIri.unsafeFrom),
       )
-      .toString
     for {
       query        <- ZIO.attempt(GravsearchParser.parseQuery(gravsearchQuery))
       schema        = SchemaRendering.apiV2SchemaWithOption(MarkupRendering.Xml)

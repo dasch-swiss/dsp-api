@@ -14,7 +14,6 @@ import scala.PartialFunction.cond
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
@@ -40,7 +39,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
@@ -61,27 +59,25 @@ import org.knora.webapi.slice.resources.repo.DeleteValueQuery
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
+import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGravsearchQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-final case class ValuesResponderV2(
-  private val appConfig: AppConfig,
-  private val auth: AuthorizationRestService,
-  private val iriConverter: IriConverter,
-  private val iriService: IriService,
-  private val messageRelay: MessageRelay,
-  private val ontologyRepo: OntologyRepo,
-  private val permissionUtilADM: PermissionUtilADM,
-  private val permissionsResponder: PermissionsResponder,
-  private val projectService: KnoraProjectService,
-  private val resourceUtilV2: ResourceUtilV2,
-  private val resourcesResponder: ResourcesResponderV2,
-  private val searchResponderV2: SearchResponderV2,
-  private val triplestoreService: TriplestoreService,
-  private val valueRepo: ValueRepo,
-  private val valueValidator: ValueContentValidator,
-  private val readResources: ReadResourcesService,
+final class ValuesResponderV2(
+  auth: AuthorizationRestService,
+  iriConverter: IriConverter,
+  iriService: IriService,
+  messageRelay: MessageRelay,
+  ontologyRepo: OntologyRepo,
+  permissionUtilADM: PermissionUtilADM,
+  permissionsResponder: PermissionsResponder,
+  resourceUtilV2: ResourceUtilV2,
+  searchResponderV2: SearchResponderV2,
+  triplestoreService: TriplestoreService,
+  valueRepo: ValueRepo,
+  valueValidator: ValueContentValidator,
+  readResources: ReadResourcesService,
 )(implicit private val stringFormatter: StringFormatter) {
 
   /**
@@ -1528,19 +1524,19 @@ final case class ValuesResponderV2(
           None
         }
 
-      // Convert the property IRIs to be queried to the API v2 complex schema for Gravsearch.
-      propertyIrisForGravsearchQuery =
-        (Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri)
-          .map(_.toOntologySchema(ApiV2Complex))
+      propertyIrisForGravsearchQuery <-
+        ZIO.foreach(
+          Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri,
+        )(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(BadRequestException(_)))
 
-      // Make a Gravsearch query from a template.
-      gravsearchQuery: String =
-        org.knora.webapi.messages.twirl.queries.gravsearch.txt
-          .getResourceWithSpecifiedProperties(
-            resourceIri = resourceIri,
-            propertyIris = propertyIrisForGravsearchQuery,
-          )
-          .toString()
+      resIri <- ZIO.fromEither(ResourceIri.from(resourceIri.toSmartIri)).mapError(BadRequestException(_))
+
+      // Make a Gravsearch query.
+      gravsearchQuery =
+        GetResourceWithSpecifiedPropertiesGravsearchQuery.build(
+          resourceIri = resIri,
+          propertyIris = propertyIrisForGravsearchQuery,
+        )
 
       // Run the query.
       query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
