@@ -58,7 +58,6 @@ final case class DeletedValue(
 
 final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: StringFormatter)
     extends QueryBuilderHelper {
-  import org.knora.webapi.messages.IriConversions.ConvertibleIri
 
   def findActiveById(iri: ValueIri): Task[Option[ActiveValue]] =
     findById(iri).map(_.collect { case v: ActiveValue => v })
