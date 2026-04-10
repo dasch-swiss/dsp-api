@@ -295,7 +295,7 @@ Order: stdlib/ZIO → third-party → internal `org.knora` (alphabetical). Singl
 
 When writing SPARQL queries do not use String concatenation.
 Instead use rdf4j and the query helper in dsp-api.
-For more details see `dsp-api-sparql-builder.md`.
+For more details see `dsp-api-sparql-queries.md`.
 
 ## Formatting 
 
