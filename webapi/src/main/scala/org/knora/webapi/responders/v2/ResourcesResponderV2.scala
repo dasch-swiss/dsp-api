@@ -55,7 +55,7 @@ import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -215,8 +215,8 @@ final case class ResourcesResponderV2(
         project <- projectService
                      .findById(resource.projectADM.id)
                      .someOrFail(NotFoundException.notFound(resource.projectADM.id))
-        resourceIri <- iriConverter
-                         .asResourceIri(updateResourceMetadataRequestV2.resourceIri)
+        resourceIri <- ZIO
+                         .fromEither(ResourceIri.from(updateResourceMetadataRequestV2.resourceIri))
                          .mapError(BadRequestException.apply)
         resourceClassIri <- iriConverter
                               .asResourceClassIri(internalResourceClassIri)
@@ -298,7 +298,8 @@ final case class ResourcesResponderV2(
         // Generate SPARQL for marking the resource as deleted.
         requestingUserIri <-
           ZIO.fromEither(UserIri.from(deleteResourceV2.requestingUser.id)).mapError(e => Exception(e)).orDie
-        resourceIri <- iriConverter.asResourceIri(deleteResourceV2.resourceIri).mapError(BadRequestException.apply)
+        resourceIri <-
+          ZIO.fromEither(ResourceIri.from(deleteResourceV2.resourceIri)).mapError(BadRequestException.apply)
         sparqlUpdate = DeleteResourceQuery.build(
                          project = resource.projectADM,
                          resourceIri = resourceIri,
@@ -351,7 +352,9 @@ final case class ResourcesResponderV2(
 
       otherResources <-
         ZIO
-          .foreach(result.results.bindings.map(_.rowMap.get("other")).flatten.toSet)(iriConverter.asResourceIri)
+          .foreach(result.results.bindings.map(_.rowMap.get("other")).flatten.toSet)(s =>
+            ZIO.fromEither(ResourceIri.from(s)),
+          )
           .mapError(DataConversionException.apply)
     } yield otherResources
 
@@ -390,7 +393,7 @@ final case class ResourcesResponderV2(
 
       _ <- ensureNoConflictingChange(resource, deleteResourceV2.maybeLastModificationDate)
 
-      resourceIri <- iriConverter.asResourceIri(deleteResourceV2.resourceIri).mapError(BadRequestException.apply)
+      resourceIri <- ZIO.fromEither(ResourceIri.from(deleteResourceV2.resourceIri)).mapError(BadRequestException.apply)
       _           <- ensureResourceIsNotInUse(resourceIri)
 
       lastModificationDate = resource.lastModificationDate.getOrElse(resource.creationDate)
@@ -454,7 +457,7 @@ final case class ResourcesResponderV2(
 
         _ <- ensureNoConflictingChange(resource, eraseResourceV2.maybeLastModificationDate)
 
-        resourceIri <- iriConverter.asResourceIri(eraseResourceV2.resourceIri).mapError(BadRequestException.apply)
+        resourceIri <- ZIO.fromEither(ResourceIri.from(eraseResourceV2.resourceIri)).mapError(BadRequestException.apply)
         _           <- ensureResourceIsNotInUse(resourceIri)
 
         // Do the update.
@@ -1206,7 +1209,7 @@ final case class ResourcesResponderV2(
 
     for {
       // Make a Gravsearch query.
-      resIri                         <- ZIO.fromEither(ResourceIri.from(resourceIri.toSmartIri)).mapError(BadRequestException(_))
+      resIri                         <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException(_))
       gravsearchQueryForIncomingLinks = GetIncomingImageLinksGravsearchQuery.build(resIri)
 
       // Run the query.

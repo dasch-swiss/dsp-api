@@ -30,7 +30,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.v2.ValueUuid
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
@@ -143,7 +143,7 @@ final class ValuesRestService(
            )
       requestedValueIris <- ZIO.foreach(request.orderedValueIris) { iriStr =>
                               ZIO
-                                .fromEither(ValueIri.from(iriStr.toSmartIri))
+                                .fromEither(ValueIri.from(iriStr))
                                 .mapError(e => BadRequestException(s"Invalid value IRI: $e"))
                             }
     } yield (propertySmartIri, requestedValueIris)

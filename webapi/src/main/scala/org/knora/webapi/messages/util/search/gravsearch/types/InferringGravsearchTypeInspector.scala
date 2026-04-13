@@ -24,6 +24,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequ
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 
 /**
@@ -1451,7 +1452,7 @@ final case class InferringGravsearchTypeInspector(
               // A variable is compared with an IRI, which must be a resource IRI.
               // Index them both in usageIndex.entitiesComparedInFilters.
 
-              if (!rightIriRef.iri.isKnoraResourceIri) {
+              if (ResourceIri.from(rightIriRef.iri).isLeft) {
                 throw GravsearchException(
                   s"IRI ${rightIriRef.toSparql}, used in a comparison, is not a Knora resource IRI",
                 )

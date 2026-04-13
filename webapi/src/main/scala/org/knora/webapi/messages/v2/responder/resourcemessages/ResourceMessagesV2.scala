@@ -32,6 +32,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.ResourceIri
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -417,7 +418,7 @@ case class ReadResourceV2(
 
     // Make an ARK URL without a version timestamp.
 
-    val resourceSmartIri: SmartIri = resourceIri.toSmartIri
+    val parsedResourceIri = ResourceIri.unsafeFrom(resourceIri)
 
     val arkUrlProp: IRI = targetSchema match {
       case ApiV2Simple  => KnoraApiV2Simple.ArkUrl
@@ -426,7 +427,7 @@ case class ReadResourceV2(
 
     val arkUrlAsJsonLD: (IRI, JsonLDObject) =
       arkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-        value = resourceSmartIri.fromResourceIriToArkUrl(),
+        value = stringFormatter.resourceIriToArkUrl(parsedResourceIri),
         datatype = Xsd.Uri.toSmartIri,
       )
 
@@ -441,7 +442,7 @@ case class ReadResourceV2(
 
     val versionArkUrlAsJsonLD: (IRI, JsonLDObject) =
       versionArkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-        value = resourceSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(arkTimestamp)),
+        value = stringFormatter.resourceIriToArkUrl(parsedResourceIri, maybeTimestamp = Some(arkTimestamp)),
         datatype = Xsd.Uri.toSmartIri,
       )
 
@@ -548,7 +549,7 @@ case class CreateValueInNewResourceV2(
  * @param creationDate     the optional creation date of the resource.
  */
 case class CreateResourceV2(
-  resourceIri: Option[SmartIri],
+  resourceIri: Option[ResourceIri],
   resourceClassIri: SmartIri,
   label: String,
   values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],

@@ -40,6 +40,8 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.mapping.CreateStandoffMappingForm
 import org.knora.webapi.slice.common.KnoraIris.*
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
@@ -110,15 +112,8 @@ final case class ApiComplexV2JsonLdRequestParser(
       for {
         model             <- ModelOps.fromJsonLd(injectedStr)
         resource          <- ZIO.fromEither(model.singleRootResource)
-        resourceIriOption <-
-          ZIO
-            .foreach(resource.uri)(
-              converter
-                .asSmartIri(_)
-                .mapError(_.getMessage)
-                .flatMap(iri => ZIO.fromEither(KnoraIris.ResourceIri.from(iri))),
-            )
-        resourceClassIri <- resourceClassIri(resource)
+        resourceIriOption <- ZIO.foreach(resource.uri)(uri => ZIO.fromEither(ResourceIri.from(uri)))
+        resourceClassIri  <- resourceClassIri(resource)
       } yield RootResource(resource, resourceIriOption, resourceClassIri)
 
     private def resourceClassIri(r: Resource): IO[String, ResourceClassIri] = ZIO
@@ -143,7 +138,7 @@ final case class ApiComplexV2JsonLdRequestParser(
              .fail("No updated resource metadata provided")
              .when(label.isEmpty && permissions.isEmpty && newModificationDate.isEmpty)
     } yield UpdateResourceMetadataRequestV2(
-      resourceIri.smartIri.toString,
+      resourceIri.value,
       r.resourceClassSmartIri,
       lastModificationDate,
       label,
@@ -166,7 +161,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       deleteDate           <- r.deleteDateOption
       lastModificationDate <- r.lastModificationDateOption
     } yield DeleteOrEraseResourceRequestV2(
-      resourceIri.smartIri.toString,
+      resourceIri.value,
       r.resourceClassSmartIri,
       deleteComment,
       deleteDate,
@@ -280,8 +275,7 @@ final case class ApiComplexV2JsonLdRequestParser(
 
     private def valueIri(valueResource: Resource): IO[String, Option[ValueIri]] = ZIO
       .fromOption(valueResource.uri)
-      .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
-      .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
+      .flatMap(uri => ZIO.fromEither(ValueIri.from(uri)).asSomeError)
       .unsome
 
     private def valuePropertyIri(valueStatement: Statement) =
@@ -314,7 +308,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       attachedToUser <- attachedToUser(r.resource, requestingUser, project.id)
       values         <- extractValues(r.resource, project.shortcode)
       createResource  = CreateResourceV2(
-                         r.resourceIri.map(_.smartIri),
+                         r.resourceIri,
                          r.resourceClassSmartIri,
                          label,
                          values,
@@ -403,12 +397,13 @@ final case class ApiComplexV2JsonLdRequestParser(
     for {
       v                       <- ValueResource.from(statement)
       cnt                     <- getValueContent(v, shortcode)
+      customValueIri          <- ZIO.foreach(v.valueIri)(vi => converter.asSmartIri(vi.value).mapError(_.getMessage))
       customValueUuid         <- v.valueHasUuidOption
       customValueCreationDate <- v.valueCreationDateOption
       permissions             <- v.hasPermissionsOption
     } yield (
       v.propertyIri,
-      CreateValueInNewResourceV2(cnt, v.valueIri.map(_.smartIri), customValueUuid, customValueCreationDate, permissions),
+      CreateValueInNewResourceV2(cnt, customValueIri, customValueUuid, customValueCreationDate, permissions),
     )
 
   def attachedToUser(r: Resource, requestingUser: User, projectIri: ProjectIri): IO[String, User] =
@@ -438,8 +433,7 @@ final case class ApiComplexV2JsonLdRequestParser(
 
   private def newValueVersionIri(r: ValueResource, valueIri: ValueIri): IO[String, Option[ValueIri]] =
     r.newValueVersionIriOption.some
-      .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
-      .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
+      .flatMap(uri => ZIO.fromEither(ValueIri.from(uri)).asSomeError)
       .filterOrFail(newV => newV != valueIri)(
         Some(s"The IRI of a new value version cannot be the same as the IRI of the current version"),
       )
@@ -456,39 +450,41 @@ final case class ApiComplexV2JsonLdRequestParser(
   def updateValueV2fromJsonLd(str: String): IO[String, UpdateValueV2] =
     ZIO.scoped {
       for {
-        r                  <- RootResource.fromJsonLd(str)
-        resourceIri        <- r.resourceIriOrFail
-        v                  <- ValueResource.from(r)
-        valueIri           <- v.valueIriOrFail
-        valueCreationDate  <- v.valueCreationDateOption
-        valuePermissions   <- v.hasPermissionsOption
-        newValueVersionIri <- newValueVersionIri(v, valueIri)
-        valueContent       <- getValueContent(v, resourceIri.shortcode).map(Some(_)).orElse(ZIO.none)
-        updateValue        <- (valueContent, valuePermissions) match
+        r                     <- RootResource.fromJsonLd(str)
+        resourceIri           <- r.resourceIriOrFail
+        v                     <- ValueResource.from(r)
+        valueIri              <- v.valueIriOrFail
+        valueCreationDate     <- v.valueCreationDateOption
+        valuePermissions      <- v.hasPermissionsOption
+        newValueVersionIri    <- newValueVersionIri(v, valueIri)
+        newValueVersionSmtIri <-
+          ZIO.foreach(newValueVersionIri)(vi => converter.asSmartIri(vi.value).mapError(_.getMessage))
+        valueContent <- getValueContent(v, resourceIri.shortcode).map(Some(_)).orElse(ZIO.none)
+        updateValue  <- (valueContent, valuePermissions) match
                          case (Some(valueContentV2), _) =>
                            ZIO.succeed(
                              UpdateValueContentV2(
-                               resourceIri.smartIri.toString,
+                               resourceIri.value,
                                r.resourceClassSmartIri,
                                v.propertySmartIri,
-                               valueIri.smartIri.toString,
+                               valueIri.value,
                                valueContentV2,
                                valuePermissions,
                                valueCreationDate,
-                               newValueVersionIri.map(_.smartIri),
+                               newValueVersionSmtIri,
                              ),
                            )
                          case (_, Some(permissions)) =>
                            ZIO.succeed(
                              UpdateValuePermissionsV2(
-                               resourceIri.smartIri.toString,
+                               resourceIri.value,
                                r.resourceClassSmartIri,
                                v.propertySmartIri,
-                               valueIri.smartIri.toString,
+                               valueIri.value,
                                v.valueType,
                                permissions,
                                valueCreationDate,
-                               newValueVersionIri.map(_.smartIri),
+                               newValueVersionSmtIri,
                              ),
                            )
                          case _ => ZIO.fail("No value content or permissions provided")
@@ -504,16 +500,17 @@ final case class ApiComplexV2JsonLdRequestParser(
         r                 <- RootResource.fromJsonLd(str)
         resourceIri       <- r.resourceIriOrFail
         v                 <- ValueResource.from(r)
+        customValueIri    <- ZIO.foreach(v.valueIri)(vi => converter.asSmartIri(vi.value).mapError(_.getMessage))
         valueUuid         <- v.valueHasUuidOption
         valueCreationDate <- v.valueCreationDateOption
         valuePermissions  <- v.hasPermissionsOption
         valueContent      <- getValueContent(v, resourceIri.shortcode)
       } yield CreateValueV2(
-        resourceIri.smartIri.toString,
+        resourceIri.value,
         r.resourceClassSmartIri,
         v.propertyIri.smartIri,
         valueContent,
-        v.valueIri.map(_.smartIri),
+        customValueIri,
         valueUuid,
         valueCreationDate,
         valuePermissions,

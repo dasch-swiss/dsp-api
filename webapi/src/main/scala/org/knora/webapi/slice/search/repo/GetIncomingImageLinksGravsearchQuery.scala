@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.search.repo
 
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.ResourceIri
 
 object GetIncomingImageLinksGravsearchQuery extends QueryBuilderHelper {
 

@@ -10,13 +10,13 @@ import zio.test.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 
 object GetResourceWithSpecifiedPropertiesGravsearchQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private val resourceIri  = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing".toSmartIri)
+  private val resourceIri  = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing")
   private val propertyIris = Seq(
     PropertyIri.unsafeFrom("http://www.knora.org/ontology/knora-base#hasStillImageFileValue".toSmartIri),
     PropertyIri.unsafeFrom("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo".toSmartIri),
