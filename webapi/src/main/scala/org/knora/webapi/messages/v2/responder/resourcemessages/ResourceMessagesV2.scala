@@ -418,7 +418,7 @@ case class ReadResourceV2(
 
     // Make an ARK URL without a version timestamp.
 
-    val resourceSmartIri: SmartIri = resourceIri.toSmartIri
+    val parsedResourceIri = ResourceIri.unsafeFrom(resourceIri)
 
     val arkUrlProp: IRI = targetSchema match {
       case ApiV2Simple  => KnoraApiV2Simple.ArkUrl
@@ -427,7 +427,7 @@ case class ReadResourceV2(
 
     val arkUrlAsJsonLD: (IRI, JsonLDObject) =
       arkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-        value = resourceSmartIri.fromResourceIriToArkUrl(),
+        value = stringFormatter.resourceIriToArkUrl(parsedResourceIri),
         datatype = Xsd.Uri.toSmartIri,
       )
 
@@ -442,7 +442,7 @@ case class ReadResourceV2(
 
     val versionArkUrlAsJsonLD: (IRI, JsonLDObject) =
       versionArkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-        value = resourceSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(arkTimestamp)),
+        value = stringFormatter.resourceIriToArkUrl(parsedResourceIri, maybeTimestamp = Some(arkTimestamp)),
         datatype = Xsd.Uri.toSmartIri,
       )
 

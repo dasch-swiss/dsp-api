@@ -22,6 +22,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v2.metadata.ResourceMetadataDto
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
@@ -98,8 +99,9 @@ final case class MetadataService(
                   val classIri =
                     row.rowMap.getOrElse(classIriVar, throwEx(classIriVar)).toSmartIri.toComplexSchema.toIri
                   val resourceIri         = row.rowMap.getOrElse(resourceIriVar, throwEx(resourceIriVar))
-                  val arkUrl              = resourceIri.toSmartIri.fromResourceIriToArkUrl(None)
-                  val arkUrlWithTimestamp = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(now))
+                  val parsedResourceIri   = ResourceIri.unsafeFrom(resourceIri)
+                  val arkUrl              = sf.resourceIriToArkUrl(parsedResourceIri)
+                  val arkUrlWithTimestamp = sf.resourceIriToArkUrl(parsedResourceIri, Some(now))
                   val label               = row.rowMap.getOrElse(labelVar, throwEx(labelVar))
                   val creatorIri          =
                     row.rowMap.getOrElse(creatorIriVar, throwEx(creatorIriVar)).toSmartIri.toComplexSchema.toIri

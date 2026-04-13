@@ -450,16 +450,17 @@ final case class ApiComplexV2JsonLdRequestParser(
   def updateValueV2fromJsonLd(str: String): IO[String, UpdateValueV2] =
     ZIO.scoped {
       for {
-        r                  <- RootResource.fromJsonLd(str)
-        resourceIri        <- r.resourceIriOrFail
-        v                  <- ValueResource.from(r)
-        valueIri           <- v.valueIriOrFail
-        valueCreationDate  <- v.valueCreationDateOption
-        valuePermissions   <- v.hasPermissionsOption
+        r                     <- RootResource.fromJsonLd(str)
+        resourceIri           <- r.resourceIriOrFail
+        v                     <- ValueResource.from(r)
+        valueIri              <- v.valueIriOrFail
+        valueCreationDate     <- v.valueCreationDateOption
+        valuePermissions      <- v.hasPermissionsOption
         newValueVersionIri    <- newValueVersionIri(v, valueIri)
-        newValueVersionSmtIri <- ZIO.foreach(newValueVersionIri)(vi => converter.asSmartIri(vi.value).mapError(_.getMessage))
-        valueContent          <- getValueContent(v, resourceIri.shortcode).map(Some(_)).orElse(ZIO.none)
-        updateValue           <- (valueContent, valuePermissions) match
+        newValueVersionSmtIri <-
+          ZIO.foreach(newValueVersionIri)(vi => converter.asSmartIri(vi.value).mapError(_.getMessage))
+        valueContent <- getValueContent(v, resourceIri.shortcode).map(Some(_)).orElse(ZIO.none)
+        updateValue  <- (valueContent, valuePermissions) match
                          case (Some(valueContentV2), _) =>
                            ZIO.succeed(
                              UpdateValueContentV2(

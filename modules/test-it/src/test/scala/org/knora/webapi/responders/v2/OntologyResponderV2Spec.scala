@@ -4679,7 +4679,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
           self.freetestLastModDate.updateFrom(addCardinalitiesResponse)
 
         // Create a resource of #BlueTestClass using only #hasBlueTestIntProp.
-        resourceIri = sf.makeRandomResourceIri(anythingProject.shortcode)
+        resourceIri = ResourceIri.makeNew(anythingProject.shortcode).value
         inputValues = Map(
                         "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestIntProp".toSmartIri -> Seq(
                           CreateValueInNewResourceV2(

@@ -33,6 +33,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.util.Base64UrlCheckDigit
@@ -323,16 +325,6 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] { 
   def isKnoraDataIri: Boolean
 
   /**
-   * Returns `true` if this is a Knora resource IRI.
-   */
-  def isKnoraResourceIri: Boolean
-
-  /**
-   * Returns `true` if this is a Knora value IRI.
-   */
-  def isKnoraValueIri: Boolean
-
-  /**
    * Returns `true` if this is a Knora standoff IRI.
    */
   def isKnoraStandoffIri: Boolean
@@ -398,16 +390,6 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] { 
     getProjectCode
       .toRight("No project shortcode in IRI")
       .flatMap(str => Shortcode.from(str))
-
-  /**
-   * Returns the IRI's resource ID, if any.
-   */
-  def getResourceID: Option[String]
-
-  /**
-   * Returns the IRI's value ID, if any.
-   */
-  def getValueID: Option[String]
 
   /**
    * Returns the IRI's standoff start index, if any.
@@ -500,24 +482,6 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] { 
    * [[DataConversionException]] if this IRI is not a Knora entity IRI.
    */
   def fromLinkPropToLinkValueProp: SmartIri
-
-  /**
-   * If this is a Knora data IRI representing a resource, returns an ARK URL for the resource. Throws
-   * [[DataConversionException]] if this IRI is not a Knora resource IRI.
-   *
-   * @param maybeTimestamp an optional timestamp indicating the point in the resource's version history that the ARK URL should
-   *                       cite.
-   */
-  def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String
-
-  /**
-   * If this is a Knora data IRI representing a value, returns an ARK URL for the value. Throws
-   * [[DataConversionException]] if this IRI is not a Knora value IRI.
-   *
-   * @param maybeTimestamp an optional timestamp indicating the point in the value's version history that the ARK URL should
-   *                       cite.
-   */
-  def fromValueIriToArkUrl(valueUUID: UUID, maybeTimestamp: Option[Instant] = None): String
 
   override def equals(obj: scala.Any): Boolean =
     // See the comment at the top of the SmartIri trait.
@@ -968,10 +932,6 @@ class StringFormatter private (
 
     override def getProjectCode: Option[String] = iriInfo.projectCode
 
-    override def getResourceID: Option[String] = iriInfo.resourceID
-
-    override def getValueID: Option[String] = iriInfo.valueID
-
     override def getStandoffStartIndex: Option[Int] = iriInfo.standoffStartIndex
 
     private lazy val ontologyFromEntity: SmartIri =
@@ -1273,26 +1233,6 @@ class StringFormatter private (
 
     override def fromLinkPropToLinkValueProp: SmartIri = asLinkValueProp
 
-    override def isKnoraResourceIri: Boolean =
-      if (!isKnoraDataIri) {
-        false
-      } else {
-        (iriInfo.projectCode, iriInfo.resourceID, iriInfo.valueID) match {
-          case (Some(_), Some(_), None) => true
-          case _                        => false
-        }
-      }
-
-    override def isKnoraValueIri: Boolean =
-      if (!isKnoraDataIri) {
-        false
-      } else {
-        (iriInfo.projectCode, iriInfo.resourceID, iriInfo.valueID) match {
-          case (Some(_), Some(_), Some(_)) => true
-          case _                           => false
-        }
-      }
-
     override def isKnoraStandoffIri: Boolean =
       if (!isKnoraDataIri) {
         false
@@ -1303,47 +1243,6 @@ class StringFormatter private (
         }
       }
 
-    override def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String = {
-      if (!isKnoraResourceIri) {
-        throw DataConversionException(s"IRI $iri is not a Knora resource IRI")
-      }
-
-      val arkUrlTry = Try {
-        makeArkUrl(
-          projectID = iriInfo.projectCode.get,
-          resourceID = iriInfo.resourceID.get,
-          maybeValueUUID = None,
-          maybeTimestamp = maybeTimestamp,
-        )
-
-      }
-
-      arkUrlTry match {
-        case Success(arkUrl) => arkUrl
-        case Failure(ex)     => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
-      }
-    }
-
-    override def fromValueIriToArkUrl(valueUUID: UUID, maybeTimestamp: Option[Instant] = None): String = {
-      if (!isKnoraValueIri) {
-        throw DataConversionException(s"IRI $iri is not a Knora value IRI")
-      }
-
-      val arkUrlTry = Try {
-        makeArkUrl(
-          projectID = iriInfo.projectCode.get,
-          resourceID = iriInfo.resourceID.get,
-          maybeValueUUID = Some(valueUUID),
-          maybeTimestamp = maybeTimestamp,
-        )
-
-      }
-
-      arkUrlTry match {
-        case Success(arkUrl) => arkUrl
-        case Failure(ex)     => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
-      }
-    }
   }
 
   /**
@@ -1511,15 +1410,35 @@ class StringFormatter private (
   }
 
   /**
-   * Creates a new resource IRI based on a UUID.
+   * Generates an ARK URL for a resource.
    *
-   * @param shortcode the project's shortcode.
-   * @return a new resource IRI.
+   * @param resourceIri    the resource IRI.
+   * @param maybeTimestamp an optional timestamp for the resource's version history.
+   * @return an ARK URL that can be resolved to obtain the resource.
    */
-  def makeRandomResourceIri(shortcode: Shortcode): IRI = {
-    val knoraResourceID = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/$shortcode/$knoraResourceID"
-  }
+  def resourceIriToArkUrl(resourceIri: ResourceIri, maybeTimestamp: Option[Instant] = None): String =
+    makeArkUrl(
+      projectID = resourceIri.shortcode.value,
+      resourceID = resourceIri.resourceId.value,
+      maybeValueUUID = None,
+      maybeTimestamp = maybeTimestamp,
+    )
+
+  /**
+   * Generates an ARK URL for a value.
+   *
+   * @param valueIri       the value IRI.
+   * @param valueUUID      the value's UUID.
+   * @param maybeTimestamp an optional timestamp for the value's version history.
+   * @return an ARK URL that can be resolved to obtain the value.
+   */
+  def valueIriToArkUrl(valueIri: ValueIri, valueUUID: UUID, maybeTimestamp: Option[Instant] = None): String =
+    makeArkUrl(
+      projectID = valueIri.shortcode.value,
+      resourceID = valueIri.resourceId.value,
+      maybeValueUUID = Some(valueUUID),
+      maybeTimestamp = maybeTimestamp,
+    )
 
   /**
    * Creates a mapping IRI based on a project IRI and a mapping name.
