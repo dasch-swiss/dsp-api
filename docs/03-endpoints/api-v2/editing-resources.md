@@ -4,7 +4,7 @@
 
 To create a new resources, use this route:
 
-```
+```text
 HTTP POST to http://host/v2/resources
 ```
 
@@ -229,7 +229,7 @@ You can modify the following metadata attached to a resource:
 
 To do this, use this route:
 
-```
+```text
 HTTP PUT to http://host/v2/resources
 ```
 
@@ -290,7 +290,7 @@ normal query results.
 
 To mark a resource as deleted, use this route:
 
-```
+```text
 HTTP POST to http://host/v2/resources/delete
 ```
 
@@ -395,7 +395,7 @@ Normally, resources are not actually removed from the triplestore; they are only
 [Deleting a Resource](#deleting-a-resource)). However, sometimes it is necessary to erase a resource from the
 triplestore. To do so, use this route:
 
-```
+```text
 HTTP POST to http://host/v2/resources/erase
 ```
 

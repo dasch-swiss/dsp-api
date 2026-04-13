@@ -24,7 +24,7 @@ Requests for ontology metadata can return information about more than one
 ontology, unlike other requests for ontology information. To get metadata
 about all ontologies:
 
-```
+```text
 HTTP GET to http://host/v2/ontologies/metadata
 ```
 
@@ -193,7 +193,7 @@ The response is in the complex API v2 schema. Sample response:
 To get metadata about the ontologies that belong to one or more particular
 projects:
 
-```
+```text
 HTTP GET to http://host/v2/ontologies/metadata/PROJECT_IRI[/PROJECT_IRI...]
 ```
 
@@ -224,7 +224,7 @@ Example response for the `anything` test project
 An ontology can be queried either by using an API route directly or by
 simply dereferencing the ontology IRI. The API route is as follows:
 
-```
+```text
 HTTP GET to http://host/v2/ontologies/allentities/ONTOLOGY_IRI
 ```
 
@@ -233,7 +233,7 @@ or the simple schema. The response will be in the same schema. For
 example, if the server is running on `0.0.0.0:3333`, you can request
 the `knora-api` ontology in the complex schema as follows:
 
-```
+```text
 HTTP GET to http://0.0.0.0:3333/v2/ontologies/allentities/http%3A%2F%2Fapi.knora.org%2Fontology%2Fknora-api%2Fv2
 ```
 
@@ -965,7 +965,7 @@ editing the value of a property. For more information on the
 
 To get the definition of a class, use the following route:
 
-```
+```text
 HTTP GET to http://host/v2/ontologies/classes/CLASS_IRI
 ```
 
@@ -1215,7 +1215,7 @@ Ontology updates always use the complex schema.
 
 An ontology is always created within a particular project.
 
-```
+```text
 HTTP POST to http://host/v2/ontologies
 ```
 
@@ -1239,7 +1239,7 @@ The ontology name must follow the rules given in
 The ontology metadata can have an optional comment given in the request 
 body as:
 
-```
+```json
 "rdfs:comment": "some comment",
 ``` 
 
@@ -1248,7 +1248,7 @@ created in the default shared ontologies project,
 `http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject`,
 and the request must have this additional boolean property:
 
-```
+```json
 "knora-api:isShared" : true
 ```
 
@@ -1267,7 +1267,7 @@ be a valid XML [NCName](https://www.w3.org/TR/xml-names/#NT-NCName).
 One can modify an ontology's metadata by updating its `rdfs:label` or `rdfs:comment` 
 or both. The example below shows the request for changing the label of an ontology.
 
-```
+```text
 HTTP PUT to http://host/v2/ontologies/metadata
 ```
 
@@ -1312,7 +1312,7 @@ ontology's metadata.
 
 ### Deleting an Ontology's comment
 
-```
+```text
 HTTP DELETE to http://host/v2/ontologies/comment/ONTOLOGY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
 ```
 
@@ -1326,7 +1326,7 @@ updated metadata.
 
 An ontology can be deleted only if it is not used in data.
 
-```
+```text
 HTTP DELETE to http://host/v2/ontologies/ONTOLOGY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
 ```
 
@@ -1338,7 +1338,7 @@ confirmation message.
 
 To check whether an ontology can be deleted:
 
-```
+```text
 HTTP GET to http://host/v2/ontologies/candeleteontology/ONTOLOGY_IRI
 ```
 
@@ -1355,7 +1355,7 @@ The response will look like this:
 
 ### Creating a Class Without Cardinalities
 
-```
+```text
 HTTP POST to http://host/v2/ontologies/classes
 ```
 
@@ -1410,7 +1410,7 @@ This can work if the new class will have cardinalities for properties
 that have no `knora-api:subjectType`, or if the new class will be a
 subclass of their `knora-api:subjectType`.
 
-```
+```text
 HTTP POST to http://host/v2/ontologies/classes
 ```
 
@@ -1478,7 +1478,7 @@ definition (but not any of the other entities in the ontology).
 
 This operation is permitted even if the class is used in data.
 
-```
+```text
 HTTP PUT to http://host/v2/ontologies/classes
 ```
 
@@ -1519,7 +1519,7 @@ To get the current labels use the [class definition](#querying-class-definition)
 
 This operation is permitted even if the class is used in data.
 
-```
+```text
 HTTP PUT to http://host/v2/ontologies/classes
 ```
 
@@ -1561,7 +1561,7 @@ To get the current comments use the [class definition](#querying-class-definitio
 
 This operation is permitted even if the class is used in data.
 
-```
+```text
 HTTP DELETE to http://host/v2/ontologies/classes/comment/CLASS_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
 ```
 
@@ -1573,7 +1573,7 @@ A successful response will be a JSON-LD document providing the class definition.
 
 ### Creating a Property
 
-```
+```text
 HTTP POST to http://host/v2/ontologies/properties
 ```
 
@@ -1664,7 +1664,7 @@ property definition (but not any of the other entities in the ontology).
 
 This operation is permitted even if the property is used in data.
 
-```
+```text
 HTTP PUT to http://host/v2/ontologies/properties
 ```
 
@@ -1702,7 +1702,7 @@ either as an object or as an array of objects.
 
 This operation is permitted even if the property is used in data.
 
-```
+```text
 HTTP PUT to http://host/v2/ontologies/properties
 ```
 
@@ -1740,7 +1740,7 @@ either as an object or as an array of objects.
 
 This operation is permitted even if the property is used in data.
 
-```
+```text
 HTTP DELETE to http://host/v2/ontologies/properties/comment/PROPERTY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
 ```
 
@@ -1756,7 +1756,7 @@ A successful response will be a JSON-LD document providing the property definiti
 
 This operation is permitted even if the property is used in data.
 
-```
+```text
 HTTP PUT to http://host/v2/ontologies/properties/guielement
 ```
 
@@ -1800,7 +1800,7 @@ the property definition, submit the request without those predicates.
 If the class (or any of its sub-classes) is used in data, 
 it is not allowed to add cardinalities `owl:minCardinality` greater than 0 or `owl:cardinality 1` to the class.
 
-```
+```text
 HTTP POST to http://host/v2/ontologies/cardinalities
 ```
 
@@ -1879,7 +1879,7 @@ A partial update of the ontology will not be performed.
     This means that currently it is necessary to maintain the cardinalities on all subproperties of a property 
     in sync with the cardinalities on the superproperty.
 
-```
+```text
 HTTP PUT to http://host/v2/ontologies/cardinalities
 ```
 
@@ -1927,7 +1927,7 @@ If any of the "Pre-Update Checks" fail the endpoint will respond with a _400 Bad
 The "Pre-Update Checks" are available on a dedicated endpoint.
 For a check whether a particular cardinality can be set on a class/property combination, use the following request:
 
-```
+```text
 HTTP GET to http://host/v2/ontologies/canreplacecardinalities/CLASS_IRI?propertyIri=PROPERTY_IRI&newCardinality=[0-1|1|1-n|0-n]
 ```
 
@@ -1981,7 +1981,7 @@ Success:
 
 To check whether all class's cardinalities can be replaced:
 
-```
+```text
 HTTP GET to http://host/v2/ontologies/canreplacecardinalities/CLASS_IRI
 ```
 
@@ -2005,7 +2005,7 @@ If a class is used in data, it is only allowed to delete a cardinality, if the
 property a cardinality refers to, is not used inside the data. Also, the property
 isn't allowed to be used inside the data in any subclasses of this class.
 
-```
+```text
 HTTP PATCH to http://host/v2/ontologies/cardinalities
 ```
 
@@ -2052,7 +2052,7 @@ definition (but not any of the other entities in the ontology).
 
 To check whether a class's cardinality can be deleted:
 
-```
+```text
 HTTP POST to http://host/v2/ontologies/candeletecardinalities
 ```
 
@@ -2071,7 +2071,7 @@ The response will look like this:
 
 To change the GUI order of one or more cardinalities in a class:
 
-```
+```text
 HTTP PUT to http://host/v2/ontologies/guiorder
 ```
 
@@ -2120,7 +2120,7 @@ are ignored; only the `GUI_ORDER_VALUE` is changed.
 A property can be deleted only if no other ontology entity refers to it,
 and if it is not used in data.
 
-```
+```text
 HTTP DELETE to http://host/v2/ontologies/properties/PROPERTY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
 ```
 
@@ -2136,7 +2136,7 @@ ontology's metadata.
 
 To check whether a property can be deleted:
 
-```
+```text
 HTTP GET to http://host/v2/ontologies/candeleteproperty/PROPERTY_IRI
 ```
 
@@ -2156,7 +2156,7 @@ The response will look like this:
 A class can be deleted only if no other ontology entity refers to it,
 and if it is not used in data.
 
-```
+```text
 HTTP DELETE to http://host/v2/ontologies/classes/CLASS_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
 ```
 
@@ -2168,7 +2168,7 @@ ontology's metadata.
 
 To check whether a class can be deleted:
 
-```
+```text
 HTTP GET to http://host/v2/ontologies/candeleteclass/CLASS_IRI
 ```
 

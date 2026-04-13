@@ -4,7 +4,7 @@
 
 To create a value in an existing resource, use this route:
 
-```
+```text
 HTTP POST to http://host/v2/values
 ```
 
@@ -254,7 +254,7 @@ Files can be ingested into DSP using SIPI or DSP-INGEST (experimental).
 The first step is to upload one or more files to SIPI, using a `multipart/form-data` request, where `sipihost`
 represents the host and port on which SIPI is running:
 
-```
+```text
 HTTP POST to http://sipihost/upload?token=TOKEN
 ```
 
@@ -429,7 +429,7 @@ pointing to a `knora-api:ArchiveFileValue`.
 
 To update a value, use this route:
 
-```
+```text
 HTTP PUT to http://host/v2/values
 ```
 
@@ -525,7 +525,7 @@ query results.
 
 To mark a value as deleted, use this route:
 
-```
+```text
 HTTP POST to http://host/v2/values/delete
 ```
 
