@@ -13,9 +13,9 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.twirl.MappingElement
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.slice.resources.repo.model.MappingElement
 
 object CreateNewMappingQuery extends QueryBuilderHelper {
 

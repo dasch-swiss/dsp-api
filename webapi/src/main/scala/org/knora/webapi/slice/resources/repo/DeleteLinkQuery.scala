@@ -18,10 +18,10 @@ import java.time.Instant
 
 import dsp.errors.SparqlGenerationException
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 /**
  * Deletes an existing link between two resources.

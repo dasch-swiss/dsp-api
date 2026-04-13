@@ -7,9 +7,9 @@ package org.knora.webapi.slice.resources.repo
 
 import zio.test.*
 
-import org.knora.webapi.messages.twirl.MappingElement
-import org.knora.webapi.messages.twirl.MappingStandoffDatatypeClass
-import org.knora.webapi.messages.twirl.MappingXMLAttribute
+import org.knora.webapi.slice.resources.repo.model.MappingElement
+import org.knora.webapi.slice.resources.repo.model.MappingStandoffDatatypeClass
+import org.knora.webapi.slice.resources.repo.model.MappingXMLAttribute
 
 object CreateNewMappingQuerySpec extends ZIOSpecDefault {
 

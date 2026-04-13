@@ -22,7 +22,6 @@ import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
@@ -34,6 +33,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
+import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 object InsertValueQueryBuilderTestSupport {
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance

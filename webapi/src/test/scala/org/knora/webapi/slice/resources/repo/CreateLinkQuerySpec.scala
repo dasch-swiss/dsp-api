@@ -16,10 +16,10 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 object CreateLinkQuerySpec extends ZIOSpecDefault {
 
@@ -51,7 +51,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
   private val testNewValueUUID        = UUID.fromString("4b47a956-a532-4252-86d4-e78ec3606c8c")
   private val testBase64UUID          = UuidUtil.base64Encode(testNewValueUUID)
 
-  private def createValidLinkUpdate(
+  private def createValidSparqlTemplateLinkUpdate(
     linkTargetExists: Boolean = true,
   ): SparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
     linkPropertyIri = testLinkPropertyIri,
@@ -75,7 +75,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
           query <- CreateLinkQuery.build(
                      testProject,
                      testResourceIri,
-                     createValidLinkUpdate(),
+                     createValidSparqlTemplateLinkUpdate(),
                      testNewValueUUID,
                      testCreationDate,
                      None,
@@ -127,7 +127,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
           query <- CreateLinkQuery.build(
                      testProject,
                      testResourceIri,
-                     createValidLinkUpdate(),
+                     createValidSparqlTemplateLinkUpdate(),
                      testNewValueUUID,
                      testCreationDate,
                      Some("This is a test comment"),
@@ -180,7 +180,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
           query <- CreateLinkQuery.build(
                      testProject,
                      testResourceIri,
-                     createValidLinkUpdate(linkTargetExists = false),
+                     createValidSparqlTemplateLinkUpdate(linkTargetExists = false),
                      testNewValueUUID,
                      testCreationDate,
                      None,

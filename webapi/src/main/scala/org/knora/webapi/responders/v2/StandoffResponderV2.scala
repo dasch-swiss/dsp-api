@@ -26,9 +26,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
-import org.knora.webapi.messages.twirl.MappingElement
-import org.knora.webapi.messages.twirl.MappingStandoffDatatypeClass
-import org.knora.webapi.messages.twirl.MappingXMLAttribute
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -51,6 +48,9 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.resources.repo.CreateNewMappingQuery
 import org.knora.webapi.slice.resources.repo.GetMappingQuery
+import org.knora.webapi.slice.resources.repo.model.MappingElement
+import org.knora.webapi.slice.resources.repo.model.MappingStandoffDatatypeClass
+import org.knora.webapi.slice.resources.repo.model.MappingXMLAttribute
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct

@@ -186,9 +186,9 @@ When changes are hard to test with local test data (e.g. they need realistic dat
 
 ### Writing SPARQL queries
 
-When writing SPARQL queries do not use Twirl templates or String concatenation.
+When writing SPARQL queries do not use String concatenation.
 Instead use rdf4j and the query helper in dsp-api.
-For more details see `docs/development/dsp-api-sparql-builder.md`.
+For more details see `docs/development/dsp-api-sparql-queries.md`.
 
 ### Development Conventions
 
