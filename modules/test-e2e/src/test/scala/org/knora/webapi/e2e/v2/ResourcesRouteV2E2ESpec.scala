@@ -35,7 +35,7 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaQueryParam
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
@@ -52,8 +52,8 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
   private var aThingLastModificationDate  = Instant.now
   private val hamletResourceIri           = new MutableTestIri
   private val aThingIri                   = "http://rdfh.ch/0001/a-thing"
-  val aThingWithHistoryIri: ResourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri)
-  val reiseInsHeiligeLandIri: ResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701".toSmartIri)
+  val aThingWithHistoryIri: ResourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
+  val reiseInsHeiligeLandIri: ResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701")
 
   override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

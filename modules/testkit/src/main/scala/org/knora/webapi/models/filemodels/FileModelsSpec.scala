@@ -22,6 +22,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.StillImageVectorFile
 import org.knora.webapi.models.filemodels.FileType.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.common.ResourceIri
 
 object FileModelsSpec extends ZIOSpecDefault {
 
@@ -345,12 +346,12 @@ object FileModelsSpec extends ZIOSpecDefault {
           val project                    = SharedTestDataADM.beolProject
           val shortcode                  = project.shortcode
           val label                      = "a custom label"
-          val resourceIRI                = sf.makeRandomResourceIri(shortcode)
+          val resourceIRI                = ResourceIri.makeNew(shortcode).value
           val comment                    = Some("This is a custom comment")
           val internalMimetype           = Some("application/msword")
           val originalFilename           = Some("document-file.docm")
           val originalMimeType           = Some("application/vnd.ms-word.document.macroEnabled.12")
-          val customValueIRI             = Some(sf.makeRandomResourceIri(shortcode).toSmartIri)
+          val customValueIRI             = Some(ResourceIri.makeNew(shortcode).value.toSmartIri)
           val customValueUUID            = Some(UUID.randomUUID())
           val customValueCreationDate    = Some(Instant.now())
           val valuePermissions           = Some("V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember")
@@ -455,8 +456,8 @@ object FileModelsSpec extends ZIOSpecDefault {
       ),
       suite("creating a ChangeFileRequest")(
         test("create a valid representation of a DocumentRepresentation with default values") {
-          val resourceIRI = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
-          val valueIRI    = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+          val resourceIRI = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
+          val valueIRI    = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
 
           val change = ChangeFileRequest.make(
             fileType = FileType.DocumentFile(),
@@ -477,8 +478,8 @@ object FileModelsSpec extends ZIOSpecDefault {
           )
         },
         test("create a valid representation of a DocumentRepresentation with custom values") {
-          val resourceIRI  = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
-          val valueIRI     = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+          val resourceIRI  = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
+          val valueIRI     = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
           val pageCount    = Some(33)
           val dimX         = Some(44)
           val dimY         = Some(55)
@@ -510,8 +511,8 @@ object FileModelsSpec extends ZIOSpecDefault {
           )
         },
         test("create a valid representation of a StillImageRepresentation with default values") {
-          val resourceIRI = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
-          val valueIRI    = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+          val resourceIRI = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
+          val valueIRI    = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
 
           val change = ChangeFileRequest.make(
             fileType = FileType.StillImageFile(),
@@ -531,8 +532,8 @@ object FileModelsSpec extends ZIOSpecDefault {
           )
         },
         test("create a valid representation of a MovingImageRepresentation with default values") {
-          val resourceIRI = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
-          val valueIRI    = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+          val resourceIRI = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
+          val valueIRI    = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
 
           val change = ChangeFileRequest.make(
             fileType = MovingImageFile(),
@@ -552,8 +553,8 @@ object FileModelsSpec extends ZIOSpecDefault {
           )
         },
         test("create a valid representation of a AudioRepresentation with default values") {
-          val resourceIRI = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
-          val valueIRI    = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+          val resourceIRI = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
+          val valueIRI    = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
 
           val change = ChangeFileRequest.make(
             fileType = FileType.AudioFile,
@@ -571,8 +572,8 @@ object FileModelsSpec extends ZIOSpecDefault {
           )
         },
         test("create a valid representation of a TextRepresentation with default values") {
-          val resourceIRI = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
-          val valueIRI    = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+          val resourceIRI = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
+          val valueIRI    = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
 
           val change = ChangeFileRequest.make(
             fileType = FileType.TextFile,
@@ -590,8 +591,8 @@ object FileModelsSpec extends ZIOSpecDefault {
           )
         },
         test("create a valid representation of a ArchiveRepresentation with default values") {
-          val resourceIRI = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
-          val valueIRI    = sf.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+          val resourceIRI = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
+          val valueIRI    = ResourceIri.makeNew(Shortcode.unsafeFrom("0000")).value
 
           val change = ChangeFileRequest.make(
             fileType = FileType.ArchiveFile,
@@ -611,8 +612,8 @@ object FileModelsSpec extends ZIOSpecDefault {
       ),
       suite("generating a JSON-LD representation of a ChangeFileRequest")(
         test("correctly serialize a DocumentRepresentation with default values") {
-          val resourceIRI = sf.makeRandomResourceIri(Shortcode.unsafeFrom("7777"))
-          val valueIRI    = sf.makeRandomResourceIri(Shortcode.unsafeFrom("7777"))
+          val resourceIRI = ResourceIri.makeNew(Shortcode.unsafeFrom("7777")).value
+          val valueIRI    = ResourceIri.makeNew(Shortcode.unsafeFrom("7777")).value
 
           val documentRepresentation = ChangeFileRequest.make(
             fileType = FileType.DocumentFile(),
@@ -639,8 +640,8 @@ object FileModelsSpec extends ZIOSpecDefault {
           assertTrue(actual == Right(expected))
         },
         test("correctly serialize a DocumentRepresentation with custom values") {
-          val resourceIRI = sf.makeRandomResourceIri(Shortcode.unsafeFrom("7777"))
-          val valueIRI    = sf.makeRandomResourceIri(Shortcode.unsafeFrom("7777"))
+          val resourceIRI = ResourceIri.makeNew(Shortcode.unsafeFrom("7777")).value
+          val valueIRI    = ResourceIri.makeNew(Shortcode.unsafeFrom("7777")).value
           val className   = "CustomDocumentRepresentation"
           val prefix      = "onto"
 

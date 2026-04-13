@@ -18,6 +18,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.CheckIriExistsQuery
 import org.knora.webapi.slice.ontology.repo.IsClassUsedInDataQuery
@@ -128,9 +129,10 @@ final case class IriService(
     makeUnusedIriRec(attempts = MAX_IRI_ATTEMPTS)
   }
 
-  def checkIriExists(iri: IRI): Task[Boolean]      = triplestore.query(CheckIriExistsQuery.build(iri))
-  def checkIriExists(iri: KnoraIri): Task[Boolean] = checkIriExists(iri.smartIri)
-  def checkIriExists(iri: SmartIri): Task[Boolean] = triplestore.query(CheckIriExistsQuery.build(iri))
+  def checkIriExists(iri: IRI): Task[Boolean]         = triplestore.query(CheckIriExistsQuery.build(iri))
+  def checkIriExists(iri: KnoraIri): Task[Boolean]    = checkIriExists(iri.smartIri)
+  def checkIriExists(iri: SmartIri): Task[Boolean]    = triplestore.query(CheckIriExistsQuery.build(iri))
+  def checkIriExists(iri: StringValue): Task[Boolean] = checkIriExists(iri.value)
 }
 
 object IriService {

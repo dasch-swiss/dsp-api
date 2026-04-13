@@ -42,6 +42,7 @@ import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
@@ -76,8 +77,6 @@ final case class ExportService(
   ): Task[String] = {
     import zio.json.*
 
-    given StringFormatter = sf
-
     for {
       resourceIris  <- findResources.findResources(project, None)
       readResources <- readResources.readResourcesSequencePar(
@@ -94,7 +93,7 @@ final case class ExportService(
                   val description = descriptionProp.flatMap(r.values.get(_).flatMap(_.headOption))
                   MetadataRecord(
                     id = r.resourceIri.toString,
-                    pid = r.resourceIri.toSmartIri.fromResourceIriToArkUrl(),
+                    pid = sf.resourceIriToArkUrl(ResourceIri.unsafeFrom(r.resourceIri)),
                     label = Map("en" -> r.label),
                     accessRights = "Full Open Access",
                     legalInfo = LegalInfo.publicDomain,
@@ -216,7 +215,7 @@ final case class ExportService(
     val arkEntryTask: Task[ListMap[String, String]] =
       if includeArkUrls then
         ZIO
-          .attempt(resource.resourceIri.toSmartIri.fromResourceIriToArkUrl())
+          .attempt(sf.resourceIriToArkUrl(ResourceIri.unsafeFrom(resource.resourceIri)))
           .orDie
           .map(url => ListMap("ARK URL" -> url))
       else ZIO.succeed(ListMap.empty)
