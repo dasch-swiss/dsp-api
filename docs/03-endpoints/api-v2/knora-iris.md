@@ -37,14 +37,14 @@ Each internal ontology has an IRI, which is also the IRI of the named
 graph that contains the ontology in the triplestore. An internal
 ontology IRI has the form:
 
-```
+```text
 http://www.knora.org/ontology/PROJECT_SHORTCODE/ONTOLOGY_NAME
 ```
 
 For example, the internal ontology IRI based on project code `0001` and ontology
 name `example` would be:
 
-```
+```text
 http://www.knora.org/ontology/0001/example
 ```
 
@@ -75,7 +75,7 @@ human-readable documentation.
 
 The IRI of an external Knora ontology has the form:
 
-```
+```text
 http://HOST[:PORT]/ontology/PROJECT_SHORTCODE/ONTOLOGY_NAME/API_VERSION
 ```
 
@@ -154,7 +154,7 @@ affect other ontologies or data that are based on it.
 
 There is currently one project for shared ontologies:
 
-```
+```text
 http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject
 ```
 

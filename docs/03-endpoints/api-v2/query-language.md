@@ -40,7 +40,7 @@ For a more detailed overview of Gravsearch, see
 
 The recommended way to submit a Gravsearch query is via HTTP POST:
 
-```
+```text
 HTTP POST to http://host/v2/searchextended
 ```
 
@@ -51,7 +51,7 @@ is sent unencoded as the HTTP request message body, in the UTF-8 charset.
 It is also possible to submit a Gravsearch query using HTTP GET. The entire
 query must be URL-encoded and included as the last element of the URL path:
 
-```
+```text
 HTTP GET to http://host/v2/searchextended/QUERY
 ```
 
@@ -61,7 +61,7 @@ formats (see [Responses Describing Resources](reading-and-searching-resources.md
 To request the number of results rather than the results themselves, you can
 do a count query:
 
-```
+```text
 HTTP POST to http://host/v2/searchextended/count
 ```
 
@@ -91,7 +91,7 @@ To write a query in the simple schema, use the `knora-api` ontology in
 the simple schema, and use the simple schema for any other DSP ontologies
 the query refers to, e.g.:
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 ```
@@ -105,7 +105,7 @@ To write a query in the complex schema, use the `knora-api` ontology in
 the complex schema, and use the complex schema for any other DSP ontologies
 the query refers to, e.g.:
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
 ```
@@ -134,7 +134,7 @@ in its link value `incunabula:partOfValue`. But in case B is marked as the main 
 B does not have a link value pointing to A because in fact B is pointed to by A.
 Instead, B has a virtual property `knora-api:hasIncomingLink` containing A's link value:
 
-```
+```json
 "knora-api:hasIncomingLinkValue" : {
     "@id" : "http://rdfh.ch/A/values/xy",
     "@type" : "knora-api:LinkValue",
@@ -165,7 +165,7 @@ since B is the main resource.
 The dedicated endpoint for querying the incoming links was introduced in DSP-API
 version [v31.10.0](https://github.com/dasch-swiss/dsp-api/releases/tag/v31.10.0).
 
-```
+```text
 HTTP GET to http://host/v2/searchIncomingLinks/[resourceIri]?offset=[pageNumber]
 ```
 
@@ -175,7 +175,7 @@ must be URL-encoded and included as the last element of the URL path.
 Here is an example of the request for the resource `http://rdfh.ch/0001/a-thing-picture`
 with the page number 1:
 
-```
+```text
 http://host/v2/searchIncomingLinks/http%3A%2F%2Frdfh.ch%2F0001%2Fa-thing-picture?offset=1
 ```
 
@@ -285,7 +285,7 @@ must be represented as a query variable.
 In the simple schema, a variable representing a DSP-API value can be used
 directly in a `FILTER` expression. For example:
 
-```
+```sparql
 ?book incunabula:title ?title .
 FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
 ```
@@ -311,7 +311,7 @@ Note that in the simple schema, uniqueness is not guaranteed (as opposed to the 
 A DSP-API value may not be represented as the literal object of a predicate;
 for example, this is not allowed:
 
-```
+```sparql
 ?book incunabula:title "Zeitglöcklein des Lebens und Leidens Christi" .
 ```
 
@@ -321,7 +321,7 @@ In the complex schema, variables representing DSP-API values are not literals.
 You must add something to the query (generally a statement) to get a literal
 from a DSP-API value. For example:
 
-```
+```sparql
 ?book incunabula:title ?title .
 ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
 ```
@@ -330,7 +330,7 @@ Here the type of `?title` is `knora-api:TextValue`. Note that no `FILTER` is nee
 in this example. But if you want to use a different comparison operator,
 you need a `FILTER`:
 
-```
+```sparql
 ?page incunabula:seqnum ?seqnum .
 ?seqnum knora-api:intValueAsInt ?seqnumInt .
 FILTER(?seqnumInt <= 10)
@@ -347,7 +347,7 @@ available in Gravsearch.
 In the simple schema, you can compare a date value directly with a `knora-api:Date`
 in a `FILTER`:
 
-```
+```sparql
 ?book incunabula:pubdate ?pubdate .
 FILTER(?pubdate < "JULIAN:1497"^^knora-api:Date)
 ```
@@ -357,7 +357,7 @@ passing it the variable representing the date value. The date literal used
 in the comparison must still be a `knora-api:Date` in the simple schema.
 This is the only case in which you can use both schemas in a single query:
 
-```
+```sparql
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -377,7 +377,7 @@ text markup (see [Matching Standoff Dates](#matching-standoff-dates)).
 
 Note that the given date value for comparison must have the following format: 
   
-```
+```text
 (GREGORIAN|JULIAN|ISLAMIC):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?
 ```
     
@@ -403,7 +403,7 @@ This function can only be used as the top-level expression in a `FILTER`.
 For example, to search for titles that contain the words 'Zeitglöcklein' and
 'Lebens':
 
-```
+```sparql
 ?book incunabule:title ?title .
 FILTER knora-api:matchText(?title, "Zeitglöcklein Lebens")
 ```
@@ -413,14 +413,14 @@ FILTER knora-api:matchText(?title, "Zeitglöcklein Lebens")
 To filter a text value by language in the simple schema, use the SPARQL `lang` function
 on the text value, e.g.:
 
-```
+```sparql
 FILTER(lang(?text) = "fr")
 ```
 
 In the complex schema, the `lang` function is not supported. Use the text
 value's `knora-api:textValueHasLanguage` predicate instead:
 
-```
+```sparql
 ?text knora-api:textValueHasLanguage "fr" .
 ```
 
@@ -430,7 +430,7 @@ The [SPARQL `regex` function](https://www.w3.org/TR/2013/REC-sparql11-query-2013
 is supported. In the simple schema, you can use it directly on the text value,
 e.g.
 
-```
+```sparql
 ?book incunabula:title ?title .
 FILTER regex(?title, "Zeit", "i")
 ```
@@ -438,7 +438,7 @@ FILTER regex(?title, "Zeit", "i")
 In the complex schema, use it on the object of the text value's
 `knora-api:valueAsString` predicate:
 
-```
+```sparql
 ?book incunabula:title ?title .
 ?title knora-api:valueAsString ?titleStr .
 FILTER regex(?titleStr, "Zeit", "i")
@@ -467,7 +467,7 @@ function takes three arguments:
 This function can only be used as the top-level expression in a `FILTER`.
 For example:
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
@@ -494,7 +494,7 @@ value containing a standoff link to another resource, the most efficient
 way is to use the property `knora-api:hasStandoffLinkTo`, whose subjects and objects
 are resources. This property is automatically maintained by the API. For example:
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
 
@@ -525,7 +525,7 @@ use the function `knora-api:standoffLink`. It takes three arguments:
 This function can only be used as the top-level expression in a `FILTER`.
 For example:
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
@@ -556,7 +556,7 @@ in the search results, you need to add a statement like
 `?letter knora-api:hasStandoffLinkTo ?person .` to the `WHERE` clause and to the
 `CONSTRUCT` clause:
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
@@ -588,7 +588,7 @@ of one of its subclasses. For example, here we are looking for a text containing
 an `anything:StandoffEventTag` (which is a project-specific subclass of `knora-api:StandoffDateTag`)
 representing an event that occurred sometime during the month of December 2016:
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
 PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -614,7 +614,7 @@ tag. In that case, we can use the inferred property
 `knora-api:standoffTagHasStartAncestor`. We can modify the previous example to
 do this:
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
 PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
@@ -641,20 +641,20 @@ This can be done in the same ways in the simple or complex schema:
 
 Using a string literal object:
 
-```
+```sparql
 ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
 ```
 
 Using a variable and a FILTER:
 
-```
+```sparql
 ?book rdfs:label ?label .
 FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
 ```
 
 Using the `regex` function:
 
-```
+```sparql
 ?book rdfs:label ?bookLabel .
 FILTER regex(?bookLabel, "Zeit", "i")
 ```
@@ -663,7 +663,7 @@ To match words in an `rdfs:label` using the full-text search index, use the
 `knora-api:matchLabel` function, which works like `knora-api:matchText`,
 except that the first argument is a variable representing a resource:
 
-```
+```sparql
 FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
 ```
 
@@ -673,7 +673,7 @@ A `FILTER` can compare a variable with another variable or IRI
 representing a resource. For example, to find a letter whose
 author and recipient are different persons:
 
-```
+```sparql
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 
@@ -692,7 +692,7 @@ OFFSET 0
 
 To find a letter whose author is not a person with a specified IRI:
 
-```
+```sparql
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 
@@ -750,7 +750,7 @@ different types of compound resources defined in different ontologies).
 
 `OFFSET` is set to 0 to get the first page of results.
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
 CONSTRUCT {
@@ -785,7 +785,7 @@ Let's assume the client is not interested in all of the book's pages,
 but just in first ten of them. In that case, the sequence number can be
 restricted using a `FILTER` that is added to the query's `WHERE` clause:
 
-```
+```sparql
 FILTER (?seqnum <= 10)
 ```
 
@@ -795,7 +795,7 @@ the first ten pages are returned.
 This query would be exactly the same in the complex schema, except for
 the expansion of the `knora-api` prefix:
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 ```
 
@@ -804,7 +804,7 @@ PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 Here we are looking for regions of pages that are part of books that have a
 particular title. In the simple schema:
 
-```
+```sparql
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
@@ -830,7 +830,7 @@ CONSTRUCT {
 
 In the complex schema:
 
-```
+```sparql
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 
@@ -865,7 +865,7 @@ Here the IRI of the main resource is already known and we want specific informat
 about it, as well as about related resources. In this case, the IRI of the main
 resource must be assigned to a variable using `BIND`:
 
-```
+```sparql
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
@@ -891,7 +891,7 @@ CONSTRUCT {
 This query would be the same in the complex schema, except for the prefix
 expansions:
 
-```
+```sparql
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 ```
@@ -902,7 +902,7 @@ Since list nodes are represented by their IRI in the complex schema,
 uniqueness is guranteed (as opposed to the simple schema).
 Also all the subnodes of the given list node are considered a match.
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
 
@@ -936,7 +936,7 @@ or the subject's specific type (if it is a value).
 
 For example, consider this query that uses a non-DSP property:
 
-```
+```sparql
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -952,7 +952,7 @@ CONSTRUCT {
 
 This produces the error message:
 
-```
+```text
 The types of one or more entities could not be determined:
   ?book, <http://purl.org/dc/terms/title>, ?title
 ```
@@ -961,7 +961,7 @@ To solve this problem, it is enough to specify the types of `?book` and
 `?title`; the type of the expected object of `dcterms:title` can then be inferred
 from the type of `?title`.
 
-```
+```sparql
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -983,7 +983,7 @@ CONSTRUCT {
 It would also be possible to annotate the property itself, using the predicate `knora-api:objectType`;
 then the type of `?title` would be inferred:
 
-```
+```sparql
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -1007,7 +1007,7 @@ its object is supposed to be a literal.
 
 Here is another example, using a non-DSP class:
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
@@ -1022,13 +1022,13 @@ CONSTRUCT {
 
 This produces the error message:
 
-```
+```text
 Types could not be determined for one or more entities: ?person
 ```
 
 The solution is to specify that `?person` is a `knora-api:Resource`:
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
@@ -1047,7 +1047,7 @@ CONSTRUCT {
 Gravsearch will also reject a query if an entity is used with inconsistent types.
 For example:
 
-```
+```sparql
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
@@ -1064,7 +1064,7 @@ CONSTRUCT {
 
 This returns the error message:
 
-```
+```text
 One or more entities have inconsistent types:
 
 <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate>
@@ -1079,7 +1079,7 @@ This is because the `incunabula` ontology says that the object of `incunabula:pu
 but the `FILTER` expression compares `?pubdate` with an `xsd:string`. The solution is to specify the
 type of the literal in the `FILTER`:
 
-```
+```sparql
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 

@@ -90,6 +90,7 @@ Each slice typically contains:
 - **Repository Pattern**: Data access abstraction
 - **Service Layer**: Business logic separation
 - **Dependency Injection**: ZIO layers for service composition
+- **Value Types**: Use `Value[A]` (e.g. `StringValue`, `BooleanValue`, `IntValue`) to make domain models type-safe with validated construction. See `docs/development/dsp-api-value-types.md` for details.
 
 ## Testing Guidelines
 

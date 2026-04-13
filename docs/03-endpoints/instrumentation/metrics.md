@@ -44,14 +44,14 @@ to replace dynamic path segments with slugs (e.g. `/projects/shortcode/0000` wit
 Like this, requesting different projects by identifier will add multiple values to the histogram of a single route,
 instead of creating a histogram for each project:
 
-```
+```text
 zio_http_request_duration_seconds_bucket{method="GET",path="/admin/projects/shortcode/:shortcode",status="200",le="0.005"} 0.0 1676481606015
 ...
 ```
 
 Instead of:
 
-```
+```text
 zio_http_request_duration_seconds_bucket{method="GET",path="/admin/projects/shortcode/0000",status="200",le="0.005"} 0.0 1676481606015
 zio_http_request_duration_seconds_bucket{method="GET",path="/admin/projects/shortcode/0001",status="200",le="0.005"} 0.0 1676481606015
 ...
