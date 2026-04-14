@@ -3,6 +3,8 @@ services:
     image: daschswiss/dsp-app:latest
     ports:
       - "4200:4200"
+    volumes:
+      - ./app-config.dev.json:/public/config/config.prod.json:ro
     networks:
       - knora-net
 
