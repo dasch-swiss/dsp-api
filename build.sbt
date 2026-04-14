@@ -259,6 +259,10 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       s"https://github.com/grafana/otel-profiling-java/releases/download/${Dependencies.otelPyroscopeVersion}/pyroscope-otel.jar",
       "/usr/local/lib/pyroscope-otel.jar",
     ),
+    // Disable OTel Java agent auto-instrumentation for HTTP client and Netty
+    // to avoid duplicate spans (dsp-api traces these manually via sttp/tapir)
+    dockerCommands += Cmd("ENV", """OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED="false""""),
+    dockerCommands += Cmd("ENV", """OTEL_INSTRUMENTATION_NETTY_ENABLED="false""""),
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
       // Remove USER command

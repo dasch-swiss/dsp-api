@@ -146,12 +146,6 @@ services:
       - 'OTEL_PYROSCOPE_ADD_PROFILE_URL=false'
       - 'OTEL_PYROSCOPE_ADD_PROFILE_BASELINE_URL=false'
       - 'OTEL_PYROSCOPE_START_PROFILING=true'
-      # Disable Java agent HTTP auto-instrumentation for the API container.
-      # ZIO's fiber-based execution breaks the agent's thread-local context propagation,
-      # causing it to overwrite SDK-injected traceparent headers with unlinked trace contexts.
-      # The SDK (OpenTelemetryTracingZioBackend + ZIO middleware) handles propagation instead.
-      - 'OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED=false'
-      - 'OTEL_INSTRUMENTATION_NETTY_ENABLED=false'
     deploy:
       resources:
         limits:
