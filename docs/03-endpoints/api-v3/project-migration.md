@@ -130,7 +130,7 @@ SHACL validation is memory-intensive. Midsized projects (e.g. BEOL) require 3–
 
 ### User Handling
 
-The import handles users referenced in the export with the following logic:
+The import handles users referenced in the export with the following logic. User merging is always additive — existing group memberships or user profile data (e.g. name) on the target instance will never be overwritten.
 
 **Built-in users** (SystemUser, AnonymousUser) are stripped from the admin data since they already exist on every instance.
 
