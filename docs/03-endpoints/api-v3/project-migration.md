@@ -138,7 +138,7 @@ The import handles users referenced in the export with the following logic:
 
 | Lookup Result | Behavior |
 | --- | --- |
-| **Found by IRI** | Verifies that email and username match the existing user. Logs warnings for profile differences (e.g. name). Rewrites the user's triples to only include memberships scoped to the imported project. |
+| **Found by IRI** | Verifies that email and username match the existing user. Logs warnings for profile differences (e.g. name). Strips the user's profile triples from the export data and keeps only memberships scoped to the imported project (e.g. `isInProject`, `isInGroup`). Because the triplestore upload is additive, the user's existing data and memberships in other projects on the target instance are not affected. |
 | **Not found at all** | Creates the user as a new user. Strips `isInSystemAdminGroup` (set to `false`). Removes any cross-project memberships. |
 | **No IRI match, but email or username collision** | Fails with an error message identifying the conflict. |
 
