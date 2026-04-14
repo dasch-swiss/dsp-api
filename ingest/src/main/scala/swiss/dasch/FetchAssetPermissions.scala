@@ -6,9 +6,9 @@
 package swiss.dasch
 
 import cats.implicits.*
-import sttp.capabilities.zio.ZioStreams
-import sttp.client3.*
-import sttp.client3.httpclient.zio.HttpClientZioBackend
+import sttp.client4.*
+import sttp.client4.httpclient.zio.HttpClientZioBackend
+import sttp.client4.opentelemetry.zio.OpenTelemetryTracingZioBackend
 import swiss.dasch.FetchAssetPermissions.PermissionResponse
 import swiss.dasch.config.Configuration
 import swiss.dasch.domain.AssetInfo
@@ -16,6 +16,7 @@ import zio.*
 import zio.json.DecoderOps
 import zio.json.DeriveJsonDecoder
 import zio.json.JsonDecoder
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import scala.concurrent.duration.*
 
@@ -27,7 +28,7 @@ trait FetchAssetPermissions {
 }
 
 class FetchAssetPermissionsLive(
-  sttp: SttpBackend[Task, ZioStreams],
+  sttp: Backend[Task],
   apiConfig: Configuration.DspApiConfig,
 ) extends FetchAssetPermissions {
   def getPermissionCode(
@@ -39,7 +40,7 @@ class FetchAssetPermissionsLive(
         ZIO.succeed(
           uri"${apiConfig.url}/admin/files/${assetInfo.assetRef.belongsToProject}/${assetInfo.derivative.filename}",
         )
-      response       <- sttp.send(basicRequest.get(uri).header("Authorization", jwt.map(jwt => s"Bearer ${jwt}")))
+      response       <- basicRequest.get(uri).header("Authorization", jwt.map(jwt => s"Bearer ${jwt}")).send(sttp)
       successBody    <- ZIO.fromEither(response.body).mapError(httpError(uri.toString, response.code.code, _))
       permissionCode <-
         ZIO.fromEither(successBody.fromJson[PermissionResponse].bimap(e => new Exception(e), _.permissionCode))
@@ -54,7 +55,12 @@ object FetchAssetPermissions {
 
   implicit val decoder: JsonDecoder[PermissionResponse] = DeriveJsonDecoder.gen[PermissionResponse]
 
-  val layer =
-    HttpClientZioBackend.layer(SttpBackendOptions.connectionTimeout(5.seconds)).orDie >+>
-      ZLayer.derive[FetchAssetPermissionsLive]
+  val layer: URLayer[Tracing & Configuration.DspApiConfig, FetchAssetPermissions] = ZLayer
+    .fromZIO(for {
+      tracing               <- ZIO.service[Tracing]
+      zioBackend            <- HttpClientZioBackend(options = BackendOptions.Default.connectionTimeout(5.seconds))
+      backend: Backend[Task] = OpenTelemetryTracingZioBackend(zioBackend, tracing)
+      apiConfig             <- ZIO.service[Configuration.DspApiConfig]
+    } yield new FetchAssetPermissionsLive(backend, apiConfig))
+    .orDie
 }

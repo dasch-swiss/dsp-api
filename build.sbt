@@ -260,7 +260,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "/usr/local/lib/pyroscope-otel.jar",
     ),
     // Disable OTel Java agent auto-instrumentation for HTTP client and Netty
-    // to avoid duplicate spans (dsp-api traces these manually via sttp/tapir)
+    // to avoid duplicate spans (dsp-api traces these manually via sttp4 tracing backend and ZIO middleware)
     dockerCommands += Cmd("ENV", """OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED="false""""),
     dockerCommands += Cmd("ENV", """OTEL_INSTRUMENTATION_NETTY_ENABLED="false""""),
     // use filterNot to return all items that do NOT meet the criteria
@@ -446,7 +446,7 @@ lazy val ingest = {
     .settings(
       name          := "dsp-ingest",
       headerLicense := projectLicense,
-      libraryDependencies ++= db ++ tapir ++ metrics ++ zioSeq ++ Seq(
+      libraryDependencies ++= db ++ tapir ++ metrics ++ zioSeq ++ zioSttpClient ++ openTelemetryWithSentry ++ Seq(
         "commons-io"                     % "commons-io"                        % "2.21.0",
         "dev.zio"                       %% "zio-config"                        % ZioConfigVersion,
         "dev.zio"                       %% "zio-config-magnolia"               % ZioConfigVersion,
@@ -456,7 +456,6 @@ lazy val ingest = {
         "dev.zio"                       %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
         "dev.zio"                       %% "zio-metrics-connectors-prometheus" % ZioMetricsConnectorsVersion,
         "eu.timepit"                    %% "refined"                           % "0.11.3",
-        "com.softwaremill.sttp.client3" %% "zio"                               % "3.11.0",
 
         // csv for reports
         "com.github.tototoshi" %% "scala-csv" % "2.0.0",
@@ -497,6 +496,10 @@ lazy val ingest = {
         s"https://github.com/grafana/otel-profiling-java/releases/download/${otelPyroscopeVersion}/pyroscope-otel.jar",
         "/usr/local/lib/pyroscope-otel.jar",
       ),
+      // Disable OTel Java agent auto-instrumentation for HTTP client and Netty
+      // to avoid duplicate spans (dsp-ingest traces these manually via sttp4 tracing backend and ZIO middleware)
+      dockerCommands += Cmd("ENV", """OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED="false""""),
+      dockerCommands += Cmd("ENV", """OTEL_INSTRUMENTATION_NETTY_ENABLED="false""""),
       dockerCommands := dockerCommands.value.filterNot {
         case Cmd("USER", args @ _*) => true
         case cmd                    => false

@@ -75,6 +75,8 @@ services:
 
   ingest:
     image: daschswiss/dsp-ingest:latest
+    depends_on:
+      - alloy
     ports:
       - "3340:3340"
     volumes:
@@ -97,6 +99,17 @@ services:
       - DB_JDBC_URL=jdbc:sqlite:/opt/db/ingest.sqlite
       - DSP_API_URL=http://host.docker.internal:3333
       # - JWT_DISABLE_AUTH=true # Uncomment this line if you want to disable authentication for the ingest service
+      - 'JAVA_TOOL_OPTIONS=-javaagent:/usr/local/lib/opentelemetry-javaagent.jar'
+      - 'PYROSCOPE_SERVER_ADDRESS=http://alloy:4040'
+      - 'PYROSCOPE_APPLICATION_NAME=DSP_svc_ingest'
+      - 'PYROSCOPE_FORMAT=jfr'
+      - 'PYROSCOPE_PROFILER_ALLOC=512k'
+      - 'OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318'
+      - 'OTEL_SERVICE_NAME=DSP_svc_ingest'
+      - 'OTEL_JAVAAGENT_EXTENSIONS=/usr/local/lib/pyroscope-otel.jar'
+      - 'OTEL_PYROSCOPE_ADD_PROFILE_URL=false'
+      - 'OTEL_PYROSCOPE_ADD_PROFILE_BASELINE_URL=false'
+      - 'OTEL_PYROSCOPE_START_PROFILING=true'
     deploy:
       resources:
         limits:
