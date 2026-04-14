@@ -98,9 +98,6 @@ object Dependencies {
   // logging
   val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.17" // the logging interface
 
-  // Metrics
-  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.24"
-
   // input validation
   val commonsValidator =
     "commons-validator" % "commons-validator" % "1.10.1" exclude ("commons-logging", "commons-logging")
