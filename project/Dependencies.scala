@@ -98,9 +98,6 @@ object Dependencies {
   // logging
   val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.17" // the logging interface
 
-  // Metrics
-  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.24"
-
   // input validation
   val commonsValidator =
     "commons-validator" % "commons-validator" % "1.10.1" exclude ("commons-logging", "commons-logging")
@@ -219,8 +216,8 @@ object Dependencies {
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
   val flywayVersion        = "12.1.0"
-  val otelAgentVersion     = "v2.18.1"
-  val otelPyroscopeVersion = "v1.0.4"
+  val otelAgentVersion     = "v2.26.1"
+  val otelPyroscopeVersion = "v1.1.0"
   val hikariVersion        = "7.0.2"
   val sqliteVersion        = "3.51.3.0"
 
