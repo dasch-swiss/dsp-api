@@ -11,7 +11,7 @@ import eu.timepit.refined.string.MatchesRegex
 import java.util.UUID
 
 /**
- * [[Base62EncodedUuid]] is a valid subset of [[AssetId]]s that is used for creating new ids. A 23 character long
+ * [[Base62EncodedUuid]] is a valid subset of [[swiss.dasch.domain.AssetId]]s that is used for creating new ids. A 23 character long
  * String that contains only the characters a-z, A-Z, 0-9 and a single hyphen. The hyphen separates the most and least
  * significant bits of the UUID. The first 11 characters are the most significant bits of the UUID. The last 11
  * characters are the least significant bits of the UUID. This encoding is URL safe and can be used as a path parameter
