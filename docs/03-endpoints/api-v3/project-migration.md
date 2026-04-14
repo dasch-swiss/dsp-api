@@ -144,17 +144,15 @@ The import handles users referenced in the export with the following logic:
 
 **Root user**: If the export contains the root user (either as an existing user match or as a new user), the import **fails**. Resources referencing the root user require pre-migration cleanup before import. See [Root User Cleanup](../../10-migration-guides/root-user-cleanup.md) for instructions.
 
-### Permissions
-
-Permission data from `permission.nq` is preserved as-is during import. No transformation or rewriting is applied. The export already scopes permissions to the exported project, so the imported permissions match the source instance exactly.
-
-### Admin Data Scoping
-
-Both export and import strip cross-project membership triples to ensure the package is self-contained:
+**Cross-project membership scoping**: Both export and import strip cross-project membership triples to ensure the package is self-contained:
 
 - `isInProject` references to other projects are removed.
 - `isInGroup` references to groups not belonging to the exported project are removed.
 - `isInProjectAdminGroup` references to other projects are removed.
+
+### Permissions
+
+Permission data from `permission.nq` is preserved as-is during import. No transformation or rewriting is applied. The export already scopes permissions to the exported project, so the imported permissions match the source instance exactly.
 
 ## Typical Workflow
 
