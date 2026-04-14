@@ -34,6 +34,8 @@ import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.*
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGravsearchQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -175,7 +177,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
   ): ZIO[SearchResponderV2, Throwable, ReadResourceV2] = {
     val gravsearchQuery: String =
       GetResourceWithSpecifiedPropertiesGravsearchQuery.build(
-        resourceIri = ResourceIri.unsafeFrom(resourceIri.toSmartIri),
+        resourceIri = ResourceIri.unsafeFrom(resourceIri),
         propertyIris = propertyIrisForGravsearch.map(PropertyIri.unsafeFrom),
       )
     for {
@@ -529,7 +531,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("delete an integer value that belongs to a property of another ontology") {
-        val resourceIri      = ResourceIri.unsafeFrom(freetestWithAPropertyFromAnythingOntologyIri.toSmartIri)
+        val resourceIri      = ResourceIri.unsafeFrom(freetestWithAPropertyFromAnythingOntologyIri)
         val propertyIri      = Anything.hasIntegerUsedByOtherOntologies
         val resourceClassIri = ResourceClassIri.unsafeFrom(
           "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
@@ -865,7 +867,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         val resourceIri        = aThingIri
         val propertyIri        = Anything.hasInteger.smartIri
         val intValue           = 1000
-        val newValueVersionIri = sf.makeRandomValueIri(resourceIri)
+        val newValueVersionIri = ValueIri.makeNew(ResourceIri.unsafeFrom(resourceIri)).value
 
         val updateParams = UpdateValueContentV2(
           resourceIri = resourceIri,
@@ -1131,7 +1133,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           .map(actual => assert(actual)(failsWithA[NotFoundException]))
       },
       test("not delete an integer value if the requesting user does not have DeletePermission on the value") {
-        val resourceIri      = ResourceIri.unsafeFrom(aThingIri.toSmartIri)
+        val resourceIri      = ResourceIri.unsafeFrom(aThingIri)
         val propertyIri      = PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri)
         val resourceClassIri = ResourceClassIri.unsafeFrom(Anything.thingClass.smartIri)
         val deleteParams     = DeleteValueV2(
@@ -1147,7 +1149,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           .map(actual => assert(actual)(failsWithA[ForbiddenException]))
       },
       test("delete an integer value") {
-        val resourceIri      = ResourceIri.unsafeFrom(aThingIri.toSmartIri)
+        val resourceIri      = ResourceIri.unsafeFrom(aThingIri)
         val propertyIri      = PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri)
         val resourceClassIri = ResourceClassIri.unsafeFrom(Anything.thingClass.smartIri)
         val deleteParams     = DeleteValueV2(
@@ -1171,7 +1173,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("delete an integer value, specifying a custom delete date") {
-        val resourceIri         = ResourceIri.unsafeFrom(aThingIri.toSmartIri)
+        val resourceIri         = ResourceIri.unsafeFrom(aThingIri)
         val propertyIri         = PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri)
         val resourceClassIri    = ResourceClassIri.unsafeFrom(Anything.thingClass.smartIri)
         val deleteDate: Instant = Instant.now
@@ -1181,7 +1183,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri,
           resourceClassIri,
           propertyIri,
-          ValueIri.unsafeFrom(intValueForRsyncIri.get.toSmartIri),
+          ValueIri.unsafeFrom(intValueForRsyncIri.get),
           valueTypeIri = KA.IntValue.toSmartIri,
           deleteComment = deleteComment,
           deleteDate = Some(deleteDate),
@@ -1193,7 +1195,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           _                        <- checkValueIsDeleted(
                  resourceIri,
                  maybeResourceLastModDate,
-                 ValueIri.unsafeFrom(intValueForRsyncIri.get.toSmartIri),
+                 ValueIri.unsafeFrom(intValueForRsyncIri.get),
                  customDeleteDate = Some(deleteDate),
                  deleteComment = deleteComment,
                  requestingUser = anythingUser1,
@@ -2884,7 +2886,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     },
     test("not delete a standoff link directly") {
       val deleteParams = DeleteValueV2(
-        ResourceIri.unsafeFrom(zeitgloeckleinIri.toSmartIri),
+        ResourceIri.unsafeFrom(zeitgloeckleinIri),
         ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri),
         PropertyIri.unsafeFrom(KA.HasStandoffLinkToValue.toSmartIri),
         standoffLinkValueIri.asValueIri,
@@ -2898,10 +2900,10 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
       val deleteParams = DeleteValueV2(
-        ResourceIri.unsafeFrom(zeitgloeckleinIri.toSmartIri),
+        ResourceIri.unsafeFrom(zeitgloeckleinIri),
         ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri),
         PropertyIri.unsafeFrom(propertyIri),
-        ValueIri.unsafeFrom(zeitgloeckleinCommentWithStandoffIri.get.toSmartIri),
+        ValueIri.unsafeFrom(zeitgloeckleinCommentWithStandoffIri.get),
         valueTypeIri = KA.TextValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
         apiRequestId = randomUUID,
@@ -2910,9 +2912,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         maybeResourceLastModDate <- getResourceLastModificationDate(zeitgloeckleinIri, incunabulaMemberUser)
         _                        <- valuesResponder(_.deleteValueV2(deleteParams, incunabulaMemberUser))
         _                        <- checkValueIsDeleted(
-               ResourceIri.unsafeFrom(zeitgloeckleinIri.toSmartIri),
+               ResourceIri.unsafeFrom(zeitgloeckleinIri),
                maybeResourceLastModDate,
-               ValueIri.unsafeFrom(zeitgloeckleinCommentWithStandoffIri.get.toSmartIri),
+               ValueIri.unsafeFrom(zeitgloeckleinCommentWithStandoffIri.get),
                requestingUser = incunabulaMemberUser,
              )
         // There==  no standoff link values left in the resource.
@@ -2924,9 +2926,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(!resource.values.contains(KA.HasStandoffLinkToValue.toSmartIri))
     },
     test("delete a link between two resources") {
-      val resourceIri          = ResourceIri.unsafeFrom("http://rdfh.ch/0803/cb1a74e3e2f6".toSmartIri)
+      val resourceIri          = ResourceIri.unsafeFrom("http://rdfh.ch/0803/cb1a74e3e2f6")
       val linkValuePropertyIri = PropertyIri.unsafeFrom(KA.HasLinkToValue.toSmartIri)
-      val linkValueIRI         = ValueIri.unsafeFrom(linkValueIri.get.toSmartIri)
+      val linkValueIRI         = ValueIri.unsafeFrom(linkValueIri.get)
       val deleteParams         = DeleteValueV2(
         resourceIri,
         ResourceClassIri.unsafeFrom(KA.LinkObj.toSmartIri),
@@ -2950,10 +2952,10 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test("not delete a value if the property's cardinality doesn't allow it") {
       val propertyIri  = PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri)
       val deleteParams = DeleteValueV2(
-        ResourceIri.unsafeFrom(zeitgloeckleinIri.toSmartIri),
+        ResourceIri.unsafeFrom(zeitgloeckleinIri),
         ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri),
         propertyIri,
-        ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/c3295339".toSmartIri),
+        ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/c3295339"),
         valueTypeIri = KA.TextValue.toSmartIri,
         apiRequestId = randomUUID,
       )
@@ -2963,9 +2965,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test(
       "not accept custom value permissions that would give the requesting user a higher permission on a value than the default",
     ) {
-      val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
+      val resourceIri   = ResourceIri.makeNew(imagesProject.shortcode).value
       val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
+        resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = Map.empty,
@@ -3000,9 +3002,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test(
       "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin",
     ) {
-      val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
+      val resourceIri   = ResourceIri.makeNew(imagesProject.shortcode).value
       val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
+        resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = Map.empty,
@@ -3036,10 +3038,10 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     test(
       "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin",
     ) {
-      val resourceIri = sf.makeRandomResourceIri(imagesProject.shortcode)
+      val resourceIri = ResourceIri.makeNew(imagesProject.shortcode).value
 
       val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
+        resourceIri = Some(ResourceIri.unsafeFrom(resourceIri)),
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = Map.empty,

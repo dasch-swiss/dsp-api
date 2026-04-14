@@ -8,7 +8,6 @@ package org.knora.webapi.models.filemodels
 import java.time.Instant
 import java.util.UUID
 
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
@@ -17,6 +16,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.common.ResourceIri
 
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
@@ -124,12 +124,10 @@ sealed abstract case class UploadFileRequest private (
     valuePropertyIRI: Option[SmartIri] = None,
     project: Option[Project] = None,
   ): CreateResourceV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
     val projectOrDefault =
       project.getOrElse(SharedTestDataADM.anythingProject)
     val resourceIRIOrDefault =
-      resourceIri.getOrElse(stringFormatter.makeRandomResourceIri(projectOrDefault.shortcode))
+      resourceIri.getOrElse(ResourceIri.makeNew(projectOrDefault.shortcode).value)
     val resourceClassIRIOrDefault: SmartIri =
       resourceClassIRI.getOrElse(FileModelUtil.getFileRepresentationClassIri(fileType))
     val fileValuePropertyIRIOrDefault: SmartIri =
@@ -157,7 +155,7 @@ sealed abstract case class UploadFileRequest private (
     )
 
     CreateResourceV2(
-      resourceIri = Some(resourceIRIOrDefault.toSmartIri),
+      resourceIri = Some(ResourceIri.unsafeFrom(resourceIRIOrDefault)),
       resourceClassIri = resourceClassIRIOrDefault,
       label = label,
       values = Map(fileValuePropertyIRIOrDefault -> values),

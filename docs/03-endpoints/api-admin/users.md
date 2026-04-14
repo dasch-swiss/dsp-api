@@ -208,7 +208,7 @@ Note: In order to add a user to a project admin group, the user needs to be memb
 
 The following is an example for user information stored in the `admin` named graph:
 
-```
+```turtle
 <http://rdfh.ch/users/c266a56709>
     rdf:type knora-admin:User ;
     knora-admin:username "user01.user1"^^xsd:string ;

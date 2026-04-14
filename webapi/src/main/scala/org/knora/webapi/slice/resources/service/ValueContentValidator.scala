@@ -13,7 +13,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
-import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.common.ResourceIri
 
 /**
  * A service that validates values in requests that create resources with values or create/update values.
@@ -23,7 +23,6 @@ import org.knora.webapi.slice.common.service.IriConverter
  * - Ensuring that file values have valid legal information
  */
 final case class ValueContentValidator(
-  private val iriConverter: IriConverter,
   private val legalInfoService: LegalInfoService,
 ) {
 
@@ -42,7 +41,7 @@ final case class ValueContentValidator(
     extractShortcode(resourceIri).flatMap(validateValueContent(vc, _))
 
   private def extractShortcode(resourceIri: IRI): IO[String, Shortcode] =
-    iriConverter.asResourceIri(resourceIri).map(_.shortcode)
+    ZIO.fromEither(ResourceIri.from(resourceIri)).map(_.shortcode)
 
   private def validateValueContent(vc: ValueContentV2, inProject: Shortcode): IO[String, Unit] =
     ensureNoCrossProjectLink(vc, inProject) *> ensureValidLegalInfo(vc, inProject)

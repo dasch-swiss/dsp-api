@@ -22,8 +22,8 @@ import dsp.errors.SparqlGenerationException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.model.Project
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update

@@ -40,6 +40,8 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.model.*
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -90,10 +92,11 @@ final case class CreateResourceV2Handler(
       shortcode  = createResourceRequestV2.createResource.projectADM.shortcode
       _         <- ensureUserHasPermission(createResourceRequestV2, projectIri)
 
-      resourceIri <- iriService.checkOrCreateEntityIri(
-                       createResourceRequestV2.createResource.resourceIri,
-                       stringFormatter.makeRandomResourceIri(shortcode),
-                     )
+      resourceIri <-
+        iriService.checkOrCreateEntityIri(
+          createResourceRequestV2.createResource.resourceIri.map(ri => stringFormatter.toSmartIri(ri.value)),
+          ResourceIri.makeNew(shortcode).value,
+        )
       taskResult <- IriLocker.runWithIriLock(createResourceRequestV2.apiRequestID, resourceIri)(
                       makeTask(createResourceRequestV2, resourceIri),
                     )
@@ -417,7 +420,7 @@ final case class CreateResourceV2Handler(
             newValueIri <-
               iriService.checkOrCreateEntityIri(
                 valueToCreate.customValueIri,
-                StringFormatter.makeValueIri(resourceIri, newValueUUID),
+                ValueIri.from(ResourceIri.unsafeFrom(resourceIri), newValueUUID).value,
               )
 
             // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
@@ -882,7 +885,7 @@ final case class CreateResourceV2Handler(
    * @return the new value IRI.
    */
   private def makeUnusedValueIri(resourceIri: IRI): Task[IRI] =
-    iriService.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri))
+    iriService.makeUnusedIri(ValueIri.makeNew(ResourceIri.unsafeFrom(resourceIri)).value)
 
   /**
    * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.

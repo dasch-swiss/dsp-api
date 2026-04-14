@@ -47,9 +47,9 @@ import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps.*
@@ -323,7 +323,7 @@ sealed trait ReadValueV2 {
           case jsonLDObject: JsonLDObject =>
             // Add the value's metadata.
 
-            val valueSmartIri = valueIri.toSmartIri
+            val parsedValueIri = ValueIri.unsafeFrom(valueIri)
 
             val requiredMetadata = Map(
               JsonLDKeywords.ID   -> JsonLDString(valueIri),
@@ -337,12 +337,12 @@ sealed trait ReadValueV2 {
               ),
               ValueHasUUID -> JsonLDString(UuidUtil.base64Encode(valueHasUUID)),
               ArkUrl       -> JsonLDUtil.datatypeValueToJsonLDObject(
-                value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID),
+                value = stringFormatter.valueIriToArkUrl(parsedValueIri, valueUUID = valueHasUUID),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri,
               ),
               VersionArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
-                value = valueSmartIri
-                  .fromValueIriToArkUrl(valueUUID = valueHasUUID, maybeTimestamp = Some(valueCreationDate)),
+                value = stringFormatter
+                  .valueIriToArkUrl(parsedValueIri, valueUUID = valueHasUUID, maybeTimestamp = Some(valueCreationDate)),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri,
               ),
             )

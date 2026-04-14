@@ -56,7 +56,7 @@ included in the request body, for example:
       }
     ]
 }
-``` 
+```
 
 In addition, in the body of the request, it is possible to specify a custom IRI (of 
 [DSP IRI](../api-v2/knora-iris.md#iris-for-data) form) for a permission through

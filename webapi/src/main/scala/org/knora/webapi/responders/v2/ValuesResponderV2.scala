@@ -41,8 +41,8 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
@@ -425,7 +425,7 @@ final class ValuesResponderV2(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           maybeValueIri,
-          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID)),
+          ValueIri.from(ResourceIri.unsafeFrom(resourceInfo.resourceIri), newValueUUID).value,
         )
 
       // Make a creation date for the new value
@@ -526,7 +526,7 @@ final class ValuesResponderV2(
       // Generate a SPARQL update.
       sparqlUpdate <- CreateLinkQuery.build(
                         project = resourceInfo.projectADM,
-                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                         linkUpdate = sparqlTemplateLinkUpdate,
                         newValueUUID = newValueUUID,
                         creationDate = creationDate,
@@ -589,7 +589,7 @@ final class ValuesResponderV2(
       _ <- valueRepo.updateValuePermissions(
              projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM),
              resourceIri = InternalIri(resourceInfo.resourceIri),
-             valueIri = ValueIri.unsafeFrom(currentValue.valueIri.toSmartIri),
+             valueIri = ValueIri.unsafeFrom(currentValue.valueIri),
              newPermissions = newValuePermissionLiteral,
              currentTime = Instant.now,
            )
@@ -878,7 +878,7 @@ final class ValuesResponderV2(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           newValueVersionIri,
-          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri),
+          ValueIri.makeNew(ResourceIri.unsafeFrom(resourceInfo.resourceIri)).value,
         )
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
@@ -1022,7 +1022,7 @@ final class ValuesResponderV2(
 
         result <- ChangeLinkTargetQuery.build(
                     project = resourceInfo.projectADM,
-                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                     linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                     linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                     maybeComment = newLinkValue.comment,
@@ -1054,7 +1054,7 @@ final class ValuesResponderV2(
 
         result <- ChangeLinkMetadataQuery.build(
                     project = resourceInfo.projectADM,
-                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                     linkUpdate = sparqlTemplateLinkUpdate,
                     maybeComment = newLinkValue.comment,
                   )
@@ -1078,7 +1078,7 @@ final class ValuesResponderV2(
   ): Task[SuccessResponseV2] =
     canRemoveValue(req, requestingUser, onlyHistory).flatMap { case (_, _, value) =>
       for {
-        valueIri         <- ZIO.succeed(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+        valueIri         <- ZIO.succeed(ValueIri.unsafeFrom(value.valueIri))
         _                <- failBadRequestForStandoffWithLinks(value)
         allPrevious      <- valueRepo.findAllPrevious(valueIri)
         isLink            = cond(value) { case _: ReadLinkValueV2 => true }
@@ -1175,7 +1175,7 @@ final class ValuesResponderV2(
       ZIO
         .fromOption(for {
           values <- resourceInfo.values.get(submittedInternalPropertyIri)
-          curVal <- values.find(_.valueIri == deleteValue.valueIri.toString)
+          curVal <- values.find(_.valueIri == deleteValue.valueIri.value)
         } yield curVal)
         .orElseFail(
           NotFoundException(
@@ -1406,9 +1406,9 @@ final class ValuesResponderV2(
       linkUpdates  <- ZIO.collectAll(linkUpdateTasks)
       sparqlUpdate <- DeleteValueQuery.build(
                         project = resourceInfo.projectADM,
-                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri.toSmartIri),
+                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
                         propertyIri = PropertyIri.unsafeFrom(propertyIri),
-                        valueIri = ValueIri.unsafeFrom(currentValue.valueIri.toSmartIri),
+                        valueIri = ValueIri.unsafeFrom(currentValue.valueIri),
                         maybeDeleteComment = deleteComment,
                         linkUpdates = linkUpdates,
                         currentTime = deleteDate.getOrElse(Instant.now),
@@ -1529,7 +1529,7 @@ final class ValuesResponderV2(
           Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri,
         )(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(BadRequestException(_)))
 
-      resIri <- ZIO.fromEither(ResourceIri.from(resourceIri.toSmartIri)).mapError(BadRequestException(_))
+      resIri <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException(_))
 
       // Make a Gravsearch query.
       gravsearchQuery =
@@ -1752,7 +1752,7 @@ final class ValuesResponderV2(
       newLinkValueIri <-
         iriService.checkOrCreateEntityIri(
           customNewLinkValueIri,
-          stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri),
+          ValueIri.makeNew(ResourceIri.unsafeFrom(sourceResourceInfo.resourceIri)).value,
         )
 
       linkUpdate =
@@ -1908,7 +1908,7 @@ final class ValuesResponderV2(
           newLinkValueIri <-
             iriService.checkOrCreateEntityIri(
               customNewLinkValueIri,
-              stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri),
+              ValueIri.makeNew(ResourceIri.unsafeFrom(sourceResourceInfo.resourceIri)).value,
             )
 
         } yield SparqlTemplateLinkUpdate(
@@ -1955,7 +1955,7 @@ final class ValuesResponderV2(
    * @return the new value IRI.
    */
   private def makeUnusedValueIri(resourceIri: IRI): Task[IRI] =
-    iriService.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri))
+    iriService.makeUnusedIri(ValueIri.makeNew(ResourceIri.unsafeFrom(resourceIri)).value)
 }
 
 object ValuesResponderV2 {
