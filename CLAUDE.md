@@ -117,7 +117,7 @@ Each slice typically contains:
 ## Development Environment
 
 ### Prerequisites
-- JDK Temurin 21
+- JDK Temurin 25
 - sbt
 - Docker Desktop
 - just (optional)
