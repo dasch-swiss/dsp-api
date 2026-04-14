@@ -230,7 +230,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Docker / dockerRepository := Some("daschswiss"),
     Docker / packageName      := "knora-api",
     dockerUpdateLatest        := true,
-    dockerBaseImage           := "eclipse-temurin:21-jre-noble",
+    dockerBaseImage           := "eclipse-temurin:25-jre-noble",
     dockerBuildxPlatforms     := Seq("linux/arm64/v8", "linux/amd64"),
     Docker / maintainer       := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333, 3339),
@@ -242,7 +242,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ).collect { case (key, Some(value)) => (key, value) },
     dockerCommands += Cmd(
       "RUN",
-      "apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*",
+      "apt-get update && apt-get install -y curl jq && rm -rf /var/lib/apt/lists/*",
     ), // install jq for container healthcheck
     dockerCommands += Cmd(
       """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
@@ -259,6 +259,10 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       s"https://github.com/grafana/otel-profiling-java/releases/download/${Dependencies.otelPyroscopeVersion}/pyroscope-otel.jar",
       "/usr/local/lib/pyroscope-otel.jar",
     ),
+    // Disable OTel Java agent auto-instrumentation for HTTP client and Netty
+    // to avoid duplicate spans (dsp-api traces these manually via sttp/tapir)
+    dockerCommands += Cmd("ENV", """OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED="false""""),
+    dockerCommands += Cmd("ENV", """OTEL_INSTRUMENTATION_NETTY_ENABLED="false""""),
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
       // Remove USER command
@@ -473,14 +477,14 @@ lazy val ingest = {
         """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
           |CMD curl -sS --fail 'http://localhost:3340/health' || exit 1""".stripMargin,
       ),
-      // Install Temurin Java 21 https://adoptium.net/de/installation/linux/
+      // Install Temurin Java 25 https://adoptium.net/de/installation/linux/
       dockerCommands += Cmd(
         "RUN",
         "apt-get update && apt install -y wget apt-transport-https gpg && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null",
       ),
       dockerCommands += Cmd(
         "RUN",
-        "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt-get update && apt-get install -y temurin-24-jre && rm -rf /var/lib/apt/lists/*",
+        "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt-get update && apt-get install -y temurin-25-jre && rm -rf /var/lib/apt/lists/*",
       ),
       // Add Opentelemetry java agent and Grafana Pyroscope extension
       dockerCommands += Cmd(

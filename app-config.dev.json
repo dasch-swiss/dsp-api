@@ -1,0 +1,45 @@
+{
+  "dspRelease": "work.in.progress",
+  "apiProtocol": "http",
+  "apiHost": "0.0.0.0",
+  "apiPort": 3333,
+  "apiPath": "",
+  "iiifProtocol": "http",
+  "iiifHost": "0.0.0.0",
+  "iiifPort": 1024,
+  "iiifPath": "",
+  "ingestUrl": "http://0.0.0.0:3340",
+  "geonameToken": "knora",
+  "jsonWebToken": "",
+  "logErrors": true,
+  "iriBase": "http://rdfh.ch",
+  "instrumentation": {
+    "environment": "local-dev",
+    "rollbar": {
+      "enabled": false,
+      "accessToken": ""
+    },
+    "faro": {
+      "enabled": true,
+      "collectorUrl": "http://localhost:4318/collect",
+      "appName": "dsp-app",
+      "sessionTracking": {
+        "enabled": true,
+        "persistent": true,
+        "samplingRate": 1.0
+      },
+      "console": {
+        "enabled": true,
+        "disabledLevels": []
+      },
+      "tracingCorsUrls": ["http://0.0.0.0:3333/.*", "http://localhost:3333/.*"],
+      "otlp": {
+        "logsUrl": "http://localhost:4318/v1/logs",
+        "tracesUrl": "http://localhost:4318/v1/traces"
+      }
+    }
+  },
+  "featureFlags": {
+    "allowEraseProjects": true
+  }
+}
