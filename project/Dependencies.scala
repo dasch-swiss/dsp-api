@@ -21,7 +21,7 @@ object Dependencies {
   val Rdf4jVersion = "5.2.2"
   val JenaVersion  = "5.2.0"
 
-  val ZioConfigVersion            = "4.0.6"
+  val ZioConfigVersion            = "4.0.7"
   val ZioLoggingVersion           = "2.5.3"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.5.5"
