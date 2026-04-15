@@ -127,7 +127,7 @@ object Dependencies {
   // test
   val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.20"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.3"
 
