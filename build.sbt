@@ -242,7 +242,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ).collect { case (key, Some(value)) => (key, value) },
     dockerCommands += Cmd(
       "RUN",
-      "apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*",
+      "apt-get update && apt-get install -y curl jq && rm -rf /var/lib/apt/lists/*",
     ), // install jq for container healthcheck
     dockerCommands += Cmd(
       """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
