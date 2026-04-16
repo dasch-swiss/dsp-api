@@ -425,7 +425,7 @@ final class ValuesResponderV2(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           maybeValueIri,
-          ValueIri.from(ResourceIri.unsafeFrom(resourceInfo.resourceIri), newValueUUID).value,
+          ValueIri.from(resourceInfo.resourceIri, newValueUUID).value,
         )
 
       // Make a creation date for the new value
@@ -456,7 +456,7 @@ final class ValuesResponderV2(
         }
 
       dataNamedGraphInternal <- iriConverter.asInternalIri(dataNamedGraph)
-      resourceIriInternal    <- iriConverter.asInternalIri(resourceInfo.resourceIri)
+      resourceIriInternal    <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
       newValueIriInternal    <- iriConverter.asInternalIri(newValueIri)
       valueCreatorInternal   <- iriConverter.asInternalIri(valueCreator)
 
@@ -526,7 +526,7 @@ final class ValuesResponderV2(
       // Generate a SPARQL update.
       sparqlUpdate <- CreateLinkQuery.build(
                         project = resourceInfo.projectADM,
-                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
+                        resourceIri = resourceInfo.resourceIri,
                         linkUpdate = sparqlTemplateLinkUpdate,
                         newValueUUID = newValueUUID,
                         creationDate = creationDate,
@@ -588,7 +588,7 @@ final class ValuesResponderV2(
 
       _ <- valueRepo.updateValuePermissions(
              projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM),
-             resourceIri = InternalIri(resourceInfo.resourceIri),
+             resourceIri = InternalIri(resourceInfo.resourceIri.value),
              valueIri = ValueIri.unsafeFrom(currentValue.valueIri),
              newPermissions = newValuePermissionLiteral,
              currentTime = Instant.now,
@@ -878,7 +878,7 @@ final class ValuesResponderV2(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           newValueVersionIri,
-          ValueIri.makeNew(ResourceIri.unsafeFrom(resourceInfo.resourceIri)).value,
+          ValueIri.makeNew(resourceInfo.resourceIri).value,
         )
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
@@ -942,7 +942,7 @@ final class ValuesResponderV2(
       // was updated.
       currentTime: Instant     = valueCreationDate.getOrElse(Instant.now)
       dataNamedGraphInternal  <- iriConverter.asInternalIri(dataNamedGraph)
-      resourceIriInternal     <- iriConverter.asInternalIri(resourceInfo.resourceIri)
+      resourceIriInternal     <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
       currentValueIriInternal <- iriConverter.asInternalIri(currentValue.valueIri)
       newValueIriInternal     <- iriConverter.asInternalIri(newValueIri)
       valueCreatorInternal    <- iriConverter.asInternalIri(valueCreator)
@@ -1022,7 +1022,7 @@ final class ValuesResponderV2(
 
         result <- ChangeLinkTargetQuery.build(
                     project = resourceInfo.projectADM,
-                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
+                    linkSourceIri = resourceInfo.resourceIri,
                     linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                     linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                     maybeComment = newLinkValue.comment,
@@ -1054,7 +1054,7 @@ final class ValuesResponderV2(
 
         result <- ChangeLinkMetadataQuery.build(
                     project = resourceInfo.projectADM,
-                    linkSourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
+                    linkSourceIri = resourceInfo.resourceIri,
                     linkUpdate = sparqlTemplateLinkUpdate,
                     maybeComment = newLinkValue.comment,
                   )
@@ -1152,12 +1152,12 @@ final class ValuesResponderV2(
     // so we can see objects that the user doesn't have permission to see.
     resourceInfo <- readResources
                       .getResources(
-                        resourceIris = Seq(deleteValue.resourceIri.toString),
+                        resourceIris = Seq(deleteValue.resourceIri.value),
                         targetSchema = ApiV2Complex,
                         schemaOptions = Set.empty,
                         requestingUser = KnoraSystemInstances.Users.SystemUser,
                       )
-                      .flatMap(_.toResource(deleteValue.resourceIri.toString))
+                      .flatMap(_.toResource(deleteValue.resourceIri))
 
     // Check that the resource belongs to the class that the client submitted.
     _ <- ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toInternalSchema) {
@@ -1351,7 +1351,7 @@ final class ValuesResponderV2(
       query <- DeleteLinkQuery
                  .build(
                    dataNamedGraph,
-                   resourceInfo.resourceIri,
+                   resourceInfo.resourceIri.value,
                    sparqlTemplateLinkUpdate,
                    deleteComment,
                    currentTime,
@@ -1406,7 +1406,7 @@ final class ValuesResponderV2(
       linkUpdates  <- ZIO.collectAll(linkUpdateTasks)
       sparqlUpdate <- DeleteValueQuery.build(
                         project = resourceInfo.projectADM,
-                        resourceIri = ResourceIri.unsafeFrom(resourceInfo.resourceIri),
+                        resourceIri = resourceInfo.resourceIri,
                         propertyIri = PropertyIri.unsafeFrom(propertyIri),
                         valueIri = ValueIri.unsafeFrom(currentValue.valueIri),
                         maybeDeleteComment = deleteComment,
@@ -1477,7 +1477,7 @@ final class ValuesResponderV2(
     messageRelay
       .ask[ReadResourcesSequenceV2](
         ResourcesPreviewGetRequestV2(
-          resourceIris = targetResourceIris.toSeq,
+          resourceIris = targetResourceIris.toSeq.map(ResourceIri.unsafeFrom),
           targetSchema = ApiV2Complex,
           requestingUser = requestingUser,
         ),
@@ -1541,7 +1541,7 @@ final class ValuesResponderV2(
       // Run the query.
       query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
       searchResponse <- searchResponderV2.gravsearchV2(query, SchemaRendering.default, requestingUser)
-      result         <- searchResponse.toResource(resourceIri)
+      result         <- searchResponse.toResource(resIri)
     } yield result
 
   /**
@@ -1563,7 +1563,7 @@ final class ValuesResponderV2(
       // Get a preview of the target resource, because we only need to find out its class and whether the user has permission to view it.
       resourcePreviewRequest <- ZIO.succeed(
                                   ResourcesPreviewGetRequestV2(
-                                    resourceIris = Seq(linkValueContent.referredResourceIri),
+                                    resourceIris = Seq(ResourceIri.unsafeFrom(linkValueContent.referredResourceIri)),
                                     targetSchema = ApiV2Complex,
                                     requestingUser = requestingUser,
                                   ),
@@ -1572,7 +1572,7 @@ final class ValuesResponderV2(
       resourcePreviewResponse <- messageRelay.ask[ReadResourcesSequenceV2](resourcePreviewRequest)
 
       // If we get a resource, we know the user has permission to view it.
-      resource <- resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
+      resource <- resourcePreviewResponse.toResource(ResourceIri.unsafeFrom(linkValueContent.referredResourceIri))
 
       // Ask the ontology responder whether the resource's class is a subclass of the link property's object class constraint.
       subClassRequest = CheckSubClassRequestV2(
@@ -1752,7 +1752,7 @@ final class ValuesResponderV2(
       newLinkValueIri <-
         iriService.checkOrCreateEntityIri(
           customNewLinkValueIri,
-          ValueIri.makeNew(ResourceIri.unsafeFrom(sourceResourceInfo.resourceIri)).value,
+          ValueIri.makeNew(sourceResourceInfo.resourceIri).value,
         )
 
       linkUpdate =
@@ -1842,7 +1842,7 @@ final class ValuesResponderV2(
         // resources should be removed.
         val deleteDirectLink = newReferenceCount == 0
 
-        makeUnusedValueIri(sourceResourceInfo.resourceIri)
+        makeUnusedValueIri(sourceResourceInfo.resourceIri.value)
           .map(newLinkValueIri =>
             SparqlTemplateLinkUpdate(
               linkPropertyIri = linkPropertyIri,
@@ -1908,7 +1908,7 @@ final class ValuesResponderV2(
           newLinkValueIri <-
             iriService.checkOrCreateEntityIri(
               customNewLinkValueIri,
-              ValueIri.makeNew(ResourceIri.unsafeFrom(sourceResourceInfo.resourceIri)).value,
+              ValueIri.makeNew(sourceResourceInfo.resourceIri).value,
             )
 
         } yield SparqlTemplateLinkUpdate(

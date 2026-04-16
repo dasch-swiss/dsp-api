@@ -548,7 +548,7 @@ final case class TestHelper(
     createReq = CreateResourceRequestV2(createRes, rootUser, uuid)
     res      <- resourcesResponderV2.createResource(createReq)
     created  <- resourceRepo
-                 .findActiveById(ResourceIri.unsafeFrom(res.resources.head.resourceIri))
+                 .findActiveById(res.resources.head.resourceIri)
                  .someOrFail(IllegalStateException("Resource not found"))
   } yield created
 
@@ -562,7 +562,7 @@ final case class TestHelper(
     createReq = CreateResourceRequestV2(createRes, rootUser, uuid)
     resource <- resourcesResponderV2.createResource(createReq).map(_.resources.head)
     created  <- resourceRepo
-                 .findActiveById(ResourceIri.unsafeFrom(resource.resourceIri))
+                 .findActiveById(resource.resourceIri)
                  .someOrFail(IllegalStateException("Resource not found"))
     values <- ZIO
                 .foreach(resource.values.toList) { (s, vs) =>
@@ -586,7 +586,7 @@ final case class TestHelper(
   def deleteResource(resource: ActiveResource): Task[Unit] = for {
     uuid     <- Random.nextUUID
     deleteReq = DeleteOrEraseResourceRequestV2(
-                  resourceIri = resource.iri.toString,
+                  resourceIri = resource.iri,
                   resourceClassIri = resource.resourceClassIri.toComplexSchema,
                   maybeDeleteComment = Some("Test deletion for value erase test"),
                   maybeLastModificationDate = resource.lastModificationDate,

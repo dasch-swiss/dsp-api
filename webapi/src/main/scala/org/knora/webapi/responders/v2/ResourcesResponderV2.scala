@@ -112,7 +112,7 @@ final case class ResourcesResponderV2(
           requestingUser,
         ) =>
       getResourcesWithDeletedResource(
-        resIris,
+        resIris.map(_.value),
         propertyIri,
         valueUuid,
         versionDate.map(VersionDate.fromInstant),
@@ -128,7 +128,7 @@ final case class ResourcesResponderV2(
           targetSchema,
           requestingUser,
         ) =>
-      getResourcePreviewWithDeletedResource(resIris, withDeletedResource, targetSchema, requestingUser)
+      getResourcePreviewWithDeletedResource(resIris.map(_.value), withDeletedResource, targetSchema, requestingUser)
 
     case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 =>
       getResourceHistoryV2(resourceHistoryRequest)
@@ -187,7 +187,7 @@ final case class ResourcesResponderV2(
       for {
         // Get the metadata of the resource to be updated.
         resourcesSeq <- getResourcePreviewWithDeletedResource(
-                          resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
+                          resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri.value),
                           targetSchema = ApiV2Complex,
                           requestingUser = updateResourceMetadataRequestV2.requestingUser,
                         )
@@ -215,9 +215,7 @@ final case class ResourcesResponderV2(
         project <- projectService
                      .findById(resource.projectADM.id)
                      .someOrFail(NotFoundException.notFound(resource.projectADM.id))
-        resourceIri <- ZIO
-                         .fromEither(ResourceIri.from(updateResourceMetadataRequestV2.resourceIri))
-                         .mapError(BadRequestException.apply)
+        resourceIri       = updateResourceMetadataRequestV2.resourceIri
         resourceClassIri <- iriConverter
                               .asResourceClassIri(internalResourceClassIri)
                               .mapError(BadRequestException.apply)
@@ -237,7 +235,7 @@ final case class ResourcesResponderV2(
 
         updatedResourcesSeq <-
           getResourcePreviewWithDeletedResource(
-            resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
+            resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri.value),
             targetSchema = ApiV2Complex,
             requestingUser = updateResourceMetadataRequestV2.requestingUser,
           )
@@ -287,7 +285,7 @@ final case class ResourcesResponderV2(
       for {
         resource <- readResources
                       .getResourcePreviewWithDeletedResource(
-                        resourceIris = Seq(deleteResourceV2.resourceIri),
+                        resourceIris = Seq(deleteResourceV2.resourceIri.value),
                         targetSchema = ApiV2Complex,
                         requestingUser = deleteResourceV2.requestingUser,
                       )
@@ -298,8 +296,7 @@ final case class ResourcesResponderV2(
         // Generate SPARQL for marking the resource as deleted.
         requestingUserIri <-
           ZIO.fromEither(UserIri.from(deleteResourceV2.requestingUser.id)).mapError(e => Exception(e)).orDie
-        resourceIri <-
-          ZIO.fromEither(ResourceIri.from(deleteResourceV2.resourceIri)).mapError(BadRequestException.apply)
+        resourceIri  = deleteResourceV2.resourceIri
         sparqlUpdate = DeleteResourceQuery.build(
                          project = resource.projectADM,
                          resourceIri = resourceIri,
@@ -376,7 +373,7 @@ final case class ResourcesResponderV2(
       resource       <- ZIO.fromOption(resource).orElse {
                     readResources
                       .getResourcePreviewWithDeletedResource(
-                        resourceIris = Seq(deleteResourceV2.resourceIri),
+                        resourceIris = Seq(deleteResourceV2.resourceIri.value),
                         targetSchema = ApiV2Complex,
                         requestingUser = requestingUser,
                       )
@@ -393,8 +390,7 @@ final case class ResourcesResponderV2(
 
       _ <- ensureNoConflictingChange(resource, deleteResourceV2.maybeLastModificationDate)
 
-      resourceIri <- ZIO.fromEither(ResourceIri.from(deleteResourceV2.resourceIri)).mapError(BadRequestException.apply)
-      _           <- ensureResourceIsNotInUse(resourceIri)
+      _ <- ensureResourceIsNotInUse(deleteResourceV2.resourceIri)
 
       lastModificationDate = resource.lastModificationDate.getOrElse(resource.creationDate)
       _                   <- ZIO.when(deleteResourceV2.maybeDeleteDate.exists(!_.isAfter(lastModificationDate))) {
@@ -432,7 +428,7 @@ final case class ResourcesResponderV2(
         resource <-
           readResources
             .getResourcePreview(
-              resourceIris = Seq(eraseResourceV2.resourceIri),
+              resourceIris = Seq(eraseResourceV2.resourceIri.value),
               targetSchema = ApiV2Complex,
               requestingUser = eraseResourceV2.requestingUser,
             )
@@ -457,14 +453,13 @@ final case class ResourcesResponderV2(
 
         _ <- ensureNoConflictingChange(resource, eraseResourceV2.maybeLastModificationDate)
 
-        resourceIri <- ZIO.fromEither(ResourceIri.from(eraseResourceV2.resourceIri)).mapError(BadRequestException.apply)
-        _           <- ensureResourceIsNotInUse(resourceIri)
+        _ <- ensureResourceIsNotInUse(eraseResourceV2.resourceIri)
 
         // Do the update.
         _ <- ZIO.logInfo(
                s"User ${eraseResourceV2.requestingUser.id} is erasing resource ${eraseResourceV2.resourceIri}",
              )
-        _ <- triplestore.query(Update(EraseResourceQuery.build(resource.projectADM, resourceIri)))
+        _ <- triplestore.query(Update(EraseResourceQuery.build(resource.projectADM, eraseResourceV2.resourceIri)))
 
         _ <- // Verify that the resource was erased correctly.
           ZIO
@@ -473,7 +468,7 @@ final case class ResourcesResponderV2(
                 s"Resource <${eraseResourceV2.resourceIri}> was not erased. Please report this as a possible bug.",
               ),
             )
-            .whenZIO(iriService.checkIriExists(resourceIri))
+            .whenZIO(iriService.checkIriExists(eraseResourceV2.resourceIri))
       } yield SuccessResponseV2("Resource erased")
     IriLocker.runWithIriLock(eraseResourceV2.apiRequestID, eraseResourceV2.resourceIri)(eraseTask)
   }
@@ -534,7 +529,7 @@ final case class ResourcesResponderV2(
                      requestingUser = requestingUser,
                    )
 
-      resource: ReadResourceV2 <- resources.toResource(gravsearchTemplateIri)
+      resource: ReadResourceV2 <- resources.toResource(ResourceIri.unsafeFrom(gravsearchTemplateIri))
 
       _ <- ZIO.when(resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
              val msg = s"Resource $gravsearchTemplateIri is not a Gravsearch template (text file expected)"
@@ -694,9 +689,10 @@ final case class ResourcesResponderV2(
                        .map(_.replace("$resourceIri", resourceIri))
                        .mapAttempt(GravsearchParser.parseQuery)
 
+            resIri   <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException(_))
             resource <- searchResponderV2
                           .gravsearchV2(query, apiV2SchemaWithOption(MarkupRendering.Xml), requestingUser)
-                          .flatMap(_.toResource(resourceIri))
+                          .flatMap(_.toResource(resIri))
           } yield resource
 
         } else {
@@ -710,6 +706,8 @@ final case class ResourcesResponderV2(
                    ZIO.fail(BadRequestException(msg))
                  }
 
+            resIri <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException(_))
+
             // get requested resource
             resource <- readResources
                           .getResourcesWithDeletedResource(
@@ -718,7 +716,7 @@ final case class ResourcesResponderV2(
                             schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                             requestingUser = requestingUser,
                           )
-                          .flatMap(_.toResource(resourceIri))
+                          .flatMap(_.toResource(resIri))
           } yield resource
         }
 
@@ -1094,7 +1092,7 @@ final case class ResourcesResponderV2(
       // Convert each node to a GraphNodeV2 for the API response message.
       resultNodes: Vector[GraphNodeV2] = nodes.map { (node: QueryResultNode) =>
                                            GraphNodeV2(
-                                             resourceIri = node.nodeIri,
+                                             resourceIri = ResourceIri.unsafeFrom(node.nodeIri),
                                              resourceClassIri = node.nodeClass,
                                              resourceLabel = node.nodeLabel,
                                            )
@@ -1103,9 +1101,9 @@ final case class ResourcesResponderV2(
       // Convert each edge to a GraphEdgeV2 for the API response message.
       resultEdges: Vector[GraphEdgeV2] = edges.map { (edge: QueryResultEdge) =>
                                            GraphEdgeV2(
-                                             source = edge.sourceNodeIri,
+                                             source = ResourceIri.unsafeFrom(edge.sourceNodeIri),
                                              propertyIri = edge.linkProp,
-                                             target = edge.targetNodeIri,
+                                             target = ResourceIri.unsafeFrom(edge.targetNodeIri),
                                            )
                                          }.toVector
 
@@ -1124,7 +1122,7 @@ final case class ResourcesResponderV2(
   ): Task[ResourceVersionHistoryResponseV2] =
     getResourceHistoryV2(
       ResourceVersionHistoryGetRequestV2(
-        resourceIri,
+        ResourceIri.unsafeFrom(resourceIri),
         withDeletedResource = false,
         startDate.map(_.value),
         endDate.map(_.value),
@@ -1145,7 +1143,7 @@ final case class ResourcesResponderV2(
       // Get the resource preview, to make sure the user has permission to see the resource, and to get
       // its creation date.
       resourcePreviewResponse <- readResources.getResourcePreviewWithDeletedResource(
-                                   resourceIris = Seq(resourceHistoryRequest.resourceIri),
+                                   resourceIris = Seq(resourceHistoryRequest.resourceIri.value),
                                    withDeleted = resourceHistoryRequest.withDeletedResource,
                                    targetSchema = ApiV2Complex,
                                    requestingUser = KnoraSystemInstances.Users.SystemUser,
@@ -1156,7 +1154,7 @@ final case class ResourcesResponderV2(
       // Get the version history of the resource's values.
 
       historyRequestSparql = GetResourceValueVersionHistoryQuery.build(
-                               resourceIri = resourceHistoryRequest.resourceIri,
+                               resourceIri = resourceHistoryRequest.resourceIri.value,
                                withDeletedResource = resourceHistoryRequest.withDeletedResource,
                                maybeStartDate = resourceHistoryRequest.startDate,
                                maybeEndDate = resourceHistoryRequest.endDate,
@@ -1221,7 +1219,7 @@ final case class ResourcesResponderV2(
                           requestingUser,
                         )
 
-      resource     <- searchResponse.toResource(resourceIri)
+      resource     <- searchResponse.toResource(resIri)
       incomingLinks = resource.values.getOrElse(OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri, Seq.empty)
 
       representations: Seq[ReadResourceV2] = incomingLinks.collect { case readLinkValueV2: ReadLinkValueV2 =>
@@ -1334,7 +1332,7 @@ final case class ResourcesResponderV2(
     for {
       resourceHistory <- getResourceHistoryV2(
                            ResourceVersionHistoryGetRequestV2(
-                             resourceIri = resourceIri,
+                             resourceIri = ResourceIri.unsafeFrom(resourceIri),
                              withDeletedResource = true,
                              requestingUser = requestingUser,
                            ),
@@ -1367,7 +1365,7 @@ final case class ResourcesResponderV2(
             resourceHistory <-
               getResourceHistoryV2(
                 ResourceVersionHistoryGetRequestV2(
-                  resourceIri = resourceIri,
+                  resourceIri = ResourceIri.unsafeFrom(resourceIri),
                   withDeletedResource = true,
                   requestingUser = requestingUser,
                 ),

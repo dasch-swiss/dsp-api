@@ -184,7 +184,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       query        <- ZIO.attempt(GravsearchParser.parseQuery(gravsearchQuery))
       schema        = SchemaRendering.apiV2SchemaWithOption(MarkupRendering.Xml)
       searchResult <- searchResponder(_.gravsearchV2(query, schema, requestingUser))
-      result       <- searchResult.toResource(resourceIri)
+      result       <- searchResult.toResource(ResourceIri.unsafeFrom(resourceIri))
     } yield result.toOntologySchema(ApiV2Complex)
   }
 
@@ -227,7 +227,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                        requestingUser = requestingUser,
                      ),
                    )
-    resource <- getResponse.toResource(resourceIri.toString)
+    resource <- getResponse.toResource(resourceIri)
     //  ensure the resource was not deleted
     _ <- ZIO.fail(AssertionException("resource was deleted")).when(resource.deletionInfo.nonEmpty)
 
@@ -326,7 +326,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                            requestingUser = requestingUser,
                          ),
                        )
-    resourcePreview <- previewResponse.toResource(resourceIri)
+    resourcePreview <- previewResponse.toResource(ResourceIri.unsafeFrom(resourceIri))
   } yield resourcePreview.lastModificationDate
 
   private def getValueUUID(valueIri: IRI): ZIO[TriplestoreService, Throwable, Option[UUID]] = {

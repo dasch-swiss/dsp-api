@@ -17,6 +17,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.common.ResourceIri
 
 object ResourcesResponderV2SpecFullData {
 
@@ -24,7 +25,7 @@ object ResourcesResponderV2SpecFullData {
 
   val expectedReadResourceV2ForZeitgloecklein: ReadResourceV2 = ReadResourceV2(
     label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-    resourceIri = "http://rdfh.ch/0803/c5058f3a",
+    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     userPermission = Permission.ObjectAccess.ChangeRights,
@@ -269,7 +270,7 @@ object ResourcesResponderV2SpecFullData {
 
   val expectedReadResourceV2ForZeitgloeckleinPreview: ReadResourceV2 = ReadResourceV2(
     label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-    resourceIri = "http://rdfh.ch/0803/c5058f3a",
+    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     userPermission = Permission.ObjectAccess.ChangeRights,
@@ -285,7 +286,7 @@ object ResourcesResponderV2SpecFullData {
 
   val expectedReadResourceV2ForReiseInsHeiligeland: ReadResourceV2 = ReadResourceV2(
     label = "Reise ins Heilige Land",
-    resourceIri = "http://rdfh.ch/0803/2a6221216701",
+    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701"),
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     userPermission = Permission.ObjectAccess.ChangeRights,
@@ -805,7 +806,7 @@ object ResourcesResponderV2SpecFullData {
     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
     label = "Reise ins Heilige Land",
     creationDate = Instant.parse("2016-03-02T15:05:21Z"),
-    resourceIri = "http://rdfh.ch/0803/2a6221216701",
+    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701"),
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     userPermission = Permission.ObjectAccess.ChangeRights,
@@ -834,7 +835,7 @@ object ResourcesResponderV2SpecFullData {
       ReadResourceV2(
         versionDate = Some(Instant.parse("2019-02-12T08:05:10Z")),
         label = "A thing with version history",
-        resourceIri = "http://rdfh.ch/0001/thing-with-history",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history"),
         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
         userPermission = Permission.ObjectAccess.Modify,
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -998,7 +999,7 @@ object ResourcesResponderV2SpecFullData {
       ReadResourceV2(
         versionDate = None,
         label = "A thing with version history",
-        resourceIri = "http://rdfh.ch/0001/thing-with-history",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history"),
         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -1036,7 +1037,7 @@ object ResourcesResponderV2SpecFullData {
         ReadResourceV2(
           versionDate = None,
           label = "A thing with version history",
-          resourceIri = "http://rdfh.ch/0001/thing-with-history",
+          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history"),
           permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
           attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
           resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,

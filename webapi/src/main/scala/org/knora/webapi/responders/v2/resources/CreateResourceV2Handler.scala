@@ -636,7 +636,7 @@ final case class CreateResourceV2Handler(
       // Make a map of the IRIs of existing target resources to their class IRIs.
       classesOfExistingTargets: Map[IRI, SmartIri] =
         existingTargets.resources
-          .map(resource => resource.resourceIri -> resource.resourceClassIri)
+          .map(resource => resource.resourceIri.value -> resource.resourceClassIri)
           .toMap
     } yield classesOfNewTargets ++ classesOfExistingTargets
   }

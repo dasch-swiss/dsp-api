@@ -138,7 +138,7 @@ final case class ApiComplexV2JsonLdRequestParser(
              .fail("No updated resource metadata provided")
              .when(label.isEmpty && permissions.isEmpty && newModificationDate.isEmpty)
     } yield UpdateResourceMetadataRequestV2(
-      resourceIri.value,
+      resourceIri,
       r.resourceClassSmartIri,
       lastModificationDate,
       label,
@@ -161,7 +161,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       deleteDate           <- r.deleteDateOption
       lastModificationDate <- r.lastModificationDateOption
     } yield DeleteOrEraseResourceRequestV2(
-      resourceIri.value,
+      resourceIri,
       r.resourceClassSmartIri,
       deleteComment,
       deleteDate,

@@ -11,17 +11,18 @@ import zio.test.*
 
 import java.time.Instant.now
 import java.time.temporal.ChronoUnit.DAYS
-import java.util.UUID.randomUUID
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.Order
 import org.knora.webapi.slice.api.admin.model.Order.*
 import org.knora.webapi.slice.api.admin.model.OrderBy
 import org.knora.webapi.slice.api.admin.model.OrderBy.*
 import org.knora.webapi.slice.api.v2.resources.info.ResourceInfoRestService
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.domain.ResourceInfo
 import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake
@@ -75,9 +76,15 @@ object ResourceInfoRestServiceSpec extends ZIOSpecDefault {
           | then it should return all info sorted by (lastModificationDate, ASC)
           |""".stripMargin.linesIterator.mkString(""),
       ) {
-        val given1 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(10, DAYS), Some(now.minus(9, DAYS)))
+        val given1 =
+          ResourceInfo(ResourceIri.makeNew(Shortcode.unsafeFrom("0001")), now.minus(10, DAYS), Some(now.minus(9, DAYS)))
         val given2 =
-          ResourceInfo("http://resourceIri/" + randomUUID, now.minus(20, DAYS), Some(now.minus(8, DAYS)), now)
+          ResourceInfo(
+            ResourceIri.makeNew(Shortcode.unsafeFrom("0001")),
+            now.minus(20, DAYS),
+            Some(now.minus(8, DAYS)),
+            now,
+          )
         for {
           _      <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
           actual <- findByProjectAndResourceClass(knownProjectIRI, knownResourceClass.value, Asc, LastModificationDate)
@@ -92,9 +99,15 @@ object ResourceInfoRestServiceSpec extends ZIOSpecDefault {
           | then it should return all info sorted correctly
           |""".stripMargin.linesIterator.mkString(""),
       ) {
-        val given1 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(10, DAYS), Some(now.minus(9, DAYS)))
+        val given1 =
+          ResourceInfo(ResourceIri.makeNew(Shortcode.unsafeFrom("0001")), now.minus(10, DAYS), Some(now.minus(9, DAYS)))
         val given2 =
-          ResourceInfo("http://resourceIri/" + randomUUID, now.minus(20, DAYS), Some(now.minus(8, DAYS)), now)
+          ResourceInfo(
+            ResourceIri.makeNew(Shortcode.unsafeFrom("0001")),
+            now.minus(20, DAYS),
+            Some(now.minus(8, DAYS)),
+            now,
+          )
         for {
           _      <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
           actual <- findByProjectAndResourceClass(knownProjectIRI, knownResourceClass.value, Desc, CreationDate)

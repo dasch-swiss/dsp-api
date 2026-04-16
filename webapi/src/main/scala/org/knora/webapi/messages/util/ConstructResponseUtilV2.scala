@@ -58,6 +58,7 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
@@ -1225,7 +1226,7 @@ final case class ConstructResponseUtilV2(
 
       valueObjects <- ZioHelper.sequence(valueObjectFutures.map { case (k, v) => k -> ZIO.collectAll(v) })
     } yield ReadResourceV2(
-      resourceIri = resourceIri,
+      resourceIri = ResourceIri.unsafeFrom(resourceIri),
       resourceClassIri = resourceClass,
       label = resourceLabel,
       attachedToUser = resourceAttachedToUser,
@@ -1294,7 +1295,7 @@ final case class ConstructResponseUtilV2(
         calculateMayHaveMoreResults && pageSizeBeforeFiltering == appConfig.v2.resourcesSequence.resultsPerPage
     } yield ReadResourcesSequenceV2(
       resources = resources,
-      hiddenResourceIris = mainResourcesAndValueRdfData.hiddenResourceIris,
+      hiddenResourceIris = mainResourcesAndValueRdfData.hiddenResourceIris.map(ResourceIri.unsafeFrom),
       mayHaveMoreResults = mayHaveMoreResults,
     )
   }

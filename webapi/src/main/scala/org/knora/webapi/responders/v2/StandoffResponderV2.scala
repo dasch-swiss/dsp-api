@@ -42,6 +42,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.CreateMappingRequestV2
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
@@ -100,19 +101,20 @@ final case class StandoffResponderV2(
     requestingUser: User,
   ): Task[GetXSLTransformationResponseV2] = {
 
+    val xslResIri     = ResourceIri.unsafeFrom(xslTransformationIri)
     val xsltUrlFuture = for {
 
       textRepresentationResponseV2 <-
         messageRelay
           .ask[ReadResourcesSequenceV2](
             ResourcesGetRequestV2(
-              resourceIris = Vector(xslTransformationIri),
+              resourceIris = Vector(xslResIri),
               targetSchema = ApiV2Complex,
               requestingUser = requestingUser,
             ),
           )
 
-      resource <- textRepresentationResponseV2.toResource(xslTransformationIri)
+      resource <- textRepresentationResponseV2.toResource(xslResIri)
 
       _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.XSLTransformation) {
             throw BadRequestException(
