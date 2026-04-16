@@ -464,7 +464,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                          case (Some(valueContentV2), _) =>
                            ZIO.succeed(
                              UpdateValueContentV2(
-                               resourceIri.value,
+                               resourceIri,
                                r.resourceClassSmartIri,
                                v.propertySmartIri,
                                valueIri.value,
@@ -477,7 +477,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                          case (_, Some(permissions)) =>
                            ZIO.succeed(
                              UpdateValuePermissionsV2(
-                               resourceIri.value,
+                               resourceIri,
                                r.resourceClassSmartIri,
                                v.propertySmartIri,
                                valueIri.value,
@@ -506,7 +506,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         valuePermissions  <- v.hasPermissionsOption
         valueContent      <- getValueContent(v, resourceIri.shortcode)
       } yield CreateValueV2(
-        resourceIri.value,
+        resourceIri,
         r.resourceClassSmartIri,
         v.propertyIri.smartIri,
         valueContent,

@@ -37,8 +37,8 @@ final case class ValueContentValidator(
     val vcsToCreate = req.createResource.values.values.flatten.map(_.valueContent)
     ZIO.foreachDiscard(vcsToCreate)(validateValueContent(_, shortcode))
 
-  private def validateValueContent(vc: ValueContentV2, resourceIri: IRI): IO[String, Unit] =
-    extractShortcode(resourceIri).flatMap(validateValueContent(vc, _))
+  private def validateValueContent(vc: ValueContentV2, resourceIri: ResourceIri): IO[String, Unit] =
+    validateValueContent(vc, resourceIri.shortcode)
 
   private def extractShortcode(resourceIri: IRI): IO[String, Shortcode] =
     ZIO.fromEither(ResourceIri.from(resourceIri)).map(_.shortcode)
@@ -51,13 +51,13 @@ final case class ValueContentValidator(
     case tvc: TextValueContentV2 => ensureNoCrossProjectLink(tvc, inProject)
     case _                       => ZIO.unit
 
-  private def ensureNoCrossProjectLink(lvc: LinkValueContentV2, inProject: Shortcode) =
-    extractShortcode(lvc.referredResourceIri).flatMap { refShortcode =>
-      ZIO
-        .fail(s"Cannot create a link between resources cross projects $inProject and $refShortcode")
-        .unless(inProject == refShortcode)
-        .unit
-    }
+  private def ensureNoCrossProjectLink(lvc: LinkValueContentV2, inProject: Shortcode) = {
+    val refShortcode = lvc.referredResourceIri.shortcode
+    ZIO
+      .fail(s"Cannot create a link between resources cross projects $inProject and $refShortcode")
+      .unless(inProject == refShortcode)
+      .unit
+  }
 
   private def ensureNoCrossProjectLink(tvc: TextValueContentV2, inProject: Shortcode): IO[String, Unit] =
     ZIO.foreachDiscard(StandoffStringUtil.getResourceIrisFromStandoffLinkTags(tvc.standoff))(resourceIri =>

@@ -865,7 +865,7 @@ object ResourcesResponderV2SpecFullData {
           "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri -> Vector(
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
-                referredResourceIri = "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ"),
                 ontologySchema = InternalSchema,
                 comment = None,
                 nestedResource = None,

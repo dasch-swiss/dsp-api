@@ -495,7 +495,7 @@ final case class CreateResourceV2Handler(
                 case MovingImageFileValueContentV2(_, fileValue, _) =>
                   ZIO.succeed(OtherFileValueInfo(fileValue))
                 case LinkValueContentV2(_, referredResourceIri, _, _, _, _) =>
-                  ZIO.succeed(LinkValueInfo(InternalIri(referredResourceIri)))
+                  ZIO.succeed(LinkValueInfo(InternalIri(referredResourceIri.value)))
                 case _: DeletedValueContentV2 => ZIO.fail(BadRequestException("Deleted values cannot be created"))
 
           } yield ValueInfo(
@@ -609,9 +609,9 @@ final case class CreateResourceV2Handler(
           valueToCreate.valueContent match {
             case linkValueContentV2: LinkValueContentV2 =>
               if (linkValueContentV2.referredResourceExists) {
-                (accExisting + linkValueContentV2.referredResourceIri, accNew)
+                (accExisting + linkValueContentV2.referredResourceIri.value, accNew)
               } else {
-                (accExisting, accNew + linkValueContentV2.referredResourceIri)
+                (accExisting, accNew + linkValueContentV2.referredResourceIri.value)
               }
 
             case _ => (accExisting, accNew)

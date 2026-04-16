@@ -256,7 +256,7 @@ final case class ExportService(
     vcs.foldMap { vc =>
       vc match
         case lvc: LinkValueContentV2 =>
-          val resource = lvc.nestedResource.orElse(resources.get(lvc.referredResourceIri))
+          val resource = lvc.nestedResource.orElse(resources.get(lvc.referredResourceIri.value))
           LinkValue(
             List(resource.map(_.label).getOrElse("")),
             List(stringFormat(vc.valueHasString)).filter(_ => includeIris),

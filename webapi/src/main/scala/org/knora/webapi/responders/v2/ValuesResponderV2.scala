@@ -151,7 +151,7 @@ final class ValuesResponderV2(
       // so we can see objects that the user doesn't have permission to see.
       resourceInfo <-
         getResourceWithPropertyValues(
-          resourceIri = valueToCreate.resourceIri,
+          resourceIri = valueToCreate.resourceIri.value,
           propertyInfo = adjustedInternalPropertyInfo,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
         )
@@ -511,7 +511,7 @@ final class ValuesResponderV2(
         incrementLinkValue(
           sourceResourceInfo = resourceInfo,
           linkPropertyIri = linkPropertyIri,
-          targetResourceIri = linkValueContent.referredResourceIri,
+          targetResourceIri = linkValueContent.referredResourceIri.value,
           customNewLinkValueIri = maybeValueIri,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
@@ -795,13 +795,14 @@ final class ValuesResponderV2(
       // so we can see objects that the user doesn't have permission to see.
       resourceInfo <-
         getResourceWithPropertyValues(
-          resourceIri = updateValue.resourceIri,
+          resourceIri = updateValue.resourceIri.value,
           propertyInfo = adjustedInternalPropertyInfo,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
         )
 
       _ <- {
-        val msg = s"The rdf:type of resource <${updateValue.resourceIri}> is not <${updateValue.resourceClassIri}>"
+        val msg =
+          s"The rdf:type of resource <${updateValue.resourceIri.value}> is not <${updateValue.resourceClassIri}>"
         ZIO
           .fail(BadRequestException(msg))
           .when(resourceInfo.resourceClassIri != updateValue.resourceClassIri.toInternalSchema)
@@ -1000,7 +1001,7 @@ final class ValuesResponderV2(
           decrementLinkValue(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = linkPropertyIri,
-            targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
+            targetResourceIri = currentLinkValue.valueContent.referredResourceIri.value,
             valueCreator = valueCreator,
             valuePermissions = valuePermissions,
           )
@@ -1010,7 +1011,7 @@ final class ValuesResponderV2(
           incrementLinkValue(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = linkPropertyIri,
-            targetResourceIri = newLinkValue.referredResourceIri,
+            targetResourceIri = newLinkValue.referredResourceIri.value,
             customNewLinkValueIri = newValueVersionIri,
             valueCreator = valueCreator,
             valuePermissions = valuePermissions,
@@ -1046,7 +1047,7 @@ final class ValuesResponderV2(
           changeLinkValueMetadata(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = linkPropertyIri,
-            targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
+            targetResourceIri = currentLinkValue.valueContent.referredResourceIri.value,
             customNewLinkValueIri = newValueVersionIri,
             valueCreator = valueCreator,
             valuePermissions = valuePermissions,
@@ -1343,7 +1344,7 @@ final class ValuesResponderV2(
         decrementLinkValue(
           sourceResourceInfo = resourceInfo,
           linkPropertyIri = propertyIri,
-          targetResourceIri = currentLinkValueContent.referredResourceIri,
+          targetResourceIri = currentLinkValueContent.referredResourceIri.value,
           valueCreator = currentValue.attachedToUser,
           valuePermissions = currentValue.permissions,
         )
@@ -1563,7 +1564,7 @@ final class ValuesResponderV2(
       // Get a preview of the target resource, because we only need to find out its class and whether the user has permission to view it.
       resourcePreviewRequest <- ZIO.succeed(
                                   ResourcesPreviewGetRequestV2(
-                                    resourceIris = Seq(ResourceIri.unsafeFrom(linkValueContent.referredResourceIri)),
+                                    resourceIris = Seq(linkValueContent.referredResourceIri),
                                     targetSchema = ApiV2Complex,
                                     requestingUser = requestingUser,
                                   ),
@@ -1572,7 +1573,7 @@ final class ValuesResponderV2(
       resourcePreviewResponse <- messageRelay.ask[ReadResourcesSequenceV2](resourcePreviewRequest)
 
       // If we get a resource, we know the user has permission to view it.
-      resource <- resourcePreviewResponse.toResource(ResourceIri.unsafeFrom(linkValueContent.referredResourceIri))
+      resource <- resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
 
       // Ask the ontology responder whether the resource's class is a subclass of the link property's object class constraint.
       subClassRequest = CheckSubClassRequestV2(
@@ -1704,7 +1705,7 @@ final class ValuesResponderV2(
     sourceResourceInfo.values.get(linkValueProperty).flatMap { (linkValueInfos: Seq[ReadValueV2]) =>
       linkValueInfos.collectFirst {
         case linkValueInfo: ReadLinkValueV2
-            if linkValueInfo.valueContent.referredResourceIri == targetResourceIri && linkValueInfo.deletionInfo.isEmpty =>
+            if linkValueInfo.valueContent.referredResourceIri.value == targetResourceIri && linkValueInfo.deletionInfo.isEmpty =>
           linkValueInfo
       }
     }

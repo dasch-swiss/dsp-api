@@ -1029,7 +1029,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
             CreateValueInNewResourceV2(
               valueContent = LinkValueContentV2(
                 ontologySchema = ApiV2Complex,
-                referredResourceIri = "http://rdfh.ch/0001/a-thing",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"),
               ),
             ),
           ),
@@ -1270,7 +1270,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
             CreateValueInNewResourceV2(
               valueContent = LinkValueContentV2(
                 ontologySchema = ApiV2Complex,
-                referredResourceIri = "http://rdfh.ch/0001/nonexistent-thing",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nonexistent-thing"),
               ),
             ),
           ),
@@ -1404,7 +1404,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         // The new resource should be created in the Anything project 0001
         val resourceIri = ResourceIri.makeNew(anythingProject.shortcode)
         // This resource is present in the Incunabula project 0803
-        val linkedResourceIri = zeitgloeckleinIri
+        val linkedResourceIri = ResourceIri.unsafeFrom(zeitgloeckleinIri)
 
         val createResource = CreateResourceV2(
           resourceIri = Some(resourceIri),
@@ -1428,7 +1428,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not create a resource with a link to a resource of the wrong class for the link property") {
         // the linked Resource exists in the test data and is a anything:ThingText
-        val linkedResourceIri = "http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw"
+        val linkedResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw")
         // subjectClassConstraint for hasOtherThingValue is anything:Thing
         val linkProperty = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri
 
@@ -1876,7 +1876,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           updateValueResponse <- ZIO.serviceWithZIO[ValuesResponderV2](
                                    _.updateValueV2(
                                      UpdateValueContentV2(
-                                       resourceIri = resourceIri.value,
+                                       resourceIri = resourceIri,
                                        resourceClassIri = resourceClassIri,
                                        propertyIri = propertyIri,
                                        valueIri = firstValueIriToErase.get,
@@ -1931,7 +1931,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
             CreateValueInNewResourceV2(
               valueContent = LinkValueContentV2(
                 ontologySchema = ApiV2Complex,
-                referredResourceIri = resourceIriToErase.get,
+                referredResourceIri = ResourceIri.unsafeFrom(resourceIriToErase.get),
               ),
             ),
           ),
@@ -2153,7 +2153,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           .map(actual => assertTrue(actual.size == 9))
       },
       test("create a new value to test create value history event") {
-        val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
         val newValueIri = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
         val testValue   = "a test value"
 
@@ -2176,7 +2176,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                    apiRequestID = randomUUID,
                  ),
                )
-          events                                                <- resourceResponder(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents))
+          events                                                <- resourceResponder(_.getResourceHistoryEvents(resourceIri.value, anythingUser2).map(_.historyEvents))
           createValueEvent: Option[ResourceAndValueHistoryEvent] =
             events.find(event =>
               event.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT && event.eventBody

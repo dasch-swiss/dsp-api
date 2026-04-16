@@ -115,7 +115,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = false,
-                referredResourceIri = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ"),
                 ontologySchema = InternalSchema,
                 comment = Some("link value pointing to hidden resource"),
                 referredResourceExists = true,
@@ -341,7 +341,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = false,
-                referredResourceIri = "http://rdfh.ch/0001/a-thing",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"),
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
@@ -400,7 +400,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = false,
-                referredResourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/ff17e5ef9601"),
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
@@ -494,7 +494,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = false,
-                referredResourceIri = "http://rdfh.ch/0803/c5058f3a",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
@@ -616,7 +616,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = true,
-                referredResourceIri = "http://rdfh.ch/0803/773f258402",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/773f258402"),
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
@@ -636,7 +636,7 @@ object ConstructResponseUtilV2SpecFullData {
                         ReadLinkValueV2(
                           valueContent = LinkValueContentV2(
                             isIncomingLink = false,
-                            referredResourceIri = "http://rdfh.ch/0803/c5058f3a",
+                            referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
                             ontologySchema = InternalSchema,
                             comment = None,
                             referredResourceExists = true,
@@ -732,7 +732,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = true,
-                referredResourceIri = "http://rdfh.ch/0803/76570a749901",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/76570a749901"),
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
@@ -752,7 +752,7 @@ object ConstructResponseUtilV2SpecFullData {
                         ReadLinkValueV2(
                           valueContent = LinkValueContentV2(
                             isIncomingLink = false,
-                            referredResourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                            referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/ff17e5ef9601"),
                             ontologySchema = InternalSchema,
                             comment = None,
                             referredResourceExists = true,

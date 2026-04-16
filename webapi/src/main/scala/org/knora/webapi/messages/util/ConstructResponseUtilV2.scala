@@ -836,7 +836,7 @@ final case class ConstructResponseUtilV2(
 
     val linkValue = LinkValueContentV2(
       ontologySchema = InternalSchema,
-      referredResourceIri = referredResourceIri,
+      referredResourceIri = ResourceIri.unsafeFrom(referredResourceIri),
       isIncomingLink = valueObject.isIncomingLink,
       nestedResource = None,
       comment = valueCommentOption,
