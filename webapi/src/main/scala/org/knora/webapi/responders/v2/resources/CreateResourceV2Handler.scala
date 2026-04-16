@@ -92,12 +92,13 @@ final case class CreateResourceV2Handler(
       shortcode  = createResourceRequestV2.createResource.projectADM.shortcode
       _         <- ensureUserHasPermission(createResourceRequestV2, projectIri)
 
-      resourceIri <-
+      resourceIriStr <-
         iriService.checkOrCreateEntityIri(
           createResourceRequestV2.createResource.resourceIri.map(ri => stringFormatter.toSmartIri(ri.value)),
           ResourceIri.makeNew(shortcode).value,
         )
-      taskResult <- IriLocker.runWithIriLock(createResourceRequestV2.apiRequestID, resourceIri)(
+      resourceIri = ResourceIri.unsafeFrom(resourceIriStr)
+      taskResult <- IriLocker.runWithIriLock(createResourceRequestV2.apiRequestID, resourceIriStr)(
                       makeTask(createResourceRequestV2, resourceIri),
                     )
     } yield taskResult
@@ -154,13 +155,13 @@ final case class CreateResourceV2Handler(
 
   private def makeTask(
     createResourceRequestV2: CreateResourceRequestV2,
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
   ): Task[ReadResourcesSequenceV2] =
     for {
       _ <- // check if resourceIri already exists holding a lock on the IRI
         ZIO
           .fail(DuplicateValueException(s"Resource IRI: '$resourceIri' already exists."))
-          .whenZIO(iriService.checkIriExists(resourceIri))
+          .whenZIO(iriService.checkIriExists(resourceIri.value))
       // Convert the resource to the internal ontology schema.
       internalCreateResource <- ZIO.attempt(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
 
@@ -174,7 +175,7 @@ final case class CreateResourceV2Handler(
 
       // Get the class IRIs of all the link targets in the request.
       linkTargetClasses <- getLinkTargetClasses(
-                             resourceIri: IRI,
+                             resourceIri = resourceIri,
                              internalCreateResources = Seq(internalCreateResource),
                              requestingUser = createResourceRequestV2.requestingUser,
                            )
@@ -247,7 +248,7 @@ final case class CreateResourceV2Handler(
 
       // Verify that the resource was created.
       previewOfCreatedResource <- verifyResource(
-                                    resourceIri = resourceReadyToCreate.resourceIri.value,
+                                    resourceIri = resourceIri,
                                     requestingUser = createResourceRequestV2.requestingUser,
                                   )
     } yield previewOfCreatedResource
@@ -272,7 +273,7 @@ final case class CreateResourceV2Handler(
    * @return a [[ResourceReadyToCreate]].
    */
   private def generateResourceReadyToCreate(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     internalCreateResource: CreateResourceV2,
     linkTargetClasses: Map[IRI, SmartIri],
     entityInfo: EntityInfoGetResponseV2,
@@ -283,7 +284,7 @@ final case class CreateResourceV2Handler(
     requestingUser: User,
   ): Task[ResourceReadyToCreate] = {
     val resourceIDForErrorMsg: String =
-      clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
+      clientResourceIDs.get(resourceIri.value).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
 
     for {
       // Check that the resource class has a suitable cardinality for each submitted value.
@@ -420,7 +421,7 @@ final case class CreateResourceV2Handler(
             newValueIri <-
               iriService.checkOrCreateEntityIri(
                 valueToCreate.customValueIri,
-                ValueIri.from(ResourceIri.unsafeFrom(resourceIri), newValueUUID).value,
+                ValueIri.from(resourceIri, newValueUUID).value,
               )
 
             // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
@@ -499,7 +500,7 @@ final case class CreateResourceV2Handler(
                 case _: DeletedValueContentV2 => ZIO.fail(BadRequestException("Deleted values cannot be created"))
 
           } yield ValueInfo(
-            resourceIri = InternalIri(resourceIri),
+            resourceIri = InternalIri(resourceIri.value),
             propertyIri = InternalIri(propertyIri.toIri),
             value = valueInfo,
             valueIri = InternalIri(newValueIri),
@@ -514,7 +515,7 @@ final case class CreateResourceV2Handler(
           )
         }
     } yield ResourceReadyToCreate(
-      resourceIri = InternalIri(resourceIri),
+      resourceIri = InternalIri(resourceIri.value),
       resourceClassIri = InternalIri(internalCreateResource.resourceClassIri.toString),
       resourceLabel = internalCreateResource.label,
       creationDate = creationDate,
@@ -598,7 +599,7 @@ final case class CreateResourceV2Handler(
    * @return a map of resource IRIs to class IRIs.
    */
   private def getLinkTargetClasses(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     internalCreateResources: Seq[CreateResourceV2],
     requestingUser: User,
   ): Task[Map[IRI, SmartIri]] = {
@@ -620,7 +621,7 @@ final case class CreateResourceV2Handler(
 
     // Make a map of the IRIs of new target resources to their class IRIs.
     val classesOfNewTargets: Map[IRI, SmartIri] = internalCreateResources.map { resourceToCreate =>
-      resourceIri -> resourceToCreate.resourceClassIri
+      resourceIri.value -> resourceToCreate.resourceClassIri
     }.toMap.view
       .filterKeys(newTargets)
       .toMap
@@ -803,12 +804,12 @@ final case class CreateResourceV2Handler(
    * @return a preview of the resource that was created.
    */
   private def verifyResource(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
     readResources
       .getResourcesWithDeletedResource(
-        resourceIris = Seq(resourceIri),
+        resourceIris = Seq(resourceIri.value),
         requestingUser = requestingUser,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
@@ -820,7 +821,7 @@ final case class CreateResourceV2Handler(
       }
 
   private def generateInsertSparqlForStandoffLinksInMultipleValues(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     values: Iterable[GenerateSparqlForValueInNewResourceV2],
   ): Task[Seq[StandoffLinkValueInfo]] = {
     // To create LinkValues for the standoff links in the values to be created, we need to compute
@@ -884,8 +885,8 @@ final case class CreateResourceV2Handler(
    * @param resourceIri the IRI of the containing resource.
    * @return the new value IRI.
    */
-  private def makeUnusedValueIri(resourceIri: IRI): Task[IRI] =
-    iriService.makeUnusedIri(ValueIri.makeNew(ResourceIri.unsafeFrom(resourceIri)).value)
+  private def makeUnusedValueIri(resourceIri: ResourceIri): Task[IRI] =
+    iriService.makeUnusedIri(ValueIri.makeNew(resourceIri).value)
 
   /**
    * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.

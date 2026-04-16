@@ -601,7 +601,7 @@ final case class ResourcesResponderV2(
    * @return a [[ResourceTEIGetResponseV2]].
    */
   def getResourceAsTeiV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     textProperty: SmartIri,
     mappingIri: Option[IRI],
     gravsearchTemplateIri: Option[IRI],
@@ -686,13 +686,12 @@ final case class ResourcesResponderV2(
                  }
             // get the template
             query <- getGravsearchTemplate(templateIri, requestingUser)
-                       .map(_.replace("$resourceIri", resourceIri))
+                       .map(_.replace("$resourceIri", resourceIri.value))
                        .mapAttempt(GravsearchParser.parseQuery)
 
-            resIri   <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException(_))
             resource <- searchResponderV2
                           .gravsearchV2(query, apiV2SchemaWithOption(MarkupRendering.Xml), requestingUser)
-                          .flatMap(_.toResource(resIri))
+                          .flatMap(_.toResource(resourceIri))
           } yield resource
 
         } else {
@@ -706,17 +705,15 @@ final case class ResourcesResponderV2(
                    ZIO.fail(BadRequestException(msg))
                  }
 
-            resIri <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException(_))
-
             // get requested resource
             resource <- readResources
                           .getResourcesWithDeletedResource(
-                            resourceIris = Vector(resourceIri),
+                            resourceIris = Vector(resourceIri.value),
                             targetSchema = ApiV2Complex,
                             schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                             requestingUser = requestingUser,
                           )
-                          .flatMap(_.toResource(resIri))
+                          .flatMap(_.toResource(resourceIri))
           } yield resource
         }
 
@@ -809,7 +806,7 @@ final case class ResourcesResponderV2(
    * @return a [[GraphDataGetResponseV2]] representing the requested graph.
    */
   def getGraphDataResponseV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     depth: Int,
     dir: GraphDirection,
     excludeProperty: Option[SmartIri],
@@ -1021,7 +1018,7 @@ final case class ResourcesResponderV2(
     // Get the start node.
     val query =
       GetGraphDataQuery.buildStartNodeOnly(
-        resourceIri,
+        resourceIri.value,
         appConfig.v2.graphRoute.maxGraphBreadth,
       )
 
@@ -1115,14 +1112,14 @@ final case class ResourcesResponderV2(
   }
 
   def getResourceHistory(
-    resourceIri: String,
+    resourceIri: ResourceIri,
     startDate: Option[VersionDate],
     endDate: Option[VersionDate],
     requestingUser: User,
   ): Task[ResourceVersionHistoryResponseV2] =
     getResourceHistoryV2(
       ResourceVersionHistoryGetRequestV2(
-        ResourceIri.unsafeFrom(resourceIri),
+        resourceIri,
         withDeletedResource = false,
         startDate.map(_.value),
         endDate.map(_.value),
@@ -1154,7 +1151,7 @@ final case class ResourcesResponderV2(
       // Get the version history of the resource's values.
 
       historyRequestSparql = GetResourceValueVersionHistoryQuery.build(
-                               resourceIri = resourceHistoryRequest.resourceIri.value,
+                               resourceIri = resourceHistoryRequest.resourceIri,
                                withDeletedResource = resourceHistoryRequest.withDeletedResource,
                                maybeStartDate = resourceHistoryRequest.startDate,
                                maybeEndDate = resourceHistoryRequest.endDate,
@@ -1197,7 +1194,7 @@ final case class ResourcesResponderV2(
       historyEntriesWithResourceCreation,
     )
 
-  def getIiifManifestV2(resourceIri: IRI, requestingUser: User): Task[ResourceIIIFManifestGetResponseV2] =
+  def getIiifManifestV2(resourceIri: ResourceIri, requestingUser: User): Task[ResourceIIIFManifestGetResponseV2] =
     // The implementation here is experimental. If we had a way of streaming the canvas URLs to the IIIF viewer,
     // it would be better to write the Gravsearch query differently, so that ?representation was the main resource.
     // Then the Gravsearch query could return pages of results.
@@ -1207,8 +1204,7 @@ final case class ResourcesResponderV2(
 
     for {
       // Make a Gravsearch query.
-      resIri                         <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException(_))
-      gravsearchQueryForIncomingLinks = GetIncomingImageLinksGravsearchQuery.build(resIri)
+      gravsearchQueryForIncomingLinks <- ZIO.succeed(GetIncomingImageLinksGravsearchQuery.build(resourceIri))
 
       // Run the query.
 
@@ -1219,7 +1215,7 @@ final case class ResourcesResponderV2(
                           requestingUser,
                         )
 
-      resource     <- searchResponse.toResource(resIri)
+      resource     <- searchResponse.toResource(resourceIri)
       incomingLinks = resource.values.getOrElse(OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri, Seq.empty)
 
       representations: Seq[ReadResourceV2] = incomingLinks.collect { case readLinkValueV2: ReadLinkValueV2 =>
@@ -1326,13 +1322,13 @@ final case class ResourcesResponderV2(
    * @return the events extracted from full representation of a resource at each time point in its history ordered by version date.
    */
   def getResourceHistoryEvents(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     requestingUser: User,
   ): Task[ResourceAndValueVersionHistoryResponseV2] =
     for {
       resourceHistory <- getResourceHistoryV2(
                            ResourceVersionHistoryGetRequestV2(
-                             resourceIri = ResourceIri.unsafeFrom(resourceIri),
+                             resourceIri = resourceIri,
                              withDeletedResource = true,
                              requestingUser = requestingUser,
                            ),
@@ -1360,17 +1356,18 @@ final case class ResourcesResponderV2(
       mainResourceIris      = sparqlSelectResponse.getColOrThrow("resource")
       // For each resource IRI return history events
       historyOfResourcesAsSeqOfFutures: Seq[Task[Seq[ResourceAndValueHistoryEvent]]] =
-        mainResourceIris.map { resourceIri =>
+        mainResourceIris.map { resourceIriStr =>
+          val resIri = ResourceIri.unsafeFrom(resourceIriStr)
           for {
             resourceHistory <-
               getResourceHistoryV2(
                 ResourceVersionHistoryGetRequestV2(
-                  resourceIri = ResourceIri.unsafeFrom(resourceIri),
+                  resourceIri = resIri,
                   withDeletedResource = true,
                   requestingUser = requestingUser,
                 ),
               )
-            resourceFullHist <- extractEventsFromHistory(resourceIri, resourceHistory.history, requestingUser)
+            resourceFullHist <- extractEventsFromHistory(resIri, resourceHistory.history, requestingUser)
           } yield resourceFullHist
         }
 
@@ -1389,7 +1386,7 @@ final case class ResourcesResponderV2(
    * @return the full history of resource as sequence of [[ResourceAndValueHistoryEvent]].
    */
   private def extractEventsFromHistory(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     resourceHistory: Seq[ResourceHistoryEntry],
     requestingUser: User,
   ): Task[Seq[ResourceAndValueHistoryEvent]] =
@@ -1450,13 +1447,13 @@ final case class ResourcesResponderV2(
    * @return the full representation of the resource at the given version date.
    */
   private def getResourceAtGivenTime(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     versionHist: ResourceHistoryEntry,
     requestingUser: User,
   ): Task[(ResourceHistoryEntry, ReadResourceV2)] =
     for {
       resourceFullRepAtCreationTime <- readResources.getResourcesWithDeletedResource(
-                                         resourceIris = Seq(resourceIri),
+                                         resourceIris = Seq(resourceIri.value),
                                          versionDate = Some(VersionDate.fromInstant(versionHist.versionDate)),
                                          showDeletedValues = true,
                                          targetSchema = ApiV2Complex,

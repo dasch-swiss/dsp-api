@@ -660,7 +660,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourceAsTeiV2(
-                          resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup",
+                          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_richtext_with_markup"),
                           textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
                           mappingIri = None,
                           gravsearchTemplateIri = None,
@@ -678,7 +678,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourceAsTeiV2(
-                          resourceIri = "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g",
+                          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g"),
                           textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
                           mappingIri = None,
                           gravsearchTemplateIri = None,
@@ -785,7 +785,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getGraphDataResponseV2(
-                          resourceIri = "http://rdfh.ch/0001/start",
+                          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
                           depth = 6,
                           GraphDirection.Both,
                           excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
@@ -801,7 +801,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getGraphDataResponseV2(
-                          resourceIri = "http://rdfh.ch/0001/start",
+                          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
                           depth = 6,
                           GraphDirection.Both,
                           excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
@@ -816,7 +816,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           response <-
             resourceResponder(
               _.getGraphDataResponseV2(
-                resourceIri = "http://rdfh.ch/0001/a-thing",
+                resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"),
                 depth = 4,
                 GraphDirection.Both,
                 excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
@@ -829,7 +829,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getGraphDataResponseV2(
-                          resourceIri = "http://rdfh.ch/0001/another-thing",
+                          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/another-thing"),
                           depth = 4,
                           GraphDirection.Both,
                           excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
@@ -2130,7 +2130,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
     ),
     suite("When asked for events")(
       test("return full history of a-thing-picture resource") {
-        val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-picture")
         for {
           events              <- resourceResponder(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents))
           createResourceEvents =
@@ -2148,7 +2148,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("return full history of a resource as events") {
-        val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
         resourceResponder(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents))
           .map(actual => assertTrue(actual.size == 9))
       },
@@ -2176,7 +2176,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                    apiRequestID = randomUUID,
                  ),
                )
-          events                                                <- resourceResponder(_.getResourceHistoryEvents(resourceIri.value, anythingUser2).map(_.historyEvents))
+          events                                                <- resourceResponder(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents))
           createValueEvent: Option[ResourceAndValueHistoryEvent] =
             events.find(event =>
               event.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT && event.eventBody
@@ -2221,7 +2221,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                  ),
                )
           events <-
-            resourceResponder(_.getResourceHistoryEvents(resourceIri.toString, anythingUser2).map(_.historyEvents))
+            resourceResponder(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents))
           deleteValueEvent: Option[ResourceAndValueHistoryEvent] =
             events.find(event =>
               event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT &&
@@ -2230,7 +2230,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertTrue(events.size == 11, deleteValueEvent.isDefined)
       },
       test("return full history of a deleted resource") {
-        val resourceIri = "http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA")
         for {
           events             <- resourceResponder(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents))
           deleteResourceEvent =
@@ -2253,7 +2253,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
         for {
           _                  <- resourceResponder(_.updateResourceMetadataV2(updateRequest))
-          events             <- resourceResponder(_.getResourceHistoryEvents(resourceIri.value, anythingUser2).map(_.historyEvents))
+          events             <- resourceResponder(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents))
           updateMetadataEvent =
             events.find(event => event.eventType == ResourceAndValueEventsUtil.UPDATE_RESOURCE_METADATA_EVENT)
         } yield assertTrue(events.size == 2, updateMetadataEvent.isDefined)

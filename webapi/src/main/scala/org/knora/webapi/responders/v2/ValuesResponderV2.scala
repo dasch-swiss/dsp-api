@@ -151,7 +151,7 @@ final class ValuesResponderV2(
       // so we can see objects that the user doesn't have permission to see.
       resourceInfo <-
         getResourceWithPropertyValues(
-          resourceIri = valueToCreate.resourceIri.value,
+          resourceIri = valueToCreate.resourceIri,
           propertyInfo = adjustedInternalPropertyInfo,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
         )
@@ -795,7 +795,7 @@ final class ValuesResponderV2(
       // so we can see objects that the user doesn't have permission to see.
       resourceInfo <-
         getResourceWithPropertyValues(
-          resourceIri = updateValue.resourceIri.value,
+          resourceIri = updateValue.resourceIri,
           propertyInfo = adjustedInternalPropertyInfo,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
         )
@@ -1500,7 +1500,7 @@ final class ValuesResponderV2(
    * @return a [[ReadResourceV2]] containing only the resource's metadata and its values for the specified property.
    */
   private def getResourceWithPropertyValues(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     propertyInfo: ReadPropertyInfoV2,
     requestingUser: User,
   ): Task[ReadResourceV2] =
@@ -1530,19 +1530,17 @@ final class ValuesResponderV2(
           Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri,
         )(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(BadRequestException(_)))
 
-      resIri <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException(_))
-
       // Make a Gravsearch query.
       gravsearchQuery =
         GetResourceWithSpecifiedPropertiesGravsearchQuery.build(
-          resourceIri = resIri,
+          resourceIri = resourceIri,
           propertyIris = propertyIrisForGravsearchQuery,
         )
 
       // Run the query.
       query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
       searchResponse <- searchResponderV2.gravsearchV2(query, SchemaRendering.default, requestingUser)
-      result         <- searchResponse.toResource(resIri)
+      result         <- searchResponse.toResource(resourceIri)
     } yield result
 
   /**
@@ -1843,7 +1841,7 @@ final class ValuesResponderV2(
         // resources should be removed.
         val deleteDirectLink = newReferenceCount == 0
 
-        makeUnusedValueIri(sourceResourceInfo.resourceIri.value)
+        makeUnusedValueIri(sourceResourceInfo.resourceIri)
           .map(newLinkValueIri =>
             SparqlTemplateLinkUpdate(
               linkPropertyIri = linkPropertyIri,
@@ -1955,8 +1953,8 @@ final class ValuesResponderV2(
    * @param resourceIri the IRI of the containing resource.
    * @return the new value IRI.
    */
-  private def makeUnusedValueIri(resourceIri: IRI): Task[IRI] =
-    iriService.makeUnusedIri(ValueIri.makeNew(ResourceIri.unsafeFrom(resourceIri)).value)
+  private def makeUnusedValueIri(resourceIri: ResourceIri): Task[IRI] =
+    iriService.makeUnusedIri(ValueIri.makeNew(resourceIri).value)
 }
 
 object ValuesResponderV2 {

@@ -7,7 +7,6 @@ package org.knora.webapi.slice.resources.service
 
 import zio.*
 
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
@@ -40,7 +39,7 @@ final case class ValueContentValidator(
   private def validateValueContent(vc: ValueContentV2, resourceIri: ResourceIri): IO[String, Unit] =
     validateValueContent(vc, resourceIri.shortcode)
 
-  private def extractShortcode(resourceIri: IRI): IO[String, Shortcode] =
+  private def extractShortcode(resourceIri: String): IO[String, Shortcode] =
     ZIO.fromEither(ResourceIri.from(resourceIri)).map(_.shortcode)
 
   private def validateValueContent(vc: ValueContentV2, inProject: Shortcode): IO[String, Unit] =

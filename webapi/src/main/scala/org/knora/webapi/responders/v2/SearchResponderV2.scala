@@ -50,6 +50,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -136,7 +137,7 @@ trait SearchResponderV2 {
    * @return a [[ReadResourcesSequenceV2]] representing the linked resources that have been found.
    */
   def searchIncomingLinksV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,
@@ -153,7 +154,7 @@ trait SearchResponderV2 {
    * @return a [[ReadResourcesSequenceV2]] representing the StillImageRepresentations that have been found.
    */
   def searchStillImageRepresentationsV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,
@@ -169,7 +170,7 @@ trait SearchResponderV2 {
    * @return a [[ResourceCountV2]] representing the number of StillImageRepresentations that have been found.
    */
   def searchStillImageRepresentationsCountV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[ResourceCountV2]
@@ -184,7 +185,7 @@ trait SearchResponderV2 {
    * @return a [[ReadResourcesSequenceV2]] representing the regions that have been found.
    */
   def searchIncomingRegionsV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,
@@ -307,7 +308,7 @@ final case class SearchResponderV2Live(
 
   private implicit val sf: StringFormatter = stringFormatter
 
-  private def stillImageRepresentationsPreQueryBuilder(resourceIri: IRI, offset: RuntimeFlags = 0) =
+  private def stillImageRepresentationsPreQueryBuilder(resourceIri: ResourceIri, offset: RuntimeFlags = 0) =
     s"""
        |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
        |
@@ -352,7 +353,7 @@ final case class SearchResponderV2Live(
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   def searchIncomingLinksV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,
@@ -406,13 +407,13 @@ final case class SearchResponderV2Live(
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   def searchStillImageRepresentationsV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[ReadResourcesSequenceV2] = {
-    val query: IRI = stillImageRepresentationsPreQueryBuilder(resourceIri, offset)
+    val query: String = stillImageRepresentationsPreQueryBuilder(resourceIri, offset)
 
     gravsearchV2(query, rendering, user, limitToProject)
   }
@@ -426,7 +427,7 @@ final case class SearchResponderV2Live(
    * @return a [[ResourceCountV2]] representing the number of StillImageRepresentations that have been found.
    */
   def searchStillImageRepresentationsCountV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[ResourceCountV2] = {
@@ -446,7 +447,7 @@ final case class SearchResponderV2Live(
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   def searchIncomingRegionsV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,

@@ -9,9 +9,11 @@ import zio.test.*
 
 import java.time.Instant
 
+import org.knora.webapi.slice.common.ResourceIri
+
 object GetResourceValueVersionHistoryQuerySpec extends ZIOSpecDefault {
 
-  private val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+  private val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
   private val startDate   = Instant.parse("2018-06-04T00:00:00Z")
   private val endDate     = Instant.parse("2018-06-05T00:00:00Z")
 
