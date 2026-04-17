@@ -5,9 +5,9 @@
 
 package swiss.dasch.api
 
-import sttp.client3.Response
-import sttp.client3.impl.zio.RIOMonadAsyncError
-import sttp.client3.testing.SttpBackendStub
+import sttp.client4.impl.zio.RIOMonadAsyncError
+import sttp.client4.testing.BackendStub
+import sttp.client4.testing.ResponseStub
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import swiss.dasch.FetchAssetPermissionsLive
@@ -57,10 +57,9 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
   } yield response
 
   val fakeSttp = {
-    val stub = SttpBackendStub(new RIOMonadAsyncError[Any]).whenRequestMatchesPartial {
-      case r if r.uri.path.mkString("/").contains("admin/files/0001") => Response.ok("""{"permissionCode": 1}""")
-      case _                                                          => ???
-    }
+    val stub = BackendStub(new RIOMonadAsyncError[Any])
+      .whenRequestMatches(_.uri.path.mkString("/").contains("admin/files/0001"))
+      .thenRespond(ResponseStub.adjust("""{"permissionCode": 1}"""))
     ZLayer.succeed(new FetchAssetPermissionsLive(stub, DspApiConfig("")))
   }
 

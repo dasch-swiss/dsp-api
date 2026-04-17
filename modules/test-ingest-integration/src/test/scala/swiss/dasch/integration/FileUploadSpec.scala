@@ -6,9 +6,9 @@
 package swiss.dasch.integration
 
 import sttp.capabilities.zio.ZioStreams
-import sttp.client3
-import sttp.client3.httpclient.zio.HttpClientZioBackend
-import sttp.client3.{SttpBackend, basicRequest}
+import sttp.client4
+import sttp.client4.httpclient.zio.HttpClientZioBackend
+import sttp.client4.{StreamBackend, basicRequest}
 import sttp.model.{Header, Uri}
 import swiss.dasch.integration.testcontainers.{DspIngestTestContainer, SharedVolumes}
 import zio.*
@@ -61,7 +61,7 @@ object FileUploadSpec extends ZIOSpecDefault {
   ) @@ TestAspect.withLiveRandom @@ TestAspect.withLiveClock @@ TestAspect.timeout(timeout)
 }
 
-final case class TestIngestClient(backend: SttpBackend[Task, ZioStreams], container: DspIngestTestContainer) {
+final case class TestIngestClient(backend: StreamBackend[Task, ZioStreams], container: DspIngestTestContainer) {
   private val baseUrl = {
     val urlAsString = s"http://localhost:" + container.getMappedPort(3340)
     Uri.parse(urlAsString).getOrElse(throw new IllegalArgumentException(s"Invalid URL: $urlAsString"))

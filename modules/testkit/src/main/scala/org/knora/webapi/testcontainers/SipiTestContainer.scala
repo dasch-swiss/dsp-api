@@ -68,8 +68,6 @@ object SipiTestContainer {
       .withEnv("SIPI_EXTERNAL_PORT", "1024")
       .withEnv("SIPI_WEBAPI_HOSTNAME", SipiTestContainer.localHostAddress)
       .withEnv("SIPI_WEBAPI_PORT", "3333")
-      .withEnv("CLEAN_TMP_DIR_USER", "clean_tmp_dir_user")
-      .withEnv("CLEAN_TMP_DIR_PW", "clean_tmp_dir_pw")
       .withCommand("--config=/sipi/config/sipi.docker-config.lua")
       .withClasspathResourceMapping(
         "/sipi.docker-config.lua",
