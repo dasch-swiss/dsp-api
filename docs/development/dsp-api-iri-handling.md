@@ -8,9 +8,8 @@ For v3-specific endpoint wiring (how SmartIri-backed IRIs cross the HTTP boundar
 
 ## The rules
 
-A typed IRI value object has a safe effectful constructor `Xxx.from(String): Either[String, Xxx]`
+A typed IRI value object has a safe constructor `Xxx.from(String): Either[String, Xxx]`
 and an unsafe constructor `Xxx.unsafeFrom(String): Xxx` that throws on invalid input.
-Where you construct an IRI — and how you handle the error — depends on the layer.
 
 ### 1. Never call `unsafeFrom` in responders or RestServices
 
@@ -20,14 +19,15 @@ constants, values round-tripping out of a typed source). In request handling cod
 latent crash.
 
 ```scala
-// BAD — responder or RestService
-val resIri = ResourceIri.unsafeFrom(request.resourceIri)
+// BAD — calling unsafe direct
+ResourceIri.unsafeFrom(request.resourceIri)
+ZIO.attempt(ReousrceIri.unsafeFrom(request.resourceIri))
 
 // GOOD
-resIri <- ZIO.fromEither(ResourceIri.from(request.resourceIri)).mapError(BadRequestException.apply)
+ZIO.fromEither(ResourceIri.from(request.resourceIri)).mapError(BadRequestException.apply)
 ```
 
-### 2. Make conversion effectful and map to the right failure type
+### 2. Make conversion ZIO effectful and map to the right failure type
 
 Convert via `ZIO.fromEither(Xxx.from(...))` and `mapError` to the failure type that fits the layer.
 
@@ -39,26 +39,24 @@ Convert via `ZIO.fromEither(Xxx.from(...))` and `mapError` to the failure type t
 
 ```scala
 // RestService (v2)
-resIri <- ZIO.fromEither(ResourceIri.from(resourceIri.value))
-            .mapError(BadRequestException(_))
+ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
 
 // RestService (v3)
-resIri <- ZIO.fromEither(ResourceIri.from(resourceIri.value))
-            .mapError(BadRequest(_))
+ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequest(_))
 ```
 
 ### 3. Never `.die` on a `ResourceIri.from` failure
 
-`ZIO.fromEither(ResourceIri.from(s)).orDie` turns a recoverable validation error into a fatal
+`ZIO.attempt(ResourceIri.unsafeFrom(s)).orDie` turns a recoverable validation error into a fatal
 defect. A malformed IRI from a client is a 400, not a 500. Always `mapError` to a recoverable
 failure.
 
 ```scala
 // BAD
-resIri <- ZIO.fromEither(ResourceIri.from(s)).orDie
+ZIO.fromEither(ResourceIri.from(s)).map(Exception(_)).orDie
 
 // GOOD
-resIri <- ZIO.fromEither(ResourceIri.from(s)).mapError(BadRequestException.apply)
+ZIO.fromEither(ResourceIri.from(s)).mapError(BadRequestException.apply)
 ```
 
 ### 4. In services, use a suitable domain error — ideally convert earlier
@@ -71,7 +69,7 @@ Services should receive typed IRIs, not raw strings. The conversion belongs in t
 def findResource(iri: ResourceIri): IO[ResourceError, Resource]
 
 // If conversion must happen inside the service, map to a domain error — not a raw Throwable
-resIri <- ZIO.fromEither(ResourceIri.from(s)).mapError(msg => InvalidResourceIri(msg))
+ZIO.fromEither(ResourceIri.from(s)).mapError(msg => InvalidResourceIri(msg))
 ```
 
 Avoid leaking `BadRequestException` out of a service if the service's error channel is a
