@@ -40,7 +40,8 @@ object TestData {
   val graphIri          = InternalIri("foo:Graph")
   val projectIri        = InternalIri("foo:ProjectIri")
   val userIri           = InternalIri("foo:UserIri")
-  val resourceIri       = InternalIri("http://rdfh.ch/0001/foo-resource")
+  val resourceIri       = ResourceIri.unsafeFrom("http://rdfh.ch/0001/foo-resource")
+  val resourceIriInt    = InternalIri(resourceIri.value)
   val resourceClassIri  = InternalIri("foo:ClassIri")
   val label             = "foo Label"
   val creationDate      = Instant.parse("2024-01-01T10:00:00.673298Z")
@@ -50,7 +51,7 @@ object TestData {
   val valueCreationDate = Instant.parse("2024-01-01T12:00:00.673298Z")
 
   val resourceDefinition = ResourceReadyToCreate(
-    resourceIri = ResourceIri.unsafeFrom(resourceIri.value),
+    resourceIri = resourceIri,
     resourceClassIri = resourceClassIri,
     resourceLabel = label,
     creationDate = creationDate,
@@ -60,7 +61,7 @@ object TestData {
   )
 
   val linkValueDefinition = ValueInfo(
-    resourceIri = resourceIri,
+    resourceIri = resourceIriInt,
     propertyIri = InternalIri("foo:hasLinkToValue"),
     valueIri = InternalIri("foo:LinkValueIri"),
     valueTypeIri = InternalIri(OntologyConstants.KnoraBase.LinkValue),
@@ -75,7 +76,7 @@ object TestData {
   )
 
   val unformattedTextValueDefinition = ValueInfo(
-    resourceIri = resourceIri,
+    resourceIri = resourceIriInt,
     propertyIri = InternalIri("foo:hasUnformattedTextValue"),
     valueIri = InternalIri("foo:UnformattedTextValueIri"),
     valueTypeIri = InternalIri(OntologyConstants.KnoraBase.TextValue),
@@ -91,7 +92,7 @@ object TestData {
 
   val standoffTagUuid              = UUID.randomUUID()
   val formattedTextValueDefinition = ValueInfo(
-    resourceIri = resourceIri,
+    resourceIri = resourceIriInt,
     propertyIri = InternalIri("foo:hasFormattedTextValue"),
     valueIri = InternalIri("foo:FormattedTextValueIri"),
     valueTypeIri = InternalIri(OntologyConstants.KnoraBase.TextValue),
@@ -154,7 +155,7 @@ object TestData {
 
   val intValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasInt"),
       valueIri = InternalIri("foo:IntValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.IntValue),
@@ -170,7 +171,7 @@ object TestData {
 
   val boolValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasBoolean"),
       valueIri = InternalIri("foo:BooleanValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.BooleanValue),
@@ -186,7 +187,7 @@ object TestData {
 
   val decimalValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasDecimal"),
       valueIri = InternalIri("foo:DecimalValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.DecimalValue),
@@ -202,7 +203,7 @@ object TestData {
 
   val uriValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasUri"),
       valueIri = InternalIri("foo:UriValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.UriValue),
@@ -218,7 +219,7 @@ object TestData {
 
   val dateValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasDate"),
       valueIri = InternalIri("foo:DateValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.DateValue),
@@ -234,7 +235,7 @@ object TestData {
 
   val colorValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasColor"),
       valueIri = InternalIri("foo:ColorValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.ColorValue),
@@ -250,7 +251,7 @@ object TestData {
 
   val geometryValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasGeom"),
       valueIri = InternalIri("foo:GeomValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.GeomValue),
@@ -269,7 +270,7 @@ object TestData {
 
   val stillImageFileValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasStillImage"),
       valueIri = InternalIri("foo:StillImageFileValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.StillImageFileValue),
@@ -294,7 +295,7 @@ object TestData {
 
   val stillImageExternalFileValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasStillImageExternal"),
       valueIri = InternalIri("foo:StillImageExternalFileValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.StillImageFileValue),
@@ -316,7 +317,7 @@ object TestData {
 
   val documentFileValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasDocument"),
       valueIri = InternalIri("foo:DocumentFileValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.DocumentFileValue),
@@ -342,7 +343,7 @@ object TestData {
 
   val otherFileValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasOtherFile"),
       valueIri = InternalIri("foo:OtherFileValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.ArchiveFileValue),
@@ -365,7 +366,7 @@ object TestData {
 
   val hierarchicalListValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasList"),
       valueIri = InternalIri("foo:ListNodeIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.ListValue),
@@ -381,7 +382,7 @@ object TestData {
 
   val intervalValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasInterval"),
       valueIri = InternalIri("foo:IntervalValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.IntervalValue),
@@ -400,7 +401,7 @@ object TestData {
 
   val timeValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasTime"),
       valueIri = InternalIri("foo:TimeValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.TimeValue),
@@ -416,7 +417,7 @@ object TestData {
 
   val geonameValueDefinition =
     ValueInfo(
-      resourceIri = resourceIri,
+      resourceIri = resourceIriInt,
       propertyIri = InternalIri("foo:hasGeoname"),
       valueIri = InternalIri("foo:GeonameValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.GeonameValue),

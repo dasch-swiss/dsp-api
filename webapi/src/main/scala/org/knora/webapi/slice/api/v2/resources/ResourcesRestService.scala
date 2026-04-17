@@ -37,7 +37,7 @@ final case class ResourcesRestService(
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] =
     for {
-      resIri   <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
+      resIri   <- parseResourceIri(resourceIri)
       result   <- resourcesService.getIiifManifestV2(resIri, user)
       response <- renderer.render(result, formatOptions)
     } yield response
@@ -47,9 +47,7 @@ final case class ResourcesRestService(
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] =
     for {
-      resIris <- ZIO
-                   .foreach(resourceIris)(iri => ZIO.fromEither(ResourceIri.from(iri)))
-                   .mapError(BadRequestException.apply)
+      resIris  <- ZIO.foreach(resourceIris)(parseResourceIri)
       response <- readResources
                     .getResourcePreviewWithDeletedResource(resIris, withDeleted = true, formatOptions.schema, user)
                     .flatMap(renderer.render(_, formatOptions))
@@ -66,7 +64,7 @@ final case class ResourcesRestService(
     user: User,
   )(resourceIri: IriDto, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
     for {
-      resIri   <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
+      resIri   <- parseResourceIri(resourceIri)
       result   <- resourcesService.getResourceHistoryEvents(resIri, user)
       response <- renderer.render(result, formatOptions)
     } yield response
@@ -96,7 +94,7 @@ final case class ResourcesRestService(
     endDate: Option[VersionDate],
   ): Task[(RenderedResponse, MediaType)] =
     for {
-      resIri   <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
+      resIri   <- parseResourceIri(resourceIri)
       result   <- resourcesService.getResourceHistory(resIri, startDate, endDate, user)
       response <- renderer.render(result, formatOptions)
     } yield response
@@ -107,9 +105,7 @@ final case class ResourcesRestService(
     versionDate: Option[VersionDate],
   ): Task[(RenderedResponse, MediaType)] =
     for {
-      resIris <- ZIO
-                   .foreach(resourceIris)(iri => ZIO.fromEither(ResourceIri.from(iri)))
-                   .mapError(BadRequestException.apply)
+      resIris  <- ZIO.foreach(resourceIris)(parseResourceIri)
       response <- readResources
                     .getResourcesWithDeletedResource(
                       resIris,
@@ -133,7 +129,7 @@ final case class ResourcesRestService(
     excludeProperty: Option[IriDto],
   ): Task[(RenderedResponse, MediaType)] = for {
     excludeProperty <- ZIO.foreach(excludeProperty.map(_.value))(iriConverter.asSmartIri)
-    resIri          <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
+    resIri          <- parseResourceIri(resourceIri)
     result          <- resourcesService.getGraphDataResponseV2(resIri, depth, direction, excludeProperty, user)
     response        <- renderer.render(result, formatOptions)
   } yield response
@@ -146,13 +142,11 @@ final case class ResourcesRestService(
     headerXSLTIri: Option[IriDto],
   ) = for {
     textProp           <- iriConverter.asSmartIri(textProperty.value)
-    resIri             <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
+    resIri             <- parseResourceIri(resourceIri)
     mapping             = mappingIri.map(_.value)
-    gravsearchTemplate <- ZIO
-                            .foreach(gravsearchTemplateIri)(iri => ZIO.fromEither(ResourceIri.from(iri.value)))
-                            .mapError(BadRequestException.apply)
-    headerXslt = headerXSLTIri.map(_.value)
-    result    <- resourcesService.getResourceAsTeiV2(resIri, textProp, mapping, gravsearchTemplate, headerXslt, user)
+    gravsearchTemplate <- ZIO.foreach(gravsearchTemplateIri)(parseResourceIri)
+    headerXslt          = headerXSLTIri.map(_.value)
+    result             <- resourcesService.getResourceAsTeiV2(resIri, textProp, mapping, gravsearchTemplate, headerXslt, user)
   } yield (result.toXML, MediaType.ApplicationXml)
 
   def eraseResource(user: User)(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =
@@ -204,6 +198,11 @@ final case class ResourcesRestService(
       result   <- resourcesService.updateResourceMetadataV2(eraseRequest)
       response <- renderer.render(result, formatOptions)
     } yield response
+
+  private def parseResourceIri(iri: String): IO[BadRequestException, ResourceIri] =
+    ZIO.fromEither(ResourceIri.from(iri)).mapError(BadRequestException.apply)
+
+  private def parseResourceIri(iri: IriDto): IO[BadRequestException, ResourceIri] = parseResourceIri(iri.value)
 }
 
 object ResourcesRestService {
