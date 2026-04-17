@@ -248,7 +248,7 @@ final case class CreateResourceV2Handler(
 
       // Verify that the resource was created.
       previewOfCreatedResource <- verifyResource(
-                                    resourceIri = resourceIri,
+                                    resourceIri = resourceReadyToCreate.resourceIri,
                                     requestingUser = createResourceRequestV2.requestingUser,
                                   )
     } yield previewOfCreatedResource
@@ -515,7 +515,7 @@ final case class CreateResourceV2Handler(
           )
         }
     } yield ResourceReadyToCreate(
-      resourceIri = InternalIri(resourceIri.value),
+      resourceIri = resourceIri,
       resourceClassIri = InternalIri(internalCreateResource.resourceClassIri.toString),
       resourceLabel = internalCreateResource.label,
       creationDate = creationDate,

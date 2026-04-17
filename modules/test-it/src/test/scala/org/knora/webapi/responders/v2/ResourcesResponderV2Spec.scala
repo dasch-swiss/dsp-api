@@ -465,7 +465,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
   private def getResource(resourceIri: IRI) = for {
     getResult <- resourceResponder(
                    _.getResourcesWithDeletedResource(
-                     resourceIris = Seq(resourceIri),
+                     resourceIris = Seq(ResourceIri.unsafeFrom(resourceIri)),
                      targetSchema = ApiV2Complex,
                      schemaOptions = Set.empty,
                      requestingUser = anythingUser2,
@@ -527,7 +527,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+                          resourceIris = Seq(ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a")),
                           versionDate = None,
                           targetSchema = ApiV2Complex,
                           schemaOptions = Set.empty,
@@ -547,7 +547,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           response <-
             resourceResponder(
               _.getResourcePreviewWithDeletedResource(
-                resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+                resourceIris = Seq(ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a")),
                 targetSchema = ApiV2Complex,
                 requestingUser = incunabulaProjectAdminUser,
               ),
@@ -563,7 +563,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           response <-
             resourceResponder(
               _.getResourcesWithDeletedResource(
-                resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
+                resourceIris = Seq(ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701")),
                 versionDate = None,
                 targetSchema = ApiV2Complex,
                 schemaOptions = Set.empty,
@@ -582,7 +582,10 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+                          resourceIris = Seq(
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701"),
+                          ),
                           versionDate = None,
                           targetSchema = ApiV2Complex,
                           schemaOptions = Set.empty,
@@ -601,7 +604,10 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcePreviewWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+                          resourceIris = Seq(
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701"),
+                          ),
                           targetSchema = ApiV2Complex,
                           requestingUser = incunabulaProjectAdminUser,
                         ),
@@ -618,7 +624,10 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
+                          resourceIris = Seq(
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701"),
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
+                          ),
                           versionDate = None,
                           targetSchema = ApiV2Complex,
                           schemaOptions = Set.empty,
@@ -639,9 +648,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
                           resourceIris = Seq(
-                            "http://rdfh.ch/0803/c5058f3a",
-                            "http://rdfh.ch/0803/c5058f3a",
-                            "http://rdfh.ch/0803/2a6221216701",
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701"),
                           ),
                           versionDate = None,
                           targetSchema = ApiV2Complex,
@@ -693,7 +702,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertTrue(!xmlDiff.hasDifferences)
       },
       test("return a past version of a resource") {
-        val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
         val versionDate = Instant.parse("2019-02-12T08:05:10Z")
         for {
           response <-
@@ -749,7 +758,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+                          resourceIris = Seq(ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")),
                           valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
                           targetSchema = ApiV2Complex,
                           schemaOptions = Set.empty,
@@ -766,7 +775,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+                          resourceIris = Seq(ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")),
                           valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
                           versionDate = Some(VersionDate.fromInstant(Instant.parse("2019-02-12T09:05:10Z"))),
                           targetSchema = ApiV2Complex,
@@ -1665,7 +1674,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           _           <- resourceResponder(_.markResourceAsDeletedV2(deleteRequest))
           getResponse <- resourceResponder(
                            _.getResourcesWithDeletedResource(
-                             resourceIris = Seq(createdResourceIri.value),
+                             resourceIris = Seq(createdResourceIri),
                              targetSchema = ApiV2Complex,
                              schemaOptions = Set.empty,
                              requestingUser = anythingUser1,
@@ -1697,7 +1706,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           _        <- resourceResponder(_.markResourceAsDeletedV2(deleteRequest))
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
-                          resourceIris = Seq(resourceIri.value),
+                          resourceIris = Seq(resourceIri),
                           targetSchema = ApiV2Complex,
                           schemaOptions = Set.empty,
                           requestingUser = anythingUser1,
@@ -2028,7 +2037,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           // Verify the resource is marked as deleted.
           getDeletedResponse <- resourceResponder(
                                   _.getResourcesWithDeletedResource(
-                                    resourceIris = Seq(createdResourceIri.value),
+                                    resourceIris = Seq(createdResourceIri),
                                     targetSchema = ApiV2Complex,
                                     schemaOptions = Set.empty,
                                     requestingUser = anythingAdminUser,

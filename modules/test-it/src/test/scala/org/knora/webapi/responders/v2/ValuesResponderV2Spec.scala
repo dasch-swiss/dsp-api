@@ -221,7 +221,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
   ) = for {
     getResponse <- ZIO.serviceWithZIO[ResourcesResponderV2](
                      _.getResourcesWithDeletedResource(
-                       resourceIris = Seq(resourceIri.value),
+                       resourceIris = Seq(resourceIri),
                        targetSchema = ApiV2Complex,
                        schemaOptions = Set.empty,
                        requestingUser = requestingUser,
@@ -321,7 +321,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
   private def getResourceLastModificationDate(resourceIri: ResourceIri, requestingUser: User) = for {
     previewResponse <- ZIO.serviceWithZIO[ResourcesResponderV2](
                          _.getResourcePreviewWithDeletedResource(
-                           Seq(resourceIri.value),
+                           Seq(resourceIri),
                            targetSchema = ApiV2Complex,
                            requestingUser = requestingUser,
                          ),

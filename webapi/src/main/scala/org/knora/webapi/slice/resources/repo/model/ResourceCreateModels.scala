@@ -11,10 +11,11 @@ import java.util.UUID
 import org.knora.webapi.messages.util.CalendarNameV2
 import org.knora.webapi.messages.util.DatePrecisionV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.domain.InternalIri
 
 final case class ResourceReadyToCreate(
-  resourceIri: InternalIri,
+  resourceIri: ResourceIri,
   resourceClassIri: InternalIri,
   resourceLabel: String,
   creationDate: Instant,

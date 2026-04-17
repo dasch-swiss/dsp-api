@@ -319,15 +319,16 @@ object ResourcesRepoLive {
     val resourcePattern = CreateResourceQueryBuilder.buildResourcePattern(resourceToCreate, projectIri, creatorIri)
     query.insertData(resourcePattern)
 
-    val valuePatterns = resourceToCreate.valueInfos.flatMap(
-      CreateResourceQueryBuilder.buildValuePattern(_, resourceToCreate.resourceIri),
+    val resourceIriInternal = InternalIri(resourceToCreate.resourceIri.value)
+    val valuePatterns       = resourceToCreate.valueInfos.flatMap(
+      CreateResourceQueryBuilder.buildValuePattern(_, resourceIriInternal),
     )
     query.insertData(valuePatterns: _*)
 
     val standoffLinkPatterns = resourceToCreate.standoffLinks.flatMap { standoffLink =>
       CreateResourceQueryBuilder.buildStandoffLinkPattern(
         standoffLink,
-        resourceToCreate.resourceIri,
+        resourceIriInternal,
         resourceToCreate.creationDate,
       )
     }

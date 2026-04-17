@@ -112,7 +112,7 @@ final case class ResourcesResponderV2(
           requestingUser,
         ) =>
       getResourcesWithDeletedResource(
-        resIris.map(_.value),
+        resIris,
         propertyIri,
         valueUuid,
         versionDate.map(VersionDate.fromInstant),
@@ -128,7 +128,7 @@ final case class ResourcesResponderV2(
           targetSchema,
           requestingUser,
         ) =>
-      getResourcePreviewWithDeletedResource(resIris.map(_.value), withDeletedResource, targetSchema, requestingUser)
+      getResourcePreviewWithDeletedResource(resIris, withDeletedResource, targetSchema, requestingUser)
 
     case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 =>
       getResourceHistoryV2(resourceHistoryRequest)
@@ -187,7 +187,7 @@ final case class ResourcesResponderV2(
       for {
         // Get the metadata of the resource to be updated.
         resourcesSeq <- getResourcePreviewWithDeletedResource(
-                          resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri.value),
+                          resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
                           targetSchema = ApiV2Complex,
                           requestingUser = updateResourceMetadataRequestV2.requestingUser,
                         )
@@ -235,7 +235,7 @@ final case class ResourcesResponderV2(
 
         updatedResourcesSeq <-
           getResourcePreviewWithDeletedResource(
-            resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri.value),
+            resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
             targetSchema = ApiV2Complex,
             requestingUser = updateResourceMetadataRequestV2.requestingUser,
           )
@@ -474,7 +474,7 @@ final case class ResourcesResponderV2(
   }
 
   def getResourcesWithDeletedResource(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     versionDate: Option[VersionDate] = None,
@@ -485,7 +485,7 @@ final case class ResourcesResponderV2(
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
     readResources.getResourcesWithDeletedResource(
-      resourceIris,
+      resourceIris.map(_.value),
       propertyIri,
       valueUuid,
       versionDate,
@@ -497,13 +497,13 @@ final case class ResourcesResponderV2(
     )
 
   def getResourcePreviewWithDeletedResource(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
     readResources.getResourcePreviewWithDeletedResource(
-      resourceIris,
+      resourceIris.map(_.value),
       withDeleted,
       targetSchema,
       requestingUser,

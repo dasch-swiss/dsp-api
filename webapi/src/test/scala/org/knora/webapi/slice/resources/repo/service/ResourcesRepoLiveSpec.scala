@@ -21,6 +21,7 @@ import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
@@ -39,7 +40,7 @@ object TestData {
   val graphIri          = InternalIri("foo:Graph")
   val projectIri        = InternalIri("foo:ProjectIri")
   val userIri           = InternalIri("foo:UserIri")
-  val resourceIri       = InternalIri("foo:ResourceInstanceIri")
+  val resourceIri       = InternalIri("http://rdfh.ch/0001/foo-resource")
   val resourceClassIri  = InternalIri("foo:ClassIri")
   val label             = "foo Label"
   val creationDate      = Instant.parse("2024-01-01T10:00:00.673298Z")
@@ -49,7 +50,7 @@ object TestData {
   val valueCreationDate = Instant.parse("2024-01-01T12:00:00.673298Z")
 
   val resourceDefinition = ResourceReadyToCreate(
-    resourceIri = resourceIri,
+    resourceIri = ResourceIri.unsafeFrom(resourceIri.value),
     resourceClassIri = resourceClassIri,
     resourceLabel = label,
     creationDate = creationDate,
