@@ -92,6 +92,21 @@ constructor that guarantees the invariant (e.g. `ResourceIri.makeNew(shortcode)`
 Parsing arbitrary triplestore output with `unsafeFrom` hides the data-integrity signal behind a
 generic defect — prefer `from` + `InconsistentRepositoryDataException`.
 
+### 6. In tests (`*Spec`), `unsafeFrom` is fine
+
+Test code may use `unsafeFrom` freely to construct fixtures, expected values, and asserted
+cases. The IRI string is a static, author-controlled constant — if it is malformed, the test
+fails loudly and immediately, which is the desired behaviour. Using `from` + effectful error
+handling in tests just adds noise without adding safety.
+
+```scala
+// GOOD — test fixture
+private val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing")
+
+// GOOD — asserted expected value
+assertTrue(actual.iri == ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"))
+```
+
 ## Summary by layer
 
 | Layer | Preferred | Error mapping |
