@@ -46,10 +46,14 @@ final case class ResourcesRestService(
     resourceIris: List[String],
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] =
-    ensureIris(resourceIris) *>
-      readResources
-        .getResourcePreviewWithDeletedResource(resourceIris, withDeleted = true, formatOptions.schema, user)
-        .flatMap(renderer.render(_, formatOptions))
+    for {
+      resIris <- ZIO
+                   .foreach(resourceIris)(iri => ZIO.fromEither(ResourceIri.from(iri)))
+                   .mapError(BadRequestException.apply)
+      response <- readResources
+                    .getResourcePreviewWithDeletedResource(resIris, withDeleted = true, formatOptions.schema, user)
+                    .flatMap(renderer.render(_, formatOptions))
+    } yield response
 
   def getResourcesProjectHistoryEvents(
     user: User,

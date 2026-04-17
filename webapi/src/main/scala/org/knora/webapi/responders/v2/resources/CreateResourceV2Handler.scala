@@ -627,9 +627,12 @@ final case class CreateResourceV2Handler(
       .toMap
 
     for {
+      existingTargetResourceIris <- ZIO
+                                      .foreach(existingTargetIris.toSeq)(iri => ZIO.fromEither(ResourceIri.from(iri)))
+                                      .mapError(BadRequestException.apply)
       // Get information about the existing resources that are targets of links.
       existingTargets <- readResources.getResourcePreviewWithDeletedResource(
-                           resourceIris = existingTargetIris.toSeq,
+                           resourceIris = existingTargetResourceIris,
                            targetSchema = ApiV2Complex,
                            requestingUser = requestingUser,
                          )
@@ -664,13 +667,16 @@ final case class CreateResourceV2Handler(
         }
     }
 
-    readResources
-      .getResourcePreviewWithDeletedResource(
-        resourceIris = standoffLinkTargetsThatShouldExist.toSeq,
-        targetSchema = ApiV2Complex,
-        requestingUser = requestingUser,
-      )
-      .unit
+    for {
+      targets <- ZIO
+                   .foreach(standoffLinkTargetsThatShouldExist.toSeq)(iri => ZIO.fromEither(ResourceIri.from(iri)))
+                   .mapError(BadRequestException.apply)
+      _ <- readResources.getResourcePreviewWithDeletedResource(
+             resourceIris = targets,
+             targetSchema = ApiV2Complex,
+             requestingUser = requestingUser,
+           )
+    } yield ()
   }
 
   /**

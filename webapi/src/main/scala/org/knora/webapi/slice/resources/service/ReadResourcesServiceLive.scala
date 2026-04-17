@@ -68,7 +68,7 @@ trait ReadResourcesService {
   ): Task[ReadResourcesSequenceV2]
 
   def getResourcePreviewWithDeletedResource(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
     requestingUser: User,
@@ -255,13 +255,13 @@ final case class ReadResourcesServiceLive(
     )
 
   def getResourcePreviewWithDeletedResource(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
     readResourcesSequence_(
-      resourceIris = resourceIris,
+      resourceIris = resourceIris.map(_.value),
       versionDate = None,
       withDeleted = withDeleted,
       targetSchema = targetSchema,

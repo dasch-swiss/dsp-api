@@ -285,7 +285,7 @@ final case class ResourcesResponderV2(
       for {
         resource <- readResources
                       .getResourcePreviewWithDeletedResource(
-                        resourceIris = Seq(deleteResourceV2.resourceIri.value),
+                        resourceIris = Seq(deleteResourceV2.resourceIri),
                         targetSchema = ApiV2Complex,
                         requestingUser = deleteResourceV2.requestingUser,
                       )
@@ -373,7 +373,7 @@ final case class ResourcesResponderV2(
       resource       <- ZIO.fromOption(resource).orElse {
                     readResources
                       .getResourcePreviewWithDeletedResource(
-                        resourceIris = Seq(deleteResourceV2.resourceIri.value),
+                        resourceIris = Seq(deleteResourceV2.resourceIri),
                         targetSchema = ApiV2Complex,
                         requestingUser = requestingUser,
                       )
@@ -503,7 +503,7 @@ final case class ResourcesResponderV2(
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
     readResources.getResourcePreviewWithDeletedResource(
-      resourceIris.map(_.value),
+      resourceIris,
       withDeleted,
       targetSchema,
       requestingUser,
@@ -1151,7 +1151,7 @@ final case class ResourcesResponderV2(
       // Get the resource preview, to make sure the user has permission to see the resource, and to get
       // its creation date.
       resourcePreviewResponse <- readResources.getResourcePreviewWithDeletedResource(
-                                   resourceIris = Seq(resourceHistoryRequest.resourceIri.value),
+                                   resourceIris = Seq(resourceHistoryRequest.resourceIri),
                                    withDeleted = resourceHistoryRequest.withDeletedResource,
                                    targetSchema = ApiV2Complex,
                                    requestingUser = KnoraSystemInstances.Users.SystemUser,
