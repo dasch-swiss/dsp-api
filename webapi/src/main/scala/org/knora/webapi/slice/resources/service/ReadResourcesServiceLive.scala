@@ -26,7 +26,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 
 trait ReadResourcesService {
   def readResourcesSequence(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     preview: Boolean = false,
@@ -36,7 +36,7 @@ trait ReadResourcesService {
   ): Task[ReadResourcesSequenceV2]
 
   def readResourcesSequencePar(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     preview: Boolean = false,
@@ -48,7 +48,7 @@ trait ReadResourcesService {
   ): Task[ReadResourcesSequenceV2]
 
   def getResources(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[Rendering],
@@ -56,7 +56,7 @@ trait ReadResourcesService {
   ): Task[ReadResourcesSequenceV2]
 
   def getResourcesWithDeletedResource(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     versionDate: Option[VersionDate] = None,
@@ -75,7 +75,7 @@ trait ReadResourcesService {
   ): Task[ReadResourcesSequenceV2]
 
   def getResourcePreview(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
     requestingUser: User,
@@ -90,7 +90,7 @@ final case class ReadResourcesServiceLive(
 )(implicit val stringFormatter: StringFormatter)
     extends ReadResourcesService {
   private def readResourcesSequence_(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     preview: Boolean = false,
@@ -103,14 +103,15 @@ final case class ReadResourcesServiceLive(
     markDeletions: Boolean = false,
     showDeletedValues: Boolean = false,
     skipRetrievalChecks: Boolean = false,
-  ): Task[ReadResourcesSequenceV2] =
+  ): Task[ReadResourcesSequenceV2] = {
+    val resourceIriStrings = resourceIris.distinct.map(_.value)
     for {
       resourcesWithValues <-
         triplestore
           .query(
             Construct(
               GetResourcePropertiesAndValuesQuery.build(
-                resourceIris = resourceIris.distinct,
+                resourceIris = resourceIriStrings,
                 preview = preview,
                 withDeleted = withDeleted,
                 maybePropertyIri = propertyIri,
@@ -132,7 +133,7 @@ final case class ReadResourcesServiceLive(
       readSequence <-
         constructResponseUtilV2.createApiResponse(
           mainResourcesAndValueRdfData = resourcesWithValues,
-          orderByResourceIri = resourceIris.distinct,
+          orderByResourceIri = resourceIriStrings,
           pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
           mappings = mappings.getOrElse(Map.empty),
           queryStandoff = queryStandoff,
@@ -143,12 +144,11 @@ final case class ReadResourcesServiceLive(
         )
 
       _ <-
-        ZIO.foreach(readSequence.checkResourceIris(resourceIris.toSet.map(ResourceIri.unsafeFrom), readSequence)) {
-          throwable =>
-            if (skipRetrievalChecks)
-              ZIO.logError(throwable.toString)
-            else
-              ZIO.fail(throwable)
+        ZIO.foreach(readSequence.checkResourceIris(resourceIris.toSet, readSequence)) { throwable =>
+          if (skipRetrievalChecks)
+            ZIO.logError(throwable.toString)
+          else
+            ZIO.fail(throwable)
         }
 
       _ <-
@@ -164,9 +164,10 @@ final case class ReadResourcesServiceLive(
     } yield readSequence
       .focus(_.resources)
       .modify(_.map(r => if (markDeletions) r.markDeleted(versionDate, showDeletedValues) else r))
+  }
 
   def readResourcesSequencePar(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     preview: Boolean = false,
@@ -194,7 +195,7 @@ final case class ReadResourcesServiceLive(
       .map(_.fold(ReadResourcesSequenceV2(Seq.empty))(_ ++ _))
 
   def readResourcesSequence(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     preview: Boolean = false,
@@ -213,7 +214,7 @@ final case class ReadResourcesServiceLive(
     )
 
   def getResources(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[Rendering],
@@ -230,7 +231,7 @@ final case class ReadResourcesServiceLive(
     )
 
   def getResourcesWithDeletedResource(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     versionDate: Option[VersionDate] = None,
@@ -261,7 +262,7 @@ final case class ReadResourcesServiceLive(
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
     readResourcesSequence_(
-      resourceIris = resourceIris.map(_.value),
+      resourceIris = resourceIris,
       versionDate = None,
       withDeleted = withDeleted,
       targetSchema = targetSchema,
@@ -271,7 +272,7 @@ final case class ReadResourcesServiceLive(
     )
 
   def getResourcePreview(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
     requestingUser: User,

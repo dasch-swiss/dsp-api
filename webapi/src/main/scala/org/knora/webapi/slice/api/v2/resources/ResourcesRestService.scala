@@ -106,23 +106,24 @@ final case class ResourcesRestService(
     formatOptions: FormatOptions,
     versionDate: Option[VersionDate],
   ): Task[(RenderedResponse, MediaType)] =
-    ensureIris(resourceIris) *>
-      readResources
-        .getResourcesWithDeletedResource(
-          resourceIris,
-          propertyIri = None,
-          valueUuid = None,
-          versionDate,
-          withDeleted = true,
-          showDeletedValues = false,
-          formatOptions.schema,
-          formatOptions.rendering,
-          user,
-        )
-        .flatMap(renderer.render(_, formatOptions))
-
-  private def ensureIris(values: List[String]): Task[Unit] =
-    ZIO.foreachDiscard(values)(str => ZIO.fromEither(IriDto.from(str)).mapError(BadRequestException.apply))
+    for {
+      resIris <- ZIO
+                   .foreach(resourceIris)(iri => ZIO.fromEither(ResourceIri.from(iri)))
+                   .mapError(BadRequestException.apply)
+      response <- readResources
+                    .getResourcesWithDeletedResource(
+                      resIris,
+                      propertyIri = None,
+                      valueUuid = None,
+                      versionDate,
+                      withDeleted = true,
+                      showDeletedValues = false,
+                      formatOptions.schema,
+                      formatOptions.rendering,
+                      user,
+                    )
+                    .flatMap(renderer.render(_, formatOptions))
+    } yield response
 
   def getResourcesGraph(user: User)(
     resourceIri: IriDto,
@@ -144,12 +145,14 @@ final case class ResourcesRestService(
     gravsearchTemplateIri: Option[IriDto],
     headerXSLTIri: Option[IriDto],
   ) = for {
-    textProp          <- iriConverter.asSmartIri(textProperty.value)
-    resIri            <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
-    mapping            = mappingIri.map(_.value)
-    gravsearchTemplate = gravsearchTemplateIri.map(_.value)
-    headerXslt         = headerXSLTIri.map(_.value)
-    result            <- resourcesService.getResourceAsTeiV2(resIri, textProp, mapping, gravsearchTemplate, headerXslt, user)
+    textProp           <- iriConverter.asSmartIri(textProperty.value)
+    resIri             <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
+    mapping             = mappingIri.map(_.value)
+    gravsearchTemplate <- ZIO
+                            .foreach(gravsearchTemplateIri)(iri => ZIO.fromEither(ResourceIri.from(iri.value)))
+                            .mapError(BadRequestException.apply)
+    headerXslt = headerXSLTIri.map(_.value)
+    result    <- resourcesService.getResourceAsTeiV2(resIri, textProp, mapping, gravsearchTemplate, headerXslt, user)
   } yield (result.toXML, MediaType.ApplicationXml)
 
   def eraseResource(user: User)(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =

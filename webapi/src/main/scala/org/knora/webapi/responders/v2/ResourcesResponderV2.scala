@@ -428,7 +428,7 @@ final case class ResourcesResponderV2(
         resource <-
           readResources
             .getResourcePreview(
-              resourceIris = Seq(eraseResourceV2.resourceIri.value),
+              resourceIris = Seq(eraseResourceV2.resourceIri),
               targetSchema = ApiV2Complex,
               requestingUser = eraseResourceV2.requestingUser,
             )
@@ -485,7 +485,7 @@ final case class ResourcesResponderV2(
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
     readResources.getResourcesWithDeletedResource(
-      resourceIris.map(_.value),
+      resourceIris,
       propertyIri,
       valueUuid,
       versionDate,
@@ -517,7 +517,7 @@ final case class ResourcesResponderV2(
    * @return the Gravsearch template.
    */
   private def getGravsearchTemplate(
-    gravsearchTemplateIri: IRI,
+    gravsearchTemplateIri: ResourceIri,
     requestingUser: User,
   ): Task[String] = {
 
@@ -529,8 +529,7 @@ final case class ResourcesResponderV2(
                      requestingUser = requestingUser,
                    )
 
-      resIri                   <- ZIO.fromEither(ResourceIri.from(gravsearchTemplateIri)).mapError(BadRequestException.apply)
-      resource: ReadResourceV2 <- resources.toResource(resIri)
+      resource: ReadResourceV2 <- resources.toResource(gravsearchTemplateIri)
 
       _ <- ZIO.when(resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
              val msg = s"Resource $gravsearchTemplateIri is not a Gravsearch template (text file expected)"
@@ -605,7 +604,7 @@ final case class ResourcesResponderV2(
     resourceIri: ResourceIri,
     textProperty: SmartIri,
     mappingIri: Option[IRI],
-    gravsearchTemplateIri: Option[IRI],
+    gravsearchTemplateIri: Option[ResourceIri],
     headerXSLTIri: Option[String],
     requestingUser: User,
   ): Task[ResourceTEIGetResponseV2] = {
@@ -709,7 +708,7 @@ final case class ResourcesResponderV2(
             // get requested resource
             resource <- readResources
                           .getResourcesWithDeletedResource(
-                            resourceIris = Vector(resourceIri.value),
+                            resourceIris = Vector(resourceIri),
                             targetSchema = ApiV2Complex,
                             schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                             requestingUser = requestingUser,
@@ -1464,7 +1463,7 @@ final case class ResourcesResponderV2(
   ): Task[(ResourceHistoryEntry, ReadResourceV2)] =
     for {
       resourceFullRepAtCreationTime <- readResources.getResourcesWithDeletedResource(
-                                         resourceIris = Seq(resourceIri.value),
+                                         resourceIris = Seq(resourceIri),
                                          versionDate = Some(VersionDate.fromInstant(versionHist.versionDate)),
                                          showDeletedValues = true,
                                          targetSchema = ApiV2Complex,

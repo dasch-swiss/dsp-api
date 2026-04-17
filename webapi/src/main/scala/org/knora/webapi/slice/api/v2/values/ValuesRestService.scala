@@ -30,6 +30,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.v2.ValueUuid
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -56,20 +57,23 @@ final class ValuesRestService(
     versionDate: Option[VersionDate],
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] =
-    render(
-      readResources.getResourcesWithDeletedResource(
-        Seq(resourceIri),
-        None,
-        Some(valueUuid.value),
-        versionDate,
-        withDeleted = true,
-        showDeletedValues = false,
-        formatOptions.schema,
-        formatOptions.rendering,
-        user,
-      ),
-      formatOptions,
-    )
+    for {
+      resIri   <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException.apply)
+      response <- render(
+                    readResources.getResourcesWithDeletedResource(
+                      Seq(resIri),
+                      None,
+                      Some(valueUuid.value),
+                      versionDate,
+                      withDeleted = true,
+                      showDeletedValues = false,
+                      formatOptions.schema,
+                      formatOptions.rendering,
+                      user,
+                    ),
+                    formatOptions,
+                  )
+    } yield response
 
   def createValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
@@ -99,10 +103,11 @@ final class ValuesRestService(
       validated                             <- validateReorderRequest(request)
       (propertySmartIri, requestedValueIris) = validated
 
+      resIri <- ZIO.fromEither(ResourceIri.from(request.resourceIri)).mapError(BadRequestException.apply)
       // Fetch as system user so we see ALL values for canonical verification.
       // This is safe: only value IRIs are compared (verifyCanonicalValues), no content is leaked to the caller.
       resourcesSeq <- readResources.getResources(
-                        Seq(request.resourceIri),
+                        Seq(resIri),
                         targetSchema = ApiV2Complex,
                         schemaOptions = Set.empty,
                         requestingUser = KnoraSystemInstances.Users.SystemUser,

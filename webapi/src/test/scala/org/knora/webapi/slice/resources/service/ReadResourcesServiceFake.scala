@@ -19,7 +19,7 @@ import org.knora.webapi.slice.common.ResourceIri
 
 final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) extends ReadResourcesService {
   def readResourcesSequence(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     preview: Boolean = false,
@@ -30,7 +30,7 @@ final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) ex
     ZIO.succeed(ReadResourcesSequenceV2(readResources, Set.empty, false))
 
   def readResourcesSequencePar(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     preview: Boolean = false,
@@ -42,7 +42,7 @@ final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) ex
   ): Task[ReadResourcesSequenceV2] = null
 
   def getResources(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[Rendering],
@@ -50,7 +50,7 @@ final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) ex
   ): Task[ReadResourcesSequenceV2] = null
 
   def getResourcesWithDeletedResource(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     versionDate: Option[VersionDate] = None,
@@ -69,7 +69,7 @@ final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) ex
   ): Task[ReadResourcesSequenceV2] = null
 
   def getResourcePreview(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
     requestingUser: User,

@@ -1163,7 +1163,7 @@ final class ValuesResponderV2(
     // so we can see objects that the user doesn't have permission to see.
     resourceInfo <- readResources
                       .getResources(
-                        resourceIris = Seq(deleteValue.resourceIri.value),
+                        resourceIris = Seq(deleteValue.resourceIri),
                         targetSchema = ApiV2Complex,
                         schemaOptions = Set.empty,
                         requestingUser = KnoraSystemInstances.Users.SystemUser,

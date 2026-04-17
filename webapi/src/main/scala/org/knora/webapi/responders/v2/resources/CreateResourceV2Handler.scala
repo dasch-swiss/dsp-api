@@ -815,7 +815,7 @@ final case class CreateResourceV2Handler(
   ): Task[ReadResourcesSequenceV2] =
     readResources
       .getResourcesWithDeletedResource(
-        resourceIris = Seq(resourceIri.value),
+        resourceIris = Seq(resourceIri),
         requestingUser = requestingUser,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
