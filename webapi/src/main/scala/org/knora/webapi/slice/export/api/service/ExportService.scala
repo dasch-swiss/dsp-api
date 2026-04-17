@@ -42,7 +42,6 @@ import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
@@ -78,10 +77,7 @@ final case class ExportService(
     import zio.json.*
 
     for {
-      smartIris    <- findResources.findResources(project, None)
-      resourceIris <- ZIO
-                        .foreach(smartIris)(iri => ZIO.fromEither(ResourceIri.from(iri.toString)))
-                        .mapError(new IllegalStateException(_))
+      resourceIris  <- findResources.findResources(project, None)
       readResources <- readResources.readResourcesSequencePar(
                          resourceIris = resourceIris,
                          targetSchema = ApiV2Complex,
@@ -145,10 +141,7 @@ final case class ExportService(
     includeArkUrls: Boolean,
   ): Task[ExportedCsv] =
     for {
-      smartIris    <- findResources.findResourcesByClass(project, classIri)
-      resourceIris <- ZIO
-                        .foreach(smartIris)(iri => ZIO.fromEither(ResourceIri.from(iri.toString)))
-                        .mapError(new IllegalStateException(_))
+      resourceIris  <- findResources.findResourcesByClass(project, classIri)
       readResources <- readResources.readResourcesSequencePar(
                          resourceIris = resourceIris,
                          targetSchema = ApiV2Complex,

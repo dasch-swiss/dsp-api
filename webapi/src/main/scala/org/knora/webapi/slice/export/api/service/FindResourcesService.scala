@@ -15,13 +15,12 @@ import zio.*
 import zio.ZLayer
 
 import dsp.errors.InconsistentRepositoryDataException as InconsistentDataException
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
-import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -31,25 +30,24 @@ trait FindResourcesService {
   def findResources(
     project: KnoraProject,
     classIri: Option[ResourceClassIri],
-  ): Task[Seq[SmartIri]]
+  ): Task[Seq[ResourceIri]]
 
   def findResourcesByClass(
     project: KnoraProject,
     classIri: ResourceClassIri,
-  ): Task[Seq[SmartIri]] = findResources(project, Some(classIri))
+  ): Task[Seq[ResourceIri]] = findResources(project, Some(classIri))
 }
 
 final case class FindResourcesServiceLive(
   private val projectService: KnoraProjectService,
   private val triplestore: TriplestoreService,
-  private val iriConverter: IriConverter,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val ontologyRepo: OntologyRepo,
 ) extends FindResourcesService {
   def findResources(
     project: KnoraProject,
     classIri: Option[ResourceClassIri],
-  ): Task[Seq[SmartIri]] =
+  ): Task[Seq[ResourceIri]] =
     for {
       sparql <- classIri match {
                   case Some(iri) => buildClassQuery(project, iri)
@@ -58,9 +56,11 @@ final case class FindResourcesServiceLive(
       rows <- triplestore.query(sparql).map(_.results.bindings)
       rows <- ZIO.foreach(rows) { row =>
                 for {
-                  value    <- ZIO.attempt(row.rowMap.getOrElse(resourceIriVar, throw new InconsistentDataException("")))
-                  smartIri <- iriConverter.asSmartIri(value)
-                } yield smartIri
+                  value       <- ZIO.attempt(row.rowMap.getOrElse(resourceIriVar, throw new InconsistentDataException("")))
+                  resourceIri <- ZIO
+                                   .fromEither(ResourceIri.from(value))
+                                   .mapError(InconsistentDataException(_))
+                } yield resourceIri
               }
     } yield rows
 
