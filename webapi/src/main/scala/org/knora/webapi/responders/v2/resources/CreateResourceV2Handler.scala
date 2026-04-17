@@ -97,8 +97,8 @@ final case class CreateResourceV2Handler(
           createResourceRequestV2.createResource.resourceIri.map(ri => stringFormatter.toSmartIri(ri.value)),
           ResourceIri.makeNew(shortcode).value,
         )
-      resourceIri = ResourceIri.unsafeFrom(resourceIriStr)
-      taskResult <- IriLocker.runWithIriLock(createResourceRequestV2.apiRequestID, resourceIriStr)(
+      resourceIri <- ZIO.fromEither(ResourceIri.from(resourceIriStr)).mapError(BadRequestException.apply)
+      taskResult  <- IriLocker.runWithIriLock(createResourceRequestV2.apiRequestID, resourceIriStr)(
                       makeTask(createResourceRequestV2, resourceIri),
                     )
     } yield taskResult

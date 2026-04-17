@@ -529,7 +529,8 @@ final case class ResourcesResponderV2(
                      requestingUser = requestingUser,
                    )
 
-      resource: ReadResourceV2 <- resources.toResource(ResourceIri.unsafeFrom(gravsearchTemplateIri))
+      resIri                   <- ZIO.fromEither(ResourceIri.from(gravsearchTemplateIri)).mapError(BadRequestException.apply)
+      resource: ReadResourceV2 <- resources.toResource(resIri)
 
       _ <- ZIO.when(resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
              val msg = s"Resource $gravsearchTemplateIri is not a Gravsearch template (text file expected)"
@@ -1087,22 +1088,32 @@ final case class ResourcesResponderV2(
       edges = outboundQueryResults.edges ++ inboundQueryResults.edges
 
       // Convert each node to a GraphNodeV2 for the API response message.
-      resultNodes: Vector[GraphNodeV2] = nodes.map { (node: QueryResultNode) =>
-                                           GraphNodeV2(
-                                             resourceIri = ResourceIri.unsafeFrom(node.nodeIri),
-                                             resourceClassIri = node.nodeClass,
-                                             resourceLabel = node.nodeLabel,
-                                           )
-                                         }.toVector
+      resultNodes <- ZIO.foreach(nodes.toVector) { (node: QueryResultNode) =>
+                       ZIO
+                         .fromEither(ResourceIri.from(node.nodeIri))
+                         .mapError(BadRequestException.apply)
+                         .map(resIri =>
+                           GraphNodeV2(
+                             resourceIri = resIri,
+                             resourceClassIri = node.nodeClass,
+                             resourceLabel = node.nodeLabel,
+                           ),
+                         )
+                     }
 
       // Convert each edge to a GraphEdgeV2 for the API response message.
-      resultEdges: Vector[GraphEdgeV2] = edges.map { (edge: QueryResultEdge) =>
-                                           GraphEdgeV2(
-                                             source = ResourceIri.unsafeFrom(edge.sourceNodeIri),
-                                             propertyIri = edge.linkProp,
-                                             target = ResourceIri.unsafeFrom(edge.targetNodeIri),
-                                           )
-                                         }.toVector
+      resultEdges <- ZIO.foreach(edges.toVector) { (edge: QueryResultEdge) =>
+                       for {
+                         source <-
+                           ZIO.fromEither(ResourceIri.from(edge.sourceNodeIri)).mapError(BadRequestException.apply)
+                         target <-
+                           ZIO.fromEither(ResourceIri.from(edge.targetNodeIri)).mapError(BadRequestException.apply)
+                       } yield GraphEdgeV2(
+                         source = source,
+                         propertyIri = edge.linkProp,
+                         target = target,
+                       )
+                     }
 
     } yield GraphDataGetResponseV2(
       nodes = resultNodes,
@@ -1357,8 +1368,8 @@ final case class ResourcesResponderV2(
       // For each resource IRI return history events
       historyOfResourcesAsSeqOfFutures: Seq[Task[Seq[ResourceAndValueHistoryEvent]]] =
         mainResourceIris.map { resourceIriStr =>
-          val resIri = ResourceIri.unsafeFrom(resourceIriStr)
           for {
+            resIri          <- ZIO.fromEither(ResourceIri.from(resourceIriStr)).mapError(BadRequestException.apply)
             resourceHistory <-
               getResourceHistoryV2(
                 ResourceVersionHistoryGetRequestV2(

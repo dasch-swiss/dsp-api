@@ -1475,15 +1475,21 @@ final class ValuesResponderV2(
    * @param requestingUser       the user making the request.
    */
   private def checkResourceIris(targetResourceIris: Set[IRI], requestingUser: User): Task[Unit] =
-    messageRelay
-      .ask[ReadResourcesSequenceV2](
-        ResourcesPreviewGetRequestV2(
-          resourceIris = targetResourceIris.toSeq.map(ResourceIri.unsafeFrom),
-          targetSchema = ApiV2Complex,
-          requestingUser = requestingUser,
-        ),
-      )
-      .unless(targetResourceIris.isEmpty)
+    ZIO
+      .unless(targetResourceIris.isEmpty) {
+        for {
+          resourceIris <- ZIO
+                            .foreach(targetResourceIris.toSeq)(iri => ZIO.fromEither(ResourceIri.from(iri)))
+                            .mapError(BadRequestException.apply)
+          _ <- messageRelay.ask[ReadResourcesSequenceV2](
+                 ResourcesPreviewGetRequestV2(
+                   resourceIris = resourceIris,
+                   targetSchema = ApiV2Complex,
+                   requestingUser = requestingUser,
+                 ),
+               )
+        } yield ()
+      }
       .unit
 
   /**

@@ -834,36 +834,34 @@ final case class ConstructResponseUtilV2(
       valueObject.requireIriObject(OntologyConstants.Rdf.Object.toSmartIri)
     }
 
-    val linkValue = LinkValueContentV2(
-      ontologySchema = InternalSchema,
-      referredResourceIri = ResourceIri.unsafeFrom(referredResourceIri),
-      isIncomingLink = valueObject.isIncomingLink,
-      nestedResource = None,
-      comment = valueCommentOption,
-    )
+    for {
+      referredResIri <- ZIO.fromEither(ResourceIri.from(referredResourceIri)).mapError(BadRequestException.apply)
+      linkValue       = LinkValueContentV2(
+                    ontologySchema = InternalSchema,
+                    referredResourceIri = referredResIri,
+                    isIncomingLink = valueObject.isIncomingLink,
+                    nestedResource = None,
+                    comment = valueCommentOption,
+                  )
+      // Is there a nested resource in the link value?
+      result <- valueObject.nestedResource match {
+                  case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
+                    // Yes. Construct a ReadResourceV2 representing the nested resource.
+                    constructReadResourceV2(
+                      resourceIri = referredResourceIri,
+                      resourceWithValueRdfData = nestedResourceAssertions,
+                      mappings = mappings,
+                      queryStandoff = queryStandoff,
+                      versionDate = versionDate,
+                      requestingUser = requestingUser,
+                      targetSchema = targetSchema,
+                    ).map(nestedResource => linkValue.copy(nestedResource = Some(nestedResource)))
 
-    // Is there a nested resource in the link value?
-    valueObject.nestedResource match {
-      case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
-        // Yes. Construct a ReadResourceV2 representing the nested resource.
-        for {
-          nestedResource <- constructReadResourceV2(
-                              resourceIri = referredResourceIri,
-                              resourceWithValueRdfData = nestedResourceAssertions,
-                              mappings = mappings,
-                              queryStandoff = queryStandoff,
-                              versionDate = versionDate,
-                              requestingUser = requestingUser,
-                              targetSchema = targetSchema,
-                            )
-        } yield linkValue.copy(
-          nestedResource = Some(nestedResource),
-        )
-
-      case None =>
-        // There is no nested resource.
-        ZIO.succeed(linkValue)
-    }
+                  case None =>
+                    // There is no nested resource.
+                    ZIO.succeed(linkValue)
+                }
+    } yield result
   }
 
   /**
@@ -1224,9 +1222,10 @@ final case class ConstructResponseUtilV2(
       project    <-
         projectService.findById(projectIri).someOrFail(NotFoundException(s"Project '${projectIri.value}' not found"))
 
+      resIri       <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException.apply)
       valueObjects <- ZioHelper.sequence(valueObjectFutures.map { case (k, v) => k -> ZIO.collectAll(v) })
     } yield ReadResourceV2(
-      resourceIri = ResourceIri.unsafeFrom(resourceIri),
+      resourceIri = resIri,
       resourceClassIri = resourceClass,
       label = resourceLabel,
       attachedToUser = resourceAttachedToUser,
@@ -1287,7 +1286,12 @@ final case class ConstructResponseUtilV2(
     }.toVector
 
     for {
-      resources <- ZIO.collectAll(readResourceFutures)
+      resources          <- ZIO.collectAll(readResourceFutures)
+      hiddenResourceIris <-
+        ZIO
+          .foreach(mainResourcesAndValueRdfData.hiddenResourceIris.toSeq)(iri => ZIO.fromEither(ResourceIri.from(iri)))
+          .mapError(BadRequestException.apply)
+          .map(_.toSet)
 
       // If we got a full page of results from the triplestore (before filtering for permissions), there
       // might be at least one more page of results that the user could request.
@@ -1295,7 +1299,7 @@ final case class ConstructResponseUtilV2(
         calculateMayHaveMoreResults && pageSizeBeforeFiltering == appConfig.v2.resourcesSequence.resultsPerPage
     } yield ReadResourcesSequenceV2(
       resources = resources,
-      hiddenResourceIris = mainResourcesAndValueRdfData.hiddenResourceIris.map(ResourceIri.unsafeFrom),
+      hiddenResourceIris = hiddenResourceIris,
       mayHaveMoreResults = mayHaveMoreResults,
     )
   }

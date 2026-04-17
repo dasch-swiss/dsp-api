@@ -101,8 +101,8 @@ final case class StandoffResponderV2(
     requestingUser: User,
   ): Task[GetXSLTransformationResponseV2] = {
 
-    val xslResIri     = ResourceIri.unsafeFrom(xslTransformationIri)
     val xsltUrlFuture = for {
+      xslResIri <- ZIO.fromEither(ResourceIri.from(xslTransformationIri)).mapError(BadRequestException.apply)
 
       textRepresentationResponseV2 <-
         messageRelay
