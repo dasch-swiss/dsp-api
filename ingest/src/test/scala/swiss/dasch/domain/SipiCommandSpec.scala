@@ -16,22 +16,31 @@ object SipiCommandSpec extends ZIOSpecDefault {
 
   val spec: Spec[TestEnvironment with Scope, Nothing] =
     suite("SipiCommand")(
-      test("should render format command") {
+      test("should render format command with --json") {
         check(Gen.fromIterable(SipiImageFormat.all)) { format =>
           for {
             cmd <- FormatArgument(format, Path("/tmp/example"), Path("/tmp/example2")).render()
-          } yield assertTrue(cmd == List("--format", format.toCliString, "--topleft", "/tmp/example", "/tmp/example2"))
+          } yield assertTrue(
+            cmd == List("--json", "--format", format.toCliString, "--topleft", "/tmp/example", "/tmp/example2"),
+          )
         }
       },
-      test("should assemble query command") {
+      test("should assemble query command without --json (mutex with --query)") {
         for {
           cmd <- QueryArgument(Path("/tmp/example")).render()
         } yield assertTrue(cmd == List("--query", "/tmp/example"))
       },
-      test("should assemble topleft command") {
+      test("should assemble topleft command with --json") {
         for {
           cmd <- TopLeftArgument(Path("/tmp/example"), Path("/tmp/example2")).render()
-        } yield assertTrue(cmd == List("--topleft", "/tmp/example", "/tmp/example2"))
+        } yield assertTrue(cmd == List("--json", "--topleft", "/tmp/example", "/tmp/example2"))
+      },
+      test("emitsJson matches the commands that include --json in their argv") {
+        assertTrue(
+          FormatArgument(SipiImageFormat.Jpx, Path("/a"), Path("/b")).emitsJson,
+          TopLeftArgument(Path("/a"), Path("/b")).emitsJson,
+          !QueryArgument(Path("/a")).emitsJson,
+        )
       },
     )
 }

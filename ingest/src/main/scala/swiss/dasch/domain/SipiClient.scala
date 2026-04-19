@@ -11,6 +11,7 @@ import swiss.dasch.domain.SipiCommand.TopLeftArgument
 import swiss.dasch.infrastructure.CommandExecutor
 import swiss.dasch.infrastructure.ProcessOutput
 import zio.*
+import zio.json.*
 import zio.metrics.Metric
 import zio.nio.file.Path
 
@@ -20,6 +21,13 @@ import java.time.temporal.ChronoUnit
 sealed trait SipiCommand {
   def flag(): String
   def render(): UIO[List[String]]
+
+  /**
+   * Whether this invocation emits the structured `--json` report on stdout.
+   * `--json` is mutually exclusive with `--salsah` and `--query` at parse time
+   * (see `sipi/src/sipi.cpp:647`), so `QueryArgument` stays false.
+   */
+  def emitsJson: Boolean = false
 }
 
 object SipiCommand {
@@ -35,11 +43,12 @@ object SipiCommand {
     fileOut: Path,
   ) extends SipiCommand {
     def flag(): String              = "--format"
+    override val emitsJson: Boolean = true
     def render(): UIO[List[String]] =
       (for {
         abs1 <- fileIn.toAbsolutePath
         abs2 <- fileOut.toAbsolutePath
-      } yield List(flag(), outputFormat.toCliString, "--topleft", abs1.toString, abs2.toString)).orDie
+      } yield List("--json", flag(), outputFormat.toCliString, "--topleft", abs1.toString, abs2.toString)).orDie
   }
 
   /**
@@ -61,11 +70,12 @@ object SipiCommand {
     fileOut: Path,
   ) extends SipiCommand {
     def flag(): String              = "--topleft"
+    override val emitsJson: Boolean = true
     def render(): UIO[List[String]] =
       (for {
         abs1 <- fileIn.toAbsolutePath
         abs2 <- fileOut.toAbsolutePath
-      } yield List(flag(), abs1.toString, abs2.toString)).orDie
+      } yield List("--json", flag(), abs1.toString, abs2.toString)).orDie
   }
 }
 
@@ -108,8 +118,40 @@ final case class SipiClientLive(executor: CommandExecutor) extends SipiClient {
       sipiParams <- command.render()
       cmd        <- executor.buildCommand(sipiPrefix, sipiParams: _*)
       timerTagged = timer.tagged("command", command.flag())
-      out        <- executor.executeOrFail(cmd) @@ timerTagged.trackDuration
+      out        <- (
+               if (command.emitsJson) runWithJsonReport(cmd)
+               else executor.executeOrFail(cmd)
+             ) @@ timerTagged.trackDuration
     } yield out
+
+  /**
+   * Runs a `--json`-emitting sipi command, parsing the structured report on
+   * stdout. On a non-zero exit with a parseable `SipiReport.Err`, fails with
+   * [[SipiCliError]]; otherwise falls back to the legacy command-failure
+   * `IOException` so callers that don't care about the report still behave
+   * identically to before.
+   */
+  private def runWithJsonReport(cmd: swiss.dasch.infrastructure.Command): IO[IOException, ProcessOutput] =
+    executor
+      .execute(cmd)
+      .flatMap { out =>
+        if (out.exitCode == 0) ZIO.succeed(out)
+        else
+          out.stdout.fromJson[SipiReport] match {
+            case Right(err: SipiReport.Err) =>
+              ZIO.fail(
+                SipiCliError(
+                  phase = err.phase,
+                  message = err.errorMessage,
+                  inputFile = Option(err.inputFile).filter(_.nonEmpty),
+                  imageMeta = err.image,
+                  exitCode = out.exitCode,
+                ),
+              )
+            case _ =>
+              ZIO.fail(new IOException(s"Command failed: '${cmd.cmd}' $out"))
+          }
+      }
 
   override def applyTopLeftCorrection(fileIn: Path, fileOut: Path): IO[IOException, ProcessOutput] =
     execute(TopLeftArgument(fileIn, fileOut))
