@@ -41,6 +41,8 @@ nav:
           - Lists Endpoint: 03-endpoints/api-admin/lists.md
           - Permissions Endpoint: 03-endpoints/api-admin/permissions.md
           - Stores Endpoint: 03-endpoints/api-admin/stores.md
+      - API V3:
+          - Project Migration Export/Import: 03-endpoints/api-v3/project-migration.md
       - Util API:
           - Version: 03-endpoints/api-util/version.md
       - Instrumentation API:
