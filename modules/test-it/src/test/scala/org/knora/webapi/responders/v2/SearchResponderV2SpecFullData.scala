@@ -16,6 +16,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.common.ResourceIri
 
 class SearchResponderV2SpecFullData(implicit sf: StringFormatter) {
 
@@ -25,7 +26,7 @@ class SearchResponderV2SpecFullData(implicit sf: StringFormatter) {
   val testUser2: String                        = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
   val bookTemplateReadResource: ReadResourceV2 = ReadResourceV2(
     label = "",
-    resourceIri = "",
+    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/template-placeholder"),
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     userPermission = Permission.ObjectAccess.ChangeRights,
@@ -125,7 +126,7 @@ class SearchResponderV2SpecFullData(implicit sf: StringFormatter) {
     resources = Vector(
       ReadResourceV2(
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-        resourceIri = "http://rdfh.ch/0803/c5058f3a",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = Permission.ObjectAccess.RestrictedView,
@@ -162,7 +163,7 @@ class SearchResponderV2SpecFullData(implicit sf: StringFormatter) {
       ),
       ReadResourceV2(
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-        resourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/ff17e5ef9601"),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = Permission.ObjectAccess.RestrictedView,
@@ -274,7 +275,7 @@ class SearchResponderV2SpecFullData(implicit sf: StringFormatter) {
     resources = Vector(
       bookTemplateReadResource.copy(
         label = "instance of a book with a list value",
-        resourceIri = "http://rdfh.ch/0001/book-instance-02",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/book-instance-02"),
         values = Map(
           booksHasTextType.toSmartIri -> Vector(
             listValueTemplateReadOtherValue.copy(
@@ -293,7 +294,7 @@ class SearchResponderV2SpecFullData(implicit sf: StringFormatter) {
     resources = Vector(
       bookTemplateReadResource.copy(
         label = "Lord of the Rings",
-        resourceIri = "http://rdfh.ch/0001/book-instance-03",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/book-instance-03"),
         values = Map(
           booksHasTextType.toSmartIri -> Vector(
             listValueTemplateReadOtherValue.copy(
@@ -307,7 +308,7 @@ class SearchResponderV2SpecFullData(implicit sf: StringFormatter) {
       ),
       bookTemplateReadResource.copy(
         label = "Treasure Island",
-        resourceIri = "http://rdfh.ch/0001/book-instance-04",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/book-instance-04"),
         values = Map(
           booksHasTextType.toSmartIri -> Vector(
             listValueTemplateReadOtherValue.copy(

@@ -200,6 +200,16 @@ the codebase. This includes structuring test suites, naming conventions, and usi
 
 After editing any markdown files, run the `/fix-markdownlint` skill to ensure proper formatting.
 
+### IRI Handling
+
+Universal rules for constructing typed IRI value objects (e.g. `ResourceIri`) from strings — see
+`docs/development/dsp-api-iri-handling.md`. Key rules:
+- Never call `unsafeFrom` in responders or RestServices — use `ZIO.fromEither(Xxx.from(...))`.
+- Map conversion errors to the right failure type per layer: `BadRequestException` in RestServices,
+  domain errors in services, `InconsistentRepositoryDataException` in repos.
+- Never `.die` on an IRI conversion failure — a malformed client IRI is a 400, not a 500.
+- Prefer converting at the API boundary so services/responders receive typed IRIs.
+
 ### V3 API — IRI Handling
 
 When adding or modifying v3 endpoints that accept IRI parameters, follow the two-category model

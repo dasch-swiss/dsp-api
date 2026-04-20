@@ -16,6 +16,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.search.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.api.v2.search.SearchEndpointsInputs.Offset
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
@@ -82,9 +83,10 @@ final class SearchRestService(
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     for {
+      resIri       <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
       searchResult <-
         searchResponderV2.searchIncomingLinksV2(
-          resourceIri.value,
+          resIri,
           offset.value,
           opts.schemaRendering,
           user,
@@ -100,8 +102,9 @@ final class SearchRestService(
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     for {
+      resIri <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
       result <- searchResponderV2.searchStillImageRepresentationsV2(
-                  resourceIri.value,
+                  resIri,
                   offset.value,
                   opts.schemaRendering,
                   user,
@@ -116,8 +119,9 @@ final class SearchRestService(
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     for {
+      resIri <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
       result <- searchResponderV2.searchStillImageRepresentationsCountV2(
-                  resourceIri.value,
+                  resIri,
                   user,
                   limitToProject,
                 )
@@ -131,8 +135,9 @@ final class SearchRestService(
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     for {
+      resIri       <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
       searchResult <- searchResponderV2.searchIncomingRegionsV2(
-                        resourceIri.value,
+                        resIri,
                         offset.value,
                         opts.schemaRendering,
                         user,
