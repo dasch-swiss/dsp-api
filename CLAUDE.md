@@ -196,6 +196,10 @@ For more details see `docs/development/dsp-api-sparql-queries.md`.
 When writing code, follow the conventions outlined in `docs/development/dsp-api-conventions.md` for consistency across
 the codebase. This includes structuring test suites, naming conventions, and using ZIO Test features effectively.
 
+### Markdown Formatting
+
+After editing any markdown files, run the `/fix-markdownlint` skill to ensure proper formatting.
+
 ### V3 API — IRI Handling
 
 When adding or modifying v3 endpoints that accept IRI parameters, follow the two-category model
