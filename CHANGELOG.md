@@ -1,5 +1,31 @@
 # Changelog
 
+## [35.6.0](https://github.com/dasch-swiss/dsp-api/compare/v35.5.0...v35.6.0) (2026-04-20)
+
+
+### Maintenances
+
+* Dependency updates ([#4080](https://github.com/dasch-swiss/dsp-api/issues/4080)) ([faed2e0](https://github.com/dasch-swiss/dsp-api/commit/faed2e06f41569d9920aa1be5ef3647065eea05f))
+* **deps:** bump sipi to v4.1.0 ([#4083](https://github.com/dasch-swiss/dsp-api/issues/4083)) ([d26ac17](https://github.com/dasch-swiss/dsp-api/commit/d26ac175eac615f4ce25db1612a39e0a3ebbc381))
+* Remove unused CLEAN_TMP_DIR env vars from Sipi config (DEV-5090) ([#4081](https://github.com/dasch-swiss/dsp-api/issues/4081)) ([22ffb3f](https://github.com/dasch-swiss/dsp-api/commit/22ffb3fa4b31feb0e0a495e480e3bdb2cd5f0170))
+* Update to JDK 25 (DEV-6235) ([#4075](https://github.com/dasch-swiss/dsp-api/issues/4075)) ([6a87c56](https://github.com/dasch-swiss/dsp-api/commit/6a87c561295037aacb45432cdf50f355ebc92cf5))
+
+
+### Documentation
+
+* **project-migration:** Add project migration export/import documentation ([#4076](https://github.com/dasch-swiss/dsp-api/issues/4076)) ([2fa58ac](https://github.com/dasch-swiss/dsp-api/commit/2fa58acbc3efa52e8b5e2f8834922ec28b74e3dd))
+
+
+### Enhancements
+
+* **ingest:** Add OpenTelemetry tracing to ingest service (DEV-6248) ([#4079](https://github.com/dasch-swiss/dsp-api/issues/4079)) ([f491886](https://github.com/dasch-swiss/dsp-api/commit/f49188651c15db1636a9690f752ba44a7e59c844))
+
+
+### Bug Fixes
+
+* **docker:** fix dsp-api healthcheck curl missing ([#4078](https://github.com/dasch-swiss/dsp-api/issues/4078)) ([99cb83b](https://github.com/dasch-swiss/dsp-api/commit/99cb83b0d559aedbc4d883b08eb0a52855295dcd))
+* **tracing:** Fix traceparent propagation from dsp-app through API to Fuseki (DEV-5672) ([#4074](https://github.com/dasch-swiss/dsp-api/issues/4074)) ([98c42fd](https://github.com/dasch-swiss/dsp-api/commit/98c42fd9527b53641fad3fe8348b06657deddf8d))
+
 ## [35.5.0](https://github.com/dasch-swiss/dsp-api/compare/v35.4.0...v35.5.0) (2026-04-13)
 
 
