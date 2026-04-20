@@ -22,7 +22,7 @@ DSP-API offers a built-in conversion form standard standoff entities (defined in
 In order to obtain a resource as a TEI document, the following request has to be performed. 
 Please note that the URL parameters have to be URL-encoded.
 
-```
+```text
 HTTP GET to http://host/v2/tei/resourceIri?textProperty=textPropertyIri
 ```
 
@@ -34,7 +34,7 @@ The test data contain the resource `http://rdfh.ch/0001/thing_with_richtext_with
 with the text property `http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext` 
 that can be converted to TEI as follows:
 
-```
+```text
 HTTP GET to http://host/v2/tei/http%3A%2F%2Frdfh.ch%2F0001%2Fthing_with_richtext_with_markup?textProperty=http%3A%2F%2F0.0.0.0%3A3333%2Fontology%2F0001%2Fanything%2Fv2%23hasRichtext
 ```
 
@@ -113,7 +113,7 @@ The Gravsearch template is a simple text file with the files extension `.txt`.
 
 A Gravsearch template may look like this (see `test_data/test_route/texts/beol/gravsearch.txt`):
 
-```
+```sparql
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -439,6 +439,6 @@ You can use the functions `knora-api:iaf` and `knora-api:dateformat` in your own
 
 The complete request looks like this:
 
-```
+```text
 HTTP GET request to http://host/v2/tei/resourceIri&textProperty=textPropertyIri&mappingIri=mappingIri&gravsearchTemplateIri=gravsearchTemplateIri&teiHeaderXSLTIri=teiHeaderXSLTIri
 ```

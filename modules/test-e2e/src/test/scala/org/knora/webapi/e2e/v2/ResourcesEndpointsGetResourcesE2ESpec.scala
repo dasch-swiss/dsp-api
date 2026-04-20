@@ -17,7 +17,7 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.testservices.RequestsUpdates.addAcceptHeaderRdfXml
 import org.knora.webapi.testservices.RequestsUpdates.addAcceptHeaderTurtle
 import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
@@ -115,14 +115,14 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
     test(
       s"for the first page of the book '[Das] Narrenschiff (lat.) using the complex schema in JSON-LD",
     ) {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/7bbb8e59b703".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/7bbb8e59b703")
       for {
         actual   <- TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri").flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "NarrenschiffFirstPage.jsonld")
       } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
     },
     test("for a resource with a BCE date property using the complex schema in JSON-LD") {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_BCE_date".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_BCE_date")
       for {
         actual   <- TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri").flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithBCEDate.jsonld")
@@ -134,7 +134,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
         s"using the complex schema " +
         s"in JSON-LD",
     ) {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_BCE_date2".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_BCE_date2")
       for {
         actual   <- TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri").flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithBCEDate2.jsonld")
@@ -142,7 +142,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
     },
     test(s"for a resource with a list value using the complex schema in JSON-LD") {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_list_value".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_list_value")
       for {
         actual   <- TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri").flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithListValue.jsonld")
@@ -154,7 +154,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
         s"using the simple schema (header) " +
         s"in JSON-LD",
     ) {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_list_value".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_list_value")
       for {
         actual <- TestApiClient
                     .getAsString(uri"/v2/resources/$resourceIri", addSimpleSchemaHeader)
@@ -163,7 +163,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
     },
     test("for a resource with a link using the complex schema in JSON-LD") {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ")
       for {
         actual   <- TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri").flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithLinkComplex.jsonld")
@@ -171,7 +171,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
     },
     test("for a resource with a link using the simple schema (header) in JSON-LD") {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ")
       for {
         actual <- TestApiClient
                     .getAsString(uri"/v2/resources/$resourceIri", addSimpleSchemaHeader)
@@ -181,7 +181,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
     },
     test("for a resource with a Text language using the complex schema in JSON-LD") {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage")
       for {
         actual   <- TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri").flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithTextLangComplex.jsonld")
@@ -189,7 +189,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
     },
     test("for a resource with a Text language using the simple schema (header) in JSON-LD") {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage")
       for {
         actual <- TestApiClient
                     .getAsString(uri"/v2/resources/$resourceIri", addSimpleSchemaHeader)
@@ -201,7 +201,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
     test(
       "for a resource with values of different types using the complex schema in JSON-LD",
     ) {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw")
       for {
         actual   <- TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri").flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "Testding.jsonld")
@@ -211,7 +211,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
     test(
       "for a Thing resource with a link to a ThingPicture resource using the complex schema in JSON-LD",
     ) {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-picture".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-picture")
       for {
         actual   <- TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri").flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithPicture.jsonld")
@@ -221,7 +221,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
     test(
       "for a resource with a link to a resource that the user doesn't have permission to see using the complex schema in JSON-LD",
     ) {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw")
       for {
         actual   <- TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri").flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithOneHiddenResource.jsonld")
@@ -231,7 +231,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
     test(
       "for a resource with a link to a resource that is marked as deleted using the complex schema in JSON-LD",
     ) {
-      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A".toSmartIri)
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A")
       for {
         actual   <- TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri").flatMap(_.assert200)
         expected <- TestDataFileUtil.readTestData("resourcesR2RV2", "ThingWithOneDeletedResource.jsonld")

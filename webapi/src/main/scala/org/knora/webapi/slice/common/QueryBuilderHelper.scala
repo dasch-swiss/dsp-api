@@ -17,9 +17,12 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfValue
+import zio.IO
+import zio.ZIO
 
 import java.time.Instant
 
+import dsp.errors.SparqlGenerationException
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
@@ -107,4 +110,7 @@ trait QueryBuilderHelper {
 
   def NS(ontologyIri: OntologyIri): SimpleNamespace =
     SimpleNamespace(ontologyIri.ontologyName.value, ontologyIri.toInternalSchema.toString + "#")
+
+  inline def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
+    ZIO.fail(SparqlGenerationException(message)).when(condition).unit
 }

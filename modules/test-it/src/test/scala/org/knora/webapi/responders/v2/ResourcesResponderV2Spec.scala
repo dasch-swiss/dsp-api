@@ -43,8 +43,8 @@ import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.resources.repo.GetStandoffTagByUUIDQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -57,156 +57,156 @@ object GraphTestData {
   val graphForAnythingUser1: GraphDataGetResponseV2 = GraphDataGetResponseV2(
     edges = Vector(
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/start",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/start",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"),
       ),
     ),
     nodes = Vector(
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Tango",
-        resourceIri = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Foxtrot",
-        resourceIri = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Echo",
-        resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Golf",
-        resourceIri = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Whiskey",
-        resourceIri = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Mike",
-        resourceIri = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "X-ray",
-        resourceIri = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Uniform",
-        resourceIri = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Sierra",
-        resourceIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Romeo",
-        resourceIri = "http://rdfh.ch/0001/start",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Quebec",
-        resourceIri = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Hotel",
-        resourceIri = "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Papa",
-        resourceIri = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Victor",
-        resourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Delta",
-        resourceIri = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"),
       ),
     ),
     ontologySchema = InternalSchema,
@@ -215,126 +215,126 @@ object GraphTestData {
   val graphForIncunabulaUser: GraphDataGetResponseV2 = GraphDataGetResponseV2(
     edges = Vector(
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/start",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/start",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"),
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"),
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
       ),
     ),
     nodes = Vector(
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Tango",
-        resourceIri = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Foxtrot",
-        resourceIri = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Echo",
-        resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Golf",
-        resourceIri = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Whiskey",
-        resourceIri = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "X-ray",
-        resourceIri = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Uniform",
-        resourceIri = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Sierra",
-        resourceIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Romeo",
-        resourceIri = "http://rdfh.ch/0001/start",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Quebec",
-        resourceIri = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Papa",
-        resourceIri = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Victor",
-        resourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"),
       ),
     ),
     ontologySchema = InternalSchema,
@@ -343,21 +343,21 @@ object GraphTestData {
   val graphWithStandoffLink: GraphDataGetResponseV2 = GraphDataGetResponseV2(
     edges = Vector(
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/a-thing",
+        target = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"),
         propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo".toSmartIri,
-        source = "http://rdfh.ch/0001/a-thing-with-text-values",
+        source = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-values"),
       ),
     ),
     nodes = Vector(
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
-        resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-values"),
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "A thing",
-        resourceIri = "http://rdfh.ch/0001/a-thing",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"),
       ),
     ),
     ontologySchema = InternalSchema,
@@ -369,7 +369,7 @@ object GraphTestData {
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Another thing",
-        resourceIri = "http://rdfh.ch/0001/another-thing",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/another-thing"),
       ),
     ),
     ontologySchema = InternalSchema,
@@ -385,7 +385,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
   private val defaultAnythingValuePermissions       = defaultAnythingResourcePermissions
   private val defaultStillImageFileValuePermissions = defaultAnythingResourcePermissions
   private val zeitgloeckleinIri                     = "http://rdfh.ch/0803/c5058f3a"
-  private val aThingIri                             = "http://rdfh.ch/0001/a-thing"
+  private val aThingIri                             = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing")
   private var aThingLastModificationDate            = Instant.now
 
   private val resourceIriToErase                            = new MutableTestIri
@@ -465,13 +465,13 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
   private def getResource(resourceIri: IRI) = for {
     getResult <- resourceResponder(
                    _.getResourcesWithDeletedResource(
-                     resourceIris = Seq(resourceIri),
+                     resourceIris = Seq(ResourceIri.unsafeFrom(resourceIri)),
                      targetSchema = ApiV2Complex,
                      schemaOptions = Set.empty,
                      requestingUser = anythingUser2,
                    ),
                  )
-    result <- getResult.toResource(resourceIri)
+    result <- getResult.toResource(ResourceIri.unsafeFrom(resourceIri))
   } yield result.toOntologySchema(ApiV2Complex)
 
   private def checkCreateResource(
@@ -481,7 +481,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
     defaultResourcePermissions: String,
     defaultValuePermissions: String,
     requestingUser: User,
-  ) = ZIO.fail("ResourceIri does not match").unless(outputResource.resourceIri == inputResourceIri) *>
+  ) = ZIO.fail("ResourceIri does not match").unless(outputResource.resourceIri.value == inputResourceIri) *>
     ZIO
       .fail("ResourceClassIri does not match")
       .unless(outputResource.resourceClassIri == inputResource.resourceClassIri) *>
@@ -527,7 +527,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+                          resourceIris = Seq(ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a")),
                           versionDate = None,
                           targetSchema = ApiV2Complex,
                           schemaOptions = Set.empty,
@@ -547,7 +547,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           response <-
             resourceResponder(
               _.getResourcePreviewWithDeletedResource(
-                resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+                resourceIris = Seq(ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a")),
                 targetSchema = ApiV2Complex,
                 requestingUser = incunabulaProjectAdminUser,
               ),
@@ -563,7 +563,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           response <-
             resourceResponder(
               _.getResourcesWithDeletedResource(
-                resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
+                resourceIris = Seq(ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701")),
                 versionDate = None,
                 targetSchema = ApiV2Complex,
                 schemaOptions = Set.empty,
@@ -582,7 +582,10 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+                          resourceIris = Seq(
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701"),
+                          ),
                           versionDate = None,
                           targetSchema = ApiV2Complex,
                           schemaOptions = Set.empty,
@@ -601,7 +604,10 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcePreviewWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+                          resourceIris = Seq(
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701"),
+                          ),
                           targetSchema = ApiV2Complex,
                           requestingUser = incunabulaProjectAdminUser,
                         ),
@@ -618,7 +624,10 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
+                          resourceIris = Seq(
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701"),
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
+                          ),
                           versionDate = None,
                           targetSchema = ApiV2Complex,
                           schemaOptions = Set.empty,
@@ -639,9 +648,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
                           resourceIris = Seq(
-                            "http://rdfh.ch/0803/c5058f3a",
-                            "http://rdfh.ch/0803/c5058f3a",
-                            "http://rdfh.ch/0803/2a6221216701",
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
+                            ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701"),
                           ),
                           versionDate = None,
                           targetSchema = ApiV2Complex,
@@ -660,7 +669,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourceAsTeiV2(
-                          resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup",
+                          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_richtext_with_markup"),
                           textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
                           mappingIri = None,
                           gravsearchTemplateIri = None,
@@ -678,7 +687,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourceAsTeiV2(
-                          resourceIri = "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g",
+                          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g"),
                           textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
                           mappingIri = None,
                           gravsearchTemplateIri = None,
@@ -693,7 +702,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertTrue(!xmlDiff.hasDifferences)
       },
       test("return a past version of a resource") {
-        val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
         val versionDate = Instant.parse("2019-02-12T08:05:10Z")
         for {
           response <-
@@ -713,7 +722,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("return the complete version history of a resource") {
-        val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
         for {
           response <- resourceResponder(
                         _.getResourceHistoryV2(
@@ -728,7 +737,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertTrue(response == ResourcesResponderV2SpecFullData.expectedCompleteVersionHistoryResponse)
       },
       test("return the version history of a resource within a date range") {
-        val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
         val startDate   = Instant.parse("2019-02-08T15:05:11Z")
         val endDate     = Instant.parse("2019-02-13T09:05:10Z")
         for {
@@ -749,7 +758,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+                          resourceIris = Seq(ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")),
                           valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
                           targetSchema = ApiV2Complex,
                           schemaOptions = Set.empty,
@@ -766,7 +775,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getResourcesWithDeletedResource(
-                          resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+                          resourceIris = Seq(ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")),
                           valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
                           versionDate = Some(VersionDate.fromInstant(Instant.parse("2019-02-12T09:05:10Z"))),
                           targetSchema = ApiV2Complex,
@@ -785,7 +794,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getGraphDataResponseV2(
-                          resourceIri = "http://rdfh.ch/0001/start",
+                          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
                           depth = 6,
                           GraphDirection.Both,
                           excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
@@ -801,7 +810,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getGraphDataResponseV2(
-                          resourceIri = "http://rdfh.ch/0001/start",
+                          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/start"),
                           depth = 6,
                           GraphDirection.Both,
                           excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
@@ -816,7 +825,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           response <-
             resourceResponder(
               _.getGraphDataResponseV2(
-                resourceIri = "http://rdfh.ch/0001/a-thing",
+                resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"),
                 depth = 4,
                 GraphDirection.Both,
                 excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
@@ -829,7 +838,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         for {
           response <- resourceResponder(
                         _.getGraphDataResponseV2(
-                          resourceIri = "http://rdfh.ch/0001/another-thing",
+                          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/another-thing"),
                           depth = 4,
                           GraphDirection.Both,
                           excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
@@ -839,9 +848,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertTrue(response == GraphTestData.graphWithOneNode)
       },
       test("create a resource with no values") {
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode)
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "test thing",
           values = Map.empty,
@@ -853,7 +862,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
             resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
           actualFromResponse <- response.toResource(resourceIri).map(_.toOntologySchema(ApiV2Complex))
           _                  <- checkCreateResource(
-                 inputResourceIri = resourceIri,
+                 inputResourceIri = resourceIri.value,
                  inputResource = inputResource,
                  outputResource = actualFromResponse,
                  defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -861,9 +870,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                  requestingUser = anythingUser2,
                )
           // Get the resource from the triplestore and check it again.
-          actualFromDb <- getResource(resourceIri)
+          actualFromDb <- getResource(resourceIri.value)
           _            <- checkCreateResource(
-                 inputResourceIri = resourceIri,
+                 inputResourceIri = resourceIri.value,
                  inputResource = inputResource,
                  outputResource = actualFromDb,
                  defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -874,7 +883,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not create a resource when empty list for required property is provided") {
         val createThis = CreateResourceV2(
-          Some(sf.makeRandomResourceIri(anythingProject.shortcode).toSmartIri),
+          Some(ResourceIri.makeNew(anythingProject.shortcode)),
           "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
           "test book",
           Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Seq.empty),
@@ -886,9 +895,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("create a resource with no values and custom permissions") {
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode)
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "test thing",
           values = Map.empty,
@@ -898,9 +907,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
 
         for {
           _              <- resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
-          outputResource <- getResource(resourceIri)
+          outputResource <- getResource(resourceIri.value)
           _              <- checkCreateResource(
-                 inputResourceIri = resourceIri,
+                 inputResourceIri = resourceIri.value,
                  inputResource = inputResource,
                  outputResource = outputResource,
                  defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -910,7 +919,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with values") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(anythingProject.shortcode)
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1029,14 +1038,14 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
             CreateValueInNewResourceV2(
               valueContent = LinkValueContentV2(
                 ontologySchema = ApiV2Complex,
-                referredResourceIri = "http://rdfh.ch/0001/a-thing",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"),
               ),
             ),
           ),
         )
 
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "test thing",
           values = inputValues,
@@ -1045,9 +1054,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
 
         for {
           _              <- resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
-          outputResource <- getResource(resourceIri)
+          outputResource <- getResource(resourceIri.value)
           _              <- checkCreateResource(
-                 inputResourceIri = resourceIri,
+                 inputResourceIri = resourceIri.value,
                  inputResource = inputResource,
                  outputResource = outputResource,
                  defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -1057,7 +1066,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with a still image file value") {
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode)
         val inputResource = UploadFileRequest
           .make(
             fileType = FileType.StillImageFile(
@@ -1066,12 +1075,12 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
             ),
             internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
           )
-          .toMessage(resourceIri = Some(resourceIri))
+          .toMessage(resourceIri = Some(resourceIri.value))
         for {
           _              <- resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
-          outputResource <- getResource(resourceIri)
+          outputResource <- getResource(resourceIri.value)
           _              <- checkCreateResource(
-                 inputResourceIri = resourceIri,
+                 inputResourceIri = resourceIri.value,
                  inputResource = inputResource,
                  outputResource = outputResource,
                  defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -1081,7 +1090,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with an external still image file value") {
-        val resourceIri     = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri     = ResourceIri.makeNew(anythingProject.shortcode)
         val imageRequestUrl = IiifImageRequestUrl.unsafeFrom(
           "https://iiif.ub.unibe.ch/image/v2.1/632664f2-20cb-43e4-8584-2fa3988c63a2/full/max/0/default.jpg",
         )
@@ -1090,13 +1099,13 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
             fileType = FileType.StillImageExternalFile(imageRequestUrl),
             internalFilename = "IQUO3t1AABm-TTTTTTTTTTT.jp2",
           )
-          .toMessage(resourceIri = Some(resourceIri))
+          .toMessage(resourceIri = Some(resourceIri.value))
 
         for {
           _              <- resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
-          outputResource <- getResource(resourceIri)
+          outputResource <- getResource(resourceIri.value)
           _              <- checkCreateResource(
-                 inputResourceIri = resourceIri,
+                 inputResourceIri = resourceIri.value,
                  inputResource = inputResource,
                  outputResource = outputResource,
                  defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -1106,19 +1115,19 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with document representation") {
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode)
         val inputResource = UploadFileRequest
           .make(
             fileType = FileType.DocumentFile(),
             internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.pdf",
           )
-          .toMessage(resourceIri = Some(resourceIri))
+          .toMessage(resourceIri = Some(resourceIri.value))
 
         for {
           _              <- resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
-          outputResource <- getResource(resourceIri)
+          outputResource <- getResource(resourceIri.value)
           _              <- checkCreateResource(
-                 inputResourceIri = resourceIri,
+                 inputResourceIri = resourceIri.value,
                  inputResource = inputResource,
                  outputResource = outputResource,
                  defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -1128,21 +1137,21 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with archive representation") {
-        val resourceIri: String = sf.makeRandomResourceIri(anythingProject.shortcode)
-        val inputResource       = UploadFileRequest
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode)
+        val inputResource = UploadFileRequest
           .make(
             fileType = FileType.ArchiveFile,
             internalFilename = "IQUO3t1AABm-FSLC0vNvVps.zip",
           )
           .toMessage(
-            resourceIri = Some(resourceIri),
+            resourceIri = Some(resourceIri.value),
             internalMimeType = Some("application/zip"),
           )
         for {
           _              <- resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
-          outputResource <- getResource(resourceIri)
+          outputResource <- getResource(resourceIri.value)
           _              <- checkCreateResource(
-                 inputResourceIri = resourceIri,
+                 inputResourceIri = resourceIri.value,
                  inputResource = inputResource,
                  outputResource = outputResource,
                  defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -1152,9 +1161,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("not create a resource with missing required values") {
-        val resourceIri   = sf.makeRandomResourceIri(incunabulaProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(incunabulaProject.shortcode)
         val inputResource = CreateResourceV2(
-          Some(resourceIri.toSmartIri),
+          Some(resourceIri),
           "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           "invalid book",
           Map.empty,
@@ -1165,7 +1174,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         ).exit.map(actual => assert(actual)(failsWithA[OntologyConstraintException]))
       },
       test("not create a resource with too many values for the cardinality of a property") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(incunabulaProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(incunabulaProject.shortcode)
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1194,7 +1203,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          Some(resourceIri.toSmartIri),
+          Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           label = "invalid book",
           values = inputValues,
@@ -1206,7 +1215,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         ).exit.map(actual => assert(actual)(failsWithA[OntologyConstraintException]))
       },
       test("not create a resource with a property for which there is no cardinality in the resource class") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(incunabulaProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(incunabulaProject.shortcode)
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1228,7 +1237,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           label = "invalid book",
           values = inputValues,
@@ -1239,7 +1248,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         ).exit.map(actual => assert(actual)(failsWithA[OntologyConstraintException]))
       },
       test("not create a resource if the user doesn't have permission to create resources in the project") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(incunabulaProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(incunabulaProject.shortcode)
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1252,7 +1261,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           label = "invalid book",
           values = inputValues,
@@ -1264,19 +1273,19 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with a link to a nonexistent other resource") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(anythingProject.shortcode)
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
               valueContent = LinkValueContentV2(
                 ontologySchema = ApiV2Complex,
-                referredResourceIri = "http://rdfh.ch/0001/nonexistent-thing",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nonexistent-thing"),
               ),
             ),
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "invalid thing",
           values = inputValues,
@@ -1287,7 +1296,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with a standoff link to a nonexistent other resource") {
-        val resourceIri                                    = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                    = ResourceIri.makeNew(anythingProject.shortcode)
         val standoffWithInvalidLink: Vector[StandoffTagV2] = Vector(
           StandoffTagV2(
             standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
@@ -1339,7 +1348,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "invalid thing",
           values = inputValues,
@@ -1350,7 +1359,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with a list value referring to a nonexistent list node") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(anythingProject.shortcode)
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1364,7 +1373,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "invalid thing",
           values = inputValues,
@@ -1376,7 +1385,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with a value that's the wrong type for the property") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(anythingProject.shortcode)
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1389,7 +1398,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "invalid thing",
           values = inputValues,
@@ -1402,12 +1411,12 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not create a resource with a link to a resource in a different project") {
         // The new resource should be created in the Anything project 0001
-        val resourceIri = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri = ResourceIri.makeNew(anythingProject.shortcode)
         // This resource is present in the Incunabula project 0803
-        val linkedResourceIri = zeitgloeckleinIri
+        val linkedResourceIri = ResourceIri.unsafeFrom(zeitgloeckleinIri)
 
         val createResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "invalid thing",
           values = Map(
@@ -1428,13 +1437,13 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not create a resource with a link to a resource of the wrong class for the link property") {
         // the linked Resource exists in the test data and is a anything:ThingText
-        val linkedResourceIri = "http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw"
+        val linkedResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw")
         // subjectClassConstraint for hasOtherThingValue is anything:Thing
         val linkProperty = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri
 
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode)
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "invalid thing",
           values =
@@ -1447,9 +1456,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with invalid custom permissions") {
-        val resourceIri   = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode)
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "invalid thing",
           values = Map.empty,
@@ -1461,7 +1470,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource with a value that has invalid custom permissions") {
-        val resourceIri                                            = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                            = ResourceIri.makeNew(anythingProject.shortcode)
         val values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1475,7 +1484,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "invalid thing",
           values = values,
@@ -1487,9 +1496,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not create a resource that uses a class from another non-shared project") {
-        val resourceIri   = sf.makeRandomResourceIri(incunabulaProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(incunabulaProject.shortcode)
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "test thing",
           values = Map.empty,
@@ -1536,7 +1545,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
 
         for {
           _              <- resourceResponder(_.updateResourceMetadataV2(updateRequest))
-          outputResource <- getResource(aThingIri)
+          outputResource <- getResource(aThingIri.value)
           _               = { self.aThingLastModificationDate = outputResource.lastModificationDate.get }
         } yield assertTrue(
           PermissionUtilADM.parsePermissions(outputResource.permissions) ==
@@ -1580,7 +1589,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
         for {
           _                          <- resourceResponder(_.updateResourceMetadataV2(updateRequest))
-          outputResource             <- getResource(aThingIri)
+          outputResource             <- getResource(aThingIri.value)
           updatedLastModificationDate = outputResource.lastModificationDate.get
           oldModificationDate         = self.aThingLastModificationDate
           _                           = { self.aThingLastModificationDate = updatedLastModificationDate }
@@ -1615,7 +1624,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
         for {
           _                          <- resourceResponder(_.updateResourceMetadataV2(updateRequest))
-          outputResource             <- getResource(aThingIri)
+          outputResource             <- getResource(aThingIri.value)
           updatedLastModificationDate = outputResource.lastModificationDate.get
           _                           = self.aThingLastModificationDate = updatedLastModificationDate
         } yield assertTrue(updatedLastModificationDate == newModificationDate)
@@ -1637,10 +1646,10 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           .map(actual => assert(actual)(failsWithA[BadRequestException]))
       },
       test("mark a resource as deleted") {
-        val resourceIri = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri = ResourceIri.makeNew(anythingProject.shortcode)
         val createReq   = CreateResourceRequestV2(
           CreateResourceV2(
-            Some(resourceIri.toSmartIri),
+            Some(resourceIri),
             "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
             "test label",
             Map.empty,
@@ -1681,7 +1690,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("mark a resource as deleted, supplying a custom delete date") {
-        val resourceIri         = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+        val resourceIri         = ResourceIri.unsafeFrom("http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA")
         val deleteDate: Instant = Instant.now
         val deleteRequest       = DeleteOrEraseResourceRequestV2(
           resourceIri = resourceIri,
@@ -1713,9 +1722,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "not accept custom resource permissions that would give the requesting user a higher permission on a resource than the default",
       ) {
-        val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(imagesProject.shortcode)
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
           label = "test bildformat",
           values = Map.empty,
@@ -1728,9 +1737,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a system admin",
       ) {
-        val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(imagesProject.shortcode)
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
           label = "test bildformat",
           values = Map.empty,
@@ -1743,9 +1752,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a project admin",
       ) {
-        val resourceIri   = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri   = ResourceIri.makeNew(imagesProject.shortcode)
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
           label = "test bildformat",
           values = Map.empty,
@@ -1758,7 +1767,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "not accept custom value permissions that would give the requesting user a higher permission on a value than the default",
       ) {
-        val resourceIri                                                 = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(imagesProject.shortcode)
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1772,7 +1781,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
           label = "test bildformat",
           values = inputValues,
@@ -1785,7 +1794,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin",
       ) {
-        val resourceIri                                                 = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(imagesProject.shortcode)
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1799,7 +1808,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
           label = "test bildformat",
           values = inputValues,
@@ -1812,7 +1821,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test(
         "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin",
       ) {
-        val resourceIri                                                 = sf.makeRandomResourceIri(imagesProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(imagesProject.shortcode)
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -1826,7 +1835,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
           label = "test bildformat",
           values = inputValues,
@@ -1837,8 +1846,8 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           .as(assertCompletes)
       },
       test("create a resource with version history so we can test erasing it") {
-        val resourceIri = sf.makeRandomResourceIri(anythingProject.shortcode)
-        resourceIriToErase.set(resourceIri)
+        val resourceIri = ResourceIri.makeNew(anythingProject.shortcode)
+        resourceIriToErase.set(resourceIri.value)
         val resourceClassIri: SmartIri                                  = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
         val propertyIri: SmartIri                                       = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
         val standoffTagUUIDsToErase                                     = collection.mutable.Set.empty[UUID]
@@ -1857,7 +1866,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = resourceClassIri,
           label = "test thing",
           values = inputValues,
@@ -1866,7 +1875,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
 
         for {
           _              <- resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
-          outputResource <- getResource(resourceIri)
+          outputResource <- getResource(resourceIri.value)
           firstTextValue  = outputResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
           _               = firstValueIriToErase.set(firstTextValue.valueIri)
           _               = for (standoffTag <- firstTextValue.valueContent.standoff) {
@@ -1894,7 +1903,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                                    ),
                                  )
           _                = secondValueIriToErase.set(updateValueResponse.valueIri)
-          updatedResource <- getResource(resourceIri)
+          updatedResource <- getResource(resourceIri.value)
           secondTextValue  = updatedResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
           _                = secondValueIriToErase.set(secondTextValue.valueIri)
           _                = for (standoffTag <- firstTextValue.valueContent.standoff) {
@@ -1910,7 +1919,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("not erase a resource if the user is not a system/project admin") {
         val eraseRequest = DeleteOrEraseResourceRequestV2(
-          resourceIri = resourceIriToErase.get,
+          resourceIri = ResourceIri.unsafeFrom(resourceIriToErase.get),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
           requestingUser = anythingUser2,
@@ -1921,10 +1930,8 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("not erase a resource if another resource has a link to it") {
-        val resourceWithLinkIri = ResourceIri.unsafeFrom(
-          sf.makeRandomResourceIri(anythingProject.shortcode).toSmartIri,
-        )
-        val resourceClassIri =
+        val resourceWithLinkIri = ResourceIri.makeNew(anythingProject.shortcode)
+        val resourceClassIri    =
           ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
         val linkValuePropertyIri =
           PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri)
@@ -1933,13 +1940,13 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
             CreateValueInNewResourceV2(
               valueContent = LinkValueContentV2(
                 ontologySchema = ApiV2Complex,
-                referredResourceIri = resourceIriToErase.get,
+                referredResourceIri = ResourceIri.unsafeFrom(resourceIriToErase.get),
               ),
             ),
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceWithLinkIri.smartIri),
+          resourceIri = Some(resourceWithLinkIri),
           resourceClassIri = resourceClassIri.smartIri,
           label = "thing with link",
           values = inputValues,
@@ -1948,11 +1955,11 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
 
         for {
           _              <- resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
-          outputResource <- getResource(resourceWithLinkIri.toString)
+          outputResource <- getResource(resourceWithLinkIri.value)
           linkValue       = outputResource.findLinkValues(linkValuePropertyIri).head
           // Try to erase the first resource.
           eraseRequest = DeleteOrEraseResourceRequestV2(
-                           resourceIri = resourceIriToErase.get,
+                           resourceIri = ResourceIri.unsafeFrom(resourceIriToErase.get),
                            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                            maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
                            requestingUser = anythingAdminUser,
@@ -1966,7 +1973,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                      resourceWithLinkIri,
                      ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
                      linkValuePropertyIri,
-                     ValueIri.unsafeFrom(linkValue.valueIri.toSmartIri),
+                     ValueIri.unsafeFrom(linkValue.valueIri),
                      valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
                      apiRequestId = randomUUID,
                    ),
@@ -1978,7 +1985,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       test("erase a resource") {
         // Erase the resource.
         val eraseRequest = DeleteOrEraseResourceRequestV2(
-          resourceIri = resourceIriToErase.get,
+          resourceIri = ResourceIri.unsafeFrom(resourceIriToErase.get),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
           requestingUser = anythingAdminUser,
@@ -1999,10 +2006,10 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("erase a deleted resource") {
-        val resourceIri = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri = ResourceIri.makeNew(anythingProject.shortcode)
         val createReq   = CreateResourceRequestV2(
           CreateResourceV2(
-            Some(resourceIri.toSmartIri),
+            Some(resourceIri),
             "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
             "test label for resource to be deleted then erased",
             Map.empty,
@@ -2058,9 +2065,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
     ),
     suite("When given a custom IRI")(
       test("create a resource with no values but a custom IRI") {
-        val resourceIri   = "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9kk"
+        val resourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9kk")
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "thing with a custom IRI",
           values = Map.empty,
@@ -2073,7 +2080,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           // Check that the response contains the correct metadata.
           actualFromResponse <- response.toResource(resourceIri).map(_.toOntologySchema(ApiV2Complex))
           _                  <- checkCreateResource(
-                 inputResourceIri = resourceIri,
+                 inputResourceIri = resourceIri.value,
                  inputResource = inputResource,
                  outputResource = actualFromResponse,
                  defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -2082,9 +2089,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                )
 
           // Get the resource from the triplestore and check it again.
-          actualFromDb <- getResource(resourceIri)
+          actualFromDb <- getResource(resourceIri.value)
           _            <- checkCreateResource(
-                 inputResourceIri = resourceIri,
+                 inputResourceIri = resourceIri.value,
                  inputResource = inputResource,
                  outputResource = actualFromDb,
                  defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -2094,7 +2101,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertCompletes
       },
       test("create a resource with a value that has custom UUID") {
-        val resourceIri                                                 = sf.makeRandomResourceIri(anythingProject.shortcode)
+        val resourceIri                                                 = ResourceIri.makeNew(anythingProject.shortcode)
         val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
             CreateValueInNewResourceV2(
@@ -2109,7 +2116,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
         val inputResource = CreateResourceV2(
-          resourceIri = Some(resourceIri.toSmartIri),
+          resourceIri = Some(resourceIri),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           label = "thing with custom value UUID",
           values = inputValues,
@@ -2118,9 +2125,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
 
         for {
           _              <- resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)))
-          outputResource <- getResource(resourceIri)
+          outputResource <- getResource(resourceIri.value)
           _              <- checkCreateResource(
-                 inputResourceIri = resourceIri,
+                 inputResourceIri = resourceIri.value,
                  inputResource = inputResource,
                  outputResource = outputResource,
                  defaultResourcePermissions = defaultAnythingResourcePermissions,
@@ -2132,7 +2139,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
     ),
     suite("When asked for events")(
       test("return full history of a-thing-picture resource") {
-        val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-picture")
         for {
           events              <- resourceResponder(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents))
           createResourceEvents =
@@ -2150,12 +2157,12 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("return full history of a resource as events") {
-        val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
         resourceResponder(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents))
           .map(actual => assertTrue(actual.size == 9))
       },
       test("create a new value to test create value history event") {
-        val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
         val newValueIri = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
         val testValue   = "a test value"
 
@@ -2198,9 +2205,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("delete the newly created value to check the delete value event of resource history") {
-        val resourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri)
+        val resourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
         val valueToDelete =
-          ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A".toSmartIri)
+          ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A")
         val resourceClassIri =
           ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
         val propertyIri   = PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri)
@@ -2223,7 +2230,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                  ),
                )
           events <-
-            resourceResponder(_.getResourceHistoryEvents(resourceIri.toString, anythingUser2).map(_.historyEvents))
+            resourceResponder(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents))
           deleteValueEvent: Option[ResourceAndValueHistoryEvent] =
             events.find(event =>
               event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT &&
@@ -2232,7 +2239,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertTrue(events.size == 11, deleteValueEvent.isDefined)
       },
       test("return full history of a deleted resource") {
-        val resourceIri = "http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA"
+        val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA")
         for {
           events             <- resourceResponder(_.getResourceHistoryEvents(resourceIri, anythingUser2).map(_.historyEvents))
           deleteResourceEvent =
@@ -2245,7 +2252,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
         )
       },
       test("update resource's metadata to test update resource metadata event") {
-        val resourceIri   = "http://rdfh.ch/0001/thing_with_BCE_date2"
+        val resourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_BCE_date2")
         val updateRequest = UpdateResourceMetadataRequestV2(
           resourceIri = resourceIri,
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,

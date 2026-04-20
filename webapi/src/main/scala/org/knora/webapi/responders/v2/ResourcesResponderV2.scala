@@ -55,7 +55,7 @@ import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -68,6 +68,7 @@ import org.knora.webapi.slice.resources.repo.GetResourceValueVersionHistoryQuery
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
+import org.knora.webapi.slice.search.repo.GetIncomingImageLinksGravsearchQuery
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -214,9 +215,7 @@ final case class ResourcesResponderV2(
         project <- projectService
                      .findById(resource.projectADM.id)
                      .someOrFail(NotFoundException.notFound(resource.projectADM.id))
-        resourceIri <- iriConverter
-                         .asResourceIri(updateResourceMetadataRequestV2.resourceIri)
-                         .mapError(BadRequestException.apply)
+        resourceIri       = updateResourceMetadataRequestV2.resourceIri
         resourceClassIri <- iriConverter
                               .asResourceClassIri(internalResourceClassIri)
                               .mapError(BadRequestException.apply)
@@ -297,7 +296,7 @@ final case class ResourcesResponderV2(
         // Generate SPARQL for marking the resource as deleted.
         requestingUserIri <-
           ZIO.fromEither(UserIri.from(deleteResourceV2.requestingUser.id)).mapError(e => Exception(e)).orDie
-        resourceIri <- iriConverter.asResourceIri(deleteResourceV2.resourceIri).mapError(BadRequestException.apply)
+        resourceIri  = deleteResourceV2.resourceIri
         sparqlUpdate = DeleteResourceQuery.build(
                          project = resource.projectADM,
                          resourceIri = resourceIri,
@@ -350,7 +349,9 @@ final case class ResourcesResponderV2(
 
       otherResources <-
         ZIO
-          .foreach(result.results.bindings.map(_.rowMap.get("other")).flatten.toSet)(iriConverter.asResourceIri)
+          .foreach(result.results.bindings.map(_.rowMap.get("other")).flatten.toSet)(s =>
+            ZIO.fromEither(ResourceIri.from(s)),
+          )
           .mapError(DataConversionException.apply)
     } yield otherResources
 
@@ -389,8 +390,7 @@ final case class ResourcesResponderV2(
 
       _ <- ensureNoConflictingChange(resource, deleteResourceV2.maybeLastModificationDate)
 
-      resourceIri <- iriConverter.asResourceIri(deleteResourceV2.resourceIri).mapError(BadRequestException.apply)
-      _           <- ensureResourceIsNotInUse(resourceIri)
+      _ <- ensureResourceIsNotInUse(deleteResourceV2.resourceIri)
 
       lastModificationDate = resource.lastModificationDate.getOrElse(resource.creationDate)
       _                   <- ZIO.when(deleteResourceV2.maybeDeleteDate.exists(!_.isAfter(lastModificationDate))) {
@@ -453,14 +453,13 @@ final case class ResourcesResponderV2(
 
         _ <- ensureNoConflictingChange(resource, eraseResourceV2.maybeLastModificationDate)
 
-        resourceIri <- iriConverter.asResourceIri(eraseResourceV2.resourceIri).mapError(BadRequestException.apply)
-        _           <- ensureResourceIsNotInUse(resourceIri)
+        _ <- ensureResourceIsNotInUse(eraseResourceV2.resourceIri)
 
         // Do the update.
         _ <- ZIO.logInfo(
                s"User ${eraseResourceV2.requestingUser.id} is erasing resource ${eraseResourceV2.resourceIri}",
              )
-        _ <- triplestore.query(Update(EraseResourceQuery.build(resource.projectADM, resourceIri)))
+        _ <- triplestore.query(Update(EraseResourceQuery.build(resource.projectADM, eraseResourceV2.resourceIri)))
 
         _ <- // Verify that the resource was erased correctly.
           ZIO
@@ -469,13 +468,13 @@ final case class ResourcesResponderV2(
                 s"Resource <${eraseResourceV2.resourceIri}> was not erased. Please report this as a possible bug.",
               ),
             )
-            .whenZIO(iriService.checkIriExists(resourceIri))
+            .whenZIO(iriService.checkIriExists(eraseResourceV2.resourceIri))
       } yield SuccessResponseV2("Resource erased")
     IriLocker.runWithIriLock(eraseResourceV2.apiRequestID, eraseResourceV2.resourceIri)(eraseTask)
   }
 
   def getResourcesWithDeletedResource(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     versionDate: Option[VersionDate] = None,
@@ -498,7 +497,7 @@ final case class ResourcesResponderV2(
     )
 
   def getResourcePreviewWithDeletedResource(
-    resourceIris: Seq[IRI],
+    resourceIris: Seq[ResourceIri],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
     requestingUser: User,
@@ -518,7 +517,7 @@ final case class ResourcesResponderV2(
    * @return the Gravsearch template.
    */
   private def getGravsearchTemplate(
-    gravsearchTemplateIri: IRI,
+    gravsearchTemplateIri: ResourceIri,
     requestingUser: User,
   ): Task[String] = {
 
@@ -602,10 +601,10 @@ final case class ResourcesResponderV2(
    * @return a [[ResourceTEIGetResponseV2]].
    */
   def getResourceAsTeiV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     textProperty: SmartIri,
     mappingIri: Option[IRI],
-    gravsearchTemplateIri: Option[IRI],
+    gravsearchTemplateIri: Option[ResourceIri],
     headerXSLTIri: Option[String],
     requestingUser: User,
   ): Task[ResourceTEIGetResponseV2] = {
@@ -687,7 +686,7 @@ final case class ResourcesResponderV2(
                  }
             // get the template
             query <- getGravsearchTemplate(templateIri, requestingUser)
-                       .map(_.replace("$resourceIri", resourceIri))
+                       .map(_.replace("$resourceIri", resourceIri.value))
                        .mapAttempt(GravsearchParser.parseQuery)
 
             resource <- searchResponderV2
@@ -807,7 +806,7 @@ final case class ResourcesResponderV2(
    * @return a [[GraphDataGetResponseV2]] representing the requested graph.
    */
   def getGraphDataResponseV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     depth: Int,
     dir: GraphDirection,
     excludeProperty: Option[SmartIri],
@@ -1019,7 +1018,7 @@ final case class ResourcesResponderV2(
     // Get the start node.
     val query =
       GetGraphDataQuery.buildStartNodeOnly(
-        resourceIri,
+        resourceIri.value,
         appConfig.v2.graphRoute.maxGraphBreadth,
       )
 
@@ -1088,22 +1087,32 @@ final case class ResourcesResponderV2(
       edges = outboundQueryResults.edges ++ inboundQueryResults.edges
 
       // Convert each node to a GraphNodeV2 for the API response message.
-      resultNodes: Vector[GraphNodeV2] = nodes.map { (node: QueryResultNode) =>
-                                           GraphNodeV2(
-                                             resourceIri = node.nodeIri,
-                                             resourceClassIri = node.nodeClass,
-                                             resourceLabel = node.nodeLabel,
-                                           )
-                                         }.toVector
+      resultNodes <- ZIO.foreach(nodes.toVector) { (node: QueryResultNode) =>
+                       ZIO
+                         .fromEither(ResourceIri.from(node.nodeIri))
+                         .mapError(BadRequestException.apply)
+                         .map(resIri =>
+                           GraphNodeV2(
+                             resourceIri = resIri,
+                             resourceClassIri = node.nodeClass,
+                             resourceLabel = node.nodeLabel,
+                           ),
+                         )
+                     }
 
       // Convert each edge to a GraphEdgeV2 for the API response message.
-      resultEdges: Vector[GraphEdgeV2] = edges.map { (edge: QueryResultEdge) =>
-                                           GraphEdgeV2(
-                                             source = edge.sourceNodeIri,
-                                             propertyIri = edge.linkProp,
-                                             target = edge.targetNodeIri,
-                                           )
-                                         }.toVector
+      resultEdges <- ZIO.foreach(edges.toVector) { (edge: QueryResultEdge) =>
+                       for {
+                         source <-
+                           ZIO.fromEither(ResourceIri.from(edge.sourceNodeIri)).mapError(BadRequestException.apply)
+                         target <-
+                           ZIO.fromEither(ResourceIri.from(edge.targetNodeIri)).mapError(BadRequestException.apply)
+                       } yield GraphEdgeV2(
+                         source = source,
+                         propertyIri = edge.linkProp,
+                         target = target,
+                       )
+                     }
 
     } yield GraphDataGetResponseV2(
       nodes = resultNodes,
@@ -1113,7 +1122,7 @@ final case class ResourcesResponderV2(
   }
 
   def getResourceHistory(
-    resourceIri: String,
+    resourceIri: ResourceIri,
     startDate: Option[VersionDate],
     endDate: Option[VersionDate],
     requestingUser: User,
@@ -1195,7 +1204,7 @@ final case class ResourcesResponderV2(
       historyEntriesWithResourceCreation,
     )
 
-  def getIiifManifestV2(resourceIri: IRI, requestingUser: User): Task[ResourceIIIFManifestGetResponseV2] =
+  def getIiifManifestV2(resourceIri: ResourceIri, requestingUser: User): Task[ResourceIIIFManifestGetResponseV2] =
     // The implementation here is experimental. If we had a way of streaming the canvas URLs to the IIIF viewer,
     // it would be better to write the Gravsearch query differently, so that ?representation was the main resource.
     // Then the Gravsearch query could return pages of results.
@@ -1204,12 +1213,8 @@ final case class ResourcesResponderV2(
     // in the manifest should be.
 
     for {
-      // Make a Gravsearch query from a template.
-      gravsearchQueryForIncomingLinks <- ZIO.attempt(
-                                           org.knora.webapi.messages.twirl.queries.gravsearch.txt
-                                             .getIncomingImageLinks(resourceIri)
-                                             .toString(),
-                                         )
+      // Make a Gravsearch query.
+      gravsearchQueryForIncomingLinks <- ZIO.succeed(GetIncomingImageLinksGravsearchQuery.build(resourceIri))
 
       // Run the query.
 
@@ -1327,7 +1332,7 @@ final case class ResourcesResponderV2(
    * @return the events extracted from full representation of a resource at each time point in its history ordered by version date.
    */
   def getResourceHistoryEvents(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     requestingUser: User,
   ): Task[ResourceAndValueVersionHistoryResponseV2] =
     for {
@@ -1361,17 +1366,18 @@ final case class ResourcesResponderV2(
       mainResourceIris      = sparqlSelectResponse.getColOrThrow("resource")
       // For each resource IRI return history events
       historyOfResourcesAsSeqOfFutures: Seq[Task[Seq[ResourceAndValueHistoryEvent]]] =
-        mainResourceIris.map { resourceIri =>
+        mainResourceIris.map { resourceIriStr =>
           for {
+            resIri          <- ZIO.fromEither(ResourceIri.from(resourceIriStr)).mapError(BadRequestException.apply)
             resourceHistory <-
               getResourceHistoryV2(
                 ResourceVersionHistoryGetRequestV2(
-                  resourceIri = resourceIri,
+                  resourceIri = resIri,
                   withDeletedResource = true,
                   requestingUser = requestingUser,
                 ),
               )
-            resourceFullHist <- extractEventsFromHistory(resourceIri, resourceHistory.history, requestingUser)
+            resourceFullHist <- extractEventsFromHistory(resIri, resourceHistory.history, requestingUser)
           } yield resourceFullHist
         }
 
@@ -1390,7 +1396,7 @@ final case class ResourcesResponderV2(
    * @return the full history of resource as sequence of [[ResourceAndValueHistoryEvent]].
    */
   private def extractEventsFromHistory(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     resourceHistory: Seq[ResourceHistoryEntry],
     requestingUser: User,
   ): Task[Seq[ResourceAndValueHistoryEvent]] =
@@ -1451,7 +1457,7 @@ final case class ResourcesResponderV2(
    * @return the full representation of the resource at the given version date.
    */
   private def getResourceAtGivenTime(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     versionHist: ResourceHistoryEntry,
     requestingUser: User,
   ): Task[(ResourceHistoryEntry, ReadResourceV2)] =

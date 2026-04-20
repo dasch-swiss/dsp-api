@@ -112,7 +112,7 @@ specified by the `id` in the request body as below:
 
 Example Group Information stored in admin named graph: :
 
-```
+```turtle
 <http://rdfh.ch/groups/[shortcode]/[UUID]>
      rdf:type knora-admin:UserGroup ;
      knora-admin:groupName "Name of the group" ;

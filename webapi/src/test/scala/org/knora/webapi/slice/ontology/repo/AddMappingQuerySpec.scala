@@ -5,23 +5,22 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import zio.*
 import zio.test.*
 
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.ontology.domain.model.OntologyMappingExternalIri
 
 object AddMappingQuerySpec extends ZIOSpecDefault {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private val ontologyIri  = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-  private val classIri     = ontologyIri.makeClass("Thing").smartIri
-  private val propertyIri  = ontologyIri.makeProperty("hasName").smartIri
-  private val externalIri1 = "http://schema.org/Thing".toSmartIri
-  private val externalIri2 = "http://purl.org/dc/terms/Agent".toSmartIri
-
+  private val ontologyIri                       = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
+  private val classIri                          = ontologyIri.makeClass("Thing").smartIri
+  private val propertyIri                       = ontologyIri.makeProperty("hasName").smartIri
+  private val externalIri1                      = OntologyMappingExternalIri.unsafeFrom("http://schema.org/Thing")
+  private val externalIri2                      = OntologyMappingExternalIri.unsafeFrom("http://purl.org/dc/terms/Agent")
   override def spec: Spec[TestEnvironment, Any] = suite("AddMappingQuerySpec")(
     // -- SUBCLASSOF (class mappings) -------------------------------------------
     suite("rdfs:subClassOf predicate")(
@@ -60,7 +59,7 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
         )
       },
       test("query contains all external IRIs when multiple property mappings are given") {
-        val propIri2 = "http://schema.org/name".toSmartIri
+        val propIri2 = OntologyMappingExternalIri.unsafeFrom("http://schema.org/name")
         for {
           update <- AddMappingQuery
                       .build(ontologyIri, propertyIri, MappingPredicate.SubPropertyOf, List(externalIri1, propIri2))
@@ -95,7 +94,7 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
         }
       },
       test("query does not decode percent-encoded injection characters in IRI positions") {
-        val encodedIri = "http://example.org/Thing%3Einjection".toSmartIri
+        val encodedIri = OntologyMappingExternalIri.unsafeFrom("http://example.org/Thing%3Einjection")
         for {
           update <- AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(encodedIri))
         } yield assertTrue(
@@ -105,14 +104,14 @@ object AddMappingQuerySpec extends ZIOSpecDefault {
       },
     ),
     suite("percent-encoded injection chars produce valid SPARQL output")(
-      test("percent-encoded '|' (%7C) in mapping IRI succeeds (SmartIri encodes '|' to '%7C')") {
-        val encodedIri = "http://example.org/Thing%7Cinjection".toSmartIri
+      test("percent-encoded '|' (%7C) in mapping IRI succeeds") {
+        val encodedIri = OntologyMappingExternalIri.unsafeFrom("http://example.org/Thing%7Cinjection")
         for {
           exit <- AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(encodedIri)).exit
         } yield assertTrue(exit.isSuccess)
       },
-      test("percent-encoded '}' (%7D) in mapping IRI succeeds (SmartIri encodes '}' to '%7D')") {
-        val encodedIri = "http://example.org/Thing%7Dinjection".toSmartIri
+      test("percent-encoded '}' (%7D) in mapping IRI succeeds") {
+        val encodedIri = OntologyMappingExternalIri.unsafeFrom("http://example.org/Thing%7Dinjection")
         for {
           exit <- AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(encodedIri)).exit
         } yield assertTrue(exit.isSuccess)

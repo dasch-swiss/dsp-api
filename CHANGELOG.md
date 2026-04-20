@@ -1,5 +1,73 @@
 # Changelog
 
+## [35.6.0](https://github.com/dasch-swiss/dsp-api/compare/v35.5.0...v35.6.0) (2026-04-20)
+
+
+### Maintenances
+
+* Dependency updates ([#4080](https://github.com/dasch-swiss/dsp-api/issues/4080)) ([faed2e0](https://github.com/dasch-swiss/dsp-api/commit/faed2e06f41569d9920aa1be5ef3647065eea05f))
+* **deps:** bump sipi to v4.1.0 ([#4083](https://github.com/dasch-swiss/dsp-api/issues/4083)) ([d26ac17](https://github.com/dasch-swiss/dsp-api/commit/d26ac175eac615f4ce25db1612a39e0a3ebbc381))
+* Remove unused CLEAN_TMP_DIR env vars from Sipi config (DEV-5090) ([#4081](https://github.com/dasch-swiss/dsp-api/issues/4081)) ([22ffb3f](https://github.com/dasch-swiss/dsp-api/commit/22ffb3fa4b31feb0e0a495e480e3bdb2cd5f0170))
+* Update to JDK 25 (DEV-6235) ([#4075](https://github.com/dasch-swiss/dsp-api/issues/4075)) ([6a87c56](https://github.com/dasch-swiss/dsp-api/commit/6a87c561295037aacb45432cdf50f355ebc92cf5))
+
+
+### Documentation
+
+* **project-migration:** Add project migration export/import documentation ([#4076](https://github.com/dasch-swiss/dsp-api/issues/4076)) ([2fa58ac](https://github.com/dasch-swiss/dsp-api/commit/2fa58acbc3efa52e8b5e2f8834922ec28b74e3dd))
+
+
+### Enhancements
+
+* **ingest:** Add OpenTelemetry tracing to ingest service (DEV-6248) ([#4079](https://github.com/dasch-swiss/dsp-api/issues/4079)) ([f491886](https://github.com/dasch-swiss/dsp-api/commit/f49188651c15db1636a9690f752ba44a7e59c844))
+
+
+### Bug Fixes
+
+* **docker:** fix dsp-api healthcheck curl missing ([#4078](https://github.com/dasch-swiss/dsp-api/issues/4078)) ([99cb83b](https://github.com/dasch-swiss/dsp-api/commit/99cb83b0d559aedbc4d883b08eb0a52855295dcd))
+* **tracing:** Fix traceparent propagation from dsp-app through API to Fuseki (DEV-5672) ([#4074](https://github.com/dasch-swiss/dsp-api/issues/4074)) ([98c42fd](https://github.com/dasch-swiss/dsp-api/commit/98c42fd9527b53641fad3fe8348b06657deddf8d))
+
+## [35.5.0](https://github.com/dasch-swiss/dsp-api/compare/v35.4.0...v35.5.0) (2026-04-13)
+
+
+### Maintenances
+
+* Dependency updates ([#4054](https://github.com/dasch-swiss/dsp-api/issues/4054)) ([a0d676e](https://github.com/dasch-swiss/dsp-api/commit/a0d676e7534e19bf76204c047b881cee20c6dfa4))
+* Migrate ResourceIri and ValueIri to standalone types (DEV-6231) ([#4072](https://github.com/dasch-swiss/dsp-api/issues/4072)) ([e13f4dc](https://github.com/dasch-swiss/dsp-api/commit/e13f4dc4fb4065791864c59e83e0a30b1fa2bfc6))
+* Migrate to rdf4j changeLinkMetadata (DEV-6219) ([#4064](https://github.com/dasch-swiss/dsp-api/issues/4064)) ([7614152](https://github.com/dasch-swiss/dsp-api/commit/7614152dc802159b7c7db930ec38d4a4493cc335))
+* Migrate to rdf4j changeLinkTarget (DEV-6205) ([#4059](https://github.com/dasch-swiss/dsp-api/issues/4059)) ([7582ecb](https://github.com/dasch-swiss/dsp-api/commit/7582ecbb981645f77329472994c988a72698d512))
+* Migrate to rdf4j changePropertyGuiElement (DEV-6201) ([#4050](https://github.com/dasch-swiss/dsp-api/issues/4050)) ([7558b2b](https://github.com/dasch-swiss/dsp-api/commit/7558b2b4532ad70b4af16e9de87c8758e49a9f84))
+* Migrate to rdf4j createLink (DEV-6207) ([#4061](https://github.com/dasch-swiss/dsp-api/issues/4061)) ([f291175](https://github.com/dasch-swiss/dsp-api/commit/f29117584fdc74a6334f4d889bdbf0b5c2d24082))
+* Migrate to rdf4j createOntology (DEV-6198) ([#4047](https://github.com/dasch-swiss/dsp-api/issues/4047)) ([c2869eb](https://github.com/dasch-swiss/dsp-api/commit/c2869eb1998df425c1b5d71a8442b9c7744385a9))
+* Migrate to rdf4j deleteValue (DEV-6199) ([#4049](https://github.com/dasch-swiss/dsp-api/issues/4049)) ([3693f5f](https://github.com/dasch-swiss/dsp-api/commit/3693f5fd0dd4cfc03797f14f5356c494959fcd4d))
+* Migrate to rdf4j gravsearch get incomingImageLinks (DEV-6229) ([#4067](https://github.com/dasch-swiss/dsp-api/issues/4067)) ([4b5c305](https://github.com/dasch-swiss/dsp-api/commit/4b5c305fe186a8622dee49497587b5a4eb5659eb))
+* Migrate to rdf4j gravsearch getResourceWithSpecificProperties (DEV-6230) ([#4068](https://github.com/dasch-swiss/dsp-api/issues/4068)) ([e473646](https://github.com/dasch-swiss/dsp-api/commit/e4736469408acd404a38af95768a51316d2025a1))
+* Migrate to rdf4j searchFullText (DEV-6222) ([#4066](https://github.com/dasch-swiss/dsp-api/issues/4066)) ([3361fa0](https://github.com/dasch-swiss/dsp-api/commit/3361fa0157b0225c4f40ef54e8f782cb3c2581b0))
+* Remove Twirl and consolidate SPARQL query documentation (DEV-6231) ([#4069](https://github.com/dasch-swiss/dsp-api/issues/4069)) ([5aa3b58](https://github.com/dasch-swiss/dsp-api/commit/5aa3b58bc14c219f1849ead2ba33a1bfe1fa948f))
+* Remove unused addValueVersion Twirl template (DEV-6220) ([#4065](https://github.com/dasch-swiss/dsp-api/issues/4065)) ([c3a8652](https://github.com/dasch-swiss/dsp-api/commit/c3a8652fa3c68dc4548ee2849da31616eb393e8b))
+* Remove unused checkValueDeletion Twirl template (DEV-6207) ([#4062](https://github.com/dasch-swiss/dsp-api/issues/4062)) ([9bdd686](https://github.com/dasch-swiss/dsp-api/commit/9bdd686744e2d13737712cf3d6b32cbb60b5eaeb))
+* Update E2E test runner to ubuntu-latest-large-runner ([#4056](https://github.com/dasch-swiss/dsp-api/issues/4056)) ([8b8a765](https://github.com/dasch-swiss/dsp-api/commit/8b8a765d1ced8b8000979e82f995706628cea1c8))
+* update run-with-dev-db ([#4045](https://github.com/dasch-swiss/dsp-api/issues/4045)) ([764acd8](https://github.com/dasch-swiss/dsp-api/commit/764acd860212325533dd0c920069b04a0848d2f9))
+* upgrade Sipi to v4.0.1 ([#4063](https://github.com/dasch-swiss/dsp-api/issues/4063)) ([e843210](https://github.com/dasch-swiss/dsp-api/commit/e8432106a466bda210483be5a91e16df45f099e2))
+
+
+### Documentation
+
+* Add development guides and introduce fix-markdownlint skill (DEV-6231) ([#4073](https://github.com/dasch-swiss/dsp-api/issues/4073)) ([578d564](https://github.com/dasch-swiss/dsp-api/commit/578d564fd2037801647c44c0803545ac55576c33))
+* update test data placement heuristic ([#4057](https://github.com/dasch-swiss/dsp-api/issues/4057)) ([0f47d23](https://github.com/dasch-swiss/dsp-api/commit/0f47d23459e696dd9e6ca96b2c2a70a584001add))
+
+
+### Enhancements
+
+* Add OntologyMappingExternalIri value type with namespace and host validation ([#4048](https://github.com/dasch-swiss/dsp-api/issues/4048)) ([dfdbf0b](https://github.com/dasch-swiss/dsp-api/commit/dfdbf0b9577449db0a10f74f080def95d2e1d027))
+* **project-migration:** idempotent user handling for export and import ([#4040](https://github.com/dasch-swiss/dsp-api/issues/4040)) ([0c816ba](https://github.com/dasch-swiss/dsp-api/commit/0c816bad221bf160aeb4c2c15281ac2535474f8a))
+
+
+### Bug Fixes
+
+* **export:** return plain string footnotes in CSV resource download ([#4044](https://github.com/dasch-swiss/dsp-api/issues/4044)) ([37a0aa5](https://github.com/dasch-swiss/dsp-api/commit/37a0aa57d49a730e689aaa0dcc68d749f1b7d3fd))
+* **project-migration:** Relax import constraint and fix import admin data query ([#4046](https://github.com/dasch-swiss/dsp-api/issues/4046)) ([9726d34](https://github.com/dasch-swiss/dsp-api/commit/9726d341830741548bea66f8ddf314137c59511f))
+* structured error details for mapping IRI validation in API v3 (DEV-6194) ([#4041](https://github.com/dasch-swiss/dsp-api/issues/4041)) ([90fdd36](https://github.com/dasch-swiss/dsp-api/commit/90fdd36127fa8f9adc1ad5a0f9c4f1b2fabde27c))
+
 ## [35.4.0](https://github.com/dasch-swiss/dsp-api/compare/v35.3.0...v35.4.0) (2026-03-30)
 
 

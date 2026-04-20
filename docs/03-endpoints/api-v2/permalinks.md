@@ -93,7 +93,7 @@ For details, see [Archival Resource Key (ARK) Identifiers](../../05-internals/de
 
 The format of a Knora project ARK URL is as follows:
 
-```
+```text
 http://HOST/ark:/NAAN/VERSION/PROJECT
 ```
 
@@ -105,7 +105,7 @@ and `PROJECT` is the project's [short-code](knora-iris.md#project-short-codes).
 For example, given a project with ID `0001`, and using the DaSCH's ARK resolver
 hostname and NAAN, the ARK URL for the project itself is:
 
-```
+```text
 http://ark.dasch.swiss/ark:/72163/1/0001
 ```
 
@@ -115,7 +115,7 @@ This could redirect to a page describing the project.
 
 The format of a Knora resource ARK URL is as follows:
 
-```
+```text
 http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
 ```
 
@@ -129,13 +129,13 @@ For example, given the Knora resource IRI `http://rdfh.ch/0001/0C-0L1kORryKzJAJx
 and using the DaSCH's ARK resolver hostname and NAAN, the corresponding
 ARK URL without a timestamp is:
 
-```
+```text
 http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY
 ```
 
 The same ARK URL with an optional timestamp is:
 
-```
+```text
 http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20180604T085622513Z
 ```
 
@@ -146,7 +146,7 @@ resource at the time when the URL is resolved.
 
 The format of a Knora value ARK URL is as follows:
 
-```
+```text
 http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID/VALUE_UUID[.TIMESTAMP]
 ```
 
@@ -161,13 +161,13 @@ For example, given a value with `knora-api:valueHasUUID "4OOf3qJUTnCDXlPNnygSzQ"
 `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`, and using the DaSCH's ARK resolver
 hostname and NAAN, the corresponding ARK URL without a timestamp is:
 
-```
+```text
 http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY/4OOf3qJUTnCDXlPNnygSzQX
 ```
 
 The same ARK URL with an optional timestamp is:
 
-```
+```text
 http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY/4OOf3qJUTnCDXlPNnygSzQX.20180604T085622513Z
 ```
 

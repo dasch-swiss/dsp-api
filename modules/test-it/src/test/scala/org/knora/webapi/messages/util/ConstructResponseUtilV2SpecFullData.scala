@@ -19,6 +19,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.common.ResourceIri
 
 object ConstructResponseUtilV2SpecFullData {
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
@@ -28,7 +29,7 @@ object ConstructResponseUtilV2SpecFullData {
       ReadResourceV2(
         versionDate = None,
         label = "visible thing with hidden int values",
-        resourceIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"),
         permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -82,7 +83,7 @@ object ConstructResponseUtilV2SpecFullData {
       ReadResourceV2(
         versionDate = None,
         label = "visible thing with hidden int values",
-        resourceIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"),
         permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -103,7 +104,7 @@ object ConstructResponseUtilV2SpecFullData {
       ReadResourceV2(
         versionDate = None,
         label = "thing with one hidden thing",
-        resourceIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"),
         permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -114,7 +115,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = false,
-                referredResourceIri = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ"),
                 ontologySchema = InternalSchema,
                 comment = Some("link value pointing to hidden resource"),
                 referredResourceExists = true,
@@ -122,7 +123,7 @@ object ConstructResponseUtilV2SpecFullData {
                   ReadResourceV2(
                     versionDate = None,
                     label = "hidden thing",
-                    resourceIri = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ",
+                    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ"),
                     permissions = "V knora-admin:Creator",
                     attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
                     resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -178,7 +179,7 @@ object ConstructResponseUtilV2SpecFullData {
       ReadResourceV2(
         versionDate = None,
         label = "thing with one hidden thing",
-        resourceIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"),
         permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -208,7 +209,7 @@ object ConstructResponseUtilV2SpecFullData {
         deletionInfo = None,
       ),
     ),
-    hiddenResourceIris = Set("http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ"),
+    hiddenResourceIris = Set(ResourceIri.unsafeFrom("http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ")),
     mayHaveMoreResults = false,
   )
 
@@ -217,7 +218,7 @@ object ConstructResponseUtilV2SpecFullData {
       ReadResourceV2(
         versionDate = None,
         label = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
-        resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-values"),
         permissions = "CR knora-admin:Creator|V knora-admin:ProjectMember",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -340,7 +341,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = false,
-                referredResourceIri = "http://rdfh.ch/0001/a-thing",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"),
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
@@ -348,7 +349,7 @@ object ConstructResponseUtilV2SpecFullData {
                   ReadResourceV2(
                     versionDate = None,
                     label = "A thing",
-                    resourceIri = "http://rdfh.ch/0001/a-thing",
+                    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
                     attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
                     resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -387,7 +388,7 @@ object ConstructResponseUtilV2SpecFullData {
       ReadResourceV2(
         versionDate = None,
         label = "a5v",
-        resourceIri = "http://rdfh.ch/0803/76570a749901",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/76570a749901"),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -399,7 +400,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = false,
-                referredResourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/ff17e5ef9601"),
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
@@ -407,7 +408,7 @@ object ConstructResponseUtilV2SpecFullData {
                   ReadResourceV2(
                     versionDate = None,
                     label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-                    resourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/ff17e5ef9601"),
                     permissions =
                       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -481,7 +482,7 @@ object ConstructResponseUtilV2SpecFullData {
       ReadResourceV2(
         versionDate = None,
         label = "a5v",
-        resourceIri = "http://rdfh.ch/0803/773f258402",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/773f258402"),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -493,7 +494,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = false,
-                referredResourceIri = "http://rdfh.ch/0803/c5058f3a",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
@@ -501,7 +502,7 @@ object ConstructResponseUtilV2SpecFullData {
                   ReadResourceV2(
                     versionDate = None,
                     label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-                    resourceIri = "http://rdfh.ch/0803/c5058f3a",
+                    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
                     permissions =
                       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -582,7 +583,7 @@ object ConstructResponseUtilV2SpecFullData {
       ReadResourceV2(
         versionDate = None,
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-        resourceIri = "http://rdfh.ch/0803/c5058f3a",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -615,7 +616,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = true,
-                referredResourceIri = "http://rdfh.ch/0803/773f258402",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/773f258402"),
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
@@ -623,7 +624,7 @@ object ConstructResponseUtilV2SpecFullData {
                   ReadResourceV2(
                     versionDate = None,
                     label = "a5v",
-                    resourceIri = "http://rdfh.ch/0803/773f258402",
+                    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/773f258402"),
                     permissions =
                       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -635,7 +636,7 @@ object ConstructResponseUtilV2SpecFullData {
                         ReadLinkValueV2(
                           valueContent = LinkValueContentV2(
                             isIncomingLink = false,
-                            referredResourceIri = "http://rdfh.ch/0803/c5058f3a",
+                            referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a"),
                             ontologySchema = InternalSchema,
                             comment = None,
                             referredResourceExists = true,
@@ -698,7 +699,7 @@ object ConstructResponseUtilV2SpecFullData {
       ReadResourceV2(
         versionDate = None,
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-        resourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/ff17e5ef9601"),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -731,7 +732,7 @@ object ConstructResponseUtilV2SpecFullData {
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = true,
-                referredResourceIri = "http://rdfh.ch/0803/76570a749901",
+                referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/76570a749901"),
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
@@ -739,7 +740,7 @@ object ConstructResponseUtilV2SpecFullData {
                   ReadResourceV2(
                     versionDate = None,
                     label = "a5v",
-                    resourceIri = "http://rdfh.ch/0803/76570a749901",
+                    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/76570a749901"),
                     permissions =
                       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -751,7 +752,7 @@ object ConstructResponseUtilV2SpecFullData {
                         ReadLinkValueV2(
                           valueContent = LinkValueContentV2(
                             isIncomingLink = false,
-                            referredResourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                            referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/ff17e5ef9601"),
                             ontologySchema = InternalSchema,
                             comment = None,
                             referredResourceExists = true,

@@ -115,7 +115,7 @@ final case class AuthenticatorLive(
   } yield ()
 
   override def calculateCookieName(): String = {
-    val base32 = new Base32('9'.toByte)
+    val base32 = Base32.builder().setPadding('9'.toByte).get()
     "KnoraAuthentication" + base32.encodeAsString(appConfig.knoraApi.externalKnoraApiHostPort.getBytes())
   }
 

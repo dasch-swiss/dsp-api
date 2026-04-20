@@ -79,7 +79,7 @@ Value versions are a linked list, starting with the current version. Each value 
 the previous version via `knora-base:previousValue`. The resource points only to the current
 version.
 
-Past value versions are queried in `getResourcePropertiesAndValues.scala.txt`, which can
+Past value versions are queried with a SPARQL construct query that can
 take a timestamp argument. Given the current value version, we must find the most recent
 past version that existed at the target date.
 

@@ -7,7 +7,7 @@ on:
       - "**/graphite-base/**"
 
 env:
-  JAVA_VERSION: 21
+  JAVA_VERSION: 25
 
 jobs:
   build-and-test:
@@ -127,7 +127,7 @@ jobs:
 
   test-e2e:
     name: Build and E2E test
-    runs-on: ubuntu-latest # previously: buildjet-32vcpu-ubuntu-2204
+    runs-on: ubuntu-latest-large-runner
     concurrency:
       group: ${{ github.ref }}-e2e
       cancel-in-progress: true
@@ -157,7 +157,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
           cache: sbt
       - name: Run integration tests
         run: make test-ingest-integration

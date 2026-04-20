@@ -32,6 +32,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.ResourceIri
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -57,7 +58,7 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 with RelayedMess
  * @param requestingUser       the user making the request.
  */
 case class ResourcesGetRequestV2(
-  resourceIris: Seq[IRI],
+  resourceIris: Seq[ResourceIri],
   propertyIri: Option[SmartIri] = None,
   valueUuid: Option[UUID] = None,
   versionDate: Option[Instant] = None,
@@ -76,7 +77,7 @@ case class ResourcesGetRequestV2(
  * @param requestingUser       the user making the request.
  */
 case class ResourcesPreviewGetRequestV2(
-  resourceIris: Seq[IRI],
+  resourceIris: Seq[ResourceIri],
   withDeletedResource: Boolean = true,
   targetSchema: ApiV2Schema,
   requestingUser: User,
@@ -106,7 +107,7 @@ case class ResourceIIIFManifestGetResponseV2(manifest: JsonLDDocument) extends K
  * @param requestingUser       the user making the request.
  */
 case class ResourceVersionHistoryGetRequestV2(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   withDeletedResource: Boolean = false,
   startDate: Option[Instant] = None,
   endDate: Option[Instant] = None,
@@ -300,7 +301,7 @@ sealed trait ResourceV2 {
  *                             deleted and the reason why it was deleted.
  */
 case class ReadResourceV2(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   label: String,
   resourceClassIri: SmartIri,
   attachedToUser: IRI,
@@ -417,8 +418,6 @@ case class ReadResourceV2(
 
     // Make an ARK URL without a version timestamp.
 
-    val resourceSmartIri: SmartIri = resourceIri.toSmartIri
-
     val arkUrlProp: IRI = targetSchema match {
       case ApiV2Simple  => KnoraApiV2Simple.ArkUrl
       case ApiV2Complex => KnoraApiV2Complex.ArkUrl
@@ -426,7 +425,7 @@ case class ReadResourceV2(
 
     val arkUrlAsJsonLD: (IRI, JsonLDObject) =
       arkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-        value = resourceSmartIri.fromResourceIriToArkUrl(),
+        value = stringFormatter.resourceIriToArkUrl(resourceIri),
         datatype = Xsd.Uri.toSmartIri,
       )
 
@@ -441,13 +440,13 @@ case class ReadResourceV2(
 
     val versionArkUrlAsJsonLD: (IRI, JsonLDObject) =
       versionArkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-        value = resourceSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(arkTimestamp)),
+        value = stringFormatter.resourceIriToArkUrl(resourceIri, maybeTimestamp = Some(arkTimestamp)),
         datatype = Xsd.Uri.toSmartIri,
       )
 
     JsonLDObject(
       Map(
-        JsonLDKeywords.ID   -> JsonLDString(resourceIri),
+        JsonLDKeywords.ID   -> JsonLDString(resourceIri.value),
         JsonLDKeywords.TYPE -> JsonLDString(resourceClassIri.toString),
         Rdfs.Label          -> JsonLDString(label),
       ) ++ propertiesAndValuesAsJsonLD ++ metadataForComplexSchema + arkUrlAsJsonLD + versionArkUrlAsJsonLD,
@@ -548,7 +547,7 @@ case class CreateValueInNewResourceV2(
  * @param creationDate     the optional creation date of the resource.
  */
 case class CreateResourceV2(
-  resourceIri: Option[SmartIri],
+  resourceIri: Option[ResourceIri],
   resourceClassIri: SmartIri,
   label: String,
   values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
@@ -601,7 +600,7 @@ case class CreateResourceRequestV2(
  * @param maybeNewModificationDate  the resource's new last modification date, if any.
  */
 case class UpdateResourceMetadataRequestV2(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   maybeLastModificationDate: Option[Instant] = None,
   maybeLabel: Option[String] = None,
@@ -621,7 +620,7 @@ case class UpdateResourceMetadataRequestV2(
  * @param maybePermissions          the resource's new permissions, if any.
  */
 case class UpdateResourceMetadataResponseV2(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   lastModificationDate: Instant,
   maybeLabel: Option[String] = None,
@@ -681,7 +680,7 @@ case class UpdateResourceMetadataResponseV2(
 
     val resourceIri_resourceClassIri_map =
       Map(
-        KnoraApiV2Complex.ResourceIri      -> JsonLDString(resourceIri),
+        KnoraApiV2Complex.ResourceIri      -> JsonLDString(resourceIri.value),
         KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
       )
 
@@ -706,7 +705,7 @@ case class UpdateResourceMetadataResponseV2(
  * @param maybeLastModificationDate the resource's last modification date, if any.
  */
 case class DeleteOrEraseResourceRequestV2(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   maybeDeleteComment: Option[String] = None,
   maybeDeleteDate: Option[Instant] = None,
@@ -724,7 +723,7 @@ case class DeleteOrEraseResourceRequestV2(
  */
 case class ReadResourcesSequenceV2(
   resources: Seq[ReadResourceV2],
-  hiddenResourceIris: Set[IRI] = Set.empty,
+  hiddenResourceIris: Set[ResourceIri] = Set.empty,
   mayHaveMoreResults: Boolean = false,
 ) extends KnoraJsonLDResponseV2
     with KnoraReadV2[ReadResourcesSequenceV2]
@@ -834,7 +833,7 @@ case class ReadResourcesSequenceV2(
    *   ForbiddenException  -> if the user does not have permission to see the requested resource.
    *   BadRequestException -> if more than one resource was returned.
    */
-  def toResource(requestedResourceIri: IRI): IO[RequestRejectedException, ReadResourceV2] =
+  def toResource(requestedResourceIri: ResourceIri): IO[RequestRejectedException, ReadResourceV2] =
     if (hiddenResourceIris.contains(requestedResourceIri)) {
       ZIO.fail(ForbiddenException(s"You do not have permission to see resource <$requestedResourceIri>"))
     } else if (resources.isEmpty) {
@@ -861,7 +860,7 @@ case class ReadResourcesSequenceV2(
    * @param resourcesSequence  the result of requesting those IRIs.
    */
   def checkResourceIris(
-    targetResourceIris: Set[IRI],
+    targetResourceIris: Set[ResourceIri],
     resourcesSequence: ReadResourcesSequenceV2,
   ): Option[Throwable] =
     targetResourceIris.intersect(resourcesSequence.hiddenResourceIris) match
@@ -896,7 +895,7 @@ case class ReadResourcesSequenceV2(
     allProjects.head
   }
 
-  def resourcesMap: Map[IRI, ReadResourceV2] = resources.map(r => (r.resourceIri, r)).toMap
+  def resourcesMap: Map[ResourceIri, ReadResourceV2] = resources.map(r => (r.resourceIri, r)).toMap
 }
 
 /**
@@ -906,7 +905,7 @@ case class ReadResourcesSequenceV2(
  * @param resourceLabel    the label of the resource.
  * @param resourceClassIri the IRI of the resource's OWL class.
  */
-case class GraphNodeV2(resourceIri: IRI, resourceClassIri: SmartIri, resourceLabel: String)
+case class GraphNodeV2(resourceIri: ResourceIri, resourceClassIri: SmartIri, resourceLabel: String)
     extends KnoraReadV2[GraphNodeV2] {
   override def toOntologySchema(targetSchema: ApiV2Schema): GraphNodeV2 =
     copy(resourceClassIri = resourceClassIri.toOntologySchema(targetSchema))
@@ -919,7 +918,8 @@ case class GraphNodeV2(resourceIri: IRI, resourceClassIri: SmartIri, resourceLab
  * @param propertyIri the link property that links the source to the target.
  * @param target      the resource that is the target of the link.
  */
-case class GraphEdgeV2(source: IRI, propertyIri: SmartIri, target: IRI) extends KnoraReadV2[GraphEdgeV2] {
+case class GraphEdgeV2(source: ResourceIri, propertyIri: SmartIri, target: ResourceIri)
+    extends KnoraReadV2[GraphEdgeV2] {
   override def toOntologySchema(targetSchema: ApiV2Schema): GraphEdgeV2 =
     copy(propertyIri = propertyIri.toOntologySchema(targetSchema))
 }
@@ -934,8 +934,9 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
     extends KnoraJsonLDResponseV2
     with KnoraReadV2[GraphDataGetResponseV2] {
   private def generateJsonLD(targetSchema: ApiV2Schema): JsonLDDocument = {
-    val sortedNodesInTargetSchema: Seq[GraphNodeV2] = nodes.map(_.toOntologySchema(targetSchema)).sortBy(_.resourceIri)
-    val edgesInTargetSchema: Seq[GraphEdgeV2]       = edges.map(_.toOntologySchema(targetSchema))
+    val sortedNodesInTargetSchema: Seq[GraphNodeV2] =
+      nodes.map(_.toOntologySchema(targetSchema)).sortBy(_.resourceIri.value)
+    val edgesInTargetSchema: Seq[GraphEdgeV2] = edges.map(_.toOntologySchema(targetSchema))
 
     // Make JSON-LD prefixes for the project-specific ontologies used in the response.
 
@@ -968,12 +969,12 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 
     // Group the edges by source IRI and add them to the nodes.
 
-    val groupedEdges: Map[IRI, Seq[GraphEdgeV2]] = edgesInTargetSchema.groupBy(_.source)
+    val groupedEdges: Map[ResourceIri, Seq[GraphEdgeV2]] = edgesInTargetSchema.groupBy(_.source)
 
     val nodesWithEdges: Seq[JsonLDObject] = sortedNodesInTargetSchema.map { (node: GraphNodeV2) =>
       // Convert the node to JSON-LD.
       val jsonLDNodeMap = Map(
-        JsonLDKeywords.ID   -> JsonLDString(node.resourceIri),
+        JsonLDKeywords.ID   -> JsonLDString(node.resourceIri.value),
         JsonLDKeywords.TYPE -> JsonLDString(node.resourceClassIri.toString),
         Rdfs.Label          -> JsonLDString(node.resourceLabel),
       )
@@ -988,9 +989,9 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 
           val jsonLDNodeEdges: Map[IRI, JsonLDArray] = nodeEdgesGroupedAndSortedByProperty.map {
             case (propertyIri: SmartIri, propertyEdges: Seq[GraphEdgeV2]) =>
-              val sortedPropertyEdges = propertyEdges.sortBy(_.target)
+              val sortedPropertyEdges = propertyEdges.sortBy(_.target.value)
               propertyIri.toString -> JsonLDArray(
-                sortedPropertyEdges.map(propertyEdge => JsonLDUtil.iriToJsonLDObject(propertyEdge.target)),
+                sortedPropertyEdges.map(propertyEdge => JsonLDUtil.iriToJsonLDObject(propertyEdge.target.value)),
               )
           }.toMap
 
@@ -1055,7 +1056,7 @@ abstract class ResourceOrValueEventBody
  * @param projectADM           the project which the resource belongs to.
  */
 case class ResourceEventBody(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   label: Option[String] = None,
   values: Map[SmartIri, Seq[ValueContentV2]] = Map.empty[SmartIri, Seq[ValueContentV2]],
@@ -1116,7 +1117,7 @@ case class ResourceEventBody(
     }
     JsonLDObject(
       Map(
-        KnoraApiV2Complex.ResourceIri       -> JsonLDString(resourceIri),
+        KnoraApiV2Complex.ResourceIri       -> JsonLDString(resourceIri.value),
         KnoraApiV2Complex.ResourceClassIri  -> JsonLDString(resourceClassIri.toString),
         KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
       ) ++ resourceLabel ++ creationDateAsJsonLD ++ propertiesAndValuesAsJsonLD ++ lastModificationDateAsJsonLD
@@ -1135,7 +1136,7 @@ case class ResourceEventBody(
  * @param newModificationDate  the new modification date of the resource.
  */
 case class ResourceMetadataEventBody(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   lastModificationDate: Instant,
   newModificationDate: Instant,
@@ -1146,7 +1147,7 @@ case class ResourceMetadataEventBody(
 
     JsonLDObject(
       Map(
-        KnoraApiV2Complex.ResourceIri          -> JsonLDString(resourceIri),
+        KnoraApiV2Complex.ResourceIri          -> JsonLDString(resourceIri.value),
         KnoraApiV2Complex.ResourceClassIri     -> JsonLDString(resourceClassIri.toString),
         KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
           value = lastModificationDate.toString,
@@ -1179,7 +1180,7 @@ case class ResourceMetadataEventBody(
  * @param deletionInfo        in case of delete value operation, it contains the date of deletion and the given comment.
  */
 case class ValueEventBody(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   projectADM: Project,
   propertyIri: SmartIri,
@@ -1242,7 +1243,7 @@ case class ValueEventBody(
       Map(
         JsonLDKeywords.ID                  -> JsonLDString(valueIri),
         JsonLDKeywords.TYPE                -> JsonLDString(valueTypeIri.toString),
-        KnoraApiV2Complex.ResourceIri      -> JsonLDString(resourceIri),
+        KnoraApiV2Complex.ResourceIri      -> JsonLDString(resourceIri.value),
         KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
         Rdf.Property                       -> JsonLDString(propertyIri.toString),
       ) ++ previousValueAsJsonLD ++ contentAsJsonLD ++ valueUUIDAsJsonLD ++ valueCreationDateAsJsonLD ++ valuePermissionsAsJSONLD

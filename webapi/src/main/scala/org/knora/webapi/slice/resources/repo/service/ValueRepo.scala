@@ -22,16 +22,16 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_String_Property
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.resources.repo.service.value.queries.InsertValueQueryBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -58,7 +58,6 @@ final case class DeletedValue(
 
 final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: StringFormatter)
     extends QueryBuilderHelper {
-  import org.knora.webapi.messages.IriConversions.ConvertibleIri
 
   def findActiveById(iri: ValueIri): Task[Option[ActiveValue]] =
     findById(iri).map(_.collect { case v: ActiveValue => v })
@@ -69,7 +68,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
   def findByIds(iris: Seq[ValueIri]) = ZIO.foreach(iris)(findById)
 
   def findById(iri: ValueIri): Task[Option[ValueModel]] =
-    val id                                                      = Rdf.iri(iri.toString)
+    val id                                                      = Rdf.iri(iri.value)
     val (clazz, isDeleted, previousValue, lastModificationDate) =
       (variable("valueClass"), variable("isDeleted"), variable("previousValue"), variable("lastModificationDate"))
 
@@ -89,7 +88,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     val query = Queries.CONSTRUCT(graphP).where(whereP)
     triplestore
       .queryRdfModel(Construct(query))
-      .flatMap(_.getResource(iri.toString).map(_.map(_.res)))
+      .flatMap(_.getResource(iri.value).map(_.map(_.res)))
       .flatMap(mapResult)
 
   private def mapResult(maybe: Option[Resource]): Task[Option[ValueModel]] =
@@ -99,11 +98,11 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
         ZIO
           .fromEither(
             for {
-              valueIri      <- resource.uri.fold(Left("Value IRI not found"))(s => ValueIri.from(s.toSmartIri))
+              valueIri      <- resource.uri.fold(Left("Value IRI not found"))(s => ValueIri.from(s))
               lastModified  <- resource.objectInstantOption(KnoraBase.LastModificationDate)
               isDeleted     <- resource.objectBooleanOption(KnoraBase.IsDeleted).map(_.getOrElse(false))
               valueClassIri <- resource.rdfType.fold(Left("Value class IRI not found"))(s => Right(InternalIri(s)))
-              previousValue <- resource.objectUriOption(KnoraBase.PreviousValue, s => ValueIri.from(s.toSmartIri))
+              previousValue <- resource.objectUriOption(KnoraBase.PreviousValue, s => ValueIri.from(s))
             } yield
               if isDeleted then Some(DeletedValue(valueIri, valueClassIri, previousValue, lastModified))
               else Some(ActiveValue(valueIri, valueClassIri, previousValue, lastModified)),
@@ -121,16 +120,16 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
 
   def findPreviousValue(valueIri: ValueIri): Task[Option[ValueIri]] = {
     val previous = variable("previous")
-    val where    = iri(valueIri.toString).has(KB.previousValue, previous)
+    val where    = iri(valueIri.value).has(KB.previousValue, previous)
     val query    = Queries.SELECT(previous).where(where)
     triplestore
       .query(Select(query))
       .map(_.getFirstRow)
-      .map(_.flatMap(row => row.rowMap.get("previous").map(_.toSmartIri).map(ValueIri.unsafeFrom)))
+      .map(_.flatMap(row => row.rowMap.get("previous").map(ValueIri.unsafeFrom)))
   }
 
   def eraseValue(project: KnoraProject)(valueIri: ValueIri): Task[Unit] = {
-    val value         = iri(valueIri.toString)
+    val value         = iri(valueIri.value)
     val (p, o)        = (variable("p"), variable("o"))
     val (s, oo)       = (variable("s"), variable("oo"))
     val delete        = value.has(p, o)
@@ -155,7 +154,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
 
   /* Deletes the subject/predicate/object triple pointed to by a LinkValue. */
   def eraseValueDirectLink(project: KnoraProject)(valueIri: ValueIri): Task[Unit] = {
-    val value            = iri(valueIri.toString)
+    val value            = iri(valueIri.value)
     val (s, p, o)        = spo
     val delete           = s.has(p, o)
     val projectDataGraph = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
@@ -178,7 +177,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     currentTime: Instant,
   ): Task[Unit] = {
     val resource = iri(resourceIri.value)
-    val value    = iri(valueIri.toString)
+    val value    = iri(valueIri.value)
 
     val (resourceLastModDate, currentValuePerms) =
       (variable("resourceLastModificationDate"), variable("currentValuePermissions"))
@@ -212,7 +211,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     currentTime: Instant,
   ): Task[Unit] = {
     val valuesClause = orderedValueIris.zipWithIndex.map { case (valueIri, idx) =>
-      s"    (<${valueIri.toString}> $idx)"
+      s"    (<${valueIri.value}> $idx)"
     }
       .mkString("\n")
 

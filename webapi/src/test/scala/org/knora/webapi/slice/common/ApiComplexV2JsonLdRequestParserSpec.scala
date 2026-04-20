@@ -158,7 +158,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       check(Gen.fromIterable(Seq(createIntegerValue, createLinkValue).map(_.toJsonPretty))) { json =>
         for {
           actual <- service(_.createValueV2FromJsonLd(json))
-        } yield assertTrue(actual.resourceIri == "http://rdfh.ch/0001/a-thing")
+        } yield assertTrue(actual.resourceIri == ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"))
       }
     },
     test("rootResourceClassIri should get the rdfs:type") {
@@ -351,7 +351,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assertTrue(
         actual.valueContent == LinkValueContentV2(
           ApiV2Complex,
-          referredResourceIri = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA",
+          referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"),
           comment = None,
         ),
       )
@@ -804,7 +804,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
           value <- service(_.createValueV2FromJsonLd(str))
         } yield assertTrue(
           value == CreateValueV2(
-            resourceIri = "http://rdfh.ch/0001/a-thing",
+            resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"),
             resourceClassIri = sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"),
             propertyIri = sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText"),
             valueContent = TextValueContentV2(
