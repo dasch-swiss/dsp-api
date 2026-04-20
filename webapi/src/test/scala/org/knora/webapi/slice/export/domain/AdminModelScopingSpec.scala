@@ -10,6 +10,8 @@ import org.apache.jena.rdf.model.ResourceFactory
 import org.apache.jena.vocabulary.RDF
 import zio.test.*
 
+import scala.jdk.CollectionConverters.*
+
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 
 object AdminModelScopingSpec extends ZIOSpecDefault {
@@ -106,6 +108,37 @@ object AdminModelScopingSpec extends ZIOSpecDefault {
       val user = model.getResource(userIri)
       val prop = ResourceFactory.createProperty(KnoraAdmin.IsInProjectAdminGroup)
       assertTrue(!user.hasProperty(prop, model.createResource(otherProjectIri)))
+    },
+    test("stripSystemAdminFlag replaces true with false") {
+      val model        = createModel()
+      val sysAdminProp = ResourceFactory.createProperty(KnoraAdmin.IsInSystemAdminGroup)
+      val user         = model.getResource(userIri)
+      user.addProperty(sysAdminProp, ResourceFactory.createTypedLiteral(true))
+      AdminModelScoping.stripSystemAdminFlag(model)
+      val stmts = user.listProperties(sysAdminProp).asScala.toList
+      assertTrue(
+        stmts.size == 1,
+        stmts.forall(s => s.getObject.isLiteral && !s.getLiteral.getBoolean),
+      )
+    },
+    test("stripSystemAdminFlag leaves non-system-admin users untouched") {
+      val model        = createModel()
+      val sysAdminProp = ResourceFactory.createProperty(KnoraAdmin.IsInSystemAdminGroup)
+      val user         = model.getResource(userIri)
+      user.addProperty(sysAdminProp, ResourceFactory.createTypedLiteral(false))
+      AdminModelScoping.stripSystemAdminFlag(model)
+      val stmts = user.listProperties(sysAdminProp).asScala.toList
+      assertTrue(
+        stmts.size == 1,
+        stmts.forall(s => s.getObject.isLiteral && !s.getLiteral.getBoolean),
+      )
+    },
+    test("stripSystemAdminFlag does nothing when the flag is absent") {
+      val model = createModel()
+      AdminModelScoping.stripSystemAdminFlag(model)
+      val user         = model.getResource(userIri)
+      val sysAdminProp = ResourceFactory.createProperty(KnoraAdmin.IsInSystemAdminGroup)
+      assertTrue(user.listProperties(sysAdminProp).asScala.isEmpty)
     },
   )
 }

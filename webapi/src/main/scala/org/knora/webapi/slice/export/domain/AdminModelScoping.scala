@@ -94,4 +94,30 @@ object AdminModelScoping {
 
     statementsToRemove.foreach(model.remove)
   }
+
+  /**
+   * Replaces `isInSystemAdminGroup "true"` triples with `"false"` for all users in the model.
+   *
+   * Project members/admins who are also system administrators on the source instance must be
+   * included in the export (otherwise they are silently dropped from the project), but the
+   * source instance's system-admin membership must not leak into the imported project. The
+   * `isInSystemAdminGroup` property has cardinality 1 on `knora-admin:User`, so the triple is
+   * rewritten to `false` rather than removed.
+   *
+   * @param model the admin data Jena model (mutated in-place)
+   */
+  def stripSystemAdminFlag(model: Model): Unit = {
+    val falseLiteral = ResourceFactory.createTypedLiteral(false)
+    val users        = model.listSubjectsWithProperty(RDF.`type`, userType).asScala.toList
+    users.foreach { user =>
+      val trueStatements = user
+        .listProperties(isInSystemAdminGroupProp)
+        .asScala
+        .filter(stmt => stmt.getObject.isLiteral && stmt.getLiteral.getBoolean)
+        .toList
+      trueStatements.foreach(model.remove)
+      if (trueStatements.nonEmpty)
+        val _ = model.add(user, isInSystemAdminGroupProp, falseLiteral)
+    }
+  }
 }

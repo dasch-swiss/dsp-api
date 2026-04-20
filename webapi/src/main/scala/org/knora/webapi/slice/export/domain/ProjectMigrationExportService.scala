@@ -146,6 +146,7 @@ final class ProjectMigrationExportService(
                    JenaLang.TURTLE,
                  )
                  AdminModelScoping.removeNonProjectMemberships(m, project.id.value)
+                 AdminModelScoping.stripSystemAdminFlag(m)
                  m
                }
 

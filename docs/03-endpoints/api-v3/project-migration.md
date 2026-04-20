@@ -144,6 +144,8 @@ The import handles users referenced in the export with the following logic. User
 
 **Root user**: If the export contains the root user (either as an existing user match or as a new user), the import **fails**. Resources referencing the root user require pre-migration cleanup before import. See [Root User Cleanup](../../10-migration-guides/root-user-cleanup.md) for instructions.
 
+**System administrators**: Project members or project admins who also belong to the SystemAdmin group on the source instance are included in the export, but the `isInSystemAdminGroup` flag is set to `false` in the exported admin data. System-admin membership is a property of the source instance and does not carry over to the target instance.
+
 **Cross-project membership scoping**: Both export and import strip cross-project membership triples to ensure the package is self-contained:
 
 - `isInProject` references to other projects are removed.

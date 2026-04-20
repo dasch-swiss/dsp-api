@@ -330,6 +330,42 @@ object ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
           !adminNqContent.contains("projects/OTHER"), // cross-project membership stripped
         )
       },
+      test("export keeps system admin project members but strips isInSystemAdminGroup flag") {
+        val ka              = "http://www.knora.org/ontology/knora-admin#"
+        val projectIri      = testProject.id.value
+        val constructResult =
+          s"""@prefix knora-admin: <$ka> .
+             |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+             |<$projectIri> a knora-admin:knoraProject ;
+             |  knora-admin:projectShortcode "0001" .
+             |<http://rdfh.ch/users/sysadmin001> a knora-admin:User ;
+             |  knora-admin:username "sysadminUser" ;
+             |  knora-admin:email "sysadmin@example.com" ;
+             |  knora-admin:isInProject <$projectIri> ;
+             |  knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
+             |""".stripMargin
+        for {
+          env            <- makeTestEnv
+          _              <- env.constructRdfRef.set(constructResult)
+          task           <- env.service.createExport(testProject, testUser, skipAssets = true)
+          result         <- pollUntilDone(env.service, task.id)
+          zipFile        <- env.storage.exportBagItZipPath(task.id)
+          adminNqContent <- ZIO.scoped {
+                              Files.createTempDirectoryScoped(Some("verify-sysadmin"), Seq.empty).flatMap { tempDir =>
+                                BagIt.readAndValidateZip(zipFile, Some(tempDir)).flatMap { case (_, bagRoot) =>
+                                  val adminNq = bagRoot / "data" / "rdf" / "admin.nq"
+                                  Files.readAllBytes(adminNq).map(bytes => new String(bytes.toArray))
+                                }
+                              }
+                            }
+          _ <- env.service.deleteExport(task.id).catchAllCause(_ => ZIO.unit)
+        } yield assertTrue(
+          result.status == DataTaskStatus.Completed,
+          adminNqContent.contains("sysadmin001"),                     // system admin user retained
+          !adminNqContent.contains("isInSystemAdminGroup> \"true\""), // flag stripped
+          adminNqContent.contains("isInSystemAdminGroup> \"false\""), // flag set to false
+        )
+      },
     ),
   ).provide(configLayer) @@ TestAspect.withLiveClock @@ TestAspect.withLiveRandom @@ TestAspect.timeout(30.seconds)
 }

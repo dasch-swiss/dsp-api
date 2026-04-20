@@ -17,16 +17,16 @@ object AdminDataQuerySpec extends ZIOSpecDefault {
   private val testUser2      = UserIri.unsafeFrom("http://rdfh.ch/users/user002")
 
   override def spec: Spec[TestEnvironment, Any] = suite("AdminDataQuerySpec")(
-    suite("build (project members only)")(
-      test("should exclude system admin users with FILTER NOT EXISTS") {
+    suite("build (project members)")(
+      test("should include all project members, including system admins") {
         val query       = AdminDataQuery.build(testProjectIri)
         val queryString = query.getQueryString
         assertTrue(
-          queryString.contains("FILTER NOT EXISTS"),
-          queryString.contains("isInSystemAdminGroup"),
+          !queryString.contains("FILTER NOT EXISTS"),
+          !queryString.contains("isInSystemAdminGroup"),
         )
       },
-      test("should still include non-admin users in the project") {
+      test("should include the project member pattern") {
         val query       = AdminDataQuery.build(testProjectIri)
         val queryString = query.getQueryString
         assertTrue(
@@ -58,20 +58,17 @@ object AdminDataQuerySpec extends ZIOSpecDefault {
           queryStr.contains(testUser2.value),
         )
       },
-      test("referenced users branch has no SystemAdmin FILTER NOT EXISTS") {
+      test("has no SystemAdmin filter on any branch") {
         val queryStr = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set(testUser1))
-        // The query has two UNION branches for users:
-        // 1. Project members with FILTER NOT EXISTS for SystemAdmin
-        // 2. Referenced users with VALUES but no SystemAdmin filter
-        // The referenced users branch should NOT have a second FILTER NOT EXISTS
-        val branchesWithFilterNotExists = "FILTER NOT EXISTS".r.findAllIn(queryStr).length
-        assertTrue(branchesWithFilterNotExists == 1)
+        assertTrue(
+          !queryStr.contains("FILTER NOT EXISTS"),
+          !queryStr.contains("isInSystemAdminGroup"),
+        )
       },
       test("includes project member pattern alongside referenced users") {
         val queryStr = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set(testUser1))
         assertTrue(
           queryStr.contains("knora-admin:isInProject"),
-          queryStr.contains("FILTER NOT EXISTS"),
           queryStr.contains("VALUES ?user"),
         )
       },
