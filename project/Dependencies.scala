@@ -21,7 +21,7 @@ object Dependencies {
   val Rdf4jVersion = "5.2.2"
   val JenaVersion  = "5.2.0"
 
-  val ZioConfigVersion            = "4.0.6"
+  val ZioConfigVersion            = "4.0.7"
   val ZioLoggingVersion           = "2.5.3"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.5.5"
@@ -30,7 +30,7 @@ object Dependencies {
   val ZioSchemaVersion  = "1.8.3"
 
   val ZioMockVersion = "1.0.0-RC12"
-  val ZioVersion     = "2.1.24"
+  val ZioVersion     = "2.1.25"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
@@ -104,7 +104,7 @@ object Dependencies {
 
   // authentication
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "7.0.3" exclude (
+    "org.springframework.security" % "spring-security-core" % "7.0.4" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -127,16 +127,16 @@ object Dependencies {
   // test
   val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.20"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.3"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.4"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.13.2"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.13.11"
+  val tapirVersion = "1.13.15"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -215,7 +215,7 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion        = "12.1.0"
+  val flywayVersion        = "12.1.1"
   val otelAgentVersion     = "v2.26.1"
   val otelPyroscopeVersion = "v1.1.0"
   val hikariVersion        = "7.0.2"
