@@ -10,7 +10,8 @@ import org.apache.jena.rdf.model
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.RDFDataMgr
-import org.apache.jena.tdb2.TDB2Factory
+import org.apache.jena.sparql.core.DatasetGraphWrapper
+import org.apache.jena.sparql.core.mem.DatasetGraphInMemory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
 import zio.Console
@@ -53,7 +54,6 @@ import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
-import org.apache.jena.tdb2.TDB2
 
 trait TestTripleStore extends TriplestoreService {
   def setDataset(ds: Dataset): UIO[Unit]
@@ -71,7 +71,7 @@ object TestTripleStore {
     ZIO.serviceWithZIO[TestTripleStore](_.setDataset(dataset))
 
   def setEmptyDataset() =
-    ZIO.serviceWithZIO[TestTripleStore](_.setDataset(TDB2Factory.createDataset()))
+    ZIO.serviceWithZIO[TestTripleStore](_.setDataset(TriplestoreServiceInMemory.createDatasetWithUnionDefault()))
 
   def getDataset: RIO[TestTripleStore, Dataset] =
     ZIO.serviceWithZIO[TestTripleStore](_.getDataset)
@@ -322,15 +322,17 @@ object TriplestoreServiceInMemory {
     .flatMap(TriplestoreServiceInMemory.setDataset)
 
   /**
-   * Creates an empty TBD2 [[Dataset]].
+   * Creates an empty in-memory [[Dataset]] where the default graph is the union of all named graphs.
    *
    * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
    */
-  val createEmptyDataset: UIO[Dataset] =
-    ZIO
-      .succeed(TDB2.getContext.set(TDB2.symUnionDefaultGraph, true))
-      .as(TDB2Factory.createDataset())
+  def createDatasetWithUnionDefault(): Dataset =
+    DatasetFactory.wrap(new DatasetGraphWrapper(new DatasetGraphInMemory()) {
+      override def getDefaultGraph() = getWrapped.getUnionGraph()
+    })
+
+  val createEmptyDataset: UIO[Dataset] = ZIO.succeed(createDatasetWithUnionDefault())
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
