@@ -215,6 +215,24 @@ jobs:
       - name: Build docs
         run: just docs-build
 
+  check-fuseki-version-consistency:
+    name: Check Fuseki version consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert fuseki/Dockerfile, Dependencies.scala, and docker-compose.yml agree
+        run: |
+          set -euo pipefail
+          DOCKERFILE_VER=$(grep '^ARG FUSEKI_VERSION=' fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
+          DEPS_VER=$(grep 'val fusekiImage' project/Dependencies.scala | sed 's/.*:\([^"]*\)".*/\1/' | tr -d '[:space:]')
+          COMPOSE_VER=$(grep 'image: daschswiss/apache-jena-fuseki:' docker-compose.yml | sed 's/.*apache-jena-fuseki://' | tr -d '[:space:]')
+          echo "fuseki/Dockerfile:          $DOCKERFILE_VER"
+          echo "project/Dependencies.scala: $DEPS_VER"
+          echo "docker-compose.yml:         $COMPOSE_VER"
+          [ "$DOCKERFILE_VER" = "$DEPS_VER" ] || { echo "ERROR: Dockerfile ($DOCKERFILE_VER) != Dependencies.scala ($DEPS_VER)"; exit 1; }
+          [ "$DOCKERFILE_VER" = "$COMPOSE_VER" ] || { echo "ERROR: Dockerfile ($DOCKERFILE_VER) != docker-compose.yml ($COMPOSE_VER)"; exit 1; }
+          echo "All Fuseki versions match: $DOCKERFILE_VER"
+
   check-formatting:
     name: Check formatting
     runs-on: ubuntu-latest
