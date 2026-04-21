@@ -18,6 +18,7 @@
 FROM eclipse-temurin:21-jre-jammy
 
 ENV LANG C.UTF-8
+# hadolint ignore=DL3008
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
@@ -65,7 +66,7 @@ RUN  (curl --location --silent --show-error --fail --retry-connrefused --retry 3
       tar zxf fuseki.tar.gz && \
       mv apache-jena-fuseki* $FUSEKI_HOME && \
       rm fuseki.tar.gz* && \
-      cd $FUSEKI_HOME && rm -rf fuseki.war && chmod 755 fuseki-server
+      rm -rf "$FUSEKI_HOME/fuseki.war" && chmod 755 "$FUSEKI_HOME/fuseki-server"
 
 # Verify that the binary works
 RUN  bash -c '[ "$($FUSEKI_HOME/fuseki-server --version)" == "Apache Jena Fuseki version $JENA_VERSION" ]'

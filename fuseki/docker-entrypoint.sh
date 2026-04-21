@@ -40,7 +40,7 @@ fi
 
 # generate password for healthcheck
 openssl rand -hex 32 > "/var/tmp/healthcheck_password"
-sed -i "s/^healthcheck=[^,]\+/healthcheck=$(cat "/var/tmp/healthcheck_password")/" "$FUSEKI_BASE/shiro.ini"
+sed -i "s/^healthcheck=[^,]\+/healthcheck=$(< "/var/tmp/healthcheck_password")/" "$FUSEKI_BASE/shiro.ini"
 
 # password placeholder sanity check
 if grep -Fq "=pw" "$FUSEKI_BASE/shiro.ini"; then
