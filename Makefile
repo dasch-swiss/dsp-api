@@ -67,8 +67,29 @@ docker-publish-ingest-image: # publish ingest image to Dockerhub
 docker-build-ingest-image: # publish ingest image to Dockerhub
 	export DOCKER_BUILDKIT=1; $(SBTX) "ingest / Docker / publishLocal"
 
+# Lazy assignment (=): evaluated only when a Fuseki target is invoked, not at parse time.
+# This avoids errors when fuseki/Dockerfile does not yet exist (Step 1 must run first).
+FUSEKI_VERSION       = $(shell grep "^ARG FUSEKI_VERSION=" fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
+FUSEKI_DOCKER_IMAGE  = daschswiss/apache-jena-fuseki:$(FUSEKI_VERSION)
+
+.PHONY: docker-build-fuseki-image
+docker-build-fuseki-image: # build Fuseki image into the local Docker daemon
+	export DOCKER_BUILDKIT=1; \
+	docker build \
+	  -t $(FUSEKI_DOCKER_IMAGE) \
+	  fuseki/
+
+.PHONY: docker-publish-fuseki-image
+docker-publish-fuseki-image: # publish multi-platform Fuseki image to Docker Hub
+	export DOCKER_BUILDKIT=1; \
+	docker buildx build \
+	  --platform linux/amd64,linux/arm64/v8 \
+	  -t $(FUSEKI_DOCKER_IMAGE) \
+	  --push \
+	  fuseki/
+
 .PHONY: docker-build
-docker-build: docker-build-dsp-api-image docker-build-sipi-image docker-build-ingest-image ## build and publish all Docker images locally
+docker-build: docker-build-dsp-api-image docker-build-sipi-image docker-build-ingest-image docker-build-fuseki-image ## build and publish all Docker images locally
 
 .PHONY: docker-publish
 docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image docker-publish-ingest-image ## publish all Docker images to Dockerhub

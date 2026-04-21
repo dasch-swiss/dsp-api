@@ -106,6 +106,14 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
+      - name: Build Fuseki image locally (only when fuseki/ changed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref || 'main' }}...HEAD)
+          if echo "$CHANGED" | grep -q "^fuseki/"; then
+            make docker-build-fuseki-image
+          fi
       - name: Run integration tests
         run: make test-it
       - name: WebApi IT Test Report
@@ -136,6 +144,14 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
+      - name: Build Fuseki image locally (only when fuseki/ changed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref || 'main' }}...HEAD)
+          if echo "$CHANGED" | grep -q "^fuseki/"; then
+            make docker-build-fuseki-image
+          fi
       - name: Run end-to-end tests
         run: ./sbtx "test-e2e/test"
       - name: WebApi E2E Test Report
