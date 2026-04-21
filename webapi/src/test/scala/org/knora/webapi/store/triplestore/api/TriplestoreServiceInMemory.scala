@@ -10,7 +10,6 @@ import org.apache.jena.rdf.model
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.RDFDataMgr
-import org.apache.jena.tdb.TDB
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
@@ -54,6 +53,7 @@ import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
+import org.apache.jena.tdb2.TDB2
 
 trait TestTripleStore extends TriplestoreService {
   def setDataset(ds: Dataset): UIO[Unit]
@@ -329,7 +329,7 @@ object TriplestoreServiceInMemory {
    */
   val createEmptyDataset: UIO[Dataset] =
     ZIO
-      .succeed(TDB.getContext.set(TDB.symUnionDefaultGraph, true))
+      .succeed(TDB2.getContext.set(TDB2.symUnionDefaultGraph, true))
       .as(TDB2Factory.createDataset())
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
