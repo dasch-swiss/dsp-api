@@ -12,7 +12,7 @@ object Dependencies {
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
   val fusekiImage = "daschswiss/apache-jena-fuseki:5.5.0-2"
   // base image the knora-sipi image is created from
-  val sipiImage = "daschswiss/sipi:v4.0.0"
+  val sipiImage = "daschswiss/sipi:v4.1.0"
 
   val ScalaVersion = "3.3.7"
 
@@ -21,16 +21,16 @@ object Dependencies {
   val Rdf4jVersion = "5.2.2"
   val JenaVersion  = "5.2.0"
 
-  val ZioConfigVersion            = "4.0.6"
+  val ZioConfigVersion            = "4.0.7"
   val ZioLoggingVersion           = "2.5.3"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.5.5"
 
-  val ZioPreludeVersion = "1.0.0-RC46"
+  val ZioPreludeVersion = "1.0.0-RC47"
   val ZioSchemaVersion  = "1.8.3"
 
   val ZioMockVersion = "1.0.0-RC12"
-  val ZioVersion     = "2.1.24"
+  val ZioVersion     = "2.1.25"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
@@ -98,47 +98,45 @@ object Dependencies {
   // logging
   val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.17" // the logging interface
 
-  // Metrics
-  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.24"
-
   // input validation
   val commonsValidator =
     "commons-validator" % "commons-validator" % "1.10.1" exclude ("commons-logging", "commons-logging")
 
   // authentication
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "7.0.3" exclude (
+    "org.springframework.security" % "spring-security-core" % "7.0.4" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.83"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.84"
 
   // caching
   val ehcache = "org.ehcache" % "ehcache" % "3.11.1"
 
   // other
-  val gwtServlet     = "com.google.gwt"        % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"           % "icu4j"            % "78.2"
-  val jakartaJSON    = "org.glassfish"         % "jakarta.json"     % "2.0.1"
-  val saxonHE        = "net.sf.saxon"          % "Saxon-HE"         % "12.9"
-  val scalaGraph     = "org.scala-graph"      %% "graph-core"       % "2.0.2"
-  val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.7.0"
-  val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.11.0"
-  val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
+  val gwtServlet     = "com.google.gwt"          % "gwt-servlet"      % "2.10.0"
+  val icu4j          = "com.ibm.icu"             % "icu4j"            % "78.3"
+  val jakartaJSON    = "org.glassfish"           % "jakarta.json"     % "2.0.1"
+  val saxonHE        = "net.sf.saxon"            % "Saxon-HE"         % "12.9"
+  val scalaGraph     = "org.scala-graph"        %% "graph-core"       % "2.0.2"
+  val titaniumJSONLD = "com.apicatalog"          % "titanium-json-ld" % "1.7.0"
+  val xmlunitCore    = "org.xmlunit"             % "xmlunit-core"     % "2.11.0"
+  val scalaCsv       = "com.github.tototoshi"   %% "scala-csv"        % "2.0.0"
+  val scalaXml       = "org.scala-lang.modules" %% "scala-xml"        % "2.4.0"
 
   // test
   val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.20"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.3"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.4"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.13.2"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.13.11"
+  val tapirVersion = "1.13.15"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -201,6 +199,7 @@ object Dependencies {
     saxonHE,
     scalaCsv,
     scalaGraph,
+    scalaXml,
     slf4jApi,
     springSecurityCore,
     titaniumJSONLD,
@@ -216,11 +215,11 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion        = "12.1.0"
-  val otelAgentVersion     = "v2.18.1"
-  val otelPyroscopeVersion = "v1.0.4"
+  val flywayVersion        = "12.1.1"
+  val otelAgentVersion     = "v2.26.1"
+  val otelPyroscopeVersion = "v1.1.0"
   val hikariVersion        = "7.0.2"
-  val sqliteVersion        = "3.51.2.0"
+  val sqliteVersion        = "3.53.0.0"
 
   val db = Seq(
     "org.xerial"   % "sqlite-jdbc" % sqliteVersion,

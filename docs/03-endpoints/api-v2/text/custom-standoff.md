@@ -229,7 +229,7 @@ are missing: what is the meaning of the date?). In the example above,
 the standoff class is `anything:StandoffEventTag` which has the
 following definition in the ontology `anything-onto.ttl`:
 
-```
+```turtle
 anything:StandoffEventTag rdf:type owl:Class ;
 
     rdfs:subClassOf knora-base:StandoffDateTag,
@@ -428,13 +428,13 @@ by DSP-API.
 The mapping has to be sent as a multipart request to the standoff route
 using the path segment `mapping`:
 
-```
+```text
 HTTP POST http://host/v2/mapping
 ```
 
 The multipart request consists of two named parts:
 
-```
+```json
 "json":
 
   {

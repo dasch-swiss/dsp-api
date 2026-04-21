@@ -52,7 +52,7 @@ trait StorageService {
    * @param file the path to the file to save
    * @param content the content to save
    * @param encoder the encoder to use to encode the content
-   * @tparam A the type of the content, must have a corresponding [[JsonDecoder]]
+   * @tparam A the type of the content, must have a corresponding [[zio.json.JsonEncoder]]
    * @return a task that completes when the file is saved
    */
   def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): Task[Unit]
@@ -67,7 +67,7 @@ trait StorageService {
    * @param file the path to the file to delete
    *
    * @return A task that completes when the file is deleted.
-   *        Fails with an [[IOException]] if the file is not a regular file or does not exist.
+   *        Fails with an [[java.io.IOException]] if the file is not a regular file or does not exist.
    */
   def delete(file: Path): IO[IOException, Unit]
 

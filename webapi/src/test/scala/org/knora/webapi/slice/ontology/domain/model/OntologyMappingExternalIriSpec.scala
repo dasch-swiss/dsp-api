@@ -1,0 +1,175 @@
+/*
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.knora.webapi.slice.ontology.domain.model
+
+import zio.test.*
+
+import org.knora.webapi.slice.api.v2.IriDto
+
+object OntologyMappingExternalIriSpec extends ZIOSpecDefault {
+  val spec = suite("OntologyMappingExternalIri")(
+    suite("from(String)")(
+      test("should accept valid external IRIs") {
+        val validIris = List(
+          "http://schema.org/name",
+          "http://xmlns.com/foaf/0.1/Person",
+          "https://www.wikidata.org/wiki/Q5",
+          "http://purl.org/dc/terms/title",
+          "http://www.cidoc-crm.org/cidoc-crm/E21_Person",
+        )
+        check(Gen.fromIterable(validIris)) { iri =>
+          assertTrue(OntologyMappingExternalIri.from(iri).map(_.value) == Right(iri))
+        }
+      },
+      test("should reject non-IRI strings") {
+        val invalidIris = List("not-an-iri", "", "just some text", "ftp://")
+        check(Gen.fromIterable(invalidIris)) { iri =>
+          assertTrue(OntologyMappingExternalIri.from(iri).isLeft)
+        }
+      },
+      test("should reject IRIs with knora.org host") {
+        val knoraIris = List(
+          "http://www.knora.org/ontology/knora-base#TextValue",
+          "http://www.knora.org/ontology/knora-admin#User",
+          "http://api.knora.org/ontology/shared/v2#hasName",
+          "http://knora.org/something/v2#isPartOf",
+        )
+        check(Gen.fromIterable(knoraIris)) { iri =>
+          assertTrue(
+            OntologyMappingExternalIri.from(iri) == Left(
+              s"OntologyMappingExternalIri must not contain host 'knora.org': $iri",
+            ),
+          )
+        }
+      },
+      test("should reject IRIs with dasch.swiss host") {
+        val daschIris = List(
+          "http://api.dasch.swiss/ontology/0001/anything/v2#hasTitle",
+          "https://app.dasch.swiss/project/001#isAdmin",
+          "http://dasch.swiss/something/v2#hasDescription",
+        )
+        check(Gen.fromIterable(daschIris)) { iri =>
+          assertTrue(
+            OntologyMappingExternalIri.from(iri) == Left(
+              s"OntologyMappingExternalIri must not contain host 'dasch.swiss': $iri",
+            ),
+          )
+        }
+      },
+      test("should reject IRIs in the RDF namespace") {
+        val rdfIris = List(
+          "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+          "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property",
+        )
+        check(Gen.fromIterable(rdfIris)) { iri =>
+          assertTrue(
+            OntologyMappingExternalIri.from(iri) == Left(
+              s"OntologyMappingExternalIri must not start with namespace 'http://www.w3.org/1999/02/22-rdf-syntax-ns#': $iri",
+            ),
+          )
+        }
+      },
+      test("should reject IRIs in the RDFS namespace") {
+        val rdfsIris = List(
+          "http://www.w3.org/2000/01/rdf-schema#Class",
+          "http://www.w3.org/2000/01/rdf-schema#label",
+        )
+        check(Gen.fromIterable(rdfsIris)) { iri =>
+          assertTrue(
+            OntologyMappingExternalIri.from(iri) == Left(
+              s"OntologyMappingExternalIri must not start with namespace 'http://www.w3.org/2000/01/rdf-schema#': $iri",
+            ),
+          )
+        }
+      },
+      test("should reject IRIs in the OWL namespace") {
+        val owlIris = List(
+          "http://www.w3.org/2002/07/owl#Class",
+          "http://www.w3.org/2002/07/owl#ObjectProperty",
+        )
+        check(Gen.fromIterable(owlIris)) { iri =>
+          assertTrue(
+            OntologyMappingExternalIri.from(iri) == Left(
+              s"OntologyMappingExternalIri must not start with namespace 'http://www.w3.org/2002/07/owl#': $iri",
+            ),
+          )
+        }
+      },
+      test("should reject IRIs in the XSD namespace") {
+        val xsdIris = List(
+          "http://www.w3.org/2001/XMLSchema#string",
+          "http://www.w3.org/2001/XMLSchema#integer",
+        )
+        check(Gen.fromIterable(xsdIris)) { iri =>
+          assertTrue(
+            OntologyMappingExternalIri.from(iri) == Left(
+              s"OntologyMappingExternalIri must not start with namespace 'http://www.w3.org/2001/XMLSchema#': $iri",
+            ),
+          )
+        }
+      },
+      test("should reject IRIs in the SHACL namespace") {
+        val shaclIris = List(
+          "https://www.w3.org/ns/shacl#NodeShape",
+          "https://www.w3.org/ns/shacl#property",
+        )
+        check(Gen.fromIterable(shaclIris)) { iri =>
+          assertTrue(
+            OntologyMappingExternalIri.from(iri) == Left(
+              s"OntologyMappingExternalIri must not start with namespace 'https://www.w3.org/ns/shacl#': $iri",
+            ),
+          )
+        }
+      },
+      test("should reject IRIs in the DASH namespace") {
+        val dashIris = List(
+          "http://datashapes.org/dash#ListShape",
+          "http://datashapes.org/dash#editor",
+        )
+        check(Gen.fromIterable(dashIris)) { iri =>
+          assertTrue(
+            OntologyMappingExternalIri.from(iri) == Left(
+              s"OntologyMappingExternalIri must not start with namespace 'http://datashapes.org/dash#': $iri",
+            ),
+          )
+        }
+      },
+    ),
+    suite("from(IriDto)")(
+      test("should accept valid external IRIs") {
+        val validIris = List(
+          "http://schema.org/name",
+          "https://www.wikidata.org/wiki/Q5",
+        )
+        check(Gen.fromIterable(validIris)) { iri =>
+          val dto = IriDto.unsafeFrom(iri)
+          assertTrue(OntologyMappingExternalIri.from(dto).map(_.value) == Right(iri))
+        }
+      },
+      test("should reject IRIs with knora.org host") {
+        val dto = IriDto.unsafeFrom("http://www.knora.org/ontology/knora-base#TextValue")
+        assertTrue(OntologyMappingExternalIri.from(dto).isLeft)
+      },
+      test("should reject IRIs with dasch.swiss host") {
+        val dto = IriDto.unsafeFrom("http://api.dasch.swiss/ontology/0001/anything/v2#hasTitle")
+        assertTrue(OntologyMappingExternalIri.from(dto).isLeft)
+      },
+      test("should reject IRIs in forbidden namespaces") {
+        val dtos = List(
+          IriDto.unsafeFrom("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+          IriDto.unsafeFrom("http://www.w3.org/2000/01/rdf-schema#Class"),
+          IriDto.unsafeFrom("http://www.w3.org/2002/07/owl#Class"),
+          IriDto.unsafeFrom("http://www.w3.org/2001/XMLSchema#string"),
+          IriDto.unsafeFrom("https://www.w3.org/ns/shacl#NodeShape"),
+          IriDto.unsafeFrom("http://datashapes.org/dash#ListShape"),
+        )
+        check(Gen.fromIterable(dtos)) { dto =>
+          assertTrue(OntologyMappingExternalIri.from(dto).isLeft)
+        }
+      },
+    ),
+  )
+}

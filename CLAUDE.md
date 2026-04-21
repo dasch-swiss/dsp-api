@@ -90,8 +90,13 @@ Each slice typically contains:
 - **Repository Pattern**: Data access abstraction
 - **Service Layer**: Business logic separation
 - **Dependency Injection**: ZIO layers for service composition
+- **Value Types**: Use `Value[A]` (e.g. `StringValue`, `BooleanValue`, `IntValue`) to make domain models type-safe with validated construction. See `docs/development/dsp-api-value-types.md` for details.
 
 ## Testing Guidelines
+
+**If the implementation plan involves adding test data**, apply this check before choosing where to add it:
+1. **Verify instances, not just schema.** Confirm whether existing test data instances already exercise the scenario — finding that the schema supports a case is not sufficient.
+2. **Discover self-contained fixtures first.** Check if the component under test has its own fixture files before adding to a shared dataset. Shared datasets are loaded by many tests; a single new record can cause cascading failures across unrelated specs.
 
 ### Test Organization
 - Unit tests: `webapi/src/test/scala/`
@@ -112,7 +117,7 @@ Each slice typically contains:
 ## Development Environment
 
 ### Prerequisites
-- JDK Temurin 21
+- JDK Temurin 25
 - sbt
 - Docker Desktop
 - just (optional)
@@ -182,14 +187,28 @@ When changes are hard to test with local test data (e.g. they need realistic dat
 
 ### Writing SPARQL queries
 
-When writing SPARQL queries do not use Twirl templates or String concatenation.
+When writing SPARQL queries do not use String concatenation.
 Instead use rdf4j and the query helper in dsp-api.
-For more details see `docs/development/dsp-api-sparql-builder.md`.
+For more details see `docs/development/dsp-api-sparql-queries.md`.
 
 ### Development Conventions
 
 When writing code, follow the conventions outlined in `docs/development/dsp-api-conventions.md` for consistency across
 the codebase. This includes structuring test suites, naming conventions, and using ZIO Test features effectively.
+
+### Markdown Formatting
+
+After editing any markdown files, run the `/fix-markdownlint` skill to ensure proper formatting.
+
+### IRI Handling
+
+Universal rules for constructing typed IRI value objects (e.g. `ResourceIri`) from strings — see
+`docs/development/dsp-api-iri-handling.md`. Key rules:
+- Never call `unsafeFrom` in responders or RestServices — use `ZIO.fromEither(Xxx.from(...))`.
+- Map conversion errors to the right failure type per layer: `BadRequestException` in RestServices,
+  domain errors in services, `InconsistentRepositoryDataException` in repos.
+- Never `.die` on an IRI conversion failure — a malformed client IRI is a 400, not a 500.
+- Prefer converting at the API boundary so services/responders receive typed IRIs.
 
 ### V3 API — IRI Handling
 

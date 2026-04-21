@@ -96,7 +96,7 @@ server's test data), make a HTTP GET request to the `resources`
 route (path segment `resources` in the API call) and append the
 URL-encoded IRI:
 
-```
+```text
 HTTP GET to http://host/v2/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a
 ```
 
@@ -107,7 +107,7 @@ can be queried in one requested is limited. See the settings for
 
 More formally, the URL looks like this:
 
-```
+```text
 HTTP GET to http://host/v2/resources/resourceIRI(/anotherResourceIri)*
 ```
 
@@ -138,7 +138,7 @@ same timestamp.
 
 To get a specific value of a resource, use this route:
 
-```
+```text
 HTTP GET to http://host/v2/values/resourceIRI/valueUUID
 ```
 
@@ -175,7 +175,7 @@ its **current** version
 To get a list of the changes that have been made to a resource since its creation,
 use this route:
 
-```
+```text
 HTTP GET to http://host/v2/resources/history/resourceIRI[?startDate=START_DATE&endDate=END_DATE]
 ```
 
@@ -245,7 +245,7 @@ and type), without its values.
 This works exactly like making a conventional resource request, using
 the path segment `resourcespreview`:
 
-```
+```text
 HTTP GET to http://host/v2/resourcespreview/resourceIRI(/anotherResourceIri)*
 ```
 
@@ -253,7 +253,7 @@ HTTP GET to http://host/v2/resourcespreview/resourceIRI(/anotherResourceIri)*
 
 DSP can return a graph of connections between resources, e.g. for generating a network diagram.
 
-```
+```text
 HTTP GET to http://host/v2/graph/resourceIRI[depth=Integer]
 [direction=outbound|inbound|both][excludeProperty=propertyIri]
 ```
@@ -349,7 +349,7 @@ syntax need to be escaped. If a user wants to search for the string "Zeit-Glöck
 needs to type "Zeit\-Glöcklein". The special characters that need escaping are: 
 `+`, `-`, `&`, `|`, `!`, `(`, `)`, `[`, `]`, `{`, `}`, `^`, `"`, `~`, `*`, `?`, `:`, `\`, `/`
 
-```
+```text
 HTTP GET to http://host/v2/searchbylabel/searchValue[limitToResourceClass=resourceClassIRI]
 [limitToProject=projectIRI][offset=Integer]
 ```
@@ -367,7 +367,7 @@ For performance reasons, standoff markup is not queried for this route.
 To request the number of results rather than the results themselves, you can
 do a count query:
 
-```
+```text
 HTTP GET to http://host/v2/searchbylabel/count/searchValue[limitToResourceClass=resourceClassIRI][limitToProject=projectIRI][offset=Integer]
 ```
 
@@ -397,7 +397,7 @@ are converted into their ASCII equivalents, if one exists, e.g. `é` or `ä` are
 
 Please note that the search terms have to be URL-encoded.
 
-```
+```text
 HTTP GET to http://host/v2/search/searchValue[limitToResourceClass=resourceClassIRI]
 [limitToStandoffClass=standoffClassIri][limitToProject=projectIRI][offset=Integer]
 ```
@@ -411,13 +411,13 @@ A search term may contain wildcards. A `?` represents a single character.
 It has to be URL-encoded as `%3F` since it has a special meaning in the URL syntax. 
 For example, the term `Uniform` can be search for like this:
 
-```
+```text
 HTTP GET to http://host/v2/search/Unif%3Frm
 ```
 
 A `*` represents zero, one or multiple characters. For example, the term `Uniform` can be searched for like this:
 
-```
+```text
 HTTP GET to http://host/v2/search/Uni*m
 ```
 
@@ -435,7 +435,7 @@ file value attached to each matching resource.
 To request the number of results rather than the results themselves, you can
 do a count query:
 
-```
+```text
 HTTP GET to http://host/v2/search/count/searchValue[limitToResourceClass=resourceClassIRI][limitToStandoffClass=standoffClassIri][limitToProject=projectIRI][offset=Integer]
 ```
 
@@ -462,7 +462,7 @@ To generate a IIIF manifest for a resource, containing
 the still image representations that have `knora-api:isPartOf` (or a subproperty)
 pointing to that resource:
 
-```
+```text
 HTTP GET to http://host/v2/resources//iiifmanifest/RESOURCE_IRI
 ```
 
@@ -472,7 +472,7 @@ To facilitate the development of tabular user interfaces for data entry, it is
 possible to get a paged list of all the resources belonging to a particular
 class in a given project, sorted by the value of a property:
 
-```
+```text
 HTTP GET to http://host/v2/resources?resourceClass=RESOURCE_CLASS_IRI&page=PAGE[&orderByProperty=PROPERTY_IRI]
 ```
 
@@ -496,7 +496,7 @@ in [Gravsearch](query-language.md)).
 To get a list of the changes that have been made to a resource and its values since its creation as events ordered by 
 date:
 
-```
+```text
 HTTP GET to http://host/v2/resources/resourceHistoryEvents/<resourceIRI>
 ```
 
@@ -638,7 +638,7 @@ payload needed to update the value of the resource's `lastModificationDate`, see
 To get a list of the changes that have been made to the resources and their values of a project as events ordered by 
 date:
 
-```
+```text
 HTTP GET to http://host/v2/resources/projectHistoryEvents/<projectIRI>
 ```
 

@@ -125,7 +125,9 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             anythingAdminUser,
           )
           .flatMap(_.assert400V3)
-          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
+          .map(err =>
+            assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.invalid_ontology_mapping_iri),
+          )
       },
       test("ontology not found returns 404") {
         TestApiClient
@@ -201,7 +203,9 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             anythingAdminUser,
           )
           .flatMap(_.assert400V3)
-          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
+          .map(err =>
+            assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.invalid_ontology_mapping_iri),
+          )
       },
       test("ontology not found returns 404") {
         TestApiClient
@@ -270,7 +274,9 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             anythingAdminUser,
           )
           .flatMap(_.assert400V3)
-          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
+          .map(err =>
+            assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.invalid_ontology_mapping_iri),
+          )
       },
       test("ontology not found returns 404") {
         TestApiClient
@@ -376,7 +382,9 @@ object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
             anythingAdminUser,
           )
           .flatMap(_.assert400V3)
-          .map(err => assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.knora_ontology_mapping_iri))
+          .map(err =>
+            assertTrue(err.errors.size == 1, err.errors.head.code == V3ErrorCode.invalid_ontology_mapping_iri),
+          )
       },
       test("ontology not found returns 404") {
         TestApiClient

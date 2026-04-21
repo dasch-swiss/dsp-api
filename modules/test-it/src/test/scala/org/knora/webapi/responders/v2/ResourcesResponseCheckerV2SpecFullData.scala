@@ -17,6 +17,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.common.ResourceIri
 
 object ResourcesResponseCheckerV2SpecFullData {
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
@@ -24,7 +25,7 @@ object ResourcesResponseCheckerV2SpecFullData {
   // one title is missing
   val expectedReadResourceV2ForReiseInsHeiligelandWrong: ReadResourceV2 = ReadResourceV2(
     label = "Reise ins Heilige Land",
-    resourceIri = "http://rdfh.ch/2a6221216701",
+    resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701"),
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     userPermission = Permission.ObjectAccess.ChangeRights,

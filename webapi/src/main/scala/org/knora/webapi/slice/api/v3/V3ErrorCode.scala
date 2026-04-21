@@ -29,11 +29,7 @@ enum V3ErrorCode(val template: String):
   case import_exists      extends V3ErrorCode("Import '{id}' exists for project '{projectIri}'.")
   case import_in_progress extends V3ErrorCode("Import '{id}' in progress for project '{projectIri}'.")
   // V3ErrorCode.BadRequest errors
-  case malformed_mapping_iri extends V3ErrorCode("Couldn't parse IRI: '{iri}'.")
-  case knora_ontology_mapping_iri
-      extends V3ErrorCode("Mapping IRI '{iri}' is a Knora-managed IRI and cannot be used as a mapping.")
-  case project_ontology_mapping_iri
-      extends V3ErrorCode("Mapping IRI '{iri}' belongs to a DSP project ontology and cannot be used as a mapping.")
+  case invalid_ontology_mapping_iri extends V3ErrorCode("Invalid OntologyMappingIri: '{iri}'.")
 
 object V3ErrorCode:
 

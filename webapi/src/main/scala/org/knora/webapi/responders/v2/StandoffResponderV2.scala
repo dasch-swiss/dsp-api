@@ -26,9 +26,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
-import org.knora.webapi.messages.twirl.MappingElement
-import org.knora.webapi.messages.twirl.MappingStandoffDatatypeClass
-import org.knora.webapi.messages.twirl.MappingXMLAttribute
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -45,12 +42,16 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.CreateMappingRequestV2
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.resources.repo.CreateNewMappingQuery
 import org.knora.webapi.slice.resources.repo.GetMappingQuery
+import org.knora.webapi.slice.resources.repo.model.MappingElement
+import org.knora.webapi.slice.resources.repo.model.MappingStandoffDatatypeClass
+import org.knora.webapi.slice.resources.repo.model.MappingXMLAttribute
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -101,18 +102,19 @@ final case class StandoffResponderV2(
   ): Task[GetXSLTransformationResponseV2] = {
 
     val xsltUrlFuture = for {
+      xslResIri <- ZIO.fromEither(ResourceIri.from(xslTransformationIri)).mapError(BadRequestException.apply)
 
       textRepresentationResponseV2 <-
         messageRelay
           .ask[ReadResourcesSequenceV2](
             ResourcesGetRequestV2(
-              resourceIris = Vector(xslTransformationIri),
+              resourceIris = Vector(xslResIri),
               targetSchema = ApiV2Complex,
               requestingUser = requestingUser,
             ),
           )
 
-      resource <- textRepresentationResponseV2.toResource(xslTransformationIri)
+      resource <- textRepresentationResponseV2.toResource(xslResIri)
 
       _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.XSLTransformation) {
             throw BadRequestException(

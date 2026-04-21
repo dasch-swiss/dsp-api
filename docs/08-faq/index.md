@@ -55,7 +55,7 @@ about the subjects and objects of properties, rather than to enforce restriction
 This is, in fact, what RDFS reasoners do in practice. For example, consider these
 statements:
 
-```
+```turtle
 example:hasAuthor rdfs:range example:Person .
 data:book1 example:hasAuthor data:oxygen .
 ```

@@ -17,6 +17,7 @@ import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
@@ -35,18 +36,22 @@ final case class ResourcesRestService(
     resourceIri: IriDto,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] =
-    resourcesService
-      .getIiifManifestV2(resourceIri.value, user)
-      .flatMap(renderer.render(_, formatOptions))
+    for {
+      resIri   <- parseResourceIri(resourceIri)
+      result   <- resourcesService.getIiifManifestV2(resIri, user)
+      response <- renderer.render(result, formatOptions)
+    } yield response
 
   def getResourcesPreview(user: User)(
     resourceIris: List[String],
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] =
-    ensureIris(resourceIris) *>
-      readResources
-        .getResourcePreviewWithDeletedResource(resourceIris, withDeleted = true, formatOptions.schema, user)
-        .flatMap(renderer.render(_, formatOptions))
+    for {
+      resIris  <- ZIO.foreach(resourceIris)(parseResourceIri)
+      response <- readResources
+                    .getResourcePreviewWithDeletedResource(resIris, withDeleted = true, formatOptions.schema, user)
+                    .flatMap(renderer.render(_, formatOptions))
+    } yield response
 
   def getResourcesProjectHistoryEvents(
     user: User,
@@ -58,9 +63,11 @@ final case class ResourcesRestService(
   def getResourcesHistoryEvents(
     user: User,
   )(resourceIri: IriDto, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
-    resourcesService
-      .getResourceHistoryEvents(resourceIri.value, user)
-      .flatMap(renderer.render(_, formatOptions))
+    for {
+      resIri   <- parseResourceIri(resourceIri)
+      result   <- resourcesService.getResourceHistoryEvents(resIri, user)
+      response <- renderer.render(result, formatOptions)
+    } yield response
 
   def searchResourcesByProjectAndClass(user: User)(
     resourceClass: IriDto,
@@ -86,32 +93,33 @@ final case class ResourcesRestService(
     startDate: Option[VersionDate],
     endDate: Option[VersionDate],
   ): Task[(RenderedResponse, MediaType)] =
-    resourcesService
-      .getResourceHistory(resourceIri.value, startDate, endDate, user)
-      .flatMap(renderer.render(_, formatOptions))
+    for {
+      resIri   <- parseResourceIri(resourceIri)
+      result   <- resourcesService.getResourceHistory(resIri, startDate, endDate, user)
+      response <- renderer.render(result, formatOptions)
+    } yield response
 
   def getResources(user: User)(
     resourceIris: List[String],
     formatOptions: FormatOptions,
     versionDate: Option[VersionDate],
   ): Task[(RenderedResponse, MediaType)] =
-    ensureIris(resourceIris) *>
-      readResources
-        .getResourcesWithDeletedResource(
-          resourceIris,
-          propertyIri = None,
-          valueUuid = None,
-          versionDate,
-          withDeleted = true,
-          showDeletedValues = false,
-          formatOptions.schema,
-          formatOptions.rendering,
-          user,
-        )
-        .flatMap(renderer.render(_, formatOptions))
-
-  private def ensureIris(values: List[String]): Task[Unit] =
-    ZIO.foreachDiscard(values)(str => ZIO.fromEither(IriDto.from(str)).mapError(BadRequestException.apply))
+    for {
+      resIris  <- ZIO.foreach(resourceIris)(parseResourceIri)
+      response <- readResources
+                    .getResourcesWithDeletedResource(
+                      resIris,
+                      propertyIri = None,
+                      valueUuid = None,
+                      versionDate,
+                      withDeleted = true,
+                      showDeletedValues = false,
+                      formatOptions.schema,
+                      formatOptions.rendering,
+                      user,
+                    )
+                    .flatMap(renderer.render(_, formatOptions))
+    } yield response
 
   def getResourcesGraph(user: User)(
     resourceIri: IriDto,
@@ -121,7 +129,8 @@ final case class ResourcesRestService(
     excludeProperty: Option[IriDto],
   ): Task[(RenderedResponse, MediaType)] = for {
     excludeProperty <- ZIO.foreach(excludeProperty.map(_.value))(iriConverter.asSmartIri)
-    result          <- resourcesService.getGraphDataResponseV2(resourceIri.value, depth, direction, excludeProperty, user)
+    resIri          <- parseResourceIri(resourceIri)
+    result          <- resourcesService.getGraphDataResponseV2(resIri, depth, direction, excludeProperty, user)
     response        <- renderer.render(result, formatOptions)
   } yield response
 
@@ -132,12 +141,12 @@ final case class ResourcesRestService(
     gravsearchTemplateIri: Option[IriDto],
     headerXSLTIri: Option[IriDto],
   ) = for {
-    textProp          <- iriConverter.asSmartIri(textProperty.value)
-    resource           = resourceIri.value
-    mapping            = mappingIri.map(_.value)
-    gravsearchTemplate = gravsearchTemplateIri.map(_.value)
-    headerXslt         = headerXSLTIri.map(_.value)
-    result            <- resourcesService.getResourceAsTeiV2(resource, textProp, mapping, gravsearchTemplate, headerXslt, user)
+    textProp           <- iriConverter.asSmartIri(textProperty.value)
+    resIri             <- parseResourceIri(resourceIri)
+    mapping             = mappingIri.map(_.value)
+    gravsearchTemplate <- ZIO.foreach(gravsearchTemplateIri)(parseResourceIri)
+    headerXslt          = headerXSLTIri.map(_.value)
+    result             <- resourcesService.getResourceAsTeiV2(resIri, textProp, mapping, gravsearchTemplate, headerXslt, user)
   } yield (result.toXML, MediaType.ApplicationXml)
 
   def eraseResource(user: User)(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =
@@ -189,6 +198,11 @@ final case class ResourcesRestService(
       result   <- resourcesService.updateResourceMetadataV2(eraseRequest)
       response <- renderer.render(result, formatOptions)
     } yield response
+
+  private def parseResourceIri(iri: String): IO[BadRequestException, ResourceIri] =
+    ZIO.fromEither(ResourceIri.from(iri)).mapError(BadRequestException.apply)
+
+  private def parseResourceIri(iri: IriDto): IO[BadRequestException, ResourceIri] = parseResourceIri(iri.value)
 }
 
 object ResourcesRestService {

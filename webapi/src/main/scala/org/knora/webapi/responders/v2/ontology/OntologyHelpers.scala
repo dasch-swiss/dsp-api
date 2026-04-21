@@ -691,10 +691,10 @@ object OntologyHelpers {
       }
 
   /**
-   * Given the triplestore's response to `getAllOntologyMetadata.scala.txt`, constructs a map of ontology IRIs
-   * to ontology metadata for the ontology cache.
+   * Given the triplestore's response to [[org.knora.webapi.slice.ontology.repo.GetAllOntologiesMetadataQuery]],
+   * constructs a map of ontology IRIs to ontology metadata for the ontology cache.
    *
-   * @param allOntologyMetadataResponse the triplestore's response to the SPARQL query `getAllOntologyMetadata.scala.txt`.
+   * @param allOntologyMetadataResponse the triplestore's response to [[org.knora.webapi.slice.ontology.repo.GetAllOntologiesMetadataQuery]].
    * @return a map of ontology IRIs to ontology metadata.
    */
   def buildOntologyMetadata(

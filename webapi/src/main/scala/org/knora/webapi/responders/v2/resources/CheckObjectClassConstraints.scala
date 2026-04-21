@@ -61,7 +61,7 @@ object CheckObjectClassConstraints {
 
               // Does the resource that's the target of the link belongs to a subclass of the
               // link property's object class constraint?
-              linkTargetClass     = linkTargetClasses(linkValueContentV2.referredResourceIri)
+              linkTargetClass     = linkTargetClasses(linkValueContentV2.referredResourceIri.value)
               linkTargetClassInfo = entityInfo.classInfoMap(linkTargetClass)
               _                  <-
                 ZIO.when(!linkTargetClassInfo.allBaseClasses.exists(objectConstraints.contains)) {
@@ -150,9 +150,9 @@ object CheckObjectClassConstraints {
     objectClassConstraints: List[SmartIri],
   ): OntologyConstraintException = {
     val resourceID = if (linkValueContentV2.referredResourceExists) {
-      s"<${linkValueContentV2.referredResourceIri}>"
+      s"<${linkValueContentV2.referredResourceIri.value}>"
     } else {
-      s"'${clientResourceIDs.apply(linkValueContentV2.referredResourceIri)}'" // unsafe apply, present before refactoring
+      s"'${clientResourceIDs.apply(linkValueContentV2.referredResourceIri.value)}'" // unsafe apply, present before refactoring
     }
 
     val constraints = objectClassConstraints.map(_.toComplexSchema).mkString(",")

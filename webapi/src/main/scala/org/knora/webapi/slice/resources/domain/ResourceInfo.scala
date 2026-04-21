@@ -7,18 +7,23 @@ package org.knora.webapi.slice.resources.domain
 
 import java.time.Instant
 
-import org.knora.webapi.IRI
+import org.knora.webapi.slice.common.ResourceIri
 
 case class ResourceInfo(
-  iri: IRI,
+  iri: ResourceIri,
   creationDate: Instant,
   lastModificationDate: Option[Instant],
   deleteDate: Option[Instant],
   isDeleted: Boolean,
 )
 object ResourceInfo {
-  def apply(iri: IRI, creationDate: Instant, lastModificationDate: Option[Instant]): ResourceInfo =
+  def apply(iri: ResourceIri, creationDate: Instant, lastModificationDate: Option[Instant]): ResourceInfo =
     ResourceInfo(iri, creationDate, lastModificationDate, deleteDate = None, isDeleted = false)
-  def apply(iri: IRI, creationDate: Instant, lastModificationDate: Option[Instant], deleteDate: Instant): ResourceInfo =
+  def apply(
+    iri: ResourceIri,
+    creationDate: Instant,
+    lastModificationDate: Option[Instant],
+    deleteDate: Instant,
+  ): ResourceInfo =
     ResourceInfo(iri, creationDate, lastModificationDate, Some(deleteDate), isDeleted = true)
 }

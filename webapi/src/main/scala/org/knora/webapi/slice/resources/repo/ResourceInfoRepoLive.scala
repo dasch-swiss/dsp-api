@@ -12,6 +12,7 @@ import java.time.Instant
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.domain.ResourceInfo
 import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
@@ -51,7 +52,7 @@ final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends R
   private def toResourceInfo(row: VariableResultsRow) = {
     val rowMap = row.rowMap
     ResourceInfo(
-      rowMap("resource"),
+      ResourceIri.unsafeFrom(rowMap("resource")),
       Instant.parse(rowMap("creationDate")),
       rowMap.get("lastModificationDate").map(Instant.parse(_)),
       rowMap.get("deleteDate").map(Instant.parse),

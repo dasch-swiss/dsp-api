@@ -14,8 +14,8 @@ import dsp.errors.SparqlGenerationException
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 object DeleteLinkQuerySpec extends ZIOSpecDefault {
 
@@ -32,7 +32,7 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
   private val testCurrentTime           = Instant.parse("2024-01-15T10:30:00Z")
   private val testRequestingUser        = UserIri.unsafeFrom("http://rdfh.ch/users/root")
 
-  private def createValidLinkUpdate(
+  private def createValidSparqlTemplateLinkUpdate(
     linkPropertyIri: SmartIri = testLinkPropertyIri,
     linkTargetIri: String = testLinkTargetIri,
     newLinkValueIri: String = testNewLinkValueIri,
@@ -61,7 +61,7 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
           query <- DeleteLinkQuery.build(
                      testDataNamedGraph,
                      testLinkSourceIri,
-                     createValidLinkUpdate(),
+                     createValidSparqlTemplateLinkUpdate(),
                      None,
                      testCurrentTime,
                      testRequestingUser,
@@ -112,7 +112,7 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
           query <- DeleteLinkQuery.build(
                      testDataNamedGraph,
                      testLinkSourceIri,
-                     createValidLinkUpdate(),
+                     createValidSparqlTemplateLinkUpdate(),
                      Some("This link is no longer needed"),
                      testCurrentTime,
                      testRequestingUser,
@@ -165,7 +165,7 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
           query <- DeleteLinkQuery.build(
                      "http://www.knora.org/data/0803/incunabula",
                      "http://rdfh.ch/0803/page123",
-                     createValidLinkUpdate(
+                     createValidSparqlTemplateLinkUpdate(
                        linkPropertyIri = differentLinkProperty,
                        linkTargetIri = "http://rdfh.ch/0803/book456",
                        newLinkValueIri = "http://rdfh.ch/0803/page123/values/deletedLink",

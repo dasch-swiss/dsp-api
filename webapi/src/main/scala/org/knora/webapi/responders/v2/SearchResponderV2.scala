@@ -11,7 +11,6 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
-import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -20,7 +19,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.ErrorHandlingMap
@@ -52,11 +50,13 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.slice.resources.repo.GetResourcesByClassInProjectPrequery
+import org.knora.webapi.slice.search.repo.SearchFulltextQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -137,7 +137,7 @@ trait SearchResponderV2 {
    * @return a [[ReadResourcesSequenceV2]] representing the linked resources that have been found.
    */
   def searchIncomingLinksV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,
@@ -154,7 +154,7 @@ trait SearchResponderV2 {
    * @return a [[ReadResourcesSequenceV2]] representing the StillImageRepresentations that have been found.
    */
   def searchStillImageRepresentationsV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,
@@ -170,7 +170,7 @@ trait SearchResponderV2 {
    * @return a [[ResourceCountV2]] representing the number of StillImageRepresentations that have been found.
    */
   def searchStillImageRepresentationsCountV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[ResourceCountV2]
@@ -185,7 +185,7 @@ trait SearchResponderV2 {
    * @return a [[ReadResourcesSequenceV2]] representing the regions that have been found.
    */
   def searchIncomingRegionsV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,
@@ -308,7 +308,7 @@ final case class SearchResponderV2Live(
 
   private implicit val sf: StringFormatter = stringFormatter
 
-  private def stillImageRepresentationsPreQueryBuilder(resourceIri: IRI, offset: RuntimeFlags = 0) =
+  private def stillImageRepresentationsPreQueryBuilder(resourceIri: ResourceIri, offset: RuntimeFlags = 0) =
     s"""
        |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
        |
@@ -353,7 +353,7 @@ final case class SearchResponderV2Live(
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   def searchIncomingLinksV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,
@@ -407,13 +407,13 @@ final case class SearchResponderV2Live(
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   def searchStillImageRepresentationsV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[ReadResourcesSequenceV2] = {
-    val query: IRI = stillImageRepresentationsPreQueryBuilder(resourceIri, offset)
+    val query: String = stillImageRepresentationsPreQueryBuilder(resourceIri, offset)
 
     gravsearchV2(query, rendering, user, limitToProject)
   }
@@ -427,7 +427,7 @@ final case class SearchResponderV2Live(
    * @return a [[ResourceCountV2]] representing the number of StillImageRepresentations that have been found.
    */
   def searchStillImageRepresentationsCountV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[ResourceCountV2] = {
@@ -447,7 +447,7 @@ final case class SearchResponderV2Live(
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   def searchIncomingRegionsV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     offset: Int,
     rendering: SchemaRendering,
     user: User,
@@ -515,21 +515,18 @@ final case class SearchResponderV2Live(
   ): Task[ResourceCountV2] =
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
-      searchValue          <- validateSearchString(searchValue)
+      _                    <- validateSearchString(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
-      countSparql          <- ZIO.attempt(
-                       sparql.v2.txt
-                         .searchFulltext(
-                           searchTerms = LuceneQueryString(searchValue),
-                           limitToProject = limitToProject.map(_.value),
-                           limitToResourceClass = limitToResourceClass.map(_.toInternalSchema.toString),
-                           limitToStandoffClass = limitToStandoffClass.map(_.toString),
-                           returnFiles = false, // not relevant for a count query
-                           separator = None,    // no separator needed for count query
-                           limit = 1,
-                           offset = 0,
-                           countQuery = true, // do not get the resources themselves, but the sum of results
-                         ),
+      countSparql          <- SearchFulltextQuery.build(
+                       searchTerms = LuceneQueryString(searchValue),
+                       limitToProject = limitToProject,
+                       limitToResourceClass = limitToResourceClass,
+                       limitToStandoffClass = limitToStandoffClass,
+                       returnFiles = false, // not relevant for a count query
+                       separator = None,    // no separator needed for count query
+                       limit = 1,
+                       offset = 0,
+                       countQuery = true, // do not get the resources themselves, but the sum of results
                      )
       bindings <- triplestore.query(Select(countSparql)).map(_.results.bindings)
       count    <- // query response should contain one result with one row with the name "count"
@@ -567,23 +564,19 @@ final case class SearchResponderV2Live(
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
-      searchValue          <- validateSearchString(searchValue)
+      _                    <- validateSearchString(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
-      searchSparql         <-
-        ZIO.attempt(
-          sparql.v2.txt
-            .searchFulltext(
-              searchTerms = LuceneQueryString(searchValue),
-              limitToProject = limitToProject.map(_.value),
-              limitToResourceClass = limitToResourceClass.map(_.toInternalSchema.toString),
-              limitToStandoffClass = limitToStandoffClass.map(_.toString),
-              returnFiles = returnFiles,
-              separator = Some(StringFormatter.INFORMATION_SEPARATOR_ONE),
-              limit = appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage, // determine the actual offset
-              countQuery = false,
-            ),
-        )
+      searchSparql         <- SearchFulltextQuery.build(
+                        searchTerms = LuceneQueryString(searchValue),
+                        limitToProject = limitToProject,
+                        limitToResourceClass = limitToResourceClass,
+                        limitToStandoffClass = limitToStandoffClass,
+                        returnFiles = returnFiles,
+                        separator = Some(StringFormatter.INFORMATION_SEPARATOR_ONE),
+                        limit = appConfig.v2.resourcesSequence.resultsPerPage,
+                        offset = offset * appConfig.v2.resourcesSequence.resultsPerPage, // determine the actual offset
+                        countQuery = false,
+                      )
 
       prequeryResponseNotMerged <- triplestore.query(Select(searchSparql))
 
@@ -1131,9 +1124,9 @@ final case class SearchResponderV2Live(
     limitToResourceClass: Option[ResourceClassIri],
   ): Task[ResourceCountV2] =
     for {
-      searchValue <- validateSearchString(searchValue)
-      _           <- ensureIsFulltextSearch(searchValue)
-      searchTerm  <- ApacheLuceneSupport
+      _          <- validateSearchString(searchValue)
+      _          <- ensureIsFulltextSearch(searchValue)
+      searchTerm <- ApacheLuceneSupport
                       .asLuceneQueryForSearchByLabel(searchValue)
                       .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
       countSparql    = SearchQueries.selectCountByLabel(searchTerm, limitToProject, limitToResourceClass)
@@ -1163,16 +1156,21 @@ final case class SearchResponderV2Live(
       .fail(BadRequestException("It looks like you are submitting a Gravsearch request to a full-text search route"))
       .when(searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname))
 
-  private def validateSearchString(searchStr: String) = {
+  private def validateSearchString(searchStr: String): Task[Unit] = {
     val searchValueMinLength = appConfig.v2.fulltextSearch.searchValueMinLength
-    ZIO
-      .fromOption(Iri.toSparqlEncodedString(searchStr))
-      .orElseFail(throw BadRequestException(s"Invalid search string: '$searchStr'"))
-      .filterOrElseWith(_.length >= searchValueMinLength) { it =>
-        val errorMsg =
-          s"A search value is expected to have at least length of $searchValueMinLength, but '$it' given of length ${it.length}."
-        ZIO.fail(BadRequestException(errorMsg))
-      }
+    for {
+      _ <- ZIO
+             .fail(BadRequestException(s"Invalid search string: '$searchStr'"))
+             .when(searchStr.isEmpty || searchStr.contains("\r"))
+      _ <-
+        ZIO
+          .fail(
+            BadRequestException(
+              s"A search value is expected to have at least length of $searchValueMinLength, but '$searchStr' given of length ${searchStr.length}.",
+            ),
+          )
+          .when(searchStr.length < searchValueMinLength)
+    } yield ()
   }
 
   override def searchResourcesByLabelV2(
@@ -1186,9 +1184,9 @@ final case class SearchResponderV2Live(
     val searchLimit  = appConfig.v2.resourcesSequence.resultsPerPage
     val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage
     for {
-      searchValue <- validateSearchString(searchValue)
-      _           <- ensureIsFulltextSearch(searchValue)
-      searchTerm  <- ApacheLuceneSupport
+      _          <- validateSearchString(searchValue)
+      _          <- ensureIsFulltextSearch(searchValue)
+      searchTerm <- ApacheLuceneSupport
                       .asLuceneQueryForSearchByLabel(searchValue)
                       .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
       searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(

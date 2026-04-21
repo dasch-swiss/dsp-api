@@ -5,7 +5,7 @@
 In order to request a complete list, make a HTTP GET request to the `lists` route, 
 appending the Iri of the list's root node (URL-encoded):
 
-```
+```text
 HTTP GET to http://host/v2/lists/listRootNodeIri
 ```
 
@@ -18,7 +18,7 @@ The response to a list request is a `List` (see interface `List` in module `List
 In order to request a single node of a list, make a HTTP GET request to the `node` route, 
 appending the node's Iri (URL-encoded):
 
-```
+```text
 HTTP GET to http://host/v2/node/nodeIri
 ```
 

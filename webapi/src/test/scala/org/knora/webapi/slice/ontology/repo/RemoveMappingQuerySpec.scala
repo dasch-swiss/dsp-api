@@ -5,23 +5,22 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import zio.*
 import zio.test.*
 
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.ontology.domain.model.OntologyMappingExternalIri
 
 object RemoveMappingQuerySpec extends ZIOSpecDefault {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private val ontologyIri = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-  private val classIri    = ontologyIri.makeClass("Thing").smartIri
-  private val propertyIri = ontologyIri.makeProperty("hasName").smartIri
-  private val externalIri = "http://schema.org/Thing".toSmartIri
-  private val propExtIri  = "http://purl.org/dc/terms/title".toSmartIri
-
+  private val ontologyIri                       = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
+  private val classIri                          = ontologyIri.makeClass("Thing").smartIri
+  private val propertyIri                       = ontologyIri.makeProperty("hasName").smartIri
+  private val externalIri                       = OntologyMappingExternalIri.unsafeFrom("http://schema.org/Thing")
+  private val propExtIri                        = OntologyMappingExternalIri.unsafeFrom("http://purl.org/dc/terms/title")
   override def spec: Spec[TestEnvironment, Any] = suite("RemoveMappingQuerySpec")(
     // -- SUBCLASSOF (class mappings) -------------------------------------------
     suite("rdfs:subClassOf predicate")(
@@ -113,14 +112,14 @@ object RemoveMappingQuerySpec extends ZIOSpecDefault {
       },
     ),
     suite("percent-encoded injection chars produce valid SPARQL output")(
-      test("percent-encoded '|' (%7C) in mapping IRI succeeds (SmartIri encodes '|' to '%7C')") {
-        val encodedIri = "http://example.org/Thing%7Cinjection".toSmartIri
+      test("percent-encoded '|' (%7C) in mapping IRI succeeds") {
+        val encodedIri = OntologyMappingExternalIri.unsafeFrom("http://example.org/Thing%7Cinjection")
         for {
           exit <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, encodedIri).exit
         } yield assertTrue(exit.isSuccess)
       },
-      test("percent-encoded '}' (%7D) in mapping IRI succeeds (SmartIri encodes '}' to '%7D')") {
-        val encodedIri = "http://example.org/Thing%7Dinjection".toSmartIri
+      test("percent-encoded '}' (%7D) in mapping IRI succeeds") {
+        val encodedIri = OntologyMappingExternalIri.unsafeFrom("http://example.org/Thing%7Dinjection")
         for {
           exit <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, encodedIri).exit
         } yield assertTrue(exit.isSuccess)

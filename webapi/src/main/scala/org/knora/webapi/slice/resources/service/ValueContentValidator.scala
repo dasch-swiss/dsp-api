@@ -7,13 +7,12 @@ package org.knora.webapi.slice.resources.service
 
 import zio.*
 
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
-import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.common.ResourceIri
 
 /**
  * A service that validates values in requests that create resources with values or create/update values.
@@ -23,7 +22,6 @@ import org.knora.webapi.slice.common.service.IriConverter
  * - Ensuring that file values have valid legal information
  */
 final case class ValueContentValidator(
-  private val iriConverter: IriConverter,
   private val legalInfoService: LegalInfoService,
 ) {
 
@@ -38,11 +36,11 @@ final case class ValueContentValidator(
     val vcsToCreate = req.createResource.values.values.flatten.map(_.valueContent)
     ZIO.foreachDiscard(vcsToCreate)(validateValueContent(_, shortcode))
 
-  private def validateValueContent(vc: ValueContentV2, resourceIri: IRI): IO[String, Unit] =
-    extractShortcode(resourceIri).flatMap(validateValueContent(vc, _))
+  private def validateValueContent(vc: ValueContentV2, resourceIri: ResourceIri): IO[String, Unit] =
+    validateValueContent(vc, resourceIri.shortcode)
 
-  private def extractShortcode(resourceIri: IRI): IO[String, Shortcode] =
-    iriConverter.asResourceIri(resourceIri).map(_.shortcode)
+  private def extractShortcode(resourceIri: String): IO[String, Shortcode] =
+    ZIO.fromEither(ResourceIri.from(resourceIri)).map(_.shortcode)
 
   private def validateValueContent(vc: ValueContentV2, inProject: Shortcode): IO[String, Unit] =
     ensureNoCrossProjectLink(vc, inProject) *> ensureValidLegalInfo(vc, inProject)
@@ -52,13 +50,13 @@ final case class ValueContentValidator(
     case tvc: TextValueContentV2 => ensureNoCrossProjectLink(tvc, inProject)
     case _                       => ZIO.unit
 
-  private def ensureNoCrossProjectLink(lvc: LinkValueContentV2, inProject: Shortcode) =
-    extractShortcode(lvc.referredResourceIri).flatMap { refShortcode =>
-      ZIO
-        .fail(s"Cannot create a link between resources cross projects $inProject and $refShortcode")
-        .unless(inProject == refShortcode)
-        .unit
-    }
+  private def ensureNoCrossProjectLink(lvc: LinkValueContentV2, inProject: Shortcode) = {
+    val refShortcode = lvc.referredResourceIri.shortcode
+    ZIO
+      .fail(s"Cannot create a link between resources cross projects $inProject and $refShortcode")
+      .unless(inProject == refShortcode)
+      .unit
+  }
 
   private def ensureNoCrossProjectLink(tvc: TextValueContentV2, inProject: Shortcode): IO[String, Unit] =
     ZIO.foreachDiscard(StandoffStringUtil.getResourceIrisFromStandoffLinkTags(tvc.standoff))(resourceIri =>

@@ -38,9 +38,9 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.FileValueTypeSpecificInfo
@@ -191,7 +191,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     .asScala
     .map { stmt =>
       val p = PropertyIri.unsafeFrom(stmt.getPredicate.toString.toSmartIri)
-      val v = ResourceIri.unsafeFrom(stmt.getObject.toString.toSmartIri)
+      val v = ResourceIri.unsafeFrom(stmt.getObject.toString)
       (p, v)
     }
     .toList
@@ -202,7 +202,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     .asScala
     .map { stmt =>
       val p = PropertyIri.unsafeFrom(stmt.getPredicate.toString.toSmartIri)
-      val v = ValueIri.unsafeFrom(stmt.getObject.toString.toSmartIri)
+      val v = ValueIri.unsafeFrom(stmt.getObject.toString)
       (p, v)
     }
     .toList
@@ -236,8 +236,8 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val isDeleted              = row.getRequired("isDeleted", s => Right(s.toBoolean))
     val label                  = row.getRequired("label")
     val resourceClassIri       = row.getRequired("clazz", s => ResourceClassIri.from(s.toSmartIri))
-    val hasStandoffLinkTo      = row.get("hasStandoffLinkTo", s => ResourceIri.from(s.toSmartIri))
-    val hasStandoffLinkToValue = row.get("hasStandoffLinkToValue", s => ValueIri.from(s.toSmartIri))
+    val hasStandoffLinkTo      = row.get("hasStandoffLinkTo", s => ResourceIri.from(s))
+    val hasStandoffLinkToValue = row.get("hasStandoffLinkToValue", s => ValueIri.from(s))
     val attachedToUser         = row.getRequired("attachedToUser", UserIri.from)
     val creationDate           = row.getRequired("creationDate", s => Try(Instant.parse(s)).toEither.left.map(_.getMessage))
     val attachedToProject      = row.getRequired("attachedToProject", ProjectIri.from)
@@ -319,15 +319,16 @@ object ResourcesRepoLive {
     val resourcePattern = CreateResourceQueryBuilder.buildResourcePattern(resourceToCreate, projectIri, creatorIri)
     query.insertData(resourcePattern)
 
-    val valuePatterns = resourceToCreate.valueInfos.flatMap(
-      CreateResourceQueryBuilder.buildValuePattern(_, resourceToCreate.resourceIri),
+    val resourceIriInternal = InternalIri(resourceToCreate.resourceIri.value)
+    val valuePatterns       = resourceToCreate.valueInfos.flatMap(
+      CreateResourceQueryBuilder.buildValuePattern(_, resourceIriInternal),
     )
     query.insertData(valuePatterns: _*)
 
     val standoffLinkPatterns = resourceToCreate.standoffLinks.flatMap { standoffLink =>
       CreateResourceQueryBuilder.buildStandoffLinkPattern(
         standoffLink,
-        resourceToCreate.resourceIri,
+        resourceIriInternal,
         resourceToCreate.creationDate,
       )
     }

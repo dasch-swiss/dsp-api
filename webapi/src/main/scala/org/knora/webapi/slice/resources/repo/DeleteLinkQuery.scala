@@ -13,16 +13,15 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.IO
-import zio.ZIO
 
 import java.time.Instant
 
 import dsp.errors.SparqlGenerationException
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 /**
  * Deletes an existing link between two resources.
@@ -52,11 +51,7 @@ object DeleteLinkQuery extends QueryBuilderHelper {
     maybeComment: Option[String],
     deletedAt: Instant,
     userIri: UserIri,
-  ): IO[SparqlGenerationException, ModifyQuery] = {
-    // Validate preconditions
-    inline def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
-      ZIO.fail(SparqlGenerationException(message)).when(condition).unit
-
+  ): IO[SparqlGenerationException, ModifyQuery] =
     for {
       _ <- failIf(!linkUpdate.deleteDirectLink, "linkUpdate.deleteDirectLink must be true in this SPARQL template")
       _ <- failIf(!linkUpdate.linkValueExists, "linkUpdate.linkValueExists must be true in this SPARQL template")
@@ -144,5 +139,4 @@ object DeleteLinkQuery extends QueryBuilderHelper {
         .insert(insertPatterns*)
         .where(wherePatterns*)
     }
-  }
 }

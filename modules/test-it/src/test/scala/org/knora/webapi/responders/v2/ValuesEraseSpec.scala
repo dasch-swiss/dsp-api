@@ -30,8 +30,8 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.repo.service.ActiveValue
 import org.knora.webapi.slice.resources.repo.service.ResourceModel
 import org.knora.webapi.slice.resources.repo.service.ResourceModel.ActiveResource
@@ -280,14 +280,14 @@ final case class TestHelper(
     for {
       uuid     <- Random.nextUUID
       createVal = CreateValueV2(
-                    left.iri.toString,
+                    left.iri,
                     left.resourceClassIri.toComplexSchema,
                     propertyIri.toComplexSchema,
-                    LinkValueContentV2(ApiV2Complex, right.iri.toString, comment = comment),
+                    LinkValueContentV2(ApiV2Complex, right.iri, comment = comment),
                   )
       value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -299,16 +299,16 @@ final case class TestHelper(
   ): ZIO[Any, Throwable, ActiveValue] =
     val hasOtherThingValue = resource.ontologyIri.makeProperty("hasOtherThingValue")
     val update             = UpdateValueContentV2(
-      resource.iri.toString,
+      resource.iri,
       resource.resourceClassIri.toComplexSchema,
       hasOtherThingValue.toComplexSchema,
       value.iri.toString,
-      LinkValueContentV2(ApiV2Complex, linkedResource.iri.toString, comment = Some(newComment)),
+      LinkValueContentV2(ApiV2Complex, linkedResource.iri, comment = Some(newComment)),
     )
     for {
       response <- valuesResponder.updateValueV2(update, rootUser, UUID.randomUUID())
       updated  <- valueRepo
-                   .findActiveById(ValueIri.unsafeFrom(response.valueIri.toSmartIri))
+                   .findActiveById(ValueIri.unsafeFrom(response.valueIri))
                    .someOrFail(IllegalStateException("Value not found"))
     } yield updated
 
@@ -317,14 +317,14 @@ final case class TestHelper(
     for {
       uuid     <- Random.nextUUID
       createVal = CreateValueV2(
-                    resource.iri.toString,
+                    resource.iri,
                     resource.resourceClassIri.toComplexSchema,
                     hasInteger.toComplexSchema,
                     IntegerValueContentV2(ApiV2Complex, 1, None),
                   )
       value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -333,14 +333,14 @@ final case class TestHelper(
     for {
       uuid     <- Random.nextUUID
       createVal = CreateValueV2(
-                    resource.iri.toString,
+                    resource.iri,
                     resource.resourceClassIri.toComplexSchema,
                     hasInteger.toComplexSchema,
                     IntegerValueContentV2(ApiV2Complex, 1, None),
                   )
       value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -352,7 +352,7 @@ final case class TestHelper(
   ): ZIO[Any, Throwable, ActiveValue] =
     val hasInteger = resource.ontologyIri.makeProperty(propName.getOrElse("hasInteger"))
     val update     = UpdateValueContentV2(
-      resource.iri.toString,
+      resource.iri,
       resource.resourceClassIri.toComplexSchema,
       hasInteger.toComplexSchema,
       value.iri.toString,
@@ -361,7 +361,7 @@ final case class TestHelper(
     for {
       response <- valuesResponder.updateValueV2(update, rootUser, UUID.randomUUID())
       updated  <- valueRepo
-                   .findActiveById(ValueIri.unsafeFrom(response.valueIri.toSmartIri))
+                   .findActiveById(ValueIri.unsafeFrom(response.valueIri))
                    .someOrFail(IllegalStateException("Value not found"))
     } yield updated
 
@@ -422,7 +422,7 @@ final case class TestHelper(
       uuid      <- Random.nextUUID
       value     <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value     <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -435,7 +435,7 @@ final case class TestHelper(
       "@id"              -> Json.Str(resource.iri.toString),
       "@type"            -> Json.Str(ontologyIri.makeClass("Thing").toComplexSchema.toIri),
       "anything:hasText" -> Json.Obj(
-        "@id"                           -> Json.Str(value.iri.toComplexSchema.toIri),
+        "@id"                           -> Json.Str(value.iri.value),
         "@type"                         -> Json.Str("knora-api:TextValue"),
         "knora-api:textValueAsXml"      -> Json.Str(textValueAsXml),
         "knora-api:textValueHasMapping" -> Json.Obj(
@@ -452,7 +452,7 @@ final case class TestHelper(
       uuid      <- Random.nextUUID
       value     <- valuesResponder.updateValueV2(updateVal, rootUser, uuid)
       value     <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -548,7 +548,7 @@ final case class TestHelper(
     createReq = CreateResourceRequestV2(createRes, rootUser, uuid)
     res      <- resourcesResponderV2.createResource(createReq)
     created  <- resourceRepo
-                 .findActiveById(ResourceIri.unsafeFrom(res.resources.head.resourceIri.toSmartIri))
+                 .findActiveById(res.resources.head.resourceIri)
                  .someOrFail(IllegalStateException("Resource not found"))
   } yield created
 
@@ -562,14 +562,14 @@ final case class TestHelper(
     createReq = CreateResourceRequestV2(createRes, rootUser, uuid)
     resource <- resourcesResponderV2.createResource(createReq).map(_.resources.head)
     created  <- resourceRepo
-                 .findActiveById(ResourceIri.unsafeFrom(resource.resourceIri.toSmartIri))
+                 .findActiveById(resource.resourceIri)
                  .someOrFail(IllegalStateException("Resource not found"))
     values <- ZIO
                 .foreach(resource.values.toList) { (s, vs) =>
                   ZIO
                     .foreach(vs) { v =>
                       valueRepo
-                        .findActiveById(ValueIri.unsafeFrom(v.valueIri.toSmartIri))
+                        .findActiveById(ValueIri.unsafeFrom(v.valueIri))
                         .someOrFail(IllegalStateException("Value not found"))
                     }
                     .map((s, _))
@@ -586,7 +586,7 @@ final case class TestHelper(
   def deleteResource(resource: ActiveResource): Task[Unit] = for {
     uuid     <- Random.nextUUID
     deleteReq = DeleteOrEraseResourceRequestV2(
-                  resourceIri = resource.iri.toString,
+                  resourceIri = resource.iri,
                   resourceClassIri = resource.resourceClassIri.toComplexSchema,
                   maybeDeleteComment = Some("Test deletion for value erase test"),
                   maybeLastModificationDate = resource.lastModificationDate,
