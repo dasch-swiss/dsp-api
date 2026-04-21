@@ -42,7 +42,6 @@ import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
@@ -80,7 +79,7 @@ final case class ExportService(
     for {
       resourceIris  <- findResources.findResources(project, None)
       readResources <- readResources.readResourcesSequencePar(
-                         resourceIris = resourceIris.map(_.toString),
+                         resourceIris = resourceIris,
                          targetSchema = ApiV2Complex,
                          requestingUser = requestingUser,
                          preview = false,
@@ -93,7 +92,7 @@ final case class ExportService(
                   val description = descriptionProp.flatMap(r.values.get(_).flatMap(_.headOption))
                   MetadataRecord(
                     id = r.resourceIri.toString,
-                    pid = sf.resourceIriToArkUrl(ResourceIri.unsafeFrom(r.resourceIri)),
+                    pid = sf.resourceIriToArkUrl(r.resourceIri),
                     label = Map("en" -> r.label),
                     accessRights = "Full Open Access",
                     legalInfo = LegalInfo.publicDomain,
@@ -142,7 +141,7 @@ final case class ExportService(
     includeArkUrls: Boolean,
   ): Task[ExportedCsv] =
     for {
-      resourceIris  <- findResources.findResourcesByClass(project, classIri).map(_.map(_.toString))
+      resourceIris  <- findResources.findResourcesByClass(project, classIri)
       readResources <- readResources.readResourcesSequencePar(
                          resourceIris = resourceIris,
                          targetSchema = ApiV2Complex,
@@ -160,7 +159,7 @@ final case class ExportService(
 
       rootVocabularies <- listsResponder.getLists(Some(Left(project.id)))
       vocabularies     <- ZIO.foreach(rootVocabularies.lists)(rootVocabularyLabels(_, language)).map(_.foldK)
-      resourcesMap      = readResources.resourcesMap // must be cached
+      resourcesMap      = readResources.resourcesMap.map { case (k, v) => k.value -> v } // must be cached
       rows             <- ZIO.foreach(readResources.resources.toList.sortBy(_.label)) { r =>
                 exportSingleRow(r, propsWithInfos, includeIris, includeArkUrls, resourcesMap, vocabularies)
               }
@@ -215,7 +214,7 @@ final case class ExportService(
     val arkEntryTask: Task[ListMap[String, String]] =
       if includeArkUrls then
         ZIO
-          .attempt(sf.resourceIriToArkUrl(ResourceIri.unsafeFrom(resource.resourceIri)))
+          .attempt(sf.resourceIriToArkUrl(resource.resourceIri))
           .orDie
           .map(url => ListMap("ARK URL" -> url))
       else ZIO.succeed(ListMap.empty)
@@ -257,7 +256,7 @@ final case class ExportService(
     vcs.foldMap { vc =>
       vc match
         case lvc: LinkValueContentV2 =>
-          val resource = lvc.nestedResource.orElse(resources.get(lvc.referredResourceIri))
+          val resource = lvc.nestedResource.orElse(resources.get(lvc.referredResourceIri.value))
           LinkValue(
             List(resource.map(_.label).getOrElse("")),
             List(stringFormat(vc.valueHasString)).filter(_ => includeIris),

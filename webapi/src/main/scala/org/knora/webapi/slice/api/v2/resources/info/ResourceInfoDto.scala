@@ -35,7 +35,7 @@ object ResourceInfoDto {
 
   def from(info: ResourceInfo): ResourceInfoDto =
     ResourceInfoDto(
-      info.iri,
+      info.iri.value,
       info.creationDate,
       info.lastModificationDate.getOrElse(info.creationDate),
       info.deleteDate,

@@ -15,14 +15,14 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 import java.time.Instant
 
-import org.knora.webapi.IRI
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 
 object GetResourceValueVersionHistoryQuery extends QueryBuilderHelper {
 
   def build(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     withDeletedResource: Boolean = false,
     maybeStartDate: Option[Instant] = None,
     maybeEndDate: Option[Instant] = None,
@@ -33,7 +33,7 @@ object GetResourceValueVersionHistoryQuery extends QueryBuilderHelper {
     val currentValue = variable("currentValue")
     val valueObject  = variable("valueObject")
 
-    val resource = Rdf.iri(resourceIri)
+    val resource = Rdf.iri(resourceIri.value)
 
     // <resourceIri> ?property ?currentValue .
     val resourcePattern = resource.has(property, currentValue)

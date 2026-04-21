@@ -138,7 +138,7 @@ final case class ApiComplexV2JsonLdRequestParser(
              .fail("No updated resource metadata provided")
              .when(label.isEmpty && permissions.isEmpty && newModificationDate.isEmpty)
     } yield UpdateResourceMetadataRequestV2(
-      resourceIri.value,
+      resourceIri,
       r.resourceClassSmartIri,
       lastModificationDate,
       label,
@@ -161,7 +161,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       deleteDate           <- r.deleteDateOption
       lastModificationDate <- r.lastModificationDateOption
     } yield DeleteOrEraseResourceRequestV2(
-      resourceIri.value,
+      resourceIri,
       r.resourceClassSmartIri,
       deleteComment,
       deleteDate,
@@ -464,7 +464,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                          case (Some(valueContentV2), _) =>
                            ZIO.succeed(
                              UpdateValueContentV2(
-                               resourceIri.value,
+                               resourceIri,
                                r.resourceClassSmartIri,
                                v.propertySmartIri,
                                valueIri.value,
@@ -477,7 +477,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                          case (_, Some(permissions)) =>
                            ZIO.succeed(
                              UpdateValuePermissionsV2(
-                               resourceIri.value,
+                               resourceIri,
                                r.resourceClassSmartIri,
                                v.propertySmartIri,
                                valueIri.value,
@@ -506,7 +506,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         valuePermissions  <- v.hasPermissionsOption
         valueContent      <- getValueContent(v, resourceIri.shortcode)
       } yield CreateValueV2(
-        resourceIri.value,
+        resourceIri,
         r.resourceClassSmartIri,
         v.propertyIri.smartIri,
         valueContent,

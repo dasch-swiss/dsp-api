@@ -518,7 +518,7 @@ case class ReadOtherValueV2(
  * @param permissions       the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueV2(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   propertyIri: SmartIri,
   valueContent: ValueContentV2,
@@ -534,7 +534,7 @@ sealed trait UpdateValueV2 {
   /**
    * The IRI of the resource containing the value.
    */
-  val resourceIri: IRI
+  val resourceIri: ResourceIri
 
   /**
    * The external IRI of the resource class.
@@ -575,7 +575,7 @@ sealed trait UpdateValueV2 {
  *                           will be generated.
  */
 case class UpdateValueContentV2(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   propertyIri: SmartIri,
   valueIri: IRI,
@@ -603,7 +603,7 @@ case class UpdateValueContentV2(
  *                           will be generated.
  */
 case class UpdateValuePermissionsV2(
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   propertyIri: SmartIri,
   valueIri: IRI,
@@ -2357,7 +2357,7 @@ object MovingImageFileValueContentV2 {
  */
 case class LinkValueContentV2(
   ontologySchema: OntologySchema,
-  referredResourceIri: IRI,
+  referredResourceIri: ResourceIri,
   referredResourceExists: Boolean = true,
   isIncomingLink: Boolean = false,
   nestedResource: Option[ReadResourceV2] = None,
@@ -2368,7 +2368,7 @@ case class LinkValueContentV2(
     OntologyConstants.KnoraBase.LinkValue.toSmartIri.toOntologySchema(ontologySchema)
   }
 
-  override def valueHasString: String = referredResourceIri
+  override def valueHasString: String = referredResourceIri.value
 
   override def toOntologySchema(targetSchema: OntologySchema): LinkValueContentV2 = {
     val convertedNestedResource = nestedResource.map { nested =>
@@ -2393,7 +2393,7 @@ case class LinkValueContentV2(
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
-      case ApiV2Simple => JsonLDUtil.iriToJsonLDObject(referredResourceIri)
+      case ApiV2Simple => JsonLDUtil.iriToJsonLDObject(referredResourceIri.value)
 
       case ApiV2Complex =>
         // check if the referred resource has to be included in the JSON response
@@ -2417,13 +2417,13 @@ case class LinkValueContentV2(
             if (!isIncomingLink) {
               Map(
                 LinkValueHasTargetIri -> JsonLDUtil.iriToJsonLDObject(
-                  referredResourceIri,
+                  referredResourceIri.value,
                 ),
               )
             } else {
               Map(
                 LinkValueHasSourceIri -> JsonLDUtil.iriToJsonLDObject(
-                  referredResourceIri,
+                  referredResourceIri.value,
                 ),
               )
             }
@@ -2447,7 +2447,8 @@ object LinkValueContentV2 {
       _         <- ZIO
              .fail(s"Link target IRI <$targetIri> is not a Knora data IRI")
              .unlessZIO(converter.isKnoraDataIri(targetIri).mapError(_.getMessage))
-    } yield LinkValueContentV2(ApiV2Complex, referredResourceIri = targetIri, comment = comment)
+      resourceIri <- ZIO.fromEither(ResourceIri.from(targetIri))
+    } yield LinkValueContentV2(ApiV2Complex, referredResourceIri = resourceIri, comment = comment)
 }
 
 /**
