@@ -19,7 +19,7 @@ object Dependencies {
   val MonocleVersion = "3.3.0"
 
   val Rdf4jVersion = "5.2.2"
-  val JenaVersion  = "5.2.0"
+  val JenaVersion  = "6.0.0"
 
   val ZioConfigVersion            = "4.0.7"
   val ZioLoggingVersion           = "2.5.3"
@@ -175,7 +175,7 @@ object Dependencies {
   val bagitDependencies     = Seq(zio, "dev.zio" %% "zio-streams" % ZioVersion, zioNio)
   val bagitTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
 
-  val TopbraidShaclVersion = "1.4.4"
+  val TopbraidShaclVersion = "1.5.0"
   val topbraidShacl        = "org.topbraid" % "shacl" % TopbraidShaclVersion
 
   val shaclValidatorDependencies     = Seq(topbraidShacl, zio)

@@ -321,7 +321,7 @@ object RdfFormatUtil {
       )
       def processStatement(statement: JenaStatement): Unit =
         inner.quad(
-          new jena.sparql.core.Quad(
+          jena.sparql.core.Quad.create(
             jena.graph.NodeFactory.createURI(graphIri),
             JenaConversions.asJenaNode(statement.subj),
             JenaConversions.asJenaNode(statement.pred),
