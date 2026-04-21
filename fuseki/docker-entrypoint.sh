@@ -57,7 +57,7 @@ fi
 # Check if index rebuild marker file exists
 if [ ! -n "$REBUILD_INDEX_OF_DATASET" ] && [ -f "$REBUILD_INDEX_MARKER_FILE" ] ; then
   info "Detected index rebuild marker file ${REBUILD_INDEX_MARKER_FILE}"
-  REBUILD_INDEX_OF_DATASET="$(cat "$REBUILD_INDEX_MARKER_FILE" | sed "s/[^[:alpha:]_-]/_/g")"
+  REBUILD_INDEX_OF_DATASET="$(sed "s/[^[:alpha:]_-]/_/g" "$REBUILD_INDEX_MARKER_FILE")"
   remove_marker_file=true
 fi
 
