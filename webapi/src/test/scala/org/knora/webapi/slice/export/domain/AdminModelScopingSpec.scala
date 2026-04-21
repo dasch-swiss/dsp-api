@@ -109,36 +109,54 @@ object AdminModelScopingSpec extends ZIOSpecDefault {
       val prop = ResourceFactory.createProperty(KnoraAdmin.IsInProjectAdminGroup)
       assertTrue(!user.hasProperty(prop, model.createResource(otherProjectIri)))
     },
-    test("stripSystemAdminFlag replaces true with false") {
+    test("replaces isInSystemAdminGroup true with false and reports the demoted user") {
       val model        = createModel()
       val sysAdminProp = ResourceFactory.createProperty(KnoraAdmin.IsInSystemAdminGroup)
       val user         = model.getResource(userIri)
       user.addProperty(sysAdminProp, ResourceFactory.createTypedLiteral(true))
-      AdminModelScoping.stripSystemAdminFlag(model)
-      val stmts = user.listProperties(sysAdminProp).asScala.toList
+      val demoted = AdminModelScoping.clearSystemAdminFlag(model)
+      val stmts   = user.listProperties(sysAdminProp).asScala.toList
       assertTrue(
         stmts.size == 1,
         stmts.forall(s => s.getObject.isLiteral && !s.getLiteral.getBoolean),
+        demoted == List(userIri),
       )
     },
-    test("stripSystemAdminFlag leaves non-system-admin users untouched") {
+    test("keeps existing false flag as false and does not report a demotion") {
       val model        = createModel()
       val sysAdminProp = ResourceFactory.createProperty(KnoraAdmin.IsInSystemAdminGroup)
       val user         = model.getResource(userIri)
       user.addProperty(sysAdminProp, ResourceFactory.createTypedLiteral(false))
-      AdminModelScoping.stripSystemAdminFlag(model)
-      val stmts = user.listProperties(sysAdminProp).asScala.toList
+      val demoted = AdminModelScoping.clearSystemAdminFlag(model)
+      val stmts   = user.listProperties(sysAdminProp).asScala.toList
       assertTrue(
         stmts.size == 1,
         stmts.forall(s => s.getObject.isLiteral && !s.getLiteral.getBoolean),
+        demoted.isEmpty,
       )
     },
-    test("stripSystemAdminFlag does nothing when the flag is absent") {
-      val model = createModel()
-      AdminModelScoping.stripSystemAdminFlag(model)
+    test("does nothing when isInSystemAdminGroup is absent") {
+      val model        = createModel()
+      val demoted      = AdminModelScoping.clearSystemAdminFlag(model)
       val user         = model.getResource(userIri)
       val sysAdminProp = ResourceFactory.createProperty(KnoraAdmin.IsInSystemAdminGroup)
-      assertTrue(user.listProperties(sysAdminProp).asScala.isEmpty)
+      assertTrue(
+        user.listProperties(sysAdminProp).asScala.isEmpty,
+        demoted.isEmpty,
+      )
+    },
+    test("tolerates malformed literals by overwriting them with false") {
+      val model        = createModel()
+      val sysAdminProp = ResourceFactory.createProperty(KnoraAdmin.IsInSystemAdminGroup)
+      val user         = model.getResource(userIri)
+      user.addProperty(sysAdminProp, model.createLiteral("not a boolean"))
+      val demoted = AdminModelScoping.clearSystemAdminFlag(model)
+      val stmts   = user.listProperties(sysAdminProp).asScala.toList
+      assertTrue(
+        stmts.size == 1,
+        stmts.forall(s => s.getObject.isLiteral && !s.getLiteral.getBoolean),
+        demoted.isEmpty,
+      )
     },
   )
 }

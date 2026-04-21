@@ -23,7 +23,7 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 object AdminModelScoping {
 
   // Shared Jena property/resource constants for admin model operations.
-  // Package-private so rewriteExistingUserTriples / rewriteNewUserTriples can reuse them.
+  // Package-private so the import service (ProjectMigrationImportService) can reuse them.
   private[domain] val isInProjectProp           = ResourceFactory.createProperty(KnoraAdmin.IsInProject)
   private[domain] val isInGroupProp             = ResourceFactory.createProperty(KnoraAdmin.IsInGroup)
   private[domain] val isInProjectAdminGroupProp = ResourceFactory.createProperty(KnoraAdmin.IsInProjectAdminGroup)
@@ -96,7 +96,7 @@ object AdminModelScoping {
   }
 
   /**
-   * Replaces `isInSystemAdminGroup "true"` triples with `"false"` for all users in the model.
+   * Rewrites `isInSystemAdminGroup` triples to `"false"^^xsd:boolean` for every user in the model.
    *
    * Project members/admins who are also system administrators on the source instance must be
    * included in the export (otherwise they are silently dropped from the project), but the
@@ -104,20 +104,27 @@ object AdminModelScoping {
    * `isInSystemAdminGroup` property has cardinality 1 on `knora-admin:User`, so the triple is
    * rewritten to `false` rather than removed.
    *
+   * For any user carrying one or more `isInSystemAdminGroup` statements, all such statements are
+   * removed and a single `"false"^^xsd:boolean` triple is added. This enforces the invariant
+   * unconditionally and tolerates malformed literals that would throw `DatatypeFormatException`
+   * if passed to `Literal.getBoolean`.
+   *
    * @param model the admin data Jena model (mutated in-place)
+   * @return the IRIs of users whose flag was demoted from `true` to `false` — for audit logging
    */
-  def stripSystemAdminFlag(model: Model): Unit = {
+  def clearSystemAdminFlag(model: Model): List[String] = {
     val falseLiteral = ResourceFactory.createTypedLiteral(false)
     val users        = model.listSubjectsWithProperty(RDF.`type`, userType).asScala.toList
-    users.foreach { user =>
-      val trueStatements = user
-        .listProperties(isInSystemAdminGroupProp)
-        .asScala
-        .filter(stmt => stmt.getObject.isLiteral && stmt.getLiteral.getBoolean)
-        .toList
-      trueStatements.foreach(model.remove)
-      if (trueStatements.nonEmpty)
+    users.flatMap { user =>
+      val existing = user.listProperties(isInSystemAdminGroupProp).asScala.toList
+      if (existing.isEmpty) None
+      else {
+        val wasTrue =
+          existing.exists(stmt => stmt.getObject.isLiteral && stmt.getLiteral.getLexicalForm.equalsIgnoreCase("true"))
+        existing.foreach(model.remove)
         val _ = model.add(user, isInSystemAdminGroupProp, falseLiteral)
+        Option.when(wasTrue)(user.getURI)
+      }
     }
   }
 }

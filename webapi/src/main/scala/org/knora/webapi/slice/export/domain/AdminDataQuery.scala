@@ -18,7 +18,7 @@ object AdminDataQuery extends QueryBuilderHelper {
 
   // NOTE: If you change the query structure here, also update buildWithReferencedUsers below.
   // Project members who are also system admins are included in the export. The
-  // `isInSystemAdminGroup` flag is stripped later by AdminModelScoping.stripSystemAdminFlag
+  // `isInSystemAdminGroup` flag is rewritten to false later by AdminModelScoping.clearSystemAdminFlag
   // so the exported package does not carry the source instance's system-admin membership.
   def build(project: ProjectIri): ConstructQuery = {
     val projectIri                   = toRdfIri(project)

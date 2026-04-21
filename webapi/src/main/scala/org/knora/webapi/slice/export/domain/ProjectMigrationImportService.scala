@@ -276,7 +276,9 @@ final class ProjectMigrationImportService(
    * 1. Strips built-in user triples (SystemUser, AnonymousUser) — they already exist on every instance.
    * 2. For each remaining user, looks up by IRI, email, and username:
    *    - Found by IRI: verify identity match, log profile diffs, rewrite to scoped memberships only.
-   *    - Not found at all: fail on root user, strip SystemAdmin, scope memberships.
+   *    - Not found at all: fail on root user, strip SystemAdmin (defense-in-depth — the export already
+   *      rewrites the flag to false via [[AdminModelScoping.clearSystemAdminFlag]]; this guards against
+   *      tampering with admin.nq between export and import), scope memberships.
    *    - No IRI match but email/username collision: fail with details.
    */
   private def prepareAdminModel(model: Model, projectIri: ProjectIri): Task[Unit] = for {
@@ -433,6 +435,10 @@ final class ProjectMigrationImportService(
 
   /**
    * For a new user: fail on root, strip cross-project memberships and SystemAdmin.
+   *
+   * The export already rewrites `isInSystemAdminGroup` to `false` via
+   * [[AdminModelScoping.clearSystemAdminFlag]]; the strip below is defense-in-depth against
+   * tampered admin.nq bags where the flag could be re-asserted as `true`.
    */
   private def rewriteNewUserTriples(
     model: Model,
@@ -446,7 +452,7 @@ final class ProjectMigrationImportService(
         s"Import contains the root user '${userResource.getURI}'. Resources referencing root require pre-migration cleanup.",
       )
 
-    // Strip isInSystemAdminGroup
+    // Strip isInSystemAdminGroup (defense-in-depth — export already rewrites to false)
     val sysAdminProp = AdminModelScoping.isInSystemAdminGroupProp
     val sysAdminStmt = userResource.getProperty(sysAdminProp)
     if (sysAdminStmt != null && sysAdminStmt.getObject.isLiteral && sysAdminStmt.getLiteral.getBoolean)
