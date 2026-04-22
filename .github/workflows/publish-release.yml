@@ -21,7 +21,6 @@ jobs:
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
-          make docker-publish-fuseki-image
 
   send-chat-notification:
     name: Send google chat notification
