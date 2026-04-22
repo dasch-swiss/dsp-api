@@ -92,7 +92,7 @@ docker-publish-fuseki-image: # publish multi-platform Fuseki image to Docker Hub
 docker-build: docker-build-dsp-api-image docker-build-sipi-image docker-build-ingest-image docker-build-fuseki-image ## build and publish all Docker images locally
 
 .PHONY: docker-publish
-docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image docker-publish-ingest-image ## publish all Docker images to Dockerhub
+docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image docker-publish-ingest-image ## publish all Docker images to Dockerhub (Fuseki excluded: published separately via docker-publish-fuseki-image)
 
 .PHONY: docker-image-tag
 docker-image-tag: ## prints the docker image tag
