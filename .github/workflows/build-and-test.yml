@@ -223,7 +223,7 @@ jobs:
       - name: Assert fuseki/Dockerfile, Dependencies.scala, and docker-compose.yml agree
         run: |
           set -euo pipefail
-          DOCKERFILE_VER=$(grep '^ARG FUSEKI_VERSION=' fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
+          DOCKERFILE_VER=$(grep '^ARG IMAGE_VERSION=' fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
           DEPS_VER=$(grep 'val fusekiImage' project/Dependencies.scala | sed 's/.*:\([^"]*\)".*/\1/' | tr -d '[:space:]')
           COMPOSE_VER=$(grep 'image: daschswiss/apache-jena-fuseki:' docker-compose.yml | sed 's/.*apache-jena-fuseki://' | tr -d '[:space:]')
           echo "fuseki/Dockerfile:          $DOCKERFILE_VER"

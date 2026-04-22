@@ -69,8 +69,8 @@ docker-build-ingest-image: # publish ingest image to Dockerhub
 
 # Lazy assignment (=): evaluated only when a Fuseki target is invoked, not at parse time.
 # This avoids errors when fuseki/Dockerfile does not yet exist (Step 1 must run first).
-FUSEKI_VERSION       = $(shell grep "^ARG FUSEKI_VERSION=" fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
-FUSEKI_DOCKER_IMAGE  = daschswiss/apache-jena-fuseki:$(FUSEKI_VERSION)
+FUSEKI_IMAGE_VERSION = $(shell grep "^ARG IMAGE_VERSION=" fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
+FUSEKI_DOCKER_IMAGE  = daschswiss/apache-jena-fuseki:$(FUSEKI_IMAGE_VERSION)
 
 .PHONY: docker-build-fuseki-image
 docker-build-fuseki-image: # build Fuseki image into the local Docker daemon

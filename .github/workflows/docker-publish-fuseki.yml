@@ -27,8 +27,8 @@ jobs:
         id: fuseki_version
         run: |
           set -euo pipefail
-          V=$(grep '^ARG FUSEKI_VERSION=' fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
-          [[ "$V" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "FUSEKI_VERSION invalid: $V"; exit 1; }
+          V=$(grep '^ARG IMAGE_VERSION=' fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
+          [[ "$V" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "IMAGE_VERSION invalid: $V"; exit 1; }
           echo "version=$V" >> "$GITHUB_OUTPUT"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
