@@ -5,14 +5,25 @@
 
 package org.knora.webapi.core
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.TextMapGetter
 import sttp.model.Method.*
+import sttp.monad.MonadError
+import sttp.tapir.AnyEndpoint
+import sttp.tapir.server.interceptor.DecodeFailureContext
+import sttp.tapir.server.interceptor.DecodeSuccessContext
+import sttp.tapir.server.interceptor.EndpointHandler
+import sttp.tapir.server.interceptor.EndpointInterceptor
+import sttp.tapir.server.interceptor.Responder
+import sttp.tapir.server.interceptor.SecurityFailureContext
 import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
+import sttp.tapir.server.interpreter.BodyListener
 import sttp.tapir.server.metrics.zio.ZioMetrics
+import sttp.tapir.server.model.ServerResponse
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import zio.*
@@ -46,7 +57,44 @@ final class DspApiServer(
         ),
       )
       .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
+      .addInterceptor(spanNameInterceptor)
       .options
+
+  // Renames the active HTTP server span to the matched Tapir endpoint's path template
+  // (e.g. "HTTP GET /admin/lists/{listIri}") once routing has succeeded. Keeps span
+  // names low-cardinality per OTel HTTP semantic conventions:
+  // https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
+  private def spanNameInterceptor: EndpointInterceptor[Task] = new EndpointInterceptor[Task] {
+    private def updateSpanName(ep: AnyEndpoint): UIO[Unit] =
+      ctxStore.get.flatMap { ctx =>
+        ZIO.succeed {
+          val method = ep.method.map(_.method).getOrElse("HTTP")
+          val path   = ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None)
+          val _      = Span.fromContext(ctx).updateName(s"HTTP $method $path")
+        }
+      }
+
+    override def apply[B](responder: Responder[Task, B], delegate: EndpointHandler[Task, B]): EndpointHandler[Task, B] =
+      new EndpointHandler[Task, B] {
+        override def onDecodeSuccess[A, U, I](ctx: DecodeSuccessContext[Task, A, U, I])(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[ServerResponse[B]] =
+          updateSpanName(ctx.endpoint) *> delegate.onDecodeSuccess(ctx)
+
+        override def onSecurityFailure[A](ctx: SecurityFailureContext[Task, A])(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[ServerResponse[B]] =
+          updateSpanName(ctx.endpoint) *> delegate.onSecurityFailure(ctx)
+
+        override def onDecodeFailure(ctx: DecodeFailureContext)(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[Option[ServerResponse[B]]] =
+          delegate.onDecodeFailure(ctx)
+      }
+  }
 
   def startup(): UIO[Unit] = for {
     _                         <- ZIO.logInfo("Starting DSP API server...")
@@ -71,7 +119,7 @@ final class DspApiServer(
               req.headers.toList.map(header => (header.headerName.toLowerCase, header.renderedValue)).toMap
             val extractedCtx = propagator.extract(Context.root(), headersMap, getter)
             ctxStore.set(extractedCtx) *>
-              tracing.span(s"HTTP ${req.method} ${req.path}", SpanKind.SERVER)(h(req))
+              tracing.span(s"HTTP ${req.method}", SpanKind.SERVER)(h(req))
           }
         }
       }
