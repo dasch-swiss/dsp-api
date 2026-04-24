@@ -10,6 +10,8 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.TextMapGetter
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import sttp.model.Method.*
 import sttp.monad.MonadError
 import sttp.tapir.AnyEndpoint
@@ -61,16 +63,18 @@ final class DspApiServer(
       .options
 
   // Renames the active HTTP server span to the matched Tapir endpoint's path template
-  // (e.g. "HTTP GET /admin/lists/{listIri}") once routing has succeeded. Keeps span
-  // names low-cardinality per OTel HTTP semantic conventions:
+  // (e.g. "HTTP GET /admin/lists/{listIri}") once routing has succeeded, and records
+  // http.route. Keeps span names low-cardinality per OTel HTTP semantic conventions:
   // https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
   private def spanNameInterceptor: EndpointInterceptor[Task] = new EndpointInterceptor[Task] {
-    private def updateSpanName(ep: AnyEndpoint): UIO[Unit] =
+    private def updateSpanMetadata(ep: AnyEndpoint): UIO[Unit] =
       ctxStore.get.flatMap { ctx =>
         ZIO.succeed {
           val method = ep.method.map(_.method).getOrElse("HTTP")
-          val path   = ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None)
-          val _      = Span.fromContext(ctx).updateName(s"HTTP $method $path")
+          val route  = ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None)
+          val span   = Span.fromContext(ctx)
+          val _      = span.updateName(s"HTTP $method $route")
+          val _      = span.setAttribute(HttpAttributes.HTTP_ROUTE, route)
         }
       }
 
@@ -80,13 +84,13 @@ final class DspApiServer(
           monad: MonadError[Task],
           bodyListener: BodyListener[Task, B],
         ): Task[ServerResponse[B]] =
-          updateSpanName(ctx.endpoint) *> delegate.onDecodeSuccess(ctx)
+          updateSpanMetadata(ctx.endpoint) *> delegate.onDecodeSuccess(ctx)
 
         override def onSecurityFailure[A](ctx: SecurityFailureContext[Task, A])(implicit
           monad: MonadError[Task],
           bodyListener: BodyListener[Task, B],
         ): Task[ServerResponse[B]] =
-          updateSpanName(ctx.endpoint) *> delegate.onSecurityFailure(ctx)
+          updateSpanMetadata(ctx.endpoint) *> delegate.onSecurityFailure(ctx)
 
         override def onDecodeFailure(ctx: DecodeFailureContext)(implicit
           monad: MonadError[Task],
@@ -119,7 +123,14 @@ final class DspApiServer(
               req.headers.toList.map(header => (header.headerName.toLowerCase, header.renderedValue)).toMap
             val extractedCtx = propagator.extract(Context.root(), headersMap, getter)
             ctxStore.set(extractedCtx) *>
-              tracing.span(s"HTTP ${req.method}", SpanKind.SERVER)(h(req))
+              tracing.span(s"HTTP ${req.method}", SpanKind.SERVER) {
+                for {
+                  _    <- tracing.setAttribute(HttpAttributes.HTTP_REQUEST_METHOD, req.method.toString)
+                  _    <- tracing.setAttribute(UrlAttributes.URL_PATH, req.path.toString)
+                  resp <- h(req)
+                  _    <- tracing.setAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, resp.status.code.toLong)
+                } yield resp
+              }
           }
         }
       }
