@@ -445,7 +445,7 @@ FILTER regex(?titleStr, "Zeit", "i")
 ```
 
 > **Note:** SPARQL regex uses [XSD/XQuery regex syntax](https://www.w3.org/TR/xpath-functions/#regex-syntax),
-> which differs from PCRE (Perl-compatible) regex. Some patterns you may know
+> Some patterns you may know
 > from other languages will not work. See the tables below for supported patterns.
 
 #### Supported Regex Patterns
