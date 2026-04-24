@@ -451,7 +451,7 @@ FILTER regex(?titleStr, "Zeit", "i")
 #### Supported Regex Patterns
 
 | Pattern | Description | Example | Status |
-|---------|-------------|---------|--------|
+| ------- | ----------- | ------- | ------ |
 | `^text` | Starts with | `^Zeit` | ✅ Supported |
 | `text$` | Ends with | `Zeit$` | ✅ Supported |
 | `^text$` | Exact match | `^Zeit$` | ✅ Supported |
