@@ -1,5 +1,28 @@
 # Changelog
 
+## [35.7.0](https://github.com/dasch-swiss/dsp-api/compare/v35.6.0...v35.7.0) (2026-04-24)
+
+
+### Maintenances
+
+* Patch dependency updates ([#4051](https://github.com/dasch-swiss/dsp-api/issues/4051)) ([3eb0f87](https://github.com/dasch-swiss/dsp-api/commit/3eb0f87807b867046c882d3cf2fb8761930dc7db))
+* Replace `String`|`IRI` with type `ResourceIri` and update docs ([#4082](https://github.com/dasch-swiss/dsp-api/issues/4082)) ([402d4be](https://github.com/dasch-swiss/dsp-api/commit/402d4bef6b96b3e8b1cd6ac9a423f2471d337840))
+
+
+### Documentation
+
+* add XSD regex patterns documentation to query-language.md ([#4089](https://github.com/dasch-swiss/dsp-api/issues/4089)) ([ab6382d](https://github.com/dasch-swiss/dsp-api/commit/ab6382d5e6e52cc23da5f62e3b4cae435b92da10))
+
+
+### Enhancements
+
+* Move Fuseki Docker image publishing to dsp-api (DEV-6277) ([#4087](https://github.com/dasch-swiss/dsp-api/issues/4087)) ([72cda16](https://github.com/dasch-swiss/dsp-api/commit/72cda164a62c1c9a2adea440c8cecdae078ae5d8))
+
+
+### Bug Fixes
+
+* **project-migration:** Include system admin project members as normal users in export (DEV-6281) ([#4086](https://github.com/dasch-swiss/dsp-api/issues/4086)) ([ce689c4](https://github.com/dasch-swiss/dsp-api/commit/ce689c45355f5a496833dd46b0e8bdd820ba9535))
+
 ## [35.6.0](https://github.com/dasch-swiss/dsp-api/compare/v35.5.0...v35.6.0) (2026-04-20)
 
 
