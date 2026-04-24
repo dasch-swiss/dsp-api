@@ -7,11 +7,13 @@ package org.knora.webapi.core
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.TextMapGetter
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
+import io.opentelemetry.semconv.UserAgentAttributes
 import sttp.model.Method.*
 import sttp.monad.MonadError
 import sttp.tapir.AnyEndpoint
@@ -32,6 +34,7 @@ import zio.*
 import zio.http.*
 import zio.http.Server.Config.ResponseCompressionConfig
 import zio.telemetry.opentelemetry.context.ContextStorage
+import zio.telemetry.opentelemetry.tracing.StatusMapper
 import zio.telemetry.opentelemetry.tracing.Tracing
 
 import scala.jdk.CollectionConverters.IterableHasAsJava
@@ -115,6 +118,15 @@ final class DspApiServer(
       override def get(carrier: Map[String, String], key: String): String         = carrier.getOrElse(key, null)
     }
 
+    // Map 5xx responses to span status ERROR per OTel HTTP semconv. 2xx/3xx/4xx stay UNSET
+    // (4xx are client errors and must not be surfaced as server-side failures). Typed
+    // failures and defects are handled by zio-telemetry's default and produce ERROR
+    // automatically, with `Cause.prettyPrint` captured as the status description.
+    private val httpStatusMapper: StatusMapper.Success[Response] =
+      StatusMapper.Success[Response] {
+        case resp if resp.status.code >= 500 => StatusMapper.Result(StatusCode.ERROR)
+      }
+
     override def apply[Env1 <: Any, Err](routes: Routes[Env1, Err]): Routes[Env1, Err] =
       routes.transform { h =>
         Handler.scoped[Env1] {
@@ -123,12 +135,21 @@ final class DspApiServer(
               req.headers.toList.map(header => (header.headerName.toLowerCase, header.renderedValue)).toMap
             val extractedCtx = propagator.extract(Context.root(), headersMap, getter)
             ctxStore.set(extractedCtx) *>
-              tracing.span(s"HTTP ${req.method}", SpanKind.SERVER) {
+              tracing.span(s"HTTP ${req.method}", SpanKind.SERVER, statusMapper = httpStatusMapper) {
                 for {
-                  _    <- tracing.setAttribute(HttpAttributes.HTTP_REQUEST_METHOD, req.method.toString)
-                  _    <- tracing.setAttribute(UrlAttributes.URL_PATH, req.path.toString)
-                  resp <- h(req)
-                  _    <- tracing.setAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, resp.status.code.toLong)
+                  _ <- tracing.setAttribute(HttpAttributes.HTTP_REQUEST_METHOD, req.method.toString)
+                  _ <- tracing.setAttribute(UrlAttributes.URL_PATH, req.path.toString)
+                  _ <- ZIO.foreachDiscard(req.headers.get("User-Agent"))(ua =>
+                         tracing.setAttribute(UserAgentAttributes.USER_AGENT_ORIGINAL, ua),
+                       )
+                  resp <- h(req).onExit {
+                            case Exit.Success(resp) =>
+                              tracing.setAttribute(
+                                HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+                                resp.status.code.toLong,
+                              )
+                            case _ => ZIO.unit
+                          }
                 } yield resp
               }
           }
