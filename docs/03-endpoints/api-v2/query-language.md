@@ -462,7 +462,7 @@ FILTER regex(?titleStr, "Zeit", "i")
 | `a\|b` | Alternation | `Zeit\|Time` | ✅ Supported |
 | `*`, `+`, `?` | Quantifiers | `Ze*it` | ✅ Supported |
 | `{n,m}` | Repetition | `e{1,2}` | ✅ Supported |
-| `\d`, `\w`, `\s` | Shorthand character classes | `\\d+` | ✅ Supported |
+| `[0-9]` | Digit (use instead of `\d`) | `[0-9]+` | ✅ Supported |
 
 #### Escaping Special Characters
 
