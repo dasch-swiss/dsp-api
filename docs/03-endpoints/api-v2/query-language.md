@@ -454,30 +454,26 @@ FILTER regex(?titleStr, "Zeit", "i")
 |---------|-------------|---------|--------|
 | `^text` | Starts with | `^Zeit` | ✅ Supported |
 | `text$` | Ends with | `Zeit$` | ✅ Supported |
+| `^text$` | Exact match | `^Zeit$` | ✅ Supported |
 | `text` | Contains | `Zeit` | ✅ Supported |
 | `.` | Any character | `Z.it` | ✅ Supported |
 | `[abc]` | Character class | `[Zz]eit` | ✅ Supported |
+| `[^abc]` | Negated character class | `[^0-9]eit` | ✅ Supported |
 | `a\|b` | Alternation | `Zeit\|Time` | ✅ Supported |
 | `*`, `+`, `?` | Quantifiers | `Ze*it` | ✅ Supported |
 | `{n,m}` | Repetition | `e{1,2}` | ✅ Supported |
-
-#### Patterns That Do NOT Work
-
-| Pattern | Reason | Workaround |
-|---------|--------|------------|
-| `^text$` | Exact match not supported | Use equality comparison instead of regex |
-| `[^abc]` | Negated character class | Rewrite using alternation or positive match |
+| `\d`, `\w`, `\s` | Shorthand character classes | `\\d+` | ✅ Supported |
 
 #### Escaping Special Characters
 
-To match literal special characters, escape with backslash:
+To match literal special characters, use double backslash in SPARQL strings:
 
 ```sparql
 FILTER regex(?title, "\\*", "i")  -- matches literal asterisk
 FILTER regex(?title, "\\.", "i")  -- matches literal period
 ```
 
-Note: In SPARQL strings, use double backslash (`\\`) for escape sequences.
+Note: SPARQL requires escaping the backslash itself, so `\\` in the query string becomes `\` in the regex pattern.
 
 ### Searching for Text Markup
 
