@@ -68,7 +68,7 @@ final class IngestApiServer(
           val method = ep.method.map(_.method).getOrElse("HTTP")
           val route  = ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None)
           val span   = Span.fromContext(ctx)
-          val _      = span.updateName(s"HTTP $method $route")
+          val _      = span.updateName(s"$method $route")
           val _      = span.setAttribute(HttpAttributes.HTTP_ROUTE, route)
         }
       }
@@ -127,7 +127,7 @@ final class IngestApiServer(
               req.headers.toList.map(header => (header.headerName.toLowerCase, header.renderedValue)).toMap
             val extractedCtx = propagator.extract(Context.root(), headersMap, getter)
             ctxStore.set(extractedCtx) *>
-              tracing.span(s"HTTP ${req.method}", SpanKind.SERVER, statusMapper = httpStatusMapper) {
+              tracing.span(s"${req.method}", SpanKind.SERVER, statusMapper = httpStatusMapper) {
                 ctxStore.get.flatMap { ctx =>
                   val body = for {
                     _ <- tracing.setAttribute(HttpAttributes.HTTP_REQUEST_METHOD, req.method.toString)
