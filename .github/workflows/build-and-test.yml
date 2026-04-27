@@ -243,3 +243,16 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
       - name: Check formatting
         run: make check
+
+  docker-healthcheck:
+    name: Run the healthcheck from the container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Build image locally
+        run: make docker-build-dsp-api-image
+      - name: Spin up the API container and wait for all healthchecks (incl. db and sipi) to pass
+        run: docker compose up --wait api
