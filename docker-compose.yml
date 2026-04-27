@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   app:
     image: daschswiss/dsp-app:latest
