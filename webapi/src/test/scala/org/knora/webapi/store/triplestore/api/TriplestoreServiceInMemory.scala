@@ -187,13 +187,13 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
     for {
       turtle <- constructToTurtle(query.sparql)
       _      <- ZIO.attempt(
-                  RdfFormatUtil.turtleToQuadsFile(
-                    RdfStringSource(turtle),
-                    graphIri.value,
-                    outputFile.toFile.toPath,
-                    outputFormat,
-                  ),
-                )
+             RdfFormatUtil.turtleToQuadsFile(
+               RdfStringSource(turtle),
+               graphIri.value,
+               outputFile.toFile.toPath,
+               outputFormat,
+             ),
+           )
     } yield ()
 
   override def query(query: Update): Task[Unit] =
@@ -212,8 +212,8 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
       fos <- fileOutputStream(outputFile)
       lang = RdfFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
       _   <- withTx(ReadWrite.READ) { ds =>
-               ds.getNamedModel(graphIri.value).write(fos, lang.getName)
-             }
+             ds.getNamedModel(graphIri.value).write(fos, lang.getName)
+           }
     } yield ()
   }
 
@@ -252,8 +252,8 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
         graphName <- checkGraphName(elem)
         in        <- loadRdfUrl(elem.path)
         _         <- withTx(ReadWrite.WRITE) { ds =>
-                       ds.getNamedModel(graphName).read(in, null, "TURTLE")
-                     }
+               ds.getNamedModel(graphName).read(in, null, "TURTLE")
+             }
       } yield ()
     }
 
