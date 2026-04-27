@@ -1,5 +1,27 @@
 # Changelog
 
+## [35.8.0](https://github.com/dasch-swiss/dsp-api/compare/v35.7.0...v35.8.0) (2026-04-27)
+
+
+### Maintenances
+
+* Verify API healthcheck in CI (DEV-6247) ([#4092](https://github.com/dasch-swiss/dsp-api/issues/4092)) ([fd83dfc](https://github.com/dasch-swiss/dsp-api/commit/fd83dfc938679bf7b83cc38d7cdb8753ea8f5358))
+
+
+### Enhancements
+
+* **tracing:** Use endpoint path template for low-cardinality span names and add trace&lt;-&gt;log correlation (DEV-6292) ([#4088](https://github.com/dasch-swiss/dsp-api/issues/4088)) ([ddfea9e](https://github.com/dasch-swiss/dsp-api/commit/ddfea9e7df5796bb77720ced442916a76377c6c0))
+
+
+### Bug Fixes
+
+* **ingest:** Use sttp/tracing client with 1h read timeout for project import ([#4094](https://github.com/dasch-swiss/dsp-api/issues/4094)) ([f933d70](https://github.com/dasch-swiss/dsp-api/commit/f933d70abc3bdf12feb9b9f2fee32d5a6b4c6064))
+
+
+### Tests
+
+* Pin TDB2 transactions to a single thread in TriplestoreServiceInMemory ([#4091](https://github.com/dasch-swiss/dsp-api/issues/4091)) ([68793e3](https://github.com/dasch-swiss/dsp-api/commit/68793e3222a95a62cb0cfc961f35bddd54d74f0e))
+
 ## [35.7.0](https://github.com/dasch-swiss/dsp-api/compare/v35.6.0...v35.7.0) (2026-04-27)
 
 
