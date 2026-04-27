@@ -8,6 +8,7 @@ package org.knora.webapi.store.triplestore.api
 import org.apache.jena.query.*
 import org.apache.jena.rdf.model
 import org.apache.jena.rdf.model.ModelFactory
+import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.tdb.TDB
 import org.apache.jena.tdb2.TDB2Factory
@@ -91,15 +92,14 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
     getDataset.flatMap { ds =>
       ZIO.attemptBlocking {
         ds.begin(rw)
+        var committed = false
         try {
           val a = f(ds)
           ds.commit()
+          committed = true
           a
-        } catch {
-          case t: Throwable =>
-            if (ds.isInTransaction) ds.abort()
-            throw t
         } finally {
+          if (!committed && ds.isInTransaction) ds.abort()
           if (ds.isInTransaction) ds.end()
         }
       }
@@ -252,7 +252,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
         graphName <- checkGraphName(elem)
         in        <- loadRdfUrl(elem.path)
         _         <- withTx(ReadWrite.WRITE) { ds =>
-               ds.getNamedModel(graphName).read(in, null, "TURTLE")
+               RDFDataMgr.read(ds.getNamedModel(graphName), in, Lang.TURTLE)
              }
       } yield ()
     }
@@ -302,7 +302,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
 
       println(s"Graph: $name\n")
       // Write the model in Turtle format
-      RDFDataMgr.write(System.out, model, org.apache.jena.riot.Lang.TURTLE)
+      RDFDataMgr.write(System.out, model, Lang.TURTLE)
     }
     dataset.end()
   }
