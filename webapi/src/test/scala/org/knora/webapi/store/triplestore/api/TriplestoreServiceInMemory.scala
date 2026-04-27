@@ -7,7 +7,6 @@ package org.knora.webapi.store.triplestore.api
 
 import org.apache.jena.query.*
 import org.apache.jena.rdf.model
-import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.tdb.TDB
@@ -21,11 +20,11 @@ import zio.Scope
 import zio.Task
 import zio.UIO
 import zio.ULayer
-import zio.URIO
 import zio.ZIO
 import zio.ZLayer
 import zio.stream.ZStream
 
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -51,7 +50,6 @@ import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
-import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
 
@@ -59,7 +57,7 @@ trait TestTripleStore extends TriplestoreService {
   def setDataset(ds: Dataset): UIO[Unit]
   def getDataset: UIO[Dataset]
   def printDataset(prefix: String = ""): UIO[Unit]
-  def datasetStatements: RIO[Scope, List[model.Statement]]
+  def datasetStatements: Task[List[model.Statement]]
 }
 
 object TestTripleStore {
@@ -83,28 +81,39 @@ object TestTripleStore {
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit val sf: StringFormatter)
     extends TestTripleStore {
 
+  // TDB2 stores transaction state in a ThreadLocal: begin / commit / abort / end
+  // must all run on the same OS thread. ZIO.attemptBlocking pins the synchronous
+  // body to a single blocking-pool thread for its full duration, so collapsing
+  // the whole txn lifecycle (and any dependent ResultSet/Model/QueryExecution
+  // consumption) into one block is the safe pattern. f must be plain Scala/Java
+  // and must fully materialise its result — no lazy iterators may escape.
+  private def withTx[A](rw: ReadWrite)(f: Dataset => A): Task[A] =
+    getDataset.flatMap { ds =>
+      ZIO.attemptBlocking {
+        ds.begin(rw)
+        try {
+          val a = f(ds)
+          ds.commit()
+          a
+        } catch {
+          case t: Throwable =>
+            if (ds.isInTransaction) ds.abort()
+            throw t
+        } finally {
+          if (ds.isInTransaction) ds.end()
+        }
+      }
+    }
+
   override def query(query: Select): Task[SparqlSelectResult] =
-    ZIO.scoped(execSelect(query.sparql).map(toSparqlSelectResult))
-
-  private def execSelect(query: String): ZIO[Any & Scope, Throwable, ResultSet] = {
-    def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execSelect)
-    def closeResultSet(rs: ResultSet)       = ZIO.succeed(rs.close())
-    getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeResultSet))
-  }
-
-  private def getReadTransactionQueryExecution(query: String): ZIO[Scope, Throwable, QueryExecution] = {
-    def acquire(query: String, ds: Dataset)                     = ZIO.attempt(QueryExecutionFactory.create(query, ds))
-    def release(qExec: QueryExecution): ZIO[Any, Nothing, Unit] = ZIO.succeed(qExec.close())
-    getDataSetWithTransaction(ReadWrite.READ).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
-  }
-
-  private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Scope, Dataset] = {
-    val acquire              = getDataset.tap(ds => ZIO.succeed(ds.begin(readWrite)))
-    def release(ds: Dataset) = ZIO.succeed(try {
-      ds.commit()
-    } finally { ds.end() })
-    ZIO.acquireRelease(acquire)(release)
-  }
+    withTx(ReadWrite.READ) { ds =>
+      val qExec = QueryExecutionFactory.create(query.sparql, ds)
+      try {
+        val rs = qExec.execSelect()
+        try toSparqlSelectResult(rs)
+        finally rs.close()
+      } finally qExec.close()
+    }
 
   private def toSparqlSelectResult(resultSet: ResultSet): SparqlSelectResult = {
     val header     = SparqlSelectResultHeader(resultSet.getResultVars.asScala.toList)
@@ -130,7 +139,11 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
   }
 
   override def query(query: Ask): Task[Boolean] =
-    ZIO.scoped(getReadTransactionQueryExecution(query.sparql).map(_.execAsk()))
+    withTx(ReadWrite.READ) { ds =>
+      val qExec = QueryExecutionFactory.create(query.sparql, ds)
+      try qExec.execAsk()
+      finally qExec.close()
+    }
 
   override def query(query: Construct): Task[SparqlConstructResponse] =
     for {
@@ -148,42 +161,47 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
                     )
     } yield SparqlConstructResponse.make(rdfModel)
 
-  override def queryRdf(query: Construct): Task[String] = ZIO.scoped(execConstruct(query.sparql).flatMap(modelToTurtle))
+  override def queryRdf(query: Construct): Task[String] = constructToTurtle(query.sparql)
 
-  private def execConstruct(query: String): ZIO[Any & Scope, Throwable, Model] = {
-    def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execConstruct(ModelFactory.createDefaultModel()))
-    def closeModel(model: Model)            = ZIO.succeed(model.close())
-    getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeModel))
-  }
-
-  private def modelToTurtle(model: Model): ZIO[Any & Scope, Throwable, String] =
-    for {
-      os    <- byteArrayOutputStream()
-      _      = model.write(os, "TURTLE")
-      turtle = os.toString(StandardCharsets.UTF_8)
-    } yield turtle
+  private def constructToTurtle(sparql: String): Task[String] =
+    withTx(ReadWrite.READ) { ds =>
+      val qExec = QueryExecutionFactory.create(sparql, ds)
+      try {
+        val m = qExec.execConstruct(ModelFactory.createDefaultModel())
+        try {
+          val os = new ByteArrayOutputStream()
+          try {
+            m.write(os, "TURTLE")
+            os.toString(StandardCharsets.UTF_8)
+          } finally os.close()
+        } finally m.close()
+      } finally qExec.close()
+    }
 
   override def queryToFile(
     query: Construct,
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat,
-  ): Task[Unit] = ZIO.scoped {
+  ): Task[Unit] =
     for {
-      model  <- execConstruct(query.sparql)
-      source <- modelToTurtle(model).map(RdfStringSource.apply)
-      _      <- ZIO.attempt(RdfFormatUtil.turtleToQuadsFile(source, graphIri.value, outputFile.toFile.toPath, outputFormat))
+      turtle <- constructToTurtle(query.sparql)
+      _      <- ZIO.attempt(
+                  RdfFormatUtil.turtleToQuadsFile(
+                    RdfStringSource(turtle),
+                    graphIri.value,
+                    outputFile.toFile.toPath,
+                    outputFormat,
+                  ),
+                )
     } yield ()
-  }
 
-  override def query(query: Update): Task[Unit] = {
-    def doUpdate(ds: Dataset) = ZIO.attempt {
+  override def query(query: Update): Task[Unit] =
+    withTx(ReadWrite.WRITE) { ds =>
       val update    = UpdateFactory.create(query.sparql)
       val processor = UpdateExecutionFactory.create(update, ds)
       processor.execute()
     }
-    ZIO.scoped(getDataSetWithTransaction(ReadWrite.WRITE).flatMap(doUpdate)).unit
-  }
 
   override def downloadGraph(
     graphIri: InternalIri,
@@ -192,13 +210,10 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
   ): Task[Unit] = ZIO.scoped {
     for {
       fos <- fileOutputStream(outputFile)
-      ds  <- getDataset
       lang = RdfFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
-      _   <- ZIO.attemptBlocking {
-             ds.begin(ReadWrite.READ)
-             try { ds.getNamedModel(graphIri.value).write(fos, lang.getName) }
-             finally { ds.end() }
-           }
+      _   <- withTx(ReadWrite.READ) { ds =>
+               ds.getNamedModel(graphIri.value).write(fos, lang.getName)
+             }
     } yield ()
   }
 
@@ -236,9 +251,9 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
       for {
         graphName <- checkGraphName(elem)
         in        <- loadRdfUrl(elem.path)
-        ds        <- getDataSetWithTransaction(ReadWrite.WRITE)
-        model      = ds.getNamedModel(graphName)
-        _          = model.read(in, null, "TURTLE")
+        _         <- withTx(ReadWrite.WRITE) { ds =>
+                       ds.getNamedModel(graphName).read(in, null, "TURTLE")
+                     }
       } yield ()
     }
 
@@ -273,8 +288,8 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
       _   = printDatasetContents(ds)
     } yield ()
 
-  override def datasetStatements: RIO[Scope, List[model.Statement]] =
-    getDataSetWithTransaction(ReadWrite.READ).map(_.getUnionModel.listStatements.toList.asScala.toList)
+  override def datasetStatements: Task[List[model.Statement]] =
+    withTx(ReadWrite.READ)(ds => ds.getUnionModel.listStatements.toList.asScala.toList)
 
   def printDatasetContents(dataset: Dataset): Unit = {
     // Iterate over the named models
