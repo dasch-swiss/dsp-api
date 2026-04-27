@@ -7,17 +7,9 @@ package org.knora.webapi.slice.admin.domain.service
 
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
-import zio.Scope
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.http.Body
-import zio.http.Client
-import zio.http.Header
-import zio.http.Headers
-import zio.http.MediaType
-import zio.http.Request
-import zio.http.URL
 import zio.json.DecoderOps
 import zio.json.DeriveJsonDecoder
 import zio.json.JsonDecoder
@@ -104,24 +96,16 @@ final class DspIngestClientLive(
     _        <- ZIO.logInfo(s"Response from ingest :${response.body}")
   } yield ()
 
-  def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = ZIO.scoped {
-    for {
-      importUrl <- ZIO.fromEither(URL.decode(s"${projectsPath(shortcode)}/import"))
-      token     <- jwtService.createJwtForDspIngest()
-      body      <- Body.fromFile(fileToImport.toFile)
-      request    = Request
-                  .post(importUrl, body)
-                  .addHeaders(
-                    Headers(
-                      Header.Authorization.Bearer(token.jwtString),
-                      Header.ContentType(MediaType.application.zip),
-                    ),
-                  )
-      response     <- Client.batched(request).provideSomeLayer[Scope](Client.default)
-      bodyAsString <- response.body.asString
-      _            <- ZIO.logInfo(s"Response code: ${response.status} body $bodyAsString")
-    } yield fileToImport
-  }
+  def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = for {
+    request <- authenticatedRequest.map {
+                 _.post(uri"${projectsPath(shortcode)}/import")
+                   .readTimeout(1.hour)
+                   .contentType("application/zip")
+                   .body(fileToImport.toFile)
+               }
+    response <- request.send(backend)
+    _        <- ZIO.logInfo(s"Response code: ${response.code} body ${response.body.fold(identity, identity)}")
+  } yield fileToImport
 }
 
 object DspIngestClientLive {
