@@ -136,21 +136,30 @@ final class DspApiServer(
             val extractedCtx = propagator.extract(Context.root(), headersMap, getter)
             ctxStore.set(extractedCtx) *>
               tracing.span(s"HTTP ${req.method}", SpanKind.SERVER, statusMapper = httpStatusMapper) {
-                for {
-                  _ <- tracing.setAttribute(HttpAttributes.HTTP_REQUEST_METHOD, req.method.toString)
-                  _ <- tracing.setAttribute(UrlAttributes.URL_PATH, req.path.toString)
-                  _ <- ZIO.foreachDiscard(req.headers.get("User-Agent"))(ua =>
-                         tracing.setAttribute(UserAgentAttributes.USER_AGENT_ORIGINAL, ua),
-                       )
-                  resp <- h(req).onExit {
-                            case Exit.Success(resp) =>
-                              tracing.setAttribute(
-                                HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
-                                resp.status.code.toLong,
-                              )
-                            case _ => ZIO.unit
-                          }
-                } yield resp
+                ctxStore.get.flatMap { ctx =>
+                  val body = for {
+                    _ <- tracing.setAttribute(HttpAttributes.HTTP_REQUEST_METHOD, req.method.toString)
+                    _ <- tracing.setAttribute(UrlAttributes.URL_PATH, req.path.toString)
+                    _ <- ZIO.foreachDiscard(req.headers.get("User-Agent"))(ua =>
+                           tracing.setAttribute(UserAgentAttributes.USER_AGENT_ORIGINAL, ua),
+                         )
+                    resp <- h(req).onExit {
+                              case Exit.Success(resp) =>
+                                tracing.setAttribute(
+                                  HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+                                  resp.status.code.toLong,
+                                )
+                              case _ => ZIO.unit
+                            }
+                  } yield resp
+
+                  val sc = Span.fromContext(ctx).getSpanContext
+                  if (sc.isValid)
+                    body @@ ZIOAspect.annotated("trace_id", sc.getTraceId)
+                      @@ ZIOAspect.annotated("span_id", sc.getSpanId)
+                  else
+                    body
+                }
               }
           }
         }
