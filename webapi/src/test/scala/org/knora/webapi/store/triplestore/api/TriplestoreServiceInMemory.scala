@@ -84,10 +84,8 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
 
   // TDB2 stores transaction state in a ThreadLocal: begin / commit / abort / end
   // must all run on the same OS thread. ZIO.attemptBlocking pins the synchronous
-  // body to a single blocking-pool thread for its full duration, so collapsing
-  // the whole txn lifecycle (and any dependent ResultSet/Model/QueryExecution
-  // consumption) into one block is the safe pattern. f must be plain Scala/Java
-  // and must fully materialise its result — no lazy iterators may escape.
+  // body to a single blocking-pool thread for its full duration.
+  // f must be plain Scala/Java and must fully materialise its result to the Dataset before returning
   private def withTx[A](rw: ReadWrite)(f: Dataset => A): Task[A] =
     getDataset.flatMap { ds =>
       ZIO.attemptBlocking {
