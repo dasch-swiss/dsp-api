@@ -63,7 +63,9 @@ object ModelOpsSpec extends ZIOSpecDefault {
       for {
         model <- ModelOps.fromTurtle("")
       } yield assertTrue(
-        model.singleRootResource == Left("Expected a single root resource. No root resource found in model"),
+        model.singleRootResource == Left(
+          "Expected a tree shaped graph with a single root resource. No root resource found in model",
+        ),
       )
     },
     test("should fail with more than a single root resource, uri resources") {
@@ -76,7 +78,7 @@ object ModelOpsSpec extends ZIOSpecDefault {
                                  |""".stripMargin)
       } yield assertTrue(
         model.singleRootResource == Left(
-          "Expected a single root resource. Multiple root resources found in model: http://example.org/root1, http://example.org/root2",
+          "Expected a tree shaped graph with a single root resource. Multiple root resources found in model: http://example.org/root1, http://example.org/root2",
         ),
       )
     },
