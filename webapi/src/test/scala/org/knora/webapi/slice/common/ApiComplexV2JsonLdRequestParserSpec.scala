@@ -356,6 +356,29 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
         ),
       )
     },
+    test("should reject a LinkValue that targets the resource itself") {
+      val selfLinkJson =
+        s"""
+           |{
+           |  "@id" : "http://rdfh.ch/0001/a-thing",
+           |  "@type" : "ex:Thing",
+           |  "ex:hasOtherThingValue" : {
+           |    "@type" : "ka:LinkValue",
+           |    "ka:linkValueHasTargetIri" : {
+           |      "@id" : "http://rdfh.ch/0001/a-thing"
+           |    }
+           |  },
+           |  "@context": {
+           |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+           |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+      for {
+        result <- service(_.createValueV2FromJsonLd(selfLinkJson)).either
+      } yield assertTrue(
+        result == Left("A resource cannot link to itself: <http://rdfh.ch/0001/a-thing>"),
+      )
+    },
     test("should parse UriValueContentV2") {
       for {
         actual <-
