@@ -111,6 +111,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       val injectedStr = injectOrderIndices(str)
       for {
         model             <- ModelOps.fromJsonLd(injectedStr)
+        _                 <- ZIO.fromEither(ensureNoSelfLink(model))
         resource          <- ZIO.fromEither(model.singleRootResource)
         resourceIriOption <- ZIO.foreach(resource.uri)(uri => ZIO.fromEither(ResourceIri.from(uri)))
         resourceClassIri  <- resourceClassIri(resource)
@@ -120,6 +121,27 @@ final case class ApiComplexV2JsonLdRequestParser(
       .fromOption(r.rdfType)
       .orElseFail("No root resource class IRI found")
       .flatMap(converter.asResourceClassIriApiV2Complex)
+
+    private def ensureNoSelfLink(model: Model): Either[String, Unit] =
+      val targetProp = model.createProperty(LinkValueHasTargetIri)
+      val selfLink   = model
+        .listStatements(null, targetProp, null)
+        .asScala
+        .iterator
+        .filter(_.getObject.isURIResource)
+        .map { st =>
+          val target    = st.getObject.asResource
+          val valueNode = st.getSubject
+          val owners    = model
+            .listStatements(null, null, valueNode)
+            .asScala
+            .map(_.getSubject)
+            .collect { case r if r.isURIResource => r }
+            .toSet
+          Option.when(owners.contains(target))(target.getURI)
+        }
+        .collectFirst { case Some(uri) => uri }
+      selfLink.toLeft(()).left.map(uri => s"A resource cannot link to itself: <$uri>")
   }
 
   def updateResourceMetadataRequestV2(
