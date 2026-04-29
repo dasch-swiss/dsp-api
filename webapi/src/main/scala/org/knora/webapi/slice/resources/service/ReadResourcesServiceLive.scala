@@ -23,6 +23,7 @@ import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 trait ReadResourcesService {
   def readResourcesSequence(
@@ -123,6 +124,7 @@ final case class ReadResourcesServiceLive(
                 queryStandoff = queryStandoff,
                 standoffTagFilter = standoffTagFilter,
               ),
+              if (queryStandoff) SparqlTimeout.Maintenance else SparqlTimeout.Standard,
             ),
           )
           .flatMap(_.asExtended)
