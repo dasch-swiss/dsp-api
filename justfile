@@ -78,10 +78,14 @@ stack-destroy:
 stack-init-test: && stack-start
     make init-db-test
 
-# Run API locally against the dev Fuseki
+# Run API locally against the dev Fuseki (requires VPN)
 run-with-dev-db:
     #!/usr/bin/env bash
     set -euo pipefail
+    if [ ! -f .env ]; then
+        main=$(git worktree list --porcelain | awk 'NR==1{print $2}')
+        ln -s "$main/.env" .env
+    fi
     source .env
     export KNORA_WEBAPI_TRIPLESTORE_HOST=db.dev.dasch.swiss
     export KNORA_WEBAPI_TRIPLESTORE_USE_HTTPS=true
