@@ -381,9 +381,10 @@ case class TriplestoreServiceLive(
       case SparqlTimeout.Gravsearch  => triplestoreConfig.gravsearchTimeout
     }
 
-    val params  = Map(("query", query.sparql), ("timeout", timeout.toSeconds.toString))
-    val uri     = targetHostUri.addPath(paths.query)
-    val request = authenticatedRequest.post(uri).header("Accept", acceptMimeType).body(params)
+    val params      = Map(("query", query.sparql), ("timeout", timeout.toSeconds.toString))
+    val uri         = targetHostUri.addPath(paths.query)
+    val readTimeout = FiniteDuration(timeout.toSeconds + 10, TimeUnit.SECONDS)
+    val request     = authenticatedRequest.post(uri).header("Accept", acceptMimeType).body(params).readTimeout(readTimeout)
     trackQueryDuration(query, doHttpRequest(request).map(_.body.merge))
   }
 
