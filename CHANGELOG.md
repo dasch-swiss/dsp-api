@@ -1,5 +1,18 @@
 # Changelog
 
+## [35.8.1](https://github.com/dasch-swiss/dsp-api/compare/v35.8.0...v35.8.1) (2026-05-04)
+
+
+### Maintenances
+
+* Clarify "single root resource" parser error message (DEV-6317) ([#4095](https://github.com/dasch-swiss/dsp-api/issues/4095)) ([a2e59ad](https://github.com/dasch-swiss/dsp-api/commit/a2e59adc5409ecec7f5aafddd0cc8b74caa8333f))
+
+
+### Bug Fixes
+
+* **export:** fix CSV export timeout for large resource classes (DEV-6288) ([#4097](https://github.com/dasch-swiss/dsp-api/issues/4097)) ([d0221c4](https://github.com/dasch-swiss/dsp-api/commit/d0221c4a559b6469c33d8a3f72ddee366a901a92))
+* **project-migration:** Use the mounted storage for unzipping the bagit zip (DEV-6334) ([#4098](https://github.com/dasch-swiss/dsp-api/issues/4098)) ([5f1045d](https://github.com/dasch-swiss/dsp-api/commit/5f1045dcf5e9a8ced30383ee824bf69910cf63b1))
+
 ## [35.8.0](https://github.com/dasch-swiss/dsp-api/compare/v35.7.0...v35.8.0) (2026-04-27)
 
 
