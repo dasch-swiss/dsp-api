@@ -16,12 +16,11 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 import java.time.Instant
 import java.util.UUID
+import scala.util.chaining.scalaUtilChainingOps
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
-import scala.util.chaining.scalaUtilChainingOps
-
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 
@@ -155,7 +154,10 @@ object GetResourcePropertiesAndValuesQuery extends QueryBuilderHelper {
         Seq(valueObject.has(KnoraBase.valueHasStandoff, standoffNode))
           .pipe(_ :+ (standoffTagFilter match {
             case Some(tagIri) => standoffNode.isA(Rdf.iri(tagIri.toIri)).andHas(standoffProperty, standoffValue)
-            case None         => standoffNode.has(standoffProperty, standoffValue).andHas(KnoraBase.targetHasOriginalXMLID, targetOriginalXMLID)
+            case None         =>
+              standoffNode
+                .has(standoffProperty, standoffValue)
+                .andHas(KnoraBase.targetHasOriginalXMLID, targetOriginalXMLID)
           }))
       else Seq.empty
 
@@ -274,21 +276,24 @@ object GetResourcePropertiesAndValuesQuery extends QueryBuilderHelper {
     // Standoff UNION
     val standoffUnion: Seq[GraphPattern] =
       if (queryStandoff) {
-        val standoffNodeContent = standoffNode.has(standoffProperty, standoffValue).andHas(KnoraBase.standoffTagHasStartIndex, startIndex)
+        val standoffNodeContent =
+          standoffNode.has(standoffProperty, standoffValue).andHas(KnoraBase.standoffTagHasStartIndex, startIndex)
         val standoffPattern = valueObject
           .has(KnoraBase.valueHasStandoff, standoffNode)
-          .pipe(base => standoffTagFilter match {
-            case Some(tagIri) => base.and(standoffNode.isA(Rdf.iri(tagIri.toIri))).and(standoffNodeContent)
-            case None =>
-              base
-                .and(standoffNodeContent)
-                .and(
-                  standoffTag
-                    .has(KnoraBase.standoffTagHasInternalReference, targetStandoffTag)
-                    .and(targetStandoffTag.has(KnoraBase.standoffTagHasOriginalXMLID, targetOriginalXMLID))
-                    .optional(),
-                )
-          })
+          .pipe(base =>
+            standoffTagFilter match {
+              case Some(tagIri) => base.and(standoffNode.isA(Rdf.iri(tagIri.toIri))).and(standoffNodeContent)
+              case None         =>
+                base
+                  .and(standoffNodeContent)
+                  .and(
+                    standoffTag
+                      .has(KnoraBase.standoffTagHasInternalReference, targetStandoffTag)
+                      .and(targetStandoffTag.has(KnoraBase.standoffTagHasOriginalXMLID, targetOriginalXMLID))
+                      .optional(),
+                  )
+            },
+          )
           .filter(Expressions.gte(startIndex, Rdf.literalOf(0)))
 
         Seq(GraphPatterns.union(valueObjectBlockWithFilter, standoffPattern))
