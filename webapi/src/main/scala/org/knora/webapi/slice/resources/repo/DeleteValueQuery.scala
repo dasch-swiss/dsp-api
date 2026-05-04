@@ -123,7 +123,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
           val linkProperty      = toRdfIri(lu.linkPropertyIri)
           val linkValueProperty = Rdf.iri(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
           val linkTarget        = Rdf.iri(lu.linkTargetIri)
-          val newLinkValue      = Rdf.iri(lu.newLinkValueIri)
+          val newLinkValue      = Rdf.iri(lu.newLinkValueIri.value)
 
           val deletedOrNot =
             if (lu.newReferenceCount == 0)

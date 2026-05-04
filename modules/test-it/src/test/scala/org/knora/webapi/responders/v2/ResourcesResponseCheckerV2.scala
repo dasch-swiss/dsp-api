@@ -64,7 +64,7 @@ object ResourcesResponseCheckerV2 {
             // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
             assert(expectedPropValues.size == receivedPropValues.size, "number of value instances is not equal")
 
-            expectedPropValues.sortBy(_.valueIri).zip(receivedPropValues.sortBy(_.valueIri)).foreach {
+            expectedPropValues.sortBy(_.valueIri.value).zip(receivedPropValues.sortBy(_.valueIri.value)).foreach {
               case (expectedVal: ReadValueV2, receivedVal: ReadValueV2) =>
                 assert(expectedVal == receivedVal, s"value objects does not match: $expectedVal != $receivedVal")
             }

@@ -18,6 +18,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 
 object ResourcesResponderV2SpecFullData {
 
@@ -45,7 +46,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/5524469101",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/5524469101"),
           valueHasUUID = UuidUtil.decode("5524469101"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
@@ -66,7 +67,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/184e99ca01",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/184e99ca01"),
           valueHasUUID = UuidUtil.decode("184e99ca01"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -85,7 +86,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/db77ec0302",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/db77ec0302"),
           valueHasUUID = UuidUtil.decode("db77ec0302"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
@@ -104,7 +105,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/9ea13f3d02",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/9ea13f3d02"),
           valueHasUUID = UuidUtil.decode("9ea13f3d02"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -125,7 +126,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/497df9ab",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/497df9ab"),
           valueHasUUID = UuidUtil.decode("497df9ab"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -146,7 +147,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/8653a672",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/8653a672"),
           valueHasUUID = UuidUtil.decode("8653a672"),
           permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser",
           userPermission = Permission.ObjectAccess.ChangeRights,
@@ -167,7 +168,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/10e00c7acc2704",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/10e00c7acc2704"),
           valueHasUUID = UuidUtil.decode("10e00c7acc2704"),
           permissions =
             "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -188,7 +189,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/92faf25701",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/92faf25701"),
           valueHasUUID = UuidUtil.decode("92faf25701"),
           permissions =
             "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
@@ -209,7 +210,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/0ca74ce5",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/0ca74ce5"),
           valueHasUUID = UuidUtil.decode("0ca74ce5"),
           permissions =
             "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
@@ -231,7 +232,7 @@ object ResourcesResponderV2SpecFullData {
             comment = None,
             valueHasEndPrecision = DatePrecisionYear,
           ),
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/cfd09f1e01",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/cfd09f1e01"),
           valueHasUUID = UuidUtil.decode("cfd09f1e01"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -252,7 +253,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/c3295339"),
           valueHasUUID = UuidUtil.decode("c3295339"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -306,7 +307,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/e94fa8a09205",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/e94fa8a09205"),
           valueHasUUID = UuidUtil.decode("e94fa8a09205"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -327,7 +328,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/7b4a9bf89305",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/7b4a9bf89305"),
           valueHasUUID = UuidUtil.decode("7b4a9bf89305"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -346,7 +347,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/3e74ee319405",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/3e74ee319405"),
           valueHasUUID = UuidUtil.decode("3e74ee319405"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -365,7 +366,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/019e416b9405",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/019e416b9405"),
           valueHasUUID = UuidUtil.decode("019e416b9405"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -384,7 +385,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/c4c794a49405",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/c4c794a49405"),
           valueHasUUID = UuidUtil.decode("c4c794a49405"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -403,7 +404,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/87f1e7dd9405",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/87f1e7dd9405"),
           valueHasUUID = UuidUtil.decode("87f1e7dd9405"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -422,7 +423,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/4a1b3b179505",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/4a1b3b179505"),
           valueHasUUID = UuidUtil.decode("4a1b3b179505"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -441,7 +442,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/0d458e509505",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/0d458e509505"),
           valueHasUUID = UuidUtil.decode("0d458e509505"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -460,7 +461,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/d06ee1899505",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/d06ee1899505"),
           valueHasUUID = UuidUtil.decode("d06ee1899505"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -479,7 +480,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/939834c39505",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/939834c39505"),
           valueHasUUID = UuidUtil.decode("939834c39505"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -500,7 +501,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/dda85bbb9105",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/dda85bbb9105"),
           valueHasUUID = UuidUtil.decode("dda85bbb9105"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -521,7 +522,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/1a7f08829105",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/1a7f08829105"),
           valueHasUUID = UuidUtil.decode("1a7f08829105"),
           permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser",
           userPermission = Permission.ObjectAccess.ChangeRights,
@@ -541,7 +542,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/56c287fc9505",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/56c287fc9505"),
           valueHasUUID = UuidUtil.decode("56c287fc9505"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -564,7 +565,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/f89173afca2704",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/f89173afca2704"),
           valueHasUUID = UuidUtil.decode("f89173afca2704"),
           permissions =
             "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -585,7 +586,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/ac79fbd99205",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/ac79fbd99205"),
           valueHasUUID = UuidUtil.decode("ac79fbd99205"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -604,7 +605,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/6fa34e139305",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/6fa34e139305"),
           valueHasUUID = UuidUtil.decode("6fa34e139305"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -623,7 +624,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/32cda14c9305",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/32cda14c9305"),
           valueHasUUID = UuidUtil.decode("32cda14c9305"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -642,7 +643,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/f5f6f4859305",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/f5f6f4859305"),
           valueHasUUID = UuidUtil.decode("f5f6f4859305"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -663,7 +664,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/b82048bf9305",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/b82048bf9305"),
           valueHasUUID = UuidUtil.decode("b82048bf9305"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -684,7 +685,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/262655679205",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/262655679205"),
           valueHasUUID = UuidUtil.decode("262655679205"),
           permissions =
             "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -705,7 +706,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/a0d2aef49105",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/a0d2aef49105"),
           valueHasUUID = UuidUtil.decode("a0d2aef49105"),
           permissions =
             "CR knora-admin:Creator|V knora-admin:ProjectMember,knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -727,7 +728,7 @@ object ResourcesResponderV2SpecFullData {
             comment = None,
             valueHasEndPrecision = DatePrecisionYear,
           ),
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/63fc012e9205",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/63fc012e9205"),
           valueHasUUID = UuidUtil.decode("63fc012e9205"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -748,7 +749,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/d1010fd69005",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/d1010fd69005"),
           valueHasUUID = UuidUtil.decode("d1010fd69005"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -767,7 +768,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/942b620f9105",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/942b620f9105"),
           valueHasUUID = UuidUtil.decode("942b620f9105"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -786,7 +787,7 @@ object ResourcesResponderV2SpecFullData {
             textValueType = TextValueType.UnformattedText,
           ),
           valueHasMaxStandoffStartIndex = None,
-          valueIri = "http://rdfh.ch/0803/2a6221216701/values/5755b5489105",
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701/values/5755b5489105"),
           valueHasUUID = UuidUtil.decode("5755b5489105"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
@@ -852,13 +853,13 @@ object ResourcesResponderV2SpecFullData {
                 textValueType = TextValueType.UnformattedText,
               ),
               valueHasMaxStandoffStartIndex = None,
-              valueIri = "http://rdfh.ch/0001/thing-with-history/values/2b",
+              valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/2b"),
               valueHasUUID = UuidUtil.decode("W5fm67e0QDWxRZumcXcs6g"),
               permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
               userPermission = Permission.ObjectAccess.ChangeRights,
               valueCreationDate = Instant.parse("2019-02-11T10:05:10Z"),
               attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
-              previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/2a"),
+              previousValueIri = Some(ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/2a")),
               deletionInfo = None,
             ),
           ),
@@ -871,7 +872,7 @@ object ResourcesResponderV2SpecFullData {
                 nestedResource = None,
               ),
               valueHasRefCount = 1,
-              valueIri = "http://rdfh.ch/0001/thing-with-history/values/3a",
+              valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/3a"),
               valueHasUUID = UuidUtil.decode("IZGOjVqxTfSNO4ieKyp0SA"),
               permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
               userPermission = Permission.ObjectAccess.Modify,
@@ -888,7 +889,7 @@ object ResourcesResponderV2SpecFullData {
                 valueHasInteger = 1,
                 comment = None,
               ),
-              valueIri = "http://rdfh.ch/0001/thing-with-history/values/1a",
+              valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/1a"),
               valueHasUUID = UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g"),
               permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
               userPermission = Permission.ObjectAccess.ChangeRights,
@@ -1013,13 +1014,13 @@ object ResourcesResponderV2SpecFullData {
                 valueHasInteger = 3,
                 comment = None,
               ),
-              valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
+              valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/1c"),
               permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
               valueCreationDate = Instant.parse("2019-02-13T09:05:10Z"),
               attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
               valueHasUUID = UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g"),
               userPermission = Permission.ObjectAccess.ChangeRights,
-              previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/1b"),
+              previousValueIri = Some(ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/1b")),
               deletionInfo = None,
             ),
           ),
@@ -1051,13 +1052,13 @@ object ResourcesResponderV2SpecFullData {
                   valueHasInteger = 2,
                   comment = None,
                 ),
-                valueIri = "http://rdfh.ch/0001/thing-with-history/values/1b",
+                valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/1b"),
                 permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
                 valueCreationDate = Instant.parse("2019-02-12T09:05:10Z"),
                 attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
                 valueHasUUID = UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g"),
                 userPermission = Permission.ObjectAccess.ChangeRights,
-                previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/1a"),
+                previousValueIri = Some(ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/1a")),
                 deletionInfo = None,
               ),
             ),

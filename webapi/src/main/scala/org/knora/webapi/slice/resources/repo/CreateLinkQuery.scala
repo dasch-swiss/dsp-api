@@ -68,7 +68,7 @@ object CreateLinkQuery extends QueryBuilderHelper {
       val linkProperty      = toRdfIri(linkUpdate.linkPropertyIri)
       val linkValueProperty = Rdf.iri(linkUpdate.linkPropertyIri.toInternalSchema.toIri + "Value")
       val linkTarget        = Rdf.iri(linkUpdate.linkTargetIri)
-      val newLinkValue      = Rdf.iri(linkUpdate.newLinkValueIri)
+      val newLinkValue      = Rdf.iri(linkUpdate.newLinkValueIri.value)
 
       val resourceLastModificationDate = variable("resourceLastModificationDate")
       val nextOrder                    = variable("nextOrder")

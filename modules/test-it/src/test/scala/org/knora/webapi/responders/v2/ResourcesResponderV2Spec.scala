@@ -1888,7 +1888,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                                        resourceIri = resourceIri,
                                        resourceClassIri = resourceClassIri,
                                        propertyIri = propertyIri,
-                                       valueIri = firstValueIriToErase.get,
+                                       valueIri = firstValueIriToErase.asValueIri,
                                        valueContent = TextValueContentV2(
                                          ontologySchema = ApiV2Complex,
                                          maybeValueHasString = Some("this is some other text with standoff"),
@@ -1973,7 +1973,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                      resourceWithLinkIri,
                      ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
                      linkValuePropertyIri,
-                     ValueIri.unsafeFrom(linkValue.valueIri),
+                     linkValue.valueIri,
                      valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
                      apiRequestId = randomUUID,
                    ),
@@ -2163,7 +2163,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("create a new value to test create value history event") {
         val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
-        val newValueIri = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
+        val newValueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A")
         val testValue   = "a test value"
 
         for {
@@ -2178,7 +2178,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                        maybeValueHasString = Some(testValue),
                        textValueType = TextValueType.UnformattedText,
                      ),
-                     valueIri = Some(newValueIri.toSmartIri),
+                     valueIri = Some(newValueIri.value.toSmartIri),
                      permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser"),
                    ),
                    requestingUser = anythingUser2,
@@ -2234,7 +2234,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           deleteValueEvent: Option[ResourceAndValueHistoryEvent] =
             events.find(event =>
               event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT &&
-                event.eventBody.asInstanceOf[ValueEventBody].valueIri == valueToDelete.toString,
+                event.eventBody.asInstanceOf[ValueEventBody].valueIri == valueToDelete,
             )
         } yield assertTrue(events.size == 11, deleteValueEvent.isDefined)
       },

@@ -33,6 +33,7 @@ import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -1184,12 +1185,12 @@ case class ValueEventBody(
   resourceClassIri: SmartIri,
   projectADM: Project,
   propertyIri: SmartIri,
-  valueIri: IRI,
+  valueIri: ValueIri,
   valueTypeIri: SmartIri,
   valueContent: Option[ValueContentV2] = None,
   valueUUID: Option[UUID] = None,
   valueCreationDate: Option[Instant] = None,
-  previousValueIri: Option[IRI] = None,
+  previousValueIri: Option[ValueIri] = None,
   permissions: Option[String] = None,
   valueComment: Option[String] = None,
   deletionInfo: Option[DeletionInfo] = None,
@@ -1241,7 +1242,7 @@ case class ValueEventBody(
     }
     JsonLDObject(
       Map(
-        JsonLDKeywords.ID                  -> JsonLDString(valueIri),
+        JsonLDKeywords.ID                  -> JsonLDString(valueIri.value),
         JsonLDKeywords.TYPE                -> JsonLDString(valueTypeIri.toString),
         KnoraApiV2Complex.ResourceIri      -> JsonLDString(resourceIri.value),
         KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),

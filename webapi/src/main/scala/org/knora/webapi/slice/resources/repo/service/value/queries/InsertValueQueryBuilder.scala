@@ -444,7 +444,7 @@ object InsertValueQueryBuilder {
 
       val isDeleted = linkUpdate.newReferenceCount == 0
 
-      val linkValue = iri(linkUpdate.newLinkValueIri)
+      val linkValue = iri(linkUpdate.newLinkValueIri.value)
         .isA(KB.linkValue)
         .andHas(RDF.SUBJECT, resource)
         .andHas(RDF.PREDICATE, iri(linkUpdate.linkPropertyIri.toString))
@@ -478,7 +478,7 @@ object InsertValueQueryBuilder {
         }
 
       val resourceToLinkValue =
-        resource.has(iri(linkUpdate.linkPropertyIri.toString + "Value"), iri(linkUpdate.newLinkValueIri))
+        resource.has(iri(linkUpdate.linkPropertyIri.toString + "Value"), iri(linkUpdate.newLinkValueIri.value))
 
       List(directLink, Some(linkValue), Some(resourceToLinkValue)).flatten
     }.toList
