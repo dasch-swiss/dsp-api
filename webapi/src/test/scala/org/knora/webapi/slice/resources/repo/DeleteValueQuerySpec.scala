@@ -49,14 +49,14 @@ object DeleteValueQuerySpec extends ZIOSpecDefault {
 
   private val testLinkPropertyIri     = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo".toSmartIri
   private val testLinkTargetIri       = "http://rdfh.ch/0001/thing2"
-  private val testNewLinkValueIri     = "http://rdfh.ch/0001/thing1/values/newLinkValue"
+  private val testNewLinkValueIri     = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing1/values/newLinkValue")
   private val testNewLinkValueCreator = "http://rdfh.ch/users/systemUser"
   private val testNewLinkValuePerms   = "CR knora-admin:Creator"
 
   private def createValidLinkUpdate(
     linkPropertyIri: SmartIri = testLinkPropertyIri,
     linkTargetIri: String = testLinkTargetIri,
-    newLinkValueIri: String = testNewLinkValueIri,
+    newLinkValueIri: ValueIri = testNewLinkValueIri,
     currentReferenceCount: Int = 2,
     newReferenceCount: Int = 1,
     newLinkValueCreator: String = testNewLinkValueCreator,

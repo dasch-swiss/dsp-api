@@ -71,7 +71,7 @@ private def objectCommentOption(r: Resource): Either[String, Option[String]] = r
  * @param projectADM        the project in which the value was created.
  */
 case class CreateValueResponseV2(
-  valueIri: IRI,
+  valueIri: ValueIri,
   valueType: SmartIri,
   valueUUID: UUID,
   valueCreationDate: Instant,
@@ -92,7 +92,7 @@ case class CreateValueResponseV2(
     JsonLDDocument(
       body = JsonLDObject(
         Map(
-          JsonLDKeywords.ID   -> JsonLDString(valueIri),
+          JsonLDKeywords.ID   -> JsonLDString(valueIri.value),
           JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
           ValueHasUUID        -> JsonLDString(UuidUtil.base64Encode(valueUUID)),
           ValueCreationDate   -> JsonLDUtil.datatypeValueToJsonLDObject(
@@ -118,7 +118,7 @@ case class CreateValueResponseV2(
  * @param valueUUID  the value's UUID.
  * @param projectADM the project in which the value was updated.
  */
-case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: UUID, projectADM: Project)
+case class UpdateValueResponseV2(valueIri: ValueIri, valueType: SmartIri, valueUUID: UUID, projectADM: Project)
     extends KnoraJsonLDResponseV2
     with UpdateResultInProject {
   override def toJsonLDDocument(
@@ -133,7 +133,7 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
     JsonLDDocument(
       body = JsonLDObject(
         Map(
-          JsonLDKeywords.ID   -> JsonLDString(valueIri),
+          JsonLDKeywords.ID   -> JsonLDString(valueIri.value),
           JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
           ValueHasUUID        -> JsonLDString(UuidUtil.base64Encode(valueUUID)),
         ),
@@ -244,7 +244,7 @@ sealed trait ReadValueV2 {
   /**
    * The IRI of the value.
    */
-  def valueIri: IRI
+  def valueIri: ValueIri
 
   /**
    * The user that created the value.
@@ -280,7 +280,7 @@ sealed trait ReadValueV2 {
    * The IRI of the previous version of this value. Not returned in API responses, but needed
    * here for testing.
    */
-  def previousValueIri: Option[IRI]
+  def previousValueIri: Option[ValueIri]
 
   /**
    * If the value has been marked as deleted, information about its deletion.
@@ -323,10 +323,8 @@ sealed trait ReadValueV2 {
           case jsonLDObject: JsonLDObject =>
             // Add the value's metadata.
 
-            val parsedValueIri = ValueIri.unsafeFrom(valueIri)
-
             val requiredMetadata = Map(
-              JsonLDKeywords.ID   -> JsonLDString(valueIri),
+              JsonLDKeywords.ID   -> JsonLDString(valueIri.value),
               JsonLDKeywords.TYPE -> JsonLDString(valueContent.valueType.toString),
               AttachedToUser      -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
               HasPermissions      -> JsonLDString(permissions),
@@ -337,12 +335,12 @@ sealed trait ReadValueV2 {
               ),
               ValueHasUUID -> JsonLDString(UuidUtil.base64Encode(valueHasUUID)),
               ArkUrl       -> JsonLDUtil.datatypeValueToJsonLDObject(
-                value = stringFormatter.valueIriToArkUrl(parsedValueIri, valueUUID = valueHasUUID),
+                value = stringFormatter.valueIriToArkUrl(valueIri, valueUUID = valueHasUUID),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri,
               ),
               VersionArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
                 value = stringFormatter
-                  .valueIriToArkUrl(parsedValueIri, valueUUID = valueHasUUID, maybeTimestamp = Some(valueCreationDate)),
+                  .valueIriToArkUrl(valueIri, valueUUID = valueHasUUID, maybeTimestamp = Some(valueCreationDate)),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri,
               ),
             )
@@ -407,7 +405,7 @@ sealed trait ReadValueV2 {
  *                                      deleted and the reason why it was deleted.
  */
 case class ReadTextValueV2(
-  valueIri: IRI,
+  valueIri: ValueIri,
   attachedToUser: IRI,
   permissions: String,
   userPermission: Permission.ObjectAccess,
@@ -415,7 +413,7 @@ case class ReadTextValueV2(
   valueHasUUID: UUID,
   valueContent: TextValueContentV2,
   valueHasMaxStandoffStartIndex: Option[Int],
-  previousValueIri: Option[IRI],
+  previousValueIri: Option[ValueIri],
   deletionInfo: Option[DeletionInfo],
 ) extends ReadValueV2
     with KnoraReadV2[ReadTextValueV2] {
@@ -446,7 +444,7 @@ case class ReadTextValueV2(
  *                         deleted and the reason why it was deleted.
  */
 case class ReadLinkValueV2(
-  valueIri: IRI,
+  valueIri: ValueIri,
   attachedToUser: IRI,
   permissions: String,
   userPermission: Permission.ObjectAccess,
@@ -454,7 +452,7 @@ case class ReadLinkValueV2(
   valueHasUUID: UUID,
   valueContent: LinkValueContentV2,
   valueHasRefCount: Int,
-  previousValueIri: Option[IRI] = None,
+  previousValueIri: Option[ValueIri] = None,
   deletionInfo: Option[DeletionInfo],
 ) extends ReadValueV2
     with KnoraReadV2[ReadLinkValueV2] {
@@ -483,14 +481,14 @@ case class ReadLinkValueV2(
  *                         deleted and the reason why it was deleted.
  */
 case class ReadOtherValueV2(
-  valueIri: IRI,
+  valueIri: ValueIri,
   attachedToUser: IRI,
   permissions: String,
   userPermission: Permission.ObjectAccess,
   valueCreationDate: Instant,
   valueHasUUID: UUID,
   valueContent: ValueContentV2,
-  previousValueIri: Option[IRI],
+  previousValueIri: Option[ValueIri],
   deletionInfo: Option[DeletionInfo],
 ) extends ReadValueV2
     with KnoraReadV2[ReadOtherValueV2] {
@@ -549,7 +547,7 @@ sealed trait UpdateValueV2 {
   /**
    * The value IRI.
    */
-  val valueIri: IRI
+  val valueIri: ValueIri
 
   /**
    * A custom value creation date.
@@ -578,7 +576,7 @@ case class UpdateValueContentV2(
   resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   propertyIri: SmartIri,
-  valueIri: IRI,
+  valueIri: ValueIri,
   valueContent: ValueContentV2,
   permissions: Option[String] = None,
   valueCreationDate: Option[Instant] = None,
@@ -606,7 +604,7 @@ case class UpdateValuePermissionsV2(
   resourceIri: ResourceIri,
   resourceClassIri: SmartIri,
   propertyIri: SmartIri,
-  valueIri: IRI,
+  valueIri: ValueIri,
   valueType: SmartIri,
   permissions: String,
   valueCreationDate: Option[Instant] = None,
@@ -623,7 +621,7 @@ case class UpdateValuePermissionsV2(
  * @param creationDate the new value's creation date.
  */
 case class UnverifiedValueV2(
-  newValueIri: IRI,
+  newValueIri: ValueIri,
   newValueUUID: UUID,
   valueContent: ValueContentV2,
   permissions: String,

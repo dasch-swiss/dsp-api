@@ -197,7 +197,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
   private def getValueFromResource(
     resource: ReadResourceV2,
     propertyIriInResult: SmartIri,
-    expectedValueIri: IRI,
+    expectedValueIri: ValueIri,
   ): ReadValueV2 = {
     val propertyValues: Seq[ReadValueV2] =
       getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
@@ -242,7 +242,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
            for {
              deletedValue <-
                ZIO.attempt(
-                 deletedValues.collectFirst { case v if v.valueIri == valueIri.toString => v }
+                 deletedValues.collectFirst { case v if v.valueIri == valueIri => v }
                    .getOrElse(throw AssertionException(s"Value <$valueIri> was not among the deleted resources")),
                )
              _ <- checkLastModDate(
@@ -277,7 +277,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
              .when(
                !deletedValues.exists(v =>
                  v.previousValueIri match {
-                   case Some(previousValueIRI) => previousValueIRI == valueIri.toString
+                   case Some(previousValueIRI) => previousValueIRI == valueIri
                    case None                   => false
                  },
                ),
@@ -308,7 +308,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     maybePreviousLastModDate: Option[Instant],
     propertyIriForGravsearch: SmartIri,
     propertyIriInResult: SmartIri,
-    expectedValueIri: IRI,
+    expectedValueIri: ValueIri,
     requestingUser: User,
     checkLastModDateChanged: Boolean = true,
   ): ZIO[SearchResponderV2, Throwable, ReadValueV2] = for {
@@ -329,7 +329,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     resourcePreview <- previewResponse.toResource(resourceIri)
   } yield resourcePreview.lastModificationDate
 
-  private def getValueUUID(valueIri: IRI): ZIO[TriplestoreService, Throwable, Option[UUID]] = {
+  private def getValueUUID(valueIri: ValueIri): ZIO[TriplestoreService, Throwable, Option[UUID]] = {
     val sparqlQuery =
       s"""
          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -344,7 +344,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     } yield firstRow.flatMap(_.rowMap.get("valueUUID")).flatMap(uuidStr => UuidUtil.base64Decode(uuidStr).toOption)
   }
 
-  private def getValuePermissions(valueIri: IRI): ZIO[TriplestoreService, Throwable, Option[UUID]] = {
+  private def getValuePermissions(valueIri: ValueIri): ZIO[TriplestoreService, Throwable, Option[UUID]] = {
     val sparqlQuery =
       s"""
          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -401,7 +401,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                     maybeResourceLastModDate,
                                     propertyIri,
                                     propertyIri,
-                                    intValueIri.get,
+                                    intValueIri.asValueIri,
                                     anythingUser1,
                                   )
           actual <- asInstanceOf[IntegerValueContentV2](valueFromTriplestore.valueContent)
@@ -419,7 +419,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                             maybePreviousLastModDate = maybeResourceLastModDate,
                                             propertyIriForGravsearch = propertyIri,
                                             propertyIriInResult = propertyIri,
-                                            expectedValueIri = intValueIri.get,
+                                            expectedValueIri = intValueIri.asValueIri,
                                             requestingUser = anythingUser1,
                                             checkLastModDateChanged = false,
                                           )
@@ -428,7 +428,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                            resourceIri = resourceIri,
                            resourceClassIri = Anything.thingClass.smartIri,
                            propertyIri = propertyIri,
-                           valueIri = intValueIri.get,
+                           valueIri = intValueIri.asValueIri,
                            valueContent = IntegerValueContentV2(ApiV2Complex, intValue),
                          )
           updateValueResponse <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
@@ -441,7 +441,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                            maybePreviousLastModDate = maybeResourceLastModDate,
                                            propertyIriForGravsearch = propertyIri,
                                            propertyIriInResult = propertyIri,
-                                           expectedValueIri = intValueIri.get,
+                                           expectedValueIri = intValueIri.asValueIri,
                                            requestingUser = anythingUser1,
                                          )
           actualInteger        <- asInstanceOf[IntegerValueContentV2](updatedValueFromTriplestore.valueContent)
@@ -477,7 +477,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                     maybePreviousLastModDate = maybeResourceLastModDate,
                                     propertyIriForGravsearch = propertyIri,
                                     propertyIriInResult = propertyIri,
-                                    expectedValueIri = intValueIriForFreetest.get,
+                                    expectedValueIri = intValueIriForFreetest.asValueIri,
                                     requestingUser = anythingUser1,
                                   )
           actual <- asInstanceOf[IntegerValueContentV2](valueFromTriplestore.valueContent)
@@ -492,7 +492,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri,
           "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
           propertyIri,
-          intValueIriForFreetest.get,
+          intValueIriForFreetest.asValueIri,
           IntegerValueContentV2(ApiV2Complex, intValue),
         )
         for {
@@ -503,7 +503,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                             maybePreviousLastModDate = maybeResourceLastModDate,
                                             propertyIriForGravsearch = propertyIri,
                                             propertyIriInResult = propertyIri,
-                                            expectedValueIri = intValueIriForFreetest.get,
+                                            expectedValueIri = intValueIriForFreetest.asValueIri,
                                             requestingUser = anythingUser2,
                                             checkLastModDateChanged = false,
                                           )
@@ -514,7 +514,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                            maybePreviousLastModDate = maybeResourceLastModDate,
                            propertyIriForGravsearch = propertyIri,
                            propertyIriInResult = propertyIri,
-                           expectedValueIri = intValueIriForFreetest.get,
+                           expectedValueIri = intValueIriForFreetest.asValueIri,
                            requestingUser = anythingUser2,
                          )
           actual        <- asInstanceOf[IntegerValueContentV2](actualValue.valueContent)
@@ -566,7 +566,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueIri.get,
+          valueIri = intValueIri.asValueIri,
           valueContent = IntegerValueContentV2(ApiV2Complex, intValue, Some(comment)),
         )
 
@@ -578,7 +578,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                             maybePreviousLastModDate = maybeResourceLastModDate,
                                             propertyIriForGravsearch = propertyIri,
                                             propertyIriInResult = propertyIri,
-                                            expectedValueIri = intValueIri.get,
+                                            expectedValueIri = intValueIri.asValueIri,
                                             requestingUser = anythingUser1,
                                             checkLastModDateChanged = false,
                                           )
@@ -590,7 +590,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                            maybePreviousLastModDate = maybeResourceLastModDate,
                            propertyIriForGravsearch = propertyIri,
                            propertyIriInResult = propertyIri,
-                           expectedValueIri = intValueIri.get,
+                           expectedValueIri = intValueIri.asValueIri,
                            requestingUser = anythingUser1,
                          )
           actualContent <- asInstanceOf[IntegerValueContentV2](actualValue.valueContent)
@@ -616,7 +616,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueIri.get,
+          valueIri = intValueIri.asValueIri,
           valueContent = IntegerValueContentV2(ApiV2Complex, intValue, Some(comment)),
         )
 
@@ -628,7 +628,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                             maybePreviousLastModDate = maybeResourceLastModDate,
                                             propertyIriForGravsearch = propertyIri,
                                             propertyIriInResult = propertyIri,
-                                            expectedValueIri = intValueIri.get,
+                                            expectedValueIri = intValueIri.asValueIri,
                                             requestingUser = anythingUser1,
                                             checkLastModDateChanged = false,
                                           )
@@ -639,7 +639,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                            maybePreviousLastModDate = maybeResourceLastModDate,
                            propertyIriForGravsearch = propertyIri,
                            propertyIriInResult = propertyIri,
-                           expectedValueIri = intValueIri.get,
+                           expectedValueIri = intValueIri.asValueIri,
                            requestingUser = anythingUser1,
                          )
           actualContent   <- asInstanceOf[IntegerValueContentV2](actualValue.valueContent)
@@ -679,7 +679,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                            maybePreviousLastModDate = maybeResourceLastModDate,
                            propertyIriForGravsearch = propertyIri,
                            propertyIriInResult = propertyIri,
-                           expectedValueIri = intValueIri.get,
+                           expectedValueIri = intValueIri.asValueIri,
                            requestingUser = anythingUser1,
                          )
           actualValueContent <- asInstanceOf[IntegerValueContentV2](actualValue.valueContent)
@@ -718,7 +718,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                     maybePreviousLastModDate = maybeResourceLastModDate,
                                     propertyIriForGravsearch = propertyIri,
                                     propertyIriInResult = propertyIri,
-                                    expectedValueIri = intValueIriWithCustomPermissions.get,
+                                    expectedValueIri = intValueIriWithCustomPermissions.asValueIri,
                                     requestingUser = anythingUser1,
                                   )
           actualValueContent <- asInstanceOf[IntegerValueContentV2](valueFromTriplestore.valueContent)
@@ -791,7 +791,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                     maybePreviousLastModDate = maybeResourceLastModDate,
                                     propertyIriForGravsearch = propertyIri,
                                     propertyIriInResult = propertyIri,
-                                    expectedValueIri = intValueForRsyncIri.get,
+                                    expectedValueIri = intValueForRsyncIri.asValueIri,
                                     requestingUser = anythingUser1,
                                   )
           savedValue <- asInstanceOf[IntegerValueContentV2](valueFromTriplestore.valueContent)
@@ -813,7 +813,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueForRsyncIri.get,
+          valueIri = intValueForRsyncIri.asValueIri,
           valueContent = IntegerValueContentV2(ApiV2Complex, intValue),
           valueCreationDate = Some(valueCreationDate),
         )
@@ -837,7 +837,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                   resourceIri = resourceIri,
                   resourceClassIri = Anything.thingClass.smartIri,
                   propertyIri = propertyIri,
-                  valueIri = intValueForRsyncIri.get,
+                  valueIri = intValueForRsyncIri.asValueIri,
                   valueContent = IntegerValueContentV2(
                     ontologySchema = ApiV2Complex,
                     valueHasInteger = intValue,
@@ -854,7 +854,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                            maybePreviousLastModDate = maybeResourceLastModDate,
                                            propertyIriForGravsearch = propertyIri,
                                            propertyIriInResult = propertyIri,
-                                           expectedValueIri = intValueForRsyncIri.get,
+                                           expectedValueIri = intValueForRsyncIri.asValueIri,
                                            requestingUser = anythingUser1,
                                          )
           savedValue <- asInstanceOf[IntegerValueContentV2](updatedValueFromTriplestore.valueContent)
@@ -867,15 +867,15 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         val resourceIri        = aThingIri
         val propertyIri        = Anything.hasInteger.smartIri
         val intValue           = 1000
-        val newValueVersionIri = ValueIri.makeNew(resourceIri).value
+        val newValueVersionIri = ValueIri.makeNew(resourceIri)
 
         val updateParams = UpdateValueContentV2(
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueForRsyncIri.get,
+          valueIri = intValueForRsyncIri.asValueIri,
           valueContent = IntegerValueContentV2(ApiV2Complex, intValue),
-          newValueVersionIri = Some(newValueVersionIri.toSmartIri),
+          newValueVersionIri = Some(newValueVersionIri.value.toSmartIri),
         )
 
         for {
@@ -888,7 +888,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                            maybePreviousLastModDate = maybeResourceLastModDate,
                                            propertyIriForGravsearch = propertyIri,
                                            propertyIriInResult = propertyIri,
-                                           expectedValueIri = intValueForRsyncIri.get,
+                                           expectedValueIri = intValueForRsyncIri.asValueIri,
                                            requestingUser = anythingUser1,
                                          )
           savedValue <- asInstanceOf[IntegerValueContentV2](updatedValueFromTriplestore.valueContent)
@@ -921,7 +921,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = firstIntValueVersionIri.get,
+          valueIri = firstIntValueVersionIri.asValueIri,
           valueContent = IntegerValueContentV2(ApiV2Complex, intValue),
         )
         valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID)).exit
@@ -936,7 +936,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueIri.get,
+          valueIri = intValueIri.asValueIri,
           valueContent = IntegerValueContentV2(ApiV2Complex, intValue),
         )
         valuesResponder(_.updateValueV2(updateParams, incunabulaMemberUser, randomUUID)).exit
@@ -952,7 +952,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueIri.get,
+          valueIri = intValueIri.asValueIri,
           valueContent = IntegerValueContentV2(
             ontologySchema = ApiV2Complex,
             valueHasInteger = intValue,
@@ -968,7 +968,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                            maybePreviousLastModDate = maybeResourceLastModDate,
                                            propertyIriForGravsearch = propertyIri,
                                            propertyIriInResult = propertyIri,
-                                           expectedValueIri = intValueIri.get,
+                                           expectedValueIri = intValueIri.asValueIri,
                                            requestingUser = anythingUser1,
                                          )
           savedValue <- asInstanceOf[IntegerValueContentV2](updatedValueFromTriplestore.valueContent)
@@ -989,7 +989,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueIri.get,
+          valueIri = intValueIri.asValueIri,
           valueContent = IntegerValueContentV2(
             ontologySchema = ApiV2Complex,
             valueHasInteger = intValue,
@@ -1009,7 +1009,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueIri.get,
+          valueIri = intValueIri.asValueIri,
           valueContent = IntegerValueContentV2(
             ontologySchema = ApiV2Complex,
             valueHasInteger = intValue,
@@ -1029,7 +1029,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueIri.get,
+          valueIri = intValueIri.asValueIri,
           valueContent = IntegerValueContentV2(
             ontologySchema = ApiV2Complex,
             valueHasInteger = intValue,
@@ -1048,7 +1048,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueIri.get,
+          valueIri = intValueIri.asValueIri,
           valueType = KA.IntValue.toSmartIri,
           permissions = permissions,
         )
@@ -1058,7 +1058,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                        maybePreviousLastModDate = None,
                                        propertyIriForGravsearch = propertyIri,
                                        propertyIriInResult = propertyIri,
-                                       expectedValueIri = intValueIri.get,
+                                       expectedValueIri = intValueIri.asValueIri,
                                        requestingUser = anythingUser1,
                                        checkLastModDateChanged = false,
                                      )
@@ -1070,7 +1070,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                            maybePreviousLastModDate = maybeResourceLastModDate,
                                            propertyIriForGravsearch = propertyIri,
                                            propertyIriInResult = propertyIri,
-                                           expectedValueIri = intValueIri.get,
+                                           expectedValueIri = intValueIri.asValueIri,
                                            requestingUser = anythingUser1,
                                          )
         } yield assertTrue(
@@ -1089,7 +1089,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueIri.get,
+          valueIri = intValueIri.asValueIri,
           valueType = KA.IntValue.toSmartIri,
           permissions = permissions,
         )
@@ -1107,7 +1107,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueIri.get,
+          valueIri = intValueIri.asValueIri,
           valueType = KA.IntValue.toSmartIri,
           permissions = permissions,
         )
@@ -1125,7 +1125,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           resourceIri = resourceIri,
           resourceClassIri = Anything.thingClass.smartIri,
           propertyIri = propertyIri,
-          valueIri = intValueIri.get,
+          valueIri = intValueIri.asValueIri,
           valueType = KA.IntValue.toSmartIri,
           permissions = permissions,
         )
@@ -1236,7 +1236,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = zeitgloeckleinCommentWithoutStandoffIri.get,
+                                  expectedValueIri = zeitgloeckleinCommentWithoutStandoffIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         savedValue <- asInstanceOf[TextValueContentV2](valueFromTriplestore.valueContent)
@@ -1266,7 +1266,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = zeitgloeckleinCommentWithCommentIri.get,
+                                  expectedValueIri = zeitgloeckleinCommentWithCommentIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         savedValue <- asInstanceOf[TextValueContentV2](valueFromTriplestore.valueContent)
@@ -1301,7 +1301,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = zeitgloeckleinCommentWithStandoffIri.get,
+                                  expectedValueIri = zeitgloeckleinCommentWithStandoffIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         savedValue <- asInstanceOf[TextValueContentV2](valueFromTriplestore.valueContent)
@@ -1335,7 +1335,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = decimalValueIri.get,
+                                  expectedValueIri = decimalValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[DecimalValueContentV2](valueFromTriplestore.valueContent)
@@ -1364,7 +1364,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = timeValueIri.get,
+                                  expectedValueIri = timeValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[TimeValueContentV2](valueFromTriplestore.valueContent)
@@ -1398,7 +1398,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = dateValueIri.get,
+                                  expectedValueIri = dateValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[DateValueContentV2](valueFromTriplestore.valueContent)
@@ -1432,7 +1432,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = booleanValueIri.get,
+                                  expectedValueIri = booleanValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[BooleanValueContentV2](valueFromTriplestore.valueContent)
@@ -1464,7 +1464,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = geometryValueIri.get,
+                                  expectedValueIri = geometryValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[GeomValueContentV2](valueFromTriplestore.valueContent)
@@ -1495,7 +1495,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = intervalValueIri.get,
+                                  expectedValueIri = intervalValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[IntervalValueContentV2](valueFromTriplestore.valueContent)
@@ -1524,7 +1524,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = listValueIri.get,
+                                  expectedValueIri = listValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[HierarchicalListValueContentV2](valueFromTriplestore.valueContent)
@@ -1581,7 +1581,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = colorValueIri.get,
+                                  expectedValueIri = colorValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[ColorValueContentV2](valueFromTriplestore.valueContent)
@@ -1610,7 +1610,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = uriValueIri.get,
+                                  expectedValueIri = uriValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[UriValueContentV2](valueFromTriplestore.valueContent)
@@ -1639,7 +1639,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = geonameValueIri.get,
+                                  expectedValueIri = geonameValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[GeonameValueContentV2](valueFromTriplestore.valueContent)
@@ -1669,7 +1669,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = linkPropertyIri,
                                   propertyIriInResult = linkValuePropertyIri,
-                                  expectedValueIri = linkValueIri.get,
+                                  expectedValueIri = linkValueIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         savedValue <- asInstanceOf[ReadLinkValueV2](valueFromTriplestore)
@@ -1854,7 +1854,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         textValueFromTriplestore = getValueFromResource(
                                      resource = updatedResource,
                                      propertyIriInResult = propertyIri,
-                                     expectedValueIri = lobComment1Iri.get,
+                                     expectedValueIri = lobComment1Iri.asValueIri,
                                    )
         savedTextValue <- asInstanceOf[TextValueContentV2](textValueFromTriplestore.valueContent)
 
@@ -1932,7 +1932,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         textValueFromTriplestore = getValueFromResource(
                                      resource = updatedResource,
                                      propertyIriInResult = propertyIri,
-                                     expectedValueIri = lobComment2Iri.get,
+                                     expectedValueIri = lobComment2Iri.asValueIri,
                                    )
         savedTextValue <- asInstanceOf[TextValueContentV2](textValueFromTriplestore.valueContent)
         // Now that we've added a different TextValue that refers to the same resource, we should have version 2
@@ -1943,7 +1943,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                       propertyIriInResult = KA.HasStandoffLinkToValue.toSmartIri,
                                     )
         linkValueFromTriplestore    <- asInstanceOf[ReadLinkValueV2](linkValuesFromTriplestore.head)
-        previousStandoffLinkValueIri = standoffLinkValueIri.get
+        previousStandoffLinkValueIri = standoffLinkValueIri.asValueIri
         _                            = standoffLinkValueIri.set(linkValueFromTriplestore.valueIri)
       } yield assertTrue(
         savedTextValue.valueHasString.contains(valueHasString),
@@ -1964,7 +1964,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = zeitgloeckleinIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         propertyIri = propertyIri,
-        valueIri = zeitgloeckleinCommentWithoutStandoffIri.get,
+        valueIri = zeitgloeckleinCommentWithoutStandoffIri.asValueIri,
         valueContent = TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(valueHasString),
@@ -1980,7 +1980,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = zeitgloeckleinCommentWithoutStandoffIri.get,
+                                  expectedValueIri = zeitgloeckleinCommentWithoutStandoffIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         savedValue <- asInstanceOf[TextValueContentV2](valueFromTriplestore.valueContent)
@@ -1993,7 +1993,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = zeitgloeckleinIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri,
-        valueIri = zeitgloeckleinCommentWithStandoffIri.get,
+        valueIri = zeitgloeckleinCommentWithStandoffIri.asValueIri,
         valueContent = TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some("ignored"),
@@ -2020,7 +2020,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = zeitgloeckleinIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         propertyIri = propertyIri,
-        valueIri = zeitgloeckleinCommentWithStandoffIri.get,
+        valueIri = zeitgloeckleinCommentWithStandoffIri.asValueIri,
         valueContent = TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(valueHasString),
@@ -2039,7 +2039,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = zeitgloeckleinCommentWithStandoffIri.get,
+                                  expectedValueIri = zeitgloeckleinCommentWithStandoffIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         savedValue <- asInstanceOf[TextValueContentV2](valueFromTriplestore.valueContent)
@@ -2093,7 +2093,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = zeitgloeckleinSecondCommentWithStandoffIri.get,
+                                  expectedValueIri = zeitgloeckleinSecondCommentWithStandoffIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         savedValue <- asInstanceOf[TextValueContentV2](valueFromTriplestore.valueContent)
@@ -2112,7 +2112,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = zeitgloeckleinIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         propertyIri = propertyIri,
-        valueIri = zeitgloeckleinSecondCommentWithStandoffIri.get,
+        valueIri = zeitgloeckleinSecondCommentWithStandoffIri.asValueIri,
         valueContent = TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(valueHasString),
@@ -2131,7 +2131,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = zeitgloeckleinSecondCommentWithStandoffIri.get,
+                                  expectedValueIri = zeitgloeckleinSecondCommentWithStandoffIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         savedValue <- asInstanceOf[TextValueContentV2](valueFromTriplestore.valueContent)
@@ -2151,7 +2151,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
         propertyIri = propertyIri,
-        valueIri = decimalValueIri.get,
+        valueIri = decimalValueIri.asValueIri,
         valueContent = DecimalValueContentV2(
           ontologySchema = ApiV2Complex,
           valueHasDecimal = valueHasDecimal,
@@ -2166,7 +2166,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = decimalValueIri.get,
+                                  expectedValueIri = decimalValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[DecimalValueContentV2](valueFromTriplestore.valueContent)
@@ -2181,7 +2181,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
         propertyIri = propertyIri,
-        valueIri = timeValueIri.get,
+        valueIri = timeValueIri.asValueIri,
         valueContent = TimeValueContentV2(
           ontologySchema = ApiV2Complex,
           valueHasTimeStamp = valueHasTimeStamp,
@@ -2196,7 +2196,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = timeValueIri.get,
+                                  expectedValueIri = timeValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[TimeValueContentV2](valueFromTriplestore.valueContent)
@@ -2219,7 +2219,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
         propertyIri = propertyIri,
-        valueIri = dateValueIri.get,
+        valueIri = dateValueIri.asValueIri,
         valueContent = submittedValueContent,
       )
       for {
@@ -2231,7 +2231,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = dateValueIri.get,
+                                  expectedValueIri = dateValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[DateValueContentV2](valueFromTriplestore.valueContent)
@@ -2252,7 +2252,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
         propertyIri = propertyIri,
-        valueIri = booleanValueIri.get,
+        valueIri = booleanValueIri.asValueIri,
         valueContent = BooleanValueContentV2(
           ontologySchema = ApiV2Complex,
           valueHasBoolean = valueHasBoolean,
@@ -2267,7 +2267,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = booleanValueIri.get,
+                                  expectedValueIri = booleanValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[BooleanValueContentV2](valueFromTriplestore.valueContent)
@@ -2283,7 +2283,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
         propertyIri = propertyIri,
-        valueIri = geometryValueIri.get,
+        valueIri = geometryValueIri.asValueIri,
         valueContent = GeomValueContentV2(
           ontologySchema = ApiV2Complex,
           valueHasGeometry = valueHasGeometry,
@@ -2298,7 +2298,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = geometryValueIri.get,
+                                  expectedValueIri = geometryValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[GeomValueContentV2](valueFromTriplestore.valueContent)
@@ -2314,7 +2314,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
         propertyIri = propertyIri,
-        valueIri = intervalValueIri.get,
+        valueIri = intervalValueIri.asValueIri,
         valueContent = IntervalValueContentV2(
           ontologySchema = ApiV2Complex,
           valueHasIntervalStart = valueHasIntervalStart,
@@ -2330,7 +2330,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = intervalValueIri.get,
+                                  expectedValueIri = intervalValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[IntervalValueContentV2](valueFromTriplestore.valueContent)
@@ -2348,7 +2348,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
         propertyIri = propertyIri,
-        valueIri = listValueIri.get,
+        valueIri = listValueIri.asValueIri,
         valueContent = HierarchicalListValueContentV2(ApiV2Complex, valueHasListNode, None, None),
       )
       for {
@@ -2360,7 +2360,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = listValueIri.get,
+                                  expectedValueIri = listValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[HierarchicalListValueContentV2](valueFromTriplestore.valueContent)
@@ -2375,7 +2375,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
         propertyIri = propertyIri,
-        valueIri = listValueIri.get,
+        valueIri = listValueIri.asValueIri,
         valueContent = HierarchicalListValueContentV2(ApiV2Complex, valueHasListNode, None, None),
       )
       valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID)).exit
@@ -2390,7 +2390,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
         propertyIri = propertyIri,
-        valueIri = colorValueIri.get,
+        valueIri = colorValueIri.asValueIri,
         valueContent = ColorValueContentV2(
           ontologySchema = ApiV2Complex,
           valueHasColor = valueHasColor,
@@ -2405,7 +2405,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = colorValueIri.get,
+                                  expectedValueIri = colorValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[ColorValueContentV2](valueFromTriplestore.valueContent)
@@ -2420,7 +2420,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
         propertyIri = propertyIri,
-        valueIri = uriValueIri.get,
+        valueIri = uriValueIri.asValueIri,
         valueContent = UriValueContentV2(
           ontologySchema = ApiV2Complex,
           valueHasUri = valueHasUri,
@@ -2435,7 +2435,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = uriValueIri.get,
+                                  expectedValueIri = uriValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[UriValueContentV2](valueFromTriplestore.valueContent)
@@ -2450,7 +2450,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = Anything.thingClass.smartIri,
         propertyIri = propertyIri,
-        valueIri = geonameValueIri.get,
+        valueIri = geonameValueIri.asValueIri,
         valueContent = GeonameValueContentV2(
           ontologySchema = ApiV2Complex,
           valueHasGeonameCode = valueHasGeonameCode,
@@ -2464,7 +2464,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = None,
                                   propertyIriForGravsearch = propertyIri,
                                   propertyIriInResult = propertyIri,
-                                  expectedValueIri = geonameValueIri.get,
+                                  expectedValueIri = geonameValueIri.asValueIri,
                                   requestingUser = anythingUser1,
                                 )
         savedValue <- asInstanceOf[GeonameValueContentV2](valueFromTriplestore.valueContent)
@@ -2479,7 +2479,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = KA.LinkObj.toSmartIri,
         propertyIri = linkValuePropertyIri,
-        valueIri = linkValueIri.get,
+        valueIri = linkValueIri.asValueIri,
         valueContent = LinkValueContentV2(
           ontologySchema = ApiV2Complex,
           referredResourceIri = generationeIri,
@@ -2497,7 +2497,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = linkPropertyIri,
                                   propertyIriInResult = linkValuePropertyIri,
-                                  expectedValueIri = linkValueIri.get,
+                                  expectedValueIri = linkValueIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         readLinkValueV2 <- asInstanceOf[ReadLinkValueV2](valueFromTriplestore)
@@ -2517,7 +2517,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = KA.LinkObj.toSmartIri,
         propertyIri = linkValuePropertyIri,
-        valueIri = linkValueIri.get,
+        valueIri = linkValueIri.asValueIri,
         valueContent = LinkValueContentV2(
           ontologySchema = ApiV2Complex,
           referredResourceIri = generationeIri,
@@ -2533,7 +2533,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = linkPropertyIri,
                                   propertyIriInResult = linkValuePropertyIri,
-                                  expectedValueIri = linkValueIri.get,
+                                  expectedValueIri = linkValueIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         readLinkValueV2 <- asInstanceOf[ReadLinkValueV2](valueFromTriplestore)
@@ -2555,7 +2555,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = KA.LinkObj.toSmartIri,
         propertyIri = linkValuePropertyIri,
-        valueIri = linkValueIri.get,
+        valueIri = linkValueIri.asValueIri,
         valueContent = LinkValueContentV2(
           ontologySchema = ApiV2Complex,
           referredResourceIri = generationeIri,
@@ -2571,7 +2571,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = linkPropertyIri,
                                   propertyIriInResult = linkValuePropertyIri,
-                                  expectedValueIri = linkValueIri.get,
+                                  expectedValueIri = linkValueIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         readLinkValueV2 <- asInstanceOf[ReadLinkValueV2](valueFromTriplestore)
@@ -2608,7 +2608,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   maybePreviousLastModDate = maybeResourceLastModDate,
                                   propertyIriForGravsearch = linkPropertyIri,
                                   propertyIriInResult = linkValuePropertyIri,
-                                  expectedValueIri = linkValueIri.get,
+                                  expectedValueIri = linkValueIri.asValueIri,
                                   requestingUser = incunabulaMemberUser,
                                 )
         readLinkValueV2 <- asInstanceOf[ReadLinkValueV2](valueFromTriplestore)
@@ -2623,7 +2623,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = zeitgloeckleinIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         propertyIri = KA.HasStandoffLinkToValue.toSmartIri,
-        valueIri = zeitgloeckleinCommentWithStandoffIri.get,
+        valueIri = zeitgloeckleinCommentWithStandoffIri.asValueIri,
         valueContent = LinkValueContentV2(
           ontologySchema = ApiV2Complex,
           referredResourceIri = generationeIri,
@@ -2645,7 +2645,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                           maybePreviousLastModDate = maybeResourceLastModDate,
                                           propertyIriForGravsearch = propertyIri,
                                           propertyIriInResult = propertyIri,
-                                          expectedValueIri = stillImageFileValueIri.get,
+                                          expectedValueIri = stillImageFileValueIri.asValueIri,
                                           requestingUser = anythingUser1,
                                           checkLastModDateChanged = false,
                                         )
@@ -2661,7 +2661,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                          resourceIri,
                          thingPictureClassIri.toSmartIri,
                          propertyIri,
-                         stillImageFileValueIri.get,
+                         stillImageFileValueIri.asValueIri,
                          FileModelUtil.getFileValueContent(
                            FileType.StillImageFile(dimX = dimX, dimY = dimY),
                            internalFilename,
@@ -2677,12 +2677,12 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                          maybePreviousLastModDate = maybeResourceLastModDate,
                                          propertyIriForGravsearch = propertyIri,
                                          propertyIriInResult = propertyIri,
-                                         expectedValueIri = stillImageFileValueIri.get,
+                                         expectedValueIri = stillImageFileValueIri.asValueIri,
                                          requestingUser = anythingUser1,
                                        )
         savedValue <- asInstanceOf[StillImageFileValueContentV2](updatedValueFromTriplestore.valueContent)
       } yield assertTrue(
-        updatedValueFromTriplestore.valueIri == (stillImageFileValueIri.get),
+        updatedValueFromTriplestore.valueIri == stillImageFileValueIri.asValueIri,
         savedValue.comment == (None),
         savedValue.dimX == (dimX),
         savedValue.dimY == (dimY),
@@ -2704,7 +2704,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         resourceIri = resourceIri,
         resourceClassIri = thingPictureClassIri.toSmartIri,
         propertyIri = propertyIri,
-        valueIri = stillImageFileValueIri.get,
+        valueIri = stillImageFileValueIri.asValueIri,
         // Submit a TextValue but the stored value is a StillImageFileValue
         valueContent = TextValueContentV2(
           ontologySchema = ApiV2Complex,
@@ -2730,7 +2730,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                          resourceIri,
                          thingPictureClassIri.toSmartIri,
                          propertyIri,
-                         stillImageFileValueIri.get,
+                         stillImageFileValueIri.asValueIri,
                          StillImageExternalFileValueContentV2(
                            ontologySchema = ApiV2Complex,
                            fileValue = FileValueV2(
@@ -2749,12 +2749,12 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                          maybePreviousLastModDate = maybeResourceLastModDate,
                                          propertyIriForGravsearch = propertyIri,
                                          propertyIriInResult = propertyIri,
-                                         expectedValueIri = stillImageFileValueIri.get,
+                                         expectedValueIri = stillImageFileValueIri.asValueIri,
                                          requestingUser = anythingUser1,
                                        )
         savedValue <- asInstanceOf[StillImageExternalFileValueContentV2](updatedValueFromTriplestore.valueContent)
       } yield assertTrue(
-        updatedValueFromTriplestore.valueIri == stillImageFileValueIri.get,
+        updatedValueFromTriplestore.valueIri == stillImageFileValueIri.asValueIri,
         savedValue.externalUrl.value.toString == externalUrl.value.toString,
       )
     },
@@ -2774,7 +2774,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                          resourceIri,
                          thingPictureClassIri.toSmartIri,
                          propertyIri,
-                         stillImageFileValueIri.get,
+                         stillImageFileValueIri.asValueIri,
                          FileModelUtil.getFileValueContent(
                            FileType.StillImageFile(dimX = dimX, dimY = dimY),
                            internalFilename,
@@ -2790,12 +2790,12 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                          maybePreviousLastModDate = maybeResourceLastModDate,
                                          propertyIriForGravsearch = propertyIri,
                                          propertyIriInResult = propertyIri,
-                                         expectedValueIri = stillImageFileValueIri.get,
+                                         expectedValueIri = stillImageFileValueIri.asValueIri,
                                          requestingUser = anythingUser1,
                                        )
         savedValue <- asInstanceOf[StillImageFileValueContentV2](updatedValueFromTriplestore.valueContent)
       } yield assertTrue(
-        updatedValueFromTriplestore.valueIri == stillImageFileValueIri.get,
+        updatedValueFromTriplestore.valueIri == stillImageFileValueIri.asValueIri,
         savedValue.dimX == dimX,
         savedValue.dimY == dimY,
         savedValue.fileValue.internalFilename == internalFilename,
@@ -2815,7 +2815,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                          resourceIri,
                          thingPictureClassIri.toSmartIri,
                          propertyIri,
-                         stillImageFileValueIri.get,
+                         stillImageFileValueIri.asValueIri,
                          StillImageVectorFileValueContentV2(
                            ontologySchema = ApiV2Complex,
                            fileValue = FileValueV2(
@@ -2833,12 +2833,12 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                          maybePreviousLastModDate = maybeResourceLastModDate,
                                          propertyIriForGravsearch = propertyIri,
                                          propertyIriInResult = propertyIri,
-                                         expectedValueIri = stillImageFileValueIri.get,
+                                         expectedValueIri = stillImageFileValueIri.asValueIri,
                                          requestingUser = anythingUser1,
                                        )
         savedValue <- asInstanceOf[StillImageVectorFileValueContentV2](updatedValueFromTriplestore.valueContent)
       } yield assertTrue(
-        updatedValueFromTriplestore.valueIri == stillImageFileValueIri.get,
+        updatedValueFromTriplestore.valueIri == stillImageFileValueIri.asValueIri,
         savedValue.fileValue.internalFilename == internalFilename,
       )
     },
@@ -2857,7 +2857,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                          resourceIri,
                          thingPictureClassIri.toSmartIri,
                          propertyIri,
-                         stillImageFileValueIri.get,
+                         stillImageFileValueIri.asValueIri,
                          FileModelUtil.getFileValueContent(
                            FileType.StillImageFile(dimX = dimX, dimY = dimY),
                            internalFilename,
@@ -2873,12 +2873,12 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                          maybePreviousLastModDate = maybeResourceLastModDate,
                                          propertyIriForGravsearch = propertyIri,
                                          propertyIriInResult = propertyIri,
-                                         expectedValueIri = stillImageFileValueIri.get,
+                                         expectedValueIri = stillImageFileValueIri.asValueIri,
                                          requestingUser = anythingUser1,
                                        )
         savedValue <- asInstanceOf[StillImageFileValueContentV2](updatedValueFromTriplestore.valueContent)
       } yield assertTrue(
-        updatedValueFromTriplestore.valueIri == stillImageFileValueIri.get,
+        updatedValueFromTriplestore.valueIri == stillImageFileValueIri.asValueIri,
         savedValue.dimX == dimX,
         savedValue.dimY == dimY,
         savedValue.fileValue.internalFilename == internalFilename,

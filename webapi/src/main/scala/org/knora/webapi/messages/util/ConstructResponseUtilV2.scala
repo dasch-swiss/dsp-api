@@ -59,6 +59,7 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
@@ -1160,9 +1161,17 @@ final case class ConstructResponseUtilV2(
               valueHasUUID: UUID = UuidUtil.decode(
                                      valObj.requireStringObject(OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri),
                                    )
-              previousValueIri: Option[IRI] = valObj.maybeIriObject(
-                                                OntologyConstants.KnoraBase.PreviousValue.toSmartIri,
-                                              )
+              previousValueIri <- ZIO
+                                    .foreach(
+                                      valObj.maybeIriObject(OntologyConstants.KnoraBase.PreviousValue.toSmartIri),
+                                    )(iri =>
+                                      ZIO
+                                        .fromEither(ValueIri.from(iri))
+                                        .mapError(InconsistentRepositoryDataException.apply),
+                                    )
+              valueIri <- ZIO
+                            .fromEither(ValueIri.from(valObj.subjectIri))
+                            .mapError(InconsistentRepositoryDataException.apply)
 
             } yield valueContent match {
               case linkValueContentV2: LinkValueContentV2 =>
@@ -1170,7 +1179,7 @@ final case class ConstructResponseUtilV2(
                   valObj.requireIntObject(OntologyConstants.KnoraBase.ValueHasRefCount.toSmartIri)
 
                 ReadLinkValueV2(
-                  valueIri = valObj.subjectIri,
+                  valueIri = valueIri,
                   attachedToUser = attachedToUser,
                   permissions = permissions,
                   userPermission = valObj.userPermission,
@@ -1187,7 +1196,7 @@ final case class ConstructResponseUtilV2(
                   valObj.maybeIntObject(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri)
 
                 ReadTextValueV2(
-                  valueIri = valObj.subjectIri,
+                  valueIri = valueIri,
                   attachedToUser = attachedToUser,
                   permissions = permissions,
                   userPermission = valObj.userPermission,
@@ -1201,7 +1210,7 @@ final case class ConstructResponseUtilV2(
 
               case otherValueContentV2: ValueContentV2 =>
                 ReadOtherValueV2(
-                  valueIri = valObj.subjectIri,
+                  valueIri = valueIri,
                   attachedToUser = attachedToUser,
                   permissions = permissions,
                   userPermission = valObj.userPermission,

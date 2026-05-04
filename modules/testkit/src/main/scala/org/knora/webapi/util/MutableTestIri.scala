@@ -14,6 +14,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.ValueIri
 
 /**
@@ -31,6 +32,8 @@ class MutableTestIri { self =>
     maybeIri = Some(
       Iri.validateAndEscapeIri(iri).getOrElse(throw TestIriException(s"Got an invalid IRI: <$iri>")),
     )
+
+  def set(iri: StringValue): Unit = set(iri.value)
 
   /**
    * Gets the stored IRI, or throws an exception if the IRI is not set.

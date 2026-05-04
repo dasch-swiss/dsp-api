@@ -1288,7 +1288,7 @@ final case class ResourcesResponderV2(
                       Seq(
                         JsonLDObject(
                           Map(
-                            "id"         -> JsonLDString(imageValue.valueIri),
+                            "id"         -> JsonLDString(imageValue.valueIri.value),
                             "type"       -> JsonLDString("Annotation"),
                             "motivation" -> JsonLDString("painting"),
                             "body"       -> JsonLDObject(
