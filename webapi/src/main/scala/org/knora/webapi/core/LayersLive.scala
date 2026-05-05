@@ -43,8 +43,6 @@ import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.security.SecurityModule
-import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
-import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -69,7 +67,6 @@ object LayersLive { self =>
     ConstructResponseUtilV2 &
     CreateResourceV2Handler &
     DefaultObjectAccessPermissionService &
-    IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     IriService &
     ListsResponder &
@@ -115,7 +112,6 @@ object LayersLive { self =>
       DspIngestClientLive.layer,
       ExportModule.layer,
       ExportApiModule.layer,
-      IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
       IriService.layer,
       KnoraResponseRenderer.layer,
