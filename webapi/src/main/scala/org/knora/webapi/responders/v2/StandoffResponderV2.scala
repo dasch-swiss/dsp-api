@@ -25,9 +25,7 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.XMLTagItem
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
@@ -173,17 +171,9 @@ final case class StandoffResponderV2(
           ZIO.attempt(xsltMaybe.get)
         } else {
           for {
-            response <-
-              sipiService
-                .getTextFileRequest(
-                  SipiGetTextFileRequest(
-                    fileUrl = xsltFileUrl,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    senderName = this.getClass.getName,
-                  ),
-                )
-            _ = xsltCache.put(xsltFileUrl, response.content)
-          } yield response.content
+            content <- sipiService.getTextFileRequest(xsltFileUrl, this.getClass.getName)
+            _        = xsltCache.put(xsltFileUrl, content)
+          } yield content
         }
 
     } yield GetXSLTransformationResponseV2(xslt)

@@ -9,7 +9,6 @@ import zio.*
 import zio.json.DeriveJsonDecoder
 import zio.json.JsonDecoder
 
-import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.store.iiif.errors.SipiException
@@ -69,7 +68,8 @@ trait SipiService {
   /**
    * Asks Sipi for a text file used internally by Knora.
    *
-   * @param textFileRequest the request message.
+   * @param fileUrl    the URL pointing to the file.
+   * @param senderName name of the caller, used in diagnostic messages on failure.
    */
-  def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse]
+  def getTextFileRequest(fileUrl: String, senderName: String): Task[String]
 }
