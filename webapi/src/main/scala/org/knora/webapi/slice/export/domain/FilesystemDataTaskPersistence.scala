@@ -24,6 +24,7 @@ final case class PersistedDataTask(
   status: DataTaskStatus,
   createdBy: UserIri,
   createdAt: Instant,
+  errorMessage: Option[String] = None,
 )
 
 object PersistedDataTask {
@@ -36,6 +37,7 @@ object PersistedDataTask {
       status = task.status,
       createdBy = task.createdBy,
       createdAt = task.createdAt,
+      errorMessage = task.errorMessage,
     )
 
   def toCurrentDataTask(persisted: PersistedDataTask): CurrentDataTask =
@@ -45,6 +47,7 @@ object PersistedDataTask {
       persisted.status,
       persisted.createdBy,
       persisted.createdAt,
+      persisted.errorMessage,
     )
 }
 
@@ -118,7 +121,9 @@ object FilesystemDataTaskPersistence {
     restored      <- fsPersistence.restore()
     wasInProgress  = restored.exists(_.isInProgress)
     corrected      = restored.map { task =>
-                  if (task.isInProgress) task.fail().getOrElse(task) else task
+                  if (task.isInProgress)
+                    task.fail(Some("Marked as failed due to service restart")).getOrElse(task)
+                  else task
                 }
     _ <- ZIO.when(wasInProgress && corrected.isDefined) {
            val task = corrected.get

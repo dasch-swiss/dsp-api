@@ -1107,7 +1107,11 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
             task   <- env.service.importDataExport(testProjectIri, testUser, stream)
             result <- pollUntilDone(env.service, task.id)
             _      <- cleanupImport(env, task.id)
-          } yield assertTrue(result.status == DataTaskStatus.Failed)
+          } yield assertTrue(
+            result.status == DataTaskStatus.Failed,
+            result.errorMessage.exists(_.contains("test@example.com")),
+            result.errorMessage.exists(_.contains("already used")),
+          )
         }
       },
     ),

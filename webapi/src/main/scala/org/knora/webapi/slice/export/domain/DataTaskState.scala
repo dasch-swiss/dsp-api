@@ -106,14 +106,18 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]], persistence: DataTa
 
   /**
    * Fail the task with the given id if it exists and is in progress.
-   * @param taskId the  [[DataTaskId]] of the task to fail
+   * @param taskId       the  [[DataTaskId]] of the task to fail
+   * @param errorMessage optional human-readable reason the task failed; surfaced to API callers
    * @return An IO that fails with [[None]] if the task is not found.
    *         An IO that fails with [[StateCompletedError]] if the task is found but is already completed.
    *         An IO that succeeds with the new state [[CurrentDataTask]].
    */
-  def fail(taskId: DataTaskId): IO[Option[StateCompletedError], CurrentDataTask] =
+  def fail(
+    taskId: DataTaskId,
+    errorMessage: Option[String] = None,
+  ): IO[Option[StateCompletedError], CurrentDataTask] =
     self
-      .atomicFindAndUpdate(taskId, _.fail().map(Some(_)))
+      .atomicFindAndUpdate(taskId, _.fail(errorMessage).map(Some(_)))
       .someOrFail(None)
       .tap(task => persistence.onChanged(task))
 

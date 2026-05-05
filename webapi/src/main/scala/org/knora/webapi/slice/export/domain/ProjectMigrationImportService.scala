@@ -80,7 +80,7 @@ final class ProjectMigrationImportService(
       bagItPath <- storage.importBagItZipPath(taskId)
       _         <- stream.run(ZSink.fromFile(bagItPath.toFile))
     } yield ()
-  ).tapError(_ => state.fail(taskId).ignore).orDie
+  ).tapError(e => state.fail(taskId, Option(e.getMessage)).ignore).orDie
 
   private def doImport(taskId: DataTaskId, projectIri: ProjectIri): UIO[Unit] =
     ZIO.scoped {
@@ -173,7 +173,7 @@ final class ProjectMigrationImportService(
       } yield ()
     }.logError.catchAll(e =>
       ZIO.logError(s"$taskId: Import failed for project '$projectIri' with error: ${e.getMessage}") *>
-        state.fail(taskId).ignore,
+        state.fail(taskId, Option(e.getMessage)).ignore,
     )
 
   private def validateVersionCompatibility(bag: Bag, taskId: DataTaskId): Task[Unit] = {

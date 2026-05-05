@@ -80,7 +80,7 @@ final class ProjectMigrationExportService(
       } yield ()
     }.logError.catchAll(e =>
       ZIO.logError(s"${task.id}: Export failed for project ${project.id} with error: ${e.getMessage}") *>
-        currentExp.fail(task.id).ignore,
+        currentExp.fail(task.id, Option(e.getMessage)).ignore,
     )
 
   private def exportAssets(
