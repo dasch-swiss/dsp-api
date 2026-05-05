@@ -9,7 +9,6 @@ import zio.*
 
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.search.*
@@ -27,7 +26,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object SearchResponderV2Module {
   type Dependencies = StandoffTagUtilV2 & AppConfig & TriplestoreService & ConstructResponseUtilV2 & OntologyCache &
-    OntologyCacheHelpers & OntologyRepo & IriConverter & MessageRelay & StringFormatter & ProjectService
+    OntologyCacheHelpers & OntologyRepo & IriConverter & StringFormatter & ProjectService
 
   type Provided = GravsearchTypeInspectionRunner & InferringGravsearchTypeInspector & OntologyInferencer &
     QueryTraverser & SearchResponderV2Live

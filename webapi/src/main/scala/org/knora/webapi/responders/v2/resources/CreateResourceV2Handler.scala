@@ -13,7 +13,6 @@ import scala.language.postfixOps
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
@@ -21,7 +20,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCre
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
-import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
@@ -45,6 +43,7 @@ import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
@@ -62,7 +61,7 @@ import org.knora.webapi.util.ZioHelper
 
 final case class CreateResourceV2Handler(
   private val iriService: IriService,
-  private val messageRelay: MessageRelay,
+  private val ontologyCacheHelpers: OntologyCacheHelpers,
   private val resourcesRepo: ResourcesRepo,
   private val resourceUtilV2: ResourceUtilV2,
   private val permissionUtilADM: PermissionUtilADM,
@@ -183,24 +182,18 @@ final case class CreateResourceV2Handler(
       // Get the definitions of the resource class and its properties, as well as of the classes of all
       // resources that are link targets.
       resourceClassEntityInfoResponse <-
-        messageRelay
-          .ask[EntityInfoGetResponseV2](
-            EntityInfoGetRequestV2(
-              classIris = linkTargetClasses.values.toSet + internalCreateResource.resourceClassIri,
-            ),
-          )
+        ontologyCacheHelpers.getEntityInfoResponseV2(
+          classIris = linkTargetClasses.values.toSet + internalCreateResource.resourceClassIri,
+        )
 
       resourceClassInfo: ReadClassInfoV2 = resourceClassEntityInfoResponse.classInfoMap(
                                              internalCreateResource.resourceClassIri,
                                            )
 
       propertyEntityInfoResponse <-
-        messageRelay
-          .ask[EntityInfoGetResponseV2](
-            EntityInfoGetRequestV2(
-              propertyIris = resourceClassInfo.knoraResourceProperties,
-            ),
-          )
+        ontologyCacheHelpers.getEntityInfoResponseV2(
+          propertyIris = resourceClassInfo.knoraResourceProperties,
+        )
 
       allEntityInfo = EntityInfoGetResponseV2(
                         classInfoMap = resourceClassEntityInfoResponse.classInfoMap,

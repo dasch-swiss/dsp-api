@@ -30,7 +30,6 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.XMLTagItem
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
@@ -63,6 +62,7 @@ import org.knora.webapi.util.FileUtil
 final case class StandoffResponderV2(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
+  ontologyResponder: OntologyResponderV2,
   triplestore: TriplestoreService,
   constructResponseUtilV2: ConstructResponseUtilV2,
   standoffTagUtilV2: StandoffTagUtilV2,
@@ -782,12 +782,9 @@ final case class StandoffResponderV2(
 
       // request information about standoff classes that should be created
       standoffClassEntities <-
-        messageRelay
-          .ask[StandoffEntityInfoGetResponseV2](
-            StandoffEntityInfoGetRequestV2(
-              standoffClassIris = standoffTagIrisFromMapping.map(_.toSmartIri),
-            ),
-          )
+        ontologyResponder.getStandoffEntityInfoResponseV2(
+          standoffClassIris = standoffTagIrisFromMapping.map(_.toSmartIri),
+        )
 
       // check that the ontology responder returned the information for all the standoff classes it was asked for
       // if the ontology responder does not return a standoff class it was asked for, then this standoff class does not exist
@@ -809,12 +806,9 @@ final case class StandoffResponderV2(
 
       // request information about the standoff properties
       standoffPropertyEntities <-
-        messageRelay
-          .ask[StandoffEntityInfoGetResponseV2](
-            StandoffEntityInfoGetRequestV2(
-              standoffPropertyIris = standoffPropertyIrisFromOntologyResponder,
-            ),
-          )
+        ontologyResponder.getStandoffEntityInfoResponseV2(
+          standoffPropertyIris = standoffPropertyIrisFromOntologyResponder,
+        )
 
       // check that the ontology responder returned the information for all the standoff properties it was asked for
       // if the ontology responder does not return a standoff property it was asked for, then this standoff property does not exist
@@ -906,6 +900,7 @@ object StandoffResponderV2 {
       for {
         ac      <- ZIO.service[AppConfig]
         mr      <- ZIO.service[MessageRelay]
+        or      <- ZIO.service[OntologyResponderV2]
         ts      <- ZIO.service[TriplestoreService]
         cru     <- ZIO.service[ConstructResponseUtilV2]
         stu     <- ZIO.service[StandoffTagUtilV2]
@@ -914,7 +909,7 @@ object StandoffResponderV2 {
         mc      <- ZIO.serviceWithZIO[CacheManager](_.createCache[String, MappingXMLtoStandoff]("mappingCache"))
         sf      <- ZIO.service[StringFormatter]
         ssl     <- ZIO.service[SipiService]
-        handler <- mr.subscribe(StandoffResponderV2(ac, mr, ts, cru, stu, ps, xc, mc, ssl)(sf))
+        handler <- mr.subscribe(StandoffResponderV2(ac, mr, or, ts, cru, stu, ps, xc, mc, ssl)(sf))
       } yield handler
     }
 }

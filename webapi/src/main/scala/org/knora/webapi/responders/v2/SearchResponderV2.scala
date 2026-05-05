@@ -13,7 +13,6 @@ import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -42,8 +41,6 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTrans
 import org.knora.webapi.messages.util.search.gravsearch.types.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
@@ -52,6 +49,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
@@ -292,9 +290,9 @@ trait SearchResponderV2 {
 final case class SearchResponderV2Live(
   private val appConfig: AppConfig,
   private val triplestore: TriplestoreService,
-  private val messageRelay: MessageRelay,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val ontologyCache: OntologyCache,
+  private val ontologyCacheHelpers: OntologyCacheHelpers,
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val queryTraverser: QueryTraverser,
   private val sparqlTransformerLive: OntologyInferencer,
@@ -965,11 +963,9 @@ final case class SearchResponderV2Live(
 
     for {
       // Get information about the resource class, and about the ORDER BY property if specified.
-      entityInfoResponse <- messageRelay.ask[EntityInfoGetResponseV2](
-                              EntityInfoGetRequestV2(
-                                classIris = Set(internalClassIri),
-                                propertyIris = maybeInternalOrderByPropertyIri.toSet,
-                              ),
+      entityInfoResponse <- ontologyCacheHelpers.getEntityInfoResponseV2(
+                              classIris = Set(internalClassIri),
+                              propertyIris = maybeInternalOrderByPropertyIri.toSet,
                             )
 
       classDef: ReadClassInfoV2 = entityInfoResponse.classInfoMap(internalClassIri)

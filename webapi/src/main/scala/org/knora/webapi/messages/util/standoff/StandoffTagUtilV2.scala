@@ -15,7 +15,6 @@ import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -30,6 +29,7 @@ import org.knora.webapi.messages.util.KnoraCalendarType
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
+import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -60,8 +60,9 @@ trait StandoffTagUtilV2 {
   ): Task[Vector[StandoffTagV2]]
 }
 
-final case class StandoffTagUtilV2Live(messageRelay: MessageRelay)(implicit val stringFormatter: StringFormatter)
-    extends StandoffTagUtilV2 {
+final class StandoffTagUtilV2Live(ontologyResponder: OntologyResponderV2)(implicit
+  stringFormatter: StringFormatter,
+) extends StandoffTagUtilV2 {
 
   /**
    * Creates a sequence of [[StandoffTagV2]] from the given standoff nodes resulting from a SPARQL CONSTRUCT query.
@@ -103,13 +104,10 @@ final case class StandoffTagUtilV2Live(messageRelay: MessageRelay)(implicit val 
     }.toSet
 
     for {
-      standoffEntities <- messageRelay
-                            .ask[StandoffEntityInfoGetResponseV2](
-                              StandoffEntityInfoGetRequestV2(
-                                standoffClassIris = standoffClassIris,
-                                standoffPropertyIris = standoffPropertyIris,
-                              ),
-                            )
+      standoffEntities <- ontologyResponder.getStandoffEntityInfoResponseV2(
+                            standoffClassIris = standoffClassIris,
+                            standoffPropertyIris = standoffPropertyIris,
+                          )
 
       standoffTags = standoffAssertions.map { case (standoffTagIri: IRI, standoffTagAssertions: Map[IRI, String]) =>
                        val standoffTagSmartIri: SmartIri = standoffTagIri.toSmartIri

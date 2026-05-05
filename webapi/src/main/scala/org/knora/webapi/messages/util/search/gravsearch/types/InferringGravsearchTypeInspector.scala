@@ -20,7 +20,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.v2.responder.KnoraReadV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
@@ -873,15 +872,9 @@ final case class InferringGravsearchTypeInspector(
       usageIndex <- ZIO.attempt(makeUsageIndex(whereClause))
 
       // Ask the ontology responder about all the Knora class and property IRIs mentioned in the query.
-
-      initialEntityInfoRequest = EntityInfoGetRequestV2(
-                                   classIris = usageIndex.knoraClassIris,
-                                   propertyIris = usageIndex.knoraPropertyIris,
-                                 )
-
       initialEntityInfo <- ontologyCacheHelpers.getEntityInfoResponseV2(
-                             initialEntityInfoRequest.classIris,
-                             initialEntityInfoRequest.propertyIris,
+                             classIris = usageIndex.knoraClassIris,
+                             propertyIris = usageIndex.knoraPropertyIris,
                            )
 
       // The ontology responder may return the requested information in the internal schema. Convert each entity
@@ -928,12 +921,7 @@ final case class InferringGravsearchTypeInspector(
                                                acc ++ maybeSubjectType ++ maybeObjectType
                                              }
 
-      additionalEntityInfoRequest = EntityInfoGetRequestV2(classIris = subjectAndObjectTypes)
-
-      additionalEntityInfo <- ontologyCacheHelpers.getEntityInfoResponseV2(
-                                additionalEntityInfoRequest.classIris,
-                                additionalEntityInfoRequest.propertyIris,
-                              )
+      additionalEntityInfo <- ontologyCacheHelpers.getEntityInfoResponseV2(classIris = subjectAndObjectTypes)
 
       // Add the additional classes to the usage index.
       usageIndexWithAdditionalClasses = usageIndex.copy(
