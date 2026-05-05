@@ -7,6 +7,7 @@ package org.knora.webapi.slice.resources.repo.model
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.slice.common.ValueIri
 
 /**
  * Contains instructions for updating direct links and `knora-base:LinkValue`
@@ -39,7 +40,7 @@ case class SparqlTemplateLinkUpdate(
   deleteDirectLink: Boolean,
   linkValueExists: Boolean,
   linkTargetExists: Boolean,
-  newLinkValueIri: IRI,
+  newLinkValueIri: ValueIri,
   linkTargetIri: IRI,
   currentReferenceCount: Int,
   newReferenceCount: Int,

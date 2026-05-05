@@ -122,10 +122,14 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     val previous = variable("previous")
     val where    = iri(valueIri.value).has(KB.previousValue, previous)
     val query    = Queries.SELECT(previous).where(where)
-    triplestore
-      .query(Select(query))
-      .map(_.getFirstRow)
-      .map(_.flatMap(row => row.rowMap.get("previous").map(ValueIri.unsafeFrom)))
+    for {
+      result        <- triplestore.query(Select(query)).map(_.getFirstRow)
+      previousIriStr = result.flatMap(_.rowMap.get("previous"))
+      previousIri   <- ZIO
+                       .foreach(previousIriStr)(s =>
+                         ZIO.fromEither(ValueIri.from(s)).mapError(InconsistentRepositoryDataException.apply),
+                       )
+    } yield previousIri
   }
 
   def eraseValue(project: KnoraProject)(valueIri: ValueIri): Task[Unit] = {

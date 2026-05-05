@@ -287,7 +287,7 @@ final case class TestHelper(
                   )
       value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
+                 .findActiveById(value.valueIri)
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -302,13 +302,13 @@ final case class TestHelper(
       resource.iri,
       resource.resourceClassIri.toComplexSchema,
       hasOtherThingValue.toComplexSchema,
-      value.iri.toString,
+      value.iri,
       LinkValueContentV2(ApiV2Complex, linkedResource.iri, comment = Some(newComment)),
     )
     for {
       response <- valuesResponder.updateValueV2(update, rootUser, UUID.randomUUID())
       updated  <- valueRepo
-                   .findActiveById(ValueIri.unsafeFrom(response.valueIri))
+                   .findActiveById(response.valueIri)
                    .someOrFail(IllegalStateException("Value not found"))
     } yield updated
 
@@ -324,7 +324,7 @@ final case class TestHelper(
                   )
       value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
+                 .findActiveById(value.valueIri)
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -340,7 +340,7 @@ final case class TestHelper(
                   )
       value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
+                 .findActiveById(value.valueIri)
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -355,13 +355,13 @@ final case class TestHelper(
       resource.iri,
       resource.resourceClassIri.toComplexSchema,
       hasInteger.toComplexSchema,
-      value.iri.toString,
+      value.iri,
       IntegerValueContentV2(ApiV2Complex, newValue, None),
     )
     for {
       response <- valuesResponder.updateValueV2(update, rootUser, UUID.randomUUID())
       updated  <- valueRepo
-                   .findActiveById(ValueIri.unsafeFrom(response.valueIri))
+                   .findActiveById(response.valueIri)
                    .someOrFail(IllegalStateException("Value not found"))
     } yield updated
 
@@ -422,7 +422,7 @@ final case class TestHelper(
       uuid      <- Random.nextUUID
       value     <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value     <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
+                 .findActiveById(value.valueIri)
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -452,7 +452,7 @@ final case class TestHelper(
       uuid      <- Random.nextUUID
       value     <- valuesResponder.updateValueV2(updateVal, rootUser, uuid)
       value     <- valueRepo
-                 .findActiveById(ValueIri.unsafeFrom(value.valueIri))
+                 .findActiveById(value.valueIri)
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
@@ -569,7 +569,7 @@ final case class TestHelper(
                   ZIO
                     .foreach(vs) { v =>
                       valueRepo
-                        .findActiveById(ValueIri.unsafeFrom(v.valueIri))
+                        .findActiveById(v.valueIri)
                         .someOrFail(IllegalStateException("Value not found"))
                     }
                     .map((s, _))

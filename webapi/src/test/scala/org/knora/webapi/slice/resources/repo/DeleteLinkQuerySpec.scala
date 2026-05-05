@@ -15,6 +15,7 @@ import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 object DeleteLinkQuerySpec extends ZIOSpecDefault {
@@ -25,7 +26,7 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
   private val testLinkSourceIri         = "http://rdfh.ch/0001/thing1"
   private val testLinkPropertyIri       = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri
   private val testLinkTargetIri         = "http://rdfh.ch/0001/thing2"
-  private val testNewLinkValueIri       = "http://rdfh.ch/0001/thing1/values/newLinkValue"
+  private val testNewLinkValueIri       = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing1/values/newLinkValue")
   private val testCurrentReferenceCount = 1
   private val testNewLinkValueCreator   = "http://rdfh.ch/users/creator1"
   private val testNewLinkValuePerms     = "CR knora-admin:Creator"
@@ -35,7 +36,7 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
   private def createValidSparqlTemplateLinkUpdate(
     linkPropertyIri: SmartIri = testLinkPropertyIri,
     linkTargetIri: String = testLinkTargetIri,
-    newLinkValueIri: String = testNewLinkValueIri,
+    newLinkValueIri: ValueIri = testNewLinkValueIri,
     currentReferenceCount: Int = testCurrentReferenceCount,
     newLinkValueCreator: String = testNewLinkValueCreator,
     newLinkValuePermissions: String = testNewLinkValuePerms,
@@ -168,7 +169,7 @@ object DeleteLinkQuerySpec extends ZIOSpecDefault {
                      createValidSparqlTemplateLinkUpdate(
                        linkPropertyIri = differentLinkProperty,
                        linkTargetIri = "http://rdfh.ch/0803/book456",
-                       newLinkValueIri = "http://rdfh.ch/0803/page123/values/deletedLink",
+                       newLinkValueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/page123/values/deletedLink"),
                        currentReferenceCount = 1,
                        newLinkValueCreator = "http://rdfh.ch/users/incunabulaUser",
                        newLinkValuePermissions = "CR knora-admin:Creator|V knora-admin:KnownUser",

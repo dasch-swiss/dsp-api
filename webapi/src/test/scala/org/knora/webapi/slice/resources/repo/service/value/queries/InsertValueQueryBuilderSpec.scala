@@ -30,6 +30,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAtt
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagTimeAttributeV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -42,7 +43,7 @@ object InsertValueQueryBuilderTestSupport {
     val testDataGraph   = InternalIri("http://0.0.0.0:3333/data/0001/thing")
     val testResourceIri = InternalIri("http://0.0.0.0:3333/0001/thing/resource")
     val testPropertyIri = SmartIri("http://www.knora.org/ontology/0001/anything#hasText")
-    val testValueIri    = InternalIri("http://0.0.0.0:3333/0001/thing/value")
+    val testValueIri    = InternalIri("http://rdfh.ch/0001/thing/values/value")
     val testValueUUID   = UUID.fromString("12345678-90ab-cdef-1234-567890abcdef")
     val testUserIri     = InternalIri("http://0.0.0.0:3333/users/9XBCrDV3SRa7kS1WwynB4Q")
     val testPermissions =
@@ -245,7 +246,7 @@ object InsertValueQueryBuilderTestSupport {
         deleteDirectLink = false,
         linkValueExists = false,
         linkTargetExists = true,
-        newLinkValueIri = "http://0.0.0.0:3333/0001/thing/linkValue",
+        newLinkValueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing/values/linkValue"),
         linkTargetIri = "http://0.0.0.0:3333/0001/thing/linkedResource",
         currentReferenceCount = 0,
         newReferenceCount = newReferenceCount,

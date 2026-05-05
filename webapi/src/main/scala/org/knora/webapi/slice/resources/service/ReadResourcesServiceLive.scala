@@ -23,6 +23,7 @@ import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 trait ReadResourcesService {
   def readResourcesSequence(
@@ -45,6 +46,7 @@ trait ReadResourcesService {
     withDeleted: Boolean = true,
     queryStandoff: Boolean = false,
     skipRetrievalChecks: Boolean = false,
+    standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2]
 
   def getResources(
@@ -103,6 +105,7 @@ final case class ReadResourcesServiceLive(
     markDeletions: Boolean = false,
     showDeletedValues: Boolean = false,
     skipRetrievalChecks: Boolean = false,
+    standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2] = {
     val resourceIriStrings = resourceIris.distinct.map(_.value)
     for {
@@ -119,7 +122,9 @@ final case class ReadResourcesServiceLive(
                 maybeVersionDate = versionDate.map(_.value),
                 queryAllNonStandoff = true,
                 queryStandoff = queryStandoff,
+                standoffTagFilter = standoffTagFilter,
               ),
+              if (queryStandoff) SparqlTimeout.Maintenance else SparqlTimeout.Standard,
             ),
           )
           .flatMap(_.asExtended)
@@ -176,6 +181,7 @@ final case class ReadResourcesServiceLive(
     withDeleted: Boolean = true,
     queryStandoff: Boolean = false,
     skipRetrievalChecks: Boolean = false,
+    standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2] =
     ZIO
       .foreachPar(Chunk.fromIterable(resourceIris).grouped(500).map(_.toSeq).toArray) { resourceIris =>
@@ -189,6 +195,7 @@ final case class ReadResourcesServiceLive(
           withDeleted = withDeleted,
           queryStandoff = queryStandoff,
           skipRetrievalChecks = skipRetrievalChecks,
+          standoffTagFilter = standoffTagFilter,
         )
       }
       .withParallelism(5)

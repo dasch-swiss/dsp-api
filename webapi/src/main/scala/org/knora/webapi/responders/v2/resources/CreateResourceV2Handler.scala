@@ -418,11 +418,12 @@ final case class CreateResourceV2Handler(
           for {
             newValueUUID <-
               ValuesResponderV2.makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
-            newValueIri <-
+            newValueIriStr <-
               iriService.checkOrCreateEntityIri(
                 valueToCreate.customValueIri,
                 ValueIri.from(resourceIri, newValueUUID).value,
               )
+            newValueIri <- ZIO.fromEither(ValueIri.from(newValueIriStr)).mapError(BadRequestException.apply)
 
             // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
             // use resource creation date for the value.
@@ -503,7 +504,7 @@ final case class CreateResourceV2Handler(
             resourceIri = InternalIri(resourceIri.value),
             propertyIri = InternalIri(propertyIri.toIri),
             value = valueInfo,
-            valueIri = InternalIri(newValueIri),
+            valueIri = InternalIri(newValueIri.value),
             valueTypeIri = InternalIri(valueToCreate.valueContent.valueType.toString),
             valueUUID = newValueUUID,
             creator = InternalIri(requestingUser.id),
@@ -525,9 +526,9 @@ final case class CreateResourceV2Handler(
     )
   }
 
-  private def generateStandoffInfo(tv: TextValueContentV2, newValueIri: IRI): Seq[StandoffTagInfo] =
+  private def generateStandoffInfo(tv: TextValueContentV2, newValueIri: ValueIri): Seq[StandoffTagInfo] =
     tv
-      .prepareForSparqlInsert(newValueIri)
+      .prepareForSparqlInsert(newValueIri.value)
       .map(standoffTag =>
         val attributes = standoffTag.standoffNode.attributes.map { attr =>
           val v = attr match
