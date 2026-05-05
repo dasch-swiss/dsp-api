@@ -83,7 +83,7 @@ run-with-dev-db:
     #!/usr/bin/env bash
     set -euo pipefail
     if [ ! -f .env ]; then
-        main=$(git worktree list --porcelain | awk 'NR==1{print $2}')
+        main=$(git worktree list --porcelain | awk 'NR==1{sub(/^worktree /, ""); print}')
         ln -s "$main/.env" .env
     fi
     source .env
