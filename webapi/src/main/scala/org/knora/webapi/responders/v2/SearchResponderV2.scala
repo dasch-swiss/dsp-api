@@ -39,7 +39,6 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTr
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.*
-import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
@@ -51,7 +50,6 @@ import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.slice.resources.repo.GetResourcesByClassInProjectPrequery
 import org.knora.webapi.slice.search.repo.SearchFulltextQuery
@@ -287,21 +285,19 @@ trait SearchResponderV2 {
   ): Task[ReadResourcesSequenceV2]
 }
 
-final case class SearchResponderV2Live(
-  private val appConfig: AppConfig,
-  private val triplestore: TriplestoreService,
-  private val constructResponseUtilV2: ConstructResponseUtilV2,
-  private val ontologyCache: OntologyCache,
-  private val ontologyCacheHelpers: OntologyCacheHelpers,
-  private val standoffTagUtilV2: StandoffTagUtilV2,
-  private val queryTraverser: QueryTraverser,
-  private val sparqlTransformerLive: OntologyInferencer,
-  private val gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
-  private val inferenceOptimizationService: InferenceOptimizationService,
-  private val stringFormatter: StringFormatter,
-  private val iriConverter: IriConverter,
-  private val constructTransformer: ConstructTransformer,
-  private val ontologyRepo: OntologyRepo,
+final class SearchResponderV2Live(
+  appConfig: AppConfig,
+  triplestore: TriplestoreService,
+  constructResponseUtilV2: ConstructResponseUtilV2,
+  ontologyCacheHelpers: OntologyCacheHelpers,
+  queryTraverser: QueryTraverser,
+  sparqlTransformerLive: OntologyInferencer,
+  gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
+  inferenceOptimizationService: InferenceOptimizationService,
+  stringFormatter: StringFormatter,
+  iriConverter: IriConverter,
+  constructTransformer: ConstructTransformer,
+  ontologyRepo: OntologyRepo,
 ) extends SearchResponderV2 {
 
   private implicit val sf: StringFormatter = stringFormatter

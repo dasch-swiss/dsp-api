@@ -14,7 +14,6 @@ import java.util.UUID
 
 import dsp.errors.*
 import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.Rdfs
@@ -85,8 +84,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  *
  * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
  */
-final case class OntologyResponderV2(
-  appConfig: AppConfig,
+final class OntologyResponderV2(
   cardinalityHandler: CardinalityHandler,
   cardinalityService: CardinalityService,
   iriService: IriService,
@@ -1727,23 +1725,5 @@ final case class OntologyResponderV2(
 }
 
 object OntologyResponderV2 {
-  val layer: URLayer[
-    AppConfig & CardinalityHandler & CardinalityService & IriService & KnoraProjectService & OntologyCache &
-      OntologyTriplestoreHelpers & OntologyCacheHelpers & OntologyRepo & StringFormatter & TriplestoreService,
-    OntologyResponderV2,
-  ] = ZLayer.fromZIO {
-    for {
-      ac  <- ZIO.service[AppConfig]
-      ch  <- ZIO.service[CardinalityHandler]
-      cs  <- ZIO.service[CardinalityService]
-      is  <- ZIO.service[IriService]
-      kr  <- ZIO.service[KnoraProjectService]
-      oc  <- ZIO.service[OntologyCache]
-      oth <- ZIO.service[OntologyTriplestoreHelpers]
-      och <- ZIO.service[OntologyCacheHelpers]
-      or  <- ZIO.service[OntologyRepo]
-      sf  <- ZIO.service[StringFormatter]
-      ts  <- ZIO.service[TriplestoreService]
-    } yield OntologyResponderV2(ac, ch, cs, is, oc, och, oth, or, kr, ts)(sf)
-  }
+  val layer = ZLayer.derive[OntologyResponderV2]
 }

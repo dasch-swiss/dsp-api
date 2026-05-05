@@ -29,9 +29,9 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 /**
  * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.
  */
-final case class InferringGravsearchTypeInspector(
-  private val ontologyCacheHelpers: OntologyCacheHelpers,
-  private val queryTraverser: QueryTraverser,
+final class InferringGravsearchTypeInspector(
+  ontologyCacheHelpers: OntologyCacheHelpers,
+  queryTraverser: QueryTraverser,
 )(private implicit val sf: StringFormatter) {
 
   // The maximum number of type inference iterations.

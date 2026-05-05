@@ -59,16 +59,16 @@ import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.util.ZioHelper
 
-final case class CreateResourceV2Handler(
-  private val iriService: IriService,
-  private val ontologyCacheHelpers: OntologyCacheHelpers,
-  private val resourcesRepo: ResourcesRepo,
-  private val resourceUtilV2: ResourceUtilV2,
-  private val permissionUtilADM: PermissionUtilADM,
-  private val ontologyRepo: OntologyRepo,
-  private val permissionsResponder: PermissionsResponder,
-  private val valueValidator: ValueContentValidator,
-  private val readResources: ReadResourcesService,
+final class CreateResourceV2Handler(
+  iriService: IriService,
+  ontologyCacheHelpers: OntologyCacheHelpers,
+  resourcesRepo: ResourcesRepo,
+  resourceUtilV2: ResourceUtilV2,
+  permissionUtilADM: PermissionUtilADM,
+  ontologyRepo: OntologyRepo,
+  permissionsResponder: PermissionsResponder,
+  valueValidator: ValueContentValidator,
+  readResources: ReadResourcesService,
 )(implicit val stringFormatter: StringFormatter) {
 
   /**
