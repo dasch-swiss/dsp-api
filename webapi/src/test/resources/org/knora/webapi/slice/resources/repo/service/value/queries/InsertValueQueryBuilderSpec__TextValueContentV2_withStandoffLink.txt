@@ -12,7 +12,7 @@ INSERT { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate "2023
 <http://rdfh.ch/0001/thing/values/value> knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> .
 <http://rdfh.ch/0001/thing/values/value> knora-base:valueHasMaxStandoffStartIndex 1 .
 <http://rdfh.ch/0001/thing/values/value> knora-base:valueHasStandoff <http://rdfh.ch/0001/thing/values/value/standoff/0> .
-<http://rdfh.ch/0001/thing/values/value/standoff/0> knora-base:standoffTagHasLink <http://0.0.0.0:3333/0001/thing/linkedResource> ;
+<http://rdfh.ch/0001/thing/values/value/standoff/0> knora-base:standoffTagHasLink <http://rdfh.ch/0001/thing-linked-resource> ;
     knora-base:standoffTagHasStartIndex 0 ;
     knora-base:standoffTagHasUUID "EjRWeJCrze8SNFZ4kKvN7w" ;
     knora-base:standoffTagHasStart 0 ;
@@ -28,22 +28,22 @@ INSERT { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate "2023
     knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:valueHasOrder ?nextOrder ;
     knora-base:valueCreationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-<http://0.0.0.0:3333/0001/thing/resource> <http://www.knora.org/ontology/0001/anything#hasOtherThing> <http://0.0.0.0:3333/0001/thing/linkedResource> .
+<http://rdfh.ch/0001/thing-resource> <http://www.knora.org/ontology/0001/anything#hasOtherThing> <http://rdfh.ch/0001/thing-linked-resource> .
 <http://rdfh.ch/0001/thing/values/linkValue> a knora-base:LinkValue ;
-    rdf:subject <http://0.0.0.0:3333/0001/thing/resource> ;
+    rdf:subject <http://rdfh.ch/0001/thing-resource> ;
     rdf:predicate <http://www.knora.org/ontology/0001/anything#hasOtherThing> ;
-    rdf:object <http://0.0.0.0:3333/0001/thing/linkedResource> ;
-    knora-base:valueHasString "http://0.0.0.0:3333/0001/thing/linkedResource" ;
+    rdf:object <http://rdfh.ch/0001/thing-linked-resource> ;
+    knora-base:valueHasString "http://rdfh.ch/0001/thing-linked-resource" ;
     knora-base:valueHasRefCount 1 ;
     knora-base:isDeleted false ;
     knora-base:valueCreationDate "2023-08-01T10:30:00Z"^^xsd:dateTime ;
     knora-base:attachedToUser <http://0.0.0.0:3333/users/9XBCrDV3SRa7kS1WwynB4Q> ;
     knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:valueHasUUID "0000000000000000000000" .
-<http://0.0.0.0:3333/0001/thing/resource> <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> <http://rdfh.ch/0001/thing/values/linkValue> .
-<http://0.0.0.0:3333/0001/thing/resource> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing/values/value> . } }
+<http://rdfh.ch/0001/thing-resource> <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> <http://rdfh.ch/0001/thing/values/linkValue> .
+<http://rdfh.ch/0001/thing-resource> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing/values/value> . } }
 WHERE { BIND( IRI( "http://0.0.0.0:3333/data/0001/thing" ) AS ?dataNamedGraph )
-BIND( IRI( "http://0.0.0.0:3333/0001/thing/resource" ) AS ?resource )
+BIND( IRI( "http://rdfh.ch/0001/thing-resource" ) AS ?resource )
 ?resource a ?resourceClass ;
     knora-base:isDeleted false .
 ?resourceClass rdfs:subClassOf* knora-base:Resource .
@@ -55,20 +55,20 @@ BIND( IRI( "http://www.knora.org/ontology/knora-base#TextValue" ) AS ?valueType 
 ?resourceClass rdfs:subClassOf* ?restriction .
 ?restriction a owl:Restriction ;
     owl:onProperty ?property .
-<http://0.0.0.0:3333/0001/thing/linkedResource> a ?linkTargetClass0 ;
+<http://rdfh.ch/0001/thing-linked-resource> a ?linkTargetClass0 ;
     knora-base:isDeleted false .
 ?linkTargetClass0 rdfs:subClassOf* knora-base:Resource .
 <http://www.knora.org/ontology/0001/anything#hasOtherThing> knora-base:objectClassConstraint ?expectedTargetClass0 .
 ?linkTargetClass0 rdfs:subClassOf* ?expectedTargetClass0 .
-MINUS { ?resource <http://www.knora.org/ontology/0001/anything#hasOtherThing> <http://0.0.0.0:3333/0001/thing/linkedResource> . }
+MINUS { ?resource <http://www.knora.org/ontology/0001/anything#hasOtherThing> <http://rdfh.ch/0001/thing-linked-resource> . }
 MINUS { ?resource <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> ?linkValue0 .
 ?linkValue0 a knora-base:LinkValue ;
     rdf:subject ?resource ;
     rdf:predicate <http://www.knora.org/ontology/0001/anything#hasOtherThing> ;
-    rdf:object <http://0.0.0.0:3333/0001/thing/linkedResource> ;
+    rdf:object <http://rdfh.ch/0001/thing-linked-resource> ;
     knora-base:isDeleted false . }
 { SELECT ( MAX( ?order ) AS ?maxOrder ) ( IF( BOUND( ?maxOrder ), ( ?maxOrder + 1 ), 0 ) AS ?nextOrder )
-WHERE { <http://0.0.0.0:3333/0001/thing/resource> <http://www.knora.org/ontology/0001/anything#hasText> ?otherValue .
+WHERE { <http://rdfh.ch/0001/thing-resource> <http://www.knora.org/ontology/0001/anything#hasText> ?otherValue .
 ?otherValue knora-base:valueHasOrder ?order ;
     knora-base:isDeleted false . }
  } }

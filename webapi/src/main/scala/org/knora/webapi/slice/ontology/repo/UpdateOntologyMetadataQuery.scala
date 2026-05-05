@@ -87,7 +87,4 @@ object UpdateOntologyMetadataQuery extends QueryBuilderHelper {
 
     ontologyModPattern :: (labelPattern ::: commentPattern)
   }
-
-  private def toRdfLiteral(str: String): org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral =
-    org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfType(str, XSD.STRING)
 }

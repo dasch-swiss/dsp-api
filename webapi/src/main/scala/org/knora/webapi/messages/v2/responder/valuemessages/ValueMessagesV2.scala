@@ -1061,7 +1061,7 @@ case class TextValueContentV2(
    * @return a list of [[CreateStandoffTagV2InTriplestore]] each representing a [[StandoffTagV2]] object
    *         along with is standoff tag class and IRI that is going to identify it in the triplestore.
    */
-  def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV2InTriplestore] =
+  def prepareForSparqlInsert(valueIri: ValueIri): Seq[CreateStandoffTagV2InTriplestore] =
     if (standoff.nonEmpty) {
       // create an IRI for each standoff tag
       // internal references to XML ids are not resolved yet
@@ -1070,7 +1070,7 @@ case class TextValueContentV2(
           CreateStandoffTagV2InTriplestore(
             standoffNode = standoffNode,
             standoffTagInstanceIri = StandoffStringUtil.makeRandomStandoffTagIri(
-              valueIri = valueIri,
+              valueIri = valueIri.value,
               startIndex = standoffNode.startIndex,
             ), // generate IRI for new standoff node
           )

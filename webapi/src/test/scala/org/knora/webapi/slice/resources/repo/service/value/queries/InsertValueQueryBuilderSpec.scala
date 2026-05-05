@@ -30,9 +30,9 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAtt
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagTimeAttributeV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
-import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
@@ -41,9 +41,9 @@ object InsertValueQueryBuilderTestSupport {
 
   object TestDataFactory {
     val testDataGraph   = InternalIri("http://0.0.0.0:3333/data/0001/thing")
-    val testResourceIri = InternalIri("http://0.0.0.0:3333/0001/thing/resource")
+    val testResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-resource")
     val testPropertyIri = SmartIri("http://www.knora.org/ontology/0001/anything#hasText")
-    val testValueIri    = InternalIri("http://rdfh.ch/0001/thing/values/value")
+    val testValueIri    = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing/values/value")
     val testValueUUID   = UUID.fromString("12345678-90ab-cdef-1234-567890abcdef")
     val testUserIri     = InternalIri("http://0.0.0.0:3333/users/9XBCrDV3SRa7kS1WwynB4Q")
     val testPermissions =
@@ -53,7 +53,7 @@ object InsertValueQueryBuilderTestSupport {
     def createBuilderQuery(
       value: ValueContentV2,
       linkUpdates: Seq[SparqlTemplateLinkUpdate] = Seq.empty,
-      newUuidOrCurrentIri: Either[UUID, InternalIri] = Left(testValueUUID),
+      newUuidOrCurrentIri: Either[UUID, ValueIri] = Left(testValueUUID),
     ): String =
       InsertValueQueryBuilder
         .createValueQuery(
@@ -247,7 +247,7 @@ object InsertValueQueryBuilderTestSupport {
         linkValueExists = false,
         linkTargetExists = true,
         newLinkValueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing/values/linkValue"),
-        linkTargetIri = "http://0.0.0.0:3333/0001/thing/linkedResource",
+        linkTargetIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-linked-resource"),
         currentReferenceCount = 0,
         newReferenceCount = newReferenceCount,
         newLinkValueCreator = testUserIri.value,
@@ -1071,9 +1071,9 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
     suite("With currentValue")(
       test("Basic case") {
         for {
-          testValue       <- ZIO.succeed(TestDataFactory.createTextValue())
-          currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
-          builderQuery    <- ZIO.attempt(
+          testValue      <- ZIO.succeed(TestDataFactory.createTextValue())
+          currentValueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/861b5644b302/values/current")
+          builderQuery   <- ZIO.attempt(
                             TestDataFactory.createBuilderQuery(
                               testValue,
                               newUuidOrCurrentIri = Right(currentValueIri),
@@ -1083,10 +1083,10 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
       },
       test("With link updates") {
         for {
-          testValue       <- ZIO.succeed(TestDataFactory.createTextValue())
-          linkUpdates     <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate()))
-          currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
-          builderQuery    <- ZIO.attempt(
+          testValue      <- ZIO.succeed(TestDataFactory.createTextValue())
+          linkUpdates    <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate()))
+          currentValueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/861b5644b302/values/current")
+          builderQuery   <- ZIO.attempt(
                             TestDataFactory.createBuilderQuery(
                               testValue,
                               linkUpdates = linkUpdates,
@@ -1097,10 +1097,10 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
       },
       test("With a deleted link update") {
         for {
-          testValue       <- ZIO.succeed(TestDataFactory.createTextValue())
-          linkUpdates     <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate(newReferenceCount = 0)))
-          currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
-          builderQuery    <- ZIO.attempt(
+          testValue      <- ZIO.succeed(TestDataFactory.createTextValue())
+          linkUpdates    <- ZIO.succeed(Seq(TestDataFactory.createSparqlTemplateLinkUpdate(newReferenceCount = 0)))
+          currentValueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/861b5644b302/values/current")
+          builderQuery   <- ZIO.attempt(
                             TestDataFactory.createBuilderQuery(
                               testValue,
                               linkUpdates = linkUpdates,
@@ -1113,9 +1113,9 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
     suite("Cross-type update")(
       test("WHERE clause uses ?currentValueType (not ?valueType) for current value type check") {
         for {
-          testValue       <- ZIO.succeed(TestDataFactory.createStillImageExternalFileValue())
-          currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
-          builderQuery    <- ZIO.attempt(
+          testValue      <- ZIO.succeed(TestDataFactory.createStillImageExternalFileValue())
+          currentValueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/861b5644b302/values/current")
+          builderQuery   <- ZIO.attempt(
                             TestDataFactory.createBuilderQuery(
                               testValue,
                               newUuidOrCurrentIri = Right(currentValueIri),
@@ -1130,9 +1130,9 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
     suite("Order preservation")(
       test("Update query reads order from current value instead of MAX + 1") {
         for {
-          testValue       <- ZIO.succeed(TestDataFactory.createTextValue())
-          currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
-          builderQuery    <- ZIO.attempt(
+          testValue      <- ZIO.succeed(TestDataFactory.createTextValue())
+          currentValueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/861b5644b302/values/current")
+          builderQuery   <- ZIO.attempt(
                             TestDataFactory.createBuilderQuery(
                               testValue,
                               newUuidOrCurrentIri = Right(currentValueIri),
@@ -1155,5 +1155,5 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
         )
       },
     ),
-  ).provide(IriConverter.layer, StringFormatter.test)
+  )
 }

@@ -497,14 +497,14 @@ final case class CreateResourceV2Handler(
                 case MovingImageFileValueContentV2(_, fileValue, _) =>
                   ZIO.succeed(OtherFileValueInfo(fileValue))
                 case LinkValueContentV2(_, referredResourceIri, _, _, _, _) =>
-                  ZIO.succeed(LinkValueInfo(InternalIri(referredResourceIri.value)))
+                  ZIO.succeed(LinkValueInfo(referredResourceIri))
                 case _: DeletedValueContentV2 => ZIO.fail(BadRequestException("Deleted values cannot be created"))
 
           } yield ValueInfo(
-            resourceIri = InternalIri(resourceIri.value),
+            resourceIri = resourceIri,
             propertyIri = InternalIri(propertyIri.toIri),
             value = valueInfo,
-            valueIri = InternalIri(newValueIri.value),
+            valueIri = newValueIri,
             valueTypeIri = InternalIri(valueToCreate.valueContent.valueType.toString),
             valueUUID = newValueUUID,
             creator = InternalIri(requestingUser.id),
@@ -528,7 +528,7 @@ final case class CreateResourceV2Handler(
 
   private def generateStandoffInfo(tv: TextValueContentV2, newValueIri: ValueIri): Seq[StandoffTagInfo] =
     tv
-      .prepareForSparqlInsert(newValueIri.value)
+      .prepareForSparqlInsert(newValueIri)
       .map(standoffTag =>
         val attributes = standoffTag.standoffNode.attributes.map { attr =>
           val v = attr match
@@ -869,11 +869,12 @@ final case class CreateResourceV2Handler(
       val standoffLinkUpdatesFutures: Seq[Task[StandoffLinkValueInfo]] = initialReferenceCounts.toSeq.map {
         case (targetIri, initialReferenceCount) =>
           for {
-            newValueIri <- makeUnusedValueIri(resourceIri)
+            newValueIri    <- makeUnusedValueIri(resourceIri)
+            targetResource <- ZIO.fromEither(ResourceIri.from(targetIri)).mapError(BadRequestException.apply)
           } yield StandoffLinkValueInfo(
             linkPropertyIri = InternalIri(OntologyConstants.KnoraBase.HasStandoffLinkTo),
-            newLinkValueIri = InternalIri(newValueIri),
-            linkTargetIri = InternalIri(targetIri),
+            newLinkValueIri = newValueIri,
+            linkTargetIri = targetResource,
             newReferenceCount = initialReferenceCount,
             newLinkValueCreator = InternalIri(KnoraUserRepo.builtIn.SystemUser.id.value),
             newLinkValuePermissions = standoffLinkValuePermissions,
@@ -892,8 +893,10 @@ final case class CreateResourceV2Handler(
    * @param resourceIri the IRI of the containing resource.
    * @return the new value IRI.
    */
-  private def makeUnusedValueIri(resourceIri: ResourceIri): Task[IRI] =
-    iriService.makeUnusedIri(ValueIri.makeNew(resourceIri).value)
+  private def makeUnusedValueIri(resourceIri: ResourceIri): Task[ValueIri] =
+    iriService
+      .makeUnusedIri(ValueIri.makeNew(resourceIri).value)
+      .flatMap(s => ZIO.fromEither(ValueIri.from(s)).mapError(BadRequestException.apply))
 
   /**
    * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.

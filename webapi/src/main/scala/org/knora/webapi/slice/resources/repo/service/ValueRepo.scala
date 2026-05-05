@@ -26,6 +26,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_String_Property
@@ -175,7 +176,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
 
   def updateValuePermissions(
     projectDataGraph: InternalIri,
-    resourceIri: InternalIri,
+    resourceIri: ResourceIri,
     valueIri: ValueIri,
     newPermissions: String,
     currentTime: Instant,
@@ -210,7 +211,7 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
   // does not support VALUES clauses with tuple bindings (?item ?newOrder) elegantly.
   def reorderValues(
     projectDataGraph: InternalIri,
-    resourceIri: InternalIri,
+    resourceIri: ResourceIri,
     orderedValueIris: List[ValueIri],
     currentTime: Instant,
   ): Task[Unit] = {
@@ -246,9 +247,9 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
 
   def createValue(
     dataNamedGraph: InternalIri,
-    resourceIri: InternalIri,
+    resourceIri: ResourceIri,
     propertyIri: SmartIri,
-    newValueIri: InternalIri,
+    newValueIri: ValueIri,
     newValueUUID: UUID,
     value: ValueContentV2,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
@@ -273,10 +274,10 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
 
   def updateValue(
     dataNamedGraph: InternalIri,
-    resourceIri: InternalIri,
+    resourceIri: ResourceIri,
     propertyIri: SmartIri,
-    currentValueIri: InternalIri,
-    newValueIri: InternalIri,
+    currentValueIri: ValueIri,
+    newValueIri: ValueIri,
     value: ValueContentV2,
     valueCreator: InternalIri,
     valuePermissions: String,

@@ -16,13 +16,14 @@ import java.time.Instant
 
 import org.knora.webapi.slice.api.admin.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.api.v2.IriDto
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.infrastructure.ColumnDef
 import org.knora.webapi.slice.infrastructure.CsvRowBuilder
 
 final case class ResourceMetadataDto(
   resourceClassIri: String,
-  resourceIri: String,
+  resourceIri: ResourceIri,
   arkUrl: String,
   arkUrlWithTimestamp: String,
   label: String,
@@ -40,7 +41,7 @@ object ResourceMetadataDto {
     ColumnDef("Resource Class", _.resourceClassIri),
     ColumnDef("ARK URL (Permalink)", _.arkUrl),
     ColumnDef("ARK with timestamp", _.arkUrlWithTimestamp),
-    ColumnDef("Resource IRI", _.resourceIri),
+    ColumnDef("Resource IRI", _.resourceIri.value),
     ColumnDef("Created by", _.resourceCreatorIri),
     ColumnDef("Creation Date", _.resourceCreationDate),
     ColumnDef("Last Modification Date (if available)", _.resourceLastModificationDate.getOrElse("")),

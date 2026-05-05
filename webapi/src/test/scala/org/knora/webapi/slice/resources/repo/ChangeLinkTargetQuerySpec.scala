@@ -43,8 +43,8 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
   )
   private val testLinkSourceIri             = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing1")
   private val testLinkPropertyIri           = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri
-  private val testCurrentLinkTargetIri      = "http://rdfh.ch/0001/thing2"
-  private val testNewLinkTargetIri          = "http://rdfh.ch/0001/thing3"
+  private val testCurrentLinkTargetIri      = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing2")
+  private val testNewLinkTargetIri          = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing3")
   private val testNewLinkValueIriForCurrent =
     ValueIri.unsafeFrom("http://rdfh.ch/0001/thing1/values/currentLinkValueNew")
   private val testNewLinkValueIriForNew =
@@ -57,7 +57,7 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
 
   private def createCurrentLinkUpdate(
     linkPropertyIri: SmartIri = testLinkPropertyIri,
-    linkTargetIri: String = testCurrentLinkTargetIri,
+    linkTargetIri: ResourceIri = testCurrentLinkTargetIri,
     newLinkValueIri: ValueIri = testNewLinkValueIriForCurrent,
     currentReferenceCount: Int = testCurrentReferenceCount,
     newLinkValueCreator: String = testNewLinkValueCreator,
@@ -79,7 +79,7 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
 
   private def createNewLinkUpdate(
     linkPropertyIri: SmartIri = testLinkPropertyIri,
-    linkTargetIri: String = testNewLinkTargetIri,
+    linkTargetIri: ResourceIri = testNewLinkTargetIri,
     newLinkValueIri: ValueIri = testNewLinkValueIriForNew,
     newReferenceCount: Int = 1,
     newLinkValueCreator: String = testNewLinkValueCreator,

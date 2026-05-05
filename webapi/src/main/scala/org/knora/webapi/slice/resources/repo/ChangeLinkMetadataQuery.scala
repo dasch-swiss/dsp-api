@@ -52,7 +52,7 @@ object ChangeLinkMetadataQuery extends QueryBuilderHelper {
       val linkSource                     = toRdfIri(linkSourceIri)
       val linkProperty                   = toRdfIri(linkUpdate.linkPropertyIri)
       val linkValueProperty              = Rdf.iri(linkUpdate.linkPropertyIri.toInternalSchema.toIri + "Value")
-      val linkTarget                     = Rdf.iri(linkUpdate.linkTargetIri)
+      val linkTarget                     = Rdf.iri(linkUpdate.linkTargetIri.value)
       val newLinkValue                   = Rdf.iri(linkUpdate.newLinkValueIri.value)
       val linkSourceClass                = variable("linkSourceClass")
       val currentLinkValue               = variable("currentLinkValue")
@@ -73,7 +73,7 @@ object ChangeLinkMetadataQuery extends QueryBuilderHelper {
         newLinkValue.has(RDF.SUBJECT, linkSource),
         newLinkValue.has(RDF.PREDICATE, linkProperty),
         newLinkValue.has(RDF.OBJECT, linkTarget),
-        newLinkValue.has(KB.valueHasString, Rdf.literalOfType(linkUpdate.linkTargetIri, XSD.STRING)),
+        newLinkValue.has(KB.valueHasString, Rdf.literalOfType(linkUpdate.linkTargetIri.value, XSD.STRING)),
         newLinkValue.has(KB.valueHasRefCount, Rdf.literalOf(linkUpdate.newReferenceCount)),
         newLinkValue.has(KB.valueCreationDate, currentTimeLiteral),
         newLinkValue.has(KB.previousValue, currentLinkValue),

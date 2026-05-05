@@ -8,10 +8,13 @@ package org.knora.webapi.slice.api.v2.values
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
+
 final case class ReorderValuesRequest(
-  resourceIri: String,
+  resourceIri: ResourceIri,
   propertyIri: String,
-  orderedValueIris: List[String],
+  orderedValueIris: List[ValueIri],
 )
 
 object ReorderValuesRequest {
@@ -19,7 +22,7 @@ object ReorderValuesRequest {
 }
 
 final case class ReorderValuesResponse(
-  resourceIri: String,
+  resourceIri: ResourceIri,
   propertyIri: String,
   valuesReordered: Int,
 )

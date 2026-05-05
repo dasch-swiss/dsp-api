@@ -13,14 +13,13 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.Bind
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfType
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfObject
@@ -37,18 +36,22 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagAttributeV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
+import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object InsertValueQueryBuilder {
+object InsertValueQueryBuilder extends QueryBuilderHelper {
+
   def createValueQuery(
     dataNamedGraph: InternalIri,
-    resourceIri: InternalIri,
+    resourceIri: ResourceIri,
     propertyIri: SmartIri,
-    newValueIri: InternalIri,
-    newUuidOrCurrentIri: Either[UUID, InternalIri],
+    newValueIri: ValueIri,
+    newUuidOrCurrentIri: Either[UUID, ValueIri],
     valueInitial: ValueContentV2,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     valueCreator: InternalIri,
@@ -61,9 +64,8 @@ object InsertValueQueryBuilder {
     val resourceVar  = variable("resource")
     val currentVar   = variable("currentValue")
 
-    val resource = iri(resourceIri.value)
-    val property = iri(propertyIri.toString)
-    val valueIri = iri(newValueIri.value)
+    val resource = toRdfIri(resourceIri)
+    val property = toRdfIri(propertyIri)
 
     val currentValue     = newUuidOrCurrentIri.toOption
     val currentVarOpt    = currentValue.map(_ => currentVar)
@@ -88,7 +90,7 @@ object InsertValueQueryBuilder {
       resource,
       resourceVar,
       property,
-      valueIri,
+      newValueIri,
       newValueUUID,
       value,
       linkUpdates,
@@ -148,7 +150,7 @@ object InsertValueQueryBuilder {
 
     val linkValueDeletePatterns = linkUpdates.zipWithIndex.flatMap { case (linkUpdate, index) =>
       val deleteDirectLink = Option.when(linkUpdate.deleteDirectLink) {
-        resource.has(iri(linkUpdate.linkPropertyIri.toString), iri(linkUpdate.linkTargetIri))
+        resource.has(toRdfIri(linkUpdate.linkPropertyIri), toRdfIri(linkUpdate.linkTargetIri))
       }
 
       val linkValueExists = Option.when(linkUpdate.linkValueExists) {
@@ -157,7 +159,7 @@ object InsertValueQueryBuilder {
         val linkValuePermissions = variable(s"linkValuePermissions$index")
 
         List(
-          resource.has(iri(linkUpdate.linkPropertyIri.toString + "Value"), linkValue),
+          resource.has(Rdf.iri(linkUpdate.linkPropertyIri.toString + "Value"), linkValue),
           linkValue.has(KB.valueHasUUID, linkValueUUID),
           linkValue.has(KB.hasPermissions, linkValuePermissions),
         )
@@ -173,7 +175,7 @@ object InsertValueQueryBuilder {
     resource: rdf.Iri,
     resourceVar: Variable,
     property: rdf.Iri,
-    valueIri: rdf.Iri,
+    valueIri: ValueIri,
     valueUUID: Either[UUID, Variable],
     value: ValueContentV2,
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
@@ -188,8 +190,9 @@ object InsertValueQueryBuilder {
       resourceVar.has(KB.lastModificationDate, literalOfType(creationDate.toString, XSD.DATETIME))
 
     // Basic value pattern
-    val baseValuePattern = valueIri
-      .isA(iri(value.valueType.toString))
+    val valueRdfIri      = toRdfIri(valueIri)
+    val baseValuePattern = valueRdfIri
+      .isA(toRdfIri(value.valueType))
       .andHas(KB.isDeleted, literalOf(false))
       .andHas(KB.valueHasString, literalOf(value.valueHasString))
 
@@ -199,10 +202,10 @@ object InsertValueQueryBuilder {
         variable => baseValuePattern.andHas(KB.valueHasUUID, variable),
       )
 
-    val base2 = valueIri
+    val base2 = valueRdfIri
       .hasOptional(KB.valueHasComment, value.comment.map(literalOf))
-      .fold(valueIri.has(KB.attachedToUser, iri(valueCreator.value)))(
-        _.andHas(KB.attachedToUser, iri(valueCreator.value)),
+      .fold(valueRdfIri.has(KB.attachedToUser, toRdfIri(valueCreator)))(
+        _.andHas(KB.attachedToUser, toRdfIri(valueCreator)),
       )
       .andHas(KB.hasPermissions, literalOf(valuePermissions))
       .andHas(KB.valueHasOrder, nextOrder)
@@ -215,8 +218,8 @@ object InsertValueQueryBuilder {
     val linkPatterns = buildLinkPatterns(resource, linkUpdates, creationDate, valueCreator)
 
     // Resource to value link
-    val resourceValuePattern = resource.has(property, valueIri)
-    val previousValuePattern = currentValue.toList.map(valueIri.has(KB.previousValue, _))
+    val resourceValuePattern = resource.has(property, valueRdfIri)
+    val previousValuePattern = currentValue.toList.map(valueRdfIri.has(KB.previousValue, _))
 
     List(
       List(resourceModPattern),
@@ -230,61 +233,63 @@ object InsertValueQueryBuilder {
   }
 
   private def buildTypeSpecificPatterns(
-    valueIri: rdf.Iri,
+    valueIri: ValueIri,
     value: ValueContentV2,
   ): List[TriplePattern] = {
     import org.knora.webapi.messages.v2.responder.valuemessages.*
 
+    val valueRdfIri = toRdfIri(valueIri)
     value match {
       case textValue: TextValueContentV2 =>
         buildTextValuePatterns(valueIri, textValue)
       case intValue: IntegerValueContentV2 =>
-        List(valueIri.has(KB.valueHasInteger, literalOf(intValue.valueHasInteger)))
+        List(valueRdfIri.has(KB.valueHasInteger, literalOf(intValue.valueHasInteger)))
       case decimalValue: DecimalValueContentV2 =>
-        List(valueIri.has(KB.valueHasDecimal, literalOfType(decimalValue.valueHasDecimal.toString, XSD.DECIMAL)))
+        List(valueRdfIri.has(KB.valueHasDecimal, literalOfType(decimalValue.valueHasDecimal.toString, XSD.DECIMAL)))
       case booleanValue: BooleanValueContentV2 =>
-        List(valueIri.has(KB.valueHasBoolean, literalOf(booleanValue.valueHasBoolean)))
+        List(valueRdfIri.has(KB.valueHasBoolean, literalOf(booleanValue.valueHasBoolean)))
       case uriValue: UriValueContentV2 =>
-        List(valueIri.has(KB.valueHasUri, literalOfType(uriValue.valueHasUri, XSD.ANYURI)))
+        List(valueRdfIri.has(KB.valueHasUri, literalOfType(uriValue.valueHasUri, XSD.ANYURI)))
       case dateValue: DateValueContentV2 =>
         buildDateValuePatterns(valueIri, dateValue)
       case colorValue: ColorValueContentV2 =>
-        List(valueIri.has(KB.valueHasColor, literalOf(colorValue.valueHasColor)))
+        List(valueRdfIri.has(KB.valueHasColor, literalOf(colorValue.valueHasColor)))
       case geometryValue: GeomValueContentV2 =>
-        List(valueIri.has(KB.valueHasGeometry, literalOf(geometryValue.valueHasGeometry)))
+        List(valueRdfIri.has(KB.valueHasGeometry, literalOf(geometryValue.valueHasGeometry)))
       case fileValue: FileValueContentV2 =>
         buildFileValuePatterns(valueIri, fileValue)
       case listValue: HierarchicalListValueContentV2 =>
-        List(valueIri.has(KB.valueHasListNode, iri(listValue.valueHasListNode.toString)))
+        List(valueRdfIri.has(KB.valueHasListNode, Rdf.iri(listValue.valueHasListNode)))
       case intervalValue: IntervalValueContentV2 =>
         List(
-          valueIri
+          valueRdfIri
             .has(KB.valueHasIntervalStart, literalOfType(intervalValue.valueHasIntervalStart.toString, XSD.DECIMAL))
             .andHas(KB.valueHasIntervalEnd, literalOfType(intervalValue.valueHasIntervalEnd.toString, XSD.DECIMAL)),
         )
       case timeValue: TimeValueContentV2 =>
-        List(valueIri.has(KB.valueHasTimeStamp, literalOfType(timeValue.valueHasTimeStamp.toString, XSD.DATETIME)))
+        List(valueRdfIri.has(KB.valueHasTimeStamp, literalOfType(timeValue.valueHasTimeStamp.toString, XSD.DATETIME)))
       case geonameValue: GeonameValueContentV2 =>
-        List(valueIri.has(KB.valueHasGeonameCode, literalOf(geonameValue.valueHasGeonameCode)))
+        List(valueRdfIri.has(KB.valueHasGeonameCode, literalOf(geonameValue.valueHasGeonameCode)))
       case _ => List.empty
     }
   }
 
   private def buildTextValuePatterns(
-    valueIri: rdf.Iri,
+    valueIri: ValueIri,
     textValue: org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2,
   ): List[TriplePattern] = {
+    val valueRdfIri     = toRdfIri(valueIri)
     val languagePattern = textValue.valueHasLanguage.toList.map { lang =>
-      valueIri.has(KB.valueHasLanguage, literalOf(lang))
+      valueRdfIri.has(KB.valueHasLanguage, literalOf(lang))
     }
 
     if (textValue.standoff.nonEmpty) {
       val mappingPattern = textValue.mappingIri.map { mappingIri =>
-        valueIri.has(KB.valueHasMapping, iri(mappingIri.toString))
+        valueRdfIri.has(KB.valueHasMapping, Rdf.iri(mappingIri))
       }.toList
 
       val maxIndexPattern = textValue.computedMaxStandoffStartIndex.map { maxIndex =>
-        valueIri.has(KB.valueHasMaxStandoffStartIndex, literalOf(maxIndex))
+        valueRdfIri.has(KB.valueHasMaxStandoffStartIndex, literalOf(maxIndex))
       }.toList
 
       val standoffPatterns = buildStandoffPatterns(valueIri, textValue)
@@ -301,9 +306,9 @@ object InsertValueQueryBuilder {
     import org.knora.webapi.messages.v2.responder.standoffmessages._
 
     attr match {
-      case iriAttr: StandoffTagIriAttributeV2           => iri(iriAttr.value)
+      case iriAttr: StandoffTagIriAttributeV2           => Rdf.iri(iriAttr.value)
       case uri: StandoffTagUriAttributeV2               => literalOfType(uri.value, XSD.ANYURI)
-      case ref: StandoffTagInternalReferenceAttributeV2 => iri(ref.value)
+      case ref: StandoffTagInternalReferenceAttributeV2 => Rdf.iri(ref.value)
       case str: StandoffTagStringAttributeV2            => literalOf(str.value)
       case int: StandoffTagIntegerAttributeV2           => literalOf(int.value)
       case dec: StandoffTagDecimalAttributeV2           => literalOfType(dec.value.toString, XSD.DECIMAL)
@@ -313,24 +318,25 @@ object InsertValueQueryBuilder {
   }
 
   private def buildStandoffPatterns(
-    valueIri: rdf.Iri,
+    valueIri: ValueIri,
     textValue: org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2,
   ): List[TriplePattern] = {
     import dsp.valueobjects.UuidUtil
 
+    val valueRdfIri = toRdfIri(valueIri)
     if (textValue.standoff.nonEmpty) {
       // Follow Twirl template lines 100-161: Create standoff nodes for each standoff tag
-      val standoffTags = textValue.prepareForSparqlInsert(valueIri.getQueryString().replaceAll("[<>]", ""))
+      val standoffTags = textValue.prepareForSparqlInsert(valueIri)
 
       standoffTags.flatMap { createStandoff =>
-        val standoffTagIri = iri(createStandoff.standoffTagInstanceIri)
+        val standoffTagIri = Rdf.iri(createStandoff.standoffTagInstanceIri)
 
         // Base pattern: valueHasStandoff connection
-        val valueHasStandoffPattern = valueIri.has(KB.valueHasStandoff, standoffTagIri)
+        val valueHasStandoffPattern = valueRdfIri.has(KB.valueHasStandoff, standoffTagIri)
 
         // Build the standoff tag properties
         val standoffPattern = standoffTagIri
-          .hasOptional(KB.standoffTagHasStartParent, createStandoff.startParentIri.map(iri))
+          .hasOptional(KB.standoffTagHasStartParent, createStandoff.startParentIri.map(Rdf.iri))
           .andHasOptional(
             standoffTagIri,
             KB.standoffTagHasOriginalXMLID,
@@ -341,15 +347,15 @@ object InsertValueQueryBuilder {
             KB.standoffTagHasEndIndex,
             createStandoff.standoffNode.endIndex.map(i => literalOf(i)),
           )
-          .andHasOptional(standoffTagIri, KB.standoffTagHasEndParent, createStandoff.endParentIri.map(iri))
+          .andHasOptional(standoffTagIri, KB.standoffTagHasEndParent, createStandoff.endParentIri.map(Rdf.iri))
           .andHasAllFn(createStandoff.standoffNode.attributes)((attr: StandoffTagAttributeV2) =>
-            (standoffTagIri, iri(attr.standoffPropertyIri.toString), standoffAttributeToRdfValue(attr)),
+            (standoffTagIri, toRdfIri(attr.standoffPropertyIri), standoffAttributeToRdfValue(attr)),
           )
           .andHas(standoffTagIri, KB.standoffTagHasStartIndex, literalOf(createStandoff.standoffNode.startIndex))
           .andHas(KB.standoffTagHasUUID, literalOf(UuidUtil.base64Encode(createStandoff.standoffNode.uuid)))
           .andHas(KB.standoffTagHasStart, literalOf(createStandoff.standoffNode.startPosition))
           .andHas(KB.standoffTagHasEnd, literalOf(createStandoff.standoffNode.endPosition))
-          .andHas(RDF.TYPE, iri(createStandoff.standoffNode.standoffTagClassIri.toString))
+          .andHas(RDF.TYPE, toRdfIri(createStandoff.standoffNode.standoffTagClassIri))
 
         List(valueHasStandoffPattern, standoffPattern)
       }.toList
@@ -359,11 +365,11 @@ object InsertValueQueryBuilder {
   }
 
   private def buildDateValuePatterns(
-    valueIri: org.eclipse.rdf4j.sparqlbuilder.rdf.Iri,
+    valueIri: ValueIri,
     dateValue: org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2,
   ): List[TriplePattern] =
     List(
-      valueIri
+      toRdfIri(valueIri)
         .has(KB.valueHasStartJDN, literalOf(dateValue.valueHasStartJDN))
         .andHas(KB.valueHasEndJDN, literalOf(dateValue.valueHasEndJDN))
         .andHas(KB.valueHasStartPrecision, literalOf(dateValue.valueHasStartPrecision.toString))
@@ -372,10 +378,11 @@ object InsertValueQueryBuilder {
     )
 
   private def buildFileValuePatterns(
-    valueIri: org.eclipse.rdf4j.sparqlbuilder.rdf.Iri,
+    valueIri: ValueIri,
     fileValue: org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2,
   ): List[TriplePattern] = {
-    val basePattern = valueIri
+    val valueRdfIri = toRdfIri(valueIri)
+    val basePattern = valueRdfIri
       .has(KB.internalFilename, literalOf(fileValue.fileValue.internalFilename))
       .andHas(KB.internalMimeType, literalOf(fileValue.fileValue.internalMimeType))
 
@@ -395,7 +402,7 @@ object InsertValueQueryBuilder {
     }
 
     val withLicense = fileValue.fileValue.licenseIri match {
-      case Some(licenseIri) => withCopyright.andHas(KB.hasLicense, iri(licenseIri.value))
+      case Some(licenseIri) => withCopyright.andHas(KB.hasLicense, toRdfIri(licenseIri))
       case None             => withCopyright
     }
 
@@ -439,22 +446,22 @@ object InsertValueQueryBuilder {
   ): List[TriplePattern] =
     linkUpdates.flatMap { linkUpdate =>
       val directLink = if (linkUpdate.insertDirectLink) {
-        Some(resource.has(iri(linkUpdate.linkPropertyIri.toString), iri(linkUpdate.linkTargetIri)))
+        Some(resource.has(toRdfIri(linkUpdate.linkPropertyIri), toRdfIri(linkUpdate.linkTargetIri)))
       } else None
 
       val isDeleted = linkUpdate.newReferenceCount == 0
 
-      val linkValue = iri(linkUpdate.newLinkValueIri.value)
+      val linkValue = toRdfIri(linkUpdate.newLinkValueIri)
         .isA(KB.linkValue)
         .andHas(RDF.SUBJECT, resource)
-        .andHas(RDF.PREDICATE, iri(linkUpdate.linkPropertyIri.toString))
-        .andHas(RDF.OBJECT, iri(linkUpdate.linkTargetIri))
-        .andHas(KB.valueHasString, literalOf(linkUpdate.linkTargetIri))
-        .andHas(KB.valueHasRefCount, literalOf(linkUpdate.newReferenceCount))
-        .andHas(KB.isDeleted, literalOf(isDeleted))
+        .andHas(RDF.PREDICATE, toRdfIri(linkUpdate.linkPropertyIri))
+        .andHas(RDF.OBJECT, toRdfIri(linkUpdate.linkTargetIri))
+        .andHas(KB.valueHasString, toRdfLiteral(linkUpdate.linkTargetIri))
+        .andHas(KB.valueHasRefCount, toRdfLiteral(linkUpdate.newReferenceCount))
+        .andHas(KB.isDeleted, toRdfLiteral(isDeleted))
         .andHas(KB.valueCreationDate, literalOfType(creationDate.toString, XSD.DATETIME))
-        .andHas(KB.attachedToUser, iri(linkUpdate.newLinkValueCreator))
-        .andHas(KB.hasPermissions, literalOf(linkUpdate.newLinkValuePermissions))
+        .andHas(KB.attachedToUser, Rdf.iri(linkUpdate.newLinkValueCreator))
+        .andHas(KB.hasPermissions, toRdfLiteral(linkUpdate.newLinkValuePermissions))
         .pipe { linkValue =>
           if (linkUpdate.linkValueExists) {
             val linkValueIndex    = linkUpdates.indexOf(linkUpdate)
@@ -471,14 +478,14 @@ object InsertValueQueryBuilder {
           if (isDeleted) {
             linkValue
               .andHas(KB.deleteDate, literalOfType(creationDate.toString, XSD.DATETIME))
-              .andHas(KB.deletedBy, iri(valueCreator.value))
+              .andHas(KB.deletedBy, toRdfIri(valueCreator))
           } else {
             linkValue
           }
         }
 
       val resourceToLinkValue =
-        resource.has(iri(linkUpdate.linkPropertyIri.toString + "Value"), iri(linkUpdate.newLinkValueIri.value))
+        resource.has(Rdf.iri(linkUpdate.linkPropertyIri.toString + "Value"), toRdfIri(linkUpdate.newLinkValueIri))
 
       List(directLink, Some(linkValue), Some(resourceToLinkValue)).flatten
     }.toList
@@ -492,10 +499,10 @@ object InsertValueQueryBuilder {
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     resourceLastModDate: Variable,
     nextOrder: Variable,
-    resourceIri: InternalIri,
+    resourceIri: ResourceIri,
     propertyIri: String,
     currentVar: Variable,
-    currentValue: Option[InternalIri],
+    currentValue: Option[ValueIri],
     currentValueUUID: Variable,
   ): List[GraphPattern] = {
     val resourceClass = variable("resourceClass")
@@ -529,7 +536,7 @@ object InsertValueQueryBuilder {
       Expressions.bind(Expressions.function(SparqlFunction.IRI, literalOf(value.valueType.toString)), valueType),
 
       // Property validation
-      propertyVar.has(iri(OntologyConstants.KnoraBase.ObjectClassConstraint), propertyRange),
+      propertyVar.has(Rdf.iri(OntologyConstants.KnoraBase.ObjectClassConstraint), propertyRange),
       valueType.has(subClassOfPath, propertyRange),
 
       // Cardinality validation
@@ -554,7 +561,7 @@ object InsertValueQueryBuilder {
     // List node validation for hierarchical list values
     val listNodeValidation = value match {
       case listValue: org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2 =>
-        List(iri(listValue.valueHasListNode.toString).isA(iri(OntologyConstants.KnoraBase.ListNode)))
+        List(Rdf.iri(listValue.valueHasListNode).isA(Rdf.iri(OntologyConstants.KnoraBase.ListNode)))
       case _ => List.empty
     }
 
@@ -569,36 +576,36 @@ object InsertValueQueryBuilder {
 
         val targetValidation = if (linkUpdate.insertDirectLink) {
           List(
-            iri(linkUpdate.linkTargetIri)
+            toRdfIri(linkUpdate.linkTargetIri)
               .isA(linkTargetClass)
               .andHas(KB.isDeleted, literalOf(false)),
             linkTargetClass.has(subClassOfPath, KB.Resource),
-            iri(linkUpdate.linkPropertyIri.toString)
-              .has(iri(OntologyConstants.KnoraBase.ObjectClassConstraint), expectedTargetClass),
+            toRdfIri(linkUpdate.linkPropertyIri)
+              .has(Rdf.iri(OntologyConstants.KnoraBase.ObjectClassConstraint), expectedTargetClass),
             linkTargetClass.has(subClassOfPath, expectedTargetClass),
           )
         } else List.empty
 
         val directLinkValidation = if (linkUpdate.directLinkExists) {
-          List(resourceVar.has(iri(linkUpdate.linkPropertyIri.toString), iri(linkUpdate.linkTargetIri)))
+          List(resourceVar.has(toRdfIri(linkUpdate.linkPropertyIri), toRdfIri(linkUpdate.linkTargetIri)))
         } else {
           // Follow Twirl template lines 471-473: Make sure there is no such direct link (MINUS clause)
           // Use MINUS pattern instead of filterNotExists for semantic equivalence
           List(
             GraphPatterns.minus(
-              resourceVar.has(iri(linkUpdate.linkPropertyIri.toString), iri(linkUpdate.linkTargetIri)),
+              resourceVar.has(toRdfIri(linkUpdate.linkPropertyIri), toRdfIri(linkUpdate.linkTargetIri)),
             ),
           )
         }
 
         val linkValueValidation = if (linkUpdate.linkValueExists) {
           List(
-            resourceVar.has(iri(linkUpdate.linkPropertyIri.toString + "Value"), linkValue),
+            resourceVar.has(Rdf.iri(linkUpdate.linkPropertyIri.toString + "Value"), linkValue),
             linkValue
               .isA(KB.linkValue)
               .andHas(RDF.SUBJECT, resourceVar)
-              .andHas(RDF.PREDICATE, iri(linkUpdate.linkPropertyIri.toString))
-              .andHas(RDF.OBJECT, iri(linkUpdate.linkTargetIri))
+              .andHas(RDF.PREDICATE, toRdfIri(linkUpdate.linkPropertyIri))
+              .andHas(RDF.OBJECT, toRdfIri(linkUpdate.linkTargetIri))
               .andHas(KB.valueHasRefCount, literalOf(linkUpdate.currentReferenceCount))
               .andHas(KB.isDeleted, literalOf(false))
               .andHas(KB.valueHasUUID, linkValueUUID)
@@ -610,13 +617,13 @@ object InsertValueQueryBuilder {
           List(
             GraphPatterns.minus(
               resourceVar
-                .has(iri(linkUpdate.linkPropertyIri.toString + "Value"), linkValue)
+                .has(Rdf.iri(linkUpdate.linkPropertyIri.toString + "Value"), linkValue)
                 .and(
                   linkValue
                     .isA(KB.linkValue)
                     .andHas(RDF.SUBJECT, resourceVar)
-                    .andHas(RDF.PREDICATE, iri(linkUpdate.linkPropertyIri.toString))
-                    .andHas(RDF.OBJECT, iri(linkUpdate.linkTargetIri))
+                    .andHas(RDF.PREDICATE, toRdfIri(linkUpdate.linkPropertyIri))
+                    .andHas(RDF.OBJECT, toRdfIri(linkUpdate.linkTargetIri))
                     .andHas(KB.isDeleted, literalOf(false)),
                 ),
             ),
@@ -660,7 +667,7 @@ object InsertValueQueryBuilder {
                 .as(nextOrder),
             )
             .where(
-              iri(resourceIri.value).has(iri(propertyIri.toString), otherValue),
+              toRdfIri(resourceIri).has(Rdf.iri(propertyIri), otherValue),
               otherValue.has(KB.valueHasOrder, order).andHas(KB.isDeleted, literalOf(false)),
             ),
         )

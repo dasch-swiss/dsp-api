@@ -43,7 +43,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
 
   private val testResourceIri         = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing1")
   private val testLinkPropertyIri     = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri
-  private val testLinkTargetIri       = "http://rdfh.ch/0001/thing2"
+  private val testLinkTargetIri       = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing2")
   private val testNewLinkValueIri     = ValueIri.unsafeFrom("http://rdfh.ch/0001/thing1/values/newLinkValue")
   private val testNewLinkValueCreator = "http://rdfh.ch/users/creator1"
   private val testNewLinkValuePerms   = "CR knora-admin:Creator"

@@ -38,6 +38,7 @@ import org.knora.webapi.slice.api.v2.values.ReorderValuesRequest
 import org.knora.webapi.slice.api.v2.values.ReorderValuesResponse
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGravsearchQuery
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
@@ -3934,12 +3935,12 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
-          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption).map(ValueIri.unsafeFrom)
           _            <- ZIO.when(valueIris.size != 3)(ZIO.fail(s"Expected 3 values, got ${valueIris.size}"))
 
           // Reverse the order
           reorderRequest = ReorderValuesRequest(
-                             resourceIri = resourceIri,
+                             resourceIri = resIri,
                              propertyIri = propertyIri.toString,
                              orderedValueIris = valueIris.reverse.toList,
                            )
@@ -4014,11 +4015,11 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
-          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption).map(ValueIri.unsafeFrom)
 
           // Send only the first value IRI (missing the second)
           reorderRequest = ReorderValuesRequest(
-                             resourceIri = resourceIri,
+                             resourceIri = resIri,
                              propertyIri = propertyIri.toString,
                              orderedValueIris = valueIris.take(1).toList,
                            )
@@ -4062,13 +4063,14 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
-          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption).map(ValueIri.unsafeFrom)
 
           // Add a fake extra IRI alongside the real one
           reorderRequest = ReorderValuesRequest(
-                             resourceIri = resourceIri,
+                             resourceIri = resIri,
                              propertyIri = propertyIri.toString,
-                             orderedValueIris = valueIris.toList :+ "http://rdfh.ch/0001/a-thing/values/nonexistent",
+                             orderedValueIris =
+                               valueIris.toList :+ ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing/values/nonexistent"),
                            )
           response <- TestApiClient
                         .putJson[ReorderValuesResponse, ReorderValuesRequest](
@@ -4080,11 +4082,11 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       },
       test("reject duplicate IRIs") {
         val reorderRequest = ReorderValuesRequest(
-          resourceIri = AThing.iri,
+          resourceIri = ResourceIri.unsafeFrom(AThing.iri),
           propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
           orderedValueIris = List(
-            "http://rdfh.ch/0001/a-thing/values/someValue",
-            "http://rdfh.ch/0001/a-thing/values/someValue",
+            ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing/values/someValue"),
+            ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing/values/someValue"),
           ),
         )
         TestApiClient
@@ -4097,7 +4099,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       },
       test("reject empty list") {
         val reorderRequest = ReorderValuesRequest(
-          resourceIri = AThing.iri,
+          resourceIri = ResourceIri.unsafeFrom(AThing.iri),
           propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
           orderedValueIris = List.empty,
         )
@@ -4111,9 +4113,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       },
       test("reject non-existent resource") {
         val reorderRequest = ReorderValuesRequest(
-          resourceIri = "http://rdfh.ch/0001/nonexistent-resource",
+          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nonexistent-resource"),
           propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
-          orderedValueIris = List("http://rdfh.ch/0001/nonexistent-resource/values/someValue"),
+          orderedValueIris = List(ValueIri.unsafeFrom("http://rdfh.ch/0001/nonexistent-resource/values/someValue")),
         )
         TestApiClient
           .putJson[ReorderValuesResponse, ReorderValuesRequest](
@@ -4156,11 +4158,11 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
-          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption).map(ValueIri.unsafeFrom)
 
           // Attempt reorder as incunabulaMemberUser (no modify permission on anything project resources)
           reorderRequest = ReorderValuesRequest(
-                             resourceIri = resourceIri,
+                             resourceIri = resIri,
                              propertyIri = propertyIri.toString,
                              orderedValueIris = valueIris.toList,
                            )
@@ -4205,11 +4207,11 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
-          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption).map(ValueIri.unsafeFrom)
 
           // Send the hasText value IRIs but claim they belong to hasInteger
           reorderRequest = ReorderValuesRequest(
-                             resourceIri = resourceIri,
+                             resourceIri = resIri,
                              propertyIri = wrongPropertyIri,
                              orderedValueIris = valueIris.toList,
                            )
@@ -4253,12 +4255,12 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           resource     <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray  <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valuesInOrder = valuesArray.value.collect { case obj: JsonLDObject => obj }
-          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption)
+          valueIris     = valuesInOrder.flatMap(_.getRequiredString(JsonLDKeywords.ID).toOption).map(ValueIri.unsafeFrom)
           _            <- ZIO.when(valueIris.size != 1)(ZIO.fail(s"Expected 1 value, got ${valueIris.size}"))
 
           // Reorder with the single value
           reorderRequest = ReorderValuesRequest(
-                             resourceIri = resourceIri,
+                             resourceIri = resIri,
                              propertyIri = propertyIri.toString,
                              orderedValueIris = valueIris.toList,
                            )

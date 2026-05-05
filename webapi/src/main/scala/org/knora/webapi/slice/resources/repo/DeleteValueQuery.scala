@@ -89,7 +89,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
         val deleteLinkPatterns = linkUpdates.zipWithIndex.flatMap { case (lu, i) =>
           val linkProperty      = toRdfIri(lu.linkPropertyIri)
           val linkValueProperty = Rdf.iri(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
-          val linkTarget        = Rdf.iri(lu.linkTargetIri)
+          val linkTarget        = Rdf.iri(lu.linkTargetIri.value)
 
           // Delete direct links for standoff resource references that no longer exist
           val deleteDirectLink =
@@ -122,7 +122,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
         val insertLinkPatterns = linkUpdates.zipWithIndex.flatMap { case (lu, i) =>
           val linkProperty      = toRdfIri(lu.linkPropertyIri)
           val linkValueProperty = Rdf.iri(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
-          val linkTarget        = Rdf.iri(lu.linkTargetIri)
+          val linkTarget        = Rdf.iri(lu.linkTargetIri.value)
           val newLinkValue      = Rdf.iri(lu.newLinkValueIri.value)
 
           val deletedOrNot =
@@ -141,7 +141,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
             newLinkValue.has(RDF.SUBJECT, resource),
             newLinkValue.has(RDF.PREDICATE, linkProperty),
             newLinkValue.has(RDF.OBJECT, linkTarget),
-            newLinkValue.has(KB.valueHasString, Rdf.literalOfType(lu.linkTargetIri, XSD.STRING)),
+            newLinkValue.has(KB.valueHasString, Rdf.literalOfType(lu.linkTargetIri.value, XSD.STRING)),
             newLinkValue.has(KB.valueHasRefCount, Rdf.literalOf(lu.newReferenceCount)),
           ) ++ deletedOrNot ++ Seq(
             newLinkValue.has(KB.valueCreationDate, currentTimeLiteral),
@@ -172,7 +172,7 @@ object DeleteValueQuery extends QueryBuilderHelper {
         val whereLinkPatterns: Seq[GraphPattern] = linkUpdates.zipWithIndex.flatMap { case (lu, i) =>
           val linkProperty      = toRdfIri(lu.linkPropertyIri)
           val linkValueProperty = Rdf.iri(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
-          val linkTarget        = Rdf.iri(lu.linkTargetIri)
+          val linkTarget        = Rdf.iri(lu.linkTargetIri.value)
 
           Seq(
             // Make sure the relevant direct link exists between the two resources

@@ -7,7 +7,6 @@ package org.knora.webapi.slice.api.v2.values
 
 import sttp.model.MediaType
 import zio.Clock
-import zio.IO
 import zio.Random
 import zio.Task
 import zio.ZIO
@@ -37,7 +36,6 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
@@ -53,16 +51,15 @@ final class ValuesRestService(
 )(implicit private val stringFormatter: StringFormatter) {
 
   def getValue(user: User)(
-    resourceIri: String,
+    resourceIri: ResourceIri,
     valueUuid: ValueUuid,
     versionDate: Option[VersionDate],
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] =
     for {
-      resIri   <- parseResourceIri(resourceIri)
       response <- render(
                     readResources.getResourcesWithDeletedResource(
-                      Seq(resIri),
+                      Seq(resourceIri),
                       None,
                       Some(valueUuid.value),
                       versionDate,
@@ -101,21 +98,20 @@ final class ValuesRestService(
 
   def reorderValues(user: User)(request: ReorderValuesRequest): Task[ReorderValuesResponse] =
     for {
-      resIri                                <- parseResourceIri(request.resourceIri)
       validated                             <- validateReorderRequest(request)
       (propertySmartIri, requestedValueIris) = validated
 
       // Fetch as system user so we see ALL values for canonical verification.
       // This is safe: only value IRIs are compared (verifyCanonicalValues), no content is leaked to the caller.
       resourcesSeq <- readResources.getResources(
-                        Seq(resIri),
+                        Seq(request.resourceIri),
                         targetSchema = ApiV2Complex,
                         schemaOptions = Set.empty,
                         requestingUser = KnoraSystemInstances.Users.SystemUser,
                       )
       resourceInfo <- ZIO
                         .fromOption(resourcesSeq.resources.headOption)
-                        .orElseFail(NotFoundException(s"Resource <$resIri> not found."))
+                        .orElseFail(NotFoundException(s"Resource <${request.resourceIri.value}> not found."))
 
       // Check that the user has modify permission on the resource
       _ <- resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.Modify, user)
@@ -126,9 +122,9 @@ final class ValuesRestService(
       // Derive project data graph and execute the reorder
       projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM)
       now             <- Clock.instant
-      _               <- valueRepo.reorderValues(projectDataGraph, InternalIri(resIri.value), requestedValueIris, now)
+      _               <- valueRepo.reorderValues(projectDataGraph, request.resourceIri, requestedValueIris, now)
     } yield ReorderValuesResponse(
-      resourceIri = resIri.value,
+      resourceIri = request.resourceIri,
       propertyIri = request.propertyIri,
       valuesReordered = requestedValueIris.size,
     )
@@ -144,12 +140,7 @@ final class ValuesRestService(
       _ <- ZIO.when(request.orderedValueIris.distinct.size != request.orderedValueIris.size)(
              ZIO.fail(BadRequestException("Duplicate value IRIs in request.")),
            )
-      requestedValueIris <- ZIO.foreach(request.orderedValueIris) { iriStr =>
-                              ZIO
-                                .fromEither(ValueIri.from(iriStr))
-                                .mapError(e => BadRequestException(s"Invalid value IRI: $e"))
-                            }
-    } yield (propertySmartIri, requestedValueIris)
+    } yield (propertySmartIri, request.orderedValueIris)
 
   private def verifyCanonicalValues(
     request: ReorderValuesRequest,
@@ -166,7 +157,7 @@ final class ValuesRestService(
       .when(canonicalIris != requestedIris)(
         ZIO.fail(
           BadRequestException(
-            s"The provided value IRIs do not match the existing values for property <${request.propertyIri}> on resource <${request.resourceIri}>. " +
+            s"The provided value IRIs do not match the existing values for property <${request.propertyIri}> on resource <${request.resourceIri.value}>. " +
               s"Expected ${canonicalIris.size} value(s), got ${requestedIris.size}. " +
               s"Missing: ${(canonicalIris -- requestedIris).mkString(", ")}. " +
               s"Extra: ${(requestedIris -- canonicalIris).mkString(", ")}.",
@@ -205,9 +196,6 @@ final class ValuesRestService(
       knoraResponse <- valuesService.eraseValueHistory(eraseReq, user, project)
       response      <- render(knoraResponse)
     } yield response
-
-  private def parseResourceIri(iri: String): IO[BadRequestException, ResourceIri] =
-    ZIO.fromEither(ResourceIri.from(iri)).mapError(BadRequestException.apply)
 }
 
 object ValuesRestService {

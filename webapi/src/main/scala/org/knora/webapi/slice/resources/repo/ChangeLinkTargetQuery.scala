@@ -99,8 +99,8 @@ object ChangeLinkTargetQuery extends QueryBuilderHelper {
       val linkSource                     = toRdfIri(linkSourceIri)
       val linkProperty                   = toRdfIri(linkUpdateForCurrentLink.linkPropertyIri)
       val linkValueProperty              = Rdf.iri(linkUpdateForCurrentLink.linkPropertyIri.toInternalSchema.toIri + "Value")
-      val linkTargetForCurrentLink       = Rdf.iri(linkUpdateForCurrentLink.linkTargetIri)
-      val linkTargetForNewLink           = Rdf.iri(linkUpdateForNewLink.linkTargetIri)
+      val linkTargetForCurrentLink       = Rdf.iri(linkUpdateForCurrentLink.linkTargetIri.value)
+      val linkTargetForNewLink           = Rdf.iri(linkUpdateForNewLink.linkTargetIri.value)
       val newLinkValueForCurrentLink     = Rdf.iri(linkUpdateForCurrentLink.newLinkValueIri.value)
       val newLinkValueForNewLink         = Rdf.iri(linkUpdateForNewLink.newLinkValueIri.value)
       val linkSourceClass                = variable("linkSourceClass")
@@ -130,7 +130,7 @@ object ChangeLinkTargetQuery extends QueryBuilderHelper {
         newLinkValueForCurrentLink.has(RDF.PREDICATE, linkProperty),
         newLinkValueForCurrentLink.has(RDF.OBJECT, linkTargetForCurrentLink),
         newLinkValueForCurrentLink
-          .has(KB.valueHasString, Rdf.literalOfType(linkUpdateForCurrentLink.linkTargetIri, XSD.STRING)),
+          .has(KB.valueHasString, Rdf.literalOfType(linkUpdateForCurrentLink.linkTargetIri.value, XSD.STRING)),
         newLinkValueForCurrentLink
           .has(KB.valueHasRefCount, Rdf.literalOf(linkUpdateForCurrentLink.newReferenceCount)),
         newLinkValueForCurrentLink.has(KB.valueCreationDate, currentTimeLiteral),
@@ -157,7 +157,7 @@ object ChangeLinkTargetQuery extends QueryBuilderHelper {
         newLinkValueForNewLink.has(RDF.PREDICATE, linkProperty),
         newLinkValueForNewLink.has(RDF.OBJECT, linkTargetForNewLink),
         newLinkValueForNewLink
-          .has(KB.valueHasString, Rdf.literalOfType(linkUpdateForNewLink.linkTargetIri, XSD.STRING)),
+          .has(KB.valueHasString, Rdf.literalOfType(linkUpdateForNewLink.linkTargetIri.value, XSD.STRING)),
       )
 
       val insertComment =

@@ -15,9 +15,9 @@ INSERT { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate "2023
     knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:valueHasOrder ?nextOrder ;
     knora-base:valueCreationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-<http://0.0.0.0:3333/0001/thing/resource> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing/values/value> . } }
+<http://rdfh.ch/0001/thing-resource> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing/values/value> . } }
 WHERE { BIND( IRI( "http://0.0.0.0:3333/data/0001/thing" ) AS ?dataNamedGraph )
-BIND( IRI( "http://0.0.0.0:3333/0001/thing/resource" ) AS ?resource )
+BIND( IRI( "http://rdfh.ch/0001/thing-resource" ) AS ?resource )
 ?resource a ?resourceClass ;
     knora-base:isDeleted false .
 ?resourceClass rdfs:subClassOf* knora-base:Resource .
@@ -30,7 +30,7 @@ BIND( IRI( "http://www.knora.org/ontology/knora-base#IntervalValue" ) AS ?valueT
 ?restriction a owl:Restriction ;
     owl:onProperty ?property .
 { SELECT ( MAX( ?order ) AS ?maxOrder ) ( IF( BOUND( ?maxOrder ), ( ?maxOrder + 1 ), 0 ) AS ?nextOrder )
-WHERE { <http://0.0.0.0:3333/0001/thing/resource> <http://www.knora.org/ontology/0001/anything#hasText> ?otherValue .
+WHERE { <http://rdfh.ch/0001/thing-resource> <http://www.knora.org/ontology/0001/anything#hasText> ?otherValue .
 ?otherValue knora-base:valueHasOrder ?order ;
     knora-base:isDeleted false . }
  } }

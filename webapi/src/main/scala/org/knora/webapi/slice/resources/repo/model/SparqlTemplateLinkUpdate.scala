@@ -7,6 +7,7 @@ package org.knora.webapi.slice.resources.repo.model
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 
 /**
@@ -41,7 +42,7 @@ case class SparqlTemplateLinkUpdate(
   linkValueExists: Boolean,
   linkTargetExists: Boolean,
   newLinkValueIri: ValueIri,
-  linkTargetIri: IRI,
+  linkTargetIri: ResourceIri,
   currentReferenceCount: Int,
   newReferenceCount: Int,
   newLinkValueCreator: IRI,

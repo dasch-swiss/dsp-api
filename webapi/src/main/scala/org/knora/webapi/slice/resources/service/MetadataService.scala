@@ -98,8 +98,10 @@ final case class MetadataService(
                 .attempt(rows.map { row =>
                   val classIri =
                     row.rowMap.getOrElse(classIriVar, throwEx(classIriVar)).toSmartIri.toComplexSchema.toIri
-                  val resourceIri         = row.rowMap.getOrElse(resourceIriVar, throwEx(resourceIriVar))
-                  val parsedResourceIri   = ResourceIri.unsafeFrom(resourceIri)
+                  val resourceIri       = row.rowMap.getOrElse(resourceIriVar, throwEx(resourceIriVar))
+                  val parsedResourceIri = ResourceIri
+                    .from(resourceIri)
+                    .fold(err => throw new InconsistentRepositoryDataException(err), identity)
                   val arkUrl              = sf.resourceIriToArkUrl(parsedResourceIri)
                   val arkUrlWithTimestamp = sf.resourceIriToArkUrl(parsedResourceIri, Some(now))
                   val label               = row.rowMap.getOrElse(labelVar, throwEx(labelVar))
@@ -110,7 +112,7 @@ final case class MetadataService(
                   val lastModAt = row.rowMap.get(lastModificationDateVar).map(Instant.parse)
                   ResourceMetadataDto(
                     classIri,
-                    resourceIri,
+                    parsedResourceIri,
                     arkUrl,
                     arkUrlWithTimestamp,
                     label,

@@ -9,7 +9,7 @@ import zio.json.*
 
 import java.time.Instant
 
-import org.knora.webapi.IRI
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.resources.domain.ResourceInfo
 
 final case class ListResponseDto private (resources: List[ResourceInfoDto], count: Int)
@@ -24,7 +24,7 @@ object ListResponseDto {
 }
 
 final case class ResourceInfoDto private (
-  resourceIri: IRI,
+  resourceIri: ResourceIri,
   creationDate: Instant,
   lastModificationDate: Instant,
   deleteDate: Option[Instant],
@@ -35,7 +35,7 @@ object ResourceInfoDto {
 
   def from(info: ResourceInfo): ResourceInfoDto =
     ResourceInfoDto(
-      info.iri.value,
+      info.iri,
       info.creationDate,
       info.lastModificationDate.getOrElse(info.creationDate),
       info.deleteDate,

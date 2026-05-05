@@ -13,13 +13,15 @@ import zio.ZLayer
 import org.knora.webapi.slice.api.v2.ApiV2
 import org.knora.webapi.slice.api.v2.ValueUuid
 import org.knora.webapi.slice.api.v2.VersionDate
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
 
   private val base: EndpointInput[Unit] = "v2" / "values"
 
-  private val resourceIri = path[String].name("resourceIri").description("The IRI of a Resource.")
+  private val resourceIri = path[ResourceIri].name("resourceIri").description("The IRI of a Resource.")
   private val valueUuid   = path[ValueUuid].name("valueUuid").description("The UUID of a Value.")
   private val version     = query[Option[VersionDate]]("version")
 
@@ -54,10 +56,13 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .in(
       jsonBody[ReorderValuesRequest].example(
         ReorderValuesRequest(
-          resourceIri = "http://rdfh.ch/0001/resource-1",
+          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/resource-1"),
           propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
-          orderedValueIris =
-            List("http://rdfh.ch/0001/value-3", "http://rdfh.ch/0001/value-1", "http://rdfh.ch/0001/value-2"),
+          orderedValueIris = List(
+            ValueIri.unsafeFrom("http://rdfh.ch/0001/resource-1/values/value-3"),
+            ValueIri.unsafeFrom("http://rdfh.ch/0001/resource-1/values/value-1"),
+            ValueIri.unsafeFrom("http://rdfh.ch/0001/resource-1/values/value-2"),
+          ),
         ),
       ),
     )

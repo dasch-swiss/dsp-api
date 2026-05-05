@@ -58,7 +58,8 @@ trait QueryBuilderHelper {
     case PlainStringLiteralV2(value)                => Rdf.literalOf(value)
   }
 
-  def toRdfLiteral(str: StringValue): RdfLiteral.StringLiteral = Rdf.literalOf(str.value)
+  def toRdfLiteral(str: StringValue): RdfLiteral.StringLiteral = toRdfLiteral(str.value)
+  def toRdfLiteral(str: String): RdfLiteral.StringLiteral      = Rdf.literalOfType(str, XSD.STRING)
 
   def toRdfLiteral(booleanV2: BooleanLiteralV2): RdfLiteral.StringLiteral =
     Rdf.literalOfType(booleanV2.value.toString, XSD.BOOLEAN)
@@ -69,6 +70,8 @@ trait QueryBuilderHelper {
   def toRdfLiteral(int: Int): RdfLiteral.StringLiteral            = Rdf.literalOfType(int.toString, XSD.INT)
   def toRdfLiteralNonNegative(int: Int): RdfLiteral.StringLiteral =
     Rdf.literalOfType(int.toString, XSD.NON_NEGATIVE_INTEGER)
+
+  def toRdfLiteral(bool: Boolean): RdfLiteral.StringLiteral = Rdf.literalOfType(bool.toString, XSD.BOOLEAN)
 
   def toRdfIri(iri: KnoraIri): Iri    = toRdfIri(iri.smartIri)
   def toRdfIri(iri: SmartIri): Iri    = Rdf.iri(iri.toInternalSchema.toIri)

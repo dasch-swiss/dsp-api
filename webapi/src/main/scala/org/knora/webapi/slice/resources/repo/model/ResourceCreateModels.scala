@@ -12,6 +12,7 @@ import org.knora.webapi.messages.util.CalendarNameV2
 import org.knora.webapi.messages.util.DatePrecisionV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 
 final case class ResourceReadyToCreate(
@@ -25,9 +26,9 @@ final case class ResourceReadyToCreate(
 )
 
 final case class ValueInfo(
-  resourceIri: InternalIri,
+  resourceIri: ResourceIri,
   propertyIri: InternalIri,
-  valueIri: InternalIri,
+  valueIri: ValueIri,
   valueTypeIri: InternalIri,
   valueUUID: UUID,
   value: TypeSpecificValueInfo,
@@ -49,7 +50,7 @@ sealed trait FileValueTypeSpecificInfo {
 }
 
 enum TypeSpecificValueInfo {
-  case LinkValueInfo(referredResourceIri: InternalIri)
+  case LinkValueInfo(referredResourceIri: ResourceIri)
   case UnformattedTextValueInfo(valueHasLanguage: Option[String])
   case FormattedTextValueInfo(
     valueHasLanguage: Option[String],
@@ -95,8 +96,8 @@ enum TypeSpecificValueInfo {
 
 final case class StandoffLinkValueInfo(
   linkPropertyIri: InternalIri,
-  newLinkValueIri: InternalIri,
-  linkTargetIri: InternalIri,
+  newLinkValueIri: ValueIri,
+  linkTargetIri: ResourceIri,
   newReferenceCount: Int,
   newLinkValueCreator: InternalIri,
   newLinkValuePermissions: String,

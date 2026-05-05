@@ -22,6 +22,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
@@ -61,24 +62,24 @@ object TestData {
   )
 
   val linkValueDefinition = ValueInfo(
-    resourceIri = resourceIriInt,
+    resourceIri = resourceIri,
     propertyIri = InternalIri("foo:hasLinkToValue"),
-    valueIri = InternalIri("foo:LinkValueIri"),
+    valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/LinkValueIri"),
     valueTypeIri = InternalIri(OntologyConstants.KnoraBase.LinkValue),
     valueUUID = UUID.randomUUID(),
-    value = TypeSpecificValueInfo.LinkValueInfo(InternalIri("foo:LinkTargetIri")),
+    value = TypeSpecificValueInfo.LinkValueInfo(ResourceIri.unsafeFrom("http://rdfh.ch/0001/LinkTargetIri")),
     permissions = valuePermissions,
     creator = valueCreator,
     creationDate = valueCreationDate,
     valueHasOrder = 1,
-    valueHasString = "foo:LinkValueIri",
+    valueHasString = "http://rdfh.ch/0001/foo-resource/values/LinkValueIri",
     comment = None,
   )
 
   val unformattedTextValueDefinition = ValueInfo(
-    resourceIri = resourceIriInt,
+    resourceIri = resourceIri,
     propertyIri = InternalIri("foo:hasUnformattedTextValue"),
-    valueIri = InternalIri("foo:UnformattedTextValueIri"),
+    valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/UnformattedTextValueIri"),
     valueTypeIri = InternalIri(OntologyConstants.KnoraBase.TextValue),
     valueUUID = UUID.randomUUID(),
     value = TypeSpecificValueInfo.UnformattedTextValueInfo(Some("en")),
@@ -92,9 +93,9 @@ object TestData {
 
   val standoffTagUuid              = UUID.randomUUID()
   val formattedTextValueDefinition = ValueInfo(
-    resourceIri = resourceIriInt,
+    resourceIri = resourceIri,
     propertyIri = InternalIri("foo:hasFormattedTextValue"),
-    valueIri = InternalIri("foo:FormattedTextValueIri"),
+    valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/FormattedTextValueIri"),
     valueTypeIri = InternalIri(OntologyConstants.KnoraBase.TextValue),
     valueUUID = UUID.randomUUID(),
     value = TypeSpecificValueInfo.FormattedTextValueInfo(
@@ -155,9 +156,9 @@ object TestData {
 
   val intValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasInt"),
-      valueIri = InternalIri("foo:IntValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/IntValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.IntValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.IntegerValueInfo(42),
@@ -171,9 +172,9 @@ object TestData {
 
   val boolValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasBoolean"),
-      valueIri = InternalIri("foo:BooleanValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/BooleanValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.BooleanValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.BooleanValueInfo(true),
@@ -187,9 +188,9 @@ object TestData {
 
   val decimalValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasDecimal"),
-      valueIri = InternalIri("foo:DecimalValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/DecimalValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.DecimalValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.DecimalValueInfo(BigDecimal(42.42)),
@@ -203,9 +204,9 @@ object TestData {
 
   val uriValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasUri"),
-      valueIri = InternalIri("foo:UriValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/UriValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.UriValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.UriValueInfo("http://example.com"),
@@ -219,9 +220,9 @@ object TestData {
 
   val dateValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasDate"),
-      valueIri = InternalIri("foo:DateValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/DateValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.DateValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.DateValueInfo(0, 0, DatePrecisionDay, DatePrecisionDay, CalendarNameGregorian),
@@ -235,9 +236,9 @@ object TestData {
 
   val colorValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasColor"),
-      valueIri = InternalIri("foo:ColorValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/ColorValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.ColorValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.ColorValueInfo("#ff0000"),
@@ -251,9 +252,9 @@ object TestData {
 
   val geometryValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasGeom"),
-      valueIri = InternalIri("foo:GeomValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/GeomValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.GeomValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.GeomValueInfo(
@@ -270,9 +271,9 @@ object TestData {
 
   val stillImageFileValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasStillImage"),
-      valueIri = InternalIri("foo:StillImageFileValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/StillImageFileValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.StillImageFileValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.StillImageFileValueInfo(
@@ -295,9 +296,9 @@ object TestData {
 
   val stillImageExternalFileValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasStillImageExternal"),
-      valueIri = InternalIri("foo:StillImageExternalFileValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/StillImageExternalFileValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.StillImageFileValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.StillImageExternalFileValueInfo(
@@ -317,9 +318,9 @@ object TestData {
 
   val documentFileValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasDocument"),
-      valueIri = InternalIri("foo:DocumentFileValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/DocumentFileValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.DocumentFileValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.DocumentFileValueInfo(
@@ -343,9 +344,9 @@ object TestData {
 
   val otherFileValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasOtherFile"),
-      valueIri = InternalIri("foo:OtherFileValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/OtherFileValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.ArchiveFileValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.OtherFileValueInfo(
@@ -366,9 +367,9 @@ object TestData {
 
   val hierarchicalListValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasList"),
-      valueIri = InternalIri("foo:ListNodeIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/ListValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.ListValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.HierarchicalListValueInfo(InternalIri("foo:ListNodeIri")),
@@ -382,9 +383,9 @@ object TestData {
 
   val intervalValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasInterval"),
-      valueIri = InternalIri("foo:IntervalValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/IntervalValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.IntervalValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.IntervalValueInfo(
@@ -401,9 +402,9 @@ object TestData {
 
   val timeValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasTime"),
-      valueIri = InternalIri("foo:TimeValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/TimeValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.TimeValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.TimeValueInfo(Instant.parse("1024-01-01T10:00:00.673298Z")),
@@ -417,9 +418,9 @@ object TestData {
 
   val geonameValueDefinition =
     ValueInfo(
-      resourceIri = resourceIriInt,
+      resourceIri = resourceIri,
       propertyIri = InternalIri("foo:hasGeoname"),
-      valueIri = InternalIri("foo:GeonameValueIri"),
+      valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/GeonameValueIri"),
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.GeonameValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.GeonameValueInfo("geoname_code"),
@@ -434,8 +435,8 @@ object TestData {
   val standoffLinkValue =
     StandoffLinkValueInfo(
       linkPropertyIri = InternalIri("foo:hasStandoffLinkTo"),
-      newLinkValueIri = InternalIri("foo:StandoffLinkValueIri"),
-      linkTargetIri = InternalIri("foo:StandoffLinkTargetIri"),
+      newLinkValueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/foo-resource/values/StandoffLinkValueIri"),
+      linkTargetIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/StandoffLinkTargetIri"),
       newReferenceCount = 2,
       newLinkValueCreator = valueCreator,
       newLinkValuePermissions = valuePermissions,
@@ -507,19 +508,19 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasLinkToValue> <foo:LinkValueIri> .
-            |        <foo:LinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
+            |            <foo:hasLinkToValue> <http://rdfh.ch/0001/foo-resource/values/LinkValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/LinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
             |            knora-base:isDeleted false  ;
-            |            knora-base:valueHasString "foo:LinkValueIri" ;
+            |            knora-base:valueHasString "http://rdfh.ch/0001/foo-resource/values/LinkValueIri" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(linkValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime .
-            |        <${resourceIri.value}> <foo:hasLinkTo> <foo:LinkTargetIri> .
-            |        <foo:LinkValueIri> rdf:subject <${resourceIri.value}> ;
+            |        <${resourceIri.value}> <foo:hasLinkTo> <http://rdfh.ch/0001/LinkTargetIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/LinkValueIri> rdf:subject <${resourceIri.value}> ;
             |            rdf:predicate <foo:hasLinkTo> ;
-            |            rdf:object <foo:LinkTargetIri> ;
+            |            rdf:object <http://rdfh.ch/0001/LinkTargetIri> ;
             |            knora-base:valueHasRefCount 1 .
             |    }
             |}
@@ -546,8 +547,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasUnformattedTextValue> <foo:UnformattedTextValueIri> .
-            |        <foo:UnformattedTextValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TextValue> ;
+            |            <foo:hasUnformattedTextValue> <http://rdfh.ch/0001/foo-resource/values/UnformattedTextValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/UnformattedTextValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TextValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "this is a text without formatting" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(unformattedTextValueDefinition.valueUUID)}" ;
@@ -582,8 +583,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasFormattedTextValue> <foo:FormattedTextValueIri> .
-            |        <foo:FormattedTextValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TextValue> ;
+            |            <foo:hasFormattedTextValue> <http://rdfh.ch/0001/foo-resource/values/FormattedTextValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/FormattedTextValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TextValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "this is a text with formatting" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(formattedTextValueDefinition.valueUUID)}" ;
@@ -638,8 +639,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasInt> <foo:IntValueIri> .
-            |        <foo:IntValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
+            |            <foo:hasInt> <http://rdfh.ch/0001/foo-resource/values/IntValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/IntValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "42" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intValueDefinition.valueUUID)}" ;
@@ -673,8 +674,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasBoolean> <foo:BooleanValueIri> .
-            |        <foo:BooleanValueIri> rdf:type <http://www.knora.org/ontology/knora-base#BooleanValue> ;
+            |            <foo:hasBoolean> <http://rdfh.ch/0001/foo-resource/values/BooleanValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/BooleanValueIri> rdf:type <http://www.knora.org/ontology/knora-base#BooleanValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "true" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(boolValueDefinition.valueUUID)}" ;
@@ -708,8 +709,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasDecimal> <foo:DecimalValueIri> .
-            |        <foo:DecimalValueIri> rdf:type <http://www.knora.org/ontology/knora-base#DecimalValue> ;
+            |            <foo:hasDecimal> <http://rdfh.ch/0001/foo-resource/values/DecimalValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/DecimalValueIri> rdf:type <http://www.knora.org/ontology/knora-base#DecimalValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "42.42" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(decimalValueDefinition.valueUUID)}" ;
@@ -743,8 +744,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasUri> <foo:UriValueIri> .
-            |        <foo:UriValueIri> rdf:type <http://www.knora.org/ontology/knora-base#UriValue> ;
+            |            <foo:hasUri> <http://rdfh.ch/0001/foo-resource/values/UriValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/UriValueIri> rdf:type <http://www.knora.org/ontology/knora-base#UriValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "http://example.com" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(uriValueDefinition.valueUUID)}" ;
@@ -778,8 +779,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasDate> <foo:DateValueIri> .
-            |        <foo:DateValueIri> rdf:type <http://www.knora.org/ontology/knora-base#DateValue> ;
+            |            <foo:hasDate> <http://rdfh.ch/0001/foo-resource/values/DateValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/DateValueIri> rdf:type <http://www.knora.org/ontology/knora-base#DateValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "2024-01-01" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(dateValueDefinition.valueUUID)}" ;
@@ -817,8 +818,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasColor> <foo:ColorValueIri> .
-            |        <foo:ColorValueIri> rdf:type <http://www.knora.org/ontology/knora-base#ColorValue> ;
+            |            <foo:hasColor> <http://rdfh.ch/0001/foo-resource/values/ColorValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/ColorValueIri> rdf:type <http://www.knora.org/ontology/knora-base#ColorValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "#ff0000" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(colorValueDefinition.valueUUID)}" ;
@@ -853,8 +854,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasGeom> <foo:GeomValueIri> .
-            |        <foo:GeomValueIri> rdf:type <http://www.knora.org/ontology/knora-base#GeomValue> ;
+            |            <foo:hasGeom> <http://rdfh.ch/0001/foo-resource/values/GeomValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/GeomValueIri> rdf:type <http://www.knora.org/ontology/knora-base#GeomValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "{\\"status\\":\\"active\\",\\"lineColor\\":\\"#33ff33\\",\\"lineWidth\\":2,\\"points\\":[{\\"x\\":0.20226843100189035,\\"y\\":0.3090909090909091},{\\"x\\":0.6389413988657845,\\"y\\":0.3594405594405594}],\\"type\\":\\"rectangle\\",\\"original_index\\":0}" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(geometryValueDefinition.valueUUID)}" ;
@@ -888,8 +889,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasStillImage> <foo:StillImageFileValueIri> .
-            |        <foo:StillImageFileValueIri> rdf:type <http://www.knora.org/ontology/knora-base#StillImageFileValue> ;
+            |            <foo:hasStillImage> <http://rdfh.ch/0001/foo-resource/values/StillImageFileValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/StillImageFileValueIri> rdf:type <http://www.knora.org/ontology/knora-base#StillImageFileValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo.jpg" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(stillImageFileValueDefinition.valueUUID)}" ;
@@ -929,8 +930,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasStillImageExternal> <foo:StillImageExternalFileValueIri> .
-            |        <foo:StillImageExternalFileValueIri> rdf:type <http://www.knora.org/ontology/knora-base#StillImageFileValue> ;
+            |            <foo:hasStillImageExternal> <http://rdfh.ch/0001/foo-resource/values/StillImageExternalFileValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/StillImageExternalFileValueIri> rdf:type <http://www.knora.org/ontology/knora-base#StillImageFileValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo.jpg" ;
             |            knora-base:valueHasUUID "$uuidEncoded" ;
@@ -966,8 +967,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasDocument> <foo:DocumentFileValueIri> .
-            |        <foo:DocumentFileValueIri> rdf:type <http://www.knora.org/ontology/knora-base#DocumentFileValue> ;
+            |            <foo:hasDocument> <http://rdfh.ch/0001/foo-resource/values/DocumentFileValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/DocumentFileValueIri> rdf:type <http://www.knora.org/ontology/knora-base#DocumentFileValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo.pdf" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(documentFileValueDefinition.valueUUID)}" ;
@@ -1007,8 +1008,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasOtherFile> <foo:OtherFileValueIri> .
-            |        <foo:OtherFileValueIri> rdf:type <http://www.knora.org/ontology/knora-base#ArchiveFileValue> ;
+            |            <foo:hasOtherFile> <http://rdfh.ch/0001/foo-resource/values/OtherFileValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/OtherFileValueIri> rdf:type <http://www.knora.org/ontology/knora-base#ArchiveFileValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo.zip" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(otherFileValueDefinition.valueUUID)}" ;
@@ -1045,8 +1046,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasList> <foo:ListNodeIri> .
-            |        <foo:ListNodeIri> rdf:type <http://www.knora.org/ontology/knora-base#ListValue> ;
+            |            <foo:hasList> <http://rdfh.ch/0001/foo-resource/values/ListValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/ListValueIri> rdf:type <http://www.knora.org/ontology/knora-base#ListValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo list" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(hierarchicalListValueDefinition.valueUUID)}" ;
@@ -1080,8 +1081,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasInterval> <foo:IntervalValueIri> .
-            |        <foo:IntervalValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntervalValue> ;
+            |            <foo:hasInterval> <http://rdfh.ch/0001/foo-resource/values/IntervalValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/IntervalValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntervalValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "0.0 - 100.0" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intervalValueDefinition.valueUUID)}" ;
@@ -1117,8 +1118,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasTime> <foo:TimeValueIri> .
-            |        <foo:TimeValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TimeValue> ;
+            |            <foo:hasTime> <http://rdfh.ch/0001/foo-resource/values/TimeValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/TimeValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TimeValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "1024-01-01T10:00:00.673298Z" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(timeValueDefinition.valueUUID)}" ;
@@ -1153,8 +1154,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasGeoname> <foo:GeonameValueIri> .
-            |        <foo:GeonameValueIri> rdf:type <http://www.knora.org/ontology/knora-base#GeonameValue> ;
+            |            <foo:hasGeoname> <http://rdfh.ch/0001/foo-resource/values/GeonameValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/GeonameValueIri> rdf:type <http://www.knora.org/ontology/knora-base#GeonameValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "geoname_code" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(geonameValueDefinition.valueUUID)}" ;
@@ -1191,8 +1192,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |            knora-base:attachedToProject <${projectIri.value}> ;
           |            knora-base:hasPermissions "$permissions" ;
           |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-          |            <foo:hasInt> <foo:IntValueIri> .
-          |        <foo:IntValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
+          |            <foo:hasInt> <http://rdfh.ch/0001/foo-resource/values/IntValueIri> .
+          |        <http://rdfh.ch/0001/foo-resource/values/IntValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
           |            knora-base:isDeleted false  ;
           |            knora-base:valueHasString "42" ;
           |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intValueDefinition.valueUUID)}" ;
@@ -1201,8 +1202,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |            knora-base:valueHasOrder 1 ;
           |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
           |            knora-base:valueHasInteger 42 .
-          |        <${resourceIri.value}> <foo:hasBoolean> <foo:BooleanValueIri> .
-          |        <foo:BooleanValueIri> rdf:type <http://www.knora.org/ontology/knora-base#BooleanValue> ;
+          |        <${resourceIri.value}> <foo:hasBoolean> <http://rdfh.ch/0001/foo-resource/values/BooleanValueIri> .
+          |        <http://rdfh.ch/0001/foo-resource/values/BooleanValueIri> rdf:type <http://www.knora.org/ontology/knora-base#BooleanValue> ;
           |            knora-base:isDeleted false  ;
           |            knora-base:valueHasString "true" ;
           |            knora-base:valueHasUUID "${UuidUtil.base64Encode(boolValueDefinition.valueUUID)}" ;
@@ -1238,13 +1239,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |            knora-base:attachedToProject <${projectIri.value}> ;
           |            knora-base:hasPermissions "$permissions" ;
           |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-          |            <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
-          |            <foo:hasStandoffLinkToValue> <foo:StandoffLinkValueIri> .
-          |        <foo:StandoffLinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
+          |            <foo:hasStandoffLinkTo> <http://rdfh.ch/0001/StandoffLinkTargetIri> ;
+          |            <foo:hasStandoffLinkToValue> <http://rdfh.ch/0001/foo-resource/values/StandoffLinkValueIri> .
+          |        <http://rdfh.ch/0001/foo-resource/values/StandoffLinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
           |            rdf:subject <${resourceIri.value}> ;
           |            rdf:predicate <foo:hasStandoffLinkTo> ;
-          |            rdf:object <foo:StandoffLinkTargetIri> ;
-          |            knora-base:valueHasString "foo:StandoffLinkTargetIri" ;
+          |            rdf:object <http://rdfh.ch/0001/StandoffLinkTargetIri> ;
+          |            knora-base:valueHasString "http://rdfh.ch/0001/StandoffLinkTargetIri" ;
           |            knora-base:valueHasRefCount 2;
           |            knora-base:isDeleted false  ;
           |            knora-base:valueCreationDate "$creationDate"^^xsd:dateTime ;
@@ -1281,8 +1282,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasInt> <foo:IntValueIri> .
-            |        <foo:IntValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
+            |            <foo:hasInt> <http://rdfh.ch/0001/foo-resource/values/IntValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/IntValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "42" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intValueDefinition.valueUUID)}" ;
@@ -1291,13 +1292,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
             |            knora-base:valueHasInteger 42 .
-            |        <${resourceIri.value}> <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
-            |            <foo:hasStandoffLinkToValue> <foo:StandoffLinkValueIri> .
-            |        <foo:StandoffLinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
+            |        <${resourceIri.value}> <foo:hasStandoffLinkTo> <http://rdfh.ch/0001/StandoffLinkTargetIri> ;
+            |            <foo:hasStandoffLinkToValue> <http://rdfh.ch/0001/foo-resource/values/StandoffLinkValueIri> .
+            |        <http://rdfh.ch/0001/foo-resource/values/StandoffLinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
             |            rdf:subject <${resourceIri.value}> ;
             |            rdf:predicate <foo:hasStandoffLinkTo> ;
-            |            rdf:object <foo:StandoffLinkTargetIri> ;
-            |            knora-base:valueHasString "foo:StandoffLinkTargetIri" ;
+            |            rdf:object <http://rdfh.ch/0001/StandoffLinkTargetIri> ;
+            |            knora-base:valueHasString "http://rdfh.ch/0001/StandoffLinkTargetIri" ;
             |            knora-base:valueHasRefCount 2;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueCreationDate "$creationDate"^^xsd:dateTime ;

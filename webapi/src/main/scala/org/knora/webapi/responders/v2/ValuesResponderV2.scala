@@ -44,7 +44,6 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -463,16 +462,14 @@ final class ValuesResponderV2(
         }
 
       dataNamedGraphInternal <- iriConverter.asInternalIri(dataNamedGraph)
-      resourceIriInternal    <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
-      newValueIriInternal    <- iriConverter.asInternalIri(newValueIri.value)
       valueCreatorInternal   <- iriConverter.asInternalIri(valueCreator)
 
       // Use repository method which handles dual validation
       _ <- valueRepo.createValue(
              dataNamedGraph = dataNamedGraphInternal,
-             resourceIri = resourceIriInternal,
+             resourceIri = resourceInfo.resourceIri,
              propertyIri = propertyIri,
-             newValueIri = newValueIriInternal,
+             newValueIri = newValueIri,
              newValueUUID = newValueUUID,
              value = value,
              linkUpdates = standoffLinkUpdates,
@@ -595,7 +592,7 @@ final class ValuesResponderV2(
 
       _ <- valueRepo.updateValuePermissions(
              projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM),
-             resourceIri = InternalIri(resourceInfo.resourceIri.value),
+             resourceIri = resourceInfo.resourceIri,
              valueIri = currentValue.valueIri,
              newPermissions = newValuePermissionLiteral,
              currentTime = Instant.now,
@@ -953,19 +950,16 @@ final class ValuesResponderV2(
 
       // If no custom value creation date was provided, make a timestamp to indicate when the value
       // was updated.
-      currentTime: Instant     = valueCreationDate.getOrElse(Instant.now)
-      dataNamedGraphInternal  <- iriConverter.asInternalIri(dataNamedGraph)
-      resourceIriInternal     <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
-      currentValueIriInternal <- iriConverter.asInternalIri(currentValue.valueIri.value)
-      newValueIriInternal     <- iriConverter.asInternalIri(newValueIri.value)
-      valueCreatorInternal    <- iriConverter.asInternalIri(valueCreator)
+      currentTime: Instant    = valueCreationDate.getOrElse(Instant.now)
+      dataNamedGraphInternal <- iriConverter.asInternalIri(dataNamedGraph)
+      valueCreatorInternal   <- iriConverter.asInternalIri(valueCreator)
       // Generate a SPARQL update.
       _ <- valueRepo.updateValue(
              dataNamedGraph = dataNamedGraphInternal,
-             resourceIri = resourceIriInternal,
+             resourceIri = resourceInfo.resourceIri,
              propertyIri = propertyIri,
-             currentValueIri = currentValueIriInternal,
-             newValueIri = newValueIriInternal,
+             currentValueIri = currentValue.valueIri,
+             newValueIri = newValueIri,
              value = newValueVersion,
              valueCreator = valueCreatorInternal,
              valuePermissions = valuePermissions,
@@ -1785,7 +1779,7 @@ final class ValuesResponderV2(
               linkValueExists = true,
               linkTargetExists = true,
               newLinkValueIri = newLinkValueIri,
-              linkTargetIri = targetResourceIri.value,
+              linkTargetIri = targetResourceIri,
               currentReferenceCount = linkValueInfo.valueHasRefCount,
               newReferenceCount = linkValueInfo.valueHasRefCount + 1,
               newLinkValueCreator = valueCreator,
@@ -1803,7 +1797,7 @@ final class ValuesResponderV2(
               linkValueExists = false,
               linkTargetExists = true,
               newLinkValueIri = newLinkValueIri,
-              linkTargetIri = targetResourceIri.value,
+              linkTargetIri = targetResourceIri,
               currentReferenceCount = 0,
               newReferenceCount = 1,
               newLinkValueCreator = valueCreator,
@@ -1869,7 +1863,7 @@ final class ValuesResponderV2(
               linkValueExists = true,
               linkTargetExists = true,
               newLinkValueIri = newLinkValueIri,
-              linkTargetIri = targetResourceIri.value,
+              linkTargetIri = targetResourceIri,
               currentReferenceCount = linkValueInfo.valueHasRefCount,
               newReferenceCount = newReferenceCount,
               newLinkValueCreator = valueCreator,
@@ -1938,7 +1932,7 @@ final class ValuesResponderV2(
           linkValueExists = true,
           linkTargetExists = true,
           newLinkValueIri = newLinkValueIri,
-          linkTargetIri = targetResourceIri.value,
+          linkTargetIri = targetResourceIri,
           currentReferenceCount = linkValueInfo.valueHasRefCount,
           newReferenceCount = linkValueInfo.valueHasRefCount,
           newLinkValueCreator = valueCreator,
