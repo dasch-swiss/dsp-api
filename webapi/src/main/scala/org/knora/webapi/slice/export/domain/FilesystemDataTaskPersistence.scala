@@ -122,7 +122,7 @@ object FilesystemDataTaskPersistence {
     wasInProgress  = restored.exists(_.isInProgress)
     corrected      = restored.map { task =>
                   if (task.isInProgress)
-                    task.fail(Some("Marked as failed due to service restart")).getOrElse(task)
+                    task.fail("Marked as failed due to service restart").getOrElse(task)
                   else task
                 }
     _ <- ZIO.when(wasInProgress && corrected.isDefined) {

@@ -73,10 +73,10 @@ final case class CurrentDataTask private (
     case DataTaskStatus.Failed     => Left(StateFailedError(self))
     case DataTaskStatus.InProgress => Right(self.copy(status = DataTaskStatus.Completed))
 
-  def fail(message: Option[String] = None): Either[StateCompletedError, CurrentDataTask] = self.status match
+  def fail(message: String): Either[StateCompletedError, CurrentDataTask] = self.status match
     case DataTaskStatus.Completed  => Left(StateCompletedError(self))
     case DataTaskStatus.Failed     => Right(self)
-    case DataTaskStatus.InProgress => Right(self.copy(status = DataTaskStatus.Failed, errorMessage = message))
+    case DataTaskStatus.InProgress => Right(self.copy(status = DataTaskStatus.Failed, errorMessage = Some(message)))
 
   def isInProgress: Boolean = status == DataTaskStatus.InProgress
   def isFailed: Boolean     = status == DataTaskStatus.Failed
