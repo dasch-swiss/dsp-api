@@ -15,7 +15,6 @@ import org.eclipse.rdf4j.model.vocabulary.XSD
 import zio.prelude.Validation
 
 import java.time.Instant
-import java.util.UUID
 
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
@@ -23,16 +22,13 @@ import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Schema
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.OntologyConstants.Rdfs
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
@@ -41,164 +37,12 @@ import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-
-/**
- * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
- */
-sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
-
-/**
- * Requests the creation of an empty ontology. A successful response will be a [[ReadOntologyV2]].
- *
- * @param ontologyName   the name of the ontology to be created.
- * @param projectIri     the IRI of the project that the ontology will belong to.
- * @param isShared       the flag that shows if an ontology is a shared one.
- * @param label          the label of the ontology.
- * @param comment        the optional comment that described the ontology to be created.
- * @param apiRequestID   the ID of the API request.
- * @param requestingUser the user making the request.
- */
-case class CreateOntologyRequestV2(
-  ontologyName: String,
-  projectIri: ProjectIri,
-  isShared: Boolean,
-  label: String,
-  comment: Option[NonEmptyString],
-  apiRequestID: UUID,
-  requestingUser: User,
-)
-
-/**
- * Requests the addition of a property to an ontology. A successful response will be a [[ReadOntologyV2]].
- *
- * @param propertyInfoContent  an [[PropertyInfoContentV2]] containing the property definition.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class CreatePropertyRequestV2(
-  propertyInfoContent: PropertyInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * FIXME(DSP-1856): Can only remove one single cardinality at a time.
- * Requests a check if the user can remove class's cardinalities. A successful response will be a [[CanDoResponseV2]].
- *
- * @param classInfoContent     a [[ClassInfoContentV2]] containing the cardinalities to be removed.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-final case class CanDeleteCardinalitiesFromClassRequestV2(
-  classInfoContent: ClassInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * FIXME(DSP-1856): Can only remove one single cardinality at a time.
- * Requests the removal of a class's cardinalities. A successful response will be a [[ReadOntologyV2]].
- *
- * @param classInfoContent     a [[ClassInfoContentV2]] containing the cardinalities to be removed.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-final case class DeleteCardinalitiesFromClassRequestV2(
-  classInfoContent: ClassInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * Requests the deletion of a class. A successful response will be a [[ReadOntologyMetadataV2]].
- *
- * @param classIri             the IRI of the class to be deleted.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class DeleteClassRequestV2(
-  classIri: SmartIri,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * Requests that the `salsah-gui:guiElement` and `salsah-gui:guiAttribute` of a property are changed.
- *
- * @param propertyIri          the IRI of the property to be changed.
- * @param newGuiObject         the GUI object with the new GUI element and/or GUI attributes.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class ChangePropertyGuiElementRequest(
-  propertyIri: KnoraIris.PropertyIri,
-  newGuiObject: Schema.GuiObject,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * Requests that a class's labels or comments are changed. A successful response will be a [[ReadOntologyV2]].
- *
- * @param classIri             the IRI of the property.
- * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
- * @param newObjects           the class's new labels or comments.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class ChangeClassLabelsOrCommentsRequestV2(
-  classIri: ResourceClassIri,
-  predicateToUpdate: LabelOrComment,
-  newObjects: Seq[LanguageTaggedStringLiteralV2],
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-enum LabelOrComment {
-  case Label
-  case Comment
-
-  override def toString: String = this match {
-    case Label   => RDFS.LABEL.toString
-    case Comment => RDFS.COMMENT.toString
-  }
-}
-object LabelOrComment {
-  def fromString(str: String): Option[LabelOrComment] =
-    LabelOrComment.values.find(_.toString == str)
-}
-
-/**
- * Requests all available information about a list of ontology entities (classes and/or properties). A successful response will be an
- * [[EntityInfoGetResponseV2]].
- *
- * @param classIris      the IRIs of the class entities to be queried.
- * @param propertyIris   the IRIs of the property entities to be queried.
- */
-case class EntityInfoGetRequestV2(
-  classIris: Set[SmartIri] = Set.empty[SmartIri],
-  propertyIris: Set[SmartIri] = Set.empty[SmartIri],
-) extends OntologiesResponderRequestV2
 
 /**
  * Represents assertions about one or more ontology entities (resource classes and/or properties).
@@ -212,18 +56,6 @@ case class EntityInfoGetResponseV2(
 )
 
 /**
- * Requests all available information about a list of ontology entities (standoff classes and/or properties). A successful response will be an
- * [[StandoffEntityInfoGetResponseV2]].
- *
- * @param standoffClassIris    the IRIs of the resource entities to be queried.
- * @param standoffPropertyIris the IRIs of the property entities to be queried.
- */
-case class StandoffEntityInfoGetRequestV2(
-  standoffClassIris: Set[SmartIri] = Set.empty,
-  standoffPropertyIris: Set[SmartIri] = Set.empty,
-) extends OntologiesResponderRequestV2
-
-/**
  * Represents assertions about one or more ontology entities (resource classes and/or properties).
  *
  * @param standoffClassInfoMap    a [[Map]] of standoff class IRIs to [[ReadClassInfoV2]] objects.
@@ -235,62 +67,11 @@ case class StandoffEntityInfoGetResponseV2(
 )
 
 /**
- * Requests information about all standoff classes that are a subclass of a data type standoff class. A successful response will be an
- * [[StandoffClassesWithDataTypeGetResponseV2]].
- *
- * @param requestingUser the user making the request.
- */
-case class StandoffClassesWithDataTypeGetRequestV2(requestingUser: User) extends OntologiesResponderRequestV2
-
-/**
- * Represents assertions about all standoff classes that are a subclass of a data type standoff class.
- *
- * @param standoffClassInfoMap a [[Map]] of standoff class entity IRIs to [[ReadClassInfoV2]] objects.
- */
-case class StandoffClassesWithDataTypeGetResponseV2(standoffClassInfoMap: Map[SmartIri, ReadClassInfoV2])
-
-/**
- * Requests information about all standoff property entities. A successful response will be an
- * [[StandoffAllPropertyEntitiesGetResponseV2]].
- *
- * @param requestingUser the user making the request.
- */
-case class StandoffAllPropertyEntitiesGetRequestV2(requestingUser: User) extends OntologiesResponderRequestV2
-
-/**
- * Represents assertions about all standoff all standoff property entities.
- *
- * @param standoffAllPropertiesEntityInfoMap a [[Map]] of standoff property IRIs to [[ReadPropertyInfoV2]] objects.
- */
-case class StandoffAllPropertyEntitiesGetResponseV2(
-  standoffAllPropertiesEntityInfoMap: Map[SmartIri, ReadPropertyInfoV2],
-)
-
-/**
- * Checks whether a Knora resource or value class is a subclass of (or identical to) another class.
- * A successful response will be a [[CheckSubClassResponseV2]].
- *
- * @param subClassIri   the IRI of the subclass.
- * @param superClassIri the IRI of the superclass.
- */
-case class CheckSubClassRequestV2(subClassIri: SmartIri, superClassIri: SmartIri, requestingUser: User)
-    extends OntologiesResponderRequestV2
-
-/**
- * Represents a response to a [[CheckSubClassRequestV2]].
+ * Represents the response to a sub-class check.
  *
  * @param isSubClass `true` if the requested inheritance relationship exists.
  */
 case class CheckSubClassResponseV2(isSubClass: Boolean)
-
-/**
- * Requests information about the subclasses of a Knora resource class. A successful response will be
- * a [[SubClassesGetResponseV2]].
- *
- * @param resourceClassIri the IRI of the given resource class.
- * @param requestingUser   the user making the request.
- */
-case class SubClassesGetRequestV2(resourceClassIri: SmartIri, requestingUser: User) extends OntologiesResponderRequestV2
 
 /**
  * Provides information about the subclasses of a Knora resource class.
@@ -298,45 +79,6 @@ case class SubClassesGetRequestV2(resourceClassIri: SmartIri, requestingUser: Us
  * @param subClasses a list of [[SubClassInfoV2]] representing the subclasses of the specified class.
  */
 case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
-
-/**
- * Requests metadata about ontologies by ontology IRI.
- *
- * @param ontologyIris   the IRIs of the ontologies to be queried. If this set is empty, information
- *                       about all ontologies is returned.
- */
-case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri])
-    extends OntologiesResponderRequestV2
-
-/**
- * Requests entity definitions for the given ontology.
- *
- * @param ontologyIri    the ontology to query for.
- * @param allLanguages   true if information in all available languages should be returned.
- * @param requestingUser the user making the request.
- */
-case class OntologyEntitiesGetRequestV2(ontologyIri: OntologyIri, allLanguages: Boolean, requestingUser: User)
-    extends OntologiesResponderRequestV2
-
-/**
- * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadOntologyV2]].
- *
- * @param classIris      the IRIs of the classes to be queried.
- * @param allLanguages   true if information in all available languages should be returned.
- * @param requestingUser the user making the request.
- */
-case class ClassesGetRequestV2(classIris: Set[SmartIri], allLanguages: Boolean, requestingUser: User)
-    extends OntologiesResponderRequestV2
-
-/**
- * Requests the definitions of the specified properties. A successful response will be a [[ReadOntologyV2]].
- *
- * @param propertyIris   the IRIs of the properties to be queried.
- * @param allLanguages   true if information in all available languages should be returned.
- * @param requestingUser the user making the request.
- */
-case class PropertiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boolean, requestingUser: User)
-    extends OntologiesResponderRequestV2
 
 /**
  * Represents the contents of an ontology to be returned in an API response.

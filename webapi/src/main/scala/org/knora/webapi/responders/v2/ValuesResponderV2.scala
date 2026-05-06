@@ -49,6 +49,7 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.ChangeLinkMetadataQuery
 import org.knora.webapi.slice.resources.repo.ChangeLinkTargetQuery
@@ -69,7 +70,9 @@ final class ValuesResponderV2(
   iriConverter: IriConverter,
   iriService: IriService,
   messageRelay: MessageRelay,
+  ontologyCacheHelpers: OntologyCacheHelpers,
   ontologyRepo: OntologyRepo,
+  ontologyResponder: OntologyResponderV2,
   permissionUtilADM: PermissionUtilADM,
   permissionsResponder: PermissionsResponder,
   resourceUtilV2: ResourceUtilV2,
@@ -102,15 +105,12 @@ final class ValuesResponderV2(
       submittedInternalValueContent = valueToCreate.valueContent.toOntologySchema(InternalSchema)
 
       // Get ontology information about the submitted property.
-      propertyInfoRequestForSubmittedProperty =
-        PropertiesGetRequestV2(
+      propertyInfoResponseForSubmittedProperty <-
+        ontologyResponder.getPropertyDefinitionsFromOntologyV2(
           propertyIris = Set(submittedInternalPropertyIri),
           allLanguages = false,
           requestingUser = requestingUser,
         )
-
-      propertyInfoResponseForSubmittedProperty <-
-        messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
 
       propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
         propertyInfoResponseForSubmittedProperty.properties(
@@ -173,14 +173,12 @@ final class ValuesResponderV2(
            )
 
       // Get the definition of the resource class.
-      classInfoRequest =
-        ClassesGetRequestV2(
+      classInfoResponse <-
+        ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
           classIris = Set(resourceInfo.resourceClassIri),
           allLanguages = false,
           requestingUser = requestingUser,
         )
-
-      classInfoResponse <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
 
       // Check that the resource class has a cardinality for the submitted property.
       cardinalityInfo <-
@@ -768,15 +766,12 @@ final class ValuesResponderV2(
       submittedInternalValueType   <- ZIO.attempt(updateValue.valueType.toInternalSchema)
 
       // Get ontology information about the submitted property.
-      propertyInfoRequestForSubmittedProperty =
-        PropertiesGetRequestV2(
+      propertyInfoResponseForSubmittedProperty <-
+        ontologyResponder.getPropertyDefinitionsFromOntologyV2(
           propertyIris = Set(submittedInternalPropertyIri),
           allLanguages = false,
           requestingUser = requestingUser,
         )
-
-      propertyInfoResponseForSubmittedProperty <-
-        messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
 
       propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
         propertyInfoResponseForSubmittedProperty.properties(submittedInternalPropertyIri)
@@ -1590,13 +1585,10 @@ final class ValuesResponderV2(
       resource <- resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
 
       // Ask the ontology responder whether the resource's class is a subclass of the link property's object class constraint.
-      subClassRequest = CheckSubClassRequestV2(
-                          subClassIri = resource.resourceClassIri,
-                          superClassIri = objectClassConstraint,
-                          requestingUser = requestingUser,
-                        )
-
-      subClassResponse <- messageRelay.ask[CheckSubClassResponseV2](subClassRequest)
+      subClassResponse <- ontologyResponder.checkSubClassV2(
+                            subClassIri = resource.resourceClassIri,
+                            superClassIri = objectClassConstraint,
+                          )
 
       // If it isn't, fail with an exception.
       _ <-
@@ -1615,27 +1607,20 @@ final class ValuesResponderV2(
    * @param propertyIri           the IRI of the property that should point to the value.
    * @param objectClassConstraint the property's object class constraint.
    * @param valueContent          the value.
-   * @param requestingUser        the user making the request.
    */
   private def checkNonLinkPropertyObjectClassConstraint(
     propertyIri: SmartIri,
     objectClassConstraint: SmartIri,
     valueContent: ValueContentV2,
-    requestingUser: User,
   ): Task[Unit] =
     // Is the value type the same as the property's object class constraint?
     ZIO
       .unless(objectClassConstraint == valueContent.valueType) {
         for {
-          subClassRequest <- ZIO.succeed(
-                               CheckSubClassRequestV2(
-                                 subClassIri = valueContent.valueType,
-                                 superClassIri = objectClassConstraint,
-                                 requestingUser = requestingUser,
-                               ),
-                             )
-
-          subClassResponse <- messageRelay.ask[CheckSubClassResponseV2](subClassRequest)
+          subClassResponse <- ontologyResponder.checkSubClassV2(
+                                subClassIri = valueContent.valueType,
+                                superClassIri = objectClassConstraint,
+                              )
 
           // If it isn't, fail with an exception.
           _ <-
@@ -1695,7 +1680,7 @@ final class ValuesResponderV2(
           // We're creating an ordinary value.
           case otherValue =>
             // Check that its type is valid for the property's object class constraint.
-            checkNonLinkPropertyObjectClassConstraint(propertyIri, objectClassConstraint, otherValue, requestingUser)
+            checkNonLinkPropertyObjectClassConstraint(propertyIri, objectClassConstraint, otherValue)
         }
     } yield result
   }

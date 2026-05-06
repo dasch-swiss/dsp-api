@@ -14,7 +14,6 @@ import scala.language.implicitConversions
 
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri

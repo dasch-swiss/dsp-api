@@ -25,14 +25,10 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
-import org.knora.webapi.messages.util.ConstructResponseUtilV2
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.XMLTagItem
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
@@ -62,12 +58,11 @@ import org.knora.webapi.util.FileUtil
  * Responds to requests relating to the creation of mappings from XML elements
  * and attributes to standoff classes and properties.
  */
-final case class StandoffResponderV2(
+final class StandoffResponderV2(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
+  ontologyResponder: OntologyResponderV2,
   triplestore: TriplestoreService,
-  constructResponseUtilV2: ConstructResponseUtilV2,
-  standoffTagUtilV2: StandoffTagUtilV2,
   projectService: ProjectService,
   xsltCache: EhCache[String, String],
   mappingCache: EhCache[String, MappingXMLtoStandoff],
@@ -173,17 +168,9 @@ final case class StandoffResponderV2(
           ZIO.attempt(xsltMaybe.get)
         } else {
           for {
-            response <-
-              sipiService
-                .getTextFileRequest(
-                  SipiGetTextFileRequest(
-                    fileUrl = xsltFileUrl,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    senderName = this.getClass.getName,
-                  ),
-                )
-            _ = xsltCache.put(xsltFileUrl, response.content)
-          } yield response.content
+            content <- sipiService.getTextFileRequest(xsltFileUrl, this.getClass.getName)
+            _        = xsltCache.put(xsltFileUrl, content)
+          } yield content
         }
 
     } yield GetXSLTransformationResponseV2(xslt)
@@ -792,12 +779,9 @@ final case class StandoffResponderV2(
 
       // request information about standoff classes that should be created
       standoffClassEntities <-
-        messageRelay
-          .ask[StandoffEntityInfoGetResponseV2](
-            StandoffEntityInfoGetRequestV2(
-              standoffClassIris = standoffTagIrisFromMapping.map(_.toSmartIri),
-            ),
-          )
+        ontologyResponder.getStandoffEntityInfoResponseV2(
+          standoffClassIris = standoffTagIrisFromMapping.map(_.toSmartIri),
+        )
 
       // check that the ontology responder returned the information for all the standoff classes it was asked for
       // if the ontology responder does not return a standoff class it was asked for, then this standoff class does not exist
@@ -819,12 +803,9 @@ final case class StandoffResponderV2(
 
       // request information about the standoff properties
       standoffPropertyEntities <-
-        messageRelay
-          .ask[StandoffEntityInfoGetResponseV2](
-            StandoffEntityInfoGetRequestV2(
-              standoffPropertyIris = standoffPropertyIrisFromOntologyResponder,
-            ),
-          )
+        ontologyResponder.getStandoffEntityInfoResponseV2(
+          standoffPropertyIris = standoffPropertyIrisFromOntologyResponder,
+        )
 
       // check that the ontology responder returned the information for all the standoff properties it was asked for
       // if the ontology responder does not return a standoff property it was asked for, then this standoff property does not exist
@@ -911,20 +892,16 @@ final case class StandoffResponderV2(
 }
 
 object StandoffResponderV2 {
-  val layer =
+  private val cachesLayer: URLayer[CacheManager, EhCache[String, String] & EhCache[String, MappingXMLtoStandoff]] =
+    ZLayer.fromZIO(ZIO.serviceWithZIO[CacheManager](_.createCache[String, String]("xsltCache"))) ++
+      ZLayer.fromZIO(
+        ZIO.serviceWithZIO[CacheManager](_.createCache[String, MappingXMLtoStandoff]("mappingCache")),
+      )
+
+  val layer = cachesLayer >>> ZLayer.derive[StandoffResponderV2].flatMap { env =>
     ZLayer.fromZIO {
-      for {
-        ac      <- ZIO.service[AppConfig]
-        mr      <- ZIO.service[MessageRelay]
-        ts      <- ZIO.service[TriplestoreService]
-        cru     <- ZIO.service[ConstructResponseUtilV2]
-        stu     <- ZIO.service[StandoffTagUtilV2]
-        ps      <- ZIO.service[ProjectService]
-        xc      <- ZIO.serviceWithZIO[CacheManager](_.createCache[String, String]("xsltCache"))
-        mc      <- ZIO.serviceWithZIO[CacheManager](_.createCache[String, MappingXMLtoStandoff]("mappingCache"))
-        sf      <- ZIO.service[StringFormatter]
-        ssl     <- ZIO.service[SipiService]
-        handler <- mr.subscribe(StandoffResponderV2(ac, mr, ts, cru, stu, ps, xc, mc, ssl)(sf))
-      } yield handler
+      val handler = env.get[StandoffResponderV2]
+      ZIO.serviceWithZIO[MessageRelay](_.subscribe(handler))
     }
+  }
 }

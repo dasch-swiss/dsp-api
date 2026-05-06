@@ -89,6 +89,7 @@ object ProjectMigrationImportE2ESpec extends E2EZSpec {
                     } yield assertTrue(
                       importStatus.status == DataTaskStatus.InProgress || importStatus.status == DataTaskStatus.Completed || importStatus.status == DataTaskStatus.Failed,
                       pollResult.status == DataTaskStatus.Failed,
+                      pollResult.errorMessage.exists(_.nonEmpty),
                       deleteResponse.code == StatusCode.NoContent,
                     )
                   }.ensuring {
