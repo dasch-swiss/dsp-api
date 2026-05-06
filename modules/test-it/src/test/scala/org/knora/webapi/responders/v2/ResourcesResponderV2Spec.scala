@@ -519,7 +519,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
     test("Load test data") {
       ZIO
         .serviceWithZIO[StandoffMappingService](
-          _.getMappingV2(StandoffMappingIri.unsafeFrom("http://rdfh.ch/standoff/mappings/StandardMapping")),
+          _.getMappingV2(StandoffMappingIri.StandardMapping),
         )
         .tap(r => ZIO.succeed(self.standardMapping = Some(r.mapping)))
         .as(assertCompletes)
@@ -956,7 +956,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                 ontologySchema = ApiV2Complex,
                 maybeValueHasString = Some("this is text with standoff"),
                 standoff = sampleStandoff,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mappingIri = Some(StandoffMappingIri.StandardMapping),
                 mapping = standardMapping,
                 textValueType = TextValueType.FormattedText,
               ),
@@ -1344,7 +1344,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                 ontologySchema = ApiV2Complex,
                 maybeValueHasString = Some("this is text with standoff"),
                 standoff = standoffWithInvalidLink,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mappingIri = Some(StandoffMappingIri.StandardMapping),
                 mapping = standardMapping,
                 textValueType = TextValueType.FormattedText,
               ),
@@ -1862,7 +1862,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                 ontologySchema = ApiV2Complex,
                 maybeValueHasString = Some("this is text with standoff"),
                 standoff = sampleStandoffForErasingResource,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mappingIri = Some(StandoffMappingIri.StandardMapping),
                 mapping = standardMapping,
                 textValueType = TextValueType.FormattedText,
               ),
@@ -1897,7 +1897,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                                          ontologySchema = ApiV2Complex,
                                          maybeValueHasString = Some("this is some other text with standoff"),
                                          standoff = Vector(sampleStandoffForErasingResource.head),
-                                         mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                                         mappingIri = Some(StandoffMappingIri.StandardMapping),
                                          mapping = standardMapping,
                                          textValueType = TextValueType.FormattedText,
                                        ),

@@ -912,7 +912,7 @@ case class TextValueContentV2(
   textValueType: TextValueType,
   valueHasLanguage: Option[String] = None,
   standoff: Seq[StandoffTagV2] = Vector.empty,
-  mappingIri: Option[IRI] = None,
+  mappingIri: Option[StandoffMappingIri] = None,
   mapping: Option[MappingXMLtoStandoff] = None,
   xslt: Option[String] = None,
   comment: Option[String] = None,
@@ -1191,7 +1191,7 @@ object TextValueContentV2 {
           textValueType = textType,
           valueHasLanguage = maybeValueHasLanguage,
           standoff = textWithStandoffTags.standoffTagV2,
-          mappingIri = Some(mappingResponse.mappingIri.value),
+          mappingIri = Some(mappingResponse.mappingIri),
           mapping = Some(mappingResponse.mapping),
           comment = comment,
         )

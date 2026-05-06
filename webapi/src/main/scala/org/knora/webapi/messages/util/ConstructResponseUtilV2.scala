@@ -647,16 +647,19 @@ final class ConstructResponseUtilV2(
       valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri)
 
     if (valueObject.standoff.nonEmpty) {
-      val mappingIri: Option[IRI]                                           = valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
-      val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] =
-        mappingIri.flatMap(s => StandoffMappingIri.from(s).toOption).flatMap(mappings.get)
-
       for {
-        standoff <- standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
+        mappingIri <- ZIO.foreach(valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)) {
+                        iri =>
+                          ZIO
+                            .fromEither(StandoffMappingIri.from(iri))
+                            .mapBoth(_ => InconsistentRepositoryDataException(s"Invalid mapping IRI $iri"), identity)
+                      }
+        mappingAndXsltTransformation = mappingIri.flatMap(mappings.get)
+        standoff                    <- standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
                       standoffAssertions = valueObject.standoff,
                       requestingUser = requestingUser,
                     )
-        textTypeInferred = mappingIri match
+        textTypeInferred = mappingIri.map(_.value) match
                              case None                                              => TextValueType.UnformattedText
                              case Some(OntologyConstants.KnoraBase.StandardMapping) => TextValueType.FormattedText
                              case Some(iri)                                         => TextValueType.CustomFormattedText(InternalIri(iri))
@@ -666,7 +669,7 @@ final class ConstructResponseUtilV2(
                        case OntologyConstants.KnoraBase.UnformattedText     => Some(TextValueType.UnformattedText)
                        case OntologyConstants.KnoraBase.FormattedText       => Some(TextValueType.FormattedText)
                        case OntologyConstants.KnoraBase.CustomFormattedText =>
-                         mappingIri.map(iri => TextValueType.CustomFormattedText(InternalIri(iri)))
+                         mappingIri.map(iri => TextValueType.CustomFormattedText(InternalIri(iri.value)))
                        case OntologyConstants.KnoraBase.UndefinedTextType => None
                        case _                                             => None
                      }

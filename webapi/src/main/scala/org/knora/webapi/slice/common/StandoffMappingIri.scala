@@ -7,6 +7,7 @@ package org.knora.webapi.slice.common
 
 import scala.util.matching.Regex
 
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.Value.StringValue
 
@@ -36,6 +37,9 @@ object StandoffMappingIri extends StringValueCompanion[StandoffMappingIri] {
 
   private val ProjectMappingIriRegex: Regex =
     """^(http://rdfh\.ch/projects/[a-zA-Z0-9_-]{4,40})/mappings/([A-Za-z0-9_-]+)$""".r
+
+  val StandardMapping: StandoffMappingIri = StandoffMappingIri.unsafeFrom(OntologyConstants.KnoraBase.StandardMapping)
+  val TEIMapping: StandoffMappingIri      = StandoffMappingIri.unsafeFrom(OntologyConstants.KnoraBase.TEIMapping)
 
   def from(value: String): Either[String, StandoffMappingIri] = value match {
     case BuiltInMappingIriRegex(name) =>
