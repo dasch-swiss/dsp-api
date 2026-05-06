@@ -19,7 +19,6 @@ import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 import org.knora.webapi.config.Sipi
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.OntologyConstants.Rdfs
@@ -48,13 +47,14 @@ import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.iiif.api.SipiService
 
 case class CreateMappingRequestV2(label: String, projectIri: ProjectIri, mappingName: String, xml: String)
 
 final case class ApiComplexV2JsonLdRequestParser(
   converter: IriConverter,
-  messageRelay: MessageRelay,
+  standoffMappingService: StandoffMappingService,
   sipiService: SipiService,
   projectService: ProjectService,
   userService: UserService,
@@ -573,7 +573,7 @@ final case class ApiComplexV2JsonLdRequestParser(
           case StillImageExternalFileValue => ZIO.fromEither(StillImageExternalFileValueContentV2.from(v.r))
           case StillImageFileValue         => withFileInfo(v, StillImageFileValueContentV2.from)
           case StillImageVectorFileValue   => withFileInfo(v, StillImageVectorFileValueContentV2.from)
-          case TextValue                   => TextValueContentV2.from(v.r).provide(ZLayer.succeed(messageRelay))
+          case TextValue                   => TextValueContentV2.from(v.r).provide(ZLayer.succeed(standoffMappingService))
           case TextFileValue               => withFileInfo(v, TextFileValueContentV2.from)
           case TimeValue                   => ZIO.fromEither(TimeValueContentV2.from(v.r))
           case UriValue                    => ZIO.fromEither(UriValueContentV2.from(v.r))

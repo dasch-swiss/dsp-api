@@ -39,6 +39,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.model.*
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -557,7 +558,7 @@ final class CreateResourceV2Handler(
     maxStandoffStartIndex: Option[Int],
     textType: TextValueType,
     valueHasLanguage: Option[String],
-    mappingIri: String,
+    mappingIri: StandoffMappingIri,
   ): IO[StandoffInternalException, TypeSpecificValueInfo] =
     ZIO
       .whenCase(textType) {
@@ -572,13 +573,7 @@ final class CreateResourceV2Handler(
           .mapBoth(
             _ => StandoffInternalException("Max standoff start index not computed"),
             standoffStartIndex =>
-              FormattedTextValueInfo(
-                valueHasLanguage,
-                InternalIri(mappingIri),
-                standoffStartIndex,
-                standoffInfo,
-                textType,
-              ),
+              FormattedTextValueInfo(valueHasLanguage, mappingIri, standoffStartIndex, standoffInfo, textType),
           )
       }
 

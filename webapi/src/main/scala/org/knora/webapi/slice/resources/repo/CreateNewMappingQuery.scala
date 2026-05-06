@@ -37,7 +37,7 @@ object CreateNewMappingQuery extends QueryBuilderHelper {
     }
 
     val elementPatterns: Seq[TriplePattern] = mappingElements.flatMap { ele =>
-      val eleIri = Rdf.iri(ele.mappingElementIri)
+      val eleIri = Rdf.iri(ele.mappingElementIri.value)
 
       val hasMappingEle = mappingIRI.has(KnoraBase.hasMappingElement, eleIri)
 
@@ -50,7 +50,7 @@ object CreateNewMappingQuery extends QueryBuilderHelper {
         .andHas(KnoraBase.mappingElementRequiresSeparator, ele.separatorRequired)
 
       val attrPatterns = ele.attributes.flatMap { attr =>
-        val attrIri = Rdf.iri(attr.mappingXMLAttributeElementIri)
+        val attrIri = Rdf.iri(attr.mappingXMLAttributeElementIri.value)
         Seq(
           eleIri.has(KnoraBase.mappingHasXMLAttribute, attrIri),
           attrIri
@@ -62,7 +62,7 @@ object CreateNewMappingQuery extends QueryBuilderHelper {
       }
 
       val dtcPatterns = ele.standoffDataTypeClass.toSeq.flatMap { dtc =>
-        val dtcIri = Rdf.iri(dtc.mappingStandoffDataTypeClassElementIri)
+        val dtcIri = Rdf.iri(dtc.mappingStandoffDataTypeClassElementIri.value)
         Seq(
           eleIri.has(KnoraBase.mappingHasStandoffDataTypeClass, dtcIri),
           dtcIri

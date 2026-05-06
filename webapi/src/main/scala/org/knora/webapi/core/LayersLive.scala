@@ -43,6 +43,8 @@ import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.security.SecurityModule
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
+import org.knora.webapi.slice.standoff.service.StandoffMappingServiceLive
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -86,6 +88,7 @@ object LayersLive { self =>
     SearchResponderV2Module.Provided &
     SecurityModule.Provided &
     SipiService &
+    StandoffMappingService &
     StandoffResponderV2 &
     StandoffTagUtilV2 &
     State &
@@ -133,6 +136,7 @@ object LayersLive { self =>
       SearchResponderV2Module.layer,
       SecurityModule.layer,
       SipiServiceLive.layer,
+      StandoffMappingServiceLive.layer,
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,

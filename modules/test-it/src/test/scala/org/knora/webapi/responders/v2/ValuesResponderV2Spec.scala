@@ -35,9 +35,11 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGravsearchQuery
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
@@ -1208,7 +1210,9 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
   override val e2eSpec = suite("ValuesResponderV2")(
     test("Load test data") {
       ZIO
-        .serviceWithZIO[StandoffResponderV2](_.getMappingV2("http://rdfh.ch/standoff/mappings/StandardMapping"))
+        .serviceWithZIO[StandoffMappingService](
+          _.getMappingV2(StandoffMappingIri.StandardMapping),
+        )
         .tap(r => ZIO.succeed(self.standardMapping = Some(r.mapping)))
         .as(assertCompletes)
     },
@@ -1286,7 +1290,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(valueHasString),
           standoff = sampleStandoff,
-          mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+          mappingIri = Some(StandoffMappingIri.StandardMapping),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
         ),
@@ -1308,7 +1312,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(
         savedValue.valueHasString.contains(valueHasString),
         savedValue.standoff == sampleStandoff,
-        savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        savedValue.mappingIri.contains(StandoffMappingIri.StandardMapping),
         savedValue.mapping == standardMapping,
       )
     },
@@ -1836,7 +1840,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(valueHasString),
           standoff = standoff,
-          mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+          mappingIri = Some(StandoffMappingIri.StandardMapping),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
         ),
@@ -1870,7 +1874,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         savedTextValue.valueHasString.contains(valueHasString),
         savedTextValue.standoff == standoff,
         savedTextValue.mapping == standardMapping,
-        savedTextValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        savedTextValue.mappingIri.contains(StandoffMappingIri.StandardMapping),
         linkValuesFromTriplestore.size == 1,
         linkValueFromTriplestore.previousValueIri.isEmpty,
         linkValueFromTriplestore.valueHasRefCount == 1,
@@ -1910,7 +1914,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(valueHasString),
           standoff = standoff,
-          mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+          mappingIri = Some(StandoffMappingIri.StandardMapping),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
         ),
@@ -1948,7 +1952,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(
         savedTextValue.valueHasString.contains(valueHasString),
         savedTextValue.standoff == (standoff),
-        savedTextValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        savedTextValue.mappingIri.contains(StandoffMappingIri.StandardMapping),
         savedTextValue.mapping == (standardMapping),
         linkValuesFromTriplestore.size == 1,
         linkValueFromTriplestore.previousValueIri.contains(previousStandoffLinkValueIri),
@@ -1998,7 +2002,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some("ignored"),
           standoff = standoffTags,
-          mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+          mappingIri = Some(StandoffMappingIri.StandardMapping),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
         ),
@@ -2025,7 +2029,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(valueHasString),
           standoff = standoffTags,
-          mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+          mappingIri = Some(StandoffMappingIri.StandardMapping),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
         ),
@@ -2060,7 +2064,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(
         savedValue.valueHasString.contains(valueHasString),
         savedValue.standoff == standoffTags,
-        savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        savedValue.mappingIri.contains(StandoffMappingIri.StandardMapping),
         savedValue.mapping == standardMapping,
         standoffLinkValues.size == 1,
         linkValueContentV2.referredResourceIri == generationeIri,
@@ -2079,7 +2083,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(valueHasString),
           standoff = sampleStandoff,
-          mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+          mappingIri = Some(StandoffMappingIri.StandardMapping),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
         ),
@@ -2100,7 +2104,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(
         savedValue.valueHasString.contains(valueHasString),
         savedValue.standoff == (sampleStandoff),
-        savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        savedValue.mappingIri.contains(StandoffMappingIri.StandardMapping),
         savedValue.mapping == (standardMapping),
       )
     },
@@ -2117,7 +2121,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(valueHasString),
           standoff = sampleStandoffModified,
-          mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+          mappingIri = Some(StandoffMappingIri.StandardMapping),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
         ),
@@ -2138,7 +2142,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
       } yield assertTrue(
         savedValue.valueHasString.contains(valueHasString),
         savedValue.standoff == sampleStandoffModified,
-        savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        savedValue.mappingIri.contains(StandoffMappingIri.StandardMapping),
         savedValue.mapping == standardMapping,
       )
     },
@@ -3085,7 +3089,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some("Comment 1 for UUID checking"),
           standoff = sampleStandoffWithLink(aThingIri.value),
-          mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+          mappingIri = Some(StandoffMappingIri.StandardMapping),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
         ),
@@ -3117,7 +3121,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                   ontologySchema = ApiV2Complex,
                   maybeValueHasString = Some("Comment 2 for UUID checking"),
                   standoff = sampleStandoffWithLink(aThingIri.value),
-                  mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                  mappingIri = Some(StandoffMappingIri.StandardMapping),
                   mapping = standardMapping,
                   textValueType = TextValueType.FormattedText,
                 ),
@@ -3158,7 +3162,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                   ontologySchema = ApiV2Complex,
                   maybeValueHasString = Some("Comment 3 for UUID checking"),
                   standoff = sampleStandoffWithLink(aThingIri.value),
-                  mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                  mappingIri = Some(StandoffMappingIri.StandardMapping),
                   mapping = standardMapping,
                   textValueType = TextValueType.FormattedText,
                 ),
