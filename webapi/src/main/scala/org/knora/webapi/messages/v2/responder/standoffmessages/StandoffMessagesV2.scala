@@ -13,10 +13,8 @@ import dsp.errors.AssertionException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.*
@@ -24,12 +22,7 @@ import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
-
-/**
- * An abstract trait representing a Knora v2 API request message that can be sent to `StandoffResponderV2`.
- */
-sealed trait StandoffResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
+import org.knora.webapi.slice.common.StandoffMappingIri
 
 /**
  * Provides the IRI of the created mapping.
@@ -76,43 +69,17 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: P
 }
 
 /**
- * Represents a request to get a mapping from XML elements and attributes to standoff entities.
- *
- * @param mappingIri           the IRI of the mapping.
- * @param requestingUser       the the user making the request.
- */
-case class GetMappingRequestV2(mappingIri: IRI) extends StandoffResponderRequestV2
-
-/**
- * Represents a response to a [[GetMappingRequestV2]].
+ * Bundles a mapping with the standoff entities it references.
  *
  * @param mappingIri       the IRI of the requested mapping.
  * @param mapping          the requested mapping.
  * @param standoffEntities the standoff entities referred to in the mapping.
  */
 case class GetMappingResponseV2(
-  mappingIri: IRI,
+  mappingIri: StandoffMappingIri,
   mapping: MappingXMLtoStandoff,
   standoffEntities: StandoffEntityInfoGetResponseV2,
 )
-
-/**
- * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
- *
- * @param xsltTextRepresentationIri the IRI of the `knora-base:XSLTransformation`.
- * @param requestingUser            the the user making the request.
- */
-case class GetXSLTransformationRequestV2(
-  xsltTextRepresentationIri: IRI,
-  requestingUser: User,
-) extends StandoffResponderRequestV2
-
-/**
- * Represents a response to a [[GetXSLTransformationRequestV2]].
- *
- * @param xslt the XSLT to be applied to the XML created from standoff.
- */
-case class GetXSLTransformationResponseV2(xslt: String)
 
 /**
  * Represents a mapping between XML tags and standoff entities (classes and properties).

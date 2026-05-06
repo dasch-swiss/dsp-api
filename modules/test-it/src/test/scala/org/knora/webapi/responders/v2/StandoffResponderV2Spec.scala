@@ -77,7 +77,7 @@ object StandoffResponderV2Spec extends E2EZSpec {
 
       for {
         response <- ZIO.serviceWithZIO[StandoffResponderV2](
-                      _.createMappingV2(createRequest, rootUser, UUID.randomUUID()),
+                      _.createMappingV2(createRequest, UUID.randomUUID()),
                     )
         expectedMappingIRI = f"${anythingProjectIri.value}/mappings/$mappingName"
         mappingFromDB     <- ZIO.serviceWithZIO[TriplestoreService](

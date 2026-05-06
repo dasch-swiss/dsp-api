@@ -44,9 +44,11 @@ import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.resources.repo.GetStandoffTagByUUIDQuery
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.*
@@ -516,7 +518,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
   override val e2eSpec = suite("ResourceResponserV2")(
     test("Load test data") {
       ZIO
-        .serviceWithZIO[StandoffResponderV2](_.getMappingV2("http://rdfh.ch/standoff/mappings/StandardMapping"))
+        .serviceWithZIO[StandoffMappingService](
+          _.getMappingV2(StandoffMappingIri.unsafeFrom("http://rdfh.ch/standoff/mappings/StandardMapping")),
+        )
         .tap(r => ZIO.succeed(self.standardMapping = Some(r.mapping)))
         .as(assertCompletes)
     },

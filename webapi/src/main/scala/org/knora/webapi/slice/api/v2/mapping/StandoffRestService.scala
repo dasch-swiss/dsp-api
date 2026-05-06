@@ -33,7 +33,7 @@ final class StandoffRestService(
                          .createMappingRequestMetadataV2(mappingForm)
                          .mapError(BadRequestException.apply)
       uuid     <- Random.nextUUID
-      result   <- standoffResponder.createMappingV2(createRequest, user, uuid)
+      result   <- standoffResponder.createMappingV2(createRequest, uuid)
       response <- renderer.render(result, opts)
     } yield response
 }

@@ -7,6 +7,7 @@ package org.knora.webapi.slice.resources.repo
 
 import zio.test.*
 
+import org.knora.webapi.slice.common.StandoffMappingElementIri
 import org.knora.webapi.slice.resources.repo.model.MappingElement
 import org.knora.webapi.slice.resources.repo.model.MappingStandoffDatatypeClass
 import org.knora.webapi.slice.resources.repo.model.MappingXMLAttribute
@@ -24,7 +25,8 @@ object CreateNewMappingQuerySpec extends ZIOSpecDefault {
     standoffClass = "http://www.knora.org/ontology/standoff#StandoffParagraphTag",
     attributes = Seq.empty,
     standoffDataTypeClass = None,
-    mappingElementIri = "http://rdfh.ch/projects/0001/mappings/testMapping/elements/1",
+    mappingElementIri =
+      StandoffMappingElementIri.unsafeFrom("http://rdfh.ch/projects/0001/mappings/testMapping/elements/1"),
     separatorRequired = true,
   )
 
@@ -38,18 +40,22 @@ object CreateNewMappingQuerySpec extends ZIOSpecDefault {
         attributeName = "href",
         namespace = "noNamespace",
         standoffProperty = "http://www.knora.org/ontology/knora-base#valueHasUri",
-        mappingXMLAttributeElementIri = "http://rdfh.ch/projects/0001/mappings/testMapping/elements/2/attributes/1",
+        mappingXMLAttributeElementIri = StandoffMappingElementIri.unsafeFrom(
+          "http://rdfh.ch/projects/0001/mappings/testMapping/elements/2/attributes/1",
+        ),
       ),
     ),
     standoffDataTypeClass = Some(
       MappingStandoffDatatypeClass(
         datatype = "http://www.knora.org/ontology/knora-base#StandoffUriTag",
         attributeName = "href",
-        mappingStandoffDataTypeClassElementIri =
+        mappingStandoffDataTypeClassElementIri = StandoffMappingElementIri.unsafeFrom(
           "http://rdfh.ch/projects/0001/mappings/testMapping/elements/2/datatypeclass/1",
+        ),
       ),
     ),
-    mappingElementIri = "http://rdfh.ch/projects/0001/mappings/testMapping/elements/2",
+    mappingElementIri =
+      StandoffMappingElementIri.unsafeFrom("http://rdfh.ch/projects/0001/mappings/testMapping/elements/2"),
     separatorRequired = false,
   )
 

@@ -18,7 +18,6 @@ import dsp.errors.NotImplementedException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -43,10 +42,7 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.admin.ListsResponder
@@ -59,18 +55,20 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
 
-final case class ConstructResponseUtilV2(
-  private val appConfig: AppConfig,
-  private val messageRelay: MessageRelay,
-  private val listsResponder: ListsResponder,
-  private val standoffTagUtilV2: StandoffTagUtilV2,
-  private val projectService: ProjectService,
+final class ConstructResponseUtilV2(
+  appConfig: AppConfig,
+  standoffMappingService: StandoffMappingService,
+  listsResponder: ListsResponder,
+  standoffTagUtilV2: StandoffTagUtilV2,
+  projectService: ProjectService,
 )(implicit val stringFormatter: StringFormatter) {
 
   private val inferredPredicates = Set(
@@ -601,7 +599,7 @@ final case class ConstructResponseUtilV2(
    * @param valuePropertyAssertions the given assertions (property -> value object).
    * @return a set of mapping Iris.
    */
-  def getMappingIrisFromValuePropertyAssertions(valuePropertyAssertions: RdfPropertyValues): Set[IRI] =
+  private def getMappingIrisFromValuePropertyAssertions(valuePropertyAssertions: RdfPropertyValues): Set[IRI] =
     valuePropertyAssertions.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], (_: SmartIri, valObjs: Seq[ValueRdfData])) =>
         val mappings: Seq[String] = valObjs.filter { (valObj: ValueRdfData) =>
@@ -641,7 +639,7 @@ final case class ConstructResponseUtilV2(
     valueObject: ValueRdfData,
     valueObjectValueHasString: Option[String],
     valueCommentOption: Option[String],
-    mappings: Map[IRI, MappingAndXSLTransformation],
+    mappings: Map[StandoffMappingIri, MappingAndXSLTransformation],
     requestingUser: User,
   ): Task[TextValueContentV2] = {
     // Any knora-base:TextValue may have a language
@@ -651,7 +649,7 @@ final case class ConstructResponseUtilV2(
     if (valueObject.standoff.nonEmpty) {
       val mappingIri: Option[IRI]                                           = valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
       val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] =
-        mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
+        mappingIri.flatMap(s => StandoffMappingIri.from(s).toOption).flatMap(mappings.get)
 
       for {
         standoff <- standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
@@ -823,7 +821,7 @@ final case class ConstructResponseUtilV2(
   private def makeLinkValueContentV2(
     valueObject: ValueRdfData,
     valueCommentOption: Option[IRI],
-    mappings: Map[IRI, MappingAndXSLTransformation],
+    mappings: Map[StandoffMappingIri, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
@@ -878,7 +876,7 @@ final case class ConstructResponseUtilV2(
    */
   private def createValueContentV2FromValueRdfData(
     valueObject: ValueRdfData,
-    mappings: Map[IRI, MappingAndXSLTransformation],
+    mappings: Map[StandoffMappingIri, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     versionDate: Option[Instant] = None,
     targetSchema: ApiV2Schema,
@@ -1084,7 +1082,7 @@ final case class ConstructResponseUtilV2(
   private def constructReadResourceV2(
     resourceIri: IRI,
     resourceWithValueRdfData: ResourceWithValueRdfData,
-    mappings: Map[IRI, MappingAndXSLTransformation],
+    mappings: Map[StandoffMappingIri, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
@@ -1269,7 +1267,8 @@ final case class ConstructResponseUtilV2(
     mainResourcesAndValueRdfData: MainResourcesAndValueRdfData,
     orderByResourceIri: Seq[IRI],
     pageSizeBeforeFiltering: Int,
-    mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation],
+    mappings: Map[StandoffMappingIri, MappingAndXSLTransformation] =
+      Map.empty[StandoffMappingIri, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     calculateMayHaveMoreResults: Boolean,
     versionDate: Option[Instant],
@@ -1317,27 +1316,24 @@ final case class ConstructResponseUtilV2(
    * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
    *
    * @param queryResultsSeparated query results referring to mappings.
-   *
-   * @param requestingUser        the user making the request.
    * @return the referred mappings.
    */
   def mappingsFromQueryResults(
-    queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
-    requestingUser: User,
-  ): Task[Map[IRI, MappingAndXSLTransformation]] = {
+    queryResultsSeparated: RdfResources,
+  ): Task[Map[StandoffMappingIri, MappingAndXSLTransformation]] = {
 
     // collect the Iris of the mappings referred to in the resources' text values
     val mappingIris = queryResultsSeparated.flatMap { case (_, assertions: ResourceWithValueRdfData) =>
       getMappingIrisFromValuePropertyAssertions(assertions.valuePropertyAssertions)
     }.toSet
 
-    // get all the mappings
-    val mappingResponsesFuture = mappingIris.map { (mappingIri: IRI) =>
-      messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri))
-    }
-
     for {
-      mappingResponses <- ZIO.collectAll(mappingResponsesFuture)
+      mappingResponses <- ZIO.foreach(mappingIris)(iri =>
+                            ZIO
+                              .fromEither(StandoffMappingIri.from(iri))
+                              .mapError(BadRequestException.apply)
+                              .flatMap(standoffMappingService.getMappingV2),
+                          )
 
       // get the default XSL transformations
       mappingsWithFuture =
@@ -1345,23 +1341,14 @@ final case class ConstructResponseUtilV2(
           for {
             // if given, get the default XSL transformation
             xsltOption <-
-              if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
-                val xslTransformationFuture = for {
-                  xslTransformation <- messageRelay.ask[GetXSLTransformationResponseV2](
-                                         GetXSLTransformationRequestV2(
-                                           mapping.mapping.defaultXSLTransformation.get,
-                                           requestingUser = requestingUser,
-                                         ),
-                                       )
-                } yield Some(xslTransformation.xslt)
-
-                xslTransformationFuture.mapError { case notFound: NotFoundException =>
-                  throw SipiException(
-                    s"Default XSL transformation <${mapping.mapping.defaultXSLTransformation.get}> not found for mapping <${mapping.mappingIri}>: ${notFound.message}",
-                  )
-                }
-              } else {
-                ZIO.none
+              ZIO.foreach(mapping.mapping.defaultXSLTransformation) { transformationIri =>
+                standoffMappingService
+                  .getXSLTransformation(transformationIri)
+                  .mapError { case notFound: NotFoundException =>
+                    SipiException(
+                      s"Default XSL transformation <$transformationIri> not found for mapping <${mapping.mappingIri}>: ${notFound.message}",
+                    )
+                  }
               }
           } yield mapping.mappingIri -> MappingAndXSLTransformation(
             mapping = mapping.mapping,

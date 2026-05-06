@@ -47,6 +47,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -638,12 +639,9 @@ final class SearchResponderV2Live(
       // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap <-
         if (queryStandoff) {
-          constructResponseUtilV2.mappingsFromQueryResults(
-            mainResourcesAndValueRdfData.resources,
-            requestingUser,
-          )
+          constructResponseUtilV2.mappingsFromQueryResults(mainResourcesAndValueRdfData.resources)
         } else {
-          ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
+          ZIO.succeed(Map.empty[StandoffMappingIri, MappingAndXSLTransformation])
         }
 
       apiResponse <-
@@ -914,9 +912,9 @@ final class SearchResponderV2Live(
       // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap <-
         if (queryStandoff) {
-          constructResponseUtilV2.mappingsFromQueryResults(mainQueryResults.resources, user)
+          constructResponseUtilV2.mappingsFromQueryResults(mainQueryResults.resources)
         } else {
-          ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
+          ZIO.succeed(Map.empty[StandoffMappingIri, MappingAndXSLTransformation])
         }
 
       apiResponse <-
@@ -1083,12 +1081,9 @@ final class SearchResponderV2Live(
             // If we're querying standoff, get XML-to standoff mappings.
             mappings <-
               if (queryStandoff) {
-                constructResponseUtilV2.mappingsFromQueryResults(
-                  mainResourcesAndValueRdfData.resources,
-                  requestingUser,
-                )
+                constructResponseUtilV2.mappingsFromQueryResults(mainResourcesAndValueRdfData.resources)
               } else {
-                ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
+                ZIO.succeed(Map.empty[StandoffMappingIri, MappingAndXSLTransformation])
               }
 
             // Construct a ReadResourceV2 for each resource that the user has permission to see.
