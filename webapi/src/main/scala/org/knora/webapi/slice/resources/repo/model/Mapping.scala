@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.resources.repo.model
 
 import org.knora.webapi.IRI
+import org.knora.webapi.slice.common.StandoffMappingElementIri
 
 /**
  * Represents a standoff datatype class of an XML tag.
@@ -17,7 +18,7 @@ import org.knora.webapi.IRI
 case class MappingStandoffDatatypeClass(
   datatype: IRI,
   attributeName: String,
-  mappingStandoffDataTypeClassElementIri: IRI,
+  mappingStandoffDataTypeClassElementIri: StandoffMappingElementIri,
 )
 
 /**
@@ -32,7 +33,7 @@ case class MappingXMLAttribute(
   attributeName: String,
   namespace: String,
   standoffProperty: IRI,
-  mappingXMLAttributeElementIri: IRI,
+  mappingXMLAttributeElementIri: StandoffMappingElementIri,
 )
 
 /**
@@ -53,6 +54,6 @@ case class MappingElement(
   standoffClass: IRI,
   attributes: Seq[MappingXMLAttribute] = Seq.empty[MappingXMLAttribute],
   standoffDataTypeClass: Option[MappingStandoffDatatypeClass] = None,
-  mappingElementIri: IRI,
+  mappingElementIri: StandoffMappingElementIri,
   separatorRequired: Boolean,
 )

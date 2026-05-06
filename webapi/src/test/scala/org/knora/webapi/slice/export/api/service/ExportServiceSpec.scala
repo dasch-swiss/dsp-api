@@ -14,7 +14,6 @@ import zio.test.*
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelayLive
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
@@ -48,6 +47,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
+import org.knora.webapi.slice.standoff.service.StandoffMappingServiceFake
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
@@ -183,8 +183,6 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       },
       test("with footnotes in text value") {
         for {
-          // OntologyResponderV2 must be initialized so it subscribes to MessageRelay (handles StandoffEntityInfoGetRequestV2)
-          _             <- ZIO.serviceWithZIO[OntologyResponderV2](_ => ZIO.unit)
           _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
@@ -224,7 +222,6 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       KnoraProjectRepoLive.layer,
       KnoraProjectService.layer,
       LicenseRepo.layer,
-      MessageRelayLive.layer,
       CardinalityHandler.layer,
       CardinalityService.layer,
       OntologyCacheHelpers.layer,
@@ -235,6 +232,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       PredicateRepositoryLive.layer,
       ProjectService.layer,
       ReadResourcesServiceLive.layer,
+      StandoffMappingServiceFake.layer,
       StandoffTagUtilV2Live.layer,
       StringFormatter.test,
       TriplestoreServiceInMemory.layer,

@@ -11,7 +11,6 @@ import zio.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
@@ -40,18 +39,11 @@ final class SipiServiceLive(
       response.fps.map(BigDecimal(_)),
     )
 
-  /**
-   * Asks Sipi for a text file used internally by Knora.
-   *
-   * @param textFileRequest the request message.
-   */
-  def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
+  override def getTextFileRequest(fileUrl: String, senderName: String): Task[String] =
     doSipiRequest
-      .apply(quickRequest.get(uri"${textFileRequest.fileUrl}"))
-      .map(SipiGetTextFileResponse.apply)
+      .apply(quickRequest.get(uri"$fileUrl"))
       .catchAll { ex =>
-        val msg =
-          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${ex.getMessage}"
+        val msg = s"Unable to get file $fileUrl from Sipi as requested by $senderName: ${ex.getMessage}"
         ex match {
           case _: NotFoundException | _: BadRequestException | _: SipiException => ZIO.die(SipiException(msg))
           case _                                                                => ZIO.logError(msg) *> ZIO.die(SipiException(msg))

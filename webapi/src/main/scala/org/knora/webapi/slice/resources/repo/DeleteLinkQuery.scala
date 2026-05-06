@@ -63,7 +63,7 @@ object DeleteLinkQuery extends QueryBuilderHelper {
       val linkProperty                   = toRdfIri(linkUpdate.linkPropertyIri)
       val linkValueProperty              = Rdf.iri(linkUpdate.linkPropertyIri.toInternalSchema.toIri + "Value")
       val linkTarget                     = Rdf.iri(linkUpdate.linkTargetIri)
-      val newLinkValue                   = Rdf.iri(linkUpdate.newLinkValueIri)
+      val newLinkValue                   = Rdf.iri(linkUpdate.newLinkValueIri.value)
       val linkSourceClass                = variable("linkSourceClass")
       val currentLinkValue               = variable("currentLinkValue")
       val currentLinkUUID                = variable("currentLinkUUID")

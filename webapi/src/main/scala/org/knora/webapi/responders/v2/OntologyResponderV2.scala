@@ -14,9 +14,6 @@ import java.util.UUID
 
 import dsp.errors.*
 import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.Rdfs
@@ -27,16 +24,21 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v2.ontologies.AddCardinalitiesToClassRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.CanDeleteCardinalitiesFromClassRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.ChangeClassLabelsOrCommentsRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.ChangeGuiOrderRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.ChangePropertyGuiElementRequest
 import org.knora.webapi.slice.api.v2.ontologies.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.CreateClassRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.CreateOntologyRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.CreatePropertyRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.DeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.api.v2.ontologies.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -88,8 +90,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  *
  * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
  */
-final case class OntologyResponderV2(
-  appConfig: AppConfig,
+final class OntologyResponderV2(
   cardinalityHandler: CardinalityHandler,
   cardinalityService: CardinalityService,
   iriService: IriService,
@@ -99,56 +100,7 @@ final case class OntologyResponderV2(
   ontologyRepo: OntologyRepo,
   knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
-)(implicit val stringFormatter: StringFormatter)
-    extends MessageHandler {
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[OntologiesResponderRequestV2]
-
-  override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case EntityInfoGetRequestV2(classIris, propertyIris) =>
-      getEntityInfoResponseV2(classIris, propertyIris)
-    case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris) =>
-      getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris)
-    case StandoffClassesWithDataTypeGetRequestV2(_) =>
-      getStandoffStandoffClassesWithDataTypeV2
-    case StandoffAllPropertyEntitiesGetRequestV2(_)            => getAllStandoffPropertyEntitiesV2
-    case CheckSubClassRequestV2(subClassIri, superClassIri, _) =>
-      checkSubClassV2(subClassIri, superClassIri)
-    case SubClassesGetRequestV2(resourceClassIri, requestingUser) =>
-      getSubClassesV2(resourceClassIri, requestingUser)
-    case OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, requestingUser) =>
-      getOntologyEntitiesV2(ontologyIri, allLanguages, requestingUser)
-    case ClassesGetRequestV2(resourceClassIris, allLanguages, requestingUser) =>
-      ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser)
-    case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) =>
-      getPropertyDefinitionsFromOntologyV2(propertyIris, allLanguages, requestingUser)
-    case OntologyMetadataGetByIriRequestV2(ontologyIris) =>
-      getOntologyMetadataByIriV2(ontologyIris)
-    case createOntologyRequest: CreateOntologyRequestV2                           => createOntology(createOntologyRequest)
-    case changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2 =>
-      changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
-    case canDeleteCardinalitiesFromClassRequestV2: CanDeleteCardinalitiesFromClassRequestV2 =>
-      canDeleteCardinalitiesFromClass(canDeleteCardinalitiesFromClassRequestV2)
-    case deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2 =>
-      deleteCardinalitiesFromClass(deleteCardinalitiesFromClassRequest)
-    case deleteClassRequest: DeleteClassRequestV2       => deleteClass(deleteClassRequest)
-    case createPropertyRequest: CreatePropertyRequestV2 => createProperty(createPropertyRequest)
-    case req: ChangePropertyGuiElementRequest           => changePropertyGuiElement(req)
-    case other                                          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
-  }
-
-  /**
-   * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
-   *
-   * @param classIris      the IRIs of the resource entities to be queried.
-   * @param propertyIris   the IRIs of the property entities to be queried.
-   * @return an [[EntityInfoGetResponseV2]].
-   */
-  private def getEntityInfoResponseV2(
-    classIris: Set[SmartIri] = Set.empty[SmartIri],
-    propertyIris: Set[SmartIri],
-  ): Task[EntityInfoGetResponseV2] =
-    ontologyCacheHelpers.getEntityInfoResponseV2(classIris, propertyIris)
+)(implicit val stringFormatter: StringFormatter) {
 
   /**
    * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV2]] describing both resource and property entities.
@@ -157,9 +109,9 @@ final case class OntologyResponderV2(
    * @param standoffPropertyIris the IRIs of the property entities to be queried.
    * @return a [[StandoffEntityInfoGetResponseV2]].
    */
-  private def getStandoffEntityInfoResponseV2(
-    standoffClassIris: Set[SmartIri],
-    standoffPropertyIris: Set[SmartIri],
+  def getStandoffEntityInfoResponseV2(
+    standoffClassIris: Set[SmartIri] = Set.empty[SmartIri],
+    standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri],
   ): Task[StandoffEntityInfoGetResponseV2] =
     for {
       cacheData <- ontologyCache.getCacheData
@@ -216,74 +168,19 @@ final case class OntologyResponderV2(
     } yield response
 
   /**
-   * Gets information about all standoff classes that are a subclass of a data type standoff class.
-   *
-   * @return a [[StandoffClassesWithDataTypeGetResponseV2]]
-   */
-  private def getStandoffStandoffClassesWithDataTypeV2: Task[StandoffClassesWithDataTypeGetResponseV2] =
-    for {
-      cacheData <- ontologyCache.getCacheData
-    } yield StandoffClassesWithDataTypeGetResponseV2(
-      standoffClassInfoMap = cacheData.ontologies.values.flatMap { ontology =>
-        ontology.classes.filter { case (_, classDef) =>
-          classDef.isStandoffClass && classDef.standoffDataType.isDefined
-        }
-      }.toMap,
-    )
-
-  /**
-   * Gets all standoff property entities.
-   *
-   * @return a [[StandoffAllPropertyEntitiesGetResponseV2]].
-   */
-  private def getAllStandoffPropertyEntitiesV2: Task[StandoffAllPropertyEntitiesGetResponseV2] =
-    ontologyCache.getCacheData.map { data =>
-      val ontologies: Iterable[ReadOntologyV2] = data.ontologies.values
-      ontologies.flatMap(_.properties.view.filterKeys(data.standoffProperties)).toMap
-    }.map(StandoffAllPropertyEntitiesGetResponseV2.apply)
-
-  /**
    * Checks whether a certain Knora resource or value class is a subclass of another class.
    *
    * @param subClassIri   the IRI of the resource or value class whose subclassOf relations have to be checked.
    * @param superClassIri the IRI of the resource or value class to check for (whether it is a super class of `subClassIri` or not).
    * @return a [[CheckSubClassResponseV2]].
    */
-  private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri): Task[CheckSubClassResponseV2] =
+  def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri): Task[CheckSubClassResponseV2] =
     for {
       cacheData  <- ontologyCache.getCacheData
       isSubClass <- ZIO
                       .fromOption(cacheData.classToSuperClassLookup.get(subClassIri))
                       .mapBoth(_ => BadRequestException(s"Class $subClassIri not found"), _.contains(superClassIri))
     } yield CheckSubClassResponseV2(isSubClass)
-
-  /**
-   * Gets the IRIs of the subclasses of a class.
-   *
-   * @param classIri the IRI of the class whose subclasses should be returned.
-   * @return a [[SubClassesGetResponseV2]].
-   */
-  private def getSubClassesV2(classIri: SmartIri, requestingUser: User): Task[SubClassesGetResponseV2] =
-    for {
-      cacheData  <- ontologyCache.getCacheData
-      subClasses <-
-        ZIO.foreach(cacheData.classToSubclassLookup(classIri).toVector.sorted) { subClassIri =>
-          val labelValueMaybe = cacheData
-            .ontologies(subClassIri.getOntologyFromEntity)
-            .classes(subClassIri)
-            .entityInfoContent
-            .getPredicateStringLiteralObject(
-              OntologyConstants.Rdfs.Label.toSmartIri,
-              Some(requestingUser.lang, appConfig.fallbackLanguage),
-            )
-          ZIO
-            .fromOption(labelValueMaybe)
-            .mapBoth(
-              _ => InconsistentRepositoryDataException(s"Resource class $subClassIri has no rdfs:label"),
-              SubClassInfoV2(subClassIri, _),
-            )
-        }
-    } yield SubClassesGetResponseV2(subClasses)
 
   /**
    * Gets the metadata describing the ontologies that belong to selected projects, or to all projects.
@@ -301,36 +198,6 @@ final case class OntologyResponderV2(
 
   def getOntologyMetadataForAllProjects: Task[ReadOntologyMetadataV2] =
     ontologyRepo.findAll().map(_.map(_.ontologyMetadata).toSet).map(ReadOntologyMetadataV2.apply)
-
-  /**
-   * Gets the metadata describing the specified ontologies, or all ontologies.
-   *
-   * @param ontologyIris   the IRIs of the ontologies selected, or an empty set if all ontologies are selected.
-   * @return a [[ReadOntologyMetadataV2]].
-   */
-  private def getOntologyMetadataByIriV2(ontologyIris: Set[SmartIri]): Task[ReadOntologyMetadataV2] =
-    for {
-      cacheData          <- ontologyCache.getCacheData
-      returnAllOntologies = ontologyIris.isEmpty
-      ontologyMetadata   <-
-        if (returnAllOntologies) { ZIO.succeed(cacheData.ontologies.values.map(_.ontologyMetadata).toSet) }
-        else {
-          val ontologyIrisForCache = ontologyIris.map(_.toOntologySchema(InternalSchema))
-          val missingOntologies    = ontologyIrisForCache -- cacheData.ontologies.keySet
-          if (missingOntologies.nonEmpty) {
-            val msg = s"One or more requested ontologies were not found: ${missingOntologies.mkString(", ")}"
-            ZIO.fail(BadRequestException(msg))
-          } else {
-            ZIO.succeed(
-              cacheData.ontologies.view
-                .filterKeys(ontologyIrisForCache)
-                .values
-                .map(ontology => ontology.ontologyMetadata)
-                .toSet,
-            )
-          }
-        }
-    } yield ReadOntologyMetadataV2(ontologyMetadata)
 
   /**
    * Requests the entities defined in the given ontology.
@@ -377,7 +244,7 @@ final case class OntologyResponderV2(
   ): Task[ReadOntologyV2] =
     getPropertyDefinitionsFromOntologyV2(propertyIris.map(_.smartIri), allLanguages, requestingUser)
 
-  private def getPropertyDefinitionsFromOntologyV2(
+  def getPropertyDefinitionsFromOntologyV2(
     propertyIris: Set[SmartIri],
     allLanguages: Boolean,
     requestingUser: User,
@@ -388,7 +255,7 @@ final case class OntologyResponderV2(
                        .filterOrFail(_.size == 1)(BadRequestException(s"Only one ontology may be queried per request"))
                        .map(_.head)
       ontology             <- getOntologyOrFailNotFound(ontologyIri)
-      propertyInfoResponse <- getEntityInfoResponseV2(propertyIris = propertyIris)
+      propertyInfoResponse <- ontologyCacheHelpers.getEntityInfoResponseV2(propertyIris = propertyIris)
       userLang              = if allLanguages then None else Some(requestingUser.lang)
     } yield ReadOntologyV2(
       ontologyMetadata = ontology.ontologyMetadata,
@@ -1194,20 +1061,6 @@ final case class OntologyResponderV2(
     classIsUsed           <- iriService.isEntityUsed(classIri.toInternalSchema)
   } yield CanDoResponseV2.of(userCanUpdateOntology && !classIsUsed)
 
-  /**
-   * Deletes a class.
-   *
-   * @param deleteClassRequest the request to delete the class.
-   * @return a [[SuccessResponseV2]].
-   */
-  private def deleteClass(deleteClassRequest: DeleteClassRequestV2): Task[ReadOntologyMetadataV2] =
-    deleteClass(
-      ResourceClassIri.unsafeFrom(deleteClassRequest.classIri),
-      deleteClassRequest.lastModificationDate,
-      deleteClassRequest.apiRequestID,
-      deleteClassRequest.requestingUser,
-    )
-
   def deleteClass(
     classIri: ResourceClassIri,
     lastModificationDate: Instant,
@@ -1878,26 +1731,5 @@ final case class OntologyResponderV2(
 }
 
 object OntologyResponderV2 {
-  val layer: URLayer[
-    AppConfig & CardinalityHandler & CardinalityService & IriService & KnoraProjectService & MessageRelay &
-      OntologyCache & OntologyTriplestoreHelpers & OntologyCacheHelpers & OntologyRepo & StringFormatter &
-      TriplestoreService,
-    OntologyResponderV2,
-  ] = ZLayer.fromZIO {
-    for {
-      ac       <- ZIO.service[AppConfig]
-      ch       <- ZIO.service[CardinalityHandler]
-      cs       <- ZIO.service[CardinalityService]
-      is       <- ZIO.service[IriService]
-      kr       <- ZIO.service[KnoraProjectService]
-      oc       <- ZIO.service[OntologyCache]
-      oth      <- ZIO.service[OntologyTriplestoreHelpers]
-      och      <- ZIO.service[OntologyCacheHelpers]
-      or       <- ZIO.service[OntologyRepo]
-      sf       <- ZIO.service[StringFormatter]
-      ts       <- ZIO.service[TriplestoreService]
-      responder = OntologyResponderV2(ac, ch, cs, is, oc, och, oth, or, kr, ts)(sf)
-      _        <- ZIO.serviceWithZIO[MessageRelay](_.subscribe(responder))
-    } yield responder
-  }
+  val layer = ZLayer.derive[OntologyResponderV2]
 }

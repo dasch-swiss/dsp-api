@@ -22,6 +22,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
@@ -99,7 +100,7 @@ object TestData {
     valueUUID = UUID.randomUUID(),
     value = TypeSpecificValueInfo.FormattedTextValueInfo(
       valueHasLanguage = Some("en"),
-      mappingIri = InternalIri("foo:MappingIri"),
+      mappingIri = StandoffMappingIri.StandardMapping,
       maxStandoffStartIndex = 0,
       standoff = List(
         StandoffTagInfo(
@@ -591,7 +592,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
-            |            knora-base:valueHasMapping <foo:MappingIri> ;
+            |            knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
             |            knora-base:hasTextValueType knora-base:FormattedText ;
             |            knora-base:valueHasMaxStandoffStartIndex 0 ;
             |            knora-base:valueHasLanguage "en" ;

@@ -16,7 +16,6 @@ import java.time.Instant
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelayLive
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
@@ -57,6 +56,7 @@ import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
+import org.knora.webapi.slice.standoff.service.StandoffMappingServiceFake
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName.GetFileMetadataFromDspIngest
@@ -865,7 +865,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     KnoraUserService.layer,
     KnoraUserToUserConverter.layer,
     LicenseRepo.layer,
-    MessageRelayLive.layer,
+    StandoffMappingServiceFake.layer,
     OntologyRepoInMemory.emptyLayer,
     PasswordService.layer,
     ProjectService.layer,

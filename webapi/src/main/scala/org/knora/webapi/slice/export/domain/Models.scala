@@ -66,16 +66,17 @@ final case class CurrentDataTask private (
   status: DataTaskStatus,
   createdBy: UserIri,
   createdAt: Instant,
+  errorMessage: Option[String] = None,
 ) { self =>
   def complete(): Either[StateFailedError, CurrentDataTask] = self.status match
     case DataTaskStatus.Completed  => Right(self)
     case DataTaskStatus.Failed     => Left(StateFailedError(self))
     case DataTaskStatus.InProgress => Right(self.copy(status = DataTaskStatus.Completed))
 
-  def fail(): Either[StateCompletedError, CurrentDataTask] = self.status match
+  def fail(message: String): Either[StateCompletedError, CurrentDataTask] = self.status match
     case DataTaskStatus.Completed  => Left(StateCompletedError(self))
     case DataTaskStatus.Failed     => Right(self)
-    case DataTaskStatus.InProgress => Right(self.copy(status = DataTaskStatus.Failed))
+    case DataTaskStatus.InProgress => Right(self.copy(status = DataTaskStatus.Failed, errorMessage = Some(message)))
 
   def isInProgress: Boolean = status == DataTaskStatus.InProgress
   def isFailed: Boolean     = status == DataTaskStatus.Failed
@@ -95,5 +96,6 @@ object CurrentDataTask {
     status: DataTaskStatus,
     createdBy: UserIri,
     createdAt: Instant,
-  ): CurrentDataTask = CurrentDataTask(id, projectIri, status, createdBy, createdAt)
+    errorMessage: Option[String] = None,
+  ): CurrentDataTask = CurrentDataTask(id, projectIri, status, createdBy, createdAt, errorMessage)
 }

@@ -39,6 +39,7 @@ final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) ex
     withDeleted: Boolean = true,
     queryStandoff: Boolean = false,
     skipRetrievalChecks: Boolean = false,
+    standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2] = null
 
   def getResources(

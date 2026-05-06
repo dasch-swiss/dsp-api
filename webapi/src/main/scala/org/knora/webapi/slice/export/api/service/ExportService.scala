@@ -150,6 +150,7 @@ final case class ExportService(
                          withDeleted = false,
                          queryStandoff = true,
                          skipRetrievalChecks = true,
+                         standoffTagFilter = Some(footnoteTagIri),
                        )
 
       propertyIriInfos <- propertyIriInfos(selectedProperties)

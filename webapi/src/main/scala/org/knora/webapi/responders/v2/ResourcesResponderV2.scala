@@ -27,73 +27,57 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
 import org.knora.webapi.slice.resources.repo.DeleteResourceQuery
 import org.knora.webapi.slice.resources.repo.EraseResourceQuery
 import org.knora.webapi.slice.resources.repo.GetAllResourcesInProjectPrequery
 import org.knora.webapi.slice.resources.repo.GetGraphDataQuery
 import org.knora.webapi.slice.resources.repo.GetResourceValueVersionHistoryQuery
-import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
-import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.slice.search.repo.GetIncomingImageLinksGravsearchQuery
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
+import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
 
-final case class ResourcesResponderV2(
-  private val appConfig: AppConfig,
-  private val constructResponseUtilV2: ConstructResponseUtilV2,
-  private val iriConverter: IriConverter,
-  private val iriService: IriService,
-  private val legalInfoService: LegalInfoService,
-  private val messageRelay: MessageRelay,
-  private val ontologyRepo: OntologyRepo,
-  private val permissionUtilADM: PermissionUtilADM,
-  private val permissionsResponder: PermissionsResponder,
-  private val projectService: KnoraProjectService,
-  private val resourceUtilV2: ResourceUtilV2,
-  private val resourcesRepo: ResourcesRepo,
-  private val searchResponderV2: SearchResponderV2,
-  private val standoffTagUtilV2: StandoffTagUtilV2,
-  private val triplestore: TriplestoreService,
-  private val valueValidator: ValueContentValidator,
-  private val readResources: ReadResourcesService,
-  private val createHandler: CreateResourceV2Handler,
+final class ResourcesResponderV2(
+  appConfig: AppConfig,
+  iriConverter: IriConverter,
+  iriService: IriService,
+  projectService: KnoraProjectService,
+  resourceUtilV2: ResourceUtilV2,
+  searchResponderV2: SearchResponderV2,
+  sipiService: SipiService,
+  standoffMappingService: StandoffMappingService,
+  triplestore: TriplestoreService,
+  readResources: ReadResourcesService,
+  createHandler: CreateResourceV2Handler,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler {
 
@@ -573,16 +557,7 @@ final case class ResourcesResponderV2(
 
     for {
       gravsearchTemplateUrl <- recoveredGravsearchUrlTask
-      response              <- messageRelay
-                    .ask[SipiGetTextFileResponse](
-                      SipiGetTextFileRequest(
-                        fileUrl = gravsearchTemplateUrl,
-                        requestingUser = KnoraSystemInstances.Users.SystemUser,
-                        senderName = this.getClass.getName,
-                      ),
-                    )
-      gravsearchTemplate: String = response.content
-
+      gravsearchTemplate    <- sipiService.getTextFileRequest(gravsearchTemplateUrl, this.getClass.getName)
     } yield gravsearchTemplate
 
   }
@@ -732,25 +707,29 @@ final case class ResourcesResponderV2(
       // get the XSL transformation for the TEI header
       headerXSLT <- headerXSLTIri match {
                       case Some(headerIri) =>
-                        messageRelay
-                          .ask[GetXSLTransformationResponseV2](GetXSLTransformationRequestV2(headerIri, requestingUser))
+                        standoffMappingService
+                          .getXSLTransformation(headerIri)
                           .mapBoth(
                             { case e: NotFoundException =>
                               SipiException(s"TEI header XSL transformation <$headerIri> not found: ${e.message}")
                             },
-                            resp => Some(resp.xslt),
+                            Some(_),
                           )
                       case _ => ZIO.none
                     }
 
       // get the Iri of the mapping to convert standoff markup to TEI/XML
-      mappingToBeApplied = mappingIri.getOrElse(OntologyConstants.KnoraBase.TEIMapping)
+      mappingToBeApplied <- ZIO
+                              .fromEither(
+                                StandoffMappingIri.from(mappingIri.getOrElse(OntologyConstants.KnoraBase.TEIMapping)),
+                              )
+                              .mapError(BadRequestException.apply)
 
       // get mapping to convert standoff markup to TEI/XML
-      teiMapping <- messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingToBeApplied))
+      teiMapping <- standoffMappingService.getMappingV2(mappingToBeApplied)
 
       // get XSLT from mapping for the TEI body
-      bodyXslt <- teiMapping.mappingIri match {
+      bodyXslt <- teiMapping.mappingIri.value match {
                     case OntologyConstants.KnoraBase.TEIMapping =>
                       // standard standoff to TEI conversion
 
@@ -766,18 +745,13 @@ final case class ResourcesResponderV2(
 
                         case Some(xslTransformationIri) =>
                           // get XSLT for the TEI body.
-                          messageRelay
-                            .ask[GetXSLTransformationResponseV2](
-                              GetXSLTransformationRequestV2(xslTransformationIri, requestingUser),
-                            )
-                            .mapBoth(
-                              { case notFound: NotFoundException =>
-                                val msg =
-                                  s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
-                                SipiException(msg)
-                              },
-                              _.xslt,
-                            )
+                          standoffMappingService
+                            .getXSLTransformation(xslTransformationIri)
+                            .mapError { case notFound: NotFoundException =>
+                              val msg =
+                                s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
+                              SipiException(msg)
+                            }
                         case None =>
                           val msg = s"Default XSL Transformation expected for mapping $otherMapping"
                           ZIO.fail(BadRequestException(msg))
@@ -1288,7 +1262,7 @@ final case class ResourcesResponderV2(
                       Seq(
                         JsonLDObject(
                           Map(
-                            "id"         -> JsonLDString(imageValue.valueIri),
+                            "id"         -> JsonLDString(imageValue.valueIri.value),
                             "type"       -> JsonLDString("Annotation"),
                             "motivation" -> JsonLDString("painting"),
                             "body"       -> JsonLDObject(
@@ -1791,41 +1765,28 @@ object ResourcesResponderV2 {
   val layer = ZLayer.fromZIO {
     for {
       appConfig               <- ZIO.service[AppConfig]
-      constructResponseUtilV2 <- ZIO.service[ConstructResponseUtilV2]
       iriConverter            <- ZIO.service[IriConverter]
       iriService              <- ZIO.service[IriService]
-      legalInfoService        <- ZIO.service[LegalInfoService]
       messageRelay            <- ZIO.service[MessageRelay]
-      ontologyRepo            <- ZIO.service[OntologyRepo]
-      permissionUtilADM       <- ZIO.service[PermissionUtilADM]
-      permissionsResponder    <- ZIO.service[PermissionsResponder]
       projectService          <- ZIO.service[KnoraProjectService]
       resourceUtilV2          <- ZIO.service[ResourceUtilV2]
-      resourcesRepo           <- ZIO.service[ResourcesRepo]
       searchResponderV2       <- ZIO.service[SearchResponderV2]
-      standoffTagUtilV2       <- ZIO.service[StandoffTagUtilV2]
+      sipiService             <- ZIO.service[SipiService]
+      standoffMappingService  <- ZIO.service[StandoffMappingService]
       stringFormatter         <- ZIO.service[StringFormatter]
       triplestoreService      <- ZIO.service[TriplestoreService]
-      valueContentValidator   <- ZIO.service[ValueContentValidator]
       readResources           <- ZIO.service[ReadResourcesService]
       createResourceV2Handler <- ZIO.service[CreateResourceV2Handler]
       responder                = new ResourcesResponderV2(
                     appConfig,
-                    constructResponseUtilV2,
                     iriConverter,
                     iriService,
-                    legalInfoService,
-                    messageRelay,
-                    ontologyRepo,
-                    permissionUtilADM,
-                    permissionsResponder,
                     projectService,
                     resourceUtilV2,
-                    resourcesRepo,
                     searchResponderV2,
-                    standoffTagUtilV2,
+                    sipiService,
+                    standoffMappingService,
                     triplestoreService,
-                    valueContentValidator,
                     readResources,
                     createResourceV2Handler,
                   )(stringFormatter)

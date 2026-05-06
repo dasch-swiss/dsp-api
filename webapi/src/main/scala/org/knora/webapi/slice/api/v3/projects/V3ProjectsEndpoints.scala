@@ -29,6 +29,7 @@ final case class DataTaskStatusResponse(
   status: DataTaskStatus,
   createdBy: UserIri,
   createdAt: Instant,
+  errorMessage: Option[String] = None,
 )
 object DataTaskStatusResponse {
   given JsonCodec[DataTaskStatusResponse] = DeriveJsonCodec.gen[DataTaskStatusResponse]
@@ -40,6 +41,7 @@ object DataTaskStatusResponse {
       state.status,
       state.createdBy.userIri,
       state.createdAt,
+      state.errorMessage,
     )
 }
 

@@ -161,7 +161,7 @@ final class ValuesRestService(
     val propertyInternalIri = propertySmartIri.toOntologySchema(InternalSchema)
     val canonicalValues     = resourceInfo.values.getOrElse(propertyInternalIri, Seq.empty).filter(_.deletionInfo.isEmpty)
     val canonicalIris       = canonicalValues.map(_.valueIri).toSet
-    val requestedIris       = requestedValueIris.map(_.toString).toSet
+    val requestedIris       = requestedValueIris.toSet
     ZIO
       .when(canonicalIris != requestedIris)(
         ZIO.fail(
