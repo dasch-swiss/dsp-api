@@ -31,14 +31,7 @@ import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyGuiElementRequest
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.CreatePropertyRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2

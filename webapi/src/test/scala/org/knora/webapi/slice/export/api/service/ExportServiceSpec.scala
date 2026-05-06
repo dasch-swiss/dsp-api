@@ -183,8 +183,6 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       },
       test("with footnotes in text value") {
         for {
-          // OntologyResponderV2 must be initialized so it subscribes to MessageRelay (handles StandoffEntityInfoGetRequestV2)
-          _             <- ZIO.serviceWithZIO[OntologyResponderV2](_ => ZIO.unit)
           _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
