@@ -444,6 +444,37 @@ In the complex schema, use it on the object of the text value's
 FILTER regex(?titleStr, "Zeit", "i")
 ```
 
+> **Note:** SPARQL regex uses [XSD/XQuery regex syntax](https://www.w3.org/TR/xpath-functions/#regex-syntax),
+> Some patterns you may know
+> from other languages will not work. See the tables below for supported patterns.
+
+#### Supported Regex Patterns
+
+| Pattern | Description | Example | Status |
+| ------- | ----------- | ------- | ------ |
+| `^text` | Starts with | `^Zeit` | ✅ Supported |
+| `text$` | Ends with | `Zeit$` | ✅ Supported |
+| `^text$` | Exact match | `^Zeit$` | ✅ Supported |
+| `text` | Contains | `Zeit` | ✅ Supported |
+| `.` | Any character | `Z.it` | ✅ Supported |
+| `[abc]` | Character class | `[Zz]eit` | ✅ Supported |
+| `[^abc]` | Negated character class | `[^0-9]eit` | ✅ Supported |
+| `a\|b` | Alternation | `Zeit\|Time` | ✅ Supported |
+| `*`, `+`, `?` | Quantifiers | `Ze*it` | ✅ Supported |
+| `{n,m}` | Repetition | `e{1,2}` | ✅ Supported |
+| `[0-9]` | Digit (use instead of `\d`) | `[0-9]+` | ✅ Supported |
+
+#### Escaping Special Characters
+
+To match literal special characters, use double backslash in SPARQL strings:
+
+```sparql
+FILTER regex(?title, "\\*", "i")  -- matches literal asterisk
+FILTER regex(?title, "\\.", "i")  -- matches literal period
+```
+
+Note: SPARQL requires escaping the backslash itself, so `\\` in the query string becomes `\` in the regex pattern.
+
 ### Searching for Text Markup
 
 To refer to standoff markup in text values, you must write your query in the complex

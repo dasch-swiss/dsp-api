@@ -139,10 +139,12 @@ The import handles users referenced in the export with the following logic. User
 | Lookup Result | Behavior |
 | --- | --- |
 | **Found by IRI** | Verifies that email and username match the existing user. Logs warnings for profile differences (e.g. name). Strips the user's profile triples from the export data and keeps only memberships scoped to the imported project (e.g. `isInProject`, `isInGroup`). Because the triplestore upload is additive, the user's existing data and memberships in other projects on the target instance are not affected. |
-| **Not found at all** | Creates the user as a new user. Strips `isInSystemAdminGroup` (set to `false`). Removes any cross-project memberships. |
+| **Not found at all** | Creates the user as a new user. Strips `isInSystemAdminGroup` (set to `false`) — defense-in-depth, since the export already sets the flag to `false` (see *System administrators* below). Removes any cross-project memberships. |
 | **No IRI match, but email or username collision** | Fails with an error message identifying the conflict. |
 
 **Root user**: If the export contains the root user (either as an existing user match or as a new user), the import **fails**. Resources referencing the root user require pre-migration cleanup before import. See [Root User Cleanup](../../10-migration-guides/root-user-cleanup.md) for instructions.
+
+**System administrators**: Project members or project admins who also belong to the SystemAdmin group on the source instance are included in the export, but the `isInSystemAdminGroup` flag is set to `false` in the exported admin data. System-admin membership is a property of the source instance and does not carry over to the target instance.
 
 **Cross-project membership scoping**: Both export and import strip cross-project membership triples to ensure the package is self-contained:
 

@@ -722,5 +722,27 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
       val actual = render(maybeVersionDate = Some(versionDate), maybeValueUuid = Some(valueUuid))
       assertTrue(actual == expectedVersionDateWithUuid)
     },
+    test("standoffTagFilter - type constraint in SPARQL, no targetHasOriginalXMLID (U-2)") {
+      val footnoteTagIri = sf.toSmartIri("http://www.knora.org/ontology/standoff#StandoffFootnoteTag")
+      val actual         = GetResourcePropertiesAndValuesQuery.build(
+        resourceIris = Seq(resourceIri1),
+        preview = false,
+        withDeleted = false,
+        queryAllNonStandoff = true,
+        queryStandoff = true,
+        standoffTagFilter = Some(footnoteTagIri),
+      )
+      assertTrue(
+        actual.contains("<http://www.knora.org/ontology/standoff#StandoffFootnoteTag>"),
+        !actual.contains("targetHasOriginalXMLID"),
+      )
+    },
+    test("no standoffTagFilter - full standoff loads without type constraint (U-3)") {
+      val actual = render(queryStandoff = true)
+      assertTrue(
+        actual.contains("targetHasOriginalXMLID"),
+        !actual.contains("StandoffFootnoteTag"),
+      )
+    },
   )
 }

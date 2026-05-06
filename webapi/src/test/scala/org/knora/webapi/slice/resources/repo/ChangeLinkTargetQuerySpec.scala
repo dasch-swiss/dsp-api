@@ -20,6 +20,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
@@ -44,18 +45,20 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
   private val testLinkPropertyIri           = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri
   private val testCurrentLinkTargetIri      = "http://rdfh.ch/0001/thing2"
   private val testNewLinkTargetIri          = "http://rdfh.ch/0001/thing3"
-  private val testNewLinkValueIriForCurrent = "http://rdfh.ch/0001/thing1/values/currentLinkValueNew"
-  private val testNewLinkValueIriForNew     = "http://rdfh.ch/0001/thing1/values/newLinkValue"
-  private val testCurrentReferenceCount     = 1
-  private val testNewLinkValueCreator       = "http://rdfh.ch/users/creator1"
-  private val testNewLinkValuePerms         = "CR knora-admin:Creator"
-  private val testCurrentTime               = Instant.parse("2024-01-15T10:30:00Z")
-  private val testRequestingUser            = UserIri.unsafeFrom("http://rdfh.ch/users/root")
+  private val testNewLinkValueIriForCurrent =
+    ValueIri.unsafeFrom("http://rdfh.ch/0001/thing1/values/currentLinkValueNew")
+  private val testNewLinkValueIriForNew =
+    ValueIri.unsafeFrom("http://rdfh.ch/0001/thing1/values/newLinkValue")
+  private val testCurrentReferenceCount = 1
+  private val testNewLinkValueCreator   = "http://rdfh.ch/users/creator1"
+  private val testNewLinkValuePerms     = "CR knora-admin:Creator"
+  private val testCurrentTime           = Instant.parse("2024-01-15T10:30:00Z")
+  private val testRequestingUser        = UserIri.unsafeFrom("http://rdfh.ch/users/root")
 
   private def createCurrentLinkUpdate(
     linkPropertyIri: SmartIri = testLinkPropertyIri,
     linkTargetIri: String = testCurrentLinkTargetIri,
-    newLinkValueIri: String = testNewLinkValueIriForCurrent,
+    newLinkValueIri: ValueIri = testNewLinkValueIriForCurrent,
     currentReferenceCount: Int = testCurrentReferenceCount,
     newLinkValueCreator: String = testNewLinkValueCreator,
     newLinkValuePermissions: String = testNewLinkValuePerms,
@@ -77,7 +80,7 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
   private def createNewLinkUpdate(
     linkPropertyIri: SmartIri = testLinkPropertyIri,
     linkTargetIri: String = testNewLinkTargetIri,
-    newLinkValueIri: String = testNewLinkValueIriForNew,
+    newLinkValueIri: ValueIri = testNewLinkValueIriForNew,
     newReferenceCount: Int = 1,
     newLinkValueCreator: String = testNewLinkValueCreator,
     newLinkValuePermissions: String = testNewLinkValuePerms,

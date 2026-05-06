@@ -39,9 +39,15 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewR
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.api.v2.ontologies.AddCardinalitiesToClassRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.CanDeleteCardinalitiesFromClassRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.ChangeClassLabelsOrCommentsRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.ChangeGuiOrderRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.ChangePropertyGuiElementRequest
 import org.knora.webapi.slice.api.v2.ontologies.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.CreateClassRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.CreateOntologyRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.DeleteCardinalitiesFromClassRequestV2
+import org.knora.webapi.slice.api.v2.ontologies.LabelOrComment
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.api.v2.ontologies.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri

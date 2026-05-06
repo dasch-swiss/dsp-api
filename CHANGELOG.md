@@ -1,5 +1,64 @@
 # Changelog
 
+## [35.8.1](https://github.com/dasch-swiss/dsp-api/compare/v35.8.0...v35.8.1) (2026-05-04)
+
+
+### Maintenances
+
+* Clarify "single root resource" parser error message (DEV-6317) ([#4095](https://github.com/dasch-swiss/dsp-api/issues/4095)) ([a2e59ad](https://github.com/dasch-swiss/dsp-api/commit/a2e59adc5409ecec7f5aafddd0cc8b74caa8333f))
+
+
+### Bug Fixes
+
+* **export:** fix CSV export timeout for large resource classes (DEV-6288) ([#4097](https://github.com/dasch-swiss/dsp-api/issues/4097)) ([d0221c4](https://github.com/dasch-swiss/dsp-api/commit/d0221c4a559b6469c33d8a3f72ddee366a901a92))
+* **project-migration:** Use the mounted storage for unzipping the bagit zip (DEV-6334) ([#4098](https://github.com/dasch-swiss/dsp-api/issues/4098)) ([5f1045d](https://github.com/dasch-swiss/dsp-api/commit/5f1045dcf5e9a8ced30383ee824bf69910cf63b1))
+
+## [35.8.0](https://github.com/dasch-swiss/dsp-api/compare/v35.7.0...v35.8.0) (2026-04-27)
+
+
+### Maintenances
+
+* Verify API healthcheck in CI (DEV-6247) ([#4092](https://github.com/dasch-swiss/dsp-api/issues/4092)) ([fd83dfc](https://github.com/dasch-swiss/dsp-api/commit/fd83dfc938679bf7b83cc38d7cdb8753ea8f5358))
+
+
+### Enhancements
+
+* **tracing:** Use endpoint path template for low-cardinality span names and add trace&lt;-&gt;log correlation (DEV-6292) ([#4088](https://github.com/dasch-swiss/dsp-api/issues/4088)) ([ddfea9e](https://github.com/dasch-swiss/dsp-api/commit/ddfea9e7df5796bb77720ced442916a76377c6c0))
+
+
+### Bug Fixes
+
+* **ingest:** Use sttp/tracing client with 1h read timeout for project import ([#4094](https://github.com/dasch-swiss/dsp-api/issues/4094)) ([f933d70](https://github.com/dasch-swiss/dsp-api/commit/f933d70abc3bdf12feb9b9f2fee32d5a6b4c6064))
+
+
+### Tests
+
+* Pin TDB2 transactions to a single thread in TriplestoreServiceInMemory ([#4091](https://github.com/dasch-swiss/dsp-api/issues/4091)) ([68793e3](https://github.com/dasch-swiss/dsp-api/commit/68793e3222a95a62cb0cfc961f35bddd54d74f0e))
+
+## [35.7.0](https://github.com/dasch-swiss/dsp-api/compare/v35.6.0...v35.7.0) (2026-04-27)
+
+
+### Maintenances
+
+* **deps:** bump sipi to v4.1.1 ([#4090](https://github.com/dasch-swiss/dsp-api/issues/4090)) ([028c13a](https://github.com/dasch-swiss/dsp-api/commit/028c13a346bd2d581d7ac55a2059676033d06272))
+* Patch dependency updates ([#4051](https://github.com/dasch-swiss/dsp-api/issues/4051)) ([3eb0f87](https://github.com/dasch-swiss/dsp-api/commit/3eb0f87807b867046c882d3cf2fb8761930dc7db))
+* Replace `String`|`IRI` with type `ResourceIri` and update docs ([#4082](https://github.com/dasch-swiss/dsp-api/issues/4082)) ([402d4be](https://github.com/dasch-swiss/dsp-api/commit/402d4bef6b96b3e8b1cd6ac9a423f2471d337840))
+
+
+### Documentation
+
+* add XSD regex patterns documentation to query-language.md ([#4089](https://github.com/dasch-swiss/dsp-api/issues/4089)) ([ab6382d](https://github.com/dasch-swiss/dsp-api/commit/ab6382d5e6e52cc23da5f62e3b4cae435b92da10))
+
+
+### Enhancements
+
+* Move Fuseki Docker image publishing to dsp-api (DEV-6277) ([#4087](https://github.com/dasch-swiss/dsp-api/issues/4087)) ([72cda16](https://github.com/dasch-swiss/dsp-api/commit/72cda164a62c1c9a2adea440c8cecdae078ae5d8))
+
+
+### Bug Fixes
+
+* **project-migration:** Include system admin project members as normal users in export (DEV-6281) ([#4086](https://github.com/dasch-swiss/dsp-api/issues/4086)) ([ce689c4](https://github.com/dasch-swiss/dsp-api/commit/ce689c45355f5a496833dd46b0e8bdd820ba9535))
+
 ## [35.6.0](https://github.com/dasch-swiss/dsp-api/compare/v35.5.0...v35.6.0) (2026-04-20)
 
 

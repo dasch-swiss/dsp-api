@@ -62,9 +62,12 @@ final class ImportServiceLive(
     val shortcode  = projectPath.shortcode
     val importPath = projectPath.path
     for {
-      _      <- ZIO.logInfo(s"Importing project $shortcode from $zipFile to $importPath")
+      _        <- ZIO.logInfo(s"Importing project $shortcode from $zipFile to $importPath")
+      bagItDir <- storageService
+                    .createTempDirectoryScoped(s"bagit-$shortcode", Some("import"))
+                    .mapError(IoError.apply)
       result <- BagIt
-                  .readAndValidateZip(zipFile)
+                  .readAndValidateZip(zipFile, Some(bagItDir))
                   .tapError(e => ZIO.logError(s"BagIt validation failed for project $shortcode: $e"))
                   .mapError {
                     case e: java.io.IOException => IoError(e)

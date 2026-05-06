@@ -6,13 +6,21 @@
 package org.knora.webapi.slice.`export`.domain
 
 import com.typesafe.config.ConfigFactory
+import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.ModelFactory
+import org.apache.jena.riot.Lang as JenaLang
+import org.apache.jena.riot.RDFDataMgr
 import zio.*
 import zio.config.typesafe.TypesafeConfigProvider
 import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.test.*
 
+import java.io.IOException
+import scala.jdk.CollectionConverters.*
+
 import org.knora.bagit.BagIt
+import org.knora.bagit.BagItError
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -174,6 +182,32 @@ object ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
       }
       .retry(Schedule.spaced(100.millis) && Schedule.recurs(100))
 
+  /** Reads a file from inside a BagIt zip and returns its contents as a UTF-8 string. */
+  private def readBagFile(zipFile: Path, relPath: String): ZIO[Any, IOException | BagItError, String] =
+    ZIO.scoped {
+      for {
+        tempDir     <- Files.createTempDirectoryScoped(Some("verify-bag"), Seq.empty)
+        pair        <- BagIt.readAndValidateZip(zipFile, Some(tempDir))
+        (_, bagRoot) = pair
+        bytes       <- Files.readAllBytes(bagRoot / relPath)
+      } yield new String(bytes.toArray)
+    }
+
+  /** Parses N-Quads content into a Jena `Model` (unions all named graphs). */
+  private def parseNQuads(content: String): Model = {
+    val dataset = org.apache.jena.query.DatasetFactory.create()
+    RDFDataMgr.read(
+      dataset,
+      new java.io.ByteArrayInputStream(content.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+      JenaLang.NQUADS,
+    )
+    val unioned = ModelFactory.createDefaultModel()
+    unioned.add(dataset.getDefaultModel)
+    dataset.listNames().asScala.foreach(name => unioned.add(dataset.getNamedModel(name)))
+    dataset.close()
+    unioned
+  }
+
   override def spec: Spec[Any, Any] = suite("ProjectMigrationExportService")(
     test("export with skipAssets=false calls ingest exportProject") {
       for {
@@ -309,25 +343,55 @@ object ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
              |  knora-admin:belongsToProject <$projectIri> .
              |""".stripMargin
         for {
-          env    <- makeTestEnv
-          _      <- env.constructRdfRef.set(constructResult)
-          task   <- env.service.createExport(testProject, testUser, skipAssets = true)
-          result <- pollUntilDone(env.service, task.id)
-          // Read the admin.nq output from the BagIt zip
+          env            <- makeTestEnv
+          _              <- env.constructRdfRef.set(constructResult)
+          task           <- env.service.createExport(testProject, testUser, skipAssets = true)
+          result         <- pollUntilDone(env.service, task.id)
           zipFile        <- env.storage.exportBagItZipPath(task.id)
-          adminNqContent <- ZIO.scoped {
-                              Files.createTempDirectoryScoped(Some("verify-scoping"), Seq.empty).flatMap { tempDir =>
-                                BagIt.readAndValidateZip(zipFile, Some(tempDir)).flatMap { case (_, bagRoot) =>
-                                  val adminNq = bagRoot / "data" / "rdf" / "admin.nq"
-                                  Files.readAllBytes(adminNq).map(bytes => new String(bytes.toArray))
-                                }
-                              }
-                            }
-          _ <- env.service.deleteExport(task.id).catchAllCause(_ => ZIO.unit)
+          adminNqContent <- readBagFile(zipFile, "data/rdf/admin.nq")
+          _              <- env.service.deleteExport(task.id).catchAllCause(_ => ZIO.unit)
         } yield assertTrue(
           result.status == DataTaskStatus.Completed,
           adminNqContent.contains(projectIri),       // project membership retained
           !adminNqContent.contains("projects/OTHER"), // cross-project membership stripped
+        )
+      },
+      test("export keeps system admin project members but strips isInSystemAdminGroup flag") {
+        val ka              = "http://www.knora.org/ontology/knora-admin#"
+        val projectIri      = testProject.id.value
+        val constructResult =
+          s"""@prefix knora-admin: <$ka> .
+             |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+             |<$projectIri> a knora-admin:knoraProject ;
+             |  knora-admin:projectShortcode "0001" .
+             |<http://rdfh.ch/users/sysadmin001> a knora-admin:User ;
+             |  knora-admin:username "sysadminUser" ;
+             |  knora-admin:email "sysadmin@example.com" ;
+             |  knora-admin:isInProject <$projectIri> ;
+             |  knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
+             |""".stripMargin
+        for {
+          env            <- makeTestEnv
+          _              <- env.constructRdfRef.set(constructResult)
+          task           <- env.service.createExport(testProject, testUser, skipAssets = true)
+          result         <- pollUntilDone(env.service, task.id)
+          zipFile        <- env.storage.exportBagItZipPath(task.id)
+          adminNqContent <- readBagFile(zipFile, "data/rdf/admin.nq")
+          adminModel      = parseNQuads(adminNqContent)
+          sysAdminUser    = adminModel.getResource("http://rdfh.ch/users/sysadmin001")
+          sysAdminProp    =
+            org.apache.jena.rdf.model.ResourceFactory.createProperty(
+              "http://www.knora.org/ontology/knora-admin#isInSystemAdminGroup",
+            )
+          sysAdminStmts = sysAdminUser.listProperties(sysAdminProp).asScala.toList
+          _            <- env.service.deleteExport(task.id).catchAllCause(_ => ZIO.unit)
+        } yield assertTrue(
+          result.status == DataTaskStatus.Completed,
+          // system admin user is retained in the export
+          sysAdminUser.listProperties().hasNext,
+          // exactly one isInSystemAdminGroup triple remains, and it is literal false
+          sysAdminStmts.size == 1,
+          sysAdminStmts.forall(s => s.getObject.isLiteral && !s.getLiteral.getBoolean),
         )
       },
     ),

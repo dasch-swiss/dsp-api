@@ -12,8 +12,6 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
@@ -50,7 +48,7 @@ object ValueContentV2Spec extends ZIOSpecDefault {
       ZIO.succeed(expected)
 
     // The following are unsupported operations because they are not used in the test
-    def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
+    def getTextFileRequest(fileUrl: String, senderName: String): Task[String] =
       ZIO.dieMessage("unsupported operation")
   })
 }

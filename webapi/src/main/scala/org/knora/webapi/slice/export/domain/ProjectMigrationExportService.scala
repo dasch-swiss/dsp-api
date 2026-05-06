@@ -80,7 +80,7 @@ final class ProjectMigrationExportService(
       } yield ()
     }.logError.catchAll(e =>
       ZIO.logError(s"${task.id}: Export failed for project ${project.id} with error: ${e.getMessage}") *>
-        currentExp.fail(task.id).ignore,
+        currentExp.fail(task.id, Option(e.getMessage).getOrElse(e.getClass.getSimpleName)).ignore,
     )
 
   private def exportAssets(
@@ -138,16 +138,27 @@ final class ProjectMigrationExportService(
       rdfStr  <- triplestore.queryRdf(Construct(queryStr))
 
       // Step 3: Parse result into Jena model, scope memberships, write as NQuads
-      model <- ZIO.attempt {
-                 val m = org.apache.jena.rdf.model.ModelFactory.createDefaultModel()
-                 RDFDataMgr.read(
-                   m,
-                   java.io.ByteArrayInputStream(rdfStr.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
-                   JenaLang.TURTLE,
-                 )
-                 AdminModelScoping.removeNonProjectMemberships(m, project.id.value)
-                 m
-               }
+      parsed <- ZIO.attempt {
+                  val m = org.apache.jena.rdf.model.ModelFactory.createDefaultModel()
+                  RDFDataMgr.read(
+                    m,
+                    java.io.ByteArrayInputStream(rdfStr.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                    JenaLang.TURTLE,
+                  )
+                  AdminModelScoping.removeNonProjectMemberships(m, project.id.value)
+                  val demoted = AdminModelScoping.clearSystemAdminFlag(m)
+                  (m, demoted)
+                }
+      (model, demotedSysAdmins) = parsed
+
+      // Audit-log any users whose source-instance system-admin membership was rewritten to false.
+      _ <-
+        ZIO.when(demotedSysAdmins.nonEmpty)(
+          ZIO.logWarning(
+            s"$taskId: Export rewrote isInSystemAdminGroup from true to false for ${demotedSysAdmins.size} user(s): " +
+              demotedSysAdmins.mkString(", "),
+          ),
+        )
 
       // Warn if root user is in the export
       _ <- ZIO.foreachDiscard(AdminModelScoping.findRootUserIri(model))(iri =>

@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
@@ -53,6 +52,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
+import org.knora.webapi.slice.api.v2.ontologies.CreateOntologyRequestV2
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.store.triplestore.api.TriplestoreService

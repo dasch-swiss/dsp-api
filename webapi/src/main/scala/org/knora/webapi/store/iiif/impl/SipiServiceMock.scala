@@ -7,7 +7,6 @@ package org.knora.webapi.store.iiif.impl
 
 import zio.*
 
-import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
@@ -38,7 +37,7 @@ case class SipiServiceMock(ref: Ref[Map[SipiMockMethodName, Task[Object]]]) exte
     ref.set(SipiMockMethodName.values.map(_ -> fail).toMap)
   }
 
-  override def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
+  override def getTextFileRequest(fileUrl: String, senderName: String): Task[String] =
     getReturnValue(GetTextFileRequest)
 
   override def getFileMetadataFromDspIngest(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse] =

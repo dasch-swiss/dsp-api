@@ -20,6 +20,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 
 object ConstructResponseUtilV2SpecFullData {
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
@@ -43,7 +44,8 @@ object ConstructResponseUtilV2SpecFullData {
                 valueHasInteger = 543212345,
                 comment = Some("second hidden int value in visible resource"),
               ),
-              valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g",
+              valueIri =
+                ValueIri.unsafeFrom("http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g"),
               permissions = "M knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -58,7 +60,8 @@ object ConstructResponseUtilV2SpecFullData {
                 valueHasInteger = 123454321,
                 comment = Some("first hidden int value in visible resource"),
               ),
-              valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw",
+              valueIri =
+                ValueIri.unsafeFrom("http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw"),
               permissions = "M knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -137,7 +140,8 @@ object ConstructResponseUtilV2SpecFullData {
                 ),
               ),
               valueHasRefCount = 1,
-              valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/UgSp5mXTTSKdI02ZU1KIAA",
+              valueIri =
+                ValueIri.unsafeFrom("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/UgSp5mXTTSKdI02ZU1KIAA"),
               permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -154,7 +158,8 @@ object ConstructResponseUtilV2SpecFullData {
                 valueHasInteger = 123454321,
                 comment = Some("visible int value in main resource"),
               ),
-              valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
+              valueIri =
+                ValueIri.unsafeFrom("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ"),
               permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -193,7 +198,8 @@ object ConstructResponseUtilV2SpecFullData {
                 valueHasInteger = 123454321,
                 comment = Some("visible int value in main resource"),
               ),
-              valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
+              valueIri =
+                ValueIri.unsafeFrom("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ"),
               permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -271,7 +277,7 @@ object ConstructResponseUtilV2SpecFullData {
                 mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
                 textValueType = TextValueType.FormattedText,
               ),
-              valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
+              valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-values/values/1"),
               permissions = "CR knora-admin:Creator",
               valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
               valueHasMaxStandoffStartIndex = Some(1),
@@ -326,7 +332,7 @@ object ConstructResponseUtilV2SpecFullData {
                 mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
                 textValueType = TextValueType.FormattedText,
               ),
-              valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
+              valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-values/values/2"),
               permissions = "CR knora-admin:Creator",
               valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
               valueHasMaxStandoffStartIndex = Some(1),
@@ -363,7 +369,7 @@ object ConstructResponseUtilV2SpecFullData {
                 ),
               ),
               valueHasRefCount = 2,
-              valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/0",
+              valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-values/values/0"),
               permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser",
               valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
               attachedToUser = "http://www.knora.org/ontology/knora-admin#SystemUser",
@@ -425,7 +431,7 @@ object ConstructResponseUtilV2SpecFullData {
                             comment = None,
                             textValueType = TextValueType.UnformattedText,
                           ),
-                          valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
+                          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006"),
                           permissions =
                             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                           valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
@@ -445,7 +451,8 @@ object ConstructResponseUtilV2SpecFullData {
                 ),
               ),
               valueHasRefCount = 1,
-              valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
+              valueIri =
+                ValueIri.unsafeFrom("http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
@@ -463,7 +470,7 @@ object ConstructResponseUtilV2SpecFullData {
                 valueHasInteger = 10,
                 comment = None,
               ),
-              valueIri = "http://rdfh.ch/0803/76570a749901/values/fae17f4f6106",
+              valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/76570a749901/values/fae17f4f6106"),
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
@@ -519,7 +526,7 @@ object ConstructResponseUtilV2SpecFullData {
                             comment = None,
                             textValueType = TextValueType.UnformattedText,
                           ),
-                          valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+                          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/c3295339"),
                           permissions =
                             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -539,7 +546,8 @@ object ConstructResponseUtilV2SpecFullData {
                 ),
               ),
               valueHasRefCount = 1,
-              valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
+              valueIri =
+                ValueIri.unsafeFrom("http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745"),
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -557,7 +565,7 @@ object ConstructResponseUtilV2SpecFullData {
                 valueHasInteger = 10,
                 comment = None,
               ),
-              valueIri = "http://rdfh.ch/0803/773f258402/values/53feeaf80a",
+              valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/773f258402/values/53feeaf80a"),
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -600,7 +608,7 @@ object ConstructResponseUtilV2SpecFullData {
                 comment = None,
                 textValueType = TextValueType.UnformattedText,
               ),
-              valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+              valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/c3295339"),
               permissions =
                 "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -643,7 +651,9 @@ object ConstructResponseUtilV2SpecFullData {
                             nestedResource = None,
                           ),
                           valueHasRefCount = 1,
-                          valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
+                          valueIri = ValueIri.unsafeFrom(
+                            "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
+                          ),
                           permissions =
                             "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
                           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -661,7 +671,7 @@ object ConstructResponseUtilV2SpecFullData {
                             valueHasInteger = 10,
                             comment = None,
                           ),
-                          valueIri = "http://rdfh.ch/0803/773f258402/values/53feeaf80a",
+                          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/773f258402/values/53feeaf80a"),
                           permissions =
                             "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
                           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -680,7 +690,8 @@ object ConstructResponseUtilV2SpecFullData {
                 ),
               ),
               valueHasRefCount = 1,
-              valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
+              valueIri =
+                ValueIri.unsafeFrom("http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745"),
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -716,7 +727,7 @@ object ConstructResponseUtilV2SpecFullData {
                 comment = None,
                 textValueType = TextValueType.UnformattedText,
               ),
-              valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
+              valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006"),
               permissions =
                 "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
@@ -759,7 +770,9 @@ object ConstructResponseUtilV2SpecFullData {
                             nestedResource = None,
                           ),
                           valueHasRefCount = 1,
-                          valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
+                          valueIri = ValueIri.unsafeFrom(
+                            "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
+                          ),
                           permissions =
                             "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
                           valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
@@ -777,7 +790,7 @@ object ConstructResponseUtilV2SpecFullData {
                             valueHasInteger = 10,
                             comment = None,
                           ),
-                          valueIri = "http://rdfh.ch/0803/76570a749901/values/fae17f4f6106",
+                          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0803/76570a749901/values/fae17f4f6106"),
                           permissions =
                             "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
                           valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
@@ -796,7 +809,8 @@ object ConstructResponseUtilV2SpecFullData {
                 ),
               ),
               valueHasRefCount = 1,
-              valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
+              valueIri =
+                ValueIri.unsafeFrom("http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
