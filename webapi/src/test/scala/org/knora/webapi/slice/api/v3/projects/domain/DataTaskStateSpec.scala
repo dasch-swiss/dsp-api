@@ -101,7 +101,7 @@ object DataTaskStateSpec extends ZIOSpecDefault {
         for {
           state  <- ZIO.service[DataTaskState]
           task   <- state.makeNew(projectIri, user)
-          failed <- state.fail(task.id)
+          failed <- state.fail(task.id, "test failure")
           result <- state.complete(task.id).either
         } yield assertTrue(result == Left(Some(StateFailedError(failed))))
       },
@@ -118,7 +118,7 @@ object DataTaskStateSpec extends ZIOSpecDefault {
         for {
           state  <- ZIO.service[DataTaskState]
           task   <- state.makeNew(projectIri, user)
-          failed <- state.fail(task.id)
+          failed <- state.fail(task.id, "test failure")
           saved  <- state.find(task.id).orElseFail(Exception("should not happen"))
         } yield assertTrue(
           failed.id == task.id,
@@ -130,8 +130,8 @@ object DataTaskStateSpec extends ZIOSpecDefault {
         for {
           state   <- ZIO.service[DataTaskState]
           task    <- state.makeNew(projectIri, user)
-          failed1 <- state.fail(task.id)
-          failed2 <- state.fail(task.id)
+          failed1 <- state.fail(task.id, "test failure")
+          failed2 <- state.fail(task.id, "test failure")
         } yield assertTrue(failed1 == failed2)
       },
       test("should fail with StateCompletedError when task is already completed") {
@@ -139,14 +139,14 @@ object DataTaskStateSpec extends ZIOSpecDefault {
           state     <- ZIO.service[DataTaskState]
           task      <- state.makeNew(projectIri, user)
           completed <- state.complete(task.id)
-          result    <- state.fail(task.id).either
+          result    <- state.fail(task.id, "test failure").either
         } yield assertTrue(result == Left(Some(StateCompletedError(completed))))
       },
       test("should fail with None when task does not exist") {
         for {
           state  <- ZIO.service[DataTaskState]
           taskId <- DataTaskId.makeNew
-          result <- state.fail(taskId).either
+          result <- state.fail(taskId, "test failure").either
         } yield assertTrue(result == Left(None))
       },
     ),
@@ -164,7 +164,7 @@ object DataTaskStateSpec extends ZIOSpecDefault {
         for {
           state <- ZIO.service[DataTaskState]
           task  <- state.makeNew(projectIri, user)
-          _     <- state.fail(task.id)
+          _     <- state.fail(task.id, "test failure")
           _     <- state.deleteIfNotInProgress(task.id)
           find  <- state.find(task.id).either
         } yield assertTrue(find == Left(None))
