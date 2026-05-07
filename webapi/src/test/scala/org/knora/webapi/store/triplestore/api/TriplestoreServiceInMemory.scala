@@ -10,8 +10,8 @@ import org.apache.jena.rdf.model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
-import org.apache.jena.sparql.core.DatasetGraphWrapper
-import org.apache.jena.sparql.core.mem.DatasetGraphInMemory
+import org.apache.jena.tdb2.TDB2
+import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
 import zio.Console
@@ -70,7 +70,7 @@ object TestTripleStore {
     ZIO.serviceWithZIO[TestTripleStore](_.setDataset(dataset))
 
   def setEmptyDataset() =
-    ZIO.serviceWithZIO[TestTripleStore](_.setDataset(TriplestoreServiceInMemory.createDatasetWithUnionDefault()))
+    ZIO.serviceWithZIO[TestTripleStore](_.setDataset(TriplestoreServiceInMemory.createTdb2DatasetWithUnionDefault()))
 
   def getDataset: RIO[TestTripleStore, Dataset] =
     ZIO.serviceWithZIO[TestTripleStore](_.getDataset)
@@ -335,17 +335,17 @@ object TriplestoreServiceInMemory {
     .flatMap(TriplestoreServiceInMemory.setDataset)
 
   /**
-   * Creates an empty in-memory [[Dataset]] where the default graph is the union of all named graphs.
+   * Creates an empty in-memory TDB2 [[Dataset]] where the default graph is the union of all named graphs.
    *
    * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
    */
-  def createDatasetWithUnionDefault(): Dataset =
-    DatasetFactory.wrap(new DatasetGraphWrapper(new DatasetGraphInMemory()) {
-      override def getDefaultGraph() = getWrapped.getUnionGraph()
-    })
+  def createTdb2DatasetWithUnionDefault(): Dataset = {
+    TDB2.getContext.set(TDB2.symUnionDefaultGraph, true)
+    TDB2Factory.createDataset()
+  }
 
-  val createEmptyDataset: UIO[Dataset] = ZIO.succeed(createDatasetWithUnionDefault())
+  val createEmptyDataset: UIO[Dataset] = ZIO.succeed(createTdb2DatasetWithUnionDefault())
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
