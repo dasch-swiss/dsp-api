@@ -10,6 +10,7 @@ import org.apache.jena.rdf.model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
+import org.apache.jena.sys.JenaSystem
 import org.apache.jena.tdb2.TDB2
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
@@ -333,6 +334,14 @@ object TriplestoreServiceInMemory {
   def setDataSetFromTriG(triG: String): ZIO[TestTripleStore, Throwable, Unit] = TestDatasetBuilder
     .datasetFromTriG(triG)
     .flatMap(TriplestoreServiceInMemory.setDataset)
+
+  // Jena 6 has a TDB2 init race: if the very first reference to the TDB2 class
+  // is one of its symbol fields (e.g. TDB2.symUnionDefaultGraph), TDB2.<clinit>
+  // recursively re-enters TDB2.init() before its private `initLock` field is
+  // assigned, producing a NullPointerException ("initLock is null") wrapped in
+  // ExceptionInInitializerError. Calling JenaSystem.init() first lets the
+  // subsystem loader complete TDB2.<clinit> before any TDB2 static is accessed.
+  JenaSystem.init()
 
   /**
    * Creates an empty in-memory TDB2 [[Dataset]] where the default graph is the union of all named graphs.
