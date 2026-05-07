@@ -15,7 +15,6 @@ import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelayLive
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepoInMemory
@@ -30,6 +29,7 @@ import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
+import org.knora.webapi.slice.standoff.service.StandoffMappingServiceFake
 import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
@@ -753,7 +753,7 @@ object ValueOrderingSpec extends ZIOSpecDefault {
     KnoraUserService.layer,
     KnoraUserToUserConverter.layer,
     LicenseRepo.layer,
-    MessageRelayLive.layer,
+    StandoffMappingServiceFake.layer,
     OntologyRepoInMemory.emptyLayer,
     PasswordService.layer,
     ProjectService.layer,

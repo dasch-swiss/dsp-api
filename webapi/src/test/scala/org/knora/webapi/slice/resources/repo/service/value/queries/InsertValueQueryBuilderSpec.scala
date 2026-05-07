@@ -30,6 +30,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAtt
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagTimeAttributeV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
@@ -193,7 +194,7 @@ object InsertValueQueryBuilderTestSupport {
         textValueType = TextValueType.FormattedText,
         valueHasLanguage = None,
         standoff = standoffTags,
-        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        mappingIri = Some(StandoffMappingIri.StandardMapping),
         comment = Option.when(withComment)("Test standoff comment"),
       )
     }
@@ -231,7 +232,7 @@ object InsertValueQueryBuilderTestSupport {
         textValueType = TextValueType.FormattedText,
         valueHasLanguage = None,
         standoff = standoffTags,
-        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        mappingIri = Some(StandoffMappingIri.StandardMapping),
         comment = Option.when(withComment)("Test standoff link comment"),
       )
     }
@@ -289,7 +290,7 @@ object InsertValueQueryBuilderTestSupport {
         textValueType = TextValueType.FormattedText,
         valueHasLanguage = None,
         standoff = standoffTags,
-        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        mappingIri = Some(StandoffMappingIri.StandardMapping),
         comment = Option.when(withComment)("Virtual hierarchy standoff comment"),
       )
     }
@@ -330,7 +331,7 @@ object InsertValueQueryBuilderTestSupport {
         textValueType = TextValueType.FormattedText,
         valueHasLanguage = None,
         standoff = standoffTags,
-        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        mappingIri = Some(StandoffMappingIri.StandardMapping),
         comment = Option.when(withComment)("Hierarchical standoff comment"),
       )
     }
@@ -368,7 +369,7 @@ object InsertValueQueryBuilderTestSupport {
         textValueType = TextValueType.FormattedText,
         valueHasLanguage = None,
         standoff = standoffTags,
-        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        mappingIri = Some(StandoffMappingIri.StandardMapping),
         comment = Option.when(withComment)("XML ID standoff comment"),
       )
     }
@@ -405,7 +406,7 @@ object InsertValueQueryBuilderTestSupport {
         textValueType = TextValueType.FormattedText,
         valueHasLanguage = None,
         standoff = standoffTags,
-        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        mappingIri = Some(StandoffMappingIri.StandardMapping),
         comment = Option.when(withComment)("Standoff integer attribute comment"),
       )
     }
@@ -442,7 +443,7 @@ object InsertValueQueryBuilderTestSupport {
         textValueType = TextValueType.FormattedText,
         valueHasLanguage = None,
         standoff = standoffTags,
-        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        mappingIri = Some(StandoffMappingIri.StandardMapping),
         comment = Option.when(withComment)("Standoff time attribute comment"),
       )
     }

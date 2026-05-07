@@ -132,7 +132,7 @@ final case class ReadResourcesServiceLive(
 
       mappings <-
         ZIO.when(queryStandoff) {
-          constructResponseUtilV2.mappingsFromQueryResults(resourcesWithValues.resources, requestingUser)
+          constructResponseUtilV2.mappingsFromQueryResults(resourcesWithValues.resources)
         }
 
       readSequence <-

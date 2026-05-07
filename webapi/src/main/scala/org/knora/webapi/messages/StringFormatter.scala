@@ -1440,31 +1440,6 @@ class StringFormatter private (
       maybeTimestamp = maybeTimestamp,
     )
 
-  /**
-   * Creates a mapping IRI based on a project IRI and a mapping name.
-   *
-   * @param projectIri the IRI of the project the mapping will belong to.
-   * @return a mapping IRI.
-   */
-  def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
-    val mappingIri = s"$projectIri/mappings/$mappingName"
-    // check that the mapping IRI is valid (mappingName is user input)
-    Iri
-      .validateAndEscapeIri(mappingIri)
-      .getOrElse(throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
-  }
-
-  /**
-   * Creates a random IRI for an element of a mapping based on a mapping IRI.
-   *
-   * @param mappingIri the IRI of the mapping the element belongs to.
-   * @return a new mapping element IRI.
-   */
-  def makeRandomMappingElementIri(mappingIri: IRI): IRI = {
-    val knoraMappingElementUuid = UuidUtil.makeRandomBase64EncodedUuid
-    s"$mappingIri/elements/$knoraMappingElementUuid"
-  }
-
   def unescapeStringLiteralSeq(stringLiteralSeq: StringLiteralSequenceV2): StringLiteralSequenceV2 =
     StringLiteralSequenceV2(
       stringLiterals = stringLiteralSeq.stringLiterals.map(stringLiteral =>

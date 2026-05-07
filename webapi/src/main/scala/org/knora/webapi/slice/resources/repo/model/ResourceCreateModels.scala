@@ -12,6 +12,7 @@ import org.knora.webapi.messages.util.CalendarNameV2
 import org.knora.webapi.messages.util.DatePrecisionV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.domain.InternalIri
 
 final case class ResourceReadyToCreate(
@@ -53,7 +54,7 @@ enum TypeSpecificValueInfo {
   case UnformattedTextValueInfo(valueHasLanguage: Option[String])
   case FormattedTextValueInfo(
     valueHasLanguage: Option[String],
-    mappingIri: InternalIri,
+    mappingIri: StandoffMappingIri,
     maxStandoffStartIndex: Int,
     standoff: Seq[StandoffTagInfo],
     textValueType: FormattedTextValueType,

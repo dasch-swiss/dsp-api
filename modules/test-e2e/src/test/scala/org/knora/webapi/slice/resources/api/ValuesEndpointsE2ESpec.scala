@@ -38,6 +38,7 @@ import org.knora.webapi.slice.api.v2.values.ReorderValuesRequest
 import org.knora.webapi.slice.api.v2.values.ReorderValuesResponse
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGravsearchQuery
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
@@ -228,12 +229,14 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       |   And this <strong id="link_id">strong value</strong> is linked by this <a class="internal-link" href="#link_id">link</a>
       |</text>""".stripMargin
 
-  private val standardMappingIri: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
-
   private val geometryValue1 =
     """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
-  private def createTextValueWithStandoffRequest(resourceIri: IRI, textValueAsXml: String, mappingIri: String): String =
+  private def createTextValueWithStandoffRequest(
+    resourceIri: IRI,
+    textValueAsXml: String,
+    mappingIri: StandoffMappingIri,
+  ): String =
     s"""{
        |  "@id" : "$resourceIri",
        |  "@type" : "anything:Thing",
@@ -1077,7 +1080,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         jsonLd                    = createTextValueWithStandoffRequest(
                    resourceIri = resourceIri,
                    textValueAsXml = textValue1AsXmlWithStandardMapping,
-                   mappingIri = standardMappingIri,
+                   mappingIri = StandoffMappingIri.StandardMapping,
                  )
         responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
         valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
@@ -1120,7 +1123,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         jsonLd                    = createTextValueWithStandoffRequest(
                    resourceIri = resourceIri,
                    textValueAsXml = textValueAsXml,
-                   mappingIri = standardMappingIri,
+                   mappingIri = StandoffMappingIri.StandardMapping,
                  )
         responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
         valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
@@ -1154,7 +1157,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         jsonLd                    = createTextValueWithStandoffRequest(
                    resourceIri = resourceIri,
                    textValueAsXml = textValueAsXml,
-                   mappingIri = standardMappingIri,
+                   mappingIri = StandoffMappingIri.StandardMapping,
                  )
         responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
         valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
@@ -1210,7 +1213,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         jsonLd                    = createTextValueWithStandoffRequest(
                    resourceIri = resourceIri,
                    textValueAsXml = textValueAsXml,
-                   mappingIri = standardMappingIri,
+                   mappingIri = StandoffMappingIri.StandardMapping,
                  )
         responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
         valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
@@ -1238,7 +1241,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       val jsonLd = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
         textValueAsXml = textValueAsXml,
-        mappingIri = standardMappingIri,
+        mappingIri = StandoffMappingIri.StandardMapping,
       )
       TestApiClient.postJsonLd(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
     },
@@ -1276,7 +1279,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         jsonLd = createTextValueWithStandoffRequest(
                    resourceIri = resourceIri,
                    textValueAsXml = textValueAsXml,
-                   mappingIri = s"$anythingProjectIri/mappings/HTMLMapping",
+                   mappingIri = StandoffMappingIri.unsafeFrom(s"$anythingProjectIri/mappings/HTMLMapping"),
                  )
         _               <- TestApiClient.postMultiPart[Json](uri"/v2/mapping", multipartBody, anythingUser1).flatMap(_.assert200)
         responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
@@ -1583,7 +1586,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         jsonLd = createTextValueWithStandoffRequest(
                    resourceIri = resourceIri,
                    textValueAsXml = textValueAsXml,
-                   mappingIri = standardMappingIri,
+                   mappingIri = StandoffMappingIri.StandardMapping,
                  )
 
         responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
@@ -2535,7 +2538,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
            |    "@type" : "knora-api:TextValue",
            |    "knora-api:textValueAsXml" : ${textValue2AsXmlWithStandardMapping.toJson},
            |    "knora-api:textValueHasMapping" : {
-           |      "@id": "$standardMappingIri"
+           |      "@id": "${StandoffMappingIri.StandardMapping}"
            |    }
            |  },
            |  "@context" : {
