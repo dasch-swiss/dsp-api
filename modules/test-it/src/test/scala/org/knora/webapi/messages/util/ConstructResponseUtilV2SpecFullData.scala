@@ -20,6 +20,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 
 object ConstructResponseUtilV2SpecFullData {
@@ -274,7 +275,7 @@ object ConstructResponseUtilV2SpecFullData {
                 maybeValueHasString = Some("Ich liebe die Dinge, sie sind alles f\u00FCr mich."),
                 comment = None,
                 xslt = None,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mappingIri = Some(StandoffMappingIri.StandardMapping),
                 textValueType = TextValueType.FormattedText,
               ),
               valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-values/values/1"),
@@ -329,7 +330,7 @@ object ConstructResponseUtilV2SpecFullData {
                 maybeValueHasString = Some("Na ja, die Dinge sind OK."),
                 comment = None,
                 xslt = None,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mappingIri = Some(StandoffMappingIri.StandardMapping),
                 textValueType = TextValueType.FormattedText,
               ),
               valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing-with-text-values/values/2"),

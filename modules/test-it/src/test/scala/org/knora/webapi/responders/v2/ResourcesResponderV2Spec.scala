@@ -44,9 +44,11 @@ import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.resources.repo.GetStandoffTagByUUIDQuery
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.*
@@ -516,7 +518,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
   override val e2eSpec = suite("ResourceResponserV2")(
     test("Load test data") {
       ZIO
-        .serviceWithZIO[StandoffResponderV2](_.getMappingV2("http://rdfh.ch/standoff/mappings/StandardMapping"))
+        .serviceWithZIO[StandoffMappingService](
+          _.getMappingV2(StandoffMappingIri.StandardMapping),
+        )
         .tap(r => ZIO.succeed(self.standardMapping = Some(r.mapping)))
         .as(assertCompletes)
     },
@@ -952,7 +956,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                 ontologySchema = ApiV2Complex,
                 maybeValueHasString = Some("this is text with standoff"),
                 standoff = sampleStandoff,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mappingIri = Some(StandoffMappingIri.StandardMapping),
                 mapping = standardMapping,
                 textValueType = TextValueType.FormattedText,
               ),
@@ -1340,7 +1344,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                 ontologySchema = ApiV2Complex,
                 maybeValueHasString = Some("this is text with standoff"),
                 standoff = standoffWithInvalidLink,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mappingIri = Some(StandoffMappingIri.StandardMapping),
                 mapping = standardMapping,
                 textValueType = TextValueType.FormattedText,
               ),
@@ -1858,7 +1862,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                 ontologySchema = ApiV2Complex,
                 maybeValueHasString = Some("this is text with standoff"),
                 standoff = sampleStandoffForErasingResource,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mappingIri = Some(StandoffMappingIri.StandardMapping),
                 mapping = standardMapping,
                 textValueType = TextValueType.FormattedText,
               ),
@@ -1893,7 +1897,7 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                                          ontologySchema = ApiV2Complex,
                                          maybeValueHasString = Some("this is some other text with standoff"),
                                          standoff = Vector(sampleStandoffForErasingResource.head),
-                                         mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                                         mappingIri = Some(StandoffMappingIri.StandardMapping),
                                          mapping = standardMapping,
                                          textValueType = TextValueType.FormattedText,
                                        ),

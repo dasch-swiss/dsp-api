@@ -22,7 +22,6 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
@@ -48,6 +47,7 @@ import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -55,6 +55,7 @@ import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.WithAsIs
@@ -911,7 +912,7 @@ case class TextValueContentV2(
   textValueType: TextValueType,
   valueHasLanguage: Option[String] = None,
   standoff: Seq[StandoffTagV2] = Vector.empty,
-  mappingIri: Option[IRI] = None,
+  mappingIri: Option[StandoffMappingIri] = None,
   mapping: Option[MappingXMLtoStandoff] = None,
   xslt: Option[String] = None,
   comment: Option[String] = None,
@@ -1179,10 +1180,10 @@ object TextValueContentV2 {
                                   )
 
           textType =
-            if (mappingResponse.mappingIri == OntologyConstants.KnoraBase.StandardMapping) {
+            if (mappingResponse.mappingIri.value == OntologyConstants.KnoraBase.StandardMapping) {
               TextValueType.FormattedText
             } else {
-              TextValueType.CustomFormattedText(InternalIri(mappingResponse.mappingIri))
+              TextValueType.CustomFormattedText(InternalIri(mappingResponse.mappingIri.value))
             }
         } yield TextValueContentV2(
           ontologySchema = ApiV2Complex,
@@ -1211,17 +1212,16 @@ object TextValueContentV2 {
              case Some(s)                    => Right(Some(s))
   } yield iri
 
-  def from(r: Resource): ZIO[MessageRelay, IRI, TextValueContentV2] = for {
-    messageRelay          <- ZIO.service[MessageRelay]
-    maybeValueAsString    <- ZIO.fromEither(objectSparqlStringOption(r, ValueAsString))
-    maybeValueHasLanguage <- ZIO.fromEither(objectSparqlStringOption(r, TextValueHasLanguage))
-    maybeTextValueAsXml   <- ZIO.fromEither(r.objectStringOption(TextValueAsXml))
-    comment               <- ZIO.fromEither(objectCommentOption(r))
-    mappingIriOption      <- ZIO.fromEither(r.objectUriOption(TextValueHasMapping))
-    maybeMappingResponse  <- ZIO
-                              .foreach(mappingIriOption) { mappingIri =>
-                                messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri))
-                              }
+  def from(r: Resource): ZIO[StandoffMappingService, IRI, TextValueContentV2] = for {
+    standoffMappingService <- ZIO.service[StandoffMappingService]
+    maybeValueAsString     <- ZIO.fromEither(objectSparqlStringOption(r, ValueAsString))
+    maybeValueHasLanguage  <- ZIO.fromEither(objectSparqlStringOption(r, TextValueHasLanguage))
+    maybeTextValueAsXml    <- ZIO.fromEither(r.objectStringOption(TextValueAsXml))
+    comment                <- ZIO.fromEither(objectCommentOption(r))
+    mappingIriOption       <- ZIO.fromEither(r.objectUriOption(TextValueHasMapping))
+    maybeMappingIri        <- ZIO.foreach(mappingIriOption)(s => ZIO.fromEither(StandoffMappingIri.from(s)))
+    maybeMappingResponse   <- ZIO
+                              .foreach(maybeMappingIri)(standoffMappingService.getMappingV2)
                               .mapError(_.getMessage)
     textValue <-
       getTextValue(maybeValueAsString, maybeTextValueAsXml, maybeValueHasLanguage, maybeMappingResponse, comment)
