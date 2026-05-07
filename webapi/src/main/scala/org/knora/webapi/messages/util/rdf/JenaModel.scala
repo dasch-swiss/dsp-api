@@ -334,6 +334,11 @@ object JenaNodeFactory {
       value1.getDatatype == value2.getDatatype && value1.getValue.equals(value2.getValue)
   }
 
+  // Jena 6 removed the eager `static { reset(); }` block from TypeMapper, so
+  // TypeMapper.getInstance() returns null until JenaSystem.init() has run the
+  // subsystem initializer that calls TypeMapper.reset(). Force init here.
+  jena.sys.JenaSystem.init()
+
   // Jena's registry of datatypes.
   private val typeMapper = jena.datatypes.TypeMapper.getInstance
 
