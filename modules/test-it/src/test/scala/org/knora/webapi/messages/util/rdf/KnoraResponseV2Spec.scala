@@ -8,6 +8,7 @@ package org.knora.webapi.messages.util.rdf
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio.Runtime
+import zio.Unsafe
 
 import java.nio.file.Paths
 
@@ -16,7 +17,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.KnoraTurtleResponseV2
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.FileUtil
 
 /**
@@ -24,7 +24,8 @@ import org.knora.webapi.util.FileUtil
  */
 class KnoraResponseV2Spec extends AnyWordSpec with Matchers {
 
-  private val appConfig          = UnsafeZioRun.runOrThrow(AppConfig.parseConfig)(Runtime.default)
+  private val appConfig =
+    Unsafe.unsafe(implicit u => Runtime.default.unsafe.run(AppConfig.parseConfig).getOrThrowFiberFailure())
   private val _: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val turtle =
