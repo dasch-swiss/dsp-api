@@ -372,13 +372,6 @@ case class ApplicationLockException(message: String) extends InternalServerExcep
 case class TransactionManagementException(message: String) extends InternalServerException(message)
 
 /**
- * Indicates that an Akka actor received an unexpected message.
- *
- * @param message a description of the error.
- */
-case class UnexpectedMessageException(message: String) extends InternalServerException(message)
-
-/**
  * Indicates that an error occurred in the application's cache.
  *
  * @param message a description of the error.
