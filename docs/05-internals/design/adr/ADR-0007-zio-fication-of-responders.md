@@ -4,7 +4,7 @@ Date: 2023-02-20
 
 ## Status
 
-Accepted
+Superseded — the ZIO migration is complete. `MessageRelay`, `MessageHandler`, `RelayedMessage`, `RoutingActor`, and `AppRouterRelayingMessageHandler` no longer exist; responders communicate via direct service calls. This ADR is retained for historical context.
 
 ## Context
 
