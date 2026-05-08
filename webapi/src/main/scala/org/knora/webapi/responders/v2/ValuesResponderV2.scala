@@ -14,7 +14,6 @@ import scala.PartialFunction.cond
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
@@ -69,7 +68,6 @@ final class ValuesResponderV2(
   auth: AuthorizationRestService,
   iriConverter: IriConverter,
   iriService: IriService,
-  messageRelay: MessageRelay,
   ontologyCacheHelpers: OntologyCacheHelpers,
   ontologyRepo: OntologyRepo,
   ontologyResponder: OntologyResponderV2,
@@ -1487,12 +1485,10 @@ final class ValuesResponderV2(
   private def checkResourceIris(targetResourceIris: Set[ResourceIri], requestingUser: User): Task[Unit] =
     ZIO
       .unless(targetResourceIris.isEmpty) {
-        messageRelay.ask[ReadResourcesSequenceV2](
-          ResourcesPreviewGetRequestV2(
-            resourceIris = targetResourceIris.toSeq,
-            targetSchema = ApiV2Complex,
-            requestingUser = requestingUser,
-          ),
+        readResources.getResourcePreviewWithDeletedResource(
+          resourceIris = targetResourceIris.toSeq,
+          targetSchema = ApiV2Complex,
+          requestingUser = requestingUser,
         )
       }
       .unit
@@ -1571,15 +1567,11 @@ final class ValuesResponderV2(
   ): Task[Unit] =
     for {
       // Get a preview of the target resource, because we only need to find out its class and whether the user has permission to view it.
-      resourcePreviewRequest <- ZIO.succeed(
-                                  ResourcesPreviewGetRequestV2(
-                                    resourceIris = Seq(linkValueContent.referredResourceIri),
-                                    targetSchema = ApiV2Complex,
-                                    requestingUser = requestingUser,
-                                  ),
-                                )
-
-      resourcePreviewResponse <- messageRelay.ask[ReadResourcesSequenceV2](resourcePreviewRequest)
+      resourcePreviewResponse <- readResources.getResourcePreviewWithDeletedResource(
+                                   resourceIris = Seq(linkValueContent.referredResourceIri),
+                                   targetSchema = ApiV2Complex,
+                                   requestingUser = requestingUser,
+                                 )
 
       // If we get a resource, we know the user has permission to view it.
       resource <- resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)

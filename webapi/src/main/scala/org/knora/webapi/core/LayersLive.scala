@@ -72,7 +72,6 @@ object LayersLive { self =>
     InfrastructureModule.Provided &
     IriService &
     ListsResponder &
-    MessageRelay &
     OntologyInferencer &
     OntologyModule.Provided &
     OntologyResponderV2 &
@@ -119,7 +118,6 @@ object LayersLive { self =>
       IriService.layer,
       KnoraResponseRenderer.layer,
       ListsResponder.layer,
-      MessageRelayLive.layer,
       OntologyModule.layer,
       OntologyResponderV2.layer,
       OtelSetup.layer,
