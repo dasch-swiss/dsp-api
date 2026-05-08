@@ -74,13 +74,6 @@ case class StandoffEntityInfoGetResponseV2(
 case class CheckSubClassResponseV2(isSubClass: Boolean)
 
 /**
- * Provides information about the subclasses of a Knora resource class.
- *
- * @param subClasses a list of [[SubClassInfoV2]] representing the subclasses of the specified class.
- */
-case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
-
-/**
  * Represents the contents of an ontology to be returned in an API response.
  *
  * @param ontologyMetadata metadata about the ontology.
@@ -1967,14 +1960,6 @@ object IndividualInfoContentV2 {
 
   }
 }
-
-/**
- * Represents information about a subclass of a resource class.
- *
- * @param id    the IRI of the subclass.
- * @param label the `rdfs:label` of the subclass.
- */
-case class SubClassInfoV2(id: SmartIri, label: String)
 
 /**
  * Returns metadata about an ontology.
