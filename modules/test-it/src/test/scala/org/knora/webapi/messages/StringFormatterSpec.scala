@@ -8,6 +8,7 @@ package org.knora.webapi.messages
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio.Runtime
+import zio.Unsafe
 
 import java.time.Instant
 
@@ -16,7 +17,6 @@ import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.common.ResourceIri
 
 /**
@@ -24,8 +24,7 @@ import org.knora.webapi.slice.common.ResourceIri
  */
 class StringFormatterSpec extends AnyWordSpec with Matchers {
   private implicit val stringFormatter: StringFormatter = {
-    val runtime = Runtime.default
-    val config  = UnsafeZioRun.runOrThrow(AppConfig.parseConfig)(runtime)
+    val config = Unsafe.unsafe(implicit u => Runtime.default.unsafe.run(AppConfig.parseConfig).getOrThrowFiberFailure())
     StringFormatter.init(config)
     StringFormatter.getGeneralInstance
   }
