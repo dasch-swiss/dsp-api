@@ -7,7 +7,6 @@ package org.knora.webapi.messages.v2.responder.listsmessages
 
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -21,7 +20,7 @@ import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 /**
  * An abstract trait representing a Knora v2 API request message that can be sent to `ListsResponderV2`.
  */
-sealed trait ListsResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
+sealed trait ListsResponderRequestV2 extends KnoraRequestV2
 
 /**
  * An abstract trait providing a convenience method for language handling.

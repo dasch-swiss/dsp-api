@@ -15,10 +15,8 @@ import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.*
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.*
@@ -34,55 +32,6 @@ import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
-
-/**
- * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
- */
-sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage {
-
-  /**
-   * The user that made the request.
-   */
-  def requestingUser: User
-}
-
-/**
- * Requests a description of a resource. A successful response will be a [[ReadResourcesSequenceV2]].
- *
- * @param resourceIris         the IRIs of the resources to be queried.
- * @param propertyIri          if defined, requests only the values of the specified explicit property.
- * @param withDeleted          if defined, returns a deleted resource or a deleted value.
- * @param valueUuid            if defined, requests only the value with the specified UUID.
- * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
- * @param targetSchema         the target API schema.
- * @param schemaOptions        the schema options submitted with the request.
- * @param requestingUser       the user making the request.
- */
-case class ResourcesGetRequestV2(
-  resourceIris: Seq[ResourceIri],
-  propertyIri: Option[SmartIri] = None,
-  valueUuid: Option[UUID] = None,
-  versionDate: Option[Instant] = None,
-  withDeleted: Boolean = true,
-  targetSchema: ApiV2Schema,
-  schemaOptions: Set[Rendering] = Set.empty,
-  requestingUser: User,
-) extends ResourcesResponderRequestV2
-
-/**
- * Requests a preview of one or more resources. A successful response will be a [[ReadResourcesSequenceV2]].
- *
- * @param resourceIris         the IRIs of the resources to obtain a preview for.
- * @param withDeletedResource  indicates if a preview of deleted resource should be returned.
- * @param targetSchema         the schema of the response.
- * @param requestingUser       the user making the request.
- */
-case class ResourcesPreviewGetRequestV2(
-  resourceIris: Seq[ResourceIri],
-  withDeletedResource: Boolean = true,
-  targetSchema: ApiV2Schema,
-  requestingUser: User,
-) extends ResourcesResponderRequestV2
 
 /**
  * Represents a IIIF manifest for the images that are `knora-base:isPartOf` the specified
@@ -113,7 +62,7 @@ case class ResourceVersionHistoryGetRequestV2(
   startDate: Option[Instant] = None,
   endDate: Option[Instant] = None,
   requestingUser: User,
-) extends ResourcesResponderRequestV2
+)
 
 /**
  * Represents an item in the version history of a resource.
@@ -588,7 +537,7 @@ case class CreateResourceRequestV2(
   createResource: CreateResourceV2,
   requestingUser: User,
   apiRequestID: UUID,
-) extends ResourcesResponderRequestV2
+)
 
 /**
  * Represents a request to update a resource's metadata.
