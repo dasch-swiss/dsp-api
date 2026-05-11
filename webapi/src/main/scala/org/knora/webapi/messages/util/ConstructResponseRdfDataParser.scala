@@ -5,6 +5,8 @@
 
 package org.knora.webapi.messages.util
 
+import zio.*
+
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
@@ -22,6 +24,10 @@ import org.knora.webapi.slice.common.ValueIri
 /**
  * Parser phase of `ConstructResponseUtilV2`: turns a [[SparqlExtendedConstructResponse]] into the
  * `ConstructResponseRdfData` tree (resources, their values, nested dependent resources, incoming links).
+ *
+ * Conversions of repository IRI strings into typed value objects (e.g. [[ResourceIri]]) fail with an
+ * [[InconsistentRepositoryDataException]] — a malformed IRI in CONSTRUCT results means the repository
+ * is inconsistent, not a client error.
  */
 private[util] object ConstructResponseRdfDataParser {
 
@@ -38,6 +44,9 @@ private[util] object ConstructResponseRdfDataParser {
     maybeUserPermission: Option[Permission.ObjectAccess],
   )
 
+  private def asResourceIri(iri: IRI): IO[InconsistentRepositoryDataException, ResourceIri] =
+    ZIO.fromEither(ResourceIri.from(iri)).mapError(InconsistentRepositoryDataException.apply)
+
   /**
    * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
    * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values,
@@ -47,7 +56,9 @@ private[util] object ConstructResponseRdfDataParser {
   def splitMainResourcesAndValueRdfData(
     constructQueryResults: SparqlExtendedConstructResponse,
     requestingUser: User,
-  )(implicit stringFormatter: StringFormatter): MainResourcesAndValueRdfData = {
+  )(implicit
+    stringFormatter: StringFormatter,
+  ): IO[InconsistentRepositoryDataException, MainResourcesAndValueRdfData] = {
 
     // Make sure all the subjects are IRIs, because blank nodes are not used in resources.
     val resultsWithIriSubjects: Statements = constructQueryResults.statements.map {
@@ -65,93 +76,115 @@ private[util] object ConstructResponseRdfDataParser {
           .contains(IriLiteralV2(OntologyConstants.KnoraBase.Resource))
     }
 
-    val resourceStatements: ResourceStatements =
-      resourceStatementsRaw.map { case (resourceIri, statements) =>
-        ResourceIri.unsafeFrom(resourceIri) -> statements
-      }
+    for {
+      resourceStatements <- ZIO
+                              .foreach(resourceStatementsRaw.toSeq) { case (resourceIri, statements) =>
+                                asResourceIri(resourceIri).map(_ -> statements)
+                              }
+                              .map(_.toMap: ResourceStatements)
 
-    val flatResourcesWithValues: RdfResources = resourceStatements.map {
-      case (resourceIri: ResourceIri, assertions: ConstructPredicateObjects) =>
-        // Drop inferred statements (every resource is a knora-base:Resource, every value property is a
-        // sub-property of knora-base:hasValue, every main resource has knora-base:isMainResource true).
-        val assertionsExplicit: ConstructPredicateObjects = assertions.filterNot { case (pred: SmartIri, _) =>
-          inferredPredicates(pred.toString)
-        }.map { case (pred: SmartIri, objs: Seq[LiteralV2]) =>
-          if (pred.toString == OntologyConstants.Rdf.Type) {
-            pred -> objs.filterNot {
-              case IriLiteralV2(OntologyConstants.KnoraBase.Resource) => true
-              case _                                                  => false
-            }
-          } else {
-            pred -> objs
-          }
+      flatResourcesWithValues: RdfResources =
+        resourceStatements.map { case (resourceIri: ResourceIri, assertions: ConstructPredicateObjects) =>
+          buildResourceWithValueRdfData(
+            resourceIri,
+            assertions,
+            requestingUser,
+            nonResourceStatements,
+          )
         }
 
-        val isMainResource: Boolean = assertions.get(OntologyConstants.KnoraBase.IsMainResource.toSmartIri) match {
-          case Some(Seq(BooleanLiteralV2(value))) => value
-          case _                                  => false
-        }
+      (visibleResources, hiddenResources) = flatResourcesWithValues.partition { case (_, r) =>
+                                              r.userPermission.nonEmpty
+                                            }
+      (mainResourceIrisVisible, dependentResourceIrisVisible) = visibleResources.toSet.partitionMap { case (iri, r) =>
+                                                                  Either.cond(!r.isMainResource, iri, iri)
+                                                                }
+      (mainResourceIrisNotVisible, dependentResourceIrisNotVisible) = hiddenResources.toSet.partitionMap {
+                                                                        case (iri, r) =>
+                                                                          Either.cond(!r.isMainResource, iri, iri)
+                                                                      }
+      incomingLinksForResource = getIncomingLink(visibleResources, flatResourcesWithValues)
 
-        val valueObjectIris: Set[IRI] = assertions.collect {
-          case (pred: SmartIri, objs: Seq[LiteralV2]) if pred.toString == OntologyConstants.KnoraBase.HasValue =>
-            objs.map {
-              case IriLiteralV2(iri) => iri
-              case other             =>
-                throw InconsistentRepositoryDataException(
-                  s"Unexpected object for $resourceIri knora-base:hasValue: $other",
-                )
-            }
-        }.flatten.toSet
-
-        val valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]] =
-          mapPropertyIrisToValueIris(assertionsExplicit, valueObjectIris)
-
-        val valuePropertyToValueObject: RdfPropertyValues = makeRdfPropertyValuesForResource(
-          valuePropertyToObjectIris = valuePropertyToObjectIris,
-          resourceIri = resourceIri,
-          requestingUser = requestingUser,
-          assertionsExplicit = assertionsExplicit,
-          nonResourceStatements = nonResourceStatements,
-        )
-
-        val userPermission: Option[Permission.ObjectAccess] =
-          PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(resourceIri.value, assertions, requestingUser)
-
-        resourceIri -> ResourceWithValueRdfData(
-          resourceIri = resourceIri,
-          assertions = assertionsExplicit,
-          isMainResource = isMainResource,
-          userPermission = userPermission,
-          valuePropertyAssertions = valuePropertyToValueObject,
-        )
-    }
-
-    val (visibleResources: RdfResources, hiddenResources: RdfResources) = flatResourcesWithValues.partition {
-      case (_: ResourceIri, resource: ResourceWithValueRdfData) => resource.userPermission.nonEmpty
-    }
-
-    val (mainResourceIrisVisible: Set[ResourceIri], dependentResourceIrisVisible: Set[ResourceIri]) =
-      visibleResources.toSet.partitionMap { case (iri, resource) => Either.cond(!resource.isMainResource, iri, iri) }
-
-    val (mainResourceIrisNotVisible: Set[ResourceIri], dependentResourceIrisNotVisible: Set[ResourceIri]) =
-      hiddenResources.toSet.partitionMap { case (iri, resource) => Either.cond(!resource.isMainResource, iri, iri) }
-
-    val incomingLinksForResource: Map[ResourceIri, RdfResources] =
-      getIncomingLink(visibleResources, flatResourcesWithValues)
-
-    MainResourcesAndValueRdfData(
-      resources = mainResourceIrisVisible.map { resourceIri =>
-        resourceIri -> nestResources(
-          depth = 0,
-          resourceIri = resourceIri,
-          flatResourcesWithValues = flatResourcesWithValues,
-          visibleResources = visibleResources,
-          dependentResourceIrisVisible = dependentResourceIrisVisible,
-          dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
-          incomingLinksForResource = incomingLinksForResource,
-        )
-      }.toMap,
+      nestedResources <- ZIO
+                           .foreach(mainResourceIrisVisible.toSeq) { resourceIri =>
+                             nestResources(
+                               depth = 0,
+                               resourceIri = resourceIri,
+                               flatResourcesWithValues = flatResourcesWithValues,
+                               visibleResources = visibleResources,
+                               dependentResourceIrisVisible = dependentResourceIrisVisible,
+                               dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
+                               incomingLinksForResource = incomingLinksForResource,
+                             ).map(resourceIri -> _)
+                           }
+                           .map(_.toMap)
+    } yield MainResourcesAndValueRdfData(
+      resources = nestedResources,
       hiddenResourceIris = mainResourceIrisNotVisible ++ dependentResourceIrisNotVisible,
+    )
+  }
+
+  /**
+   * Builds a single [[ResourceWithValueRdfData]] from a resource's raw assertions. Pure: no IRI parsing
+   * happens here because the caller has already constructed the typed [[ResourceIri]].
+   */
+  private def buildResourceWithValueRdfData(
+    resourceIri: ResourceIri,
+    assertions: ConstructPredicateObjects,
+    requestingUser: User,
+    nonResourceStatements: Statements,
+  )(implicit stringFormatter: StringFormatter): (ResourceIri, ResourceWithValueRdfData) = {
+    // Drop inferred statements (every resource is a knora-base:Resource, every value property is a
+    // sub-property of knora-base:hasValue, every main resource has knora-base:isMainResource true).
+    val assertionsExplicit: ConstructPredicateObjects = assertions.filterNot { case (pred: SmartIri, _) =>
+      inferredPredicates(pred.toString)
+    }.map { case (pred: SmartIri, objs: Seq[LiteralV2]) =>
+      if (pred.toString == OntologyConstants.Rdf.Type) {
+        pred -> objs.filterNot {
+          case IriLiteralV2(OntologyConstants.KnoraBase.Resource) => true
+          case _                                                  => false
+        }
+      } else {
+        pred -> objs
+      }
+    }
+
+    val isMainResource: Boolean = assertions.get(OntologyConstants.KnoraBase.IsMainResource.toSmartIri) match {
+      case Some(Seq(BooleanLiteralV2(value))) => value
+      case _                                  => false
+    }
+
+    val valueObjectIris: Set[IRI] = assertions.collect {
+      case (pred: SmartIri, objs: Seq[LiteralV2]) if pred.toString == OntologyConstants.KnoraBase.HasValue =>
+        objs.map {
+          case IriLiteralV2(iri) => iri
+          case other             =>
+            throw InconsistentRepositoryDataException(
+              s"Unexpected object for $resourceIri knora-base:hasValue: $other",
+            )
+        }
+    }.flatten.toSet
+
+    val valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]] =
+      mapPropertyIrisToValueIris(assertionsExplicit, valueObjectIris)
+
+    val valuePropertyToValueObject: RdfPropertyValues = makeRdfPropertyValuesForResource(
+      valuePropertyToObjectIris = valuePropertyToObjectIris,
+      resourceIri = resourceIri,
+      requestingUser = requestingUser,
+      assertionsExplicit = assertionsExplicit,
+      nonResourceStatements = nonResourceStatements,
+    )
+
+    val userPermission: Option[Permission.ObjectAccess] =
+      PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(resourceIri.value, assertions, requestingUser)
+
+    resourceIri -> ResourceWithValueRdfData(
+      resourceIri = resourceIri,
+      assertions = assertionsExplicit,
+      isMainResource = isMainResource,
+      userPermission = userPermission,
+      valuePropertyAssertions = valuePropertyToValueObject,
     )
   }
 
@@ -309,69 +342,75 @@ private[util] object ConstructResponseRdfDataParser {
     dependentResourceIrisNotVisible: Set[ResourceIri],
     incomingLinksForResource: Map[ResourceIri, RdfResources],
     alreadyTraversed: Set[ResourceIri] = Set.empty,
-  )(implicit stringFormatter: StringFormatter): ResourceWithValueRdfData = {
+  )(implicit stringFormatter: StringFormatter): IO[InconsistentRepositoryDataException, ResourceWithValueRdfData] = {
     val resource = visibleResources(resourceIri)
 
-    if (depth > 15) {
-      resource
-    } else {
-      val transformedValuePropertyAssertions: RdfPropertyValues = resource.valuePropertyAssertions.map {
-        case (propIri: SmartIri, values: Seq[ValueRdfData]) =>
-          val transformedValues: Seq[ValueRdfData] = transformValuesByNestingResources(
-            depth = depth + 1,
-            values = values,
-            flatResourcesWithValues = flatResourcesWithValues,
-            visibleResources = visibleResources,
-            dependentResourceIrisVisible = dependentResourceIrisVisible,
-            dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
-            incomingLinksForResource = incomingLinksForResource,
-            alreadyTraversed = alreadyTraversed + resourceIri,
-          )
+    if (depth > 15) ZIO.succeed(resource)
+    else {
+      for {
+        transformedValuePropertyAssertions <-
+          ZIO
+            .foreach(resource.valuePropertyAssertions.toSeq) { case (propIri, values) =>
+              transformValuesByNestingResources(
+                depth = depth + 1,
+                values = values,
+                flatResourcesWithValues = flatResourcesWithValues,
+                visibleResources = visibleResources,
+                dependentResourceIrisVisible = dependentResourceIrisVisible,
+                dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
+                incomingLinksForResource = incomingLinksForResource,
+                alreadyTraversed = alreadyTraversed + resourceIri,
+              ).map(propIri -> _)
+            }
+            .map(_.filter { case (_, vs) => vs.nonEmpty }.toMap: RdfPropertyValues)
 
-          propIri -> transformedValues
-      }.filter { case (_, values) => values.nonEmpty }
+        // Ignore already-traversed sources and main resources (those are already on the top level and would
+        // otherwise create circular dependencies).
+        referringResources = incomingLinksForResource(resourceIri).filterNot { case (incomingResIri, _) =>
+                               alreadyTraversed(incomingResIri) || flatResourcesWithValues(
+                                 incomingResIri,
+                               ).isMainResource
+                             }
 
-      // Ignore already-traversed sources and main resources (those are already on the top level and would
-      // otherwise create circular dependencies).
-      val referringResources: RdfResources = incomingLinksForResource(resourceIri).filterNot {
-        case (incomingResIri: ResourceIri, _: ResourceWithValueRdfData) =>
-          alreadyTraversed(incomingResIri) || flatResourcesWithValues(incomingResIri).isMainResource
-      }
+        incomingLinkAssertions: RdfPropertyValues = referringResources.values.foldLeft(emptyRdfPropertyValues) {
+                                                      case (acc, assertions) =>
+                                                        assertions.valuePropertyAssertions.flatMap {
+                                                          case (propIri, values) =>
+                                                            if (acc.contains(propIri))
+                                                              acc + (propIri -> (acc(propIri) ++ values)
+                                                                .sortBy(_.subjectIri))
+                                                            else acc + (propIri -> values.sortBy(_.subjectIri))
+                                                        }
+                                                    }
 
-      val incomingLinkAssertions: RdfPropertyValues = referringResources.values.foldLeft(emptyRdfPropertyValues) {
-        case (acc: RdfPropertyValues, assertions: ResourceWithValueRdfData) =>
-          assertions.valuePropertyAssertions.flatMap { case (propIri: SmartIri, values: Seq[ValueRdfData]) =>
-            if (acc.contains(propIri)) acc + (propIri -> (acc(propIri) ++ values).sortBy(_.subjectIri))
-            else acc + (propIri                       -> values.sortBy(_.subjectIri))
-          }
-      }
-
-      if (incomingLinkAssertions.nonEmpty) {
-        val incomingProps: (SmartIri, Seq[ValueRdfData]) =
-          OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri -> incomingLinkAssertions.values.toSeq.flatten.map {
-            (linkValue: ValueRdfData) =>
-              val sourceIri: ResourceIri = ResourceIri.unsafeFrom(
-                linkValue.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri),
-              )
-              val source = Some(
-                nestResources(
-                  depth = depth + 1,
-                  resourceIri = sourceIri,
-                  flatResourcesWithValues = flatResourcesWithValues,
-                  visibleResources = visibleResources,
-                  dependentResourceIrisVisible = dependentResourceIrisVisible,
-                  dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
-                  incomingLinksForResource = incomingLinksForResource,
-                  alreadyTraversed = alreadyTraversed + resourceIri,
-                ),
-              )
-              linkValue.copy(nestedResource = source, isIncomingLink = true)
-          }
-
-        resource.copy(valuePropertyAssertions = transformedValuePropertyAssertions + incomingProps)
-      } else {
-        resource.copy(valuePropertyAssertions = transformedValuePropertyAssertions)
-      }
+        result <- if (incomingLinkAssertions.isEmpty)
+                    ZIO.succeed(resource.copy(valuePropertyAssertions = transformedValuePropertyAssertions))
+                  else
+                    ZIO
+                      .foreach(incomingLinkAssertions.values.toSeq.flatten) { linkValue =>
+                        for {
+                          sourceIri <-
+                            asResourceIri(linkValue.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri))
+                          source <- nestResources(
+                                      depth = depth + 1,
+                                      resourceIri = sourceIri,
+                                      flatResourcesWithValues = flatResourcesWithValues,
+                                      visibleResources = visibleResources,
+                                      dependentResourceIrisVisible = dependentResourceIrisVisible,
+                                      dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
+                                      incomingLinksForResource = incomingLinksForResource,
+                                      alreadyTraversed = alreadyTraversed + resourceIri,
+                                    )
+                        } yield linkValue.copy(nestedResource = Some(source), isIncomingLink = true)
+                      }
+                      .map { incomingLinkValues =>
+                        val incomingProps =
+                          OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri -> incomingLinkValues
+                        resource.copy(
+                          valuePropertyAssertions = transformedValuePropertyAssertions + incomingProps,
+                        )
+                      }
+      } yield result
     }
   }
 
@@ -389,35 +428,31 @@ private[util] object ConstructResponseRdfDataParser {
     dependentResourceIrisNotVisible: Set[ResourceIri],
     incomingLinksForResource: Map[ResourceIri, RdfResources],
     alreadyTraversed: Set[ResourceIri],
-  )(implicit stringFormatter: StringFormatter): Seq[ValueRdfData] =
-    values.foldLeft(Vector.empty[ValueRdfData]) { case (acc: Vector[ValueRdfData], value: ValueRdfData) =>
+  )(implicit stringFormatter: StringFormatter): IO[InconsistentRepositoryDataException, Seq[ValueRdfData]] =
+    ZIO.foldLeft(values)(Vector.empty[ValueRdfData]) { (acc, value) =>
       if (value.valueObjectClass.toString == OntologyConstants.KnoraBase.LinkValue) {
-        val dependentResourceIri: ResourceIri =
-          ResourceIri.unsafeFrom(value.requireIriObject(OntologyConstants.Rdf.Object.toSmartIri))
-
-        if (alreadyTraversed(dependentResourceIri)) {
-          acc :+ value
-        } else if (dependentResourceIrisVisible.contains(dependentResourceIri)) {
-          val dependentResource = nestResources(
-            depth = depth + 1,
-            resourceIri = dependentResourceIri,
-            flatResourcesWithValues = flatResourcesWithValues,
-            visibleResources = visibleResources,
-            dependentResourceIrisVisible = dependentResourceIrisVisible,
-            dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
-            incomingLinksForResource = incomingLinksForResource,
-            alreadyTraversed = alreadyTraversed + dependentResourceIri,
-          )
-          acc :+ value.copy(nestedResource = Some(dependentResource))
-        } else if (dependentResourceIrisNotVisible.contains(dependentResourceIri)) {
-          // User isn't allowed to see the dependent resource — drop the link value.
-          acc
-        } else {
-          // Dependent resource is marked as deleted — keep the link value without a nested resource.
-          acc :+ value
-        }
+        for {
+          dependentResourceIri <- asResourceIri(value.requireIriObject(OntologyConstants.Rdf.Object.toSmartIri))
+          result               <-
+            if (alreadyTraversed(dependentResourceIri)) ZIO.succeed(acc :+ value)
+            else if (dependentResourceIrisVisible.contains(dependentResourceIri))
+              nestResources(
+                depth = depth + 1,
+                resourceIri = dependentResourceIri,
+                flatResourcesWithValues = flatResourcesWithValues,
+                visibleResources = visibleResources,
+                dependentResourceIrisVisible = dependentResourceIrisVisible,
+                dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
+                incomingLinksForResource = incomingLinksForResource,
+                alreadyTraversed = alreadyTraversed + dependentResourceIri,
+              ).map(dep => acc :+ value.copy(nestedResource = Some(dep)))
+            // User isn't allowed to see the dependent resource — drop the link value.
+            else if (dependentResourceIrisNotVisible.contains(dependentResourceIri)) ZIO.succeed(acc)
+            // Dependent resource is marked as deleted — keep the link value without a nested resource.
+            else ZIO.succeed(acc :+ value)
+        } yield result
       } else {
-        acc :+ value
+        ZIO.succeed(acc :+ value)
       }
     }
 }

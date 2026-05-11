@@ -55,13 +55,14 @@ final class ConstructResponseUtilV2(
 
   /**
    * Turns a SPARQL CONSTRUCT response into a [[MainResourcesAndValueRdfData]] tree (resources, values,
-   * nested dependent resources, incoming links). Pure data transformation — see
-   * [[ConstructResponseRdfDataParser]] for the implementation.
+   * nested dependent resources, incoming links). Fails with [[InconsistentRepositoryDataException]] if
+   * the response contains a malformed resource IRI. See [[ConstructResponseRdfDataParser]] for the
+   * implementation.
    */
   def splitMainResourcesAndValueRdfData(
     constructQueryResults: SparqlExtendedConstructResponse,
     requestingUser: User,
-  ): MainResourcesAndValueRdfData =
+  ): IO[InconsistentRepositoryDataException, MainResourcesAndValueRdfData] =
     ConstructResponseRdfDataParser.splitMainResourcesAndValueRdfData(constructQueryResults, requestingUser)
 
   /**

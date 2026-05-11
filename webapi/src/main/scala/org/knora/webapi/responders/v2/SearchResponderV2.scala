@@ -624,7 +624,7 @@ final class SearchResponderV2Live(
             query          <- constructTransformer.transform(mainQuery).map(_.toSparql)
             searchResponse <- triplestore.query(Construct.gravsearch(query)).flatMap(_.asExtended)
             // separate resources and value objects
-            queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
+            queryResultsSep <- constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
           } yield queryResultsSep
         } else {
           // the prequery returned no results, no further query is necessary
@@ -880,7 +880,7 @@ final class SearchResponderV2Live(
             mainQueryResponse <- triplestore.query(Construct.gravsearch(mainQuery)).flatMap(_.asExtended)
 
             // Filter out values that the user doesn't have permission to see.
-            queryResultsFilteredForPermissions =
+            queryResultsFilteredForPermissions <-
               constructResponseUtilV2.splitMainResourcesAndValueRdfData(mainQueryResponse, user)
 
             // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
@@ -1073,10 +1073,10 @@ final class SearchResponderV2Live(
             resourceRequestResponse <- triplestore.query(resourceRequestSparql).flatMap(_.asExtended)
 
             // separate resources and values
-            mainResourcesAndValueRdfData = constructResponseUtilV2.splitMainResourcesAndValueRdfData(
-                                             resourceRequestResponse,
-                                             requestingUser,
-                                           )
+            mainResourcesAndValueRdfData <- constructResponseUtilV2.splitMainResourcesAndValueRdfData(
+                                              resourceRequestResponse,
+                                              requestingUser,
+                                            )
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappings <-
@@ -1221,7 +1221,7 @@ final class SearchResponderV2Live(
                           }
 
       // separate resources and value objects
-      mainResourcesAndValueRdfData =
+      mainResourcesAndValueRdfData <-
         constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResourceByLabelResponse, requestingUser)
       apiResponse <- constructResponseUtilV2.createApiResponse(
                        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
