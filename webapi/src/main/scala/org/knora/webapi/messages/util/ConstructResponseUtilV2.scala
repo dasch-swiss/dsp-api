@@ -247,7 +247,7 @@ final class ConstructResponseUtilV2(
     requestingUser: User,
     assertionsExplicit: ConstructPredicateObjects,
     nonResourceStatements: Statements,
-  )(implicit stringFormatter: StringFormatter): RdfPropertyValues = {
+  )(implicit stringFormatter: StringFormatter): RdfPropertyValues =
     valuePropertyToObjectIris.map { case (property: SmartIri, valObjIris: Seq[IRI]) =>
       // Make an RdfWithUserPermission for each value of the property.
       val rdfWithUserPermissionsForValues: Seq[(IRI, RdfWithUserPermission)] = valObjIris.map { (valObjIri: IRI) =>
@@ -286,6 +286,7 @@ final class ConstructResponseUtilV2(
       // Make a ValueRdfData for each value object.
       val valueRdfDataForProperty: Seq[ValueRdfData] = visibleRdfWithUserPermissionsForValues.flatMap {
         case (valObjIri: IRI, valueRdfWithUserPermission: RdfWithUserPermission) =>
+          val valueIri = ValueIri.unsafeFrom(valObjIri)
           // get all the standoff node IRIs possibly belonging to this value object
           val standoffNodeIris: Set[IRI] = valueRdfWithUserPermission.assertions.collect {
             case (pred: SmartIri, objs: Seq[LiteralV2])
@@ -307,14 +308,14 @@ final class ConstructResponseUtilV2(
           val rdfTypeLiteral: LiteralV2 = valueRdfWithUserPermission.assertions
             .getOrElse(
               OntologyConstants.Rdf.Type.toSmartIri,
-              throw InconsistentRepositoryDataException(s"Value $valObjIri has no rdf:type"),
+              throw InconsistentRepositoryDataException(s"Value $valueIri has no rdf:type"),
             )
             .head
 
           val valueObjectClass: SmartIri = rdfTypeLiteral
             .as[IriLiteralV2]()
             .getOrElse(
-              throw InconsistentRepositoryDataException(s"Unexpected object of $valObjIri rdf:type: $rdfTypeLiteral"),
+              throw InconsistentRepositoryDataException(s"Unexpected object of $valueIri rdf:type: $rdfTypeLiteral"),
             )
             .value
             .toSmartIri
@@ -324,7 +325,7 @@ final class ConstructResponseUtilV2(
             // create a link value object
             Some(
               ValueRdfData(
-                subjectIri = valObjIri,
+                valueIri = valueIri,
                 valueObjectClass = valueObjectClass,
                 userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
                 assertions = valueRdfWithUserPermission.assertions,
@@ -336,7 +337,7 @@ final class ConstructResponseUtilV2(
             // create a non-link value object
             Some(
               ValueRdfData(
-                subjectIri = valObjIri,
+                valueIri = valueIri,
                 valueObjectClass = valueObjectClass,
                 userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
                 assertions = valueRdfWithUserPermission.assertions,
@@ -353,7 +354,6 @@ final class ConstructResponseUtilV2(
       case (_, valObjs: Seq[ValueRdfData]) =>
         valObjs.isEmpty
     }
-  }
 
   /**
    * This method returns all the incoming link for each resource as a map of resource IRI to resources that link to it.
@@ -1139,106 +1139,119 @@ final class ConstructResponseUtilV2(
       resIri <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException.apply)
 
       // get the resource's values
-      valueObjects <- ZIO.foreach(resourceWithValueRdfData.valuePropertyAssertions) { (property, valObjs) =>
-                        val sortedValObjs = valObjs
-                          .sortBy(_.subjectIri)
-                          .sortBy { // order values by value IRI, then by knora-base:valueHasOrder
-                            (valObj: ValueRdfData) =>
-                              // set order to zero if not given
-                              valObj
-                                .maybeIntObject(OntologyConstants.KnoraBase.ValueHasOrder.toSmartIri)
-                                .getOrElse(0)
-                          }
-                        ZIO
-                          .foreach(sortedValObjs) { (valObj: ValueRdfData) =>
-                            for {
-                              valueContent <-
-                                createValueContentV2FromValueRdfData(
-                                  valueObject = valObj,
-                                  mappings = mappings,
-                                  queryStandoff = queryStandoff,
-                                  targetSchema = targetSchema,
-                                  requestingUser = requestingUser,
-                                )
+      valueObjects: Map[SmartIri, Seq[ReadValueV2]] <- ZIO.foreach(resourceWithValueRdfData.valuePropertyAssertions) {
+                                                         (property, valObjs) =>
+                                                           val sortedValObjs = valObjs
+                                                             .sortBy(_.valueIri.value)
+                                                             .sortBy { // order values by value IRI, then by knora-base:valueHasOrder
+                                                               (valObj: ValueRdfData) =>
+                                                                 // set order to zero if not given
+                                                                 valObj
+                                                                   .maybeIntObject(
+                                                                     OntologyConstants.KnoraBase.ValueHasOrder.toSmartIri,
+                                                                   )
+                                                                   .getOrElse(0)
+                                                             }
+                                                           ZIO
+                                                             .foreach(sortedValObjs) { (valObj: ValueRdfData) =>
+                                                               for {
+                                                                 valueContent <-
+                                                                   createValueContentV2FromValueRdfData(
+                                                                     valueObject = valObj,
+                                                                     mappings = mappings,
+                                                                     queryStandoff = queryStandoff,
+                                                                     targetSchema = targetSchema,
+                                                                     requestingUser = requestingUser,
+                                                                   )
 
-                              attachedToUser =
-                                valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
-                              permissions =
-                                valObj.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
-                              valueCreationDate: Instant = valObj.requireDateTimeObject(
-                                                             OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri,
-                                                           )
-                              valueDeletionInfo  = getDeletionInfo(valObj)
-                              valueHasUUID: UUID =
-                                UuidUtil.decode(
-                                  valObj.requireStringObject(OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri),
-                                )
-                              previousValueIri <-
-                                ZIO
-                                  .foreach(
-                                    valObj.maybeIriObject(OntologyConstants.KnoraBase.PreviousValue.toSmartIri),
-                                  )(iri =>
-                                    ZIO
-                                      .fromEither(ValueIri.from(iri))
-                                      .mapError(InconsistentRepositoryDataException.apply),
-                                  )
-                              valueIri <- ZIO
-                                            .fromEither(ValueIri.from(valObj.subjectIri))
-                                            .mapError(InconsistentRepositoryDataException.apply)
+                                                                 attachedToUser =
+                                                                   valObj.requireIriObject(
+                                                                     OntologyConstants.KnoraBase.AttachedToUser.toSmartIri,
+                                                                   )
+                                                                 permissions =
+                                                                   valObj.requireStringObject(
+                                                                     OntologyConstants.KnoraBase.HasPermissions.toSmartIri,
+                                                                   )
+                                                                 valueCreationDate: Instant =
+                                                                   valObj.requireDateTimeObject(
+                                                                     OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri,
+                                                                   )
+                                                                 valueDeletionInfo  = getDeletionInfo(valObj)
+                                                                 valueHasUUID: UUID =
+                                                                   UuidUtil.decode(
+                                                                     valObj.requireStringObject(
+                                                                       OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri,
+                                                                     ),
+                                                                   )
+                                                                 previousValueIri <-
+                                                                   ZIO
+                                                                     .foreach(
+                                                                       valObj.maybeIriObject(
+                                                                         OntologyConstants.KnoraBase.PreviousValue.toSmartIri,
+                                                                       ),
+                                                                     )(iri =>
+                                                                       ZIO
+                                                                         .fromEither(ValueIri.from(iri))
+                                                                         .mapError(
+                                                                           InconsistentRepositoryDataException.apply,
+                                                                         ),
+                                                                     )
+                                                               } yield (valueContent match {
+                                                                 case linkValueContentV2: LinkValueContentV2 =>
+                                                                   val valueHasRefCount: Int =
+                                                                     valObj.requireIntObject(
+                                                                       OntologyConstants.KnoraBase.ValueHasRefCount.toSmartIri,
+                                                                     )
 
-                            } yield (valueContent match {
-                              case linkValueContentV2: LinkValueContentV2 =>
-                                val valueHasRefCount: Int =
-                                  valObj.requireIntObject(OntologyConstants.KnoraBase.ValueHasRefCount.toSmartIri)
+                                                                   ReadLinkValueV2(
+                                                                     valueIri = valObj.valueIri,
+                                                                     attachedToUser = attachedToUser,
+                                                                     permissions = permissions,
+                                                                     userPermission = valObj.userPermission,
+                                                                     valueCreationDate = valueCreationDate,
+                                                                     valueHasUUID = valueHasUUID,
+                                                                     valueContent = linkValueContentV2,
+                                                                     valueHasRefCount = valueHasRefCount,
+                                                                     previousValueIri = previousValueIri,
+                                                                     deletionInfo = valueDeletionInfo,
+                                                                   )
 
-                                ReadLinkValueV2(
-                                  valueIri = valueIri,
-                                  attachedToUser = attachedToUser,
-                                  permissions = permissions,
-                                  userPermission = valObj.userPermission,
-                                  valueCreationDate = valueCreationDate,
-                                  valueHasUUID = valueHasUUID,
-                                  valueContent = linkValueContentV2,
-                                  valueHasRefCount = valueHasRefCount,
-                                  previousValueIri = previousValueIri,
-                                  deletionInfo = valueDeletionInfo,
-                                )
+                                                                 case textValueContentV2: TextValueContentV2 =>
+                                                                   val maybeValueHasMaxStandoffStartIndex: Option[Int] =
+                                                                     valObj.maybeIntObject(
+                                                                       OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri,
+                                                                     )
 
-                              case textValueContentV2: TextValueContentV2 =>
-                                val maybeValueHasMaxStandoffStartIndex: Option[Int] =
-                                  valObj.maybeIntObject(
-                                    OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri,
-                                  )
+                                                                   ReadTextValueV2(
+                                                                     valueIri = valObj.valueIri,
+                                                                     attachedToUser = attachedToUser,
+                                                                     permissions = permissions,
+                                                                     userPermission = valObj.userPermission,
+                                                                     valueCreationDate = valueCreationDate,
+                                                                     valueHasUUID = valueHasUUID,
+                                                                     valueContent = textValueContentV2,
+                                                                     valueHasMaxStandoffStartIndex =
+                                                                       maybeValueHasMaxStandoffStartIndex,
+                                                                     previousValueIri = previousValueIri,
+                                                                     deletionInfo = valueDeletionInfo,
+                                                                   )
 
-                                ReadTextValueV2(
-                                  valueIri = valueIri,
-                                  attachedToUser = attachedToUser,
-                                  permissions = permissions,
-                                  userPermission = valObj.userPermission,
-                                  valueCreationDate = valueCreationDate,
-                                  valueHasUUID = valueHasUUID,
-                                  valueContent = textValueContentV2,
-                                  valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
-                                  previousValueIri = previousValueIri,
-                                  deletionInfo = valueDeletionInfo,
-                                )
-
-                              case otherValueContentV2: ValueContentV2 =>
-                                ReadOtherValueV2(
-                                  valueIri = valueIri,
-                                  attachedToUser = attachedToUser,
-                                  permissions = permissions,
-                                  userPermission = valObj.userPermission,
-                                  valueCreationDate = valueCreationDate,
-                                  valueHasUUID = valueHasUUID,
-                                  valueContent = otherValueContentV2,
-                                  previousValueIri = previousValueIri,
-                                  deletionInfo = valueDeletionInfo,
-                                )
-                            }): ReadValueV2
-                          }
-                          .map(property -> _)
-                      }
+                                                                 case otherValueContentV2: ValueContentV2 =>
+                                                                   ReadOtherValueV2(
+                                                                     valueIri = valObj.valueIri,
+                                                                     attachedToUser = attachedToUser,
+                                                                     permissions = permissions,
+                                                                     userPermission = valObj.userPermission,
+                                                                     valueCreationDate = valueCreationDate,
+                                                                     valueHasUUID = valueHasUUID,
+                                                                     valueContent = otherValueContentV2,
+                                                                     previousValueIri = previousValueIri,
+                                                                     deletionInfo = valueDeletionInfo,
+                                                                   )
+                                                               }): ReadValueV2
+                                                             }
+                                                             .map(property -> _)
+                                                       }
     } yield ReadResourceV2(
       resourceIri = resIri,
       resourceClassIri = resourceClass,
@@ -1571,7 +1584,7 @@ object ConstructResponseUtilV2 {
   /**
    * Represents the RDF data about a value, possibly including standoff.
    *
-   * @param subjectIri       the value object's IRI.
+   * @param valueIri       the value object's IRI.
    * @param valueObjectClass the type (class) of the value object.
    * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[isIncomingLink]]).
    * @param isIncomingLink   indicates if it is an incoming or outgoing link in case of a link value.
@@ -1580,14 +1593,16 @@ object ConstructResponseUtilV2 {
    * @param standoff         standoff assertions, if any.
    */
   case class ValueRdfData(
-    subjectIri: IRI,
+    valueIri: ValueIri,
     valueObjectClass: SmartIri,
     nestedResource: Option[ResourceWithValueRdfData] = None,
     isIncomingLink: Boolean = false,
     userPermission: Permission.ObjectAccess,
     assertions: PredicateObjects,
     standoff: FlatStatements,
-  ) extends RdfData
+  ) extends RdfData {
+    override val subjectIri: IRI = valueIri.value
+  }
 
   /**
    * Represents a resource and its values.
