@@ -882,17 +882,15 @@ final class SearchResponderV2Live(
               constructResponseUtilV2.splitMainResourcesAndValueRdfData(mainQueryResponse, user)
 
             // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
-            queryResWithFullGraphPatternOnlyRequestedValues: Map[
-              IRI,
-              ConstructResponseUtilV2.ResourceWithValueRdfData,
-            ] = MainQueryResultProcessor
-                  .getRequestedValuesFromResultsWithFullGraphPattern(
-                    queryResultsFilteredForPermissions.resources,
-                    valueObjectVarsAndIrisPerMainResource,
-                    allResourceVariablesFromTypeInspection,
-                    dependentResourceIrisFromTypeInspection,
-                    gravsearchToPrequeryTransformer,
-                  )
+            queryResWithFullGraphPatternOnlyRequestedValues: ConstructResponseUtilV2.RdfResources =
+              MainQueryResultProcessor
+                .getRequestedValuesFromResultsWithFullGraphPattern(
+                  queryResultsFilteredForPermissions.resources,
+                  valueObjectVarsAndIrisPerMainResource,
+                  allResourceVariablesFromTypeInspection,
+                  dependentResourceIrisFromTypeInspection,
+                  gravsearchToPrequeryTransformer,
+                )
           } yield queryResultsFilteredForPermissions.copy(
             resources = queryResWithFullGraphPatternOnlyRequestedValues,
           )

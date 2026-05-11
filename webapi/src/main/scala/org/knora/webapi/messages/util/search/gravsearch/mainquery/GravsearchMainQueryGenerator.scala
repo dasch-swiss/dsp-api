@@ -15,6 +15,7 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
+import org.knora.webapi.slice.common.ResourceIri
 
 object GravsearchMainQueryGenerator {
 
@@ -90,7 +91,7 @@ object GravsearchMainQueryGenerator {
    * @param valueObjectVariablesAndValueObjectIris a set of value object Iris organized by value object variable and main resource.
    */
   case class ValueObjectVariablesAndValueObjectIris(
-    valueObjectVariablesAndValueObjectIris: Map[IRI, Map[QueryVariable, Set[IRI]]],
+    valueObjectVariablesAndValueObjectIris: Map[ResourceIri, Map[QueryVariable, Set[IRI]]],
   )
 
   /**
@@ -170,11 +171,11 @@ object GravsearchMainQueryGenerator {
     // value objects variables present in the prequery's WHERE clause
     val valueObjectVariablesConcat = transformer.valueObjectVariablesGroupConcat
 
-    val valueObjVarsAndIris: Map[IRI, Map[QueryVariable, Set[IRI]]] =
-      prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
-        (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
+    val valueObjVarsAndIris: Map[ResourceIri, Map[QueryVariable, Set[IRI]]] =
+      prequeryResponse.results.bindings.foldLeft(Map.empty[ResourceIri, Map[QueryVariable, Set[IRI]]]) {
+        (acc: Map[ResourceIri, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
           // the main resource's Iri
-          val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
+          val mainResIri: ResourceIri = ResourceIri.unsafeFrom(resultRow.rowMap(mainResourceVar.variableName))
 
           // the the variables representing value objects and their Iris
           val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {

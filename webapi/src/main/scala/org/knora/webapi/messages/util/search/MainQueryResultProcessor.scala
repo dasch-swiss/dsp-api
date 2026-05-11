@@ -17,6 +17,7 @@ import org.knora.webapi.messages.util.ConstructResponseUtilV2.ResourceWithValueR
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.ValueRdfData
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
+import org.knora.webapi.slice.common.ResourceIri
 
 object MainQueryResultProcessor {
 
@@ -71,28 +72,27 @@ object MainQueryResultProcessor {
       requestedValueObjectVariablesForAllResVars ++ requestedValueObjectVariablesForDependentResIris
 
     // collect requested value object Iris for each main resource
-    val requestedValObjIrisPerMainResource: Map[IRI, Set[IRI]] = queryResultsWithFullGraphPattern.keySet.map {
-      mainResIri =>
-        // get all value object variables and Iris for the current main resource
-        val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] =
-          valueObjectVarsAndIrisPerMainResource.valueObjectVariablesAndValueObjectIris(mainResIri)
+    val requestedValObjIrisPerMainResource = queryResultsWithFullGraphPattern.keySet.map { mainResIri =>
+      // get all value object variables and Iris for the current main resource
+      val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] =
+        valueObjectVarsAndIrisPerMainResource.valueObjectVariablesAndValueObjectIris(mainResIri)
 
-        // get those value object Iris from the results that the user asked for in the input query's CONSTRUCT clause
-        val valObjIrisRequestedForRes: Set[IRI] = allRequestedValueObjectVariables.flatMap {
-          (requestedQueryVar: QueryVariable) =>
-            valueObjIrisForRes.getOrElse(
-              requestedQueryVar,
-              throw AssertionException(
-                s"key $requestedQueryVar is absent in prequery's value object IRIs collection for resource $mainResIri",
-              ),
-            )
-        }
+      // get those value object Iris from the results that the user asked for in the input query's CONSTRUCT clause
+      val valObjIrisRequestedForRes: Set[IRI] = allRequestedValueObjectVariables.flatMap {
+        (requestedQueryVar: QueryVariable) =>
+          valueObjIrisForRes.getOrElse(
+            requestedQueryVar,
+            throw AssertionException(
+              s"key $requestedQueryVar is absent in prequery's value object IRIs collection for resource $mainResIri",
+            ),
+          )
+      }
 
-        mainResIri -> valObjIrisRequestedForRes
+      mainResIri -> valObjIrisRequestedForRes
     }.toMap
 
     // for each main resource, get only the requested value objects
-    queryResultsWithFullGraphPattern.map { case (mainResIri: IRI, assertions: ResourceWithValueRdfData) =>
+    queryResultsWithFullGraphPattern.map { case (mainResIri: ResourceIri, assertions: ResourceWithValueRdfData) =>
       // get the Iris of all the value objects requested for the current main resource
       val valueObjIrisRequestedForRes: Set[IRI] = requestedValObjIrisPerMainResource.getOrElse(
         mainResIri,

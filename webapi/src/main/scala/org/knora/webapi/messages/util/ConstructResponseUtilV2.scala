@@ -108,7 +108,8 @@ final class ConstructResponseUtilV2(
 
     // create a single map of all resources with their representing values (rdf data)
     val flatResourcesWithValues: RdfResources = resourceStatements.map {
-      case (resourceIri: IRI, assertions: ConstructPredicateObjects) =>
+      case (objResIri: IRI, assertions: ConstructPredicateObjects) =>
+        val resourceIri = ResourceIri.unsafeFrom(objResIri)
         // remove inferred statements (non explicit) returned in the query result
         // the query returns the following inferred information:
         // - every resource is a knora-base:Resource
@@ -159,11 +160,11 @@ final class ConstructResponseUtilV2(
         )
 
         val userPermission: Option[Permission.ObjectAccess] =
-          PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(resourceIri, assertions, requestingUser)
+          PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(resourceIri.value, assertions, requestingUser)
 
         // Make a ResourceWithValueRdfData for each resource IRI.
         resourceIri -> ResourceWithValueRdfData(
-          subjectIri = resourceIri,
+          resourceIri = resourceIri,
           assertions = assertionsExplicit,
           isMainResource = isMainResource,
           userPermission = userPermission,
@@ -174,17 +175,18 @@ final class ConstructResponseUtilV2(
     // Identify the resources that the user has permission to see.
 
     val (visibleResources: RdfResources, hiddenResources: RdfResources) = flatResourcesWithValues.partition {
-      case (_: IRI, resource: ResourceWithValueRdfData) => resource.userPermission.nonEmpty
+      case (_: ResourceIri, resource: ResourceWithValueRdfData) => resource.userPermission.nonEmpty
     }
 
-    val (mainResourceIrisVisible: Set[IRI], dependentResourceIrisVisible: Set[IRI]) =
+    val (mainResourceIrisVisible: Set[ResourceIri], dependentResourceIrisVisible: Set[ResourceIri]) =
       visibleResources.toSet.partitionMap { case (iri, resource) => Either.cond(!resource.isMainResource, iri, iri) }
 
-    val (mainResourceIrisNotVisible: Set[IRI], dependentResourceIrisNotVisible: Set[IRI]) =
+    val (mainResourceIrisNotVisible: Set[ResourceIri], dependentResourceIrisNotVisible: Set[ResourceIri]) =
       hiddenResources.toSet.partitionMap { case (iri, resource) => Either.cond(!resource.isMainResource, iri, iri) }
 
     // get incoming links for each resource: a map of resource IRIs to resources that link to it
-    val incomingLinksForResource: Map[IRI, RdfResources] = getIncomingLink(visibleResources, flatResourcesWithValues)
+    val incomingLinksForResource: Map[ResourceIri, RdfResources] =
+      getIncomingLink(visibleResources, flatResourcesWithValues)
 
     MainResourcesAndValueRdfData(
       resources = mainResourceIrisVisible.map { resourceIri =>
@@ -243,7 +245,7 @@ final class ConstructResponseUtilV2(
    */
   private def makeRdfPropertyValuesForResource(
     valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]],
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     requestingUser: User,
     assertionsExplicit: ConstructPredicateObjects,
     nonResourceStatements: Statements,
@@ -364,11 +366,11 @@ final class ConstructResponseUtilV2(
    */
   private def getIncomingLink(visibleResources: RdfResources, flatResourcesWithValues: RdfResources)(implicit
     stringFormatter: StringFormatter,
-  ): Map[IRI, RdfResources] =
-    visibleResources.map { case (resourceIri: IRI, values: ResourceWithValueRdfData) =>
+  ): Map[ResourceIri, RdfResources] =
+    visibleResources.map { case (resourceIri: ResourceIri, values: ResourceWithValueRdfData) =>
       // get all incoming links for resourceIri
       val incomingLinksForRes: RdfResources = flatResourcesWithValues.foldLeft(emptyRdfResources) {
-        case (acc: RdfResources, (otherResourceIri: IRI, otherResource: ResourceWithValueRdfData)) =>
+        case (acc: RdfResources, (otherResourceIri: ResourceIri, otherResource: ResourceWithValueRdfData)) =>
           // get all incoming links having assertions about value properties pointing to this resource
           val incomingLinkPropertyAssertions: RdfPropertyValues =
             otherResource.valuePropertyAssertions.foldLeft(emptyRdfPropertyValues) {
@@ -379,7 +381,7 @@ final class ConstructResponseUtilV2(
                     // check if it is a link value and points to this resource
                     if (
                       value.valueObjectClass.toString == OntologyConstants.KnoraBase.LinkValue && value
-                        .requireIriObject(OntologyConstants.Rdf.Object.toSmartIri) == resourceIri
+                        .requireIriObject(OntologyConstants.Rdf.Object.toSmartIri) == resourceIri.value
                     ) {
                       acc :+ value
                     } else {
@@ -429,13 +431,13 @@ final class ConstructResponseUtilV2(
    */
   private def nestResources(
     depth: Int,
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     flatResourcesWithValues: RdfResources,
     visibleResources: RdfResources,
-    dependentResourceIrisVisible: Set[IRI],
-    dependentResourceIrisNotVisible: Set[IRI],
-    incomingLinksForResource: Map[IRI, RdfResources],
-    alreadyTraversed: Set[IRI] = Set.empty[IRI],
+    dependentResourceIrisVisible: Set[ResourceIri],
+    dependentResourceIrisNotVisible: Set[ResourceIri],
+    incomingLinksForResource: Map[ResourceIri, RdfResources],
+    alreadyTraversed: Set[ResourceIri] = Set.empty,
   )(implicit stringFormatter: StringFormatter): ResourceWithValueRdfData = {
     val resource = visibleResources(resourceIri)
 
@@ -472,7 +474,7 @@ final class ConstructResponseUtilV2(
 
       // resources that point to this resource
       val referringResources: RdfResources = incomingLinksForResource(resourceIri).filterNot {
-        case (incomingResIri: IRI, _: ResourceWithValueRdfData) =>
+        case (incomingResIri: ResourceIri, _: ResourceWithValueRdfData) =>
           alreadyTraversed(incomingResIri) || flatResourcesWithValues(incomingResIri).isMainResource
       }
 
@@ -500,8 +502,10 @@ final class ConstructResponseUtilV2(
           OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri -> incomingLinkAssertions.values.toSeq.flatten.map {
             (linkValue: ValueRdfData) =>
               // get the source of the link value (it points to the resource that is currently processed)
-              val sourceIri: IRI = linkValue.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
-              val source         = Some(
+              val sourceIri: ResourceIri = ResourceIri.unsafeFrom(
+                linkValue.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri),
+              )
+              val source = Some(
                 nestResources(
                   depth = depth + 1,
                   resourceIri = sourceIri,
@@ -549,14 +553,15 @@ final class ConstructResponseUtilV2(
     values: Seq[ValueRdfData],
     flatResourcesWithValues: RdfResources,
     visibleResources: RdfResources,
-    dependentResourceIrisVisible: Set[IRI],
-    dependentResourceIrisNotVisible: Set[IRI],
-    incomingLinksForResource: Map[IRI, RdfResources],
-    alreadyTraversed: Set[IRI],
+    dependentResourceIrisVisible: Set[ResourceIri],
+    dependentResourceIrisNotVisible: Set[ResourceIri],
+    incomingLinksForResource: Map[ResourceIri, RdfResources],
+    alreadyTraversed: Set[ResourceIri],
   )(implicit stringFormatter: StringFormatter): Seq[ValueRdfData] =
     values.foldLeft(Vector.empty[ValueRdfData]) { case (acc: Vector[ValueRdfData], value: ValueRdfData) =>
       if (value.valueObjectClass.toString == OntologyConstants.KnoraBase.LinkValue) {
-        val dependentResourceIri: IRI = value.requireIriObject(OntologyConstants.Rdf.Object.toSmartIri)
+        val dependentResourceIri: ResourceIri =
+          ResourceIri.unsafeFrom(value.requireIriObject(OntologyConstants.Rdf.Object.toSmartIri))
 
         if (alreadyTraversed(dependentResourceIri)) {
           acc :+ value
@@ -849,7 +854,7 @@ final class ConstructResponseUtilV2(
                   case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
                     // Yes. Construct a ReadResourceV2 representing the nested resource.
                     constructReadResourceV2(
-                      resourceIri = referredResourceIri,
+                      resourceIri = referredResIri,
                       resourceWithValueRdfData = nestedResourceAssertions,
                       mappings = mappings,
                       queryStandoff = queryStandoff,
@@ -1082,7 +1087,7 @@ final class ConstructResponseUtilV2(
    * @return a [[ReadResourceV2]].
    */
   private def constructReadResourceV2(
-    resourceIri: IRI,
+    resourceIri: ResourceIri,
     resourceWithValueRdfData: ResourceWithValueRdfData,
     mappings: Map[StandoffMappingIri, MappingAndXSLTransformation],
     queryStandoff: Boolean,
@@ -1135,8 +1140,6 @@ final class ConstructResponseUtilV2(
       projectIri <- ZIO.fromEither(ProjectIri.from(resourceAttachedToProject)).mapError(BadRequestException.apply)
       project    <-
         projectService.findById(projectIri).someOrFail(NotFoundException(s"Project '${projectIri.value}' not found"))
-
-      resIri <- ZIO.fromEither(ResourceIri.from(resourceIri)).mapError(BadRequestException.apply)
 
       // get the resource's values
       valueObjects: Map[SmartIri, Seq[ReadValueV2]] <- ZIO.foreach(resourceWithValueRdfData.valuePropertyAssertions) {
@@ -1253,7 +1256,7 @@ final class ConstructResponseUtilV2(
                                                              .map(property -> _)
                                                        }
     } yield ReadResourceV2(
-      resourceIri = resIri,
+      resourceIri = resourceIri,
       resourceClassIri = resourceClass,
       label = resourceLabel,
       attachedToUser = resourceAttachedToUser,
@@ -1297,11 +1300,11 @@ final class ConstructResponseUtilV2(
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
 
-    val visibleResourceIris: Seq[IRI] =
-      orderByResourceIri.filter(resourceIri => mainResourcesAndValueRdfData.resources.keySet.contains(resourceIri))
+    val visibleResourceIris: Seq[ResourceIri] =
+      orderByResourceIri.flatMap(ResourceIri.from(_).toOption).filter(mainResourcesAndValueRdfData.resources.keySet)
 
     // iterate over visibleResourceIris and construct the response in the correct order
-    val readResourceFutures: Vector[Task[ReadResourceV2]] = visibleResourceIris.map { (resourceIri: IRI) =>
+    val readResourceFutures: Vector[Task[ReadResourceV2]] = visibleResourceIris.map { (resourceIri: ResourceIri) =>
       val data = mainResourcesAndValueRdfData.resources(resourceIri)
       constructReadResourceV2(
         resourceIri = resourceIri,
@@ -1315,12 +1318,7 @@ final class ConstructResponseUtilV2(
     }.toVector
 
     for {
-      resources          <- ZIO.collectAll(readResourceFutures)
-      hiddenResourceIris <-
-        ZIO
-          .foreach(mainResourcesAndValueRdfData.hiddenResourceIris.toSeq)(iri => ZIO.fromEither(ResourceIri.from(iri)))
-          .mapError(BadRequestException.apply)
-          .map(_.toSet)
+      resources <- ZIO.collectAll(readResourceFutures)
 
       // If we got a full page of results from the triplestore (before filtering for permissions), there
       // might be at least one more page of results that the user could request.
@@ -1328,7 +1326,7 @@ final class ConstructResponseUtilV2(
         calculateMayHaveMoreResults && pageSizeBeforeFiltering == appConfig.v2.resourcesSequence.resultsPerPage
     } yield ReadResourcesSequenceV2(
       resources = resources,
-      hiddenResourceIris = hiddenResourceIris,
+      hiddenResourceIris = mainResourcesAndValueRdfData.hiddenResourceIris,
       mayHaveMoreResults = mayHaveMoreResults,
     )
   }
@@ -1389,7 +1387,7 @@ object ConstructResponseUtilV2 {
   /**
    * A map of resource IRIs to resource RDF data.
    */
-  type RdfResources = Map[IRI, ResourceWithValueRdfData]
+  type RdfResources = Map[ResourceIri, ResourceWithValueRdfData]
 
   /**
    * A map of subject IRIs to [[ConstructPredicateObjects]] instances.
@@ -1607,19 +1605,21 @@ object ConstructResponseUtilV2 {
   /**
    * Represents a resource and its values.
    *
-   * @param subjectIri              the resource IRI.
+   * @param resourceIri              the resource IRI.
    * @param assertions              assertions about the resource (direct statements).
    * @param isMainResource          indicates if this represents a top level resource or a referred resource (depending on the query).
    * @param userPermission          the permission that the requesting user has on the resource.
    * @param valuePropertyAssertions assertions about value properties.
    */
   case class ResourceWithValueRdfData(
-    subjectIri: IRI,
+    resourceIri: ResourceIri,
     assertions: PredicateObjects,
     isMainResource: Boolean,
     userPermission: Option[Permission.ObjectAccess],
     valuePropertyAssertions: RdfPropertyValues,
-  ) extends RdfData
+  ) extends RdfData {
+    override val subjectIri: IRI = resourceIri.value
+  }
 
   /**
    * Represents a mapping including information about the standoff entities.
@@ -1643,7 +1643,7 @@ object ConstructResponseUtilV2 {
    * @param hiddenResourceIris the IRIs of resources that were hidden because the user does not have permission
    *                           to see them.
    */
-  case class MainResourcesAndValueRdfData(resources: RdfResources, hiddenResourceIris: Set[IRI] = Set.empty)
+  case class MainResourcesAndValueRdfData(resources: RdfResources, hiddenResourceIris: Set[ResourceIri] = Set.empty)
 
   /**
    * An intermediate data structure containing RDF assertions about an entity and the user's permission on the entity.
