@@ -337,16 +337,164 @@ final class ConstructResponseUtilV2(
     } yield result
   }
 
+  private def makeDateValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): DateValueContentV2 = {
+    val startPrecisionStr =
+      valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasStartPrecision.toSmartIri)
+    val endPrecisionStr =
+      valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasEndPrecision.toSmartIri)
+    val calendarNameStr = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasCalendar.toSmartIri)
+
+    DateValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasStartJDN = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri),
+      valueHasEndJDN = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri),
+      valueHasStartPrecision = DatePrecisionV2.parse(
+        startPrecisionStr,
+        throw InconsistentRepositoryDataException(s"Invalid date precision: $startPrecisionStr"),
+      ),
+      valueHasEndPrecision = DatePrecisionV2.parse(
+        endPrecisionStr,
+        throw InconsistentRepositoryDataException(s"Invalid date precision: $endPrecisionStr"),
+      ),
+      valueHasCalendar = CalendarNameV2.parse(
+        calendarNameStr,
+        throw InconsistentRepositoryDataException(s"Invalid calendar name: $calendarNameStr"),
+      ),
+      comment = valueCommentOption,
+    )
+  }
+
+  private def makeIntegerValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): IntegerValueContentV2 =
+    IntegerValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasInteger = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasInteger.toSmartIri),
+      comment = valueCommentOption,
+    )
+
+  private def makeDecimalValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): DecimalValueContentV2 =
+    DecimalValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasDecimal = valueObject.requireDecimalObject(OntologyConstants.KnoraBase.ValueHasDecimal.toSmartIri),
+      comment = valueCommentOption,
+    )
+
+  private def makeBooleanValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): BooleanValueContentV2 =
+    BooleanValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasBoolean = valueObject.requireBooleanObject(OntologyConstants.KnoraBase.ValueHasBoolean.toSmartIri),
+      comment = valueCommentOption,
+    )
+
+  private def makeUriValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): UriValueContentV2 =
+    UriValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasUri = valueObject.requireIriObject(OntologyConstants.KnoraBase.ValueHasUri.toSmartIri),
+      comment = valueCommentOption,
+    )
+
+  private def makeColorValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): ColorValueContentV2 =
+    ColorValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasColor = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasColor.toSmartIri),
+      comment = valueCommentOption,
+    )
+
+  private def makeGeomValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): GeomValueContentV2 =
+    GeomValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasGeometry = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasGeometry.toSmartIri),
+      comment = valueCommentOption,
+    )
+
+  private def makeGeonameValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): GeonameValueContentV2 =
+    GeonameValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasGeonameCode = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasGeonameCode.toSmartIri),
+      comment = valueCommentOption,
+    )
+
+  private def makeIntervalValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): IntervalValueContentV2 =
+    IntervalValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasIntervalStart =
+        valueObject.requireDecimalObject(OntologyConstants.KnoraBase.ValueHasIntervalStart.toSmartIri),
+      valueHasIntervalEnd =
+        valueObject.requireDecimalObject(OntologyConstants.KnoraBase.ValueHasIntervalEnd.toSmartIri),
+      comment = valueCommentOption,
+    )
+
+  private def makeTimeValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): TimeValueContentV2 =
+    TimeValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasTimeStamp = valueObject.requireDateTimeObject(OntologyConstants.KnoraBase.ValueHasTimeStamp.toSmartIri),
+      comment = valueCommentOption,
+    )
+
   /**
-   * Given a [[ValueRdfData]], constructs a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
-   *
-   * @param valueObject          the given [[ValueRdfData]].
-   * @param mappings             the mappings needed for standoff conversions and XSL transformations.
-   * @param queryStandoff        if `true`, make separate queries to get the standoff for text values.
-   * @param versionDate          if defined, represents the requested time in the the resources' version history.
-   * @param targetSchema         the schema of the response.
-   * @param requestingUser       the user making the request.
-   * @return a [[ValueContentV2]] representing a value.
+   * Builds a [[HierarchicalListValueContentV2]]. In the simple schema the list node label is required and
+   * is fetched via [[ListsResponder]]; in the complex schema the label is omitted.
+   */
+  private def makeHierarchicalListValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+  ): Task[HierarchicalListValueContentV2] = {
+    val listNodeIri: IRI = valueObject.requireIriObject(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri)
+    val listNode         = HierarchicalListValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasListNode = listNodeIri,
+      listNodeLabel = None,
+      comment = valueCommentOption,
+    )
+
+    targetSchema match {
+      case ApiV2Simple =>
+        listsResponder
+          .listNodeInfoGetRequestADM(ListIri.unsafeFrom(listNodeIri))
+          .flatMap(r =>
+            ZIO
+              .fromOption(r.asOpt[ChildNodeInfoGetResponseADM])
+              .orElseFail(NotFoundException(s"List node not found: $listNodeIri")),
+          )
+          .map(_.nodeinfo.getLabelInPreferredLanguage(requestingUser.lang, appConfig.fallbackLanguage))
+          .map(label => listNode.copy(listNodeLabel = label))
+      case ApiV2Complex => ZIO.succeed(listNode)
+    }
+  }
+
+  /**
+   * Dispatches a [[ValueRdfData]] to the appropriate `make…ValueContentV2` helper based on its value class.
    */
   private def createValueContentV2FromValueRdfData(
     valueObject: ValueRdfData,
@@ -355,188 +503,45 @@ final class ConstructResponseUtilV2(
     versionDate: Option[Instant] = None,
     targetSchema: ApiV2Schema,
     requestingUser: User,
-  ) = {
-    // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
-    val valueObjectValueHasString: Option[String] =
+  ): Task[ValueContentV2] = {
+    val valueObjectValueHasString =
       valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasString.toSmartIri)
-
-    // every knora-base:value (any of its subclasses) may have a comment
-    val valueCommentOption: Option[String] =
+    val valueCommentOption =
       valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasComment.toSmartIri)
 
-    val valueTypeStr: IRI = valueObject.valueObjectClass.toString
-
-    valueTypeStr match {
+    valueObject.valueObjectClass.toString match {
       case OntologyConstants.KnoraBase.TextValue =>
-        makeTextValueContentV2(
-          valueObject = valueObject,
-          valueObjectValueHasString = valueObjectValueHasString,
-          valueCommentOption = valueCommentOption,
-          mappings = mappings,
-          requestingUser = requestingUser,
-        )
-
-      case OntologyConstants.KnoraBase.DateValue =>
-        val startPrecisionStr =
-          valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasStartPrecision.toSmartIri)
-        val endPrecisionStr =
-          valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasEndPrecision.toSmartIri)
-        val calendarNameStr = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasCalendar.toSmartIri)
-
-        ZIO.succeed(
-          DateValueContentV2(
-            ontologySchema = InternalSchema,
-            valueHasStartJDN = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri),
-            valueHasEndJDN = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri),
-            valueHasStartPrecision = DatePrecisionV2.parse(
-              startPrecisionStr,
-              throw InconsistentRepositoryDataException(s"Invalid date precision: $startPrecisionStr"),
-            ),
-            valueHasEndPrecision = DatePrecisionV2.parse(
-              endPrecisionStr,
-              throw InconsistentRepositoryDataException(s"Invalid date precision: $endPrecisionStr"),
-            ),
-            valueHasCalendar = CalendarNameV2.parse(
-              calendarNameStr,
-              throw InconsistentRepositoryDataException(s"Invalid calendar name: $calendarNameStr"),
-            ),
-            comment = valueCommentOption,
-          ),
-        )
-
-      case OntologyConstants.KnoraBase.IntValue =>
-        ZIO.succeed(
-          IntegerValueContentV2(
-            ontologySchema = InternalSchema,
-            valueHasInteger = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasInteger.toSmartIri),
-            comment = valueCommentOption,
-          ),
-        )
-
+        makeTextValueContentV2(valueObject, valueObjectValueHasString, valueCommentOption, mappings, requestingUser)
+      case OntologyConstants.KnoraBase.DateValue => ZIO.succeed(makeDateValueContentV2(valueObject, valueCommentOption))
+      case OntologyConstants.KnoraBase.IntValue  =>
+        ZIO.succeed(makeIntegerValueContentV2(valueObject, valueCommentOption))
       case OntologyConstants.KnoraBase.DecimalValue =>
-        ZIO.succeed(
-          DecimalValueContentV2(
-            ontologySchema = InternalSchema,
-            valueHasDecimal = valueObject.requireDecimalObject(OntologyConstants.KnoraBase.ValueHasDecimal.toSmartIri),
-            comment = valueCommentOption,
-          ),
-        )
-
+        ZIO.succeed(makeDecimalValueContentV2(valueObject, valueCommentOption))
       case OntologyConstants.KnoraBase.BooleanValue =>
-        ZIO.succeed(
-          BooleanValueContentV2(
-            ontologySchema = InternalSchema,
-            valueHasBoolean = valueObject.requireBooleanObject(OntologyConstants.KnoraBase.ValueHasBoolean.toSmartIri),
-            comment = valueCommentOption,
-          ),
-        )
-
-      case OntologyConstants.KnoraBase.UriValue =>
-        ZIO.succeed(
-          UriValueContentV2(
-            ontologySchema = InternalSchema,
-            valueHasUri = valueObject.requireIriObject(OntologyConstants.KnoraBase.ValueHasUri.toSmartIri),
-            comment = valueCommentOption,
-          ),
-        )
-
+        ZIO.succeed(makeBooleanValueContentV2(valueObject, valueCommentOption))
+      case OntologyConstants.KnoraBase.UriValue   => ZIO.succeed(makeUriValueContentV2(valueObject, valueCommentOption))
       case OntologyConstants.KnoraBase.ColorValue =>
-        ZIO.succeed(
-          ColorValueContentV2(
-            ontologySchema = InternalSchema,
-            valueHasColor = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasColor.toSmartIri),
-            comment = valueCommentOption,
-          ),
-        )
-
-      case OntologyConstants.KnoraBase.GeomValue =>
-        ZIO.succeed(
-          GeomValueContentV2(
-            ontologySchema = InternalSchema,
-            valueHasGeometry = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasGeometry.toSmartIri),
-            comment = valueCommentOption,
-          ),
-        )
-
+        ZIO.succeed(makeColorValueContentV2(valueObject, valueCommentOption))
+      case OntologyConstants.KnoraBase.GeomValue    => ZIO.succeed(makeGeomValueContentV2(valueObject, valueCommentOption))
       case OntologyConstants.KnoraBase.GeonameValue =>
-        ZIO.succeed(
-          GeonameValueContentV2(
-            ontologySchema = InternalSchema,
-            valueHasGeonameCode =
-              valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasGeonameCode.toSmartIri),
-            comment = valueCommentOption,
-          ),
-        )
-
+        ZIO.succeed(makeGeonameValueContentV2(valueObject, valueCommentOption))
       case OntologyConstants.KnoraBase.ListValue =>
-        val listNodeIri: IRI = valueObject.requireIriObject(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri)
-
-        val listNode = HierarchicalListValueContentV2(
-          ontologySchema = InternalSchema,
-          valueHasListNode = listNodeIri,
-          listNodeLabel = None,
-          comment = valueCommentOption,
-        )
-
-        // only query the list node if the response is requested in the simple schema
-        // (label is required in the simple schema, but not in the complex schema)
-
-        targetSchema match {
-          case ApiV2Simple =>
-            for {
-              listNodeLabel <-
-                listsResponder
-                  .listNodeInfoGetRequestADM(ListIri.unsafeFrom(listNodeIri))
-                  .flatMap(r =>
-                    ZIO
-                      .fromOption(r.asOpt[ChildNodeInfoGetResponseADM])
-                      .orElseFail(NotFoundException(s"List node not found: $listNodeIri")),
-                  )
-                  .map(_.nodeinfo.getLabelInPreferredLanguage(requestingUser.lang, appConfig.fallbackLanguage))
-            } yield listNode.copy(listNodeLabel = listNodeLabel)
-          case ApiV2Complex => ZIO.succeed(listNode)
-        }
-
+        makeHierarchicalListValueContentV2(valueObject, valueCommentOption, targetSchema, requestingUser)
       case OntologyConstants.KnoraBase.IntervalValue =>
-        ZIO.succeed(
-          IntervalValueContentV2(
-            ontologySchema = InternalSchema,
-            valueHasIntervalStart =
-              valueObject.requireDecimalObject(OntologyConstants.KnoraBase.ValueHasIntervalStart.toSmartIri),
-            valueHasIntervalEnd =
-              valueObject.requireDecimalObject(OntologyConstants.KnoraBase.ValueHasIntervalEnd.toSmartIri),
-            comment = valueCommentOption,
-          ),
-        )
-
-      case OntologyConstants.KnoraBase.TimeValue =>
-        ZIO.succeed(
-          TimeValueContentV2(
-            ontologySchema = InternalSchema,
-            valueHasTimeStamp =
-              valueObject.requireDateTimeObject(OntologyConstants.KnoraBase.ValueHasTimeStamp.toSmartIri),
-            comment = valueCommentOption,
-          ),
-        )
-
+        ZIO.succeed(makeIntervalValueContentV2(valueObject, valueCommentOption))
+      case OntologyConstants.KnoraBase.TimeValue => ZIO.succeed(makeTimeValueContentV2(valueObject, valueCommentOption))
       case OntologyConstants.KnoraBase.LinkValue =>
         makeLinkValueContentV2(
-          valueObject = valueObject,
-          valueCommentOption = valueCommentOption,
-          mappings = mappings,
-          queryStandoff = queryStandoff,
-          versionDate = versionDate,
-          targetSchema = targetSchema,
-          requestingUser = requestingUser,
+          valueObject,
+          valueCommentOption,
+          mappings,
+          queryStandoff,
+          versionDate,
+          targetSchema,
+          requestingUser,
         )
-
-      case fileValueClass: IRI if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
-        makeFileValueContentV2(
-          valueType = fileValueClass,
-          valueObject = valueObject,
-          valueCommentOption = valueCommentOption,
-        )
-
+      case fileValueClass if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
+        makeFileValueContentV2(fileValueClass, valueObject, valueCommentOption)
       case other => throw NotImplementedException(s"Not implemented yet: $other")
     }
   }

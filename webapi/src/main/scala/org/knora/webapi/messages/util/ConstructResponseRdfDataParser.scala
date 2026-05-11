@@ -22,7 +22,6 @@ import org.knora.webapi.slice.common.ValueIri
 /**
  * Parser phase of `ConstructResponseUtilV2`: turns a [[SparqlExtendedConstructResponse]] into the
  * `ConstructResponseRdfData` tree (resources, their values, nested dependent resources, incoming links).
- *
  */
 private[util] object ConstructResponseRdfDataParser {
 
