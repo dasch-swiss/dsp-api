@@ -10,11 +10,11 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.ConstructResponseUtilV2
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfPropertyValues
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfResources
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.ResourceWithValueRdfData
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.ValueRdfData
+import org.knora.webapi.messages.util.ConstructResponseRdfData
+import org.knora.webapi.messages.util.ConstructResponseRdfData.RdfPropertyValues
+import org.knora.webapi.messages.util.ConstructResponseRdfData.RdfResources
+import org.knora.webapi.messages.util.ConstructResponseRdfData.ResourceWithValueRdfData
+import org.knora.webapi.messages.util.ConstructResponseRdfData.ValueRdfData
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.slice.common.ResourceIri
@@ -109,7 +109,7 @@ object MainQueryResultProcessor {
        * @return filtered values.
        */
       def traverseAndFilterValues(values: ResourceWithValueRdfData): RdfPropertyValues =
-        values.valuePropertyAssertions.foldLeft(ConstructResponseUtilV2.emptyRdfPropertyValues) {
+        values.valuePropertyAssertions.foldLeft(ConstructResponseRdfData.emptyRdfPropertyValues) {
           case (acc, (propIri: SmartIri, values: Seq[ValueRdfData])) =>
             // filter values for the current resource
             val valuesFiltered: Seq[ValueRdfData] = values.filter { (valueObj: ValueRdfData) =>

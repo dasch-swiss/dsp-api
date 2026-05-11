@@ -9,8 +9,6 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
-import scala.reflect.ClassTag
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
@@ -25,25 +23,12 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatStatements
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.MainResourcesAndValueRdfData
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfData
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfPropertyValues
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfResources
+import org.knora.webapi.messages.util.ConstructResponseRdfData.*
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfWithUserPermission
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.ResourceWithValueRdfData
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.Statements
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.ValueRdfData
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyFlatStatements
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyRdfPropertyValues
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyRdfResources
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.Authorship
@@ -98,7 +83,7 @@ final class ConstructResponseUtilV2(
 
     // split statements about resources and other statements (value objects and standoff)
     // resources are identified by the triple "resourceIri a knora-base:Resource" which is an inferred information returned by the SPARQL Construct query.
-    val (resourceStatements: Statements, nonResourceStatements: Statements) = resultsWithIriSubjects.partition {
+    val (resourceStatementsRaw: Statements, nonResourceStatements: Statements) = resultsWithIriSubjects.partition {
       case (_: IRI, assertions: ConstructPredicateObjects) =>
         // check if the subject is a Knora resource
         assertions
@@ -106,10 +91,14 @@ final class ConstructResponseUtilV2(
           .contains(IriLiteralV2(OntologyConstants.KnoraBase.Resource))
     }
 
+    val resourceStatements: ResourceStatements =
+      resourceStatementsRaw.map { case (resourceIri, statements) =>
+        ResourceIri.unsafeFrom(resourceIri) -> statements
+      }
+
     // create a single map of all resources with their representing values (rdf data)
     val flatResourcesWithValues: RdfResources = resourceStatements.map {
-      case (objResIri: IRI, assertions: ConstructPredicateObjects) =>
-        val resourceIri = ResourceIri.unsafeFrom(objResIri)
+      case (resourceIri: ResourceIri, assertions: ConstructPredicateObjects) =>
         // remove inferred statements (non explicit) returned in the query result
         // the query returns the following inferred information:
         // - every resource is a knora-base:Resource
@@ -1385,273 +1374,12 @@ object ConstructResponseUtilV2 {
   val layer = ZLayer.derive[ConstructResponseUtilV2]
 
   /**
-   * A map of resource IRIs to resource RDF data.
-   */
-  type RdfResources = Map[ResourceIri, ResourceWithValueRdfData]
-
-  /**
-   * A map of subject IRIs to [[ConstructPredicateObjects]] instances.
-   */
-  type Statements = Map[IRI, ConstructPredicateObjects]
-
-  /**
-   * A flattened map of predicates to objects. This assumes that each predicate has
-   * * only one object.
-   */
-  type PredicateObjects = Map[SmartIri, Seq[LiteralV2]]
-
-  /**
-   * A map of subject IRIs to flattened maps of predicates to objects.
-   */
-  type FlatStatements = Map[IRI, Map[SmartIri, LiteralV2]]
-
-  /**
-   * A map of property IRIs to value RDF data.
-   */
-  type RdfPropertyValues = Map[SmartIri, Seq[ValueRdfData]]
-
-  /**
-   * Makes an empty instance of [[RdfResources]].
-   */
-  val emptyRdfResources: RdfResources = Map.empty
-
-  /**
-   * Makes an empty instance of [[RdfPropertyValues]].
-   */
-  val emptyRdfPropertyValues: RdfPropertyValues = Map.empty
-
-  /**
-   * Makes an empty instance of [[FlatStatements]].
-   */
-  val emptyFlatStatements: FlatStatements = Map.empty
-
-  /**
-   * Represents assertions about an RDF subject.
-   */
-  sealed trait RdfData {
-
-    /**
-     * The IRI of the subject.
-     */
-    val subjectIri: IRI
-
-    /**
-     * Assertions about the subject.
-     */
-    val assertions: PredicateObjects
-
-    private def maybeSingleAs[A <: LiteralV2](predicateIri: SmartIri)(implicit tag: ClassTag[A]): Option[A] =
-      maybeAs[A](predicateIri).flatMap(_.headOption)
-
-    private def requireSingleAs[A <: LiteralV2](predicateIri: SmartIri)(implicit tag: ClassTag[A]): A =
-      maybeSingleAs(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
-      )
-
-    private def maybeAs[A <: LiteralV2](predicateIri: SmartIri)(implicit tag: ClassTag[A]): Option[Seq[A]] =
-      assertions
-        .get(predicateIri)
-        .map(
-          _.map(literal =>
-            literal
-              .as[A]()
-              .getOrElse(
-                throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
-              ),
-          ),
-        )
-
-    /**
-     * Returns the optional string object of the specified predicate. Throws an exception if the object is not a string.
-     *
-     * @param predicateIri the predicate.
-     * @return the string object of the predicate.
-     */
-    def maybeStringObject(predicateIri: SmartIri): Option[String] =
-      maybeSingleAs[StringLiteralV2](predicateIri).map(_.value)
-
-    def maybeStringListObject(predicateIri: SmartIri): Option[Seq[String]] =
-      maybeAs[StringLiteralV2](predicateIri).map(_.map(_.value))
-
-    /**
-     * Returns the required string object of the specified predicate. Throws an exception if the object is not found or
-     * is not a string.
-     *
-     * @param predicateIri the predicate.
-     * @return the string object of the predicate.
-     */
-    def requireStringObject(predicateIri: SmartIri): String =
-      requireSingleAs[StringLiteralV2](predicateIri).value
-
-    /**
-     * Returns the optional IRI object of the specified predicate. Throws an exception if the object is not an IRI.
-     *
-     * @param predicateIri the predicate.
-     * @return the IRI object of the predicate.
-     */
-    def maybeIriObject(predicateIri: SmartIri): Option[IRI] =
-      maybeSingleAs[IriLiteralV2](predicateIri).map(_.value)
-
-    /**
-     * Returns the required IRI object of the specified predicate. Throws an exception if the object is not found or
-     * is not an IRI.
-     *
-     * @param predicateIri the predicate.
-     * @return the IRI object of the predicate.
-     */
-    def requireIriObject(predicateIri: SmartIri): IRI =
-      requireSingleAs[IriLiteralV2](predicateIri).value
-
-    /**
-     * Returns the optional integer object of the specified predicate. Throws an exception if the object is not an integer.
-     *
-     * @param predicateIri the predicate.
-     * @return the integer object of the predicate.
-     */
-    def maybeIntObject(predicateIri: SmartIri): Option[Int] =
-      maybeSingleAs[IntLiteralV2](predicateIri).map(_.value)
-
-    /**
-     * Returns the required integer object of the specified predicate. Throws an exception if the object is not found or
-     * is not an integer.
-     *
-     * @param predicateIri the predicate.
-     * @return the integer object of the predicate.
-     */
-    def requireIntObject(predicateIri: SmartIri): Int =
-      requireSingleAs[IntLiteralV2](predicateIri).value
-
-    /**
-     * Returns the optional boolean object of the specified predicate. Throws an exception if the object is not a boolean.
-     *
-     * @param predicateIri the predicate.
-     * @return the boolean object of the predicate.
-     */
-    def maybeBooleanObject(predicateIri: SmartIri): Option[Boolean] =
-      maybeSingleAs[BooleanLiteralV2](predicateIri).map(_.value)
-
-    /**
-     * Returns the required boolean object of the specified predicate. Throws an exception if the object is not found or
-     * is not a boolean value.
-     *
-     * @param predicateIri the predicate.
-     * @return the boolean object of the predicate.
-     */
-    def requireBooleanObject(predicateIri: SmartIri): Boolean =
-      requireSingleAs[BooleanLiteralV2](predicateIri).value
-
-    /**
-     * Returns the optional decimal object of the specified predicate. Throws an exception if the object is not a decimal.
-     *
-     * @param predicateIri the predicate.
-     * @return the decimal object of the predicate.
-     */
-    def maybeDecimalObject(predicateIri: SmartIri): Option[BigDecimal] =
-      maybeSingleAs[DecimalLiteralV2](predicateIri).map(_.value)
-
-    /**
-     * Returns the required decimal object of the specified predicate. Throws an exception if the object is not found or
-     * is not a decimal value.
-     *
-     * @param predicateIri the predicate.
-     * @return the decimal object of the predicate.
-     */
-    def requireDecimalObject(predicateIri: SmartIri): BigDecimal =
-      requireSingleAs[DecimalLiteralV2](predicateIri).value
-
-    /**
-     * Returns the optional timestamp object of the specified predicate. Throws an exception if the object is not a timestamp.
-     *
-     * @param predicateIri the predicate.
-     * @return the timestamp object of the predicate.
-     */
-    def maybeDateTimeObject(predicateIri: SmartIri): Option[Instant] =
-      maybeSingleAs[DateTimeLiteralV2](predicateIri).map(_.value)
-
-    /**
-     * Returns the required timestamp object of the specified predicate. Throws an exception if the object is not found or
-     * is not a timestamp value.
-     *
-     * @param predicateIri the predicate.
-     * @return the timestamp object of the predicate.
-     */
-    def requireDateTimeObject(predicateIri: SmartIri): Instant =
-      requireSingleAs[DateTimeLiteralV2](predicateIri).value
-  }
-
-  /**
-   * Represents the RDF data about a value, possibly including standoff.
-   *
-   * @param valueIri       the value object's IRI.
-   * @param valueObjectClass the type (class) of the value object.
-   * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[isIncomingLink]]).
-   * @param isIncomingLink   indicates if it is an incoming or outgoing link in case of a link value.
-   * @param userPermission   the permission that the requesting user has on the value.
-   * @param assertions       the value objects assertions.
-   * @param standoff         standoff assertions, if any.
-   */
-  case class ValueRdfData(
-    valueIri: ValueIri,
-    valueObjectClass: SmartIri,
-    nestedResource: Option[ResourceWithValueRdfData] = None,
-    isIncomingLink: Boolean = false,
-    userPermission: Permission.ObjectAccess,
-    assertions: PredicateObjects,
-    standoff: FlatStatements,
-  ) extends RdfData {
-    override val subjectIri: IRI = valueIri.value
-  }
-
-  /**
-   * Represents a resource and its values.
-   *
-   * @param resourceIri              the resource IRI.
-   * @param assertions              assertions about the resource (direct statements).
-   * @param isMainResource          indicates if this represents a top level resource or a referred resource (depending on the query).
-   * @param userPermission          the permission that the requesting user has on the resource.
-   * @param valuePropertyAssertions assertions about value properties.
-   */
-  case class ResourceWithValueRdfData(
-    resourceIri: ResourceIri,
-    assertions: PredicateObjects,
-    isMainResource: Boolean,
-    userPermission: Option[Permission.ObjectAccess],
-    valuePropertyAssertions: RdfPropertyValues,
-  ) extends RdfData {
-    override val subjectIri: IRI = resourceIri.value
-  }
-
-  /**
-   * Represents a mapping including information about the standoff entities.
-   * May include a default XSL transformation.
-   *
-   * @param mapping           the mapping from XML to standoff and vice versa.
-   * @param standoffEntities  information about the standoff entities referred to in the mapping.
-   * @param XSLTransformation the default XSL transformation to convert the resulting XML (e.g., to HTML), if any.
-   */
-  case class MappingAndXSLTransformation(
-    mapping: MappingXMLtoStandoff,
-    standoffEntities: StandoffEntityInfoGetResponseV2,
-    XSLTransformation: Option[String],
-  )
-
-  /**
-   * Represents a tree structure of resources, values and dependent resources returned by a SPARQL CONSTRUCT query.
-   *
-   * @param resources          a map of resource Iris to [[ResourceWithValueRdfData]]. The resource Iris represent main resources, dependent
-   *                           resources are contained in the link values as nested structures.
-   * @param hiddenResourceIris the IRIs of resources that were hidden because the user does not have permission
-   *                           to see them.
-   */
-  case class MainResourcesAndValueRdfData(resources: RdfResources, hiddenResourceIris: Set[ResourceIri] = Set.empty)
-
-  /**
    * An intermediate data structure containing RDF assertions about an entity and the user's permission on the entity.
    *
    * @param assertions          RDF assertions about the entity.
    * @param maybeUserPermission the user's permission on the entity, if any.
    */
-  case class RdfWithUserPermission(
+  private[util] case class RdfWithUserPermission(
     assertions: ConstructPredicateObjects,
     maybeUserPermission: Option[Permission.ObjectAccess],
   )

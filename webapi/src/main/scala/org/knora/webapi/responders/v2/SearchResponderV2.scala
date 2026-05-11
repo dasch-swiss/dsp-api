@@ -18,8 +18,10 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.util.ConstructResponseRdfData
+import org.knora.webapi.messages.util.ConstructResponseRdfData.MainResourcesAndValueRdfData
+import org.knora.webapi.messages.util.ConstructResponseRdfData.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDInt
@@ -626,7 +628,7 @@ final class SearchResponderV2Live(
           } yield queryResultsSep
         } else {
           // the prequery returned no results, no further query is necessary
-          ZIO.attempt(ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty))
+          ZIO.attempt(MainResourcesAndValueRdfData(resources = Map.empty))
         }
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -882,7 +884,7 @@ final class SearchResponderV2Live(
               constructResponseUtilV2.splitMainResourcesAndValueRdfData(mainQueryResponse, user)
 
             // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
-            queryResWithFullGraphPatternOnlyRequestedValues: ConstructResponseUtilV2.RdfResources =
+            queryResWithFullGraphPatternOnlyRequestedValues: ConstructResponseRdfData.RdfResources =
               MainQueryResultProcessor
                 .getRequestedValuesFromResultsWithFullGraphPattern(
                   queryResultsFilteredForPermissions.resources,
@@ -897,7 +899,7 @@ final class SearchResponderV2Live(
 
         } else {
           // the prequery returned no results, no further query is necessary
-          ZIO.attempt(ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty))
+          ZIO.attempt(MainResourcesAndValueRdfData(resources = Map.empty))
         }
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
