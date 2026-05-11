@@ -25,7 +25,6 @@ import org.knora.webapi.slice.api.admin.service.UserRestService.UserResponse
 import org.knora.webapi.slice.common.domain.LanguageCode.DE
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
-import org.knora.webapi.util.ZioHelper.addLogTiming
 
 object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
@@ -206,5 +205,12 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
           uri"/admin/users/iri/$userIri/project-memberships/$projectIri",
           requestingUser,
         )
+    }
+
+  private def addLogTiming[R, E, A](msg: String, logLevel: LogLevel = LogLevel.Debug)(zio: ZIO[R, E, A]): ZIO[R, E, A] =
+    ZIO.logLevel(logLevel) {
+      zio.timed.flatMap { case (duration, res) =>
+        ZIO.log(s"$msg took: ${duration.toMillis} ms").as(res)
+      }
     }
 }

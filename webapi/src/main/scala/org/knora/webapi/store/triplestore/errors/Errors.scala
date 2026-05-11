@@ -58,15 +58,6 @@ object TriplestoreUnsupportedFeatureException {
 }
 
 /**
- * Indicates that something inside the Triplestore package went wrong. More details can be given in the message parameter.
- *
- * @param message a description of the error.
- * @param cause   the original exception representing the cause of the error, if any.
- */
-case class TriplestoreInternalException(message: String, cause: Option[Throwable] = None)
-    extends TriplestoreException(message, cause)
-
-/**
  * Indicates that the triplestore returned an error message, or a response that could not be parsed.
  *
  * @param message a description of the error.

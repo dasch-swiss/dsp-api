@@ -58,7 +58,6 @@ import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
-import org.knora.webapi.util.ZioHelper
 
 final class CreateResourceV2Handler(
   iriService: IriService,
@@ -725,71 +724,65 @@ final class CreateResourceV2Handler(
     defaultPropertyPermissions: Map[SmartIri, String],
     resourceIDForErrorMsg: String,
     requestingUser: User,
-  ): Task[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
-    val propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Task[GenerateSparqlForValueInNewResourceV2]]] =
-      values.map { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
-        val validatedPermissionFutures: Seq[Task[GenerateSparqlForValueInNewResourceV2]] = valuesToCreate.map {
-          valueToCreate =>
-            // Does this value have custom permissions?
-            valueToCreate.permissions match {
-              case Some(permissionStr: String) =>
-                // Yes. Validate and reformat them.
-                for {
-                  validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
+  ): Task[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] =
+    ZIO.foreach(values) { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
+      ZIO
+        .foreach(valuesToCreate) { valueToCreate =>
+          // Does this value have custom permissions?
+          valueToCreate.permissions match {
+            case Some(permissionStr: String) =>
+              // Yes. Validate and reformat them.
+              for {
+                validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
 
-                  // Is the requesting user a system admin, or an admin of this project?
-                  _ <- ZIO.when(
-                         !(requestingUser.permissions
-                           .isProjectAdmin(project.id.value) || requestingUser.permissions.isSystemAdmin),
-                       ) {
+                // Is the requesting user a system admin, or an admin of this project?
+                _ <- ZIO.when(
+                       !(requestingUser.permissions
+                         .isProjectAdmin(project.id.value) || requestingUser.permissions.isSystemAdmin),
+                     ) {
 
-                         // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                       // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                       val permissionComparisonResult: PermissionComparisonResult =
+                         PermissionUtilADM.comparePermissionsADM(
+                           entityProject = project.id.value,
+                           permissionLiteralA = validatedCustomPermissions,
+                           permissionLiteralB = defaultPropertyPermissions(propertyIri),
+                           requestingUser = requestingUser,
+                         )
 
-                         val permissionComparisonResult: PermissionComparisonResult =
-                           PermissionUtilADM.comparePermissionsADM(
-                             entityProject = project.id.value,
-                             permissionLiteralA = validatedCustomPermissions,
-                             permissionLiteralB = defaultPropertyPermissions(propertyIri),
-                             requestingUser = requestingUser,
-                           )
-
-                         ZIO.when(permissionComparisonResult == AGreaterThanB) {
-                           ZIO.fail(
-                             ForbiddenException(
-                               s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
-                             ),
-                           )
-                         }
+                       ZIO.when(permissionComparisonResult == AGreaterThanB) {
+                         ZIO.fail(
+                           ForbiddenException(
+                             s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
+                           ),
+                         )
                        }
-                } yield GenerateSparqlForValueInNewResourceV2(
+                     }
+              } yield GenerateSparqlForValueInNewResourceV2(
+                valueContent = valueToCreate.valueContent,
+                customValueIri = valueToCreate.customValueIri,
+                customValueUUID = valueToCreate.customValueUUID,
+                customValueCreationDate = valueToCreate.customValueCreationDate,
+                permissions = validatedCustomPermissions,
+                orderHint = valueToCreate.orderHint,
+              )
+
+            case None =>
+              // No. Use the default permissions.
+              ZIO.succeed {
+                GenerateSparqlForValueInNewResourceV2(
                   valueContent = valueToCreate.valueContent,
                   customValueIri = valueToCreate.customValueIri,
                   customValueUUID = valueToCreate.customValueUUID,
                   customValueCreationDate = valueToCreate.customValueCreationDate,
-                  permissions = validatedCustomPermissions,
+                  permissions = defaultPropertyPermissions(propertyIri),
                   orderHint = valueToCreate.orderHint,
                 )
-
-              case None =>
-                // No. Use the default permissions.
-                ZIO.succeed {
-                  GenerateSparqlForValueInNewResourceV2(
-                    valueContent = valueToCreate.valueContent,
-                    customValueIri = valueToCreate.customValueIri,
-                    customValueUUID = valueToCreate.customValueUUID,
-                    customValueCreationDate = valueToCreate.customValueCreationDate,
-                    permissions = defaultPropertyPermissions(propertyIri),
-                    orderHint = valueToCreate.orderHint,
-                  )
-                }
-            }
+              }
+          }
         }
-
-        propertyIri -> validatedPermissionFutures
-      }
-
-    ZioHelper.sequence(propertyValuesWithValidatedPermissionsFutures.map { case (k, v) => k -> ZIO.collectAll(v) })
-  }
+        .map((propertyIri, _))
+    }
 
   /**
    * Checks that a resource was created.
