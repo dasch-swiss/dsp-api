@@ -8,8 +8,11 @@ package org.knora.webapi.messages.util.standoff
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+import zio.ZIO
+import zio.test.Assertion.failsWithA
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
+import zio.test.assert
 import zio.test.assertTrue
 
 import java.nio.file.Paths
@@ -74,16 +77,9 @@ object XMLUtilSpec extends ZIOSpecDefault {
           |</xsl:transform
                 """.stripMargin
 
-      val threw =
-        try {
-          val _: String = XMLUtil.applyXSLTransformation(xml, xsltInvalid)
-          false
-        } catch {
-          case _: StandoffConversionException => true
-        }
-
-      assertTrue(threw)
-
+      for {
+        actual <- ZIO.attempt(XMLUtil.applyXSLTransformation(xml, xsltInvalid)).exit
+      } yield assert(actual)(failsWithA[StandoffConversionException])
     },
     test("demonstrate how to handle resources that may or may not be embedded") {
       val xmlWithNestedResource =
