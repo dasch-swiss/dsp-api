@@ -60,10 +60,10 @@ case class LegalInfoService(
 
   def validateLegalInfo(fileValue: FileValueV2, id: Shortcode): IO[String, FileValueV2] =
     for {
-      project              <- projects.findByShortcode(id).orDie.someOrFail(s"Project $id not found")
-      licenseValid          = licenseValidation(fileValue.licenseIri, project)
-      copyrightHolderValid  = copyrightHolderValidation(fileValue.copyrightHolder, project)
-      _                    <- Validation.validate(licenseValid, copyrightHolderValid).toZIOParallelErrors.mapError(_.mkString(", "))
+      project             <- projects.findByShortcode(id).orDie.someOrFail(s"Project $id not found")
+      licenseValid         = licenseValidation(fileValue.licenseIri, project)
+      copyrightHolderValid = copyrightHolderValidation(fileValue.copyrightHolder, project)
+      _                   <- Validation.validate(licenseValid, copyrightHolderValid).toZIOParallelErrors.mapError(_.mkString(", "))
     } yield fileValue
 
   private def licenseValidation(

@@ -8,7 +8,7 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 import org.knora.webapi.messages.util.rdf.*
 
 class UpgradePluginPR4116Spec extends UpgradePluginSpec {
-  private val adminGraph = "http://www.knora.org/data/admin"
+  private val adminGraph     = "http://www.knora.org/data/admin"
   private val lifecycleQuery =
     s"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
         |
