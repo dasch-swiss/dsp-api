@@ -5,11 +5,16 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
 import org.knora.webapi.messages.util.rdf.*
 
-class UpgradePluginPR1615Spec extends UpgradePluginSpec {
-  "Upgrade plugin PR1615" should {
-    "remove the instance of ForbiddenResource" in {
+object UpgradePluginPR1615Spec extends ZIOSpecDefault with UpgradePluginSpec {
+
+  val spec: Spec[Any, Nothing] = suite("Upgrade plugin PR1615")(
+    test("remove the instance of ForbiddenResource") {
       // Parse the input file.
       val model: RdfModel = trigFileToModel("test_data/upgrade/pr1615.trig")
 
@@ -31,7 +36,7 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
           |""".stripMargin
 
       val queryResult1: SparqlSelectResult = repository.doSelect(selectQuery = query1)
-      assert(queryResult1.isEmpty)
+      val firstResultEmpty                 = queryResult1.isEmpty
 
       // Check that other data is still there.
 
@@ -44,9 +49,11 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
           |""".stripMargin
 
       val queryResult2: SparqlSelectResult = repository.doSelect(selectQuery = query2)
-      assert(queryResult2.nonEmpty)
+      val secondResultNonEmpty             = queryResult2.nonEmpty
 
       repository.shutDown()
-    }
-  }
+
+      assertTrue(firstResultEmpty, secondResultNonEmpty)
+    },
+  )
 }

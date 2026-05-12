@@ -5,8 +5,9 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -15,7 +16,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 /**
  * This spec is used to test the [[User]] and [[UserIdentifierADM]] classes.
  */
-class UsersMessagesADMSpec extends AnyWordSpec with Matchers {
+object UsersMessagesADMSpec extends ZIOSpecDefault {
 
   private val id          = SharedTestDataADM.rootUser.id
   private val username    = SharedTestDataADM.rootUser.username
@@ -29,8 +30,8 @@ class UsersMessagesADMSpec extends AnyWordSpec with Matchers {
   private val projects    = SharedTestDataADM.rootUser.projects
   private val permissions = SharedTestDataADM.rootUser.permissions
 
-  "The UserADM case class" should {
-    "return a RESTRICTED UserADM when requested " in {
+  val spec: Spec[Any, Nothing] = suite("The UserADM case class")(
+    test("return a RESTRICTED UserADM when requested") {
       val rootUser = User(
         id = id,
         username = username,
@@ -58,21 +59,13 @@ class UsersMessagesADMSpec extends AnyWordSpec with Matchers {
         permissions = permissions.ofType(PermissionProfileType.Restricted),
       )
 
-      assert(rootUser.ofType(UserInformationType.Restricted) === rootUserRestricted)
-    }
-
-    "return true if user is ProjectAdmin in any project " in {
-      assert(
-        SharedTestDataADM.anythingAdminUser.permissions.isProjectAdminInAnyProject() === true,
-        "user is not ProjectAdmin in any of his projects",
-      )
-    }
-
-    "return false if user is not ProjectAdmin in any project " in {
-      assert(
-        SharedTestDataADM.anythingUser1.permissions.isProjectAdminInAnyProject() === false,
-        "user is ProjectAdmin in one of his projects",
-      )
-    }
-  }
+      assertTrue(rootUser.ofType(UserInformationType.Restricted) == rootUserRestricted)
+    },
+    test("return true if user is ProjectAdmin in any project") {
+      assertTrue(SharedTestDataADM.anythingAdminUser.permissions.isProjectAdminInAnyProject())
+    },
+    test("return false if user is not ProjectAdmin in any project") {
+      assertTrue(!SharedTestDataADM.anythingUser1.permissions.isProjectAdminInAnyProject())
+    },
+  )
 }

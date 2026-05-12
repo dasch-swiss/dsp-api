@@ -5,11 +5,16 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
 
-class UpgradePluginPR2081Spec extends UpgradePluginSpec {
+object UpgradePluginPR2081Spec extends ZIOSpecDefault with UpgradePluginSpec {
+
   private def getDateValue(model: RdfModel, subj: IriNode, pred: IriNode): String = {
     val statement = model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet.head
     statement.obj match {
@@ -19,9 +24,8 @@ class UpgradePluginPR2081Spec extends UpgradePluginSpec {
     }
   }
 
-  "Upgrade plugin PR2081" should {
-
-    "fix invalid date serializations" in {
+  val spec: Spec[Any, Nothing] = suite("Upgrade plugin PR2081")(
+    test("fix invalid date serializations") {
       val resource1            = JenaNodeFactory.makeIriNode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9ma")
       val resource2            = JenaNodeFactory.makeIriNode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mb")
       val resource3            = JenaNodeFactory.makeIriNode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mc")
@@ -51,20 +55,20 @@ class UpgradePluginPR2081Spec extends UpgradePluginSpec {
       val newResource3DeletionDate         = getDateValue(model, resource3, deletionDate)
 
       // Check that the dates were fixed.
-      newResource1CreationDate should not equal (resource1CreationDate)
-      newResource1CreationDate should endWith("Z")
-
-      newResource2CreationDate should not equal (resource2CreationDate)
-      newResource2CreationDate should endWith("Z")
-      newResource2LastModificationDate should not equal (resource2CreationDate)
-      newResource2LastModificationDate should endWith("Z")
-
-      newResource3CreationDate should equal(resource3CreationDate) // is equal!
-      newResource3CreationDate should endWith("Z")
-      newResource3LastModificationDate should not equal (resource3CreationDate)
-      newResource3LastModificationDate should endWith("Z")
-      newResource3DeletionDate should not equal (resource3CreationDate)
-      newResource3DeletionDate should endWith("Z")
-    }
-  }
+      assertTrue(
+        newResource1CreationDate != resource1CreationDate,
+        newResource1CreationDate.endsWith("Z"),
+        newResource2CreationDate != resource2CreationDate,
+        newResource2CreationDate.endsWith("Z"),
+        newResource2LastModificationDate != resource2CreationDate,
+        newResource2LastModificationDate.endsWith("Z"),
+        newResource3CreationDate == resource3CreationDate,
+        newResource3CreationDate.endsWith("Z"),
+        newResource3LastModificationDate != resource3CreationDate,
+        newResource3LastModificationDate.endsWith("Z"),
+        newResource3DeletionDate != resource3CreationDate,
+        newResource3DeletionDate.endsWith("Z"),
+      )
+    },
+  )
 }
