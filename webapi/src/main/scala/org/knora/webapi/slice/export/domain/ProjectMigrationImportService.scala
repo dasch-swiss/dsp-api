@@ -5,10 +5,15 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import org.apache.jena.graph.Node
+import org.apache.jena.graph.Triple
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.rdf.model.ResourceFactory
 import org.apache.jena.riot.Lang
+import org.apache.jena.riot.RDFParser
+import org.apache.jena.riot.system.StreamRDFBase
+import org.apache.jena.sparql.core.Quad
 import org.apache.jena.vocabulary.RDF
 import zio.*
 import zio.nio.file.Files
@@ -124,6 +129,13 @@ final class ProjectMigrationImportService(
                        } yield shortcode
                      }
         _ <- ZIO.logInfo(s"$taskId: Admin data validation passed for project '$projectIri'")
+
+        // Reject imports where the data graph references built-in users (SystemUser, AnonymousUser).
+        // These IRIs exist on every target instance, so leaving such references intact after import
+        // would silently bind project data to system-managed identities.
+        dataNqPath = bagRoot / "data" / "rdf" / "data.nq"
+        _         <- validateNoBuiltInUserReferences(dataNqPath)
+        _         <- ZIO.logInfo(s"$taskId: Built-in user reference check passed for project '$projectIri'")
 
         // SHACL validates the original admin.nq (all user type declarations present)
         _ <- ZIO.logInfo(s"$taskId: Starting shacl validation '$projectIri'")
@@ -253,6 +265,37 @@ final class ProjectMigrationImportService(
            ),
          )
   } yield shortcode
+
+  private def validateNoBuiltInUserReferences(dataNqPath: Path): Task[Unit] = {
+    val builtInIris: Set[String] = KnoraUserRepo.builtIn.all.map(_.id.value).toSet
+    ZIO.attemptBlocking {
+      val found = scala.collection.mutable.LinkedHashSet.empty[String]
+      val sink  = new StreamRDFBase {
+        private def check(n: Node): Unit =
+          if (n.isURI && builtInIris.contains(n.getURI)) { val _ = found.add(n.getURI) }
+        override def quad(q: Quad): Unit = {
+          check(q.getSubject); check(q.getObject)
+        }
+        override def triple(t: Triple): Unit = {
+          check(t.getSubject); check(t.getObject)
+        }
+      }
+      RDFParser.source(dataNqPath.toFile.getAbsolutePath).lang(Lang.NQUADS).parse(sink)
+      found.toList
+    }
+      .flatMap(found =>
+        ZIO.when(found.nonEmpty)(
+          ZIO.fail(
+            new RuntimeException(
+              s"data.nq references built-in user(s) ${found.mkString("'", "', '", "'")}. " +
+                "Built-in users (SystemUser, AnonymousUser) must not appear in the data graph; " +
+                "pre-migration cleanup is required.",
+            ),
+          ),
+        ),
+      )
+      .unit
+  }
 
   private def validateGroupsNotExist(model: Model): Task[Unit] = {
     val groupResources = model.listSubjectsWithProperty(RDF.`type`, KnoraAdmin.UserGroup: Resource).asScala.toList

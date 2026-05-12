@@ -1115,5 +1115,85 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         }
       },
     ),
+    suite("built-in user references in data graph")(
+      test("rejects data.nq referencing SystemUser as object (e.g. attachedToUser)") {
+        val dataGraph            = "http://www.knora.org/data/9999/test"
+        val resourceType         = "http://www.knora.org/ontology/9999/test#TestResource"
+        val attachedToUser       = "http://www.knora.org/ontology/knora-base#attachedToUser"
+        val dataNqWithSystemUser =
+          s"""<http://rdfh.ch/9999/resource001> <$RdfType> <$resourceType> <$dataGraph> .
+             |<http://rdfh.ch/9999/resource001> <$attachedToUser> <${KnoraAdminPrefix}SystemUser> <$dataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          for {
+            env    <- makeTestEnv
+            stream <- buildBagItZip(
+                        payloadFiles = Map(
+                          "rdf/admin.nq"      -> adminNq,
+                          "rdf/data.nq"       -> dataNqWithSystemUser,
+                          "rdf/ontology-0.nq" -> ontologyNq,
+                        ),
+                      )
+            task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+            result <- pollUntilDone(env.service, task.id)
+            _      <- cleanupImport(env, task.id)
+          } yield assertTrue(
+            result.status == DataTaskStatus.Failed,
+            result.errorMessage.exists(_.contains("SystemUser")),
+          )
+        }
+      },
+      test("rejects data.nq referencing AnonymousUser as object") {
+        val dataGraph      = "http://www.knora.org/data/9999/test"
+        val resourceType   = "http://www.knora.org/ontology/9999/test#TestResource"
+        val attachedToUser = "http://www.knora.org/ontology/knora-base#attachedToUser"
+        val dataNqWithAnon =
+          s"""<http://rdfh.ch/9999/resource001> <$RdfType> <$resourceType> <$dataGraph> .
+             |<http://rdfh.ch/9999/resource001> <$attachedToUser> <${KnoraAdminPrefix}AnonymousUser> <$dataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          for {
+            env    <- makeTestEnv
+            stream <- buildBagItZip(
+                        payloadFiles = Map(
+                          "rdf/admin.nq"      -> adminNq,
+                          "rdf/data.nq"       -> dataNqWithAnon,
+                          "rdf/ontology-0.nq" -> ontologyNq,
+                        ),
+                      )
+            task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+            result <- pollUntilDone(env.service, task.id)
+            _      <- cleanupImport(env, task.id)
+          } yield assertTrue(
+            result.status == DataTaskStatus.Failed,
+            result.errorMessage.exists(_.contains("AnonymousUser")),
+          )
+        }
+      },
+      test("rejects data.nq referencing SystemUser as subject") {
+        val dataGraph                   = "http://www.knora.org/data/9999/test"
+        val dataNqWithSystemUserSubject =
+          s"""<${KnoraAdminPrefix}SystemUser> <http://www.knora.org/ontology/knora-base#hasPermissions> "anything" <$dataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          for {
+            env    <- makeTestEnv
+            stream <- buildBagItZip(
+                        payloadFiles = Map(
+                          "rdf/admin.nq"      -> adminNq,
+                          "rdf/data.nq"       -> dataNqWithSystemUserSubject,
+                          "rdf/ontology-0.nq" -> ontologyNq,
+                        ),
+                      )
+            task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+            result <- pollUntilDone(env.service, task.id)
+            _      <- cleanupImport(env, task.id)
+          } yield assertTrue(
+            result.status == DataTaskStatus.Failed,
+            result.errorMessage.exists(_.contains("SystemUser")),
+          )
+        }
+      },
+    ),
   ).provide(configLayer) @@ TestAspect.withLiveClock @@ TestAspect.withLiveRandom @@ TestAspect.timeout(30.seconds)
 }
