@@ -84,16 +84,15 @@ object IriLockerSpec extends ZIOSpecDefault {
         secondResult <- IriLocker.runWithIriLock(UUID.randomUUID, testIri)(runTask(true))
       } yield assertTrue(firstResult.isLeft, secondResult == SUCCESS)
     },
-    test("release a lock when a task dies with an exception") {
-      def runTask(succeed: Boolean): Task[String] =
-        if (succeed) ZIO.succeed(SUCCESS) else ZIO.attempt(throw new Exception(FAILURE))
-
+    test("release a lock when a task dies with a defect") {
       val testIri: IRI = "http://example.org/test4"
 
       for {
-        firstResult  <- IriLocker.runWithIriLock(UUID.randomUUID, testIri)(runTask(false)).either
-        secondResult <- IriLocker.runWithIriLock(UUID.randomUUID, testIri)(runTask(true))
-      } yield assertTrue(firstResult.isLeft, secondResult == SUCCESS)
+        // `ZIO.die` produces an unrecoverable defect (not a typed failure).
+        // `.exit` is required because `.either` only catches typed failures.
+        firstExit    <- IriLocker.runWithIriLock(UUID.randomUUID, testIri)(ZIO.die(new Exception(FAILURE))).exit
+        secondResult <- IriLocker.runWithIriLock(UUID.randomUUID, testIri)(ZIO.succeed(SUCCESS))
+      } yield assertTrue(firstExit.isFailure, secondResult == SUCCESS)
     },
   ) @@ TestAspect.sequential
 }
