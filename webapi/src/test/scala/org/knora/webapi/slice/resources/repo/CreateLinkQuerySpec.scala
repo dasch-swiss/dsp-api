@@ -39,6 +39,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault {
     SelfJoin.CannotJoin,
     Set.empty,
     Set.empty,
+    Lifecycle.Draft,
   )
 
   private val testResourceIri         = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing1")

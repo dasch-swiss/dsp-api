@@ -19,6 +19,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Lifecycle
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -186,6 +187,7 @@ object SharedTestDataADM {
     selfjoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
+    lifecycle = Lifecycle.Draft,
   )
 
   /* represents the full ProjectADM of the default shared ontologies project */
@@ -202,6 +204,7 @@ object SharedTestDataADM {
     selfjoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
+    lifecycle = Lifecycle.Draft,
   )
 
   /**
@@ -323,6 +326,7 @@ object SharedTestDataADM {
     selfjoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
+    lifecycle = Lifecycle.Draft,
   )
 
   /* represents the full ProjectADM of the images project in the external format */
@@ -339,6 +343,7 @@ object SharedTestDataADM {
     selfjoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
+    lifecycle = Lifecycle.Draft,
   )
 
   /* represents the full GroupADM of the images ProjectAdmin group */
@@ -512,6 +517,7 @@ object SharedTestDataADM {
     selfjoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
+    lifecycle = Lifecycle.Draft,
   )
 
   /* represents the ProjectADM of the incunabula project in the external format*/
@@ -547,6 +553,7 @@ object SharedTestDataADM {
     selfjoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
+    lifecycle = Lifecycle.Draft,
   )
 
   /**
@@ -670,6 +677,7 @@ object SharedTestDataADM {
     selfjoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
+    lifecycle = Lifecycle.Draft,
   )
 
   def anythingProjectExternal: Project = Project(
@@ -688,6 +696,7 @@ object SharedTestDataADM {
     selfjoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
+    lifecycle = Lifecycle.Draft,
   )
 
   /* represents the full GroupADM of the Thing searcher group */
@@ -727,6 +736,7 @@ object SharedTestDataADM {
     selfjoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
+    lifecycle = Lifecycle.Draft,
   )
 
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -778,6 +788,7 @@ object SharedTestDataADM {
     selfjoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
+    lifecycle = Lifecycle.Draft,
   )
 
   /**

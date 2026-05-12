@@ -202,6 +202,10 @@ object KnoraProject {
 
     def from(value: String): Either[String, Lifecycle] =
       all.find(_.value == value).toRight(s"Invalid lifecycle: $value")
+
+    given JsonCodec[Lifecycle] = ZioJsonCodec.stringCodec[Lifecycle](Lifecycle.from)
+    given Schema[Lifecycle]    =
+      Schema.string.description("The lifecycle stage of the project. One of \"draft\" or \"published\".")
   }
 
 }

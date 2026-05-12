@@ -19,6 +19,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Lifecycle
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin.CannotJoin
@@ -113,6 +114,7 @@ object Examples {
       selfjoin = CannotJoin,
       allowedCopyrightHolders = Set.empty,
       enabledLicenses = LicenseIri.BUILT_IN,
+      lifecycle = Lifecycle.Draft,
     )
 
     private val group = Group(

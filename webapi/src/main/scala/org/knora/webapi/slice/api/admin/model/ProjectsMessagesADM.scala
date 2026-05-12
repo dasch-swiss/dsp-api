@@ -31,6 +31,7 @@ import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec.*
  * @param ontologies  The project's ontologies.
  * @param status      The project's status.
  * @param selfjoin    The project's self-join status.
+ * @param lifecycle   The project's lifecycle stage (draft or published).
  */
 case class Project(
   id: ProjectIri,
@@ -45,6 +46,7 @@ case class Project(
   selfjoin: SelfJoin,
   allowedCopyrightHolders: Set[CopyrightHolder],
   enabledLicenses: Set[LicenseIri],
+  lifecycle: Lifecycle,
 ) extends Ordered[Project] {
 
   /**

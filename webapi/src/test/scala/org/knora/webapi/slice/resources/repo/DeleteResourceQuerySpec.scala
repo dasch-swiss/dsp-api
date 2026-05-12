@@ -30,6 +30,7 @@ object DeleteResourceQuerySpec extends ZIOSpecDefault {
     SelfJoin.CannotJoin,
     Set.empty,
     Set.empty,
+    Lifecycle.Draft,
   )
 
   private val dataNamedGraph = "http://www.knora.org/data/0001/anything"

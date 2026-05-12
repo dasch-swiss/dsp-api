@@ -136,5 +136,6 @@ object TestDataFactory {
     SelfJoin.CannotJoin,
     Set.empty,
     Set.empty,
+    Lifecycle.Draft,
   )
 }
