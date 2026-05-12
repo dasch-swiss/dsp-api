@@ -5,9 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.FileInputStream
@@ -21,7 +18,7 @@ import org.knora.webapi.messages.util.rdf.*
 /**
  * Provides helper methods for specs that test upgrade plugins.
  */
-abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
+trait UpgradePluginSpec {
 
   /**
    * Parses a TriG file and returns it as an [[RdfModel]].
