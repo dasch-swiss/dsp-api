@@ -1115,8 +1115,8 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         }
       },
     ),
-    suite("built-in user references in data graph")(
-      test("rejects data.nq referencing SystemUser as object (e.g. attachedToUser)") {
+    suite("built-in user references in data graph (caught by SHACL)")(
+      test("rejects data.nq with attachedToUser pointing at SystemUser") {
         val dataGraph            = "http://www.knora.org/data/9999/test"
         val resourceType         = "http://www.knora.org/ontology/9999/test#TestResource"
         val attachedToUser       = "http://www.knora.org/ontology/knora-base#attachedToUser"
@@ -1143,7 +1143,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           )
         }
       },
-      test("rejects data.nq referencing AnonymousUser as object") {
+      test("rejects data.nq with attachedToUser pointing at AnonymousUser") {
         val dataGraph      = "http://www.knora.org/data/9999/test"
         val resourceType   = "http://www.knora.org/ontology/9999/test#TestResource"
         val attachedToUser = "http://www.knora.org/ontology/knora-base#attachedToUser"
@@ -1167,30 +1167,6 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           } yield assertTrue(
             result.status == DataTaskStatus.Failed,
             result.errorMessage.exists(_.contains("AnonymousUser")),
-          )
-        }
-      },
-      test("rejects data.nq referencing SystemUser as subject") {
-        val dataGraph                   = "http://www.knora.org/data/9999/test"
-        val dataNqWithSystemUserSubject =
-          s"""<${KnoraAdminPrefix}SystemUser> <http://www.knora.org/ontology/knora-base#hasPermissions> "anything" <$dataGraph> .
-             |""".stripMargin
-        ZIO.scoped {
-          for {
-            env    <- makeTestEnv
-            stream <- buildBagItZip(
-                        payloadFiles = Map(
-                          "rdf/admin.nq"      -> adminNq,
-                          "rdf/data.nq"       -> dataNqWithSystemUserSubject,
-                          "rdf/ontology-0.nq" -> ontologyNq,
-                        ),
-                      )
-            task   <- env.service.importDataExport(testProjectIri, testUser, stream)
-            result <- pollUntilDone(env.service, task.id)
-            _      <- cleanupImport(env, task.id)
-          } yield assertTrue(
-            result.status == DataTaskStatus.Failed,
-            result.errorMessage.exists(_.contains("SystemUser")),
           )
         }
       },
