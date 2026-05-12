@@ -210,8 +210,8 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
     },
     test("convert a valid date string with day precision to a Julian Day range") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02-28", CalendarNameGregorian)
-      calendarDate.toJulianDayRange
-      assertTrue(true)
+      val (startJDN, endJDN)           = calendarDate.toJulianDayRange
+      assertTrue(startJDN == endJDN)
     },
     test("not convert a string representing a non-existent date with day precision to a Julian Day range") {
       assertTrue(throwsBadRequest {
@@ -233,8 +233,8 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
     },
     test("convert a valid date string with month precision to a Julian Day range") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02", CalendarNameGregorian)
-      calendarDate.toJulianDayRange
-      assertTrue(true)
+      val (startJDN, endJDN)           = calendarDate.toJulianDayRange
+      assertTrue(startJDN < endJDN)
     },
     test("not convert an invalid date string with month precision to a Julian Day range") {
       assertTrue(throwsBadRequest {
@@ -260,8 +260,8 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
     },
     test("convert a valid islamic date string with month precision to a Julian Day range") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("1432-08-29", CalendarNameIslamic)
-      calendarDate.toJulianDayRange
-      assertTrue(true)
+      val (startJDN, endJDN)           = calendarDate.toJulianDayRange
+      assertTrue(startJDN == endJDN)
     },
     test("not convert an islamic date to a Julian Day range if an era is given") {
       assertTrue(throwsBadRequest {
@@ -271,8 +271,8 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
     },
     test("convert an islamic date range to a Julian Day range") {
       val calendarDate: CalendarDateRangeV2 = CalendarDateRangeV2.parse("ISLAMIC:1432-08-29:1441")
-      calendarDate.toJulianDayRange
-      assertTrue(true)
+      val (startJDN, endJDN)                = calendarDate.toJulianDayRange
+      assertTrue(startJDN < endJDN)
     },
     test("not convert an islamic date range if end date is before start data") {
       assertTrue(throwsBadRequest {
