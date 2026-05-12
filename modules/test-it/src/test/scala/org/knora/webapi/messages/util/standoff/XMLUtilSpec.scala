@@ -5,22 +5,22 @@
 
 package org.knora.webapi.messages.util.standoff
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 import java.nio.file.Paths
 
 import dsp.errors.StandoffConversionException
 import org.knora.webapi.util.FileUtil
 
-class XMLUtilSpec extends AnyWordSpec with Matchers {
+object XMLUtilSpec extends ZIOSpecDefault {
 
-  "The XML to standoff utility" should {
-
-    "transform an XML document to HTML" in {
+  val spec: Spec[Any, Nothing] = suite("The XML to standoff utility")(
+    test("transform an XML document to HTML") {
 
       val xml =
         """<?xml version="1.0"?>
@@ -50,11 +50,10 @@ class XMLUtilSpec extends AnyWordSpec with Matchers {
       val xmlDiff: Diff =
         DiffBuilder.compare(Input.fromString(expected)).withTest(Input.fromString(transformed)).build()
 
-      xmlDiff.hasDifferences should be(false)
+      assertTrue(!xmlDiff.hasDifferences)
 
-    }
-
-    "attempt transform an XML document with an invalid XSL transformation" in {
+    },
+    test("attempt transform an XML document with an invalid XSL transformation") {
 
       val xml =
         """<?xml version="1.0"?>
@@ -75,13 +74,18 @@ class XMLUtilSpec extends AnyWordSpec with Matchers {
           |</xsl:transform
                 """.stripMargin
 
-      assertThrows[StandoffConversionException] {
-        val _: String = XMLUtil.applyXSLTransformation(xml, xsltInvalid)
-      }
+      val threw =
+        try {
+          val _: String = XMLUtil.applyXSLTransformation(xml, xsltInvalid)
+          false
+        } catch {
+          case _: StandoffConversionException => true
+        }
 
-    }
+      assertTrue(threw)
 
-    "demonstrate how to handle resources that may or may not be embedded" in {
+    },
+    test("demonstrate how to handle resources that may or may not be embedded") {
       val xmlWithNestedResource =
         FileUtil.readTextFile(Paths.get("test_data/test_route/texts/beol/xml-with-nested-resources.xml"))
       val xmlWithNonNestedResource =
@@ -95,7 +99,7 @@ class XMLUtilSpec extends AnyWordSpec with Matchers {
         .compare(Input.fromString(transformedXmlWithNestedResource))
         .withTest(Input.fromString(transformedXmlWithNonNestedResource))
         .build()
-      xmlDiff.hasDifferences should be(false)
-    }
-  }
+      assertTrue(!xmlDiff.hasDifferences)
+    },
+  )
 }

@@ -5,11 +5,16 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
 import org.knora.webapi.messages.util.rdf.*
 
-class UpgradePluginPR1307Spec extends UpgradePluginSpec {
-  "Upgrade plugin PR1307" should {
-    "update text values with standoff" in {
+object UpgradePluginPR1307Spec extends ZIOSpecDefault with UpgradePluginSpec {
+
+  val spec: Spec[Any, Nothing] = suite("Upgrade plugin PR1307")(
+    test("update text values with standoff") {
       // Parse the input file.
       val model: RdfModel = trigFileToModel("test_data/upgrade/pr1307.trig")
 
@@ -43,7 +48,7 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
         ),
       )
 
-      assert(queryResult1.results == expectedResult1)
+      val firstResultsOk = queryResult1.results == expectedResult1
 
       // Check that the standoff tags' IRIs were changed correctly.
 
@@ -72,7 +77,7 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
         ),
       )
 
-      assert(queryResult2.results == expectedResult2)
+      val secondResultsOk = queryResult2.results == expectedResult2
 
       // Check that the objects of knora-base:standoffTagHasStartParent were changed correctly.
 
@@ -136,9 +141,11 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
         ),
       )
 
-      assert(queryResult3.results == expectedResult3)
+      val thirdResultsOk = queryResult3.results == expectedResult3
 
       repository.shutDown()
-    }
-  }
+
+      assertTrue(firstResultsOk, secondResultsOk, thirdResultsOk)
+    },
+  )
 }

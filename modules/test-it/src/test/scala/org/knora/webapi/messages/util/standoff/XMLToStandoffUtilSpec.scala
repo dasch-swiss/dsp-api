@@ -5,11 +5,12 @@
 
 package org.knora.webapi.messages.util.standoff
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 import java.util.UUID
 
@@ -18,11 +19,10 @@ import org.knora.webapi.messages.StringFormatter
 /**
  * Tests [[XMLToStandoffUtil]].
  */
-class XMLToStandoffUtilSpec extends AnyWordSpec with Matchers {
+object XMLToStandoffUtilSpec extends ZIOSpecDefault {
 
-  "The XML to standoff utility" should {
-
-    "convert an XML document to text with standoff, then back to an equivalent XML document" in {
+  val spec: Spec[Any, Nothing] = suite("The XML to standoff utility")(
+    test("convert an XML document to text with standoff, then back to an equivalent XML document") {
       val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
       // Convert the XML document to text with standoff.
@@ -37,10 +37,11 @@ class XMLToStandoffUtilSpec extends AnyWordSpec with Matchers {
         .compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDoc))
         .withTest(Input.fromString(backToXml))
         .build()
-      xmlDiff.hasDifferences should be(false)
-    }
-
-    "convert an XML document with one nested empty tag to text with standoff, then back to an equivalent XML document" in {
+      assertTrue(!xmlDiff.hasDifferences)
+    },
+    test(
+      "convert an XML document with one nested empty tag to text with standoff, then back to an equivalent XML document",
+    ) {
       val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
       // Convert the XML document to text with standoff.
@@ -55,10 +56,11 @@ class XMLToStandoffUtilSpec extends AnyWordSpec with Matchers {
         .compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTag))
         .withTest(Input.fromString(backToXml))
         .build()
-      xmlDiff.hasDifferences should be(false)
-    }
-
-    "convert an XML document with multiple nested empty tags to text with standoff, then back to an equivalent XML document" in {
+      assertTrue(!xmlDiff.hasDifferences)
+    },
+    test(
+      "convert an XML document with multiple nested empty tags to text with standoff, then back to an equivalent XML document",
+    ) {
       val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
       // Convert the XML document to text with standoff.
@@ -73,10 +75,11 @@ class XMLToStandoffUtilSpec extends AnyWordSpec with Matchers {
         .compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTags))
         .withTest(Input.fromString(backToXml))
         .build()
-      xmlDiff.hasDifferences should be(false)
-    }
-
-    "convert an XML document with namespaces and CLIX milestones to standoff, then back to an equivalent XML document" in {
+      assertTrue(!xmlDiff.hasDifferences)
+    },
+    test(
+      "convert an XML document with namespaces and CLIX milestones to standoff, then back to an equivalent XML document",
+    ) {
       val documentSpecificIDs = Map(
         "s02" -> UUID.randomUUID,
         "s03" -> UUID.randomUUID,
@@ -102,10 +105,11 @@ class XMLToStandoffUtilSpec extends AnyWordSpec with Matchers {
         .compare(Input.fromString(XMLToStandoffUtilSpec.xmlDocWithClix))
         .withTest(Input.fromString(backToXml))
         .build()
-      xmlDiff.hasDifferences should be(false)
-    }
-
-    "convert an XML document to a TextWithStandoff and check that information separator two has been inserted in the string" in {
+      assertTrue(!xmlDiff.hasDifferences)
+    },
+    test(
+      "convert an XML document to a TextWithStandoff and check that information separator two has been inserted in the string",
+    ) {
 
       val BEBBXML =
         """<?xml version="1.0" encoding="UTF-8"?>
@@ -127,11 +131,12 @@ class XMLToStandoffUtilSpec extends AnyWordSpec with Matchers {
       )
 
       // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)
-      assert(StringFormatter.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 3)
+      assertTrue(StringFormatter.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 3)
 
-    }
-
-    "convert an XML document containing elements with classes to a TextWithStandoff and check that information separator two has been inserted in the string" in {
+    },
+    test(
+      "convert an XML document containing elements with classes to a TextWithStandoff and check that information separator two has been inserted in the string",
+    ) {
 
       val testXML =
         """<?xml version="1.0" encoding="UTF-8"?>
@@ -155,13 +160,10 @@ class XMLToStandoffUtilSpec extends AnyWordSpec with Matchers {
       )
 
       // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)
-      assert(StringFormatter.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 1)
+      assertTrue(StringFormatter.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 1)
 
-    }
-  }
-}
-
-object XMLToStandoffUtilSpec {
+    },
+  )
 
   val simpleXmlDoc: String =
     """<?xml version="1.0" encoding="UTF-8"?>

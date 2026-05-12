@@ -5,8 +5,9 @@
 
 package org.knora.webapi.messages.util
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 import scala.collection.Map
 
@@ -19,7 +20,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 
-class PermissionUtilADMSpec extends AnyWordSpec with Matchers {
+object PermissionUtilADMSpec extends ZIOSpecDefault {
 
   val permissionLiteral =
     "RV knora-admin:UnknownUser|V knora-admin:KnownUser|M knora-admin:ProjectMember|CR knora-admin:Creator"
@@ -31,81 +32,79 @@ class PermissionUtilADMSpec extends AnyWordSpec with Matchers {
     Permission.ObjectAccess.ChangeRights   -> Set(KnoraGroupRepo.builtIn.Creator.id.value),
   )
 
-  "PermissionUtil" should {
-
-    "return user's max permission for a specific resource (incunabula normal project member user)" in {
-      PermissionUtilADM.getUserPermissionADM(
+  val spec: Spec[Any, Nothing] = suite("PermissionUtil")(
+    test("return user's max permission for a specific resource (incunabula normal project member user)") {
+      val result = PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataADM2.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.incunabulaMemberUser,
-      ) should equal(Some(Permission.ObjectAccess.Modify)) // modify permission
-    }
-
-    "return user's max permission for a specific resource (incunabula project admin user)" in {
-      PermissionUtilADM.getUserPermissionADM(
+      )
+      assertTrue(result.contains(Permission.ObjectAccess.Modify))
+    },
+    test("return user's max permission for a specific resource (incunabula project admin user)") {
+      val result = PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataADM2.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.incunabulaProjectAdminUser,
-      ) should equal(Some(Permission.ObjectAccess.ChangeRights)) // change rights permission
-    }
-
-    "return user's max permission for a specific resource (incunabula creator user)" in {
-      PermissionUtilADM.getUserPermissionADM(
+      )
+      assertTrue(result.contains(Permission.ObjectAccess.ChangeRights))
+    },
+    test("return user's max permission for a specific resource (incunabula creator user)") {
+      val result = PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataADM2.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.incunabulaCreatorUser,
-      ) should equal(Some(Permission.ObjectAccess.ChangeRights)) // change rights permission
-    }
-
-    "return user's max permission for a specific resource (root user)" in {
-      PermissionUtilADM.getUserPermissionADM(
+      )
+      assertTrue(result.contains(Permission.ObjectAccess.ChangeRights))
+    },
+    test("return user's max permission for a specific resource (root user)") {
+      val result = PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataADM2.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.rootUser,
-      ) should equal(Some(Permission.ObjectAccess.ChangeRights)) // change rights permission
-    }
-
-    "return user's max permission for a specific resource (normal user)" in {
-      PermissionUtilADM.getUserPermissionADM(
+      )
+      assertTrue(result.contains(Permission.ObjectAccess.ChangeRights))
+    },
+    test("return user's max permission for a specific resource (normal user)") {
+      val result = PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataADM2.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.normalUser,
-      ) should equal(Some(Permission.ObjectAccess.View)) // view permission
-    }
-
-    "return user's max permission for a specific resource (anonymous user)" in {
-      PermissionUtilADM.getUserPermissionADM(
+      )
+      assertTrue(result.contains(Permission.ObjectAccess.View))
+    },
+    test("return user's max permission for a specific resource (anonymous user)") {
+      val result = PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataADM2.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.anonymousUser,
-      ) should equal(Some(Permission.ObjectAccess.RestrictedView)) // restricted view permission
-    }
-
-    "return user's max permission from assertions for a specific resource" in {
+      )
+      assertTrue(result.contains(Permission.ObjectAccess.RestrictedView))
+    },
+    test("return user's max permission from assertions for a specific resource") {
       val assertions: Seq[(IRI, String)] = Seq(
         (OntologyConstants.KnoraBase.AttachedToUser, "http://rdfh.ch/users/91e19f1e01"),
         (OntologyConstants.KnoraBase.AttachedToProject, SharedTestDataADM2.incunabulaProjectIri),
         (OntologyConstants.KnoraBase.HasPermissions, permissionLiteral),
       )
 
-      PermissionUtilADM.getUserPermissionFromAssertionsADM(
+      val result = PermissionUtilADM.getUserPermissionFromAssertionsADM(
         entityIri = "http://rdfh.ch/00014b43f902",
         assertions = assertions,
         requestingUser = SharedTestDataADM.incunabulaMemberUser,
-      ) should equal(Some(Permission.ObjectAccess.Modify)) // modify permissions
-    }
-
-    "return parsed permissions string as 'Map[IRI, Set[String]]" in {
-      PermissionUtilADM.parsePermissions(permissionLiteral) should equal(parsedPermissionLiteral)
-    }
-
-    "return parsed permissions string as 'Set[PermissionV1]' (object access permissions)" in {
+      )
+      assertTrue(result.contains(Permission.ObjectAccess.Modify))
+    },
+    test("return parsed permissions string as 'Map[IRI, Set[String]]") {
+      assertTrue(PermissionUtilADM.parsePermissions(permissionLiteral) == parsedPermissionLiteral)
+    },
+    test("return parsed permissions string as 'Set[PermissionV1]' (object access permissions)") {
       val hasPermissionsString =
         "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser,http://rdfh.ch/groups/customgroup|RV knora-admin:UnknownUser"
 
@@ -117,13 +116,13 @@ class PermissionUtilADMSpec extends AnyWordSpec with Matchers {
         PermissionADM.from(Permission.ObjectAccess.RestrictedView, KnoraGroupRepo.builtIn.UnknownUser.id.value),
       )
 
-      PermissionUtilADM.parsePermissionsWithType(
+      val result = PermissionUtilADM.parsePermissionsWithType(
         Some(hasPermissionsString),
         PermissionType.OAP,
-      ) should contain allElementsOf permissionsSet
-    }
-
-    "return parsed permissions string as 'Set[PermissionV1]' (administrative permissions)" in {
+      )
+      assertTrue(permissionsSet.subsetOf(result))
+    },
+    test("return parsed permissions string as 'Set[PermissionV1]' (administrative permissions)") {
       val hasPermissionsString =
         "ProjectResourceCreateAllPermission|ProjectAdminAllPermission|ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/00FF/images#bild>,<http://www.knora.org/ontology/00FF/images#bildformat>"
 
@@ -140,26 +139,25 @@ class PermissionUtilADMSpec extends AnyWordSpec with Matchers {
         ),
       )
 
-      PermissionUtilADM.parsePermissionsWithType(
+      val result = PermissionUtilADM.parsePermissionsWithType(
         Some(hasPermissionsString),
         PermissionType.AP,
-      ) should contain allElementsOf permissionsSet
-    }
-
-    "build a 'PermissionADM' object" in {
-      PermissionUtilADM.buildPermissionObject(
+      )
+      assertTrue(permissionsSet.subsetOf(result))
+    },
+    test("build a 'PermissionADM' object") {
+      val result = PermissionUtilADM.buildPermissionObject(
         name = Permission.Administrative.ProjectResourceCreateRestricted.token,
         iris = Set("1", "2", "3"),
-      ) should equal(
-        Set(
-          PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, "1"),
-          PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, "2"),
-          PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, "3"),
-        ),
       )
-    }
-
-    "remove duplicate permissions" in {
+      val expected = Set(
+        PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, "1"),
+        PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, "2"),
+        PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, "3"),
+      )
+      assertTrue(result == expected)
+    },
+    test("remove duplicate permissions") {
 
       val duplicatedPermissions = Seq(
         PermissionADM.from(Permission.ObjectAccess.View, "1"),
@@ -178,11 +176,12 @@ class PermissionUtilADMSpec extends AnyWordSpec with Matchers {
       )
 
       val result = PermissionUtilADM.removeDuplicatePermissions(duplicatedPermissions)
-      result.size should equal(deduplicatedPermissions.size)
-      result should contain allElementsOf deduplicatedPermissions
-    }
-
-    "create permissions string" in {
+      assertTrue(
+        result.size == deduplicatedPermissions.size,
+        deduplicatedPermissions.subsetOf(result),
+      )
+    },
+    test("create permissions string") {
       val permissions = Set(
         PermissionADM.from(Permission.ObjectAccess.ChangeRights, "1"),
         PermissionADM.from(Permission.ObjectAccess.Delete, "2"),
@@ -194,8 +193,7 @@ class PermissionUtilADMSpec extends AnyWordSpec with Matchers {
       val permissionsString = "CR 1,knora-admin:Creator|D 2|M knora-admin:ProjectMember|V knora-admin:KnownUser"
       val result            = PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)
 
-      result should equal(permissionsString)
-
-    }
-  }
+      assertTrue(result == permissionsString)
+    },
+  )
 }
