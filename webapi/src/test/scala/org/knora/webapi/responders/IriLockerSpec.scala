@@ -5,14 +5,17 @@
 
 package org.knora.webapi.responders
 
+import zio.Promise
+import zio.Task
+import zio.ZIO
+import zio.durationInt
 import zio.test.Spec
+import zio.test.TestAspect
+import zio.test.TestClock
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import java.util.UUID
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration.*
 
 import dsp.errors.ApplicationLockException
 import org.knora.webapi.IRI
@@ -22,149 +25,75 @@ import org.knora.webapi.IRI
  */
 object IriLockerSpec extends ZIOSpecDefault {
 
-  import scala.concurrent.ExecutionContext.Implicits.global
+  private val SUCCESS = "success"
+  private val FAILURE = "failure"
 
-  val SUCCESS = "success"
-  val FAILURE = "failure"
-
-  val spec: Spec[Any, Nothing] = suite("IriLocker")(
+  val spec: Spec[Any, Throwable] = suite("IriLocker")(
     test("not allow a request to acquire a lock when another request already has it") {
-      def runLongTask(): Future[String] = Future {
-        Thread.sleep(16000)
-        SUCCESS
-      }
-
-      def runShortTask(): Future[String] = Future(SUCCESS)
-
       val testIri: IRI = "http://example.org/test1"
 
-      val firstApiRequestID = UUID.randomUUID
-
-      IriLocker.runWithIriLock(
-        apiRequestID = firstApiRequestID,
-        iri = testIri,
-        task = () => runLongTask(),
-      )
-
-      // Wait a bit to allow the first request to get the lock.
-      Thread.sleep(500)
-
+      val firstApiRequestID  = UUID.randomUUID
       val secondApiRequestID = UUID.randomUUID
 
-      val secondTaskResultFuture = IriLocker.runWithIriLock(
-        apiRequestID = secondApiRequestID,
-        iri = testIri,
-        task = () => runShortTask(),
-      )
+      for {
+        // Use promises to signal lock acquisition and to keep the lock held for as long as we want.
+        lockHeld <- Promise.make[Nothing, Unit]
+        release  <- Promise.make[Nothing, Unit]
+        longTask  = lockHeld.succeed(()) *> release.await.as(SUCCESS)
+        shortTask = ZIO.succeed(SUCCESS)
 
-      val secondTaskFailedWithLockTimeout =
-        try {
-          Await.result(secondTaskResultFuture, 20.seconds)
-          false
-        } catch {
-          case _: ApplicationLockException => true
-        }
+        // Start the long-running task in the background so it holds the lock.
+        firstFiber <- IriLocker.runWithIriLock(firstApiRequestID, testIri)(longTask).fork
+        // Wait until the first request has acquired the lock.
+        _ <- lockHeld.await
 
-      assertTrue(secondTaskFailedWithLockTimeout)
+        // The second request will retry for MAX_LOCK_RETRY_MILLIS (15s) before failing.
+        secondFiber <- IriLocker.runWithIriLock(secondApiRequestID, testIri)(shortTask).either.fork
+        // Advance virtual time past the maximum lock-retry window.
+        _      <- TestClock.adjust(16.seconds)
+        result <- secondFiber.join
+
+        // Let the first task finish and clean up.
+        _ <- release.succeed(())
+        _ <- firstFiber.join
+      } yield assertTrue(result.left.exists(_.isInstanceOf[ApplicationLockException]))
     },
     test("provide reentrant locks") {
-      def runRecursiveTask(iri: IRI, apiRequestID: UUID, count: Int): Future[String] =
+      def runRecursiveTask(iri: IRI, apiRequestID: UUID, count: Int): Task[String] =
         if (count > 0) {
-          IriLocker.runWithIriLock(
-            apiRequestID = apiRequestID,
-            iri = iri,
-            task = () => runRecursiveTask(iri, apiRequestID, count - 1),
-          )
+          IriLocker.runWithIriLock(apiRequestID, iri)(runRecursiveTask(iri, apiRequestID, count - 1))
         } else {
-          Future(SUCCESS)
+          ZIO.succeed(SUCCESS)
         }
 
       val testIri: IRI = "http://example.org/test2"
 
-      val firstApiRequestID  = UUID.randomUUID
-      val firstTestResult    = Await.result(runRecursiveTask(testIri, firstApiRequestID, 3), 1.second)
-      val secondApiRequestID = UUID.randomUUID
-      val secondTestResult   = Await.result(runRecursiveTask(testIri, secondApiRequestID, 3), 1.second)
-      assertTrue(firstTestResult == SUCCESS, secondTestResult == SUCCESS)
+      for {
+        firstResult  <- runRecursiveTask(testIri, UUID.randomUUID, 3)
+        secondResult <- runRecursiveTask(testIri, UUID.randomUUID, 3)
+      } yield assertTrue(firstResult == SUCCESS, secondResult == SUCCESS)
     },
-    test("release a lock when a task returns a failed future") {
-      // If succeed is true, returns a successful future, otherwise returns a failed future.
-      def runTask(succeed: Boolean): Future[String] = Future {
-        if (succeed) {
-          SUCCESS
-        } else {
-          throw new Exception(FAILURE)
-        }
-      }
+    test("release a lock when a task fails") {
+      def runTask(succeed: Boolean): Task[String] =
+        if (succeed) ZIO.succeed(SUCCESS) else ZIO.fail(new Exception(FAILURE))
 
       val testIri: IRI = "http://example.org/test3"
 
-      val firstApiRequestID = UUID.randomUUID
-
-      val firstTaskResultFuture = IriLocker.runWithIriLock(
-        apiRequestID = firstApiRequestID,
-        iri = testIri,
-        task = () => runTask(false),
-      )
-
-      val firstTaskFailed =
-        try {
-          Await.result(firstTaskResultFuture, 1.second)
-          false
-        } catch {
-          case _: Exception => true
-        }
-
-      val secondApiRequestID = UUID.randomUUID
-
-      val secondTaskResultFuture = IriLocker.runWithIriLock(
-        apiRequestID = secondApiRequestID,
-        iri = testIri,
-        task = () => runTask(true),
-      )
-
-      val secondTaskResult = Await.result(secondTaskResultFuture, 1.second)
-
-      assertTrue(firstTaskFailed, secondTaskResult == SUCCESS)
+      for {
+        firstResult  <- IriLocker.runWithIriLock(UUID.randomUUID, testIri)(runTask(false)).either
+        secondResult <- IriLocker.runWithIriLock(UUID.randomUUID, testIri)(runTask(true))
+      } yield assertTrue(firstResult.isLeft, secondResult == SUCCESS)
     },
-    test("release a lock when a task throws an exception instead of returning a future") {
-      // If succeed is true, returns a successful future, otherwise throws an exception.
-      def runTask(succeed: Boolean): Future[String] =
-        if (succeed) {
-          Future(SUCCESS)
-        } else {
-          throw new Exception(FAILURE)
-        }
+    test("release a lock when a task dies with an exception") {
+      def runTask(succeed: Boolean): Task[String] =
+        if (succeed) ZIO.succeed(SUCCESS) else ZIO.attempt(throw new Exception(FAILURE))
 
       val testIri: IRI = "http://example.org/test4"
 
-      val firstApiRequestID = UUID.randomUUID
-
-      val firstTaskResultFuture = IriLocker.runWithIriLock(
-        apiRequestID = firstApiRequestID,
-        iri = testIri,
-        task = () => runTask(false),
-      )
-
-      val firstTaskFailed =
-        try {
-          Await.result(firstTaskResultFuture, 1.second)
-          false
-        } catch {
-          case _: Exception => true
-        }
-
-      val secondApiRequestID = UUID.randomUUID
-
-      val secondTaskResultFuture = IriLocker.runWithIriLock(
-        apiRequestID = secondApiRequestID,
-        iri = testIri,
-        task = () => runTask(true),
-      )
-
-      val secondTaskResult = Await.result(secondTaskResultFuture, 1.second)
-
-      assertTrue(firstTaskFailed, secondTaskResult == SUCCESS)
+      for {
+        firstResult  <- IriLocker.runWithIriLock(UUID.randomUUID, testIri)(runTask(false)).either
+        secondResult <- IriLocker.runWithIriLock(UUID.randomUUID, testIri)(runTask(true))
+      } yield assertTrue(firstResult.isLeft, secondResult == SUCCESS)
     },
-  )
+  ) @@ TestAspect.sequential
 }
