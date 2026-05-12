@@ -544,6 +544,46 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
             validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
           }
         },
+        test("rejects resource attachedToUser referencing the built-in SystemUser") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+               |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToUser> <${KnoraAdmin}SystemUser> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects resource attachedToUser referencing the built-in AnonymousUser") {
+          val nq =
+            s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+               |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+               |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToUser> <${KnoraAdmin}AnonymousUser> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects value attachedToUser referencing the built-in SystemUser") {
+          val Value1 = "http://rdfh.ch/9999/thing001/values/val001"
+          val nq     = validResourceNq +
+            s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+               |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$Value1> <${KnoraBase}attachedToUser> <${KnoraAdmin}SystemUser> <$DataGraph> .
+               |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
       )
     },
   ) @@ TestAspect.timeout(30.seconds)
