@@ -5,39 +5,37 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import scalax.collection.hyperedges.DiHyperEdge
 import scalax.collection.immutable.Graph
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 /**
  * Tests [[TopologicalSortUtil]].
  */
-class TopologicalSortUtilSpec extends AnyWordSpec with Matchers {
+object TopologicalSortUtilSpec extends ZIOSpecDefault {
   type GraphT = Graph[Int, DiHyperEdge[Int]]
   type NodeT  = GraphT#NodeT
 
   private def nodesToValues(orders: Set[Vector[NodeT]]): Set[Vector[Int]] = orders.map(_.map(_.outer))
 
-  "TopologicalSortUtilSpec" should {
-
-    "return all topological orders of a graph with one leaf" in {
+  val spec: Spec[Any, Nothing] = suite("TopologicalSortUtil")(
+    test("return all topological orders of a graph with one leaf") {
       val graph: GraphT =
         Graph.from(List(DiHyperEdge[Int](2)(4), DiHyperEdge[Int](2)(7), DiHyperEdge[Int](4)(5)))
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
-        TopologicalSortUtil
-          .findAllTopologicalOrderPermutations(graph),
+        TopologicalSortUtil.findAllTopologicalOrderPermutations(graph),
       )
 
       val expectedOrders = Set(
         Vector(2, 7, 4, 5),
       )
 
-      assert(allOrders == expectedOrders)
-    }
-
-    "return all topological orders of a graph with multiple leaves" in {
+      assertTrue(allOrders == expectedOrders)
+    },
+    test("return all topological orders of a graph with multiple leaves") {
       val graph: GraphT =
         Graph.from(
           List(
@@ -50,8 +48,7 @@ class TopologicalSortUtilSpec extends AnyWordSpec with Matchers {
         )
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
-        TopologicalSortUtil
-          .findAllTopologicalOrderPermutations(graph),
+        TopologicalSortUtil.findAllTopologicalOrderPermutations(graph),
       )
 
       val expectedOrders = Set(
@@ -59,30 +56,26 @@ class TopologicalSortUtilSpec extends AnyWordSpec with Matchers {
         Vector(2, 8, 7, 4, 3, 5),
       )
 
-      assert(allOrders == expectedOrders)
-    }
-
-    "return an empty set of orders for an empty graph" in {
+      assertTrue(allOrders == expectedOrders)
+    },
+    test("return an empty set of orders for an empty graph") {
       val graph: GraphT = Graph.empty
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
-        TopologicalSortUtil
-          .findAllTopologicalOrderPermutations(graph),
+        TopologicalSortUtil.findAllTopologicalOrderPermutations(graph),
       )
 
-      assert(allOrders.isEmpty)
-    }
-
-    "return an empty set of orders for a cyclic graph" in {
+      assertTrue(allOrders.isEmpty)
+    },
+    test("return an empty set of orders for a cyclic graph") {
       val graph: GraphT =
         Graph.from(List(DiHyperEdge[Int](2)(4), DiHyperEdge[Int](4)(7), DiHyperEdge[Int](7)(2)))
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
-        TopologicalSortUtil
-          .findAllTopologicalOrderPermutations(graph),
+        TopologicalSortUtil.findAllTopologicalOrderPermutations(graph),
       )
 
-      assert(allOrders.isEmpty)
-    }
-  }
+      assertTrue(allOrders.isEmpty)
+    },
+  )
 }

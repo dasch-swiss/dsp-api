@@ -5,11 +5,16 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
 import org.knora.webapi.messages.util.rdf.*
 
-class UpgradePluginPR1372Spec extends UpgradePluginSpec {
-  "Upgrade plugin PR1372" should {
-    "remove permissions from past versions of values" in {
+object UpgradePluginPR1372Spec extends ZIOSpecDefault with UpgradePluginSpec {
+
+  val spec: Spec[Any, Nothing] = suite("Upgrade plugin PR1372")(
+    test("remove permissions from past versions of values") {
       // Parse the input file.
       val model: RdfModel = trigFileToModel("test_data/upgrade/pr1372.trig")
 
@@ -49,9 +54,11 @@ class UpgradePluginPR1372Spec extends UpgradePluginSpec {
         ),
       )
 
-      assert(queryResult1.results == expectedResultBody)
+      val resultsOk = queryResult1.results == expectedResultBody
 
       repository.shutDown()
-    }
-  }
+
+      assertTrue(resultsOk)
+    },
+  )
 }

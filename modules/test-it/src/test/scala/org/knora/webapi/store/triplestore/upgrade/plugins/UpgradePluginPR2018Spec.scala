@@ -5,11 +5,16 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
 import org.knora.webapi.messages.util.rdf.*
 
-class UpgradePluginPR2018Spec extends UpgradePluginSpec {
-  "Upgrade plugin PR2018" should {
-    "add lastModificationDate to ontology not attached to SystemProject" in {
+object UpgradePluginPR2018Spec extends ZIOSpecDefault with UpgradePluginSpec {
+
+  val spec: Spec[Any, Nothing] = suite("Upgrade plugin PR2018")(
+    test("add lastModificationDate to ontology not attached to SystemProject") {
       val model: RdfModel = trigFileToModel("test_data/upgrade/pr2018.trig")
       val plugin          = new UpgradePluginPR2018()
       plugin.transform(model)
@@ -43,8 +48,9 @@ class UpgradePluginPR2018Spec extends UpgradePluginSpec {
         ),
       )
 
-      assert(queryResult.results == expectedResultBody)
+      val resultsOk = queryResult.results == expectedResultBody
       repository.shutDown()
-    }
-  }
+      assertTrue(resultsOk)
+    },
+  )
 }

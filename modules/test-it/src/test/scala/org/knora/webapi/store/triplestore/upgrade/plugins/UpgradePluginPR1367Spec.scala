@@ -5,13 +5,18 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
 
-class UpgradePluginPR1367Spec extends UpgradePluginSpec {
-  "Upgrade plugin PR1367" should {
-    "fix the datatypes of decimal literals" in {
+object UpgradePluginPR1367Spec extends ZIOSpecDefault with UpgradePluginSpec {
+
+  val spec: Spec[Any, Nothing] = suite("Upgrade plugin PR1367")(
+    test("fix the datatypes of decimal literals") {
       // Parse the input file.
       val model: RdfModel = trigFileToModel("test_data/upgrade/pr1367.trig")
 
@@ -24,7 +29,7 @@ class UpgradePluginPR1367Spec extends UpgradePluginSpec {
       val subj = JenaNodeFactory.makeIriNode("http://rdfh.ch/0001/thing-with-history/values/1")
       val pred = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasDecimal)
 
-      model
+      val datatypeOk = model
         .find(
           subj = Some(subj),
           pred = Some(pred),
@@ -35,7 +40,7 @@ class UpgradePluginPR1367Spec extends UpgradePluginSpec {
         case Some(statement: Statement) =>
           statement.obj match {
             case datatypeLiteral: DatatypeLiteral =>
-              assert(datatypeLiteral.datatype == OntologyConstants.Xsd.Decimal)
+              datatypeLiteral.datatype == OntologyConstants.Xsd.Decimal
 
             case other =>
               throw AssertionException(s"Unexpected object for $pred: $other")
@@ -43,6 +48,8 @@ class UpgradePluginPR1367Spec extends UpgradePluginSpec {
 
         case None => throw AssertionException(s"No statement found with subject $subj and predicate $pred")
       }
-    }
-  }
+
+      assertTrue(datatypeOk)
+    },
+  )
 }

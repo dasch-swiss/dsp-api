@@ -5,13 +5,18 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
 
-class UpgradePluginPR2094Spec extends UpgradePluginSpec {
-  "Upgrade plugin PR2094" should {
-    "fix the missing valueHasUri datatype" in {
+object UpgradePluginPR2094Spec extends ZIOSpecDefault with UpgradePluginSpec {
+
+  val spec: Spec[Any, Nothing] = suite("Upgrade plugin PR2094")(
+    test("fix the missing valueHasUri datatype") {
       // Parse the input file.
       val model: RdfModel = trigFileToModel("test_data/upgrade/pr2094.trig")
 
@@ -26,7 +31,7 @@ class UpgradePluginPR2094Spec extends UpgradePluginSpec {
         )
       val pred = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUri)
 
-      model
+      val datatypeOk = model
         .find(
           subj = Some(subj),
           pred = Some(pred),
@@ -37,7 +42,7 @@ class UpgradePluginPR2094Spec extends UpgradePluginSpec {
         case Some(statement: Statement) =>
           statement.obj match {
             case datatypeLiteral: DatatypeLiteral =>
-              assert(datatypeLiteral.datatype == OntologyConstants.Xsd.Uri)
+              datatypeLiteral.datatype == OntologyConstants.Xsd.Uri
 
             case other =>
               throw AssertionException(s"Unexpected object for $pred: $other")
@@ -45,6 +50,8 @@ class UpgradePluginPR2094Spec extends UpgradePluginSpec {
 
         case None => throw AssertionException(s"No statement found with subject $subj and predicate $pred")
       }
-    }
-  }
+
+      assertTrue(datatypeOk)
+    },
+  )
 }

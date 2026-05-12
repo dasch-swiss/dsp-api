@@ -5,9 +5,10 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import org.scalatest.compatible.Assertion
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import zio.test.Spec
+import zio.test.TestAspect
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 import java.io.BufferedInputStream
 import java.io.FileInputStream
@@ -19,7 +20,7 @@ import org.knora.webapi.messages.util.rdf.*
 /**
  * Tests implementations of [[RdfModel]].
  */
-class RdfModelSpec extends AnyWordSpec with Matchers {
+object RdfModelSpec extends ZIOSpecDefault {
 
   private val model: RdfModel = JenaModelFactory.makeEmptyModel
 
@@ -29,20 +30,19 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
    * @param subj    the subject.
    * @param pred    the predicate.
    * @param obj     the object.
-   * @param context the context.
    */
   private def addAndFindBySubjAndPred(
     subj: RdfResource,
     pred: IriNode,
     obj: RdfNode,
-  ): Assertion = {
+  ): Boolean = {
     val statement: Statement = JenaNodeFactory.makeStatement(subj = subj, pred = pred, obj = obj)
     model.addStatement(statement)
-    assert(model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet == Set(statement))
+    model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet == Set(statement)
   }
 
-  "An RdfModel" should {
-    "add a triple with a datatype literal object, without first creating a Statement" in {
+  val spec: Spec[Any, Nothing] = suite("An RdfModel")(
+    test("add a triple with a datatype literal object, without first creating a Statement") {
       val subj: IriNode        = JenaNodeFactory.makeIriNode("http://example.org/1")
       val pred: IriNode        = JenaNodeFactory.makeIriNode("http://example.org/int_prop")
       val obj: DatatypeLiteral =
@@ -50,48 +50,50 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
 
       model.add(subj = subj, pred = pred, obj = obj)
       val expectedStatement: Statement = JenaNodeFactory.makeStatement(subj = subj, pred = pred, obj = obj)
-      assert(model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet == Set(expectedStatement))
-    }
-
-    "add a triple with a datatype literal object" in {
-      addAndFindBySubjAndPred(
-        subj = JenaNodeFactory.makeIriNode("http://example.org/2"),
-        pred = JenaNodeFactory.makeIriNode("http://example.org/decimal_prop"),
-        obj = JenaNodeFactory.makeDatatypeLiteral(value = "123.45", datatype = OntologyConstants.Xsd.Decimal),
+      assertTrue(model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet == Set(expectedStatement))
+    },
+    test("add a triple with a datatype literal object") {
+      assertTrue(
+        addAndFindBySubjAndPred(
+          subj = JenaNodeFactory.makeIriNode("http://example.org/2"),
+          pred = JenaNodeFactory.makeIriNode("http://example.org/decimal_prop"),
+          obj = JenaNodeFactory.makeDatatypeLiteral(value = "123.45", datatype = OntologyConstants.Xsd.Decimal),
+        ),
       )
-    }
-
-    "add a triple with an IRI object" in {
-      addAndFindBySubjAndPred(
-        subj = JenaNodeFactory.makeIriNode("http://example.org/3"),
-        pred = JenaNodeFactory.makeIriNode("http://example.org/object_prop"),
-        obj = JenaNodeFactory.makeIriNode("http://example.org/1"),
+    },
+    test("add a triple with an IRI object") {
+      assertTrue(
+        addAndFindBySubjAndPred(
+          subj = JenaNodeFactory.makeIriNode("http://example.org/3"),
+          pred = JenaNodeFactory.makeIriNode("http://example.org/object_prop"),
+          obj = JenaNodeFactory.makeIriNode("http://example.org/1"),
+        ),
       )
-    }
-
-    "add a blank node" in {
-      addAndFindBySubjAndPred(
-        subj = JenaNodeFactory.makeBlankNodeWithID("bnode_1"),
-        pred = JenaNodeFactory.makeIriNode("http://example.org/boolean_prop"),
-        obj = JenaNodeFactory.makeDatatypeLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean),
+    },
+    test("add a blank node") {
+      assertTrue(
+        addAndFindBySubjAndPred(
+          subj = JenaNodeFactory.makeBlankNodeWithID("bnode_1"),
+          pred = JenaNodeFactory.makeIriNode("http://example.org/boolean_prop"),
+          obj = JenaNodeFactory.makeDatatypeLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean),
+        ),
       )
-    }
-
-    "add a triple with a blank node object" in {
-      addAndFindBySubjAndPred(
-        subj = JenaNodeFactory.makeIriNode("http://example.org/4"),
-        pred = JenaNodeFactory.makeIriNode("http://example.org/object_prop"),
-        obj = JenaNodeFactory.makeBlankNodeWithID("bnode_1"),
+    },
+    test("add a triple with a blank node object") {
+      assertTrue(
+        addAndFindBySubjAndPred(
+          subj = JenaNodeFactory.makeIriNode("http://example.org/4"),
+          pred = JenaNodeFactory.makeIriNode("http://example.org/object_prop"),
+          obj = JenaNodeFactory.makeBlankNodeWithID("bnode_1"),
+        ),
       )
-    }
-
-    "remove a triple" in {
+    },
+    test("remove a triple") {
       val subj: IriNode = JenaNodeFactory.makeIriNode("http://example.org/1")
       model.remove(subj = Some(subj), pred = None, obj = None)
-      assert(model.find(subj = Some(subj), pred = None, obj = None).isEmpty)
-    }
-
-    "add and find several triples with the same subject" in {
+      assertTrue(model.find(subj = Some(subj), pred = None, obj = None).isEmpty)
+    },
+    test("add and find several triples with the same subject") {
       val subj: IriNode = JenaNodeFactory.makeIriNode("http://example.org/5")
 
       val booleanStatement: Statement = JenaNodeFactory.makeStatement(
@@ -119,7 +121,8 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
       )
 
       model.addStatements(statements)
-      assert(model.find(subj = Some(subj), pred = None, obj = None).toSet == statements)
+
+      val foundAll = model.find(subj = Some(subj), pred = None, obj = None).toSet == statements
 
       val stringWithLangFindResult: Set[Statement] = model
         .find(
@@ -129,10 +132,10 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
         )
         .toSet
 
-      assert(stringWithLangFindResult.size == 1)
+      val singleResult = stringWithLangFindResult.size == 1
 
       // Try some matching.
-      stringWithLangFindResult.head match {
+      val matchOk = stringWithLangFindResult.head match {
         case statement =>
           statement.obj match {
             case resource: RdfResource =>
@@ -144,13 +147,14 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
                   throw AssertionException(s"Expected a string with a language code, got $datatypeLiteral")
 
                 case stringWithLanguage: StringWithLanguage =>
-                  assert(stringWithLanguage.value == "Hello" && stringWithLanguage.language == "en")
+                  stringWithLanguage.value == "Hello" && stringWithLanguage.language == "en"
               }
           }
       }
-    }
 
-    "add, find, and remove quads" in {
+      assertTrue(foundAll, singleResult, matchOk)
+    },
+    test("add, find, and remove quads") {
       val labelPred: IriNode   = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
       val commentPred: IriNode = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Comment)
       val context1             = "http://example.org/graph1"
@@ -202,30 +206,29 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
       model.addStatements(graph1)
       model.addStatements(graph2)
 
-      assert(model.find(subj = None, pred = None, obj = None, context = Some(context1)).toSet == graph1)
-      assert(model.find(subj = None, pred = None, obj = None, context = Some(context2)).toSet == graph2)
-      assert(
+      val ok1 = model.find(subj = None, pred = None, obj = None, context = Some(context1)).toSet == graph1
+      val ok2 = model.find(subj = None, pred = None, obj = None, context = Some(context2)).toSet == graph2
+      val ok3 =
         model.find(subj = None, pred = Some(labelPred), obj = None).toSet == Set(
           graph1LabelStatement,
           graph2LabelStatement,
-        ),
-      )
-      assert(
+        )
+      val ok4 =
         model.find(subj = None, pred = Some(commentPred), obj = None).toSet == Set(
           graph1CommentStatement,
           graph2CommentStatement,
-        ),
-      )
+        )
 
       model.removeStatement(graph1CommentStatement)
-      assert(!model.contains(graph1CommentStatement))
+      val ok5 = !model.contains(graph1CommentStatement)
 
-      assert(model.contains(graph1LabelStatement))
-      assert(model.contains(graph2LabelStatement))
-      assert(model.contains(graph2CommentStatement))
-    }
+      val ok6 = model.contains(graph1LabelStatement)
+      val ok7 = model.contains(graph2LabelStatement)
+      val ok8 = model.contains(graph2CommentStatement)
 
-    "Remove a statement from the default graph, rather than an otherwise identical statement in a named graph" in {
+      assertTrue(ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8)
+    },
+    test("Remove a statement from the default graph, rather than an otherwise identical statement in a named graph") {
       val subj: IriNode        = JenaNodeFactory.makeIriNode("http://example.org/foo")
       val pred: IriNode        = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
       val obj: DatatypeLiteral =
@@ -250,16 +253,17 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
       model.addStatement(statementInDefaultGraph)
       model.addStatement(statementInNamedGraph)
 
-      assert(model.contains(statementInDefaultGraph))
-      assert(model.contains(statementInNamedGraph))
+      val ok1 = model.contains(statementInDefaultGraph)
+      val ok2 = model.contains(statementInNamedGraph)
 
       model.removeStatement(statementInDefaultGraph)
 
-      assert(!model.contains(statementInDefaultGraph))
-      assert(model.contains(statementInNamedGraph))
-    }
+      val ok3 = !model.contains(statementInDefaultGraph)
+      val ok4 = model.contains(statementInNamedGraph)
 
-    "Remove a statement from the default graph, and an otherwise identical statement in a named graph" in {
+      assertTrue(ok1, ok2, ok3, ok4)
+    },
+    test("Remove a statement from the default graph, and an otherwise identical statement in a named graph") {
       val subj: IriNode        = JenaNodeFactory.makeIriNode("http://example.org/bar")
       val pred: IriNode        = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
       val obj: DatatypeLiteral =
@@ -284,8 +288,8 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
       model.addStatement(statementInDefaultGraph)
       model.addStatement(statementInNamedGraph)
 
-      assert(model.contains(statementInDefaultGraph))
-      assert(model.contains(statementInNamedGraph))
+      val ok1 = model.contains(statementInDefaultGraph)
+      val ok2 = model.contains(statementInNamedGraph)
 
       model.remove(
         subj = Some(subj),
@@ -293,11 +297,12 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
         obj = Some(obj),
       )
 
-      assert(!model.contains(statementInDefaultGraph))
-      assert(!model.contains(statementInNamedGraph))
-    }
+      val ok3 = !model.contains(statementInDefaultGraph)
+      val ok4 = !model.contains(statementInNamedGraph)
 
-    "do a SPARQL SELECT query" in {
+      assertTrue(ok1, ok2, ok3, ok4)
+    },
+    test("do a SPARQL SELECT query") {
       val fileInputStream =
         new BufferedInputStream(new FileInputStream("test_data/project_data/anything-data.ttl"))
       val anythingModel: RdfModel =
@@ -317,8 +322,6 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
 
       val queryResult: SparqlSelectResult = rdfRepository.doSelect(selectQuery)
 
-      assert(queryResult.head.vars == Seq("resource", "value", "decimalValue"))
-
       val results: Seq[Map[String, String]] = queryResult.results.bindings.map(_.rowMap)
 
       val expectedResults = Seq(
@@ -334,7 +337,10 @@ class RdfModelSpec extends AnyWordSpec with Matchers {
         ),
       )
 
-      assert(results == expectedResults)
-    }
-  }
+      assertTrue(
+        queryResult.head.vars == Seq("resource", "value", "decimalValue"),
+        results == expectedResults,
+      )
+    },
+  ) @@ TestAspect.sequential
 }
