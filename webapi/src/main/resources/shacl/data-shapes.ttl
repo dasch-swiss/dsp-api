@@ -146,3 +146,16 @@ knora-base:AttachedToUserExistsShape
     sh:class knora-admin:User ;
     sh:message "knora-base:attachedToUser must reference a knora-admin:User instance" ;
   ] .
+
+# Rejects imports whose data graph attaches resources or values to the built-in
+# SystemUser or AnonymousUser. These IRIs exist on every target instance and
+# pre-migration cleanup is required to rebind such data to project-scoped users.
+knora-base:AttachedToUserNotBuiltInShape
+  a sh:NodeShape ;
+  sh:targetSubjectsOf knora-base:attachedToUser ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:attachedToUser ;
+    sh:not [ sh:in ( knora-admin:SystemUser knora-admin:AnonymousUser ) ] ;
+    sh:message "knora-base:attachedToUser must not reference the built-in SystemUser or AnonymousUser" ;
+  ] .
