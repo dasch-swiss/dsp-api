@@ -15,31 +15,28 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 
-final case class UserService(
-  private val knoraUserService: KnoraUserService,
-  private val userConverter: KnoraUserToUserConverter,
-) {
+final class UserService(userService: KnoraUserService, userConverter: KnoraUserToUserConverter) {
 
   def findUserByIri(iri: UserIri): Task[Option[User]] =
-    knoraUserService.findById(iri).flatMap(userConverter.toUser)
+    userService.findById(iri).flatMap(userConverter.toUser)
 
   def findUserByEmail(email: Email): Task[Option[User]] =
-    knoraUserService.findByEmail(email).flatMap(userConverter.toUser)
+    userService.findByEmail(email).flatMap(userConverter.toUser)
 
   def findUserByUsername(username: Username): Task[Option[User]] =
-    knoraUserService.findByUsername(username).flatMap(userConverter.toUser)
+    userService.findByUsername(username).flatMap(userConverter.toUser)
 
   def findByProjectMembership(project: KnoraProject): Task[Seq[User]] =
-    knoraUserService.findByProjectMembership(project).flatMap(userConverter.toUser)
+    userService.findByProjectMembership(project).flatMap(userConverter.toUser)
 
   def findByProjectAdminMembership(project: KnoraProject): Task[Seq[User]] =
-    knoraUserService.findByProjectAdminMembership(project).flatMap(userConverter.toUser)
+    userService.findByProjectAdminMembership(project).flatMap(userConverter.toUser)
 
   def findAllRegularUsers: Task[Seq[User]] =
-    knoraUserService.findAllRegularUsers().flatMap(userConverter.toUser)
+    userService.findAllRegularUsers().flatMap(userConverter.toUser)
 
   def findByGroupMembership(groupIri: GroupIri): Task[Seq[User]] =
-    knoraUserService.findByGroupMembership(groupIri).flatMap(userConverter.toUser)
+    userService.findByGroupMembership(groupIri).flatMap(userConverter.toUser)
 }
 
 object UserService {

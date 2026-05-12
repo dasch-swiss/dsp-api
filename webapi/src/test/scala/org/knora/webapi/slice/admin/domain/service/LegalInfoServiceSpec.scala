@@ -13,6 +13,7 @@ import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Lifecycle
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
@@ -124,6 +125,40 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
             s"License $invalidIri is not allowed in project ${prj.shortcode}, " +
               s"Copyright holder $invalidHolder is not allowed in project ${prj.shortcode}",
           ),
+        ),
+      )
+    },
+    test("A FileValue with PLACEHOLDER LicenseIri should be valid in a Draft project") {
+      for {
+        prj <- projectRepo(
+                 _.save(
+                   TestDataFactory.someProject.copy(
+                     allowedCopyrightHolders = Set(validCopyrightHolder),
+                     enabledLicenses = Set(LicenseIri.PLACEHOLDER),
+                     lifecycle = Lifecycle.Draft,
+                   ),
+                 ),
+               )
+        fileValue = fileValueValid.copy(licenseIri = Some(LicenseIri.PLACEHOLDER))
+        actual   <- service(_.validateLegalInfo(fileValue, prj.shortcode))
+      } yield assertTrue(actual == fileValue)
+    },
+    test("A FileValue with PLACEHOLDER LicenseIri should be rejected in a Published project") {
+      for {
+        prj <- projectRepo(
+                 _.save(
+                   TestDataFactory.someProject.copy(
+                     allowedCopyrightHolders = Set(validCopyrightHolder),
+                     enabledLicenses = Set(LicenseIri.PLACEHOLDER),
+                     lifecycle = Lifecycle.Published,
+                   ),
+                 ),
+               )
+        fileValue = fileValueValid.copy(licenseIri = Some(LicenseIri.PLACEHOLDER))
+        actual   <- service(_.validateLegalInfo(fileValue, prj.shortcode)).exit
+      } yield assert(actual)(
+        fails(
+          equalTo(s"License ${LicenseIri.PLACEHOLDER} is not allowed in published project ${prj.shortcode}"),
         ),
       )
     },

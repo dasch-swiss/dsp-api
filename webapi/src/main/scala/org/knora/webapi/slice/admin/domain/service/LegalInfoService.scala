@@ -16,6 +16,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Lifecycle
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
@@ -59,40 +60,36 @@ case class LegalInfoService(
 
   def validateLegalInfo(fileValue: FileValueV2, id: Shortcode): IO[String, FileValueV2] =
     for {
-      licenseValid         <- licenseValidation(fileValue.licenseIri, id)
-      copyrightHolderValid <- copyrightHolderValidation(fileValue.copyrightHolder, id)
+      project              <- projects.findByShortcode(id).orDie.someOrFail(s"Project $id not found")
+      licenseValid          = licenseValidation(fileValue.licenseIri, project)
+      copyrightHolderValid  = copyrightHolderValidation(fileValue.copyrightHolder, project)
       _                    <- Validation.validate(licenseValid, copyrightHolderValid).toZIOParallelErrors.mapError(_.mkString(", "))
     } yield fileValue
 
   private def licenseValidation(
     licenseIri: Option[LicenseIri],
-    shortcode: Shortcode,
-  ): UIO[Validation[String, Unit]] =
+    project: KnoraProject,
+  ): Validation[String, Unit] =
     licenseIri match
-      case None      => ZIO.succeed(Validation.unit)
+      case None      => Validation.unit
       case Some(iri) =>
-        findEnabledLicenses(shortcode).map { licenses =>
-          if (licenses.map(_.id).contains(iri)) { Validation.unit }
-          else { Validation.fail(s"License $iri is not allowed in project $shortcode") }
+        if (!project.enabledLicenses.contains(iri)) {
+          Validation.fail(s"License $iri is not allowed in project ${project.shortcode}")
+        } else if (iri == LicenseIri.PLACEHOLDER && project.lifecycle == Lifecycle.Published) {
+          Validation.fail(s"License $iri is not allowed in published project ${project.shortcode}")
+        } else {
+          Validation.unit
         }
 
   private def copyrightHolderValidation(
     copyrightHolder: Option[CopyrightHolder],
-    shortcode: Shortcode,
-  ): UIO[Validation[String, Unit]] =
+    project: KnoraProject,
+  ): Validation[String, Unit] =
     copyrightHolder match
-      case None         => ZIO.succeed(Validation.unit)
+      case None         => Validation.unit
       case Some(holder) =>
-        projects
-          .findByShortcode(shortcode)
-          .orDie
-          .map {
-            case None          => Validation.fail(s"Project $shortcode not found")
-            case Some(project) =>
-              val holders = project.allowedCopyrightHolders
-              if (holders.contains(holder)) { Validation.unit }
-              else { Validation.fail(s"Copyright holder $holder is not allowed in project $shortcode") }
-          }
+        if (project.allowedCopyrightHolders.contains(holder)) { Validation.unit }
+        else { Validation.fail(s"Copyright holder $holder is not allowed in project ${project.shortcode}") }
 
   def findAuthorships(
     project: KnoraProject,
