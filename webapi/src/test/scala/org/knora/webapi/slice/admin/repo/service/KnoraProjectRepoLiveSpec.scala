@@ -21,6 +21,7 @@ import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Lifecycle
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -49,6 +50,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     RestrictedView.default,
     Set("foo", "bar").map(CopyrightHolder.unsafeFrom),
     Set(LicenseIri.CC_BY_4_0, LicenseIri.CC_BY_NC_4_0),
+    Lifecycle.Draft,
   )
 
   private val someProjectTrig =
@@ -69,7 +71,8 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:hasSelfJoinEnabled false ;
         |    knora-admin:projectRestrictedViewSize "!128,128" ;
         |    knora-admin:hasAllowedCopyrightHolder "foo", "bar" ;
-        |    knora-admin:hasEnabledLicense <${LicenseIri.CC_BY_4_0}>, <${LicenseIri.CC_BY_NC_4_0}> .
+        |    knora-admin:hasEnabledLicense <${LicenseIri.CC_BY_4_0}>, <${LicenseIri.CC_BY_NC_4_0}> ;
+        |    knora-admin:projectLifecycle "draft" .
         |}
         |""".stripMargin
 

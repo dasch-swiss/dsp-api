@@ -36,6 +36,7 @@ object UpdateListInfoQuerySpec extends ZIOSpecDefault {
     RestrictedView.default,
     Set.empty,
     Set.empty,
+    Lifecycle.Draft,
   )
 
   private val listNodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/test-list")
@@ -305,6 +306,7 @@ object UpdateListInfoQuerySpec extends ZIOSpecDefault {
         RestrictedView.default,
         Set.empty,
         Set.empty,
+        Lifecycle.Draft,
       )
       val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/image-list")
       val name    = ListName.unsafeFrom("imageCategories")

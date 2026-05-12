@@ -58,6 +58,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           restrictedView = RestrictedView.default,
           allowedCopyrightHolders = Set.empty,
           enabledLicenses = Set.empty,
+          lifecycle = Lifecycle.Draft,
         )
         assertTrue(
           ProjectService

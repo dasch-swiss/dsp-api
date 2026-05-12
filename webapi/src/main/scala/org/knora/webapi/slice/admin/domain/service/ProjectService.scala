@@ -77,6 +77,7 @@ final case class ProjectService(
       restrictedView,
       project.allowedCopyrightHolders,
       project.enabledLicenses,
+      Lifecycle.Draft,
     )
 
   def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =

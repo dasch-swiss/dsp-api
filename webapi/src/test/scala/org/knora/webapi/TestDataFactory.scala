@@ -120,6 +120,7 @@ object TestDataFactory {
     RestrictedView.default,
     Set.empty,
     Set.empty,
+    Lifecycle.Draft,
   )
 
   val someProjectADM = org.knora.webapi.slice.api.admin.model.Project(
