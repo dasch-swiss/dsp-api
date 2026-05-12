@@ -7,8 +7,11 @@ package org.knora.webapi.messages
 
 import zio.Runtime
 import zio.Unsafe
+import zio.ZIO
+import zio.test.Assertion.failsWithA
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
+import zio.test.assert
 import zio.test.assertTrue
 
 import java.time.Instant
@@ -30,13 +33,11 @@ object StringFormatterSpec extends ZIOSpecDefault {
     StringFormatter.getGeneralInstance
   }
 
-  private def throwsAssertion(thunk: => Any): Boolean =
-    try {
-      thunk
-      false
-    } catch {
-      case _: AssertionException => true
-    }
+  private def assertRejected(iri: String) =
+    ZIO
+      .attempt(iri.toSmartIriWithErr(throw AssertionException(s"Invalid IRI")))
+      .exit
+      .map(actual => assert(actual)(failsWithA[AssertionException]))
 
   val spec: Spec[Any, Nothing] = suite("The StringFormatter class")(
     test("recognize the url of the dhlab site as a valid IRI") {
@@ -641,140 +642,66 @@ object StringFormatterSpec extends ZIOSpecDefault {
       val urlPath = "/ontology/knora-api/simple/v2"
       assertTrue(stringFormatter.isBuiltInApiV2OntologyUrlPath(urlPath))
     },
-    test("reject an empty IRI string") {
-      assertTrue(throwsAssertion {
-        "".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject the IRI 'foo'") {
-      assertTrue(throwsAssertion {
-        "foo".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://") {
-      assertTrue(throwsAssertion {
-        "http://".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject ftp://www.knora.org/ontology/00FF/images (wrong URL scheme)") {
-      assertTrue(throwsAssertion {
-        "ftp://www.knora.org/ontology/00FF/images".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject https://www.knora.org/ontology/00FF/images (wrong URL scheme)") {
-      assertTrue(throwsAssertion {
-        "https://www.knora.org/ontology/00FF/images".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://www.knora.org/") {
-      assertTrue(throwsAssertion {
-        "http://www.knora.org/".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://api.knora.org/") {
-      assertTrue(throwsAssertion {
-        "http://api.knora.org/".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://0.0.0.0:3333/") {
-      assertTrue(throwsAssertion {
-        "http://api.knora.org/".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://www.knora.org/ontology") {
-      assertTrue(throwsAssertion {
-        "http://www.knora.org/ontology".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://api.knora.org/ontology") {
-      assertTrue(throwsAssertion {
-        "http://api.knora.org/".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://0.0.0.0:3333/ontology") {
-      assertTrue(throwsAssertion {
-        "http://api.knora.org/ontology".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://www.knora.org/ontology/00FF/images/v2 (wrong hostname)") {
-      assertTrue(throwsAssertion {
-        "http://www.knora.org/ontology/00FF/images/v2".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://www.knora.org/ontology/00FF/images/simple/v2 (wrong hostname)") {
-      assertTrue(throwsAssertion {
-        "http://www.knora.org/ontology/00FF/images/v2".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://api.knora.org/ontology/00FF/images/v2 (wrong hostname)") {
-      assertTrue(throwsAssertion {
-        "http://api.knora.org/ontology/00FF/images/v2".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://api.knora.org/ontology/00FF/images/simple/v2 (wrong hostname)") {
-      assertTrue(throwsAssertion {
-        "http://api.knora.org/ontology/00FF/images/simple/v2".toSmartIriWithErr(
-          throw AssertionException(s"Invalid IRI"),
-        )
-      })
-    },
-    test("reject http://0.0.0.0:3333/ontology/v2 (invalid ontology name)") {
-      assertTrue(throwsAssertion {
-        "http://0.0.0.0:3333/ontology/v2".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://0.0.0.0:3333/ontology/0000/v2 (invalid ontology name)") {
-      assertTrue(throwsAssertion {
-        "http://0.0.0.0:3333/ontology/0000/v2".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://0.0.0.0:3333/ontology/ontology (invalid ontology name)") {
-      assertTrue(throwsAssertion {
-        "http://0.0.0.0:3333/ontology/ontology".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://0.0.0.0:3333/ontology/0000/ontology (invalid ontology name)") {
-      assertTrue(throwsAssertion {
-        "http://0.0.0.0:3333/ontology/0000/ontology".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://0.0.0.0:3333/ontology/0000/simple/simple/v2 (invalid ontology name)") {
-      assertTrue(throwsAssertion {
-        "http://0.0.0.0:3333/ontology/0000/simple/simple/v2".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://0.0.0.0:3333/ontology/00FF/images/v2#1234 (invalid entity name)") {
-      assertTrue(throwsAssertion {
-        "http://0.0.0.0:3333/ontology/00FF/images/v2#1234".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://0.0.0.0:3333/ontology/images/v2 (missing project shortcode in ontology IRI)") {
-      assertTrue(throwsAssertion {
-        "http://0.0.0.0:3333/ontology/0000/simple/simple/v2".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://0.0.0.0:3333/ontology/images/simple/v2 (missing project shortcode in ontology IRI)") {
-      assertTrue(throwsAssertion {
-        "http://0.0.0.0:3333/ontology/images/simple/v2".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://0.0.0.0:3333/ontology/images/v2#bild (missing project shortcode in entity IRI)") {
-      assertTrue(throwsAssertion {
-        "http://0.0.0.0:3333/ontology/images/v2#bild".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
-    test("reject http://0.0.0.0:3333/ontology/images/simple/v2#bild (missing project shortcode in entity IRI)") {
-      assertTrue(throwsAssertion {
-        "http://0.0.0.0:3333/ontology/images/simple/v2#bild".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
+    test("reject an empty IRI string")(assertRejected("")),
+    test("reject the IRI 'foo'")(assertRejected("foo")),
+    test("reject http://")(assertRejected("http://")),
+    test("reject ftp://www.knora.org/ontology/00FF/images (wrong URL scheme)")(
+      assertRejected("ftp://www.knora.org/ontology/00FF/images"),
+    ),
+    test("reject https://www.knora.org/ontology/00FF/images (wrong URL scheme)")(
+      assertRejected("https://www.knora.org/ontology/00FF/images"),
+    ),
+    test("reject http://www.knora.org/")(assertRejected("http://www.knora.org/")),
+    test("reject http://api.knora.org/")(assertRejected("http://api.knora.org/")),
+    test("reject http://0.0.0.0:3333/")(assertRejected("http://0.0.0.0:3333/")),
+    test("reject http://www.knora.org/ontology")(assertRejected("http://www.knora.org/ontology")),
+    test("reject http://api.knora.org/ontology")(assertRejected("http://api.knora.org/ontology")),
+    test("reject http://0.0.0.0:3333/ontology")(assertRejected("http://0.0.0.0:3333/ontology")),
+    test("reject http://www.knora.org/ontology/00FF/images/v2 (wrong hostname)")(
+      assertRejected("http://www.knora.org/ontology/00FF/images/v2"),
+    ),
+    test("reject http://www.knora.org/ontology/00FF/images/simple/v2 (wrong hostname)")(
+      assertRejected("http://www.knora.org/ontology/00FF/images/simple/v2"),
+    ),
+    test("reject http://api.knora.org/ontology/00FF/images/v2 (wrong hostname)")(
+      assertRejected("http://api.knora.org/ontology/00FF/images/v2"),
+    ),
+    test("reject http://api.knora.org/ontology/00FF/images/simple/v2 (wrong hostname)")(
+      assertRejected("http://api.knora.org/ontology/00FF/images/simple/v2"),
+    ),
+    test("reject http://0.0.0.0:3333/ontology/v2 (invalid ontology name)")(
+      assertRejected("http://0.0.0.0:3333/ontology/v2"),
+    ),
+    test("reject http://0.0.0.0:3333/ontology/0000/v2 (invalid ontology name)")(
+      assertRejected("http://0.0.0.0:3333/ontology/0000/v2"),
+    ),
+    test("reject http://0.0.0.0:3333/ontology/ontology (invalid ontology name)")(
+      assertRejected("http://0.0.0.0:3333/ontology/ontology"),
+    ),
+    test("reject http://0.0.0.0:3333/ontology/0000/ontology (invalid ontology name)")(
+      assertRejected("http://0.0.0.0:3333/ontology/0000/ontology"),
+    ),
+    test("reject http://0.0.0.0:3333/ontology/0000/simple/simple/v2 (invalid ontology name)")(
+      assertRejected("http://0.0.0.0:3333/ontology/0000/simple/simple/v2"),
+    ),
+    test("reject http://0.0.0.0:3333/ontology/00FF/images/v2#1234 (invalid entity name)")(
+      assertRejected("http://0.0.0.0:3333/ontology/00FF/images/v2#1234"),
+    ),
+    test("reject http://0.0.0.0:3333/ontology/images/v2 (missing project shortcode in ontology IRI)")(
+      assertRejected("http://0.0.0.0:3333/ontology/images/v2"),
+    ),
+    test("reject http://0.0.0.0:3333/ontology/images/simple/v2 (missing project shortcode in ontology IRI)")(
+      assertRejected("http://0.0.0.0:3333/ontology/images/simple/v2"),
+    ),
+    test("reject http://0.0.0.0:3333/ontology/images/v2#bild (missing project shortcode in entity IRI)")(
+      assertRejected("http://0.0.0.0:3333/ontology/images/v2#bild"),
+    ),
+    test("reject http://0.0.0.0:3333/ontology/images/simple/v2#bild (missing project shortcode in entity IRI)")(
+      assertRejected("http://0.0.0.0:3333/ontology/images/simple/v2#bild"),
+    ),
     test(
       "reject http://0.0.0.0:3333/ontology/shared/example/v2 (shared project code with local hostname in ontology IRI)",
-    ) {
-      assertTrue(throwsAssertion {
-        "http://0.0.0.0:3333/ontology/shared/example/v2".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
-      })
-    },
+    )(assertRejected("http://0.0.0.0:3333/ontology/shared/example/v2")),
     test("enable pattern matching with SmartIri") {
       val input: SmartIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
 
