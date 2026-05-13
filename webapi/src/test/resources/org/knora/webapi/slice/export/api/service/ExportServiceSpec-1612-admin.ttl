@@ -19,5 +19,4 @@
                 "!128,128";
         knora-admin:projectShortcode    "1612";
         knora-admin:projectShortname    "funk";
-        knora-admin:status              true;
-        knora-admin:projectLifecycle    "draft" .
+        knora-admin:status              true .

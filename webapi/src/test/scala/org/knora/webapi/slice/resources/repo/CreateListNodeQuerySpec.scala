@@ -38,7 +38,6 @@ object CreateListNodeQuerySpec extends ZIOSpecDefault {
     RestrictedView.default,
     Set.empty,
     Set.empty,
-    Lifecycle.Draft,
   )
 
   private val rootNodeIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/root-node")
@@ -242,7 +241,6 @@ object CreateListNodeQuerySpec extends ZIOSpecDefault {
         RestrictedView.default,
         Set.empty,
         Set.empty,
-        Lifecycle.Draft,
       )
       val nodeIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/image-types")
       val labels   = Labels.unsafeFrom(List(StringLiteralV2.from("Image Types", EN)))

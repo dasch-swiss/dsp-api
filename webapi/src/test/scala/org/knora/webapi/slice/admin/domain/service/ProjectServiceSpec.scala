@@ -37,7 +37,6 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           selfjoin = SelfJoin.CanJoin,
           allowedCopyrightHolders = Set.empty,
           enabledLicenses = Set.empty,
-          lifecycle = Lifecycle.Draft,
         )
         assertTrue(
           ProjectService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname",
@@ -59,7 +58,6 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           restrictedView = RestrictedView.default,
           allowedCopyrightHolders = Set.empty,
           enabledLicenses = Set.empty,
-          lifecycle = Lifecycle.Draft,
         )
         assertTrue(
           ProjectService

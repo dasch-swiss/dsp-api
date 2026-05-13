@@ -84,8 +84,7 @@
     knora-admin:projectRestrictedViewSize      "!512,512"^^xsd:string ;
     knora-admin:projectRestrictedViewWatermark "true"^^xsd:boolean;
     knora-admin:status                         "true"^^xsd:boolean ;
-    knora-admin:hasSelfJoinEnabled             "false"^^xsd:boolean ;
-    knora-admin:projectLifecycle               "draft"^^xsd:string .
+    knora-admin:hasSelfJoinEnabled             "false"^^xsd:boolean .
 
 
 ## Project Admin
@@ -182,8 +181,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:projectRestrictedViewSize      "!512,512"^^xsd:string ;
     knora-admin:projectRestrictedViewWatermark "true"^^xsd:boolean;
     knora-admin:status                         "true"^^xsd:boolean ;
-    knora-admin:hasSelfJoinEnabled             "false"^^xsd:boolean ;
-    knora-admin:projectLifecycle               "draft"^^xsd:string .
+    knora-admin:hasSelfJoinEnabled             "false"^^xsd:boolean .
 
 
 ## Project Admin
@@ -268,8 +266,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:status             "true"^^xsd:boolean ;
     knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean ;
     knora-admin:projectKeyword     "things"^^xsd:string,
-                                   "arbitrary test data"^^xsd:string ;
-    knora-admin:projectLifecycle   "draft"^^xsd:string .
+                                   "arbitrary test data"^^xsd:string .
 
 <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>
     a                                knora-admin:User ;
@@ -329,8 +326,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:projectLongname    "Dokubib"^^xsd:string ;
     knora-admin:projectDescription "Dokubib"^^xsd:string ;
     knora-admin:status             "false"^^xsd:boolean ;
-    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean ;
-    knora-admin:projectLifecycle   "draft"^^xsd:string .
+    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 ###################################
@@ -344,8 +340,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:projectLongname    "Bernoulli-Euler Online"^^xsd:string ;
     knora-admin:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
     knora-admin:status             "true"^^xsd:boolean ;
-    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean ;
-    knora-admin:projectLifecycle   "draft"^^xsd:string .
+    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF>
     a                                knora-admin:User ;
@@ -384,8 +379,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:projectLongname    "Anton Webern Gesamtausgabe"^^xsd:string ;
     knora-admin:projectDescription "Historisch-kritische Edition des Gesamtschaffens von Anton Webern."^^xsd:string ;
     knora-admin:status             "true"^^xsd:boolean ;
-    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean ;
-    knora-admin:projectLifecycle   "draft"^^xsd:string .
+    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 ## Project Member
 <http://rdfh.ch/users/webernProjectMember>

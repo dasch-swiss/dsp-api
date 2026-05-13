@@ -40,7 +40,6 @@ object ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
     SelfJoin.CannotJoin,
     Set.empty,
     Set.empty,
-    Lifecycle.Draft,
   )
   private val testLinkSourceIri             = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing1")
   private val testLinkPropertyIri           = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri

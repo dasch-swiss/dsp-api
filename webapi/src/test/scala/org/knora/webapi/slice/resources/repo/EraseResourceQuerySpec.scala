@@ -27,7 +27,6 @@ object EraseResourceQuerySpec extends ZIOSpecDefault {
     SelfJoin.CannotJoin,
     Set.empty,
     Set.empty,
-    Lifecycle.Draft,
   )
 
   private val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing_with_history")

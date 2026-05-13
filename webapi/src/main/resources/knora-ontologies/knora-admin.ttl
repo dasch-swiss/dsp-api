@@ -269,16 +269,6 @@
     knora-base:objectClassConstraint  knora-base:License .
 
 
-### http://www.knora.org/ontology/knora-admin#projectLifecycle
-
-:projectLifecycle
-    rdf:type                            owl:DatatypeProperty ;
-    rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
-    rdfs:comment                        "The lifecycle stage of a Knora project. One of \"draft\" or \"published\"."@en ;
-    knora-base:subjectClassConstraint   :knoraProject ;
-    knora-base:objectDatatypeConstraint xsd:string .
-
-
 ###  http://www.knora.org/ontology/knora-admin#username
 
 :username
@@ -417,10 +407,7 @@
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasEnabledLicense ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
-                    [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :projectLifecycle ;
-                      owl:cardinality    "1"^^xsd:nonNegativeInteger ] ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     rdfs:comment    "Represents a project that uses Knora."@en .
 
 
@@ -503,8 +490,7 @@
     :projectLongname    "Knora System Project" ;
     :projectDescription "Knora System Project"@en ;
     :status             "true"^^xsd:boolean ;
-    :hasSelfJoinEnabled "false"^^xsd:boolean ;
-    :projectLifecycle   "draft" .
+    :hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 ### http://www.knora.org/ontology/knora-admin#SharedOntologiesProject
@@ -516,8 +502,7 @@
     :projectLongname    "Knora Default Shared Ontologies Project" ;
     :projectDescription "Knora Shared Ontologies Project"@en ;
     :status             "true"^^xsd:boolean ;
-    :hasSelfJoinEnabled "false"^^xsd:boolean ;
-    :projectLifecycle   "draft" .
+    :hasSelfJoinEnabled "false"^^xsd:boolean .
 
 #
 ##

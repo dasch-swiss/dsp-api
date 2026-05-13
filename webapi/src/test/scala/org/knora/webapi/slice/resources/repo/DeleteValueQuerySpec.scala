@@ -40,7 +40,6 @@ object DeleteValueQuerySpec extends ZIOSpecDefault {
     SelfJoin.CannotJoin,
     Set.empty,
     Set.empty,
-    Lifecycle.Draft,
   )
   private val testResourceIri    = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing1")
   private val testPropertyIri    = PropertyIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri)

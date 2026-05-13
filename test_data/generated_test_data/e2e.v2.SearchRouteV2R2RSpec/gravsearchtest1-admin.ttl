@@ -13,8 +13,7 @@
   knora-admin:projectDescription "Test"^^xsd:string ;
   knora-admin:projectKeyword "test"^^xsd:string ;
   knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean ;
-  knora-admin:projectLifecycle "draft"^^xsd:string .
+  knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 # --- Utilisateurs ---
 

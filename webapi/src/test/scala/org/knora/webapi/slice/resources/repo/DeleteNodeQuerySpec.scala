@@ -29,7 +29,6 @@ object DeleteNodeQuerySpec extends ZIOSpecDefault {
     RestrictedView.default,
     Set.empty,
     Set.empty,
-    Lifecycle.Draft,
   )
 
   private val testNodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/test-node")
@@ -79,7 +78,6 @@ object DeleteNodeQuerySpec extends ZIOSpecDefault {
           RestrictedView.default,
           Set.empty,
           Set.empty,
-          Lifecycle.Draft,
         )
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0803/book-list-node")
         val actual  = DeleteNodeQuery.buildForChildNode(nodeIri, otherProject).getQueryString
@@ -134,7 +132,6 @@ object DeleteNodeQuerySpec extends ZIOSpecDefault {
           RestrictedView.default,
           Set.empty,
           Set.empty,
-          Lifecycle.Draft,
         )
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0803/root-book-list")
         val actual  = DeleteNodeQuery.buildForRootNode(nodeIri, otherProject).getQueryString

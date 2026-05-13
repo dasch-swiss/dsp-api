@@ -41,7 +41,6 @@ case class KnoraProject(
   restrictedView: RestrictedView,
   allowedCopyrightHolders: Set[CopyrightHolder],
   enabledLicenses: Set[LicenseIri],
-  lifecycle: Lifecycle,
 ) extends EntityWithId[ProjectIri]
 
 object KnoraProject {
@@ -189,23 +188,6 @@ object KnoraProject {
     case object CannotJoin extends SelfJoin { val value = false }
 
     def from(value: Boolean): SelfJoin = if (value) CanJoin else CannotJoin
-  }
-
-  sealed trait Lifecycle extends StringValue
-
-  object Lifecycle extends WithFrom[String, Lifecycle] {
-
-    case object Draft     extends Lifecycle { val value = "draft"     }
-    case object Published extends Lifecycle { val value = "published" }
-
-    val all: Set[Lifecycle] = Set(Draft, Published)
-
-    def from(value: String): Either[String, Lifecycle] =
-      all.find(_.value == value).toRight(s"Invalid lifecycle: $value")
-
-    given JsonCodec[Lifecycle] = ZioJsonCodec.stringCodec[Lifecycle](Lifecycle.from)
-    given Schema[Lifecycle]    =
-      Schema.string.description("The lifecycle stage of the project. One of \"draft\" or \"published\".")
   }
 
 }

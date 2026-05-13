@@ -81,7 +81,6 @@ final case class KnoraProjectService(
                 RestrictedView.default,
                 copyrightHolders,
                 licenses.toSet,
-                KnoraProject.Lifecycle.Draft,
               )
     project <- projectRepo.save(project)
   } yield project

@@ -60,7 +60,6 @@ object Vocabulary {
     val projectShortname: Iri               = Rdf.iri(ka, "projectShortname")
     val hasAllowedCopyrightHolder: Iri      = Rdf.iri(ka, "hasAllowedCopyrightHolder")
     val hasEnabledLicense: Iri              = Rdf.iri(ka, "hasEnabledLicense")
-    val projectLifecycle: Iri               = Rdf.iri(ka, "projectLifecycle")
 
     // permission properties
     val AdministrativePermission: Iri      = Rdf.iri(ka, "AdministrativePermission")

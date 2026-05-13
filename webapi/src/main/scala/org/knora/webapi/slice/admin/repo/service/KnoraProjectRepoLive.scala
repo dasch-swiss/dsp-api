@@ -41,7 +41,6 @@ final case class KnoraProjectRepoLive(
     NonEmptyChunk(
       Vocabulary.KnoraAdmin.hasSelfJoinEnabled,
       Vocabulary.KnoraAdmin.projectDescription,
-      Vocabulary.KnoraAdmin.projectLifecycle,
       Vocabulary.KnoraAdmin.projectShortcode,
       Vocabulary.KnoraAdmin.projectShortname,
       Vocabulary.KnoraAdmin.status,
@@ -109,7 +108,6 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
         allowedCopyrightHolders <-
           resource.getStringLiterals(hasAllowedCopyrightHolder)(CopyrightHolder.from).map(_.toSet)
         enabledLicenses <- resource.getObjectIrisConvert(hasEnabledLicense)(LicenseIri.from).map(_.toSet)
-        lifecycle       <- resource.getStringLiteralOrFail[Lifecycle](ProjectLifecycle)(Lifecycle.from)
         restrictedView  <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),
@@ -124,7 +122,6 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
         restrictedView = restrictedView,
         allowedCopyrightHolders = allowedCopyrightHolders,
         enabledLicenses = enabledLicenses,
-        lifecycle = lifecycle,
       )
     }
 
@@ -155,7 +152,6 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
       project.enabledLicenses.foreach(licenseIri =>
         pattern.andHas(Vocabulary.KnoraAdmin.hasEnabledLicense, Rdf.iri(licenseIri.value)),
       )
-      pattern.andHas(Vocabulary.KnoraAdmin.projectLifecycle, project.lifecycle.value)
       pattern
     }
   }
