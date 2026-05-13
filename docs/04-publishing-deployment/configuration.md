@@ -56,3 +56,43 @@ override any value set in the application configuration file:
   reloading of data over HTTP.
 - `-c`: Print the configuration at startup.
 - `--help`: Shows the help message with all startup flags.
+
+## Feature Flags
+
+Feature flags gate functionality that is not yet stable, is being rolled out,
+or is intentionally restricted on certain deployments. Each flag can be set
+via its environment variable or in `application.conf` under
+`app.features.<flag-name>`.
+
+| key in application.conf                   | environment variable           | default value |
+|-------------------------------------------|--------------------------------|---------------|
+| app.features.allow-placeholder            | ALLOW_PLACEHOLDER              | true          |
+| app.features.allow-import-migration-bagit | ALLOW_IMPORT_MIGRATION_BAGIT   | true          |
+
+### `allow-placeholder`
+
+Controls whether the Placeholder License
+(`http://rdfh.ch/licenses/placeholder`) may be used on a `FileValue`.
+The Placeholder License is intended as a temporary placeholder while the
+actual license for a file is still being determined. See
+[License](../01-introduction/legal-info.md#license) for the broader context.
+
+When the flag is disabled, any FileValue with
+`licenseIri = http://rdfh.ch/licenses/placeholder` is rejected by the
+legal-info validation with the error:
+
+```
+License http://rdfh.ch/licenses/placeholder is the placeholder license and is not allowed on this server
+```
+
+This is checked at the server level — the placeholder license is rejected
+even if a project has explicitly enabled it.
+
+### `allow-import-migration-bagit`
+
+Controls whether the project migration import endpoints are available.
+See [Project Migration Export/Import](../03-endpoints/api-v3/project-migration.md)
+for the endpoint reference.
+
+When the flag is disabled, import endpoints return `404 Not Found`.
+Export endpoints are always available and are not gated by this flag.
