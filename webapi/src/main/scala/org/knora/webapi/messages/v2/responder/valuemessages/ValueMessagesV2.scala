@@ -46,6 +46,7 @@ import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.PlaceholderIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.Value.StringValue
@@ -705,20 +706,43 @@ object ValueContentV2 {
     shortcode: Shortcode,
   ): ZIO[SipiService, Throwable, Option[FileInfo]] =
     ZIO.foreach(filenameMaybe) { filename =>
-      for {
-        sipiService <- ZIO.service[SipiService]
-        assetId     <- ZIO
-                     .fromEither(AssetId.fromFilename(filename))
-                     .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
-        meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
-                  case NotFoundException(_) =>
-                    NotFoundException(
-                      s"Asset '$filename' not found in dsp-ingest, make sure the old Sipi upload mechanism is not being used.",
-                    )
-                  case e => e
-                }
-      } yield FileInfo(filename, meta)
+      if (filename == PlaceholderIri.instance.value) ZIO.succeed(placeholderFileInfo)
+      else
+        for {
+          sipiService <- ZIO.service[SipiService]
+          assetId     <- ZIO
+                       .fromEither(AssetId.fromFilename(filename))
+                       .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
+          meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
+                    case NotFoundException(_) =>
+                      NotFoundException(
+                        s"Asset '$filename' not found in dsp-ingest, make sure the old Sipi upload mechanism is not being used.",
+                      )
+                    case e => e
+                  }
+        } yield FileInfo(filename, meta)
     }
+
+  /**
+   * Synthetic [[FileInfo]] used when the client supplies the placeholder sentinel
+   * `urn:placeholder` as the file reference. Skips the round-trip to DSP-ingest/Sipi
+   * since no real asset exists yet. The MIME type is set to the same sentinel so
+   * that downstream code can recognise it without consulting the filename.
+   */
+  private val placeholderFileInfo: FileInfo =
+    FileInfo(
+      PlaceholderIri.instance.value,
+      FileMetadataSipiResponse(
+        originalFilename = None,
+        originalMimeType = None,
+        internalMimeType = PlaceholderIri.instance.value,
+        width = None,
+        height = None,
+        numpages = None,
+        duration = None,
+        fps = None,
+      ),
+    )
 }
 
 /**
@@ -1836,6 +1860,22 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
    */
   def fileValue: FileValueV2
 
+  /**
+   * `true` if this file value's internal filename is the placeholder sentinel
+   * (`urn:placeholder`). Placeholder file values reference no real asset on Sipi;
+   * they exist only to mark "to be filled in" data during the editing phase.
+   */
+  def isPlaceholder: Boolean = fileValue.internalFilename == PlaceholderIri.instance.value
+
+  /**
+   * Computes the file URL: returns the placeholder sentinel as-is when this is a
+   * placeholder file value, otherwise evaluates `makeUrl` to build the normal Sipi
+   * URL. Used so that placeholders render as `urn:placeholder` rather than a
+   * non-resolvable `<sipi>/<shortcode>/urn:placeholder/...` URL.
+   */
+  protected def fileUrlOrPlaceholder(makeUrl: => String): String =
+    if (isPlaceholder) PlaceholderIri.instance.value else makeUrl
+
   def toJsonLDValueInSimpleSchema(fileUrl: String): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -1890,7 +1930,7 @@ case class StillImageFileValueContentV2(
     copy(ontologySchema = targetSchema)
 
   def makeFileUrl(projectADM: Project, url: String): String =
-    s"$url/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
+    fileUrlOrPlaceholder(s"$url/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg")
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
@@ -2041,8 +2081,9 @@ case class StillImageVectorFileValueContentV2(
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
-    val fileUrl: String =
-      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
+    val fileUrl: String = fileUrlOrPlaceholder(
+      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file",
+    )
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
@@ -2099,8 +2140,9 @@ case class DocumentFileValueContentV2(
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
-    val fileUrl: String =
-      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
+    val fileUrl: String = fileUrlOrPlaceholder(
+      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file",
+    )
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
@@ -2145,8 +2187,9 @@ case class ArchiveFileValueContentV2(
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
-    val fileUrl: String =
-      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
+    val fileUrl: String = fileUrlOrPlaceholder(
+      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file",
+    )
 
     targetSchema match {
       case ApiV2Simple  => toJsonLDValueInSimpleSchema(fileUrl)
@@ -2211,8 +2254,9 @@ case class TextFileValueContentV2(
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
-    val fileUrl: String =
-      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
+    val fileUrl: String = fileUrlOrPlaceholder(
+      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file",
+    )
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
@@ -2263,8 +2307,9 @@ case class AudioFileValueContentV2(
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
-    val fileUrl: String =
-      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
+    val fileUrl: String = fileUrlOrPlaceholder(
+      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file",
+    )
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
@@ -2315,8 +2360,9 @@ case class MovingImageFileValueContentV2(
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
-    val fileUrl: String =
-      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
+    val fileUrl: String = fileUrlOrPlaceholder(
+      s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file",
+    )
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
