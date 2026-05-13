@@ -19,6 +19,7 @@ import zio.test.Assertion.*
 import java.time.Instant
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -922,6 +923,62 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(containsString("placeholder sentinel 'urn:placeholder'") && containsString("not allowed")),
+      )
+    },
+    test("updateValueV2fromJsonLd rejects a placeholder FileValue") {
+      for {
+        _      <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        actual <- service(
+                    _.updateValueV2fromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "urn:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(containsString("placeholder sentinel 'urn:placeholder'") && containsString("not allowed")),
+      )
+    },
+    test("createResourceRequestV2 rejects a placeholder FileValue") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        _      <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        uuid   <- Random.nextUUID
+        actual <- service(
+                    _.createResourceRequestV2(
+                      s"""
+                         |{
+                         |  "@type" : "ex:Thing",
+                         |  "rdfs:label" : "test resource",
+                         |  "ka:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "urn:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+                         |  }
+                         |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
                     ),
                   ).exit
       } yield assert(actual)(
