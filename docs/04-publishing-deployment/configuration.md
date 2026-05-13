@@ -114,17 +114,17 @@ Export endpoints are always available and are not gated by this flag.
 ### `allow-placeholder`
 
 Controls whether the Placeholder License
-(`http://rdfh.ch/licenses/placeholder`) may be used on a `FileValue`.
+(`urn:placeholder`) may be used on a `FileValue`.
 The Placeholder License is intended as a temporary placeholder while the
 actual license for a file is still being determined. See
 [License](../01-introduction/legal-info.md#license) for the broader context.
 
 When the flag is disabled, any FileValue with
-`licenseIri = http://rdfh.ch/licenses/placeholder` is rejected by the
+`licenseIri = urn:placeholder` is rejected by the
 legal-info validation with the error:
 
 ```
-License http://rdfh.ch/licenses/placeholder is the placeholder license and is not allowed on this server
+License urn:placeholder is the placeholder license and is not allowed on this server
 ```
 
 This is checked at the server level — the placeholder license is rejected
