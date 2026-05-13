@@ -12,6 +12,7 @@ import zio.prelude.Validation
 import scala.annotation.unused
 
 import dsp.errors.InconsistentRepositoryDataException
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
@@ -71,9 +72,16 @@ case class LegalInfoService(
     licenseIri match
       case None      => ZIO.succeed(Validation.unit)
       case Some(iri) =>
-        findEnabledLicenses(shortcode).map { licenses =>
-          if (licenses.map(_.id).contains(iri)) { Validation.unit }
-          else { Validation.fail(s"License $iri is not allowed in project $shortcode") }
+        AppConfig.features(_.allowPlaceholder).flatMap { allowPlaceholder =>
+          if (iri == LicenseIri.PLACEHOLDER && !allowPlaceholder)
+            ZIO.succeed(
+              Validation.fail(s"License $iri is the placeholder license and is not allowed on this server"),
+            )
+          else
+            findEnabledLicenses(shortcode).map { licenses =>
+              if (licenses.map(_.id).contains(iri)) Validation.unit
+              else Validation.fail(s"License $iri is not allowed in project $shortcode")
+            }
         }
 
   private def copyrightHolderValidation(

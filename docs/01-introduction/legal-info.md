@@ -81,6 +81,11 @@ Notable **CC BY 4.0** (Attribution 4.0 International) and **CC BY-SA 4.0** (Attr
     - **Public Domain - Not Protected by Copyright**
         - Id: `http://rdfh.ch/licenses/public-domain`
         - URI: [http://rdfh.ch/licenses/public-domain](http://rdfh.ch/licenses/public-domain)
+    - **Placeholder License**
+        - Id: `http://rdfh.ch/licenses/placeholder`
+        - URI: [http://rdfh.ch/licenses/placeholder](http://rdfh.ch/licenses/placeholder)
+        - Use of this license on a FileValue is gated by the
+          [`allow-placeholder` feature switch](#allow-placeholder-feature-switch).
 
 #### Other Licenses
 
@@ -99,3 +104,30 @@ Notable **CC BY 4.0** (Attribution 4.0 International) and **CC BY-SA 4.0** (Attr
 - **No Copyright - Non-Commercial Use Only 1.0**
     - Id: <http://rdfh.ch/licenses/noc-nc-1.0>
     - URI: <http://rightsstatements.org/vocab/NoC-NC/1.0/>
+
+### `allow-placeholder` Feature Switch
+
+The Placeholder License (`http://rdfh.ch/licenses/placeholder`) is intended
+as a temporary placeholder while the actual license for a file is still
+being determined. Whether a FileValue may use this license is controlled
+by the `allow-placeholder` feature switch.
+
+When the switch is disabled, any FileValue with `licenseIri =
+http://rdfh.ch/licenses/placeholder` is rejected by the legal-info
+validation with the error:
+
+```
+License http://rdfh.ch/licenses/placeholder is the placeholder license and is not allowed on this server
+```
+
+This is checked at the server level — the placeholder license is rejected
+even if a project has explicitly enabled it.
+
+The switch can be set via the environment variable `ALLOW_PLACEHOLDER`
+or in `application.conf`:
+
+```
+app.features.allow-placeholder = true
+```
+
+Default: `true`.

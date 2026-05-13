@@ -157,6 +157,7 @@ final case class Features(
   disableLastModificationDateCheck: Boolean,
   triggerCompactionAfterProjectErasure: Boolean,
   allowImportMigrationBagit: Boolean,
+  allowPlaceholder: Boolean,
 )
 
 object AppConfig {
@@ -190,6 +191,7 @@ object AppConfig {
          |* DISABLE_LAST_MODIFICATION_DATE_CHECK: ${c.features.disableLastModificationDateCheck}
          |* TRIGGER_COMPACTION_AFTER_PROJECT_ERASURE: ${c.features.triggerCompactionAfterProjectErasure}
          |* ALLOW_IMPORT_MIGRATION_BAGIT : ${c.features.allowImportMigrationBagit}
+         |* ALLOW_PLACEHOLDER: ${c.features.allowPlaceholder}
          |""".stripMargin,
     )
 
