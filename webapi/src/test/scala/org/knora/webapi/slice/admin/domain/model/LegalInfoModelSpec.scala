@@ -35,9 +35,13 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
       val validIri = "http://rdfh.ch/licenses/i6xBpZn4RVOdOIyTezEumw"
       assertTrue(LicenseIri.from(validIri).map(_.value).contains(validIri))
     },
+    test("pass a placeholder IRI and successfully create value object") {
+      val validIri = "urn:placeholder"
+      assertTrue(LicenseIri.from(validIri).map(_.value).contains(validIri))
+    },
     test("pass an invalid object and return an error") {
       val invalidIri = "http://rdfh.ch/licenses/invalid"
-      assertTrue(LicenseIri.from(invalidIri) == Left("Invalid license IRI"))
+      assertTrue(LicenseIri.from(invalidIri) == Left(s"<$invalidIri> is not a valid license IRI"))
     },
     test("make new returns a valid IRI") {
       val newIri = LicenseIri.makeNew

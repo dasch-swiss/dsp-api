@@ -12,7 +12,6 @@ import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.net.URI
-
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.AI_GENERATED
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.BORIS
@@ -30,7 +29,7 @@ import org.knora.webapi.slice.admin.domain.model.LicenseIri.PLACEHOLDER
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.PUBLIC_DOMAIN
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.UNKNOWN
 import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
-import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.{PlaceholderIri, StringValueCompanion}
 import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.Value.StringValue
 
@@ -101,7 +100,7 @@ object LicenseIri                                                extends StringV
   val BORIS: LicenseIri            = LicenseIri("http://rdfh.ch/licenses/boris")
   val OPEN_LICENCE_2_0: LicenseIri = LicenseIri("http://rdfh.ch/licenses/open-licence-2.0")
   val NOC_NC_1_0: LicenseIri       = LicenseIri("http://rdfh.ch/licenses/noc-nc-1.0")
-  val PLACEHOLDER: LicenseIri      = LicenseIri("http://rdfh.ch/licenses/placeholder")
+  val PLACEHOLDER: LicenseIri      = LicenseIri(PlaceholderIri.instance.value)
 
   val BUILT_IN: Set[LicenseIri] =
     Set(
@@ -124,9 +123,9 @@ object LicenseIri                                                extends StringV
 
   private def isLicenseIri(iri: String) = licenseIriRegEx.matches(iri) || BUILT_IN.map(_.value).contains(iri)
 
-  def from(str: String): Either[String, LicenseIri] = str match {
-    case str if !isLicenseIri(str) => Left("Invalid license IRI")
-    case _                         => Right(LicenseIri(str))
+  def from(value: String): Either[String, LicenseIri] = value match {
+    case value if !isLicenseIri(value) => Left(s"<$value> is not a valid license IRI")
+    case _                         => Right(LicenseIri(value))
   }
 
   def makeNew: LicenseIri = {
@@ -226,7 +225,7 @@ object License {
     License(
       PLACEHOLDER,
       URI.create(PLACEHOLDER.value),
-      "Placeholder License",
+      "Placeholder License - Not a Real License only to be used when the real license is not known yet.",
       IsDaschRecommended.No,
     ),
   )
