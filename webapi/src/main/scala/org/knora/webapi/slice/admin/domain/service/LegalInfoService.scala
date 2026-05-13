@@ -52,8 +52,13 @@ case class LegalInfoService(
   def findAvailableLicenseByIdAndShortcode(licenseIri: LicenseIri, shortcode: Shortcode): UIO[Option[License]] =
     findAvailableLicenses(shortcode).map(_.find(_.id == licenseIri))
 
-  def enableLicense(license: LicenseIri, project: KnoraProject): UIO[KnoraProject] =
-    projects.enableLicense(license, project).orDie
+  def enableLicense(license: LicenseIri, project: KnoraProject): IO[String, KnoraProject] =
+    AppConfig.features(_.allowPlaceholder).flatMap { allowPlaceholder =>
+      if (license == LicenseIri.PLACEHOLDER && !allowPlaceholder)
+        ZIO.fail(s"License $license is the placeholder license and is not allowed on this server")
+      else
+        projects.enableLicense(license, project).orDie
+    }
 
   def disableLicense(license: LicenseIri, project: KnoraProject): UIO[KnoraProject] =
     projects.disableLicense(license, project).orDie

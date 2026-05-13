@@ -76,6 +76,12 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
         actual <- service(_.enableLicense(disabledLicense, prj))
       } yield assertTrue(actual.enabledLicenses == Set(disabledLicense, enabledLicense))
     },
+    test("enabling PLACEHOLDER should work when allow-placeholder is true") {
+      for {
+        prj    <- setupProject
+        actual <- service(_.enableLicense(LicenseIri.PLACEHOLDER, prj))
+      } yield assertTrue(actual.enabledLicenses == Set(LicenseIri.PLACEHOLDER, enabledLicense))
+    },
     test("disabling should work") {
       for {
         prj    <- setupProject
@@ -196,6 +202,18 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
                )
         fileValue = fileValueValid.copy(licenseIri = Some(LicenseIri.PLACEHOLDER))
         actual   <- service(_.validateLegalInfo(fileValue, prj.shortcode)).exit
+      } yield assert(actual)(
+        fails(
+          equalTo(
+            s"License ${LicenseIri.PLACEHOLDER} is the placeholder license and is not allowed on this server",
+          ),
+        ),
+      )
+    },
+    test("enabling PLACEHOLDER should be rejected with a server-level error") {
+      for {
+        prj    <- setupProject
+        actual <- service(_.enableLicense(LicenseIri.PLACEHOLDER, prj)).exit
       } yield assert(actual)(
         fails(
           equalTo(
