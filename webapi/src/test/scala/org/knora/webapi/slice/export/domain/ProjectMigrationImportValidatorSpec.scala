@@ -5,9 +5,7 @@
 
 package org.knora.webapi.slice.`export`.domain
 
-import com.typesafe.config.ConfigFactory
 import zio.*
-import zio.config.typesafe.TypesafeConfigProvider
 import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.test.*
@@ -15,6 +13,7 @@ import zio.test.Assertion.*
 
 import java.nio.charset.StandardCharsets
 
+import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 object ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
@@ -60,17 +59,6 @@ object ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     Files.writeBytes(file, Chunk.fromArray(content.getBytes(StandardCharsets.UTF_8))).as(file)
   }
 
-  private def configLayer(allowPlaceholder: Boolean): ULayer[Unit] =
-    Runtime.setConfigProvider(
-      TypesafeConfigProvider.fromTypesafeConfig(
-        ConfigFactory
-          .parseString(s"app.features.allow-placeholder = $allowPlaceholder")
-          .withFallback(ConfigFactory.load())
-          .getConfig("app")
-          .resolve,
-      ),
-    )
-
   private def validate(
     ontologyNq: String,
     dataNq: String = baselineDataNq,
@@ -86,7 +74,7 @@ object ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       result       <-
         validator
           .validate(NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile), testProjectIri)
-          .provideSomeLayer[Scope](configLayer(allowPlaceholder))
+          .provideSomeLayer[Scope](TestAppConfig.layer("app.features.allow-placeholder" -> allowPlaceholder))
           .either
     } yield result
 

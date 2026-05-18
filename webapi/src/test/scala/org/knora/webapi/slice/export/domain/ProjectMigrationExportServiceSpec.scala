@@ -5,13 +5,11 @@
 
 package org.knora.webapi.slice.`export`.domain
 
-import com.typesafe.config.ConfigFactory
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.Lang as JenaLang
 import org.apache.jena.riot.RDFDataMgr
 import zio.*
-import zio.config.typesafe.TypesafeConfigProvider
 import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.test.*
@@ -22,6 +20,7 @@ import scala.jdk.CollectionConverters.*
 import org.knora.bagit.BagIt
 import org.knora.bagit.BagItError
 import org.knora.webapi.TestDataFactory
+import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
@@ -49,9 +48,7 @@ object ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
     capturedConstructQueryRef: Ref[Option[String]],
   )
 
-  private val configLayer: ULayer[Unit] = Runtime.setConfigProvider(
-    TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve),
-  )
+  private val configLayer: ULayer[Unit] = TestAppConfig.layer()
 
   private def stubDspIngestClient(exportProjectCalled: Ref[Boolean]): DspIngestClient = new DspIngestClient {
     override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =

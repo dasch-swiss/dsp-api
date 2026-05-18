@@ -5,11 +5,9 @@
 
 package org.knora.webapi.slice.common
 
-import com.typesafe.config.ConfigFactory
 import org.apache.jena.vocabulary.RDFS
 import zio.*
 import zio.config.*
-import zio.config.typesafe.TypesafeConfigProvider
 import zio.json.DecoderOps
 import zio.json.EncoderOps
 import zio.json.ast.Json
@@ -21,6 +19,7 @@ import java.time.Instant
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
@@ -890,13 +889,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
   )
 
   private def appConfigLayerWith(allowPlaceholder: Boolean): ULayer[AppConfig.AppConfigurations] = {
-    val provider = TypesafeConfigProvider.fromTypesafeConfig(
-      ConfigFactory
-        .parseString(s"app.features.allow-placeholder = $allowPlaceholder")
-        .withFallback(ConfigFactory.load())
-        .getConfig("app")
-        .resolve,
-    )
+    val provider                    = TestAppConfig.provider("app.features.allow-placeholder" -> allowPlaceholder)
     val parseConfig: UIO[AppConfig] = read(AppConfig.config from provider).orDie
     Runtime.setConfigProvider(provider) >>>
       AppConfig.projectAppConfigurations(ZLayer.fromZIO(parseConfig))

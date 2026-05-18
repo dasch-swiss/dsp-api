@@ -5,13 +5,12 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import com.typesafe.config.ConfigFactory
 import zio.*
-import zio.config.typesafe.TypesafeConfigProvider
 import zio.test.*
 import zio.test.Assertion.*
 
 import org.knora.webapi.TestDataFactory
+import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
@@ -43,15 +42,7 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
   )
 
   private def configLayer(allowPlaceholder: Boolean): ULayer[Unit] =
-    Runtime.setConfigProvider(
-      TypesafeConfigProvider.fromTypesafeConfig(
-        ConfigFactory
-          .parseString(s"app.features.allow-placeholder = $allowPlaceholder")
-          .withFallback(ConfigFactory.load())
-          .getConfig("app")
-          .resolve,
-      ),
-    )
+    TestAppConfig.layer("app.features.allow-placeholder" -> allowPlaceholder)
 
   private val findLicenseByIri = suite("findAvailableLicenseByIdAndShortcode")(
     test("should return the license for a project") {
