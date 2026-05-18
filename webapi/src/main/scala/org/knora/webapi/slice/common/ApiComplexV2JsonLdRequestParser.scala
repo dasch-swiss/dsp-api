@@ -340,8 +340,8 @@ final case class ApiComplexV2JsonLdRequestParser(
                          permissions,
                          creationDate,
                        )
-      _ <- checkMimeTypesForFileValueContents(createResource.flatValues)
       _ <- ensurePlaceholderAllowed(createResource.flatValues.map(_.valueContent))
+      _ <- checkMimeTypesForFileValueContents(createResource.flatValues)
     } yield CreateResourceRequestV2(createResource, attachedToUser, uuid)
   }
 
@@ -385,24 +385,33 @@ final case class ApiComplexV2JsonLdRequestParser(
   }
 
   /**
-   * Rejects writes that contain placeholder file values when the
-   * `allow-placeholder` feature switch is disabled on this deployment.
-   * Reads are never gated; this check applies only to create/update of file values.
+   * Rejects writes that contain the placeholder sentinel in any of the
+   * sentinel-bearing FileValue fields (`internalFilename`, `copyrightHolder`,
+   * or any element of `authorship`) when the `allow-placeholder` feature
+   * switch is disabled on this deployment. Reads are never gated; this check
+   * applies only to create/update of file values.
    */
   private def ensurePlaceholderAllowed(values: Iterable[ValueContentV2]): IO[String, Unit] =
-    val hasPlaceholder = values.exists {
-      case fvc: FileValueContentV2 => fvc.isPlaceholder
-      case _                       => false
+    val sentinel                      = PlaceholderIri.instance.value
+    val offendingFields: List[String] = values.toList.flatMap {
+      case fvc: FileValueContentV2 =>
+        val filenameHit  = Option.when(fvc.isPlaceholder)("internalFilename")
+        val copyrightHit =
+          fvc.fileValue.copyrightHolder.collect { case h if h.value == sentinel => "copyrightHolder" }
+        val authorshipHit =
+          fvc.fileValue.authorship.flatMap(_.find(_.value == sentinel)).map(_ => "authorship")
+        filenameHit.toList ++ copyrightHit.toList ++ authorshipHit.toList
+      case _ => Nil
     }
-    if (!hasPlaceholder) ZIO.unit
+    if (offendingFields.isEmpty) ZIO.unit
     else
       AppConfig
         .features(_.allowPlaceholder)
         .flatMap(allow =>
           ZIO
             .fail(
-              s"FileValue references the placeholder sentinel '${PlaceholderIri.instance.value}', " +
-                s"which is not allowed on this server.",
+              s"FileValue field(s) ${offendingFields.mkString(", ")} reference the placeholder sentinel " +
+                s"'$sentinel', which is not allowed on this server.",
             )
             .unless(allow)
             .unit,
