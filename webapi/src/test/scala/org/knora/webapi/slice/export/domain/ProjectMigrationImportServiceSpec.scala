@@ -301,7 +301,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                   }
     taskStateRef  <- Ref.make[Option[CurrentDataTask]](None)
     taskState      = new DataTaskState(taskStateRef, persistence)
-    shaclValidator = new ProjectMigrationImportShaclValidator()
+    shaclValidator = new ProjectMigrationImportValidator()
     service        =
       new ProjectMigrationImportService(
         taskState,

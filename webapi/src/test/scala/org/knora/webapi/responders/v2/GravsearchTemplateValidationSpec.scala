@@ -17,7 +17,7 @@ import org.knora.webapi.slice.common.ValueIri
 
 object GravsearchTemplateValidationSpec extends ZIOSpecDefault {
 
-  private val templateIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing")
+  private val templateIri  = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing")
   private val fileValueIri =
     ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw")
 

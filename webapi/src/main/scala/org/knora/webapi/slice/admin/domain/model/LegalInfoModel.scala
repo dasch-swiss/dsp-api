@@ -12,6 +12,7 @@ import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.net.URI
+
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.AI_GENERATED
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.BORIS
@@ -29,7 +30,8 @@ import org.knora.webapi.slice.admin.domain.model.LicenseIri.PLACEHOLDER
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.PUBLIC_DOMAIN
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.UNKNOWN
 import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
-import org.knora.webapi.slice.common.{PlaceholderIri, StringValueCompanion}
+import org.knora.webapi.slice.common.PlaceholderIri
+import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.Value.StringValue
 
@@ -125,7 +127,7 @@ object LicenseIri                                                extends StringV
 
   def from(value: String): Either[String, LicenseIri] = value match {
     case value if !isLicenseIri(value) => Left(s"<$value> is not a valid license IRI")
-    case _                         => Right(LicenseIri(value))
+    case _                             => Right(LicenseIri(value))
   }
 
   def makeNew: LicenseIri = {
