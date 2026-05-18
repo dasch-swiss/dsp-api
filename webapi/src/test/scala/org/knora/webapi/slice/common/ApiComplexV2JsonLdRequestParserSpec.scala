@@ -24,19 +24,17 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.BooleanValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ColorValueContentV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DecimalValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeomValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
@@ -51,6 +49,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContent
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType.UnformattedText
 import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.*
@@ -1262,7 +1262,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                   )
       } yield assertTrue(
         result.valueContent match {
-          case fvc: FileValueContentV2 => fvc.isPlaceholder
+          case fvc: FileValueContentV2 => fvc.hasPlaceholderAsset
           case _                       => false
         },
       )
@@ -1355,7 +1355,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
         result match {
           case uvc: UpdateValueContentV2 =>
             uvc.valueContent match {
-              case fvc: FileValueContentV2 => fvc.isPlaceholder
+              case fvc: FileValueContentV2 => fvc.hasPlaceholderAsset
               case _                       => false
             }
           case _ => false

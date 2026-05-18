@@ -1829,7 +1829,23 @@ case class FileValueV2(
   copyrightHolder: Option[CopyrightHolder] = None,
   authorship: Option[List[Authorship]] = None,
   licenseIri: Option[LicenseIri] = None,
-)
+) {
+
+  /**
+   * Names of the FileValue fields whose value is the placeholder sentinel
+   * (`urn:placeholder`). Empty when no field is a placeholder. Used by the
+   * parser-level gate to report exactly which fields are non-compliant under
+   * `allow-placeholder = false`. `licenseIri` is intentionally not included —
+   * placeholder license handling lives in `LegalInfoService`.
+   */
+  def placeholderFields: List[String] = {
+    val sentinel  = PlaceholderIri.instance.value
+    val filename  = Option.when(internalFilename == sentinel)("internalFilename")
+    val copyright = copyrightHolder.collect { case h if h.value == sentinel => "copyrightHolder" }
+    val authors   = authorship.flatMap(_.find(_.value == sentinel)).map(_ => "authorship")
+    filename.toList ++ copyright.toList ++ authors.toList
+  }
+}
 object FileValueV2 {
 
   def makeNew(r: Resource, info: FileInfo): Either[String, FileValueV2] = {
@@ -1861,11 +1877,13 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
   def fileValue: FileValueV2
 
   /**
-   * `true` if this file value's internal filename is the placeholder sentinel
-   * (`urn:placeholder`). Placeholder file values reference no real asset on Sipi;
-   * they exist only to mark "to be filled in" data during the editing phase.
+   * `true` if the asset reference (`internalFilename`) is the placeholder
+   * sentinel (`urn:placeholder`) — i.e. no real file exists on Sipi /
+   * dsp-ingest yet. Does NOT consider `copyrightHolder` or `authorship`; for
+   * "are any FileValue fields placeholders?" use
+   * [[FileValueV2.placeholderFields]].
    */
-  def isPlaceholder: Boolean = fileValue.internalFilename == PlaceholderIri.instance.value
+  def hasPlaceholderAsset: Boolean = fileValue.internalFilename == PlaceholderIri.instance.value
 
   /**
    * Computes the file URL: returns the placeholder sentinel as-is when this is a
@@ -1874,7 +1892,7 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
    * non-resolvable `<sipi>/<shortcode>/urn:placeholder/...` URL.
    */
   protected def fileUrlOrPlaceholder(makeUrl: => String): String =
-    if (isPlaceholder) PlaceholderIri.instance.value else makeUrl
+    if (hasPlaceholderAsset) PlaceholderIri.instance.value else makeUrl
 
   def toJsonLDValueInSimpleSchema(fileUrl: String): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

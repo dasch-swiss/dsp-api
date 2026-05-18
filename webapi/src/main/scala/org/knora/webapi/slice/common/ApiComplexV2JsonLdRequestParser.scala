@@ -359,8 +359,8 @@ final case class ApiComplexV2JsonLdRequestParser(
         value.valueContent match {
           // Placeholder file values carry the sentinel MIME type and have no real asset on
           // Sipi yet, so the per-type MIME check does not apply.
-          case fvc: FileValueContentV2 if fvc.isPlaceholder   => ZIO.unit
-          case fileValueContent: StillImageFileValueContentV2 =>
+          case fvc: FileValueContentV2 if fvc.hasPlaceholderAsset => ZIO.unit
+          case fileValueContent: StillImageFileValueContentV2     =>
             failBadRequest(fileValueContent)
               .when(!sipiConfig.imageMimeTypes.contains(fileValueContent.fileValue.internalMimeType))
           case fileValueContent: DocumentFileValueContentV2 =>
@@ -392,26 +392,19 @@ final case class ApiComplexV2JsonLdRequestParser(
    * applies only to create/update of file values.
    */
   private def ensurePlaceholderAllowed(values: Iterable[ValueContentV2]): IO[String, Unit] =
-    val sentinel                      = PlaceholderIri.instance.value
-    val offendingFields: List[String] = values.toList.flatMap {
-      case fvc: FileValueContentV2 =>
-        val filenameHit  = Option.when(fvc.isPlaceholder)("internalFilename")
-        val copyrightHit =
-          fvc.fileValue.copyrightHolder.collect { case h if h.value == sentinel => "copyrightHolder" }
-        val authorshipHit =
-          fvc.fileValue.authorship.flatMap(_.find(_.value == sentinel)).map(_ => "authorship")
-        filenameHit.toList ++ copyrightHit.toList ++ authorshipHit.toList
-      case _ => Nil
+    val offending = values.toList.flatMap {
+      case fvc: FileValueContentV2 => fvc.fileValue.placeholderFields
+      case _                       => Nil
     }
-    if (offendingFields.isEmpty) ZIO.unit
+    if (offending.isEmpty) ZIO.unit
     else
       AppConfig
         .features(_.allowPlaceholder)
         .flatMap(allow =>
           ZIO
             .fail(
-              s"FileValue field(s) ${offendingFields.mkString(", ")} reference the placeholder sentinel " +
-                s"'$sentinel', which is not allowed on this server.",
+              s"FileValue field(s) ${offending.mkString(", ")} reference the placeholder sentinel " +
+                s"'${PlaceholderIri.instance.value}', which is not allowed on this server.",
             )
             .unless(allow)
             .unit,

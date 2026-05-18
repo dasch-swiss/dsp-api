@@ -1733,7 +1733,7 @@ object ResourcesResponderV2 {
     fileValueIri: ValueIri,
     content: TextFileValueContentV2,
   ): Either[String, Unit] =
-    if (content.isPlaceholder)
+    if (content.hasPlaceholderAsset)
       Left(
         s"Gravsearch template $gravsearchTemplateIri references a placeholder file value with no real asset yet",
       )
