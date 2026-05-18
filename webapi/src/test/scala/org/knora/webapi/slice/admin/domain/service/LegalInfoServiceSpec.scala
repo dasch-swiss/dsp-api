@@ -181,26 +181,6 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
   )
 
   private val placeholderDisabledSuite = suite("with allow-placeholder = false")(
-    test("A FileValue with PLACEHOLDER LicenseIri should be rejected with a server-level error") {
-      for {
-        prj <- projectRepo(
-                 _.save(
-                   TestDataFactory.someProject.copy(
-                     allowedCopyrightHolders = Set(validCopyrightHolder),
-                     enabledLicenses = Set(LicenseIri.PLACEHOLDER),
-                   ),
-                 ),
-               )
-        fileValue = fileValueValid.copy(licenseIri = Some(LicenseIri.PLACEHOLDER))
-        actual   <- service(_.validateLegalInfo(fileValue, prj.shortcode)).exit
-      } yield assert(actual)(
-        fails(
-          equalTo(
-            s"License ${LicenseIri.PLACEHOLDER} is the placeholder license and is not allowed on this server",
-          ),
-        ),
-      )
-    },
     test("enabling PLACEHOLDER should be rejected with a server-level error") {
       for {
         prj    <- setupProject

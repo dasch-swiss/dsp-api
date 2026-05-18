@@ -70,6 +70,10 @@ case class LegalInfoService(
       _                    <- Validation.validate(licenseValid, copyrightHolderValid).toZIOParallelErrors.mapError(_.mkString(", "))
     } yield fileValue
 
+  // Placeholder rejection lives at the parser layer
+  // (`ApiComplexV2JsonLdRequestParser.ensurePlaceholderAllowed` via
+  // `FileValueV2.placeholderFields`). This method handles only the
+  // project-policy concern: the license must be in the project's enabled set.
   private def licenseValidation(
     licenseIri: Option[LicenseIri],
     shortcode: Shortcode,
@@ -77,16 +81,9 @@ case class LegalInfoService(
     licenseIri match
       case None      => ZIO.succeed(Validation.unit)
       case Some(iri) =>
-        AppConfig.features(_.allowPlaceholder).flatMap { allowPlaceholder =>
-          if (iri == LicenseIri.PLACEHOLDER && !allowPlaceholder)
-            ZIO.succeed(
-              Validation.fail(s"License $iri is the placeholder license and is not allowed on this server"),
-            )
-          else
-            findEnabledLicenses(shortcode).map { licenses =>
-              if (licenses.map(_.id).contains(iri)) Validation.unit
-              else Validation.fail(s"License $iri is not allowed in project $shortcode")
-            }
+        findEnabledLicenses(shortcode).map { licenses =>
+          if (licenses.map(_.id).contains(iri)) Validation.unit
+          else Validation.fail(s"License $iri is not allowed in project $shortcode")
         }
 
   private def copyrightHolderValidation(

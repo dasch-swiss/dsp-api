@@ -1833,17 +1833,20 @@ case class FileValueV2(
 
   /**
    * Names of the FileValue fields whose value is the placeholder sentinel
-   * (`urn:placeholder`). Empty when no field is a placeholder. Used by the
-   * parser-level gate to report exactly which fields are non-compliant under
-   * `allow-placeholder = false`. `licenseIri` is intentionally not included —
-   * placeholder license handling lives in `LegalInfoService`.
+   * (`urn:placeholder`). Covers all four sentinel-bearing fields:
+   * `internalFilename`, `copyrightHolder`, `authorship`, and `licenseIri`.
+   * Empty when no field is a placeholder. Consumed by the parser-level gate
+   * (`ApiComplexV2JsonLdRequestParser.ensurePlaceholderAllowed`), the single
+   * enforcement point for the `allow-placeholder` deployment policy on
+   * write paths.
    */
   def placeholderFields: List[String] = {
     val sentinel  = PlaceholderIri.instance.value
     val filename  = Option.when(internalFilename == sentinel)("internalFilename")
     val copyright = copyrightHolder.collect { case h if h.value == sentinel => "copyrightHolder" }
     val authors   = authorship.flatMap(_.find(_.value == sentinel)).map(_ => "authorship")
-    filename.toList ++ copyright.toList ++ authors.toList
+    val license   = licenseIri.collect { case l if l.value == sentinel => "licenseIri" }
+    filename.toList ++ copyright.toList ++ authors.toList ++ license.toList
   }
 }
 object FileValueV2 {
