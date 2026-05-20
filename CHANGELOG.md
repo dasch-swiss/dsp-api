@@ -1,5 +1,34 @@
 # Changelog
 
+## [35.9.0](https://github.com/dasch-swiss/dsp-api/compare/v35.8.1...v35.9.0) (2026-05-12)
+
+
+### Maintenances
+
+* Add .worktreeinclude for Claude Code worktrees ([#4106](https://github.com/dasch-swiss/dsp-api/issues/4106)) ([2a1dae4](https://github.com/dasch-swiss/dsp-api/commit/2a1dae443cfad1840df80d52a8a445d59df58577))
+* auto-symlink .env in worktrees for run-with-dev-db ([#4099](https://github.com/dasch-swiss/dsp-api/issues/4099)) ([26458dc](https://github.com/dasch-swiss/dsp-api/commit/26458dc818368cc68728ad9f63782649dcf0fa5c))
+* Extract StandoffMappingService and remove MessageRelay usage ([#4112](https://github.com/dasch-swiss/dsp-api/issues/4112)) ([b515fff](https://github.com/dasch-swiss/dsp-api/commit/b515fffddbbef0db21c93316f3d0e67f648cb6ac))
+* migrate learnings to dasch-specs repository ([#4111](https://github.com/dasch-swiss/dsp-api/issues/4111)) ([4fb5449](https://github.com/dasch-swiss/dsp-api/commit/4fb544912528d8f45be5fd9e5a02a645682185a3))
+* Remove claude-flow from .claude/settings.json configuration ([#4109](https://github.com/dasch-swiss/dsp-api/issues/4109)) ([7c3cbff](https://github.com/dasch-swiss/dsp-api/commit/7c3cbff831d88a9cc4f0a944dbc3e2e6145b2dea))
+* Remove IIIFRequestMessageHandler indirection ([#4104](https://github.com/dasch-swiss/dsp-api/issues/4104)) ([620e8e2](https://github.com/dasch-swiss/dsp-api/commit/620e8e2e9f80d3e7187318815c0a24147723351a))
+* Remove MessageRelay and MessageHandler abstractions ([#4113](https://github.com/dasch-swiss/dsp-api/issues/4113)) ([07609cc](https://github.com/dasch-swiss/dsp-api/commit/07609cc1b03f77b727cd35b030b3047ec02a40bf))
+* Remove MessageRelay from OntologyResponderV2 ([#4107](https://github.com/dasch-swiss/dsp-api/issues/4107)) ([c559467](https://github.com/dasch-swiss/dsp-api/commit/c559467ee41eefeba78c0694e3918818e855a64d))
+* Remove UnsafeZioRun utility class ([#4114](https://github.com/dasch-swiss/dsp-api/issues/4114)) ([3848e3c](https://github.com/dasch-swiss/dsp-api/commit/3848e3ca08e0f2b490d201878d88153651f67fff))
+* Remove unused dependencies from QueryTraverser ([#4103](https://github.com/dasch-swiss/dsp-api/issues/4103)) ([807c050](https://github.com/dasch-swiss/dsp-api/commit/807c050688e418df1a19ea223d423cce759b7b0d))
+* Replace String|IRI|SmartIri with type ValueIri ([#4101](https://github.com/dasch-swiss/dsp-api/issues/4101)) ([fb4c94c](https://github.com/dasch-swiss/dsp-api/commit/fb4c94ca3e358c9a3861e89be1f9b15f937c21f9))
+* Replace ZioHelper utilities with native ZIO operations ([#4115](https://github.com/dasch-swiss/dsp-api/issues/4115)) ([9def755](https://github.com/dasch-swiss/dsp-api/commit/9def755b5645c15b701bcc1242f67e6541a6dafc))
+
+
+### Enhancements
+
+* **project-migration:** Add optional error message to failed data tasks ([#4108](https://github.com/dasch-swiss/dsp-api/issues/4108)) ([8360b63](https://github.com/dasch-swiss/dsp-api/commit/8360b63630cdb3659e9a16654fd81f26e8480e48))
+* Reject built-in user references in attachedToUser on project migration import ([#4117](https://github.com/dasch-swiss/dsp-api/issues/4117)) ([aa2a4e0](https://github.com/dasch-swiss/dsp-api/commit/aa2a4e01011745b59be300d3ea48111ee2d3096c))
+
+
+### Tests
+
+* Migrate remaining ScalaTest specs to ZIO Test ([#4118](https://github.com/dasch-swiss/dsp-api/issues/4118)) ([2f707a7](https://github.com/dasch-swiss/dsp-api/commit/2f707a75b9b7653296bbda256bd8547f69f16ffd))
+
 ## [35.8.1](https://github.com/dasch-swiss/dsp-api/compare/v35.8.0...v35.8.1) (2026-05-04)
 
 
