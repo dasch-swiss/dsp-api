@@ -380,7 +380,7 @@ object JenaNodeFactory {
    */
   def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Statement =
     JenaStatement(
-      new jena.sparql.core.Quad(
+      jena.sparql.core.Quad.create(
         JenaContextFactory.contextNodeOrDefaultGraph(context),
         JenaConversions.asJenaNode(subj),
         JenaConversions.asJenaNode(pred),

@@ -10,7 +10,7 @@ import org.apache.jena.rdf.model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
-import org.apache.jena.tdb.TDB
+import org.apache.jena.tdb2.TDB2
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
@@ -280,7 +280,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
 
   override def printDataset(prefix: String = ""): UIO[Unit] =
     for {
-//      _  <- Console.printLine(s"TDB Context:\n${TDB.getContext}\n").orDie
+//      _  <- Console.printLine(s"TDB Context:\n${TDB2.getContext}\n").orDie
       ds <- getDataset
       _  <- Console.printLine(s"${prefix}TriplestoreServiceInMemory.printDataset:").orDie
       _   = printDatasetContents(ds)
@@ -334,6 +334,11 @@ object TriplestoreServiceInMemory {
     .datasetFromTriG(triG)
     .flatMap(TriplestoreServiceInMemory.setDataset)
 
+  // Force full Jena initialization once, lazily, before any TDB2 static symbol is referenced.
+  // Touching TDB2's symbol fields directly re-enters TDB2.<clinit> via InitTDB2 → TDB2.init,
+  // which fails with NPE on the not-yet-assigned TDB2.initLock (Jena 6.1.0 static-init bug).
+  private lazy val jenaInitialized: Unit = org.apache.jena.sys.JenaSystem.init()
+
   /**
    * Creates an empty TBD2 [[Dataset]].
    *
@@ -341,9 +346,11 @@ object TriplestoreServiceInMemory {
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
    */
   val createEmptyDataset: UIO[Dataset] =
-    ZIO
-      .succeed(TDB.getContext.set(TDB.symUnionDefaultGraph, true))
-      .as(TDB2Factory.createDataset())
+    ZIO.succeed {
+      jenaInitialized
+      TDB2.getContext.set(TDB2.symUnionDefaultGraph, true)
+      TDB2Factory.createDataset()
+    }
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
