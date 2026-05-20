@@ -23,8 +23,6 @@ import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.*
@@ -36,7 +34,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -78,48 +75,7 @@ final class ResourcesResponderV2(
   triplestore: TriplestoreService,
   readResources: ReadResourcesService,
   createHandler: CreateResourceV2Handler,
-)(implicit val stringFormatter: StringFormatter)
-    extends MessageHandler {
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean =
-    message.isInstanceOf[ResourcesResponderRequestV2]
-
-  override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ResourcesGetRequestV2(
-          resIris,
-          propertyIri,
-          valueUuid,
-          versionDate,
-          withDeleted,
-          targetSchema,
-          schemaOptions,
-          requestingUser,
-        ) =>
-      getResourcesWithDeletedResource(
-        resIris,
-        propertyIri,
-        valueUuid,
-        versionDate.map(VersionDate.fromInstant),
-        withDeleted,
-        showDeletedValues = false,
-        targetSchema,
-        schemaOptions,
-        requestingUser,
-      )
-    case ResourcesPreviewGetRequestV2(
-          resIris,
-          withDeletedResource,
-          targetSchema,
-          requestingUser,
-        ) =>
-      getResourcePreviewWithDeletedResource(resIris, withDeletedResource, targetSchema, requestingUser)
-
-    case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 =>
-      getResourceHistoryV2(resourceHistoryRequest)
-
-    case other =>
-      Responder.handleUnexpectedMessage(other, this.getClass.getName)
-  }
+)(implicit val stringFormatter: StringFormatter) {
 
   def createResource(createResource: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] =
     createHandler(createResource)
@@ -1762,35 +1718,5 @@ final class ResourcesResponderV2(
 }
 
 object ResourcesResponderV2 {
-  val layer = ZLayer.fromZIO {
-    for {
-      appConfig               <- ZIO.service[AppConfig]
-      iriConverter            <- ZIO.service[IriConverter]
-      iriService              <- ZIO.service[IriService]
-      messageRelay            <- ZIO.service[MessageRelay]
-      projectService          <- ZIO.service[KnoraProjectService]
-      resourceUtilV2          <- ZIO.service[ResourceUtilV2]
-      searchResponderV2       <- ZIO.service[SearchResponderV2]
-      sipiService             <- ZIO.service[SipiService]
-      standoffMappingService  <- ZIO.service[StandoffMappingService]
-      stringFormatter         <- ZIO.service[StringFormatter]
-      triplestoreService      <- ZIO.service[TriplestoreService]
-      readResources           <- ZIO.service[ReadResourcesService]
-      createResourceV2Handler <- ZIO.service[CreateResourceV2Handler]
-      responder                = new ResourcesResponderV2(
-                    appConfig,
-                    iriConverter,
-                    iriService,
-                    projectService,
-                    resourceUtilV2,
-                    searchResponderV2,
-                    sipiService,
-                    standoffMappingService,
-                    triplestoreService,
-                    readResources,
-                    createResourceV2Handler,
-                  )(stringFormatter)
-      _ <- messageRelay.subscribe(responder)
-    } yield responder
-  }
+  val layer = ZLayer.derive[ResourcesResponderV2]
 }

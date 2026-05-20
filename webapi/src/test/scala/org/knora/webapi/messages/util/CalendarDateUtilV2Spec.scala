@@ -5,23 +5,23 @@
 
 package org.knora.webapi.messages.util
 
-import org.scalatest.compatible.Assertion
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 import dsp.errors.BadRequestException
 
 /**
  * Tests [[CalendarDateUtilV2]].
  */
-class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
+object CalendarDateUtilV2Spec extends ZIOSpecDefault {
 
   private def checkSingleDate(
     calendarDate: CalendarDateV2,
     expectedStartJDN: Int,
     expectedEndJDN: Int,
     dateStr: String,
-  ): Assertion = {
+  ): Boolean = {
     val calendarDateRange = CalendarDateRangeV2(
       startCalendarDate = calendarDate,
       endCalendarDate = calendarDate,
@@ -40,11 +40,9 @@ class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
     expectedStartJDN: Int,
     expectedEndJDN: Int,
     dateStr: String,
-  ): Assertion = {
+  ): Boolean = {
     // Convert the date range to Julian Day Numbers and check that they're correct.
     val (startJDN: Int, endJDN: Int) = calendarDateRange.toJulianDayRange
-    assert(startJDN == expectedStartJDN)
-    assert(endJDN == expectedEndJDN)
 
     // Convert the Julian Day Numbers back into calendar dates and check that they're the same
     // as the original ones.
@@ -66,22 +64,31 @@ class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
       endCalendarDate = convertedEndCalendarDate,
     )
 
-    assert(convertedCalendarDateRange == calendarDateRange)
-
     // Parse the string and check that we get the same result.
     val parsedDateRange: CalendarDateRangeV2 = CalendarDateRangeV2.parse(dateStr)
-    assert(parsedDateRange == calendarDateRange)
 
     // Convert the date range to a string and check that it's correct.
     val convertedDateStr: String = calendarDateRange.toString
-    assert(convertedDateStr == dateStr)
+
+    startJDN == expectedStartJDN &&
+    endJDN == expectedEndJDN &&
+    convertedCalendarDateRange == calendarDateRange &&
+    parsedDateRange == calendarDateRange &&
+    convertedDateStr == dateStr
   }
 
-  "The CalendarDateUtilV2Spec class" should {
-    "convert between calendar dates, Julian Day Numbers, and strings for the JULIAN calendar" in {
-      // JULIAN:1291-08-01 CE
+  private def throwsBadRequest(thunk: => Any): Boolean =
+    try {
+      thunk
+      false
+    } catch {
+      case _: BadRequestException => true
+    }
 
-      checkSingleDate(
+  val spec: Spec[Any, Nothing] = suite("The CalendarDateUtilV2Spec class")(
+    test("convert between calendar dates, Julian Day Numbers, and strings for the JULIAN calendar") {
+      // JULIAN:1291-08-01 CE
+      val ok1 = checkSingleDate(
         calendarDate = CalendarDateV2(
           calendarName = CalendarNameJulian,
           year = 1291,
@@ -95,8 +102,7 @@ class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
       )
 
       // JULIAN:4713-01-01 BCE
-
-      checkSingleDate(
+      val ok2 = checkSingleDate(
         calendarDate = CalendarDateV2(
           calendarName = CalendarNameJulian,
           year = 4713,
@@ -108,12 +114,12 @@ class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
         expectedEndJDN = 0,
         dateStr = "JULIAN:4713-01-01 BCE",
       )
-    }
-
-    "convert between calendar dates, Julian Day Numbers, and strings for the GREGORIAN calendar" in {
+      assertTrue(ok1, ok2)
+    },
+    test("convert between calendar dates, Julian Day Numbers, and strings for the GREGORIAN calendar") {
 
       // GREGORIAN:1969-03-10 CE
-      checkSingleDate(
+      val ok1 = checkSingleDate(
         calendarDate = CalendarDateV2(
           calendarName = CalendarNameGregorian,
           year = 1969,
@@ -127,8 +133,7 @@ class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
       )
 
       // GREGORIAN:1291-08 CE:1969-03-10 CE
-
-      checkDateRange(
+      val ok2 = checkDateRange(
         calendarDateRange = CalendarDateRangeV2(
           startCalendarDate = CalendarDateV2(
             calendarName = CalendarNameGregorian,
@@ -151,8 +156,7 @@ class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
       )
 
       // GREGORIAN:2005-09 CE:2015-07 CE
-
-      checkDateRange(
+      val ok3 = checkDateRange(
         calendarDateRange = CalendarDateRangeV2(
           startCalendarDate = CalendarDateV2(
             calendarName = CalendarNameGregorian,
@@ -173,124 +177,112 @@ class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
         expectedEndJDN = 2457235,
         dateStr = "GREGORIAN:2005-09 CE:2015-07 CE",
       )
-    }
 
-    "convert an era date string with year precision to a CalendarDateV2 BC" in {
+      assertTrue(ok1, ok2, ok3)
+    },
+    test("convert an era date string with year precision to a CalendarDateV2 BC") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02-28 BC", CalendarNameGregorian)
-      assert(calendarDate.maybeEra.contains(DateEraBCE))
-    }
-
-    "convert an era date string with year precision to a CalendarDateV2 AD" in {
+      assertTrue(calendarDate.maybeEra.contains(DateEraBCE))
+    },
+    test("convert an era date string with year precision to a CalendarDateV2 AD") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02-28 AD", CalendarNameGregorian)
-      assert(calendarDate.maybeEra.contains(DateEraCE))
-    }
-
-    "convert an era date string with year precision to a CalendarDateV2 BCE" in {
+      assertTrue(calendarDate.maybeEra.contains(DateEraCE))
+    },
+    test("convert an era date string with year precision to a CalendarDateV2 BCE") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02-28 BCE", CalendarNameGregorian)
-      assert(calendarDate.maybeEra.contains(DateEraBCE))
-    }
-
-    "convert an era date string with just year precision to a CalendarDateV2 BCE" in {
+      assertTrue(calendarDate.maybeEra.contains(DateEraBCE))
+    },
+    test("convert an era date string with just year precision to a CalendarDateV2 BCE") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50 BCE", CalendarNameGregorian)
-      assert(calendarDate.maybeEra.contains(DateEraBCE))
-    }
-
-    "convert an era date string with just year/month precision to a CalendarDateV2 BCE" in {
+      assertTrue(calendarDate.maybeEra.contains(DateEraBCE))
+    },
+    test("convert an era date string with just year/month precision to a CalendarDateV2 BCE") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02 BCE", CalendarNameGregorian)
-      assert(calendarDate.maybeEra.contains(DateEraBCE))
-    }
-
-    "convert an era date string with year precision to a CalendarDateV2 CE" in {
+      assertTrue(calendarDate.maybeEra.contains(DateEraBCE))
+    },
+    test("convert an era date string with year precision to a CalendarDateV2 CE") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02-28 CE", CalendarNameGregorian)
-      assert(calendarDate.maybeEra.contains(DateEraCE))
-    }
-
-    "convert an era date string with julian calendar with year precision to a CalendarDateV2 BC" in {
+      assertTrue(calendarDate.maybeEra.contains(DateEraCE))
+    },
+    test("convert an era date string with julian calendar with year precision to a CalendarDateV2 BC") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02-28 AD", CalendarNameJulian)
-      assert(calendarDate.maybeEra.contains(DateEraCE))
-    }
-
-    "convert a valid date string with day precision to a Julian Day range" in {
+      assertTrue(calendarDate.maybeEra.contains(DateEraCE))
+    },
+    test("convert a valid date string with day precision to a Julian Day range") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02-28", CalendarNameGregorian)
-      calendarDate.toJulianDayRange
-    }
-
-    "not convert a string representing a non-existent date with day precision to a Julian Day range" in {
-      assertThrows[BadRequestException] {
+      val (startJDN, endJDN)           = calendarDate.toJulianDayRange
+      assertTrue(startJDN == endJDN)
+    },
+    test("not convert a string representing a non-existent date with day precision to a Julian Day range") {
+      assertTrue(throwsBadRequest {
         val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02-29", CalendarNameGregorian)
         calendarDate.toJulianDayRange
-      }
-    }
-
-    "not convert an invalid date string with day precision to a Julian Day range" in {
-      assertThrows[BadRequestException] {
+      })
+    },
+    test("not convert an invalid date string with day precision to a Julian Day range") {
+      assertTrue(throwsBadRequest {
         val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02-00", CalendarNameGregorian)
         calendarDate.toJulianDayRange
-      }
-    }
-
-    "not convert an invalid date string with day precision to a Julian Day range (2)" in {
-      assertThrows[BadRequestException] {
+      })
+    },
+    test("not convert an invalid date string with day precision to a Julian Day range (2)") {
+      assertTrue(throwsBadRequest {
         val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-00-01", CalendarNameGregorian)
         calendarDate.toJulianDayRange
-      }
-    }
-
-    "convert a valid date string with month precision to a Julian Day range" in {
+      })
+    },
+    test("convert a valid date string with month precision to a Julian Day range") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02", CalendarNameGregorian)
-      calendarDate.toJulianDayRange
-    }
-
-    "not convert an invalid date string with month precision to a Julian Day range" in {
-      assertThrows[BadRequestException] {
+      val (startJDN, endJDN)           = calendarDate.toJulianDayRange
+      assertTrue(startJDN < endJDN)
+    },
+    test("not convert an invalid date string with month precision to a Julian Day range") {
+      assertTrue(throwsBadRequest {
         val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-00", CalendarNameGregorian)
         calendarDate.toJulianDayRange
-      }
-    }
-
-    "not convert a date range in which the start date is after the end date" in {
-      assertThrows[BadRequestException] {
+      })
+    },
+    test("not convert a date range in which the start date is after the end date") {
+      assertTrue(throwsBadRequest {
         val calendarDateRange: CalendarDateRangeV2 = CalendarDateRangeV2.parse("GREGORIAN:2000:1900")
         calendarDateRange.toJulianDayRange
-      }
-    }
-
+      })
+    },
     // *** Test ISLAMIC Date Conversions ****//
-    "convert an islamic date string to a CalendarDateV2" in {
+    test("convert an islamic date string to a CalendarDateV2") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("1441-02-15", CalendarNameIslamic)
-      assert(calendarDate.year == 1441)
-      assert(calendarDate.maybeMonth.contains(2))
-      assert(calendarDate.maybeDay.contains(15))
-      assert(calendarDate.maybeEra.isEmpty)
-    }
-
-    "convert a valid islamic date string with month precision to a Julian Day range" in {
+      assertTrue(
+        calendarDate.year == 1441,
+        calendarDate.maybeMonth.contains(2),
+        calendarDate.maybeDay.contains(15),
+        calendarDate.maybeEra.isEmpty,
+      )
+    },
+    test("convert a valid islamic date string with month precision to a Julian Day range") {
       val calendarDate: CalendarDateV2 = CalendarDateV2.parse("1432-08-29", CalendarNameIslamic)
-      calendarDate.toJulianDayRange
-    }
-
-    "not convert an islamic date to a Julian Day range if an era is given" in {
-      assertThrows[BadRequestException] {
+      val (startJDN, endJDN)           = calendarDate.toJulianDayRange
+      assertTrue(startJDN == endJDN)
+    },
+    test("not convert an islamic date to a Julian Day range if an era is given") {
+      assertTrue(throwsBadRequest {
         val calendarDate: CalendarDateV2 = CalendarDateV2.parse("1432-08-29 AH", CalendarNameIslamic)
         calendarDate.toJulianDayRange
-      }
-    }
-
-    "convert an islamic date range to a Julian Day range" in {
+      })
+    },
+    test("convert an islamic date range to a Julian Day range") {
       val calendarDate: CalendarDateRangeV2 = CalendarDateRangeV2.parse("ISLAMIC:1432-08-29:1441")
-      calendarDate.toJulianDayRange
-    }
-
-    "not convert an islamic date range if end date is before start data" in {
-      assertThrows[BadRequestException] {
+      val (startJDN, endJDN)                = calendarDate.toJulianDayRange
+      assertTrue(startJDN < endJDN)
+    },
+    test("not convert an islamic date range if end date is before start data") {
+      assertTrue(throwsBadRequest {
         val calendarDate: CalendarDateRangeV2 = CalendarDateRangeV2.parse("ISLAMIC:1432-08-29:1413")
         calendarDate.toJulianDayRange
-      }
-    }
-
-    "convert between calendar dates, Julian Day Numbers, and strings for the islamic calendar" in {
+      })
+    },
+    test("convert between calendar dates, Julian Day Numbers, and strings for the islamic calendar") {
       // ISLAMIC:1432-08-29
-      checkSingleDate(
+      val ok1 = checkSingleDate(
         calendarDate = CalendarDateV2(
           calendarName = CalendarNameIslamic,
           year = 1432,
@@ -304,8 +296,7 @@ class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
       )
 
       // ISLAMIC:1432-08-29:1436-09-14
-
-      checkDateRange(
+      val ok2 = checkDateRange(
         calendarDateRange = CalendarDateRangeV2(
           startCalendarDate = CalendarDateV2(
             calendarName = CalendarNameIslamic,
@@ -326,6 +317,8 @@ class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
         expectedEndJDN = 2457205,
         dateStr = "ISLAMIC:1432-08-29:1436-09-14",
       )
-    }
-  }
+
+      assertTrue(ok1, ok2)
+    },
+  )
 }

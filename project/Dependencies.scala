@@ -127,8 +127,6 @@ object Dependencies {
   // test
   val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.20"
-
   val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.4"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.13.2"
@@ -164,7 +162,6 @@ object Dependencies {
 
   val integrationTestDependencies = Seq(
     rdf4jClient,
-    scalaTest,
     testcontainers,
     wiremock,
     xmlunitCore,

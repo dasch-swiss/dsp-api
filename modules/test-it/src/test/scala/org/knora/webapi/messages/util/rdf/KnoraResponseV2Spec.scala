@@ -5,9 +5,11 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import zio.Runtime
+import zio.Unsafe
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 import java.nio.file.Paths
 
@@ -16,15 +18,15 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.KnoraTurtleResponseV2
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.FileUtil
 
 /**
  * Tests the formatting of Knora API v2 responses.
  */
-class KnoraResponseV2Spec extends AnyWordSpec with Matchers {
+object KnoraResponseV2Spec extends ZIOSpecDefault {
 
-  private val appConfig          = UnsafeZioRun.runOrThrow(AppConfig.parseConfig)(Runtime.default)
+  private val appConfig =
+    Unsafe.unsafe(implicit u => Runtime.default.unsafe.run(AppConfig.parseConfig).getOrThrowFiberFailure())
   private val _: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val turtle =
@@ -131,8 +133,8 @@ class KnoraResponseV2Spec extends AnyWordSpec with Matchers {
     ): JsonLDDocument = jsonLDDocument
   }
 
-  "KnoraResponseV2" should {
-    "convert Turtle to JSON-LD" in {
+  val spec: Spec[Any, Nothing] = suite("KnoraResponseV2")(
+    test("convert Turtle to JSON-LD") {
       // Read a Turtle file representing a resource. TODO: Use sample project metadata for this test.
       val turtle: String =
         FileUtil.readTextFile(
@@ -161,10 +163,9 @@ class KnoraResponseV2Spec extends AnyWordSpec with Matchers {
       val parsedExpectedJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(expectedJsonLD)
 
       // Compare the two documents.
-      parsedJsonLD.body should ===(parsedExpectedJsonLD.body)
-    }
-
-    "convert JSON-LD to Turtle" in {
+      assertTrue(parsedJsonLD.body == parsedExpectedJsonLD.body)
+    },
+    test("convert JSON-LD to Turtle") {
       // Read a JSON-LD file representing a resource.
       val jsonLD: String =
         FileUtil.readTextFile(
@@ -193,28 +194,25 @@ class KnoraResponseV2Spec extends AnyWordSpec with Matchers {
       val parsedExpectedTurtle: RdfModel = RdfModel.fromTurtle(expectedTurtle)
 
       // Compare the two models.
-      parsedTurtle should ===(parsedExpectedTurtle)
-    }
-
-    "convert a hierarchical JsonLDDocument to a flat one" in {
+      assertTrue(parsedTurtle == parsedExpectedTurtle)
+    },
+    test("convert a hierarchical JsonLDDocument to a flat one") {
       val actual = JsonLDTestResponse(hierarchicalJsonLD)
         .format(JsonLD, ApiV2Complex, Set(JsonLdRendering.Flat), appConfig)
 
-      assert(JsonLDUtil.parseJsonLD(actual).body == flatJsonLD.body)
-    }
-
-    "convert Turtle to a hierarchical JSON-LD document" in {
+      assertTrue(JsonLDUtil.parseJsonLD(actual).body == flatJsonLD.body)
+    },
+    test("convert Turtle to a hierarchical JSON-LD document") {
       val actual = TurtleTestResponse(turtle)
         .format(JsonLD, InternalSchema, Set(JsonLdRendering.Hierarchical), appConfig)
 
-      assert(JsonLDUtil.parseJsonLD(actual).body == hierarchicalJsonLD.body)
-    }
-
-    "convert Turtle to a flat JSON-LD document" in {
+      assertTrue(JsonLDUtil.parseJsonLD(actual).body == hierarchicalJsonLD.body)
+    },
+    test("convert Turtle to a flat JSON-LD document") {
       val actual = TurtleTestResponse(turtle)
         .format(JsonLD, InternalSchema, Set(JsonLdRendering.Flat), appConfig)
 
-      assert(JsonLDUtil.parseJsonLD(actual).body == flatJsonLD.body)
-    }
-  }
+      assertTrue(JsonLDUtil.parseJsonLD(actual).body == flatJsonLD.body)
+    },
+  )
 }
