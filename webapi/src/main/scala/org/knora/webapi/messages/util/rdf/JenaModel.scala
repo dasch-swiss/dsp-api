@@ -335,6 +335,9 @@ object JenaNodeFactory {
   }
 
   // Jena's registry of datatypes.
+  // Force full Jena initialization before touching TypeMapper; under Jena 6.1.0
+  // `TypeMapper.getInstance` returns null if `JenaSystem.init()` has not run yet.
+  org.apache.jena.sys.JenaSystem.init()
   private val typeMapper = jena.datatypes.TypeMapper.getInstance
 
   // Register Knora's custom datatypes.
@@ -380,7 +383,7 @@ object JenaNodeFactory {
    */
   def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Statement =
     JenaStatement(
-      new jena.sparql.core.Quad(
+      jena.sparql.core.Quad.create(
         JenaContextFactory.contextNodeOrDefaultGraph(context),
         JenaConversions.asJenaNode(subj),
         JenaConversions.asJenaNode(pred),
