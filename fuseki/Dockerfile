@@ -17,7 +17,7 @@
 
 FROM eclipse-temurin:21-jre-jammy
 
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 # hadolint ignore=DL3008
 RUN set -eux; \
     apt-get update; \
@@ -29,32 +29,32 @@ RUN set -eux; \
 
 # Update below according to https://jena.apache.org/download/
 # and checksum for apache-jena-fuseki-<version>.tar.gz.sha512
-ARG IMAGE_VERSION=5.5.0-3
-ARG FUSEKI_VERSION=5.5.0
-ARG FUSEKI_SHA512=bfbf59eac731b71bcf8e148f2abeda9b4adca215639eef3bba61243b308572b23a9a70a43c1483247f9894bfb23d69b59e0e64e1da47cb3cfc592aa979084d5c
+ARG IMAGE_VERSION=6.1.0-0
+ARG FUSEKI_VERSION=6.1.0
+ARG FUSEKI_SHA512=75457f45d14397876a41ed51abe7ae5d2f1e708dfe1315765f858158bc5c6813bc036ec1539ddc4dffd26201f5cc31fadec299ca5c3dc2548b723513ed31d326
 ENV IMAGE_VERSION=$IMAGE_VERSION
 ENV FUSEKI_VERSION=$FUSEKI_VERSION
 ENV FUSEKI_SHA512=$FUSEKI_SHA512
 # No need for https due to sha512 checksums below
-ENV ASF_MIRROR http://www.apache.org/dyn/mirrors/mirrors.cgi?action=download&filename=
-ENV ASF_ARCHIVE http://archive.apache.org/dist/
+ENV ASF_MIRROR=http://www.apache.org/dyn/mirrors/mirrors.cgi?action=download&filename=
+ENV ASF_ARCHIVE=http://archive.apache.org/dist/
 
-LABEL org.opencontainers.image.url https://github.com/dasch-swiss/dsp-api/tree/main/fuseki
-LABEL org.opencontainers.image.source https://github.com/dasch-swiss/dsp-api
-LABEL org.opencontainers.image.documentation https://jena.apache.org/documentation/fuseki2/
-LABEL org.opencontainers.image.title "Apache Jena Fuseki"
-LABEL org.opencontainers.image.description "Fuseki is a SPARQL 1.1 server with a web interface, backed by the Apache Jena TDB RDF triple store."
-LABEL org.opencontainers.image.version ${IMAGE_VERSION}
-LABEL org.opencontainers.image.licenses "(Apache-2.0 AND (GPL-2.0 WITH Classpath-exception-2.0) AND GPL-3.0)"
-LABEL org.opencontainers.image.authors "DaSCH — https://dasch.swiss"
+LABEL org.opencontainers.image.url=https://github.com/dasch-swiss/dsp-api/tree/main/fuseki
+LABEL org.opencontainers.image.source=https://github.com/dasch-swiss/dsp-api
+LABEL org.opencontainers.image.documentation=https://jena.apache.org/documentation/fuseki2/
+LABEL org.opencontainers.image.title="Apache Jena Fuseki"
+LABEL org.opencontainers.image.description="Fuseki is a SPARQL 1.1 server with a web interface, backed by the Apache Jena TDB RDF triple store."
+LABEL org.opencontainers.image.version=${IMAGE_VERSION}
+LABEL org.opencontainers.image.licenses="(Apache-2.0 AND (GPL-2.0 WITH Classpath-exception-2.0) AND GPL-3.0)"
+LABEL org.opencontainers.image.authors="DaSCH — https://dasch.swiss"
 
 # Config and data
 VOLUME /fuseki
-ENV FUSEKI_BASE /fuseki
-ENV INDEX_BASE $FUSEKI_BASE/lucene
+ENV FUSEKI_BASE=/fuseki
+ENV INDEX_BASE=$FUSEKI_BASE/lucene
 
 # Installation folder
-ENV FUSEKI_HOME /jena-fuseki
+ENV FUSEKI_HOME=/jena-fuseki
 
 WORKDIR /tmp
 # published sha512 checksum

@@ -529,7 +529,11 @@ case class TriplestoreServiceLive(
           (response.code.code, response.body.merge) match {
             case (404, _) =>
               ZIO.fail(NotFoundException.notFound)
-            case (400, response) if response.contains("Text search parse error") =>
+            // Jena/Fuseki reports invalid Lucene text-search input either as a parse-time
+            // error (HTTP 400) for top-level text:query usage, or as an evaluation-time
+            // TextIndexParseException (HTTP 500) when the same query is embedded in a
+            // sub-select/OPTIONAL. Both indicate bad user input, not a triplestore fault.
+            case (400 | 500, response) if response.contains("Text search parse error") =>
               ZIO.fail(BadRequestException(s"$response"))
             case (503, response) if response.contains("Query timed out") =>
               ZIO.fail(TriplestoreTimeoutException(s"$statusResponseMsg: $response"))
