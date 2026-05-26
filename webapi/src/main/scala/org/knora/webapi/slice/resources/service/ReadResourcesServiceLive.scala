@@ -128,7 +128,7 @@ final case class ReadResourcesServiceLive(
             ),
           )
           .flatMap(_.asExtended)
-          .map(constructResponseUtilV2.splitMainResourcesAndValueRdfData(_, requestingUser))
+          .flatMap(constructResponseUtilV2.splitMainResourcesAndValueRdfData(_, requestingUser))
 
       mappings <-
         ZIO.when(queryStandoff) {

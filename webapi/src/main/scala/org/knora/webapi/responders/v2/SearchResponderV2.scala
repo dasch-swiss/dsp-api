@@ -18,8 +18,10 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.util.ConstructResponseRdfData
+import org.knora.webapi.messages.util.ConstructResponseRdfData.MainResourcesAndValueRdfData
+import org.knora.webapi.messages.util.ConstructResponseRdfData.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDInt
@@ -622,11 +624,11 @@ final class SearchResponderV2Live(
             query          <- constructTransformer.transform(mainQuery).map(_.toSparql)
             searchResponse <- triplestore.query(Construct.gravsearch(query)).flatMap(_.asExtended)
             // separate resources and value objects
-            queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
+            queryResultsSep <- constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
           } yield queryResultsSep
         } else {
           // the prequery returned no results, no further query is necessary
-          ZIO.attempt(ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty))
+          ZIO.attempt(MainResourcesAndValueRdfData(resources = Map.empty))
         }
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -878,28 +880,26 @@ final class SearchResponderV2Live(
             mainQueryResponse <- triplestore.query(Construct.gravsearch(mainQuery)).flatMap(_.asExtended)
 
             // Filter out values that the user doesn't have permission to see.
-            queryResultsFilteredForPermissions =
+            queryResultsFilteredForPermissions <-
               constructResponseUtilV2.splitMainResourcesAndValueRdfData(mainQueryResponse, user)
 
             // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
-            queryResWithFullGraphPatternOnlyRequestedValues: Map[
-              IRI,
-              ConstructResponseUtilV2.ResourceWithValueRdfData,
-            ] = MainQueryResultProcessor
-                  .getRequestedValuesFromResultsWithFullGraphPattern(
-                    queryResultsFilteredForPermissions.resources,
-                    valueObjectVarsAndIrisPerMainResource,
-                    allResourceVariablesFromTypeInspection,
-                    dependentResourceIrisFromTypeInspection,
-                    gravsearchToPrequeryTransformer,
-                  )
+            queryResWithFullGraphPatternOnlyRequestedValues: ConstructResponseRdfData.RdfResources =
+              MainQueryResultProcessor
+                .getRequestedValuesFromResultsWithFullGraphPattern(
+                  queryResultsFilteredForPermissions.resources,
+                  valueObjectVarsAndIrisPerMainResource,
+                  allResourceVariablesFromTypeInspection,
+                  dependentResourceIrisFromTypeInspection,
+                  gravsearchToPrequeryTransformer,
+                )
           } yield queryResultsFilteredForPermissions.copy(
             resources = queryResWithFullGraphPatternOnlyRequestedValues,
           )
 
         } else {
           // the prequery returned no results, no further query is necessary
-          ZIO.attempt(ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty))
+          ZIO.attempt(MainResourcesAndValueRdfData(resources = Map.empty))
         }
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -1073,10 +1073,10 @@ final class SearchResponderV2Live(
             resourceRequestResponse <- triplestore.query(resourceRequestSparql).flatMap(_.asExtended)
 
             // separate resources and values
-            mainResourcesAndValueRdfData = constructResponseUtilV2.splitMainResourcesAndValueRdfData(
-                                             resourceRequestResponse,
-                                             requestingUser,
-                                           )
+            mainResourcesAndValueRdfData <- constructResponseUtilV2.splitMainResourcesAndValueRdfData(
+                                              resourceRequestResponse,
+                                              requestingUser,
+                                            )
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappings <-
@@ -1221,7 +1221,7 @@ final class SearchResponderV2Live(
                           }
 
       // separate resources and value objects
-      mainResourcesAndValueRdfData =
+      mainResourcesAndValueRdfData <-
         constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResourceByLabelResponse, requestingUser)
       apiResponse <- constructResponseUtilV2.createApiResponse(
                        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
