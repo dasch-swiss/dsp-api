@@ -154,6 +154,150 @@
     "keywords" : []
   },
   {
+    "id" : "http://rdfh.ch/1612/ordering-Delta",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/ordering=Delta4",
+    "label" : {
+      "en" : "Delta"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "Delta",
+    "publisher" : "DaSCH",
+    "dateCreated" : "2026-05-01T10:00:00Z",
+    "datePublished" : "2026-05-01T10:00:00Z",
+    "keywords" : []
+  },
+  {
+    "id" : "http://rdfh.ch/1612/ordering-Alpha",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/ordering=Alpha7",
+    "label" : {
+      "en" : "Alpha"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "Alpha",
+    "publisher" : "DaSCH",
+    "dateCreated" : "2026-05-01T10:01:00Z",
+    "datePublished" : "2026-05-01T10:01:00Z",
+    "keywords" : []
+  },
+  {
+    "id" : "http://rdfh.ch/1612/ordering-Echo",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/ordering=EchoY",
+    "label" : {
+      "en" : "Echo"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "Echo",
+    "publisher" : "DaSCH",
+    "dateCreated" : "2026-05-01T10:02:00Z",
+    "datePublished" : "2026-05-01T10:02:00Z",
+    "keywords" : []
+  },
+  {
+    "id" : "http://rdfh.ch/1612/ordering-Bravo",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/ordering=BravoN",
+    "label" : {
+      "en" : "Bravo"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "Bravo",
+    "publisher" : "DaSCH",
+    "dateCreated" : "2026-05-01T10:03:00Z",
+    "datePublished" : "2026-05-01T10:03:00Z",
+    "keywords" : []
+  },
+  {
+    "id" : "http://rdfh.ch/1612/ordering-Charlie",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/ordering=CharlieP",
+    "label" : {
+      "en" : "Charlie"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "Charlie",
+    "publisher" : "DaSCH",
+    "dateCreated" : "2026-05-01T10:04:00Z",
+    "datePublished" : "2026-05-01T10:04:00Z",
+    "keywords" : []
+  },
+  {
+    "id" : "http://rdfh.ch/1612/ordering-Foxtrot",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/ordering=Foxtrotq",
+    "label" : {
+      "en" : "Foxtrot"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "Foxtrot",
+    "publisher" : "DaSCH",
+    "dateCreated" : "2026-05-01T10:05:00Z",
+    "datePublished" : "2026-05-01T10:05:00Z",
+    "keywords" : []
+  },
+  {
     "id" : "http://rdfh.ch/1612/FootnoteResource",
     "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/FootnoteResourceY",
     "label" : {

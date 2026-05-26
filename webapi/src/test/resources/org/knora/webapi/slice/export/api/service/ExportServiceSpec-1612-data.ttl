@@ -358,6 +358,60 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
         knora-base:listNodeName      "Vk0NruDmRyeZCZvOVwXOnw-depth2funknode";
         knora-base:listNodePosition  0 .
 
+<http://rdfh.ch/1612/ordering-Delta>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#OrderingTestClass>;
+        rdfs:label                    "Delta";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2026-05-01T10:00:00.000000Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
+<http://rdfh.ch/1612/ordering-Alpha>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#OrderingTestClass>;
+        rdfs:label                    "Alpha";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2026-05-01T10:01:00.000000Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
+<http://rdfh.ch/1612/ordering-Echo>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#OrderingTestClass>;
+        rdfs:label                    "Echo";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2026-05-01T10:02:00.000000Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
+<http://rdfh.ch/1612/ordering-Bravo>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#OrderingTestClass>;
+        rdfs:label                    "Bravo";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2026-05-01T10:03:00.000000Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
+<http://rdfh.ch/1612/ordering-Charlie>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#OrderingTestClass>;
+        rdfs:label                    "Charlie";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2026-05-01T10:04:00.000000Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
+<http://rdfh.ch/1612/ordering-Foxtrot>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#OrderingTestClass>;
+        rdfs:label                    "Foxtrot";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2026-05-01T10:05:00.000000Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
 <http://rdfh.ch/1612/FootnoteResource/values/FootnoteTextVal/standoff/0>
         rdf:type                        standoff:StandoffRootTag;
         knora-base:standoffTagHasEnd    11;
