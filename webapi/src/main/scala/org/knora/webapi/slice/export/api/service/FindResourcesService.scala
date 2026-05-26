@@ -15,6 +15,7 @@ import zio.*
 import zio.ZLayer
 
 import dsp.errors.InconsistentRepositoryDataException as InconsistentDataException
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -36,6 +37,13 @@ trait FindResourcesService {
     project: KnoraProject,
     classIri: ResourceClassIri,
   ): Task[Seq[ResourceIri]] = findResources(project, Some(classIri))
+
+  def findResourceIrisOrderedByLabel(
+    project: KnoraProject,
+    classIri: ResourceClassIri,
+  ): Task[Seq[ResourceIri]]
+
+  def findLabelsFor(iris: Seq[ResourceIri]): Task[Map[IRI, String]]
 }
 
 final case class FindResourcesServiceLive(
@@ -64,7 +72,7 @@ final case class FindResourcesServiceLive(
               }
     } yield rows
 
-  private val (classIriVar, resourceIriVar) = ("classIri", "resourceIri")
+  private val (classIriVar, resourceIriVar, labelVar) = ("classIri", "resourceIri", "label")
 
   // Resolves subclasses from the ontology cache and builds a VALUES-based SPARQL query.
   // This avoids expensive rdfs:subClassOf* triplestore traversal, which times out
@@ -82,6 +90,63 @@ final case class FindResourcesServiceLive(
            |  VALUES ?$classIriVar { $valuesClause }
            |}""".stripMargin,
       )
+    }
+
+  private def buildClassQueryOrderedByLabel(project: KnoraProject, classIri: ResourceClassIri): Task[Select] =
+    ontologyRepo.findAllSubclassesBy(classIri).map { subclasses =>
+      val projectGraph = projectService.getDataGraphForProject(project)
+      val allClassIris = classIri.toInternalSchema.toIri +: subclasses.map(_.entityInfoContent.classIri.toIri)
+      val valuesClause = allClassIris.map(iri => s"<$iri>").mkString(" ")
+      // String interpolation is used here because rdf4j SparqlBuilder does not support VALUES blocks or ORDER BY.
+      Select.gravsearch(
+        s"""PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+           |SELECT DISTINCT ?$resourceIriVar ?$labelVar WHERE {
+           |  GRAPH <${projectGraph.value}> {
+           |    ?$resourceIriVar a ?$classIriVar .
+           |    OPTIONAL { ?$resourceIriVar rdfs:label ?$labelVar }
+           |  }
+           |  VALUES ?$classIriVar { $valuesClause }
+           |}
+           |ORDER BY (LCASE(STR(?$labelVar)))""".stripMargin,
+      )
+    }
+
+  def findResourceIrisOrderedByLabel(
+    project: KnoraProject,
+    classIri: ResourceClassIri,
+  ): Task[Seq[ResourceIri]] =
+    for {
+      sparql <- buildClassQueryOrderedByLabel(project, classIri)
+      rows   <- triplestore.query(sparql).map(_.results.bindings)
+      iris   <- ZIO.foreach(rows) { row =>
+                for {
+                  value <- ZIO.attempt(
+                             row.rowMap.getOrElse(resourceIriVar, throw new InconsistentDataException("")),
+                           )
+                  resourceIri <- ZIO.fromEither(ResourceIri.from(value)).mapError(InconsistentDataException(_))
+                } yield resourceIri
+              }
+    } yield iris
+
+  def findLabelsFor(iris: Seq[ResourceIri]): Task[Map[IRI, String]] =
+    if (iris.isEmpty) ZIO.succeed(Map.empty)
+    else {
+      val valuesClause = iris.map(i => s"<${i.value}>").mkString(" ")
+      val sparql       = Select.gravsearch(
+        s"""PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+           |SELECT ?$resourceIriVar ?$labelVar WHERE {
+           |  ?$resourceIriVar rdfs:label ?$labelVar .
+           |  VALUES ?$resourceIriVar { $valuesClause }
+           |}""".stripMargin,
+      )
+      triplestore.query(sparql).map { result =>
+        result.results.bindings.flatMap { row =>
+          for {
+            iri   <- row.rowMap.get(resourceIriVar)
+            label <- row.rowMap.get(labelVar)
+          } yield iri -> label
+        }.toMap
+      }
     }
 
   private def buildAllResourcesQuery(project: KnoraProject): Select = {
@@ -110,5 +175,15 @@ final case class FindResourcesServiceLive(
 object FindResourcesService {
   val layer = ZLayer.derive[FindResourcesServiceLive]
 
-  val Empty = ZLayer.succeed[FindResourcesService]((_: KnoraProject, _: Option[ResourceClassIri]) => ZIO.succeed(Seq()))
+  val Empty = ZLayer.succeed[FindResourcesService](
+    new FindResourcesService {
+      def findResources(project: KnoraProject, classIri: Option[ResourceClassIri]): Task[Seq[ResourceIri]] =
+        ZIO.succeed(Seq())
+      def findResourceIrisOrderedByLabel(
+        project: KnoraProject,
+        classIri: ResourceClassIri,
+      ): Task[Seq[ResourceIri]]                                         = ZIO.succeed(Seq())
+      def findLabelsFor(iris: Seq[ResourceIri]): Task[Map[IRI, String]] = ZIO.succeed(Map.empty)
+    },
+  )
 }

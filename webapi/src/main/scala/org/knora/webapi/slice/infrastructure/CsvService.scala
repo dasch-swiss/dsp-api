@@ -44,6 +44,25 @@ case class CsvService() {
     writeToWriter(items, sw).as(sw.toString)
   }
 
+  def encodeRowToString[A](row: A)(using
+    rowBuilder: CsvRowBuilder[A],
+    csvFormat: CSVFormat,
+  ): String = {
+    val sw     = new StringWriter()
+    val writer = CSVWriter.open(sw)
+    writer.writeRow(rowBuilder.values(row))
+    writer.close()
+    sw.toString
+  }
+
+  def encodeHeaderToString[A](rowBuilder: CsvRowBuilder[A])(using csvFormat: CSVFormat): String = {
+    val sw     = new StringWriter()
+    val writer = CSVWriter.open(sw)
+    writer.writeRow(rowBuilder.header)
+    writer.close()
+    sw.toString
+  }
+
   private def write[A](w: CSVWriter, items: Seq[A])(using
     rowBuilder: CsvRowBuilder[A],
   ): Task[Unit] = ZIO.attempt(w.writeRow(rowBuilder.header)) *>

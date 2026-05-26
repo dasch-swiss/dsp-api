@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.api.v3.`export`
 
-import sttp.model.MediaType
+import sttp.capabilities.zio.ZioStreams
 import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.User
@@ -27,8 +27,8 @@ final class ExportRestService(
     user: User,
   )(
     request: ExportRequest,
-  ): IO[V3ErrorInfo, (String, MediaType, String)] =
-    (for {
+  ): IO[V3ErrorInfo, (String, ZioStreams.BinaryStream)] =
+    for {
       resourceClassIri <- iriConverter.asResourceClassIri(request.resourceClass).mapError(BadRequest(_))
       shortcode        <- ZIO.fromEither(resourceClassIri.smartIri.getProjectShortcode).mapError(BadRequest(_))
       properties       <- ZIO.foreach(request.selectedProperties)(iriConverter.asPropertyIri).mapError(BadRequest(_))
@@ -37,25 +37,19 @@ final class ExportRestService(
       ontologyIri = resourceClassIri.ontologyIri
       _          <- ontologyService.findById(ontologyIri).orDie.someOrFail(NotFound(ontologyIri))
 
-      data <-
-        exportService
-          .exportResources(
-            project,
-            resourceClassIri,
-            properties,
-            user,
-            request.language,
-            request.includeIris,
-            request.includeArkUrls,
-          )
-          .orDie
-      csv <- exportService.toCsv(data).orDie
-      now <- Clock.instant
-    } yield (
-      csv,
-      MediaType.TextCsv,
-      s"attachment; filename=project_${shortcode.value}_resources_${resourceClassIri.name}_${now}.csv",
-    ))
+      now   <- Clock.instant
+      stream = exportService.exportResources(
+                 project,
+                 resourceClassIri,
+                 properties,
+                 user,
+                 request.language,
+                 request.includeIris,
+                 request.includeArkUrls,
+               )
+      contentDisposition =
+        s"""attachment; filename="project_${shortcode.value}_resources_${resourceClassIri.name}_${now}.csv""""
+    } yield (contentDisposition, stream)
 
   def exportResourcesOai(
     user: User,
