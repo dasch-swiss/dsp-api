@@ -19,7 +19,6 @@ import org.knora.webapi.util.FileUtil
 
 object ConstructResponseUtilV2Spec extends E2EZSpec {
 
-  private val constructResponseUtilV2    = ZIO.serviceWith[ConstructResponseUtilV2]
   private val constructResponseUtilV2ZIO = ZIO.serviceWithZIO[ConstructResponseUtilV2]
 
   override val e2eSpec = suite("ConstructResponseUtilV2")(
@@ -32,7 +31,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       for {
         resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
-          constructResponseUtilV2(
+          constructResponseUtilV2ZIO(
             _.splitMainResourcesAndValueRdfData(resourceRequestResponse, incunabulaProjectAdminUser),
           )
         resourceSequence <- constructResponseUtilV2ZIO(
@@ -64,7 +63,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       for {
         resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
-          constructResponseUtilV2(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
+          constructResponseUtilV2ZIO(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
         resourceSequence <- constructResponseUtilV2ZIO(
                               _.createApiResponse(
                                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
@@ -94,7 +93,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       for {
         resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
-          constructResponseUtilV2(
+          constructResponseUtilV2ZIO(
             _.splitMainResourcesAndValueRdfData(resourceRequestResponse, incunabulaProjectAdminUser),
           )
         resourceSequence <- constructResponseUtilV2ZIO(
@@ -126,7 +125,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       for {
         resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
-          constructResponseUtilV2(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
+          constructResponseUtilV2ZIO(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
         resourceSequence <- constructResponseUtilV2ZIO(
                               _.createApiResponse(
                                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
@@ -155,7 +154,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       for {
         resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
-          constructResponseUtilV2(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anonymousUser))
+          constructResponseUtilV2ZIO(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anonymousUser))
         resourceSequence <- constructResponseUtilV2ZIO(
                               _.createApiResponse(
                                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
@@ -185,7 +184,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       for {
         resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
-          constructResponseUtilV2(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
+          constructResponseUtilV2ZIO(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
         resourceSequence <- constructResponseUtilV2ZIO(
                               _.createApiResponse(
                                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
@@ -244,7 +243,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       for {
         resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
-          constructResponseUtilV2(
+          constructResponseUtilV2ZIO(
             _.splitMainResourcesAndValueRdfData(resourceRequestResponse, incunabulaProjectAdminUser),
           )
         resourceSequence <- constructResponseUtilV2ZIO(
@@ -306,7 +305,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       for {
         mainResourcesAndValueRdfData <-
           SparqlExtendedConstructResponse.make(turtleStr).flatMap { r =>
-            constructResponseUtilV2(_.splitMainResourcesAndValueRdfData(r, incunabulaProjectAdminUser))
+            constructResponseUtilV2ZIO(_.splitMainResourcesAndValueRdfData(r, incunabulaProjectAdminUser))
           }
         resourceSequence <- constructResponseUtilV2ZIO(
                               _.createApiResponse(
