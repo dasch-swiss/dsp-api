@@ -97,9 +97,9 @@ case class LegalInfoService(
     shortcode: Shortcode,
   ): UIO[Validation[String, Unit]] =
     copyrightHolder match
-      case None                                                    => ZIO.succeed(Validation.unit)
+      case None                                                          => ZIO.succeed(Validation.unit)
       case Some(holder) if holder.value == PlaceholderIri.instance.value => ZIO.succeed(Validation.unit)
-      case Some(holder)                                            =>
+      case Some(holder)                                                  =>
         projects
           .findByShortcode(shortcode)
           .orDie
