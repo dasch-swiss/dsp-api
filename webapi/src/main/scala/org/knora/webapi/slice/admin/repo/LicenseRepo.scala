@@ -10,6 +10,7 @@ import zio.Ref
 import zio.Task
 import zio.ZLayer
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.common.repo.service.Repository
@@ -21,5 +22,11 @@ final case class LicenseRepo(ref: Ref[Chunk[License]]) extends Repository[Licens
 }
 
 object LicenseRepo {
-  def layer = ZLayer.fromZIO(Ref.make(License.BUILT_IN).map(LicenseRepo.apply))
+  val layer: ZLayer[Any, Nothing, LicenseRepo] =
+    ZLayer.fromZIO(AppConfig.features(_.allowPlaceholder).flatMap { allow =>
+      val licenses =
+        if allow then License.BUILT_IN
+        else License.BUILT_IN.filterNot(_.id == LicenseIri.PLACEHOLDER)
+      Ref.make(Chunk.fromIterable(licenses)).map(LicenseRepo.apply)
+    })
 }
