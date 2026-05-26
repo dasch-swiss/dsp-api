@@ -281,7 +281,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
 
   override def printDataset(prefix: String = ""): UIO[Unit] =
     for {
-//      _  <- Console.printLine(s"TDB Context:\n${TDB.getContext}\n").orDie
+//      _  <- Console.printLine(s"TDB Context:\n${TDB2.getContext}\n").orDie
       ds <- getDataset
       _  <- Console.printLine(s"${prefix}TriplestoreServiceInMemory.printDataset:").orDie
       _   = printDatasetContents(ds)
@@ -342,6 +342,10 @@ object TriplestoreServiceInMemory {
   // ExceptionInInitializerError. Calling JenaSystem.init() first lets the
   // subsystem loader complete TDB2.<clinit> before any TDB2 static is accessed.
   JenaSystem.init()
+  // Force full Jena initialization once, lazily, before any TDB2 static symbol is referenced.
+  // Touching TDB2's symbol fields directly re-enters TDB2.<clinit> via InitTDB2 → TDB2.init,
+  // which fails with NPE on the not-yet-assigned TDB2.initLock (Jena 6.1.0 static-init bug).
+  private lazy val jenaInitialized: Unit = org.apache.jena.sys.JenaSystem.init()
 
   /**
    * Creates an empty in-memory TDB2 [[Dataset]] where the default graph is the union of all named graphs.

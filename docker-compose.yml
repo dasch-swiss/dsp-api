@@ -11,7 +11,7 @@ services:
   db:
     # should be the same version as in Dependencies.scala,
     # make sure to use the same version in ops-deploy repository when deploying new DSP releases!
-    image: daschswiss/apache-jena-fuseki:5.5.0-3
+    image: daschswiss/apache-jena-fuseki:6.1.0-0
     build:
       context: ./fuseki
     ports:

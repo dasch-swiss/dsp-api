@@ -10,7 +10,7 @@ import sbt._
 object Dependencies {
   // should be the same version as in docker-compose.yml,
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
-  val fusekiImage = "daschswiss/apache-jena-fuseki:5.5.0-3"
+  val fusekiImage = "daschswiss/apache-jena-fuseki:6.1.0-0"
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v4.1.1"
 
@@ -19,7 +19,8 @@ object Dependencies {
   val MonocleVersion = "3.3.0"
 
   val Rdf4jVersion = "5.2.2"
-  val JenaVersion  = "6.0.0"
+
+  val JenaVersion  = "6.1.0"
 
   val ZioConfigVersion            = "4.0.7"
   val ZioLoggingVersion           = "2.5.3"
@@ -216,7 +217,7 @@ object Dependencies {
   val otelAgentVersion     = "v2.26.1"
   val otelPyroscopeVersion = "v1.1.0"
   val hikariVersion        = "7.0.2"
-  val sqliteVersion        = "3.53.0.0"
+  val sqliteVersion        = "3.53.1.0"
 
   val db = Seq(
     "org.xerial"   % "sqlite-jdbc" % sqliteVersion,

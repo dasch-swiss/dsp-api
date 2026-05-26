@@ -331,6 +331,7 @@ object RdfFormatUtil {
       override def start(): Unit                                      = inner.start()
       override def base(s: String): Unit                              = {}
       override def prefix(prefixStr: String, namespace: String): Unit = inner.prefix(prefixStr, namespace)
+      override def version(s: String): Unit                           = {}
       override def finish(): Unit                                     = inner.finish()
       override def triple(triple: jena.graph.Triple): Unit            =
         quad(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))

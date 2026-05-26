@@ -340,6 +340,9 @@ object JenaNodeFactory {
   jena.sys.JenaSystem.init()
 
   // Jena's registry of datatypes.
+  // Force full Jena initialization before touching TypeMapper; under Jena 6.1.0
+  // `TypeMapper.getInstance` returns null if `JenaSystem.init()` has not run yet.
+  org.apache.jena.sys.JenaSystem.init()
   private val typeMapper = jena.datatypes.TypeMapper.getInstance
 
   // Register Knora's custom datatypes.
