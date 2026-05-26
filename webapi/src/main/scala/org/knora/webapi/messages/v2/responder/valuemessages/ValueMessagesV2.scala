@@ -1843,9 +1843,9 @@ case class FileValueV2(
   def placeholderFields: List[String] = {
     val sentinel  = PlaceholderIri.instance.value
     val filename  = Option.when(internalFilename == sentinel)("internalFilename")
-    val copyright = copyrightHolder.collect { case h if h.value == sentinel => "copyrightHolder" }
+    val copyright = copyrightHolder.find(_.value == sentinel).map(_ => "copyrightHolder")
     val authors   = authorship.flatMap(_.find(_.value == sentinel)).map(_ => "authorship")
-    val license   = licenseIri.collect { case l if l.value == sentinel => "licenseIri" }
+    val license   = licenseIri.find(_.value == sentinel).map(_ => "licenseIri")
     filename.toList ++ copyright.toList ++ authors.toList ++ license.toList
   }
 }
