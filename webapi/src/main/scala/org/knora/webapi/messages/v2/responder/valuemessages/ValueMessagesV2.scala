@@ -725,7 +725,7 @@ object ValueContentV2 {
 
   /**
    * Synthetic [[FileInfo]] used when the client supplies the placeholder sentinel
-   * `urn:placeholder` as the file reference. Skips the round-trip to DSP-ingest/Sipi
+   * `urn:dasch:placeholder` as the file reference. Skips the round-trip to DSP-ingest/Sipi
    * since no real asset exists yet. The MIME type is set to the same sentinel so
    * that downstream code can recognise it without consulting the filename.
    */
@@ -1833,7 +1833,7 @@ case class FileValueV2(
 
   /**
    * Names of the FileValue fields whose value is the placeholder sentinel
-   * (`urn:placeholder`). Covers all four sentinel-bearing fields:
+   * (`urn:dasch:placeholder`). Covers all four sentinel-bearing fields:
    * `internalFilename`, `copyrightHolder`, `authorship`, and `licenseIri`.
    * Empty when no field is a placeholder. Consumed by the parser-level gate
    * (`ApiComplexV2JsonLdRequestParser.ensurePlaceholderAllowed`), the single
@@ -1881,7 +1881,7 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
 
   /**
    * `true` if the asset reference (`internalFilename`) is the placeholder
-   * sentinel (`urn:placeholder`) — i.e. no real file exists on Sipi /
+   * sentinel (`urn:dasch:placeholder`) — i.e. no real file exists on Sipi /
    * dsp-ingest yet. Does NOT consider `copyrightHolder` or `authorship`; for
    * "are any FileValue fields placeholders?" use
    * [[FileValueV2.placeholderFields]].
@@ -1891,8 +1891,8 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
   /**
    * Computes the file URL: returns the placeholder sentinel as-is when this is a
    * placeholder file value, otherwise evaluates `makeUrl` to build the normal Sipi
-   * URL. Used so that placeholders render as `urn:placeholder` rather than a
-   * non-resolvable `<sipi>/<shortcode>/urn:placeholder/...` URL.
+   * URL. Used so that placeholders render as `urn:dasch:placeholder` rather than a
+   * non-resolvable `<sipi>/<shortcode>/urn:dasch:placeholder/...` URL.
    */
   protected def fileUrlOrPlaceholder(makeUrl: => String): String =
     if (hasPlaceholderAsset) PlaceholderIri.instance.value else makeUrl

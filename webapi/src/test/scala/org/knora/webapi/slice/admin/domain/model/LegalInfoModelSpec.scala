@@ -36,7 +36,7 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
       assertTrue(LicenseIri.from(validIri).map(_.value).contains(validIri))
     },
     test("pass a placeholder IRI and successfully create value object") {
-      val validIri = "urn:placeholder"
+      val validIri = "urn:dasch:placeholder"
       assertTrue(LicenseIri.from(validIri).map(_.value).contains(validIri))
     },
     test("pass an invalid object and return an error") {

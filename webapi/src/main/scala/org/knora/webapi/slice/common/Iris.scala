@@ -20,7 +20,7 @@ trait StableIri extends StringValue
 final case class PlaceholderIri private (override val value: String) extends StableIri
 
 object PlaceholderIri extends WithFrom[String, PlaceholderIri] {
-  val instance: PlaceholderIri = PlaceholderIri("urn:placeholder")
+  val instance: PlaceholderIri = PlaceholderIri("urn:dasch:placeholder")
 
   def from(value: String): Either[String, PlaceholderIri] =
     if value == instance.value then Right(instance)

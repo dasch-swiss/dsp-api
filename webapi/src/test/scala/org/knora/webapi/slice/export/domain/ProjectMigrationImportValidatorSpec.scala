@@ -595,7 +595,7 @@ object ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     placeholderGateSuite,
   ) @@ TestAspect.timeout(30.seconds)
 
-  private val SentinelValue = "urn:placeholder"
+  private val SentinelValue = "urn:dasch:placeholder"
 
   private val placeholderIriDataNq =
     s"""<http://rdfh.ch/9999/thing001/values/val001> <${KnoraBase}hasLicense> <$SentinelValue> <$DataGraph> .

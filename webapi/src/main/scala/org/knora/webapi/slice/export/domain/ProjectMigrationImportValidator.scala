@@ -62,7 +62,7 @@ final class ProjectMigrationImportValidator() {
 
   /**
    * Streams each N-Quad file and fails on the first quad whose object is the
-   * placeholder sentinel (`urn:placeholder`), either as an IRI or as a string
+   * placeholder sentinel (`urn:dasch:placeholder`), either as an IRI or as a string
    * literal. Called only when the `allow-placeholder` feature switch is off, so
    * a rejected import fails before any model/SHACL work is done.
    *

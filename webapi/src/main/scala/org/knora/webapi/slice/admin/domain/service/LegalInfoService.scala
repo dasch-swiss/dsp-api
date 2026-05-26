@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.api.admin.model.FilterAndOrder
+import org.knora.webapi.slice.common.PlaceholderIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -74,25 +75,31 @@ case class LegalInfoService(
   // (`ApiComplexV2JsonLdRequestParser.ensurePlaceholderAllowed` via
   // `FileValueV2.placeholderFields`). This method handles only the
   // project-policy concern: the license must be in the project's enabled set.
+  // The sentinel `urn:dasch:placeholder` short-circuits — by the time we get here,
+  // the parser-level gate has already approved its use on this deployment.
   private def licenseValidation(
     licenseIri: Option[LicenseIri],
     shortcode: Shortcode,
   ): UIO[Validation[String, Unit]] =
     licenseIri match
-      case None      => ZIO.succeed(Validation.unit)
-      case Some(iri) =>
+      case None                                                    => ZIO.succeed(Validation.unit)
+      case Some(iri) if iri.value == PlaceholderIri.instance.value => ZIO.succeed(Validation.unit)
+      case Some(iri)                                               =>
         findEnabledLicenses(shortcode).map { licenses =>
           if (licenses.map(_.id).contains(iri)) Validation.unit
           else Validation.fail(s"License $iri is not allowed in project $shortcode")
         }
 
+  // The sentinel `urn:dasch:placeholder` short-circuits for the same reason as
+  // `licenseValidation`: deployment-level gating happens at the parser layer.
   private def copyrightHolderValidation(
     copyrightHolder: Option[CopyrightHolder],
     shortcode: Shortcode,
   ): UIO[Validation[String, Unit]] =
     copyrightHolder match
-      case None         => ZIO.succeed(Validation.unit)
-      case Some(holder) =>
+      case None                                                    => ZIO.succeed(Validation.unit)
+      case Some(holder) if holder.value == PlaceholderIri.instance.value => ZIO.succeed(Validation.unit)
+      case Some(holder)                                            =>
         projects
           .findByShortcode(shortcode)
           .orDie

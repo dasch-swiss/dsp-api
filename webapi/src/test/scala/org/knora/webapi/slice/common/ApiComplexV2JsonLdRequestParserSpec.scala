@@ -490,7 +490,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ex:hasOtherThingValue" : {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
-                         |    "ka:fileValueHasFilename": "urn:placeholder"
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -503,7 +503,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assertTrue(
         actual.valueContent == StillImageFileValueContentV2(
           ApiV2Complex,
-          FileValueV2("urn:placeholder", "urn:placeholder", None, None),
+          FileValueV2("urn:dasch:placeholder", "urn:dasch:placeholder", None, None),
           0,
           0,
           None,
@@ -926,7 +926,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ex:hasOtherThingValue" : {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
-                         |    "ka:fileValueHasFilename": "urn:placeholder"
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -937,7 +937,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                     ),
                   ).exit
       } yield assert(actual)(
-        fails(containsString("placeholder sentinel 'urn:placeholder'") && containsString("not allowed")),
+        fails(containsString("placeholder sentinel 'urn:dasch:placeholder'") && containsString("not allowed")),
       )
     },
     test("updateValueV2fromJsonLd rejects a placeholder FileValue") {
@@ -952,7 +952,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ex:hasOtherThingValue" : {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
-                         |    "ka:fileValueHasFilename": "urn:placeholder"
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -963,7 +963,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                     ),
                   ).exit
       } yield assert(actual)(
-        fails(containsString("placeholder sentinel 'urn:placeholder'") && containsString("not allowed")),
+        fails(containsString("placeholder sentinel 'urn:dasch:placeholder'") && containsString("not allowed")),
       )
     },
     test("createResourceRequestV2 rejects a placeholder FileValue") {
@@ -980,7 +980,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ka:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
                          |  "ex:hasOtherThingValue" : {
                          |    "@type" : "ka:StillImageFileValue",
-                         |    "ka:fileValueHasFilename": "urn:placeholder"
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -993,7 +993,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                     ),
                   ).exit
       } yield assert(actual)(
-        fails(containsString("placeholder sentinel 'urn:placeholder'") && containsString("not allowed")),
+        fails(containsString("placeholder sentinel 'urn:dasch:placeholder'") && containsString("not allowed")),
       )
     },
     test("createValueV2FromJsonLd rejects a placeholder copyrightHolder") {
@@ -1009,7 +1009,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasCopyrightHolder" : "urn:placeholder"
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1022,7 +1022,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assert(actual)(
         fails(
           containsString("copyrightHolder") &&
-            containsString("placeholder sentinel 'urn:placeholder'") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
             containsString("not allowed"),
         ),
       )
@@ -1040,7 +1040,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasAuthorship" : [ "urn:placeholder" ]
+                         |    "ka:hasAuthorship" : [ "urn:dasch:placeholder" ]
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1053,7 +1053,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assert(actual)(
         fails(
           containsString("authorship") &&
-            containsString("placeholder sentinel 'urn:placeholder'") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
             containsString("not allowed"),
         ),
       )
@@ -1071,7 +1071,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasCopyrightHolder" : "urn:placeholder"
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1084,7 +1084,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assert(actual)(
         fails(
           containsString("copyrightHolder") &&
-            containsString("placeholder sentinel 'urn:placeholder'") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
             containsString("not allowed"),
         ),
       )
@@ -1102,7 +1102,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasAuthorship" : [ "Mr. Smith", "urn:placeholder" ]
+                         |    "ka:hasAuthorship" : [ "Mr. Smith", "urn:dasch:placeholder" ]
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1115,7 +1115,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assert(actual)(
         fails(
           containsString("authorship") &&
-            containsString("placeholder sentinel 'urn:placeholder'") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
             containsString("not allowed"),
         ),
       )
@@ -1135,7 +1135,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ex:hasOtherThingValue" : {
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasCopyrightHolder" : "urn:placeholder"
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1150,7 +1150,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assert(actual)(
         fails(
           containsString("copyrightHolder") &&
-            containsString("placeholder sentinel 'urn:placeholder'") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
             containsString("not allowed"),
         ),
       )
@@ -1170,7 +1170,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ex:hasOtherThingValue" : {
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasAuthorship" : [ "urn:placeholder" ]
+                         |    "ka:hasAuthorship" : [ "urn:dasch:placeholder" ]
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1185,7 +1185,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assert(actual)(
         fails(
           containsString("authorship") &&
-            containsString("placeholder sentinel 'urn:placeholder'") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
             containsString("not allowed"),
         ),
       )
@@ -1203,7 +1203,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasLicense" : { "@id" : "urn:placeholder" }
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1216,7 +1216,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assert(actual)(
         fails(
           containsString("licenseIri") &&
-            containsString("placeholder sentinel 'urn:placeholder'") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
             containsString("not allowed"),
         ),
       )
@@ -1234,7 +1234,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasLicense" : { "@id" : "urn:placeholder" }
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1247,7 +1247,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assert(actual)(
         fails(
           containsString("licenseIri") &&
-            containsString("placeholder sentinel 'urn:placeholder'") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
             containsString("not allowed"),
         ),
       )
@@ -1267,7 +1267,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ex:hasOtherThingValue" : {
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasLicense" : { "@id" : "urn:placeholder" }
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1282,7 +1282,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assert(actual)(
         fails(
           containsString("licenseIri") &&
-            containsString("placeholder sentinel 'urn:placeholder'") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
             containsString("not allowed"),
         ),
       )
@@ -1355,7 +1355,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ex:hasOtherThingValue" : {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
-                         |    "ka:fileValueHasFilename": "urn:placeholder"
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1385,7 +1385,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasCopyrightHolder" : "urn:placeholder"
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1398,7 +1398,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assertTrue(
         result.valueContent match {
           case fvc: FileValueContentV2 =>
-            fvc.fileValue.copyrightHolder.contains(CopyrightHolder.unsafeFrom("urn:placeholder"))
+            fvc.fileValue.copyrightHolder.contains(CopyrightHolder.unsafeFrom("urn:dasch:placeholder"))
           case _ => false
         },
       )
@@ -1416,7 +1416,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasAuthorship" : [ "urn:placeholder" ]
+                         |    "ka:hasAuthorship" : [ "urn:dasch:placeholder" ]
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1429,7 +1429,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assertTrue(
         result.valueContent match {
           case fvc: FileValueContentV2 =>
-            fvc.fileValue.authorship.exists(_.contains(Authorship.unsafeFrom("urn:placeholder")))
+            fvc.fileValue.authorship.exists(_.contains(Authorship.unsafeFrom("urn:dasch:placeholder")))
           case _ => false
         },
       )
@@ -1446,7 +1446,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ex:hasOtherThingValue" : {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
-                         |    "ka:fileValueHasFilename": "urn:placeholder"
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1480,7 +1480,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasCopyrightHolder" : "urn:placeholder"
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1491,7 +1491,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                     ),
                   )
       } yield assertTrue(
-        fileValueCopyrightHolder(result).contains(CopyrightHolder.unsafeFrom("urn:placeholder")),
+        fileValueCopyrightHolder(result).contains(CopyrightHolder.unsafeFrom("urn:dasch:placeholder")),
       )
     },
     test("updateValueV2fromJsonLd accepts a placeholder authorship element") {
@@ -1507,7 +1507,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasAuthorship" : [ "urn:placeholder" ]
+                         |    "ka:hasAuthorship" : [ "urn:dasch:placeholder" ]
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1518,7 +1518,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                     ),
                   )
       } yield assertTrue(
-        fileValueAuthorship(result).exists(_.contains(Authorship.unsafeFrom("urn:placeholder"))),
+        fileValueAuthorship(result).exists(_.contains(Authorship.unsafeFrom("urn:dasch:placeholder"))),
       )
     },
     test("createResourceRequestV2 accepts a placeholder FileValue") {
@@ -1535,7 +1535,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ka:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
                          |  "ex:hasOtherThingValue" : {
                          |    "@type" : "ka:StillImageFileValue",
-                         |    "ka:fileValueHasFilename": "urn:placeholder"
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1548,7 +1548,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                     ),
                   )
       } yield assertTrue(
-        createResourceFileValue(result).exists(_.internalFilename == "urn:placeholder"),
+        createResourceFileValue(result).exists(_.internalFilename == "urn:dasch:placeholder"),
       )
     },
     test("createResourceRequestV2 accepts a placeholder copyrightHolder") {
@@ -1566,7 +1566,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ex:hasOtherThingValue" : {
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasCopyrightHolder" : "urn:placeholder"
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1581,7 +1581,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assertTrue(
         createResourceFileValue(result)
           .flatMap(_.copyrightHolder)
-          .contains(CopyrightHolder.unsafeFrom("urn:placeholder")),
+          .contains(CopyrightHolder.unsafeFrom("urn:dasch:placeholder")),
       )
     },
     test("createResourceRequestV2 accepts a placeholder authorship element") {
@@ -1599,7 +1599,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ex:hasOtherThingValue" : {
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasAuthorship" : [ "urn:placeholder" ]
+                         |    "ka:hasAuthorship" : [ "urn:dasch:placeholder" ]
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1614,7 +1614,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       } yield assertTrue(
         createResourceFileValue(result)
           .flatMap(_.authorship)
-          .exists(_.contains(Authorship.unsafeFrom("urn:placeholder"))),
+          .exists(_.contains(Authorship.unsafeFrom("urn:dasch:placeholder"))),
       )
     },
     test("createValueV2FromJsonLd accepts a placeholder licenseIri") {
@@ -1630,7 +1630,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasLicense" : { "@id" : "urn:placeholder" }
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1660,7 +1660,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasLicense" : { "@id" : "urn:placeholder" }
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
@@ -1689,7 +1689,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  "ex:hasOtherThingValue" : {
                          |    "@type" : "ka:StillImageFileValue",
                          |    "ka:fileValueHasFilename": "internalFilename.ext",
-                         |    "ka:hasLicense" : { "@id" : "urn:placeholder" }
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
