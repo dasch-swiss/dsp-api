@@ -67,7 +67,7 @@ final class ProjectMigrationImportValidator() {
    * a rejected import fails before any model/SHACL work is done.
    *
    * Aborts parsing on the first hit by throwing a private sentinel exception
-   * from the StreamRDF sink — Jena's RDFParser propagates the throw and stops
+   * from the StreamRDF sink -- Jena's RDFParser propagates the throw and stops
    * reading the file, so large bags with an early sentinel do not pay for a
    * full parse.
    */
@@ -93,7 +93,7 @@ final class ProjectMigrationImportValidator() {
         None: Option[Quad]
       } catch {
         case hit: PlaceholderHit => Some(hit.quad)
-        // Jena may wrap our exception inside a RiotException — unwrap it.
+        // Jena may wrap our exception inside a RiotException; unwrap it.
         case e: RuntimeException if e.getCause.isInstanceOf[PlaceholderHit] =>
           Some(e.getCause.asInstanceOf[PlaceholderHit].quad)
       }
