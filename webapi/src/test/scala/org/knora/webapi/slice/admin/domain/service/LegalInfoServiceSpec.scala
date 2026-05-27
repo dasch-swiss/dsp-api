@@ -10,6 +10,7 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import org.knora.webapi.TestDataFactory
+import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
@@ -40,6 +41,9 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
     ),
   )
 
+  private def configLayer(allowPlaceholder: Boolean): ULayer[Unit] =
+    TestAppConfig.layer("app.features.allow-placeholder" -> allowPlaceholder)
+
   private val findLicenseByIri = suite("findAvailableLicenseByIdAndShortcode")(
     test("should return the license for a project") {
       for {
@@ -62,6 +66,12 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
         prj    <- setupProject
         actual <- service(_.enableLicense(disabledLicense, prj))
       } yield assertTrue(actual.enabledLicenses == Set(disabledLicense, enabledLicense))
+    },
+    test("enabling PLACEHOLDER should work when allow-placeholder is true") {
+      for {
+        prj    <- setupProject
+        actual <- service(_.enableLicense(LicenseIri.PLACEHOLDER, prj))
+      } yield assertTrue(actual.enabledLicenses == Set(LicenseIri.PLACEHOLDER, enabledLicense))
     },
     test("disabling should work") {
       for {
@@ -127,9 +137,23 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
         ),
       )
     },
+    test("A FileValue with PLACEHOLDER LicenseIri should be valid when allow-placeholder is true") {
+      for {
+        prj <- projectRepo(
+                 _.save(
+                   TestDataFactory.someProject.copy(
+                     allowedCopyrightHolders = Set(validCopyrightHolder),
+                     enabledLicenses = Set(LicenseIri.PLACEHOLDER),
+                   ),
+                 ),
+               )
+        fileValue = fileValueValid.copy(licenseIri = Some(LicenseIri.PLACEHOLDER))
+        actual   <- service(_.validateLegalInfo(fileValue, prj.shortcode))
+      } yield assertTrue(actual == fileValue)
+    },
   )
 
-  def spec = suite("LegalInfoService")(
+  private val placeholderAllowedSuite = suite("with allow-placeholder = true")(
     findLicenseByIri,
     licenseEnablingSuite,
     validateLegalInfoSuite,
@@ -153,5 +177,37 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
     StringFormatter.test,
     TriplestoreServiceInMemory.emptyLayer,
     CacheManager.layer,
+    configLayer(true),
+  )
+
+  private val placeholderDisabledSuite = suite("with allow-placeholder = false")(
+    test("enabling PLACEHOLDER should be rejected with a server-level error") {
+      for {
+        prj    <- setupProject
+        actual <- service(_.enableLicense(LicenseIri.PLACEHOLDER, prj)).exit
+      } yield assert(actual)(
+        fails(
+          equalTo(
+            s"License ${LicenseIri.PLACEHOLDER} is the placeholder license and is not allowed on this server",
+          ),
+        ),
+      )
+    },
+  ).provide(
+    LegalInfoService.layer,
+    LicenseRepo.layer,
+    KnoraProjectService.layer,
+    KnoraProjectRepoLive.layer,
+    OntologyRepoInMemory.emptyLayer,
+    IriConverter.layer,
+    StringFormatter.test,
+    TriplestoreServiceInMemory.emptyLayer,
+    CacheManager.layer,
+    configLayer(false),
+  )
+
+  def spec = suite("LegalInfoService")(
+    placeholderAllowedSuite,
+    placeholderDisabledSuite,
   )
 }

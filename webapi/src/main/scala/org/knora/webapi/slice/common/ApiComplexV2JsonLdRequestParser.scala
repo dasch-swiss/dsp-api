@@ -18,6 +18,7 @@ import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
@@ -39,6 +40,7 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.mapping.CreateStandoffMappingForm
 import org.knora.webapi.slice.common.KnoraIris.*
+import org.knora.webapi.slice.common.PlaceholderIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given
@@ -338,6 +340,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                          permissions,
                          creationDate,
                        )
+      _ <- ensurePlaceholderAllowed(createResource.flatValues.map(_.valueContent))
       _ <- checkMimeTypesForFileValueContents(createResource.flatValues)
     } yield CreateResourceRequestV2(createResource, attachedToUser, uuid)
   }
@@ -354,7 +357,10 @@ final case class ApiComplexV2JsonLdRequestParser(
     ZIO
       .foreach(values) { value =>
         value.valueContent match {
-          case fileValueContent: StillImageFileValueContentV2 =>
+          // Placeholder file values carry the sentinel MIME type and have no real asset on
+          // Sipi yet, so the per-type MIME check does not apply.
+          case fvc: FileValueContentV2 if fvc.hasPlaceholderAsset => ZIO.unit
+          case fileValueContent: StillImageFileValueContentV2     =>
             failBadRequest(fileValueContent)
               .when(!sipiConfig.imageMimeTypes.contains(fileValueContent.fileValue.internalMimeType))
           case fileValueContent: DocumentFileValueContentV2 =>
@@ -377,6 +383,32 @@ final case class ApiComplexV2JsonLdRequestParser(
       }
       .unit
   }
+
+  /**
+   * Rejects writes that contain the placeholder sentinel in any of the
+   * sentinel-bearing FileValue fields (`internalFilename`, `copyrightHolder`,
+   * or any element of `authorship`) when the `allow-placeholder` feature
+   * switch is disabled on this deployment. Reads are never gated; this check
+   * applies only to create/update of file values.
+   */
+  private def ensurePlaceholderAllowed(values: Iterable[ValueContentV2]): IO[String, Unit] =
+    val offending = values.toList.flatMap {
+      case fvc: FileValueContentV2 => fvc.fileValue.placeholderFields
+      case _                       => Nil
+    }
+    if (offending.isEmpty) ZIO.unit
+    else
+      AppConfig
+        .features(_.allowPlaceholder)
+        .flatMap(allow =>
+          ZIO
+            .fail(
+              s"FileValue field(s) ${offending.mkString(", ")} reference the placeholder sentinel " +
+                s"'${PlaceholderIri.instance.value}', which is not allowed on this server.",
+            )
+            .unless(allow)
+            .unit,
+        )
 
   private def readOrderIndex(r: Resource): Option[Int] =
     r.objectIntOption(OrderIndexProperty).toOption.flatten
@@ -482,6 +514,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         newValueVersionSmtIri <-
           ZIO.foreach(newValueVersionIri)(vi => converter.asSmartIri(vi.value).mapError(_.getMessage))
         valueContent <- getValueContent(v, resourceIri.shortcode).map(Some(_)).orElse(ZIO.none)
+        _            <- ensurePlaceholderAllowed(valueContent.toSeq)
         updateValue  <- (valueContent, valuePermissions) match
                          case (Some(valueContentV2), _) =>
                            ZIO.succeed(
@@ -527,6 +560,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueCreationDate <- v.valueCreationDateOption
         valuePermissions  <- v.hasPermissionsOption
         valueContent      <- getValueContent(v, resourceIri.shortcode)
+        _                 <- ensurePlaceholderAllowed(Seq(valueContent))
       } yield CreateValueV2(
         resourceIri,
         r.resourceClassSmartIri,

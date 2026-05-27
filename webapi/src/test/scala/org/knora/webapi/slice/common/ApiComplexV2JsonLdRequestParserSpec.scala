@@ -7,19 +7,24 @@ package org.knora.webapi.slice.common
 
 import org.apache.jena.vocabulary.RDFS
 import zio.*
+import zio.config.*
 import zio.json.DecoderOps
 import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.BooleanValueContentV2
@@ -28,6 +33,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DecimalValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeomValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
@@ -43,6 +49,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContent
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType.UnformattedText
 import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.*
@@ -89,6 +97,20 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
   private val configureSipiServiceMock = for {
     sipiMock <- ZIO.service[SipiServiceMock]
     _        <- sipiMock.setReturnValue(GetFileMetadataFromDspIngest, ZIO.succeed(givenFileInfo))
+  } yield ()
+
+  /**
+   * Variant of [[configureSipiServiceMock]] that reports a valid image MIME type
+   * so that requests reaching [[ApiComplexV2JsonLdRequestParser]]'s MIME check
+   * (run on the `createResourceRequestV2` path for `StillImageFileValue`) do
+   * not fail before the path under test executes.
+   */
+  private val configureSipiServiceMockWithImageMime = for {
+    sipiMock <- ZIO.service[SipiServiceMock]
+    _        <- sipiMock.setReturnValue(
+           GetFileMetadataFromDspIngest,
+           ZIO.succeed(givenFileInfo.copy(internalMimeType = "image/jpeg")),
+         )
   } yield ()
 
   private val createIntegerValue = """
@@ -153,7 +175,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     )
   })
 
-  val spec = suite("KnoraApiValueModel")(
+  private val knoraApiValueModelSuite = suite("KnoraApiValueModel")(
     test("getResourceIri should get the id") {
       check(Gen.fromIterable(Seq(createIntegerValue, createLinkValue).map(_.toJsonPretty))) { json =>
         for {
@@ -455,6 +477,38 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             ),
           )
       } yield assertTrue(actual.valueContent == ColorValueContentV2(ApiV2Complex, "red", None))
+    },
+    test("should parse a placeholder StillImageFileValue without calling Sipi") {
+      for {
+        _      <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        actual.valueContent == StillImageFileValueContentV2(
+          ApiV2Complex,
+          FileValueV2("urn:dasch:placeholder", "urn:dasch:placeholder", None, None),
+          0,
+          0,
+          None,
+        ),
+      )
     },
     test("should parse StillImageFileValue") {
       for {
@@ -850,6 +904,389 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       }
     },
     standOffSuite,
+  )
+
+  private def appConfigLayerWith(allowPlaceholder: Boolean): ULayer[AppConfig.AppConfigurations] = {
+    val provider                    = TestAppConfig.provider("app.features.allow-placeholder" -> allowPlaceholder)
+    val parseConfig: UIO[AppConfig] = read(AppConfig.config from provider).orDie
+    Runtime.setConfigProvider(provider) >>>
+      AppConfig.projectAppConfigurations(ZLayer.fromZIO(parseConfig))
+  }
+
+  private val placeholderDisabledSuite = suite("with allow-placeholder = false")(
+    test("createValueV2FromJsonLd rejects a placeholder FileValue") {
+      for {
+        _      <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(containsString("placeholder sentinel 'urn:dasch:placeholder'") && containsString("not allowed")),
+      )
+    },
+    test("updateValueV2fromJsonLd rejects a placeholder FileValue") {
+      for {
+        _      <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        actual <- service(
+                    _.updateValueV2fromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(containsString("placeholder sentinel 'urn:dasch:placeholder'") && containsString("not allowed")),
+      )
+    },
+    test("createResourceRequestV2 rejects a placeholder FileValue") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        _      <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        uuid   <- Random.nextUUID
+        actual <- service(
+                    _.createResourceRequestV2(
+                      s"""
+                         |{
+                         |  "@type" : "ex:Thing",
+                         |  "rdfs:label" : "test resource",
+                         |  "ka:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+                         |  }
+                         |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(containsString("placeholder sentinel 'urn:dasch:placeholder'") && containsString("not allowed")),
+      )
+    },
+    test("createValueV2FromJsonLd rejects a placeholder copyrightHolder") {
+      for {
+        _      <- configureSipiServiceMock
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(
+          containsString("copyrightHolder") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
+            containsString("not allowed"),
+        ),
+      )
+    },
+    test("createValueV2FromJsonLd rejects a placeholder authorship element") {
+      for {
+        _      <- configureSipiServiceMock
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasAuthorship" : [ "urn:dasch:placeholder" ]
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(
+          containsString("authorship") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
+            containsString("not allowed"),
+        ),
+      )
+    },
+    test("updateValueV2fromJsonLd rejects a placeholder copyrightHolder") {
+      for {
+        _      <- configureSipiServiceMock
+        actual <- service(
+                    _.updateValueV2fromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(
+          containsString("copyrightHolder") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
+            containsString("not allowed"),
+        ),
+      )
+    },
+    test("updateValueV2fromJsonLd rejects a placeholder authorship element") {
+      for {
+        _      <- configureSipiServiceMock
+        actual <- service(
+                    _.updateValueV2fromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasAuthorship" : [ "Mr. Smith", "urn:dasch:placeholder" ]
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(
+          containsString("authorship") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
+            containsString("not allowed"),
+        ),
+      )
+    },
+    test("createResourceRequestV2 rejects a placeholder copyrightHolder") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        _      <- configureSipiServiceMock
+        uuid   <- Random.nextUUID
+        actual <- service(
+                    _.createResourceRequestV2(
+                      s"""
+                         |{
+                         |  "@type" : "ex:Thing",
+                         |  "rdfs:label" : "test resource",
+                         |  "ka:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+                         |  }
+                         |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(
+          containsString("copyrightHolder") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
+            containsString("not allowed"),
+        ),
+      )
+    },
+    test("createResourceRequestV2 rejects a placeholder authorship element") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        _      <- configureSipiServiceMock
+        uuid   <- Random.nextUUID
+        actual <- service(
+                    _.createResourceRequestV2(
+                      s"""
+                         |{
+                         |  "@type" : "ex:Thing",
+                         |  "rdfs:label" : "test resource",
+                         |  "ka:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasAuthorship" : [ "urn:dasch:placeholder" ]
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+                         |  }
+                         |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(
+          containsString("authorship") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
+            containsString("not allowed"),
+        ),
+      )
+    },
+    test("createValueV2FromJsonLd rejects a placeholder licenseIri") {
+      for {
+        _      <- configureSipiServiceMock
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(
+          containsString("licenseIri") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
+            containsString("not allowed"),
+        ),
+      )
+    },
+    test("updateValueV2fromJsonLd rejects a placeholder licenseIri") {
+      for {
+        _      <- configureSipiServiceMock
+        actual <- service(
+                    _.updateValueV2fromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(
+          containsString("licenseIri") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
+            containsString("not allowed"),
+        ),
+      )
+    },
+    test("createResourceRequestV2 rejects a placeholder licenseIri") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        _      <- configureSipiServiceMock
+        uuid   <- Random.nextUUID
+        actual <- service(
+                    _.createResourceRequestV2(
+                      s"""
+                         |{
+                         |  "@type" : "ex:Thing",
+                         |  "rdfs:label" : "test resource",
+                         |  "ka:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+                         |  }
+                         |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(
+          containsString("licenseIri") &&
+            containsString("placeholder sentinel 'urn:dasch:placeholder'") &&
+            containsString("not allowed"),
+        ),
+      )
+    },
   ).provide(
     AdministrativePermissionRepoInMemory.layer,
     AdministrativePermissionService.layer,
@@ -873,6 +1310,454 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     StringFormatter.test,
     TriplestoreServiceInMemory.emptyLayer,
     UserService.layer,
-    AppConfig.layer,
+    appConfigLayerWith(false),
+  )
+
+  private def fileValueCopyrightHolder(uv: UpdateValueV2): Option[CopyrightHolder] =
+    uv match
+      case uvc: UpdateValueContentV2 =>
+        uvc.valueContent match
+          case fvc: FileValueContentV2 => fvc.fileValue.copyrightHolder
+          case _                       => None
+      case _ => None
+
+  private def fileValueAuthorship(uv: UpdateValueV2): Option[List[Authorship]] =
+    uv match
+      case uvc: UpdateValueContentV2 =>
+        uvc.valueContent match
+          case fvc: FileValueContentV2 => fvc.fileValue.authorship
+          case _                       => None
+      case _ => None
+
+  private def fileValueLicenseIri(uv: UpdateValueV2): Option[LicenseIri] =
+    uv match
+      case uvc: UpdateValueContentV2 =>
+        uvc.valueContent match
+          case fvc: FileValueContentV2 => fvc.fileValue.licenseIri
+          case _                       => None
+      case _ => None
+
+  private def createResourceFileValue(req: CreateResourceRequestV2): Option[FileValueV2] =
+    req.createResource.flatValues
+      .map(_.valueContent)
+      .collectFirst { case fvc: FileValueContentV2 => fvc.fileValue }
+
+  private val placeholderAllowedSuite = suite("with allow-placeholder = true")(
+    test("createValueV2FromJsonLd accepts a placeholder FileValue") {
+      for {
+        _      <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        result <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        result.valueContent match {
+          case fvc: FileValueContentV2 => fvc.hasPlaceholderAsset
+          case _                       => false
+        },
+      )
+    },
+    test("createValueV2FromJsonLd accepts a placeholder copyrightHolder") {
+      for {
+        _      <- configureSipiServiceMock
+        result <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        result.valueContent match {
+          case fvc: FileValueContentV2 =>
+            fvc.fileValue.copyrightHolder.contains(CopyrightHolder.unsafeFrom("urn:dasch:placeholder"))
+          case _ => false
+        },
+      )
+    },
+    test("createValueV2FromJsonLd accepts a placeholder authorship element") {
+      for {
+        _      <- configureSipiServiceMock
+        result <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasAuthorship" : [ "urn:dasch:placeholder" ]
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        result.valueContent match {
+          case fvc: FileValueContentV2 =>
+            fvc.fileValue.authorship.exists(_.contains(Authorship.unsafeFrom("urn:dasch:placeholder")))
+          case _ => false
+        },
+      )
+    },
+    test("updateValueV2fromJsonLd accepts a placeholder FileValue") {
+      for {
+        _      <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        result <- service(
+                    _.updateValueV2fromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        result match {
+          case uvc: UpdateValueContentV2 =>
+            uvc.valueContent match {
+              case fvc: FileValueContentV2 => fvc.hasPlaceholderAsset
+              case _                       => false
+            }
+          case _ => false
+        },
+      )
+    },
+    test("updateValueV2fromJsonLd accepts a placeholder copyrightHolder") {
+      for {
+        _      <- configureSipiServiceMock
+        result <- service(
+                    _.updateValueV2fromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        fileValueCopyrightHolder(result).contains(CopyrightHolder.unsafeFrom("urn:dasch:placeholder")),
+      )
+    },
+    test("updateValueV2fromJsonLd accepts a placeholder authorship element") {
+      for {
+        _      <- configureSipiServiceMock
+        result <- service(
+                    _.updateValueV2fromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasAuthorship" : [ "urn:dasch:placeholder" ]
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        fileValueAuthorship(result).exists(_.contains(Authorship.unsafeFrom("urn:dasch:placeholder"))),
+      )
+    },
+    test("createResourceRequestV2 accepts a placeholder FileValue") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        _      <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        uuid   <- Random.nextUUID
+        result <- service(
+                    _.createResourceRequestV2(
+                      s"""
+                         |{
+                         |  "@type" : "ex:Thing",
+                         |  "rdfs:label" : "test resource",
+                         |  "ka:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+                         |  }
+                         |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  )
+      } yield assertTrue(
+        createResourceFileValue(result).exists(_.internalFilename == "urn:dasch:placeholder"),
+      )
+    },
+    test("createResourceRequestV2 accepts a placeholder copyrightHolder") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        _      <- configureSipiServiceMockWithImageMime
+        uuid   <- Random.nextUUID
+        result <- service(
+                    _.createResourceRequestV2(
+                      s"""
+                         |{
+                         |  "@type" : "ex:Thing",
+                         |  "rdfs:label" : "test resource",
+                         |  "ka:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasCopyrightHolder" : "urn:dasch:placeholder"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+                         |  }
+                         |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  )
+      } yield assertTrue(
+        createResourceFileValue(result)
+          .flatMap(_.copyrightHolder)
+          .contains(CopyrightHolder.unsafeFrom("urn:dasch:placeholder")),
+      )
+    },
+    test("createResourceRequestV2 accepts a placeholder authorship element") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        _      <- configureSipiServiceMockWithImageMime
+        uuid   <- Random.nextUUID
+        result <- service(
+                    _.createResourceRequestV2(
+                      s"""
+                         |{
+                         |  "@type" : "ex:Thing",
+                         |  "rdfs:label" : "test resource",
+                         |  "ka:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasAuthorship" : [ "urn:dasch:placeholder" ]
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+                         |  }
+                         |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  )
+      } yield assertTrue(
+        createResourceFileValue(result)
+          .flatMap(_.authorship)
+          .exists(_.contains(Authorship.unsafeFrom("urn:dasch:placeholder"))),
+      )
+    },
+    test("createValueV2FromJsonLd accepts a placeholder licenseIri") {
+      for {
+        _      <- configureSipiServiceMock
+        result <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        result.valueContent match {
+          case fvc: FileValueContentV2 => fvc.fileValue.licenseIri.contains(LicenseIri.PLACEHOLDER)
+          case _                       => false
+        },
+      )
+    },
+    test("updateValueV2fromJsonLd accepts a placeholder licenseIri") {
+      for {
+        _      <- configureSipiServiceMock
+        result <- service(
+                    _.updateValueV2fromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        fileValueLicenseIri(result).contains(LicenseIri.PLACEHOLDER),
+      )
+    },
+    test("createResourceRequestV2 accepts a placeholder licenseIri") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        _      <- configureSipiServiceMockWithImageMime
+        uuid   <- Random.nextUUID
+        result <- service(
+                    _.createResourceRequestV2(
+                      s"""
+                         |{
+                         |  "@type" : "ex:Thing",
+                         |  "rdfs:label" : "test resource",
+                         |  "ka:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@type" : "ka:StillImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext",
+                         |    "ka:hasLicense" : { "@id" : "urn:dasch:placeholder" }
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                         |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+                         |  }
+                         |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  )
+      } yield assertTrue(
+        createResourceFileValue(result).flatMap(_.licenseIri).contains(LicenseIri.PLACEHOLDER),
+      )
+    },
+  ).provide(
+    AdministrativePermissionRepoInMemory.layer,
+    AdministrativePermissionService.layer,
+    ApiComplexV2JsonLdRequestParser.layer,
+    GroupService.layer,
+    IriConverter.layer,
+    IriService.layer,
+    KnoraGroupRepoInMemory.layer,
+    KnoraGroupService.layer,
+    KnoraProjectRepoInMemory.layer,
+    KnoraProjectService.layer,
+    KnoraUserRepoInMemory.layer,
+    KnoraUserService.layer,
+    KnoraUserToUserConverter.layer,
+    LicenseRepo.layer,
+    StandoffMappingServiceFake.layer,
+    OntologyRepoInMemory.emptyLayer,
+    PasswordService.layer,
+    ProjectService.layer,
+    SipiServiceMock.layer,
+    StringFormatter.test,
+    TriplestoreServiceInMemory.emptyLayer,
+    UserService.layer,
+    appConfigLayerWith(true),
+  )
+
+  val spec = suite("ApiComplexV2JsonLdRequestParser")(
+    knoraApiValueModelSuite.provide(
+      AdministrativePermissionRepoInMemory.layer,
+      AdministrativePermissionService.layer,
+      ApiComplexV2JsonLdRequestParser.layer,
+      GroupService.layer,
+      IriConverter.layer,
+      IriService.layer,
+      KnoraGroupRepoInMemory.layer,
+      KnoraGroupService.layer,
+      KnoraProjectRepoInMemory.layer,
+      KnoraProjectService.layer,
+      KnoraUserRepoInMemory.layer,
+      KnoraUserService.layer,
+      KnoraUserToUserConverter.layer,
+      LicenseRepo.layer,
+      StandoffMappingServiceFake.layer,
+      OntologyRepoInMemory.emptyLayer,
+      PasswordService.layer,
+      ProjectService.layer,
+      SipiServiceMock.layer,
+      StringFormatter.test,
+      TriplestoreServiceInMemory.emptyLayer,
+      UserService.layer,
+      AppConfig.layer,
+    ),
+    placeholderDisabledSuite,
+    placeholderAllowedSuite,
   )
 }

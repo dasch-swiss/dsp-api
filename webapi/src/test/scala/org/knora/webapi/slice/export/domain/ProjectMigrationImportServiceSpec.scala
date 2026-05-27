@@ -5,9 +5,7 @@
 
 package org.knora.webapi.slice.`export`.domain
 
-import com.typesafe.config.ConfigFactory
 import zio.*
-import zio.config.typesafe.TypesafeConfigProvider
 import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.stream.ZStream
@@ -20,6 +18,7 @@ import org.knora.bagit.domain.BagInfo
 import org.knora.bagit.domain.PayloadEntry
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.TestDataFactory
+import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
@@ -252,9 +251,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     ingestImportCalls: Ref[Option[(Shortcode, Path)]],
   )
 
-  private val configLayer: ULayer[Unit] = Runtime.setConfigProvider(
-    TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve),
-  )
+  private val configLayer: ULayer[Unit] = TestAppConfig.layer()
 
   private def stubDspIngestClient(
     ingestImportCalls: Ref[Option[(Shortcode, Path)]],
@@ -301,7 +298,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                   }
     taskStateRef  <- Ref.make[Option[CurrentDataTask]](None)
     taskState      = new DataTaskState(taskStateRef, persistence)
-    shaclValidator = new ProjectMigrationImportShaclValidator()
+    shaclValidator = new ProjectMigrationImportValidator()
     service        =
       new ProjectMigrationImportService(
         taskState,

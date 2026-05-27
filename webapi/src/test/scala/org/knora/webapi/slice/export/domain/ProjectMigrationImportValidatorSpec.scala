@@ -9,12 +9,14 @@ import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.test.*
+import zio.test.Assertion.*
 
 import java.nio.charset.StandardCharsets
 
+import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
-object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
+object ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
 
   private val testProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/9999")
 
@@ -61,15 +63,19 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
     ontologyNq: String,
     dataNq: String = baselineDataNq,
     adminNq: String = defaultAdminNq,
+    allowPlaceholder: Boolean = true,
   ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
     for {
       dir          <- Files.createTempDirectoryScoped(Some("shacl-test"), Seq.empty)
       ontologyFile <- writeNqFile(dir, "ontology-0.nq", ontologyNq)
       dataFile     <- writeNqFile(dir, "data.nq", dataNq)
       adminFile    <- writeNqFile(dir, "admin.nq", adminNq)
-      validator     = new ProjectMigrationImportShaclValidator()
+      validator     = new ProjectMigrationImportValidator()
       result       <-
-        validator.validate(NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile), testProjectIri).either
+        validator
+          .validate(NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile), testProjectIri)
+          .provideSomeLayer[Scope](TestAppConfig.layer("app.features.allow-placeholder" -> allowPlaceholder))
+          .either
     } yield result
 
   override def spec: Spec[Any, Any] = suite("ProjectMigrationImportShaclValidatorSpec")(
@@ -586,5 +592,64 @@ object ProjectMigrationImportShaclValidatorSpec extends ZIOSpecDefault {
         },
       )
     },
+    placeholderGateSuite,
   ) @@ TestAspect.timeout(30.seconds)
+
+  private val SentinelValue = "urn:dasch:placeholder"
+
+  private val placeholderIriDataNq =
+    s"""<http://rdfh.ch/9999/thing001/values/val001> <${KnoraBase}hasLicense> <$SentinelValue> <$DataGraph> .
+       |""".stripMargin
+
+  private val placeholderLiteralDataNq =
+    s"""<http://rdfh.ch/9999/thing001/values/val001> <${KnoraBase}internalFilename> "$SentinelValue" <$DataGraph> .
+       |""".stripMargin
+
+  private val placeholderGateSuite = suite("placeholder gate")(
+    test("rejects sentinel as IRI in object position when allow-placeholder=false") {
+      ZIO.scoped {
+        validate(validOntologyNq, dataNq = placeholderIriDataNq, allowPlaceholder = false).map { result =>
+          assert(result)(isLeft) &&
+          assert(result.left.toOption.map(_.getMessage))(
+            isSome(containsString(s"placeholder sentinel '$SentinelValue' in object position")),
+          )
+        }
+      }
+    },
+    test("rejects sentinel as string literal in object position when allow-placeholder=false") {
+      ZIO.scoped {
+        validate(validOntologyNq, dataNq = placeholderLiteralDataNq, allowPlaceholder = false).map { result =>
+          assert(result)(isLeft) &&
+          assert(result.left.toOption.map(_.getMessage))(
+            isSome(containsString(s"placeholder sentinel '$SentinelValue' in object position")),
+          )
+        }
+      }
+    },
+    test("allows sentinel in object position when allow-placeholder=true") {
+      ZIO.scoped {
+        validate(validOntologyNq, dataNq = placeholderIriDataNq, allowPlaceholder = true).map { result =>
+          assert(result)(isRight)
+        }
+      }
+    },
+    test("short-circuits the N-Quad parse on the first sentinel match") {
+      // Sentinel on line 1, then syntactically invalid N-Quads on line 2. If the
+      // scanner short-circuits via the StreamRDF throw, line 2 is never parsed and
+      // we get the placeholder error. If it did not short-circuit, Jena would parse
+      // line 2 and fail with a RiotException — masking the placeholder message.
+      val dataNq =
+        s"""<http://rdfh.ch/9999/thing001/values/val001> <${KnoraBase}hasLicense> <$SentinelValue> <$DataGraph> .
+           |this line is not valid n-quads syntax and would crash the parser if reached
+           |""".stripMargin
+      ZIO.scoped {
+        validate(validOntologyNq, dataNq = dataNq, allowPlaceholder = false).map { result =>
+          assert(result)(isLeft) &&
+          assert(result.left.toOption.map(_.getMessage))(
+            isSome(containsString(s"placeholder sentinel '$SentinelValue' in object position")),
+          )
+        }
+      }
+    },
+  )
 }
