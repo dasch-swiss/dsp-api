@@ -44,21 +44,20 @@ case class CsvService() {
     writeToWriter(items, sw).as(sw.toString)
   }
 
-  def encodeRowToString[A](row: A)(using
+  def writeRowToString[A](row: A)(using
     rowBuilder: CsvRowBuilder[A],
     csvFormat: CSVFormat,
-  ): String = {
-    val sw     = new StringWriter()
-    val writer = CSVWriter.open(sw)
-    writer.writeRow(rowBuilder.values(row))
-    writer.close()
-    sw.toString
-  }
+  ): String = writeOneRow(rowBuilder.values(row))
 
-  def encodeHeaderToString[A](rowBuilder: CsvRowBuilder[A])(using csvFormat: CSVFormat): String = {
+  def writeHeaderToString[A](rowBuilder: CsvRowBuilder[A])(using csvFormat: CSVFormat): String =
+    writeOneRow(rowBuilder.header)
+
+  // Encodes a single CSV row (header or data) to a String, reusing the same tototoshi `CSVWriter` machinery and
+  // `CSVFormat` as `writeToString` so escaping, quoting, and the `\r\n` row terminator stay byte-identical.
+  private def writeOneRow(cells: Seq[Any])(using csvFormat: CSVFormat): String = {
     val sw     = new StringWriter()
     val writer = CSVWriter.open(sw)
-    writer.writeRow(rowBuilder.header)
+    writer.writeRow(cells)
     writer.close()
     sw.toString
   }

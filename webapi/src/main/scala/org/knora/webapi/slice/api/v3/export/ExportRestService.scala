@@ -37,16 +37,18 @@ final class ExportRestService(
       ontologyIri = resourceClassIri.ontologyIri
       _          <- ontologyService.findById(ontologyIri).orDie.someOrFail(NotFound(ontologyIri))
 
-      now   <- Clock.instant
-      stream = exportService.exportResources(
-                 project,
-                 resourceClassIri,
-                 properties,
-                 user,
-                 request.language,
-                 request.includeIris,
-                 request.includeArkUrls,
-               )
+      now    <- Clock.instant
+      stream <- exportService
+                  .exportResources(
+                    project,
+                    resourceClassIri,
+                    properties,
+                    user,
+                    request.language,
+                    request.includeIris,
+                    request.includeArkUrls,
+                  )
+                  .orDie
       contentDisposition =
         s"""attachment; filename="project_${shortcode.value}_resources_${resourceClassIri.name}_${now}.csv""""
     } yield (contentDisposition, stream)

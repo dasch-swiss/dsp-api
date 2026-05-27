@@ -16,7 +16,6 @@ import java.nio.charset.StandardCharsets
 
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.GoldenTest
-import org.knora.webapi.IRI
 import org.knora.webapi.Rendering
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
@@ -133,7 +132,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
                 includeIris = true,
                 includeArkUrls = false,
               )
-              .runCollect
+              .flatMap(_.runCollect)
           csv = new String(bytes.toArray, StandardCharsets.UTF_8)
         } yield assertGolden(csv, "basic")
       },
@@ -160,7 +159,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
                 includeIris = false,
                 includeArkUrls = false,
               )
-              .runCollect
+              .flatMap(_.runCollect)
           csv = new String(bytes.toArray, StandardCharsets.UTF_8)
         } yield assertGolden(csv, "includeIrisFalse")
       },
@@ -181,7 +180,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
                 includeIris = true,
                 includeArkUrls = false,
               )
-              .runCollect
+              .flatMap(_.runCollect)
           csv = new String(bytes.toArray, StandardCharsets.UTF_8)
         } yield assertGolden(csv, "superclassExport")
       },
@@ -208,7 +207,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
                 includeIris = false,
                 includeArkUrls = true,
               )
-              .runCollect
+              .flatMap(_.runCollect)
           csv = new String(bytes.toArray, StandardCharsets.UTF_8)
         } yield assertGolden(csv, "includeArkUrlsTrue")
       },
@@ -231,7 +230,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
                 includeIris = false,
                 includeArkUrls = false,
               )
-              .runCollect
+              .flatMap(_.runCollect)
           csv = new String(bytes.toArray, StandardCharsets.UTF_8)
         } yield assertGolden(csv, "withFootnotes")
       },
@@ -260,7 +259,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
                 includeIris = false,
                 includeArkUrls = false,
               )
-              .runCollect
+              .flatMap(_.runCollect)
           csv    = new String(bytes.toArray, StandardCharsets.UTF_8)
           lines  = csv.trim.split("\r\n").toList
           labels = lines.tail.map(line => line.split(",").last)
@@ -283,7 +282,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
                 includeIris = false,
                 includeArkUrls = false,
               )
-              .runCollect
+              .flatMap(_.runCollect)
           csv   = new String(bytes.toArray, StandardCharsets.UTF_8)
           lines = csv.trim.split("\r\n").toList
           // The "Resource IRI" column is always the first column. Two resources share the label "Mike"
@@ -292,6 +291,38 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
         } yield assertTrue(
           mikeIris == List("http://rdfh.ch/1612/ordering-Mike-1", "http://rdfh.ch/1612/ordering-Mike-2"),
         )
+      },
+      test("link-value labels resolve across batch boundaries") {
+        // Resource1 (TfZ6…) links to Resource2 (wQtV…) and vice versa. With batchSize = 1 each resource is its
+        // own batch, so a link target lives in a different batch than its source. The cross-batch link-label
+        // map (built once over all exported IRIs, not per batch) must still resolve each link to the target's
+        // label — a regression to a per-batch map would yield an empty link column here.
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                resourceClassIri,
+                List(
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
+                ),
+                user,
+                LanguageCode.EN,
+                includeIris = false,
+                includeArkUrls = false,
+                batchSize = 1,
+              )
+              .flatMap(_.runCollect)
+          csv          = new String(bytes.toArray, StandardCharsets.UTF_8)
+          lines        = csv.trim.split("\r\n").toList
+          resource1Row = lines.find(_.startsWith("http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA,")).getOrElse("")
+          resource2Row = lines.find(_.startsWith("http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w,")).getOrElse("")
+        } yield assertTrue(resource1Row.split(",").last == "Resource2") &&
+          assertTrue(resource2Row.split(",").last == "Resource1")
       },
     ).provide(
       ConstructResponseUtilV2.layer,
@@ -339,10 +370,8 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
     val stubFindResources: FindResourcesService = new FindResourcesService {
       def findResources(p: KnoraProject, c: Option[ResourceClassIri]): Task[Seq[ResourceIri]] =
         ZIO.succeed(Seq.empty)
-      def findResourceIrisOrderedByLabel(p: KnoraProject, c: ResourceClassIri): Task[Seq[ResourceIri]] =
-        ZIO.succeed(fakeIris)
-      def findLabelsFor(iris: Seq[ResourceIri]): Task[Map[IRI, String]] =
-        ZIO.succeed(Map.empty)
+      def findResourceIrisOrderedByLabel(p: KnoraProject, c: ResourceClassIri): Task[Seq[(ResourceIri, String)]] =
+        ZIO.succeed(fakeIris.map(iri => (iri, "")))
     }
 
     def mkExportService(
@@ -436,7 +465,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           exportService = mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf)
           result       <- exportService
                       .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
-                      .runDrain
+                      .flatMap(_.runDrain)
                       .exit
         } yield assertTrue(result.isFailure)
       },
@@ -454,10 +483,37 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           resultOpt      <-
             exportService
               .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
-              .take(1)
-              .runCollect
+              .flatMap(_.take(1).runCollect)
               .timeout(2.seconds)
         } yield assertTrue(resultOpt.isDefined) && assertTrue(resultOpt.get.nonEmpty)
+      },
+      test("setup failure surfaces as an effect failure before the stream is consumed") {
+        // Regression guard: setup (ordered-IRI fetch, link-labels, vocabularies, header) runs inside the returned
+        // Task, so a setup failure must fail the effect itself — observable WITHOUT draining the stream body. If
+        // setup were deferred into the ZStream, this failure would only appear after the 200 OK was committed,
+        // yielding a silently-truncated success instead of a 5xx.
+        val failure                                    = new RuntimeException("setup failure")
+        val failingFindResources: FindResourcesService = new FindResourcesService {
+          def findResources(p: KnoraProject, c: Option[ResourceClassIri]): Task[Seq[ResourceIri]] =
+            ZIO.succeed(Seq.empty)
+          def findResourceIrisOrderedByLabel(p: KnoraProject, c: ResourceClassIri): Task[Seq[(ResourceIri, String)]] =
+            ZIO.fail(failure)
+        }
+        for {
+          _              <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          project        <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          iriConverter   <- ZIO.service[IriConverter]
+          ontologyRepo   <- ZIO.service[OntologyRepo]
+          listsResponder <- ZIO.service[ListsResponder]
+          csvService     <- ZIO.service[CsvService]
+          sf             <- ZIO.service[StringFormatter]
+          readStub       <- mkReadStub((_, _) => ZIO.never)
+          exportService   =
+            ExportService(iriConverter, ontologyRepo, readStub, failingFindResources, listsResponder, csvService, sf)
+          exit <- exportService
+                    .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
+                    .exit
+        } yield assertTrue(exit.isFailure)
       },
     ).provide(
       AppConfig.layer,

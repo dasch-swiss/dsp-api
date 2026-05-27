@@ -144,7 +144,8 @@ final case class ExportService(
     language: LanguageCode,
     includeIris: Boolean,
     includeArkUrls: Boolean,
-  ): ZStream[Any, Throwable, Byte] = {
+    batchSize: Int = 500, // production value; overridable only so tests can force resources across batch boundaries
+  ): Task[ZStream[Any, Throwable, Byte]] = {
     case class StreamingExportContext(
       orderedIris: Seq[ResourceIri],
       linkLabels: Map[IRI, String],
@@ -156,8 +157,12 @@ final case class ExportService(
 
     val setup: Task[StreamingExportContext] =
       for {
-        orderedIris      <- findResources.findResourceIrisOrderedByLabel(project, classIri)
-        linkLabels       <- findResources.findLabelsFor(orderedIris)
+        orderedWithLabels <- findResources.findResourceIrisOrderedByLabel(project, classIri)
+        orderedIris        = orderedWithLabels.map(_._1)
+        // The ordered query already carries each resource's label, so the cross-batch link-label map is built
+        // from it directly — no second SPARQL round-trip. Link targets outside the exported class are absent
+        // here and fall back to "" in valueColumns, same as before.
+        linkLabels        = orderedWithLabels.map { case (iri, label) => iri.value -> label }.toMap
         propertyIriInfos <- propertyIriInfos(selectedProperties)
         labelSmartIri    <- iriConverter.asSmartIri(OntologyConstants.Rdfs.Label)
         propsWithInfos    = selectedProperties.map(p => (p, propertyIriInfos.get(p)))
@@ -165,12 +170,15 @@ final case class ExportService(
         rowBuilder        = makeRowBuilder(headers)
         rootVocabularies <- listsResponder.getLists(Some(Left(project.id)))
         vocabularies     <- ZIO.foreach(rootVocabularies.lists)(rootVocabularyLabels(_, language)).map(_.foldK)
-        headerBytes       = Chunk.fromArray(csvService.encodeHeaderToString(rowBuilder).getBytes(StandardCharsets.UTF_8))
+        headerBytes       = Chunk.fromArray(csvService.writeHeaderToString(rowBuilder).getBytes(StandardCharsets.UTF_8))
       } yield StreamingExportContext(orderedIris, linkLabels, propsWithInfos, vocabularies, rowBuilder, headerBytes)
 
-    ZStream.fromZIO(setup).flatMap { ctx =>
+    // `setup` runs eagerly as part of this Task so that failures during setup (ordered-IRI fetch, link-label
+    // fetch, vocabulary load, header encoding) surface to the caller *before* the response status is committed
+    // — i.e. a 5xx, not a `200 OK` with an empty/truncated body. Only per-batch failures after the first bytes
+    // have been flushed remain an inherent (unavoidable) mid-stream truncation.
+    setup.map { ctx =>
       val iriPosition: Map[ResourceIri, Int] = ctx.orderedIris.zipWithIndex.toMap
-      val batchSize                          = 500
       val parallelism                        = 5
 
       val batches: Seq[Seq[ResourceIri]] = ctx.orderedIris.grouped(batchSize).toSeq
@@ -201,7 +209,7 @@ final case class ExportService(
                       )
                     }
             rowBytes = rows.map { row =>
-                         csvService.encodeRowToString(row)(using ctx.rowBuilder).getBytes(StandardCharsets.UTF_8)
+                         csvService.writeRowToString(row)(using ctx.rowBuilder).getBytes(StandardCharsets.UTF_8)
                        }
           } yield Chunk.fromIterable(rowBytes).flatMap(Chunk.fromArray)
         }
@@ -210,9 +218,6 @@ final case class ExportService(
       ZStream.fromChunk(ctx.headerBytes) ++ rowsStream
     }
   }
-
-  def toCsv(csv: ExportedCsv): Task[String] =
-    ZIO.scoped(csvService.writeToString(csv.rows)(using csv.rowBuilder))
 
   private def makeRowBuilder(headers: List[String]): CsvRowBuilder[ExportedResource] =
     new CsvRowBuilder[ExportedResource] {
