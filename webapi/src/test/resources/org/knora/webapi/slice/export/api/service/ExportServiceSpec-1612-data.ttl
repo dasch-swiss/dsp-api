@@ -412,6 +412,27 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
         knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
         knora-base:isDeleted          false .
 
+# Two resources sharing the label "Mike" exercise the tie-break for identical labels.
+# Inserted in non-IRI-sorted order (Mike-2 before Mike-1) so the export must sort them by
+# resource IRI ascending (Mike-1 before Mike-2), not by triplestore insertion order.
+<http://rdfh.ch/1612/ordering-Mike-2>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#OrderingTestClass>;
+        rdfs:label                    "Mike";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2026-05-01T10:06:00.000000Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
+<http://rdfh.ch/1612/ordering-Mike-1>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#OrderingTestClass>;
+        rdfs:label                    "Mike";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2026-05-01T10:07:00.000000Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
 <http://rdfh.ch/1612/FootnoteResource/values/FootnoteTextVal/standoff/0>
         rdf:type                        standoff:StandoffRootTag;
         knora-base:standoffTagHasEnd    11;

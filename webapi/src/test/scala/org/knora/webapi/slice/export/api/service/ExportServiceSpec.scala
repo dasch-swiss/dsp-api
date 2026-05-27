@@ -264,7 +264,34 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           csv    = new String(bytes.toArray, StandardCharsets.UTF_8)
           lines  = csv.trim.split("\r\n").toList
           labels = lines.tail.map(line => line.split(",").last)
-        } yield assertTrue(labels == List("Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"))
+        } yield assertTrue(labels == List("Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Mike", "Mike"))
+      },
+      test("resources sharing a label are ordered by resource IRI") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                orderingTestClassIri,
+                List.empty,
+                user,
+                LanguageCode.EN,
+                includeIris = false,
+                includeArkUrls = false,
+              )
+              .runCollect
+          csv      = new String(bytes.toArray, StandardCharsets.UTF_8)
+          lines    = csv.trim.split("\r\n").toList
+          // The "Resource IRI" column is always the first column. Two resources share the label "Mike"
+          // and were inserted in reverse-IRI order; they must come out sorted by resource IRI ascending.
+          mikeIris = lines.tail.filter(_.endsWith(",Mike")).map(_.split(",").head)
+        } yield assertTrue(
+          mikeIris == List("http://rdfh.ch/1612/ordering-Mike-1", "http://rdfh.ch/1612/ordering-Mike-2"),
+        )
       },
     ).provide(
       ConstructResponseUtilV2.layer,
