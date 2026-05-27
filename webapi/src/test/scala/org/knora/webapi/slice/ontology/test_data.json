@@ -1,0 +1,768 @@
+[
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Empty"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testBoolean": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#BooleanValue",
+            "http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean": {
+                "@type": "http://www.w3.org/2001/XMLSchema#boolean",
+                "@value": true
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Bool True"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testBoolean": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#BooleanValue",
+            "http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean": {
+                "@type": "http://www.w3.org/2001/XMLSchema#boolean",
+                "@value": true
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Bool One"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testBoolean": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#BooleanValue",
+            "http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean": {
+                "@type": "http://www.w3.org/2001/XMLSchema#boolean",
+                "@value": false
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Bool Zero"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testColor": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#ColorValue",
+            "http://api.knora.org/ontology/knora-api/v2#colorValueAsColor": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "#00ff00"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Color"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testSubDate1": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "JULIAN"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "BCE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 600
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "BCE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 700
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Date"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testDecimalSimpleText": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#DecimalValue",
+            "http://api.knora.org/ontology/knora-api/v2#decimalValueAsDecimal": {
+                "@type": "http://www.w3.org/2001/XMLSchema#decimal",
+                "@value": "2.71"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Decimal"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testGeoname": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#GeonameValue",
+            "http://api.knora.org/ontology/knora-api/v2#geonameValueAsGeonameCode": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "1111111"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Geoname"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testIntegerSimpleText": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#IntValue",
+            "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": {
+                "@type": "http://www.w3.org/2001/XMLSchema#int",
+                "@value": "1"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Integer"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testListProp": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
+            "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
+                "@id": "http://rdfh.ch/lists/9999/WF8qwFbGQg228GJUlqOLzw"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "List"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassInheritedCardinality",
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Link Target"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testRichtext": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Text line 1 line2</text>"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": {
+                "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Richtext"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testRichtext": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Text</p></text>"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": {
+                "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Richtext"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testRichtext": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Text with an external link: <a href=\"https://www.google.com/\">Google</a></text>"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": {
+                "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Richtext"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testTextarea": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "Text line 1\n\nline 2"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Simpletext"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "Text"
+            }
+        },
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testTextarea": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "Text"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Simpletext"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": [
+            {
+                "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+                "http://api.knora.org/ontology/knora-api/v2#valueAsString": {
+                    "@type": "http://www.w3.org/2001/XMLSchema#string",
+                    "@value": "Text 1"
+                },
+                "http://api.knora.org/ontology/knora-api/v2#valueHasComment": {
+                    "@type": "http://www.w3.org/2001/XMLSchema#string",
+                    "@value": "comment"
+                }
+            },
+            {
+                "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+                "http://api.knora.org/ontology/knora-api/v2#valueAsString": {
+                    "@type": "http://www.w3.org/2001/XMLSchema#string",
+                    "@value": "Text 2"
+                },
+                "http://api.knora.org/ontology/knora-api/v2#valueHasComment": {
+                    "@type": "http://www.w3.org/2001/XMLSchema#string",
+                    "@value": "comment"
+                }
+            }
+        ],
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "same_comment_on_different_values"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testTimeValue": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TimeValue",
+            "http://api.knora.org/ontology/knora-api/v2#timeValueAsTimeStamp": {
+                "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
+                "@value": "2019-10-23T13:45:12.01-14:00"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Time"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testUriValue": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#UriValue",
+            "http://api.knora.org/ontology/knora-api/v2#uriValueAsUri": {
+                "@type": "http://www.w3.org/2001/XMLSchema#anyURI",
+                "@value": "https://dasch.swiss"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Uri"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testUriValue": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#UriValue",
+            "http://api.knora.org/ontology/knora-api/v2#uriValueAsUri": {
+                "@type": "http://www.w3.org/2001/XMLSchema#anyURI",
+                "@value": "https://dasch.swiss"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#valueHasComment": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "This is a comment to the value"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Comment on Value"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testSubDate1": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "JULIAN"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1900
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1800
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "date_full_JULIAN"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testSubDate1": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "GREGORIAN"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1900
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1800
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "date_full_GREGORIAN"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testSubDate1": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "ISLAMIC"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1900
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1800
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "date_full_ISLAMIC"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testSubDate1": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "GREGORIAN"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1800
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1800
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "date_start_end_is_the_same"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testSubDate1": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "GREGORIAN"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1900
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1800
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "date_yyyy_mm"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testSubDate1": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "GREGORIAN"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1900
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1800
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "date_yyyy"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testSubDate1": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "GREGORIAN"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1900
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1800
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "date_mixed_precision"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testSubDate1": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "GREGORIAN"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1800
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "CE"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": {
+                "@type": "http://www.w3.org/2001/XMLSchema#integer",
+                "@value": 1800
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "date_only_start"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testRichtext": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": {
+                "@type": "http://www.w3.org/2001/XMLSchema#string",
+                "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>This is a text with <a class=\"salsah-link\" href=\"http://rdfh.ch/9999/CV9Lea7hSESPWPuILr8dyw\">standoff</a>.</text>"
+            },
+            "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": {
+                "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Richtext"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testHasLinkToValue": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+            "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": {
+                "@id": "http://rdfh.ch/9999/CV9Lea7hSESPWPuILr8dyw"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Link Prop"
+        }
+    },
+    {
+        "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+        "http://0.0.0.0:3333/ontology/9999/onto/v2#testHasLinkToCardOneResourceValue": {
+            "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+            "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": {
+                "@id": "http://rdfh.ch/9999/CBeGfzZxRKmVcU3n5XkacQ"
+            }
+        },
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/DhTdTFEDQ6mJgQGSf5hsZQ"
+        },
+        "http://www.w3.org/2000/01/rdf-schema#label": {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "Link Prop"
+        }
+    }
+]
