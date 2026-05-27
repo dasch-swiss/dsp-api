@@ -284,8 +284,8 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
                 includeArkUrls = false,
               )
               .runCollect
-          csv      = new String(bytes.toArray, StandardCharsets.UTF_8)
-          lines    = csv.trim.split("\r\n").toList
+          csv   = new String(bytes.toArray, StandardCharsets.UTF_8)
+          lines = csv.trim.split("\r\n").toList
           // The "Resource IRI" column is always the first column. Two resources share the label "Mike"
           // and were inserted in reverse-IRI order; they must come out sorted by resource IRI ascending.
           mikeIris = lines.tail.filter(_.endsWith(",Mike")).map(_.split(",").head)
