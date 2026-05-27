@@ -29,7 +29,8 @@ final case class LicenseRepo(ref: Ref[Chunk[License]]) extends Repository[Licens
 
   override def findById(id: LicenseIri): Task[Option[License]] = ref.get.flatMap(visible).map(_.find(_.id == id))
   override def findAll(): Task[Chunk[License]]                 = ref.get.flatMap(visible)
-  def findRecommendedLicenses(): Task[Chunk[License]] = ref.get.flatMap(visible).map(_.filter(_.isRecommended.toBoolean))
+  def findRecommendedLicenses(): Task[Chunk[License]]          =
+    ref.get.flatMap(visible).map(_.filter(_.isRecommended.toBoolean))
 }
 
 object LicenseRepo {
