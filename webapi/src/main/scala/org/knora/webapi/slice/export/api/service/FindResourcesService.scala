@@ -97,7 +97,9 @@ final case class FindResourcesServiceLive(
       val projectGraph = projectService.getDataGraphForProject(project)
       val allClassIris = classIri.toInternalSchema.toIri +: subclasses.map(_.entityInfoContent.classIri.toIri)
       val valuesClause = allClassIris.map(iri => s"<$iri>").mkString(" ")
-      // String interpolation is used here because rdf4j SparqlBuilder does not support VALUES blocks or ORDER BY.
+      // String interpolation is used here because rdf4j SparqlBuilder does not support VALUES blocks.
+      // ?label is selected so findResourceIrisOrderedByLabel can sort in the JVM; Fuseki's ORDER BY
+      // tie-break for equal labels is not reproducible, so the authoritative sort happens in Scala.
       Select.gravsearch(
         s"""PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
            |SELECT DISTINCT ?$resourceIriVar ?$labelVar WHERE {
@@ -106,11 +108,13 @@ final case class FindResourcesServiceLive(
            |    OPTIONAL { ?$resourceIriVar rdfs:label ?$labelVar }
            |  }
            |  VALUES ?$classIriVar { $valuesClause }
-           |}
-           |ORDER BY (LCASE(STR(?$labelVar)))""".stripMargin,
+           |}""".stripMargin,
       )
     }
 
+  // Sort by (label, resourceIri) in the JVM. Label ordering is case-sensitive lexicographic, matching the
+  // pre-streaming Scala `.sortBy(_.label)`; resourceIri is the secondary key so resources sharing a label get a
+  // deterministic, reproducible order (Fuseki's ORDER BY does not guarantee a stable tie-break).
   def findResourceIrisOrderedByLabel(
     project: KnoraProject,
     classIri: ResourceClassIri,
@@ -118,15 +122,15 @@ final case class FindResourcesServiceLive(
     for {
       sparql <- buildClassQueryOrderedByLabel(project, classIri)
       rows   <- triplestore.query(sparql).map(_.results.bindings)
-      iris   <- ZIO.foreach(rows) { row =>
-                for {
-                  value <- ZIO.attempt(
-                             row.rowMap.getOrElse(resourceIriVar, throw new InconsistentDataException("")),
-                           )
-                  resourceIri <- ZIO.fromEither(ResourceIri.from(value)).mapError(InconsistentDataException(_))
-                } yield resourceIri
-              }
-    } yield iris
+      pairs  <- ZIO.foreach(rows) { row =>
+                 for {
+                   value <- ZIO.attempt(
+                              row.rowMap.getOrElse(resourceIriVar, throw new InconsistentDataException("")),
+                            )
+                   resourceIri <- ZIO.fromEither(ResourceIri.from(value)).mapError(InconsistentDataException(_))
+                 } yield (resourceIri, row.rowMap.getOrElse(labelVar, ""))
+               }
+    } yield pairs.sortBy { case (resourceIri, label) => (label, resourceIri.value) }.map(_._1)
 
   def findLabelsFor(iris: Seq[ResourceIri]): Task[Map[IRI, String]] =
     if (iris.isEmpty) ZIO.succeed(Map.empty)
