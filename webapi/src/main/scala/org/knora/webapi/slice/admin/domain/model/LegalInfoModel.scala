@@ -26,9 +26,11 @@ import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_SA_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_PDM_1_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.NOC_NC_1_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.OPEN_LICENCE_2_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.PLACEHOLDER
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.PUBLIC_DOMAIN
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.UNKNOWN
 import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec
+import org.knora.webapi.slice.common.PlaceholderIri
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.Value.StringValue
@@ -100,6 +102,7 @@ object LicenseIri                                                extends StringV
   val BORIS: LicenseIri            = LicenseIri("http://rdfh.ch/licenses/boris")
   val OPEN_LICENCE_2_0: LicenseIri = LicenseIri("http://rdfh.ch/licenses/open-licence-2.0")
   val NOC_NC_1_0: LicenseIri       = LicenseIri("http://rdfh.ch/licenses/noc-nc-1.0")
+  val PLACEHOLDER: LicenseIri      = LicenseIri(PlaceholderIri.instance.value)
 
   val BUILT_IN: Set[LicenseIri] =
     Set(
@@ -117,13 +120,14 @@ object LicenseIri                                                extends StringV
       BORIS,
       OPEN_LICENCE_2_0,
       NOC_NC_1_0,
+      PLACEHOLDER,
     )
 
   private def isLicenseIri(iri: String) = licenseIriRegEx.matches(iri) || BUILT_IN.map(_.value).contains(iri)
 
-  def from(str: String): Either[String, LicenseIri] = str match {
-    case str if !isLicenseIri(str) => Left("Invalid license IRI")
-    case _                         => Right(LicenseIri(str))
+  def from(value: String): Either[String, LicenseIri] = value match {
+    case value if !isLicenseIri(value) => Left(s"<$value> is not a valid license IRI")
+    case _                             => Right(LicenseIri(value))
   }
 
   def makeNew: LicenseIri = {
@@ -218,6 +222,12 @@ object License {
       NOC_NC_1_0,
       URI.create("http://rightsstatements.org/vocab/NoC-NC/1.0/"),
       "No Copyright - Non-Commercial Use Only",
+      IsDaschRecommended.No,
+    ),
+    License(
+      PLACEHOLDER,
+      URI.create(PLACEHOLDER.value),
+      "Placeholder License - Not a Real License only to be used when the real license is not known yet.",
       IsDaschRecommended.No,
     ),
   )

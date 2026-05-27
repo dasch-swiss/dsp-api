@@ -45,6 +45,7 @@ import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
@@ -496,12 +497,15 @@ final class ResourcesResponderV2(
         }
       (fileValueIri, gravsearchFileValueContent) = valueAndContent
 
-      // check if gravsearchFileValueContent represents a text file
-      _ <- ZIO.when(gravsearchFileValueContent.fileValue.internalMimeType != "text/plain") {
-             val msg =
-               s"Expected $fileValueIri to be a text file referring to a Gravsearch template, but it has MIME type ${gravsearchFileValueContent.fileValue.internalMimeType}"
-             ZIO.fail(BadRequestException(msg))
-           }
+      _ <- ZIO
+             .fromEither(
+               ResourcesResponderV2.validateGravsearchTemplate(
+                 gravsearchTemplateIri,
+                 fileValueIri,
+                 gravsearchFileValueContent,
+               ),
+             )
+             .mapError(BadRequestException.apply)
 
       gravsearchUrl: String =
         s"${appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
@@ -1719,4 +1723,24 @@ final class ResourcesResponderV2(
 
 object ResourcesResponderV2 {
   val layer = ZLayer.derive[ResourcesResponderV2]
+
+  /**
+   * Validates that a Gravsearch template file value is usable as a template source:
+   * not a placeholder, and with `text/plain` MIME.
+   */
+  def validateGravsearchTemplate(
+    gravsearchTemplateIri: ResourceIri,
+    fileValueIri: ValueIri,
+    content: TextFileValueContentV2,
+  ): Either[String, Unit] =
+    if (content.hasPlaceholderAsset)
+      Left(
+        s"Gravsearch template $gravsearchTemplateIri references a placeholder file value with no real asset yet",
+      )
+    else if (content.fileValue.internalMimeType != "text/plain")
+      Left(
+        s"Expected $fileValueIri to be a text file referring to a Gravsearch template, " +
+          s"but it has MIME type ${content.fileValue.internalMimeType}",
+      )
+    else Right(())
 }

@@ -10,6 +10,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
@@ -75,7 +76,7 @@ final case class ProjectsLegalInfoRestService(
   def enableLicense(user: User)(shortcode: Shortcode, licenseIri: LicenseIri): Task[Unit] =
     for {
       project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-      _       <- legalInfos.enableLicense(licenseIri, project)
+      _       <- legalInfos.enableLicense(licenseIri, project).mapError(BadRequestException.apply)
     } yield ()
 
   def disableLicense(user: User)(shortcode: Shortcode, licenseIri: LicenseIri): Task[Unit] =

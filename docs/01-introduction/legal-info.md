@@ -81,6 +81,11 @@ Notable **CC BY 4.0** (Attribution 4.0 International) and **CC BY-SA 4.0** (Attr
     - **Public Domain - Not Protected by Copyright**
         - Id: `http://rdfh.ch/licenses/public-domain`
         - URI: [http://rdfh.ch/licenses/public-domain](http://rdfh.ch/licenses/public-domain)
+    - **Placeholder License**
+        - Id: `urn:dasch:placeholder`
+        - URI: `urn:dasch:placeholder`
+        - Use of this license on a FileValue is gated by the
+          [`allow-placeholder` feature flag](../04-publishing-deployment/configuration.md#allow-placeholder).
 
 #### Other Licenses
 

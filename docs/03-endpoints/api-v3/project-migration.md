@@ -27,15 +27,9 @@ Requests from non-SystemAdmin users (e.g. project admins) are rejected with `403
 
 ## Feature Flag (Import Only)
 
-The import endpoints are gated behind the `allow-import-migration-bagit` feature flag.
+The import endpoints are gated behind the
+[`allow-import-migration-bagit` feature flag](../../04-publishing-deployment/configuration.md#allow-import-migration-bagit).
 When disabled, import endpoints return `404 Not Found`.
-
-The flag can be set via the environment variable `ALLOW_IMPORT_MIGRATION_BAGIT`
-or in `application.conf`:
-
-```
-app.features.allow-import-migration-bagit = true
-```
 
 Export endpoints are always available and not gated by a feature flag.
 

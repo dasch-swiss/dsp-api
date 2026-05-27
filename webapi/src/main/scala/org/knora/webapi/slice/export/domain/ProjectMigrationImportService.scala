@@ -57,7 +57,7 @@ final class ProjectMigrationImportService(
   dspIngestClient: DspIngestClient,
   groupService: KnoraGroupService,
   projectService: KnoraProjectService,
-  projectShaclValidator: ProjectMigrationImportShaclValidator,
+  projectImportValidator: ProjectMigrationImportValidator,
   storage: ProjectMigrationStorageService,
   triplestore: TriplestoreService,
   ontologyCache: OntologyCache,
@@ -125,10 +125,9 @@ final class ProjectMigrationImportService(
                      }
         _ <- ZIO.logInfo(s"$taskId: Admin data validation passed for project '$projectIri'")
 
-        // SHACL validates the original admin.nq (all user type declarations present)
-        _ <- ZIO.logInfo(s"$taskId: Starting shacl validation '$projectIri'")
-        _ <- projectShaclValidator.validate(ontologyFiles, dataFiles, projectIri)
-        _ <- ZIO.logInfo(s"$taskId: SHACL validation passed for project '$projectIri'")
+        _ <- ZIO.logInfo(s"$taskId: Starting import graph data validation '$projectIri'")
+        _ <- projectImportValidator.validate(ontologyFiles, dataFiles, projectIri)
+        _ <- ZIO.logInfo(s"$taskId: Graph data validation passed for project '$projectIri'")
 
         // Second parse of admin.nq: idempotent user handling rewrites user triples.
         _               <- ZIO.logInfo(s"$taskId: Starting user preparation for project '$projectIri'")
@@ -523,7 +522,7 @@ final class ProjectMigrationImportService(
 
 object ProjectMigrationImportService {
   val layer: URLayer[
-    DspIngestClient & KnoraGroupService & KnoraProjectService & ProjectMigrationImportShaclValidator &
+    DspIngestClient & KnoraGroupService & KnoraProjectService & ProjectMigrationImportValidator &
       ProjectMigrationStorageService & TriplestoreService & OntologyCache & KnoraUserService,
     ProjectMigrationImportService,
   ] = FilesystemDataTaskPersistence.importLayer >>> ZLayer.derive[ProjectMigrationImportService]

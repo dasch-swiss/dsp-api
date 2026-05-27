@@ -56,3 +56,76 @@ override any value set in the application configuration file:
   reloading of data over HTTP.
 - `-c`: Print the configuration at startup.
 - `--help`: Shows the help message with all startup flags.
+
+## Feature Flags
+
+Feature flags gate functionality that is not yet stable, is being rolled out,
+or is intentionally restricted on certain deployments. Each flag can be set
+via its environment variable or in `application.conf` under
+`app.features.<flag-name>`.
+
+| key in application.conf                               | environment variable                     | default value |
+|-------------------------------------------------------|------------------------------------------|---------------|
+| app.features.allow-erase-projects                     | ALLOW_ERASE_PROJECTS                     | false         |
+| app.features.trigger-compaction-after-project-erasure | TRIGGER_COMPACTION_AFTER_PROJECT_ERASURE | false         |
+| app.features.disable-last-modification-date-check     | DISABLE_LAST_MODIFICATION_DATE_CHECK     | false         |
+| app.features.allow-import-migration-bagit             | ALLOW_IMPORT_MIGRATION_BAGIT             | true          |
+| app.features.allow-placeholder                        | ALLOW_PLACEHOLDER                        | true          |
+
+### `allow-erase-projects`
+
+Controls whether the project erase endpoint is enabled.
+Erasing a project permanently removes all of its data from the triplestore
+and is irreversible; it requires SystemAdmin permission.
+
+When the flag is disabled, calls to the erase endpoint are rejected with
+`403 Forbidden` and the message
+`The feature to erase projects is not enabled.`
+
+### `trigger-compaction-after-project-erasure`
+
+Controls whether the triplestore is compacted after a project is erased.
+When enabled, a Fuseki compaction is triggered as the final step of the
+erase operation to reclaim disk space.
+
+Has no effect unless [`allow-erase-projects`](#allow-erase-projects) is
+also enabled.
+
+### `disable-last-modification-date-check`
+
+Disables the optimistic-concurrency check that compares the client-supplied
+`lastModificationDate` against the value stored in the triplestore on
+resource and ontology updates.
+
+When the flag is enabled, mismatched modification dates no longer raise an
+`EditConflictException`, so concurrent edits can overwrite each other
+silently. Intended for data migration or recovery scenarios only; leave it
+off for normal operation.
+
+### `allow-import-migration-bagit`
+
+Controls whether the project migration import endpoints are available.
+See [Project Migration Export/Import](../03-endpoints/api-v3/project-migration.md)
+for the endpoint reference.
+
+When the flag is disabled, import endpoints return `404 Not Found`.
+Export endpoints are always available and are not gated by this flag.
+
+### `allow-placeholder`
+
+Controls whether the Placeholder License
+(`urn:dasch:placeholder`) may be used on a `FileValue`.
+The Placeholder License is intended as a temporary placeholder while the
+actual license for a file is still being determined. See
+[License](../01-introduction/legal-info.md#license) for the broader context.
+
+When the flag is disabled, any FileValue with
+`licenseIri = urn:dasch:placeholder` is rejected by the
+legal-info validation with the error:
+
+```
+License urn:dasch:placeholder is the placeholder license and is not allowed on this server
+```
+
+This is checked at the server level — the placeholder license is rejected
+even if a project has explicitly enabled it.
