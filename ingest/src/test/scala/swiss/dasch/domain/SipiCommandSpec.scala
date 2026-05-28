@@ -5,9 +5,9 @@
 
 package swiss.dasch.domain
 
-import swiss.dasch.domain.SipiCommand.FormatArgument
-import swiss.dasch.domain.SipiCommand.QueryArgument
-import swiss.dasch.domain.SipiCommand.TopLeftArgument
+import swiss.dasch.domain.SipiCommand.ApplyTopLeft
+import swiss.dasch.domain.SipiCommand.Query
+import swiss.dasch.domain.SipiCommand.Transcode
 import zio.*
 import zio.nio.file.*
 import zio.test.*
@@ -16,30 +16,38 @@ object SipiCommandSpec extends ZIOSpecDefault {
 
   val spec: Spec[TestEnvironment with Scope, Nothing] =
     suite("SipiCommand")(
-      test("should render format command with --json") {
+      test("should render convert subcommand with --json for Transcode") {
         check(Gen.fromIterable(SipiImageFormat.all)) { format =>
           for {
-            cmd <- FormatArgument(format, Path("/tmp/example"), Path("/tmp/example2")).render()
+            cmd <- Transcode(format, Path("/tmp/example"), Path("/tmp/example2")).render()
           } yield assertTrue(
-            cmd == List("--json", "--format", format.toCliString, "--topleft", "/tmp/example", "/tmp/example2"),
+            cmd == List(
+              "convert",
+              "/tmp/example",
+              "/tmp/example2",
+              "--json",
+              "--format",
+              format.toCliString,
+              "--topleft",
+            ),
           )
         }
       },
-      test("should assemble query command without --json (mutex with --query)") {
+      test("should render query subcommand without --json") {
         for {
-          cmd <- QueryArgument(Path("/tmp/example")).render()
-        } yield assertTrue(cmd == List("--query", "/tmp/example"))
+          cmd <- Query(Path("/tmp/example")).render()
+        } yield assertTrue(cmd == List("query", "/tmp/example"))
       },
-      test("should assemble topleft command with --json") {
+      test("should render convert subcommand with --json --topleft for ApplyTopLeft") {
         for {
-          cmd <- TopLeftArgument(Path("/tmp/example"), Path("/tmp/example2")).render()
-        } yield assertTrue(cmd == List("--json", "--topleft", "/tmp/example", "/tmp/example2"))
+          cmd <- ApplyTopLeft(Path("/tmp/example"), Path("/tmp/example2")).render()
+        } yield assertTrue(cmd == List("convert", "/tmp/example", "/tmp/example2", "--json", "--topleft"))
       },
       test("emitsJson matches the commands that include --json in their argv") {
         assertTrue(
-          FormatArgument(SipiImageFormat.Jpx, Path("/a"), Path("/b")).emitsJson,
-          TopLeftArgument(Path("/a"), Path("/b")).emitsJson,
-          !QueryArgument(Path("/a")).emitsJson,
+          Transcode(SipiImageFormat.Jpx, Path("/a"), Path("/b")).emitsJson,
+          ApplyTopLeft(Path("/a"), Path("/b")).emitsJson,
+          !Query(Path("/a")).emitsJson,
         )
       },
     )

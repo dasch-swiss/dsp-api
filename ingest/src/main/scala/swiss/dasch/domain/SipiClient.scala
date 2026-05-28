@@ -5,9 +5,9 @@
 
 package swiss.dasch.domain
 
-import swiss.dasch.domain.SipiCommand.FormatArgument
-import swiss.dasch.domain.SipiCommand.QueryArgument
-import swiss.dasch.domain.SipiCommand.TopLeftArgument
+import swiss.dasch.domain.SipiCommand.ApplyTopLeft
+import swiss.dasch.domain.SipiCommand.Query
+import swiss.dasch.domain.SipiCommand.Transcode
 import swiss.dasch.infrastructure.CommandExecutor
 import swiss.dasch.infrastructure.ProcessOutput
 import zio.*
@@ -19,36 +19,50 @@ import java.io.IOException
 import java.time.temporal.ChronoUnit
 
 sealed trait SipiCommand {
-  def flag(): String
+
+  /** The Sipi v5 verb-noun subcommand name (e.g. "query", "convert"). */
+  def subcommand(): String
+
   def render(): UIO[List[String]]
 
   /**
-   * Whether this invocation emits the structured `--json` report on stdout.
-   * `--json` is mutually exclusive with `--salsah` and `--query` at parse time
-   * (see `sipi/src/sipi.cpp:647`), so `QueryArgument` stays false.
+   * Whether this invocation emits the structured `--json` report on stdout
+   * (`SipiReport` schema). Sipi v5's `convert` subcommand emits it for both
+   * success and error; `query`'s `--json` flag is documented but in v5.0.0 the
+   * success path still prints the human-readable text dump that
+   * `StillImageService` parses, so `Query` stays `false` to avoid
+   * routing through `runWithJsonReport`'s parse path.
    */
   def emitsJson: Boolean = false
 }
 
 object SipiCommand {
-  final case class QueryArgument(fileIn: Path) extends SipiCommand {
-    def flag(): String              = "--query"
+  final case class Query(fileIn: Path) extends SipiCommand {
+    def subcommand(): String        = "query"
     def render(): UIO[List[String]] =
-      fileIn.toAbsolutePath.orDie.map(abs => List(flag(), abs.toString))
+      fileIn.toAbsolutePath.orDie.map(abs => List(subcommand(), abs.toString))
   }
 
-  final case class FormatArgument(
+  final case class Transcode(
     outputFormat: SipiImageFormat,
     fileIn: Path,
     fileOut: Path,
   ) extends SipiCommand {
-    def flag(): String              = "--format"
+    def subcommand(): String        = "convert"
     override val emitsJson: Boolean = true
     def render(): UIO[List[String]] =
       (for {
         abs1 <- fileIn.toAbsolutePath
         abs2 <- fileOut.toAbsolutePath
-      } yield List("--json", flag(), outputFormat.toCliString, "--topleft", abs1.toString, abs2.toString)).orDie
+      } yield List(
+        subcommand(),
+        abs1.toString,
+        abs2.toString,
+        "--json",
+        "--format",
+        outputFormat.toCliString,
+        "--topleft",
+      )).orDie
   }
 
   /**
@@ -65,17 +79,17 @@ object SipiCommand {
    *
    * if fileOut is the same as fileIn, the file will be overwritten
    */
-  final case class TopLeftArgument(
+  final case class ApplyTopLeft(
     fileIn: Path,
     fileOut: Path,
   ) extends SipiCommand {
-    def flag(): String              = "--topleft"
+    def subcommand(): String        = "convert"
     override val emitsJson: Boolean = true
     def render(): UIO[List[String]] =
       (for {
         abs1 <- fileIn.toAbsolutePath
         abs2 <- fileOut.toAbsolutePath
-      } yield List("--json", flag(), abs1.toString, abs2.toString)).orDie
+      } yield List(subcommand(), abs1.toString, abs2.toString, "--json", "--topleft")).orDie
   }
 }
 
@@ -110,14 +124,14 @@ object SipiClient {
 
 final case class SipiClientLive(executor: CommandExecutor) extends SipiClient {
 
-  private val sipiPrefix = "/sipi/sipi"
+  private val sipiPrefix = "/sbin/sipi"
   private val timer      = Metric.timer("sipi_command_duration", ChronoUnit.MILLIS, Chunk.iterate(1.0, 6)(_ * 10))
 
   private def execute(command: SipiCommand): IO[IOException, ProcessOutput] =
     for {
       sipiParams <- command.render()
       cmd        <- executor.buildCommand(sipiPrefix, sipiParams: _*)
-      timerTagged = timer.tagged("command", command.flag())
+      timerTagged = timer.tagged("command", command.subcommand())
       out        <- (
                if (command.emitsJson) runWithJsonReport(cmd)
                else executor.executeOrFail(cmd)
@@ -154,17 +168,17 @@ final case class SipiClientLive(executor: CommandExecutor) extends SipiClient {
       }
 
   override def applyTopLeftCorrection(fileIn: Path, fileOut: Path): IO[IOException, ProcessOutput] =
-    execute(TopLeftArgument(fileIn, fileOut))
+    execute(ApplyTopLeft(fileIn, fileOut))
 
   override def transcodeImageFile(
     fileIn: Path,
     fileOut: Path,
     outputFormat: SipiImageFormat,
   ): IO[IOException, ProcessOutput] =
-    execute(FormatArgument(outputFormat, fileIn, fileOut))
+    execute(Transcode(outputFormat, fileIn, fileOut))
 
   override def queryImageFile(file: Path): IO[IOException, ProcessOutput] =
-    execute(QueryArgument(file))
+    execute(Query(file))
 }
 
 object SipiClientLive {

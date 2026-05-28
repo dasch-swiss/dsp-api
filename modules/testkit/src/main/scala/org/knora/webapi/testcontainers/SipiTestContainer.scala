@@ -7,6 +7,7 @@ package org.knora.webapi.testcontainers
 
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.wait.strategy.Wait
 import zio.URIO
 import zio.URLayer
 import zio.ZIO
@@ -16,6 +17,9 @@ import zio.http.URL
 
 import java.net.Inet6Address
 import java.net.InetAddress
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.attribute.PosixFilePermissions
 
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.testcontainers.TestContainerOps.toZio
@@ -75,17 +79,27 @@ object SipiTestContainer {
         BindMode.READ_ONLY,
       )
       .withFileSystemBind(imagesVolume.hostPath, imagesDir, BindMode.READ_WRITE)
+      .waitingFor(Wait.forHttp("/health").forPort(1024).forStatusCode(200))
 //      .withLogConsumer(frame => print("SIPI:" + frame.getUtf8String))
 
+  // Create the asset /tmp directory on the *host* before container start
+  // rather than via `execInContainer("mkdir", ...)`. Sipi v5.0.0's image
+  // is distroless and has no `mkdir`/`chmod` binary, so any in-container
+  // shell-out fails. The bind mount makes the host directory visible at
+  // /sipi/images/tmp inside the container.
   private val initSipi = ZLayer.fromZIO(
-    for {
-      container <- ZIO.service[SipiTestContainer]
-      _         <- ZIO.attemptBlocking {
-             container.execInContainer("mkdir", s"$imagesDir/tmp")
-             container.execInContainer("chmod", "777", s"$imagesDir/tmp")
-           }
-
-    } yield container,
+    ZIO.serviceWithZIO[SipiTestContainer] { container =>
+      for {
+        images <- ZIO.service[SharedVolumes.Images]
+        _      <- ZIO.attemptBlocking {
+               val tmp = Paths.get(images.hostPath, "tmp")
+               Files.createDirectories(
+                 tmp,
+                 PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxrwxrwx")),
+               )
+             }.orDie
+      } yield container
+    },
   )
 
   val layer: URLayer[SharedVolumes.Images, SipiTestContainer] = layerWithCustomEnv(Map.empty)
@@ -96,6 +110,6 @@ object SipiTestContainer {
       env.foreach { case (k, v) => imagesToContainer.withEnv(k, v) }
       imagesToContainer.toZio
     })
-    (container >>> initSipi).orDie
+    container >>> initSipi
   }
 }
