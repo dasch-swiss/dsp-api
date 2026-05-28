@@ -72,7 +72,8 @@ object SipiTestContainer {
       .withEnv("SIPI_EXTERNAL_PORT", "1024")
       .withEnv("SIPI_WEBAPI_HOSTNAME", SipiTestContainer.localHostAddress)
       .withEnv("SIPI_WEBAPI_PORT", "3333")
-      .withCommand("--config=/sipi/config/sipi.docker-config.lua")
+      // Sipi v5 requires an explicit verb-noun subcommand; `server` runs the IIIF server.
+      .withCommand("server", "--config=/sipi/config/sipi.docker-config.lua")
       .withClasspathResourceMapping(
         "/sipi.docker-config.lua",
         "/sipi/config/sipi.docker-config.lua",
