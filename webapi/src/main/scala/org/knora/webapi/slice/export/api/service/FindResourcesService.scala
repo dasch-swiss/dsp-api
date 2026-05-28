@@ -61,7 +61,9 @@ final case class FindResourcesServiceLive(
       rows <- triplestore.query(sparql).map(_.results.bindings)
       rows <- ZIO.foreach(rows) { row =>
                 for {
-                  value       <- ZIO.attempt(row.rowMap.getOrElse(resourceIriVar, throw new InconsistentDataException("")))
+                  value <- ZIO
+                             .fromOption(row.rowMap.get(resourceIriVar))
+                             .orElseFail(InconsistentDataException(""))
                   resourceIri <- ZIO
                                    .fromEither(ResourceIri.from(value))
                                    .mapError(InconsistentDataException(_))
@@ -125,9 +127,9 @@ final case class FindResourcesServiceLive(
       rows   <- triplestore.query(sparql).map(_.results.bindings)
       pairs  <- ZIO.foreach(rows) { row =>
                  for {
-                   value <- ZIO.attempt(
-                              row.rowMap.getOrElse(resourceIriVar, throw new InconsistentDataException("")),
-                            )
+                   value <- ZIO
+                              .fromOption(row.rowMap.get(resourceIriVar))
+                              .orElseFail(InconsistentDataException(""))
                    resourceIri <- ZIO.fromEither(ResourceIri.from(value)).mapError(InconsistentDataException(_))
                  } yield (resourceIri, row.rowMap.getOrElse(labelVar, ""))
                }

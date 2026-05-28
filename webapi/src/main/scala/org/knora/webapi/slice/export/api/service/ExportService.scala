@@ -17,7 +17,6 @@ import scala.collection.immutable.ListMap
 import scala.util.chaining.scalaUtilChainingOps
 
 import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -144,11 +143,14 @@ final case class ExportService(
     language: LanguageCode,
     includeIris: Boolean,
     includeArkUrls: Boolean,
-    batchSize: Int = 500, // production value; overridable only so tests can force resources across batch boundaries
+    // batchSize/parallelism are production values; overridable only so tests can force resources across batch
+    // boundaries and so the tuning IT (ExportStreamingIT) can sweep the matrix.
+    batchSize: Int = 500,
+    parallelism: Int = 5,
   ): Task[ZStream[Any, Throwable, Byte]] = {
     case class StreamingExportContext(
       orderedIris: Seq[ResourceIri],
-      linkLabels: Map[IRI, String],
+      linkLabels: Map[ResourceIri, String],
       propsWithInfos: List[(PropertyIri, Option[ReadPropertyInfoV2])],
       vocabularies: Map[String, String],
       rowBuilder: CsvRowBuilder[ExportedResource],
@@ -162,7 +164,7 @@ final case class ExportService(
         // The ordered query already carries each resource's label, so the cross-batch link-label map is built
         // from it directly — no second SPARQL round-trip. Link targets outside the exported class are absent
         // here and fall back to "" in valueColumns, same as before.
-        linkLabels        = orderedWithLabels.map { case (iri, label) => iri.value -> label }.toMap
+        linkLabels        = orderedWithLabels.toMap
         propertyIriInfos <- propertyIriInfos(selectedProperties)
         labelSmartIri    <- iriConverter.asSmartIri(OntologyConstants.Rdfs.Label)
         propsWithInfos    = selectedProperties.map(p => (p, propertyIriInfos.get(p)))
@@ -179,7 +181,6 @@ final case class ExportService(
     // have been flushed remain an inherent (unavoidable) mid-stream truncation.
     setup.map { ctx =>
       val iriPosition: Map[ResourceIri, Int] = ctx.orderedIris.zipWithIndex.toMap
-      val parallelism                        = 5
 
       val batches: Seq[Seq[ResourceIri]] = ctx.orderedIris.grouped(batchSize).toSeq
 
@@ -265,7 +266,7 @@ final case class ExportService(
     propsWithInfo: List[(PropertyIri, Option[ReadPropertyInfoV2])],
     includeIris: Boolean,
     includeArkUrls: Boolean,
-    linkLabels: Map[IRI, String],
+    linkLabels: Map[ResourceIri, String],
     vocabularies: Map[String, String],
   ): Task[ExportedResource] = {
     val arkEntryTask: Task[ListMap[String, String]] =
@@ -307,13 +308,13 @@ final case class ExportService(
   private def valueColumns(
     vcs: Seq[ValueContentV2],
     includeIris: Boolean,
-    linkLabels: Map[IRI, String],
+    linkLabels: Map[ResourceIri, String],
     vocabularies: Map[String, String],
   ): IntermediateValue =
     vcs.foldMap { vc =>
       vc match
         case lvc: LinkValueContentV2 =>
-          val label = lvc.nestedResource.map(_.label).orElse(linkLabels.get(lvc.referredResourceIri.value))
+          val label = lvc.nestedResource.map(_.label).orElse(linkLabels.get(lvc.referredResourceIri))
           LinkValue(
             List(label.getOrElse("")),
             List(stringFormat(vc.valueHasString)).filter(_ => includeIris),
@@ -347,7 +348,7 @@ final case class ExportService(
   }
 
   private def stringFormat(s: String): String =
-    s.replaceAll("<[^>]+>", "").replaceAll("", " ")
+    s.replaceAll("<[^>]+>", "").replaceAll("\u001e", " ")
 }
 
 object ExportService {
