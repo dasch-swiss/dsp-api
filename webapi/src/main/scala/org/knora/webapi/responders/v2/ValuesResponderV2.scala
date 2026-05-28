@@ -307,6 +307,7 @@ final class ValuesResponderV2(
           valueCreationDate = valueToCreate.valueCreationDate,
           valueCreator = requestingUser.id,
           valuePermissions = newValuePermissionLiteral,
+          valueHasOrder = valueToCreate.valueHasOrder,
         )
 
     } yield CreateValueResponseV2(
@@ -363,6 +364,7 @@ final class ValuesResponderV2(
     valueCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
+    valueHasOrder: Option[Int],
   ): ZIO[Any, Throwable, UnverifiedValueV2] =
     value match {
       case linkValueContent: LinkValueContentV2 =>
@@ -388,6 +390,7 @@ final class ValuesResponderV2(
           maybeValueCreationDate = valueCreationDate,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
+          valueHasOrder = valueHasOrder,
         )
     }
 
@@ -415,6 +418,7 @@ final class ValuesResponderV2(
     maybeValueCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
+    valueHasOrder: Option[Int],
   ) =
     for {
 
@@ -475,6 +479,7 @@ final class ValuesResponderV2(
              valueCreator = valueCreatorInternal,
              valuePermissions = valuePermissions,
              creationDate = creationDate,
+             valueHasOrder = valueHasOrder,
            )
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,

@@ -277,6 +277,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     def newValueVersionIriOption: IO[String, Option[String]] = ZIO.fromEither(r.objectUriOption(NewValueVersionIri))
     def valueCreationDateOption: IO[String, Option[Instant]] = ZIO.fromEither(r.objectInstantOption(ValueCreationDate))
     def valueHasUuidOption: IO[String, Option[UUID]]         = ZIO.fromEither(r.objectUuidOption(ValueHasUUID))
+    def valueHasOrderOption: IO[String, Option[Int]]         = ZIO.fromEither(r.objectIntOption(ValueHasOrder))
   }
 
   private object ValueResource {
@@ -432,17 +433,25 @@ final case class ApiComplexV2JsonLdRequestParser(
       .toSeq
     ZIO
       .foreach(valueStatements) { stmt =>
-        val valueResource = stmt.getObject.asResource()
-        val orderIdx      = readOrderIndex(valueResource)
+        val valueResource  = stmt.getObject.asResource()
+        val explicitOrder  = valueResource.objectIntOption(ValueHasOrder).toOption.flatten
+        val injectedOrder  = readOrderIndex(valueResource)
+        val resolvedOrder  = explicitOrder.orElse(injectedOrder)
         valueStatementAsContent(stmt, shortcode).map { case (propIri, value) =>
-          (propIri.smartIri, value.copy(orderHint = orderIdx))
+          (propIri.smartIri, value.copy(orderHint = resolvedOrder))
         }
       }
-      .map(
-        _.groupMap(_._1)(_._2).map { case (iri, values) =>
+      .flatMap { pairs =>
+        val grouped = pairs.groupMap(_._1)(_._2).map { case (iri, values) =>
           iri -> values.sortBy(_.orderHint.getOrElse(Int.MaxValue))
-        },
-      )
+        }
+        ZIO.foreachDiscard(grouped) { case (propIri, values) =>
+          val orders = values.flatMap(_.orderHint)
+          ZIO
+            .fail(s"Duplicate knora-api:valueHasOrder for property <$propIri> in the same request")
+            .when(orders.distinct.size != orders.size)
+        } *> ZIO.succeed(grouped)
+      }
 
   private def valueStatementAsContent(
     statement: Statement,
@@ -559,8 +568,14 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueUuid         <- v.valueHasUuidOption
         valueCreationDate <- v.valueCreationDateOption
         valuePermissions  <- v.hasPermissionsOption
-        valueContent      <- getValueContent(v, resourceIri.shortcode)
-        _                 <- ensurePlaceholderAllowed(Seq(valueContent))
+        valueHasOrder     <- v.valueHasOrderOption
+        _                 <- ZIO.foreach(valueHasOrder)(order =>
+                               ZIO
+                                 .fail(s"knora-api:valueHasOrder must be non-negative, got $order")
+                                 .when(order < 0),
+                             )
+        valueContent <- getValueContent(v, resourceIri.shortcode)
+        _            <- ensurePlaceholderAllowed(Seq(valueContent))
       } yield CreateValueV2(
         resourceIri,
         r.resourceClassSmartIri,
@@ -570,6 +585,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueUuid,
         valueCreationDate,
         valuePermissions,
+        valueHasOrder,
       )
     }
 

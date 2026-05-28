@@ -34,6 +34,7 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.resources.repo.service.value.queries.InsertValueQueryBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -255,21 +256,52 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     valueCreator: InternalIri,
     valuePermissions: String,
     creationDate: Instant,
+    valueHasOrder: Option[Int] = None,
   ): Task[Unit] =
-    triplestore.query(
-      InsertValueQueryBuilder.createValueQuery(
-        dataNamedGraph,
-        resourceIri,
-        propertyIri,
-        newValueIri,
-        Left(newValueUUID),
-        value,
-        linkUpdates,
-        valueCreator,
-        valuePermissions,
-        creationDate,
-      ),
-    )
+    for {
+      _ <- ZIO.foreach(valueHasOrder)(order => checkDuplicateOrder(resourceIri, propertyIri, order))
+      _ <- triplestore.query(
+             InsertValueQueryBuilder.createValueQuery(
+               dataNamedGraph,
+               resourceIri,
+               propertyIri,
+               newValueIri,
+               Left(newValueUUID),
+               value,
+               linkUpdates,
+               valueCreator,
+               valuePermissions,
+               creationDate,
+               valueHasOrder,
+             ),
+           )
+    } yield ()
+
+  private def checkDuplicateOrder(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): Task[Unit] = {
+    import dsp.errors.BadRequestException
+    import Rdf.literalOf
+    val existingValue    = variable("existingValue")
+    val resourcePattern  = iri(resourceIri.value).has(iri(propertyIri.toString), existingValue)
+    val valuePattern     = existingValue
+                             .has(KB.valueHasOrder, literalOf(order))
+                             .andHas(KB.isDeleted, literalOf(false))
+    val ask              = Ask(s"""ASK WHERE {
+                                  |  ${resourcePattern.getQueryString}
+                                  |  ${valuePattern.getQueryString}
+                                  |}""".stripMargin)
+    triplestore
+      .query(ask)
+      .flatMap(exists =>
+        ZIO
+          .fail(
+            BadRequestException(
+              s"A non-deleted value for property <$propertyIri> on resource <${resourceIri.value}> already has knora-api:valueHasOrder $order",
+            ),
+          )
+          .when(exists),
+      )
+      .unit
+  }
 
   def updateValue(
     dataNamedGraph: InternalIri,

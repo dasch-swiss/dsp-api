@@ -54,6 +54,7 @@ object InsertValueQueryBuilder {
     valueCreator: InternalIri,
     valuePermissions: String,
     creationDate: Instant,
+    valueHasOrder: Option[Int] = None,
   ): Update = {
     val value = valueInitial.toOntologySchema(InternalSchema)
 
@@ -114,6 +115,7 @@ object InsertValueQueryBuilder {
       currentVar,
       currentValue,
       currentValueUUID,
+      valueHasOrder,
     )
 
     val query = Queries
@@ -497,6 +499,7 @@ object InsertValueQueryBuilder {
     currentVar: Variable,
     currentValue: Option[InternalIri],
     currentValueUUID: Variable,
+    valueHasOrder: Option[Int],
   ): List[GraphPattern] = {
     val resourceClass = variable("resourceClass")
     val valueType     = variable("valueType")
@@ -642,28 +645,40 @@ object InsertValueQueryBuilder {
           ),
         )
       case None =>
-        // Create case: append at end using MAX(order) + 1
-        val maxOrder   = variable("maxOrder")
-        val order      = variable("order")
-        val otherValue = variable("otherValue")
-        List(
-          GraphPatterns
-            .select()
-            .select(
-              Expressions.max(order).as(maxOrder),
-              Expressions
-                .iff(
-                  Expressions.bound(maxOrder),
-                  Expressions.add(maxOrder, literalOf(1)),
-                  literalOf(0),
-                )
-                .as(nextOrder),
+        valueHasOrder match {
+          case Some(explicitOrder) =>
+            // Create case with explicit order: bind the supplied integer directly.
+            // rdf4j 5.2.2 does not support BIND(literal AS var); wrap in IF(true, ...) as equivalent.
+            List(
+              Expressions.bind(
+                Expressions.iff(literalOf(true), literalOf(explicitOrder), literalOf(0)),
+                nextOrder,
+              ),
             )
-            .where(
-              iri(resourceIri.value).has(iri(propertyIri.toString), otherValue),
-              otherValue.has(KB.valueHasOrder, order).andHas(KB.isDeleted, literalOf(false)),
-            ),
-        )
+          case None =>
+            // Create case: append at end using MAX(order) + 1
+            val maxOrder   = variable("maxOrder")
+            val order      = variable("order")
+            val otherValue = variable("otherValue")
+            List(
+              GraphPatterns
+                .select()
+                .select(
+                  Expressions.max(order).as(maxOrder),
+                  Expressions
+                    .iff(
+                      Expressions.bound(maxOrder),
+                      Expressions.add(maxOrder, literalOf(1)),
+                      literalOf(0),
+                    )
+                    .as(nextOrder),
+                )
+                .where(
+                  iri(resourceIri.value).has(iri(propertyIri.toString), otherValue),
+                  otherValue.has(KB.valueHasOrder, order).andHas(KB.isDeleted, literalOf(false)),
+                ),
+            )
+        }
     }
 
     List(
