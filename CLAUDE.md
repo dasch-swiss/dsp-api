@@ -196,6 +196,10 @@ For more details see `docs/development/dsp-api-sparql-queries.md`.
 When writing code, follow the conventions outlined in `docs/development/dsp-api-conventions.md` for consistency across
 the codebase. This includes structuring test suites, naming conventions, and using ZIO Test features effectively.
 
+See also `CONVENTIONS.md` (work-phase agent reference card — code/testing/commit conventions, with pointers into
+`docs/development/`) and `REVIEW.md` (review-phase checklist). Update these alongside `docs/development/` whenever a
+convention changes.
+
 ### Markdown Formatting
 
 After editing any markdown files, run the `/fix-markdownlint` skill to ensure proper formatting.
