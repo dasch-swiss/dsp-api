@@ -175,6 +175,11 @@ jobs:
           if echo "$CHANGED" | grep -q "^fuseki/"; then
             make docker-build-fuseki-image
           fi
+      - name: Build sipi image locally
+        # `SipiTestContainer` runs `daschswiss/knora-sipi:latest`. The registry
+        # version lags the PR; build the PR's version locally so the CLI surface
+        # matches (relevant across major Sipi base bumps, e.g. v4 -> v5).
+        run: make docker-build-sipi-image
       - name: Run end-to-end tests
         run: ./sbtx -v coverage "test-e2e/test" coverageAggregate
       - name: WebApi E2E Test Report
