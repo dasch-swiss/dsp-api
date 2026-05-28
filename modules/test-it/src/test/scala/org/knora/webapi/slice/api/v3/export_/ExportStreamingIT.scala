@@ -22,8 +22,8 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
  * Fuseki testcontainer and times the streaming pipeline across a `(batchSize, parallelism)` matrix.
  *
  * Two purposes:
- *   1. Tuning vehicle — emits per-combo timings so we can pick production defaults from data, not guesses.
- *   2. Regression guard — the matrix asserts that the production combo (5, 500) completes within a generous wall-time
+ *   1. Tuning vehicle -- emits per-combo timings so we can pick production defaults from data, not guesses.
+ *   2. Regression guard -- the matrix asserts that the production combo (5, 500) completes within a generous wall-time
  *      budget and produces the expected number of CSV rows.
  *
  * Excluded from default CI because it is multi-minute (Fuseki testcontainer startup + incunabula bulk-load + matrix).
@@ -41,8 +41,8 @@ object ExportStreamingIT extends E2EZSpec {
     batchSize   <- List(100, 250, 500, 1000, 2000)
   } yield (parallelism, batchSize)
 
-  // Generous regression-guard threshold — actual run is expected to be well under this. Tightening would invite
-  // flake on busy CI runners; the goal is to catch a 10× regression, not enforce a budget.
+  // Generous regression-guard threshold -- actual run is expected to be well under this. Tightening would invite
+  // flake on busy CI runners; the goal is to catch a 10x regression, not enforce a budget.
   private val regressionGuardWallTime: Duration = 5.minutes
 
   override val e2eSpec = suite("Export streaming tuning IT")(
