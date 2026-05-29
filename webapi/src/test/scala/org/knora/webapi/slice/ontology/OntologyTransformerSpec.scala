@@ -2,6 +2,7 @@ package org.knora.webapi.slice.ontology
 
 import org.apache.jena.riot.Lang
 import org.knora.webapi.core.TestAppConfig
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.jena.ModelOps
 import zio.ZIO
 import zio.test.*
@@ -25,24 +26,36 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
     ZIO.attempt(Files.deleteIfExists(p)).ignore.unit
 
   override def spec = suite("OntologyTransformerSpec")(
-    test("OntologyTransformer should read a JSON-LD file and produce an NQUAD file") {
+    test("OntologyTransformer should convert a resource with a boolean value") {
       val jsonLd = """
                      |[{
-                     |    "rdfs:label": "test",
                      |    "@id": "http://rdfh.ch/9999/Td9Y3a-cSjueXwn9pK1KYQ",
+                     |    "rdfs:label": "test",
+                     |    "http://0.0.0.0:3333/ontology/9999/onto/v2#testBoolean": {
+                     |      "@type": "http://api.knora.org/ontology/knora-api/v2#BooleanValue",
+                     |      "http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean": {
+                     |        "@type": "http://www.w3.org/2001/XMLSchema#boolean",
+                     |         "@value": true
+                     |       }
+                     |    },
                      |    "@context": {
-                     |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+                     |       "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
                      |    }
                      |}]""".stripMargin
 
       val expectedStr = """
-                          | PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-                          | PREFIX knora-base:  <http://www.knora.org/ontology/knora-base#>
-                          | PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                          | PREFIX rdfs:        <http://www.w3.org/2000/01/rdf-schema#>
+                          | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                          | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+                          | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+                          | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+                          | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                           |
                           | <http://rdfh.ch/9999/Td9Y3a-cSjueXwn9pK1KYQ>
-                          |         rdfs:label                    "test" .
+                          |         rdfs:label       "test" ;
+                          |         onto:testBoolean [
+                          |             a                          knora-base:BooleanValue ;
+                          |             knora-base:valueHasBoolean "true"^^xsd:boolean
+                          |         ] .
                           |""".stripMargin
 
       ZIO.scoped {
@@ -50,13 +63,13 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
           inputPath  <- ZIO.acquireRelease(writeTempFile(".jsonld", jsonLd).orDie)(deleteIfExists)
           outputPath <- transformer(_.toKnoraBase(inputPath))
           _          <- ZIO.addFinalizer(deleteIfExists(outputPath))
-          actualNQ   <- ZIO.attempt(new String(Files.readAllBytes(outputPath), StandardCharsets.UTF_8))
-          actual     <- ModelOps.from(actualNQ, Lang.NTRIPLES)
-          expected   <- ModelOps.fromTurtle(expectedStr)
-          iso         = actual.isIsomorphicWith(expected)
+          actualNQ <- ZIO.attempt(new String(Files.readAllBytes(outputPath), StandardCharsets.UTF_8))
+          actual   <- ModelOps.from(actualNQ, Lang.NTRIPLES)
+          expected <- ModelOps.fromTurtle(expectedStr)
+          iso       = actual.isIsomorphicWith(expected)
         } yield assertTrue(iso)
       }
     },
-  ).provide(OntologyTransformer.layer, TestAppConfig.layer())
+  ).provide(OntologyTransformer.layer, StringFormatter.test, TestAppConfig.layer())
 
 }

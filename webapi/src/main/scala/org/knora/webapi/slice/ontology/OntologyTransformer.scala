@@ -10,7 +10,6 @@ import org.apache.jena.riot.system.StreamRDFBase
 import org.apache.jena.riot.system.StreamRDFLib
 import org.apache.jena.sparql.core.Quad
 import zio.IO
-import zio.UIO
 import zio.ZIO
 import zio.ZLayer
 
@@ -21,39 +20,34 @@ import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 
-import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.StringFormatter
 
 final case class TransformerError(message: String)
 
-final class OntologyTransformer { self =>
-
-  private val extPrefix: UIO[String] = AppConfig.config(_.knoraApi.externalOntologyIriHostAndPort)
-  private val intPrefix: String      = "http://www.knora.org"
+final class OntologyTransformer(sf: StringFormatter) { self =>
 
   def toKnoraBase(rdf: Path): IO[TransformerError, Path] =
-    for {
-      prefix <- extPrefix
-      out    <- ZIO.attemptBlocking {
-               val nq = Files.createTempFile("onto-transformer-", ".nq")
-               val in = new BufferedInputStream(new FileInputStream(rdf.toFile))
-               try {
-                 val os = new BufferedOutputStream(new FileOutputStream(nq.toFile))
-                 try {
-                   val writer = StreamRDFLib.writer(os)
-                   val sink   = rewritingSink(writer, prefix, intPrefix)
-                   sink.start()
-                   try RDFParser.source(in).lang(Lang.JSONLD).parse(sink)
-                   finally sink.finish()
-                 } finally os.close()
-               } finally in.close()
-               nq
-             }
-               .mapError(e => TransformerError(s"Failed to transform RDF: ${e.getMessage}"))
-    } yield out
+    ZIO
+      .attemptBlocking {
+        val nq = Files.createTempFile("onto-transformer-", ".nq")
+        val in = new BufferedInputStream(new FileInputStream(rdf.toFile))
+        try {
+          val os = new BufferedOutputStream(new FileOutputStream(nq.toFile))
+          try {
+            val writer = StreamRDFLib.writer(os)
+            val sink   = rewritingSink(writer)
+            sink.start()
+            try RDFParser.source(in).lang(Lang.JSONLD).parse(sink)
+            finally sink.finish()
+          } finally os.close()
+        } finally in.close()
+        nq
+      }
+      .mapError(e => TransformerError(s"Failed to transform RDF: ${e.getMessage}"))
 
-  private def rewritingSink(downstream: StreamRDF, fromPrefix: String, toPrefix: String): StreamRDF = {
+  private def rewritingSink(downstream: StreamRDF): StreamRDF = {
     def rewriteUri(uri: String): String =
-      if (uri.startsWith(fromPrefix)) toPrefix + uri.substring(fromPrefix.length) else uri
+      if (uri != null) sf.toSmartIri(uri).toInternalSchema.toString else uri
 
     def rewriteNode(n: Node): Node =
       if (n != null && n.isURI) NodeFactory.createURI(rewriteUri(n.getURI)) else n
@@ -81,5 +75,5 @@ final class OntologyTransformer { self =>
 }
 
 object OntologyTransformer {
-  val layer: ZLayer[Any, Nothing, OntologyTransformer] = ZLayer.derive[OntologyTransformer]
+  val layer: ZLayer[StringFormatter, Nothing, OntologyTransformer] = ZLayer.derive[OntologyTransformer]
 }
