@@ -4083,6 +4083,53 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           .flatMap(_.assert200)
           .as(assertCompletes)
       },
+      test("PUT /v2/values with knora-api:valueHasOrder in body is silently ignored: returns 200") {
+        val resourceIri: IRI = AThing.iri
+        for {
+          // Create a value first so we have a value IRI to update
+          createJson <-
+            ZIO.succeed(
+              s"""{
+                 |  "@id" : "$resourceIri",
+                 |  "@type" : "anything:Thing",
+                 |  "anything:hasInteger" : {
+                 |    "@type" : "knora-api:IntValue",
+                 |    "knora-api:intValueAsInt" : 77
+                 |  },
+                 |  "@context" : {
+                 |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                 |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                 |  }
+                 |}""".stripMargin,
+            )
+          createResponse <- TestApiClient.postJsonLdDocument(uri"/v2/values", createJson, anythingUser1).flatMap(_.assert200)
+          valueIri       <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          // PUT the value including valueHasOrder — must be silently ignored, returning 200
+          putJson <-
+            ZIO.succeed(
+              s"""{
+                 |  "@id" : "$resourceIri",
+                 |  "@type" : "anything:Thing",
+                 |  "anything:hasInteger" : {
+                 |    "@id" : "$valueIri",
+                 |    "@type" : "knora-api:IntValue",
+                 |    "knora-api:intValueAsInt" : 78,
+                 |    "knora-api:valueHasOrder" : {
+                 |      "@type" : "xsd:integer",
+                 |      "@value" : 99
+                 |    }
+                 |  },
+                 |  "@context" : {
+                 |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                 |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                 |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+                 |  }
+                 |}""".stripMargin,
+            )
+          _ <- TestApiClient.putJsonLdDocument(uri"/v2/values", putJson, anythingUser1).flatMap(_.assert200)
+        } yield assertCompletes
+      },
     ),
     suite("PUT /v2/values/order")(
       test("successfully reorder 3 values (reverse order)") {

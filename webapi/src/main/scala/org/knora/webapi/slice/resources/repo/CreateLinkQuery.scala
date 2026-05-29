@@ -147,11 +147,7 @@ object CreateLinkQuery extends QueryBuilderHelper {
       val orderPattern: GraphPattern =
         valueHasOrder match {
           case Some(explicitOrder) =>
-            // rdf4j 5.2.2 does not support BIND(literal AS var); wrap in IF(true, ...) as equivalent.
-            Expressions.bind(
-              Expressions.iff(literalOf(true), literalOf(explicitOrder), literalOf(0)),
-              nextOrder,
-            )
+            bindExplicitOrder(explicitOrder, nextOrder)
           case None =>
             val order      = variable("order")
             val maxOrder   = variable("maxOrder")

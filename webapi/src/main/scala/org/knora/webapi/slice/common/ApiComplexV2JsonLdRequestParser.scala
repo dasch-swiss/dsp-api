@@ -392,6 +392,9 @@ final case class ApiComplexV2JsonLdRequestParser(
    * switch is disabled on this deployment. Reads are never gated; this check
    * applies only to create/update of file values.
    */
+  private def validateNonNegativeOrder(order: Int): IO[String, Unit] =
+    ZIO.fail(s"knora-api:valueHasOrder must be non-negative, got $order").when(order < 0).unit
+
   private def ensurePlaceholderAllowed(values: Iterable[ValueContentV2]): IO[String, Unit] =
     val offending = values.toList.flatMap {
       case fvc: FileValueContentV2 => fvc.fileValue.placeholderFields
@@ -435,11 +438,8 @@ final case class ApiComplexV2JsonLdRequestParser(
       .foreach(valueStatements) { stmt =>
         val valueResource = stmt.getObject.asResource()
         val explicitOrder = valueResource.objectIntOption(ValueHasOrder).toOption.flatten
-        val injectedOrder = readOrderIndex(valueResource)
-        val resolvedOrder = explicitOrder.orElse(injectedOrder)
-        ZIO
-          .fail(s"knora-api:valueHasOrder must be non-negative, got ${explicitOrder.get}")
-          .when(explicitOrder.exists(_ < 0)) *>
+        val resolvedOrder = explicitOrder.orElse(readOrderIndex(valueResource))
+        ZIO.foreach(explicitOrder)(validateNonNegativeOrder) *>
           valueStatementAsContent(stmt, shortcode).map { case (propIri, value) =>
             (propIri.smartIri, value.copy(orderHint = resolvedOrder))
           }
@@ -571,12 +571,8 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueUuid         <- v.valueHasUuidOption
         valueCreationDate <- v.valueCreationDateOption
         valuePermissions  <- v.hasPermissionsOption
-        valueHasOrder     <- v.valueHasOrderOption
-        _                 <- ZIO.foreach(valueHasOrder)(order =>
-               ZIO
-                 .fail(s"knora-api:valueHasOrder must be non-negative, got $order")
-                 .when(order < 0),
-             )
+        valueHasOrder <- v.valueHasOrderOption
+        _             <- ZIO.foreach(valueHasOrder)(validateNonNegativeOrder)
         valueContent <- getValueContent(v, resourceIri.shortcode)
         _            <- ensurePlaceholderAllowed(Seq(valueContent))
       } yield CreateValueV2(

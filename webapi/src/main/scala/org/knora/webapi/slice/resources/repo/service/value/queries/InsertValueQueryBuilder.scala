@@ -13,7 +13,6 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.Bind
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
@@ -33,6 +32,7 @@ import scala.util.chaining.scalaUtilChainingOps
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.InternalSchema
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagAttributeV2
@@ -42,7 +42,7 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object InsertValueQueryBuilder {
+object InsertValueQueryBuilder extends QueryBuilderHelper {
   def createValueQuery(
     dataNamedGraph: InternalIri,
     resourceIri: InternalIri,
@@ -647,14 +647,7 @@ object InsertValueQueryBuilder {
       case None =>
         valueHasOrder match {
           case Some(explicitOrder) =>
-            // Create case with explicit order: bind the supplied integer directly.
-            // rdf4j 5.2.2 does not support BIND(literal AS var); wrap in IF(true, ...) as equivalent.
-            List(
-              Expressions.bind(
-                Expressions.iff(literalOf(true), literalOf(explicitOrder), literalOf(0)),
-                nextOrder,
-              ),
-            )
+            List(bindExplicitOrder(explicitOrder, nextOrder))
           case None =>
             // Create case: append at end using MAX(order) + 1
             val maxOrder   = variable("maxOrder")
