@@ -32,6 +32,7 @@ import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
+import org.knora.webapi.messages.OntologyConstants
 
 /**
  * Represents a IIIF manifest for the images that are `knora-base:isPartOf` the specified
@@ -465,6 +466,17 @@ case class ReadResourceV2(
     deletionInfo
       .map(_ => asDeletedResource(versionDate))
       .getOrElse(if (showDeletedValues) this else withDeletedValues(versionDate))
+
+  def isRegionOfValueReferredIri(implicit sf: StringFormatter): Option[ResourceIri] = {
+    val isRegionOfValue = PropertyIri.unsafeFrom(OntologyConstants.KnoraBase.IsRegionOfValue.toSmartIri)
+
+    values
+      .get(isRegionOfValue.smartIri)
+      .toList
+      .flatten
+      .collect { case rlv: ReadLinkValueV2 => rlv.valueContent.referredResourceIri }
+      .headOption
+  }
 }
 
 /**
@@ -846,6 +858,10 @@ case class ReadResourcesSequenceV2(
   }
 
   def resourcesMap: Map[ResourceIri, ReadResourceV2] = resources.map(r => (r.resourceIri, r)).toMap
+}
+
+object ReadResourcesSequenceV2 {
+  val Empty: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(Seq())
 }
 
 /**

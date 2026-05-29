@@ -219,6 +219,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "anything:hasRegionPreview"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "anything:isPartOfOtherThing"
                     },
                     "owl:minCardinality": 0
@@ -410,6 +417,13 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "anything:hasTimeStamp"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasRegionPreview"
                     },
                     "owl:minCardinality": 0
                 },
@@ -992,6 +1006,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "anything:hasRegionPreview"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "anything:isPartOfOtherThing"
                     },
                     "owl:minCardinality": 0
@@ -1335,6 +1356,20 @@
                 "@id": "xsd:string"
             },
             "@id": "anything:hasPictureTitle"
+        },
+        {
+            "rdfs:label": "has region preview",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "@id": "anything:hasRegionPreview"
         },
         {
             "rdfs:label": "Integer",

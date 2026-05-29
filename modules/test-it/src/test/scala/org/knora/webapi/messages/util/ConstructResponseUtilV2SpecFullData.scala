@@ -831,4 +831,47 @@ object ConstructResponseUtilV2SpecFullData {
     hiddenResourceIris = Set(),
     mayHaveMoreResults = false,
   )
+
+  val expectedReadResourceForThingWithRegionPreviewValue = ReadResourcesSequenceV2(
+    resources = Vector(
+      ReadResourceV2(
+        versionDate = None,
+        label = "thing with region preview value",
+        resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-region-preview"),
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+        resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+        creationDate = Instant.parse("2025-05-11T10:00:00.000000Z"),
+        userPermission = Permission.ObjectAccess.ChangeRights,
+        values = Map(
+          "http://www.knora.org/ontology/0001/anything#hasRegionPreview".toSmartIri -> Vector(
+            ReadOtherValueV2(
+              valueContent = RegionPreviewValueContentV2(
+                ontologySchema = InternalSchema,
+                regionIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w"),
+                iiifUrl = Some("http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/512,256/0/default.jpg"),
+              ),
+              valueIri = ValueIri.unsafeFrom(
+                "http://rdfh.ch/0001/thing-with-region-preview/values/XcRF1s0uSXemB5YXeC7djw",
+              ),
+              permissions =
+                "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+              valueCreationDate = Instant.parse("2025-05-11T10:00:00.000000Z"),
+              attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+              previousValueIri = None,
+              valueHasUUID = UuidUtil.decode("XcRF1s0uSXemB5YXeC7djw"),
+              userPermission = Permission.ObjectAccess.ChangeRights,
+              deletionInfo = None,
+            ),
+          ),
+        ),
+        projectADM = SharedTestDataADM.anythingProject,
+        lastModificationDate = None,
+        deletionInfo = None,
+      ),
+    ),
+    hiddenResourceIris = Set(),
+    mayHaveMoreResults = false,
+  )
 }

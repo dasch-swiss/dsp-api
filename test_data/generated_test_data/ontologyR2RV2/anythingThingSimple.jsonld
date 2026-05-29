@@ -166,6 +166,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "anything:hasRegionPreview"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "anything:isPartOfOtherThing"
                     },
                     "owl:minCardinality": 0
