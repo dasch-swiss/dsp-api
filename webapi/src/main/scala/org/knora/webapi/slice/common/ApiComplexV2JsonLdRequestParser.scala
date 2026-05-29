@@ -609,6 +609,7 @@ final case class ApiComplexV2JsonLdRequestParser(
           case StillImageVectorFileValue   => withFileInfo(v, StillImageVectorFileValueContentV2.from)
           case TextValue                   => TextValueContentV2.from(v.r).provide(ZLayer.succeed(standoffMappingService))
           case TextFileValue               => withFileInfo(v, TextFileValueContentV2.from)
+          case RegionPreviewValue          => ZIO.fromEither(RegionPreviewValueContentV2.from(v.r))
           case TimeValue                   => ZIO.fromEither(TimeValueContentV2.from(v.r))
           case UriValue                    => ZIO.fromEither(UriValueContentV2.from(v.r))
           case unsupported                 => ZIO.fail(s"Unsupported value type: $unsupported")

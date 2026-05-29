@@ -491,6 +491,8 @@ final class CreateResourceV2Handler(
                   ZIO.succeed(OtherFileValueInfo(fileValue))
                 case LinkValueContentV2(_, referredResourceIri, _, _, _, _) =>
                   ZIO.succeed(LinkValueInfo(InternalIri(referredResourceIri.value)))
+                case RegionPreviewValueContentV2(_, regionIri, _, _) =>
+                  ZIO.succeed(RegionPreviewValueInfo(InternalIri(regionIri.value)))
                 case _: DeletedValueContentV2 => ZIO.fail(BadRequestException("Deleted values cannot be created"))
 
           } yield ValueInfo(

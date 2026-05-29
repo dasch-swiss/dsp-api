@@ -20,7 +20,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v51" .
+    :ontologyVersion   "knora-base v52" .
 
 
 #################################################################
@@ -331,6 +331,19 @@
     :isEditable             true ;
     :objectClassConstraint  :GeomValue ;
     :subjectClassConstraint :Region .
+
+
+###  http://www.knora.org/ontology/knora-base#hasRegionPreview
+
+:hasRegionPreview
+    rdf:type                owl:ObjectProperty ;
+    rdfs:subPropertyOf      :hasValue ;
+    rdfs:label              "has Region preview"@en ;
+    rdfs:comment            "Points to a region"@en ;
+    :isEditable             true ;
+    salsah-gui:guiElement   salsah-gui:RegionPreview ;
+    :objectClassConstraint  :RegionPreviewValue ;
+    :subjectClassConstraint :Resource .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasLinkTo
@@ -2792,3 +2805,39 @@
     rdfs:comment "Indicates the type of text value."@en ;
     :subjectClassConstraint :TextValue ;
     :objectClassConstraint  :TextValueType .
+
+
+###  http://www.knora.org/ontology/knora-base#RegionPreviewValue
+
+:RegionPreviewValue
+    rdf:type        owl:Class ;
+    rdfs:subClassOf :Value,
+                    [ rdf:type        owl:Restriction ;
+                      owl:onProperty  :isRegionPreviewOf ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "region preview value"@en ;
+    rdfs:comment    "Represents a direct reference to a Region resource, without link-value reification."@en .
+
+
+###  http://www.knora.org/ontology/knora-base#isRegionPreviewOf
+
+:isRegionPreviewOf
+    rdf:type                owl:ObjectProperty ;
+    rdfs:label              "is region preview of"@en ;
+    rdfs:comment            "Points directly to the Region that this preview value represents."@en ;
+    rdfs:subPropertyOf      :valueHas ;
+    :subjectClassConstraint :RegionPreviewValue ;
+    :objectClassConstraint  :Region .
+
+
+###  http://www.knora.org/ontology/knora-base#iiifUrl
+
+# This property is generated on the fly and not present in the database
+
+:iiifUrl
+    rdf:type                owl:ObjectProperty ;
+    rdfs:label              "is an IIIF URL"@en ;
+    rdfs:comment            "IIIF URL for the region preview"@en ;
+    rdfs:subPropertyOf      :valueHas ;
+    :subjectClassConstraint :RegionPreviewValue ;
+    :objectDatatypeConstraint  xsd:string .
