@@ -27,22 +27,21 @@ final case class TransformerError(message: String)
 final class OntologyTransformer(sf: StringFormatter) { self =>
 
   def toKnoraBase(rdf: Path): IO[TransformerError, Path] =
-    ZIO
-      .attemptBlocking {
-        val nq = Files.createTempFile("onto-transformer-", ".nq")
-        val in = new BufferedInputStream(new FileInputStream(rdf.toFile))
+    ZIO.attemptBlocking {
+      val nq = Files.createTempFile("onto-transformer-", ".nq")
+      val in = new BufferedInputStream(new FileInputStream(rdf.toFile))
+      try {
+        val os = new BufferedOutputStream(new FileOutputStream(nq.toFile))
         try {
-          val os = new BufferedOutputStream(new FileOutputStream(nq.toFile))
-          try {
-            val writer = StreamRDFLib.writer(os)
-            val sink   = rewritingSink(writer)
-            sink.start()
-            try RDFParser.source(in).lang(Lang.JSONLD).parse(sink)
-            finally sink.finish()
-          } finally os.close()
-        } finally in.close()
-        nq
-      }
+          val writer = StreamRDFLib.writer(os)
+          val sink   = rewritingSink(writer)
+          sink.start()
+          try RDFParser.source(in).lang(Lang.JSONLD).parse(sink)
+          finally sink.finish()
+        } finally os.close()
+      } finally in.close()
+      nq
+    }
       .mapError(e => TransformerError(s"Failed to transform RDF: ${e.getMessage}"))
 
   private def rewritingSink(downstream: StreamRDF): StreamRDF = {
