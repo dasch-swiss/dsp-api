@@ -381,8 +381,18 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       listsResponder: ListsResponder,
       csvService: CsvService,
       sf: StringFormatter,
+      appConfig: AppConfig,
     ): ExportService =
-      ExportService(iriConverter, ontologyRepo, readResources, stubFindResources, listsResponder, csvService, sf)
+      ExportService(
+        iriConverter,
+        ontologyRepo,
+        readResources,
+        stubFindResources,
+        listsResponder,
+        csvService,
+        sf,
+        appConfig,
+      )
 
     def mkReadStub(
       onCall: (Int, Seq[ResourceIri]) => Task[ReadResourcesSequenceV2],
@@ -448,6 +458,33 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       }
 
     suite("streaming behavior")(
+      test("batchSize defaults to the configured app.export.batch-size") {
+        // Fix-confirmation for the review point that batch size must be a config value, not a hard-coded literal.
+        // stubFindResources yields 600 IRIs; with the configured batch size of 100 the export must issue 6 batches
+        // of 100 (the old hard-coded 500 would have produced batches of 500 + 100). exportResources is called
+        // WITHOUT an explicit batchSize, so the value can only come from AppConfig.
+        for {
+          _              <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          project        <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          iriConverter   <- ZIO.service[IriConverter]
+          ontologyRepo   <- ZIO.service[OntologyRepo]
+          listsResponder <- ZIO.service[ListsResponder]
+          csvService     <- ZIO.service[CsvService]
+          sf             <- ZIO.service[StringFormatter]
+          appConfig      <- ZIO.service[AppConfig]
+          configured      = appConfig.copy(`export` = appConfig.`export`.copy(batchSize = 100))
+          batchSizes     <- Ref.make(Chunk.empty[Int])
+          readStub       <- mkReadStub { (_, iris) =>
+                        batchSizes.update(_ :+ iris.size).as(ReadResourcesSequenceV2(Seq.empty))
+                      }
+          exportService =
+            mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf, configured)
+          _ <- exportService
+                 .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
+                 .flatMap(_.runDrain)
+          sizes <- batchSizes.get
+        } yield assertTrue(sizes == Chunk.fill(6)(100))
+      },
       test("mid-stream batch failure propagates through stream error channel") {
         val failure = new RuntimeException("mid-stream batch failure")
         for {
@@ -458,12 +495,14 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           listsResponder <- ZIO.service[ListsResponder]
           csvService     <- ZIO.service[CsvService]
           sf             <- ZIO.service[StringFormatter]
+          appConfig      <- ZIO.service[AppConfig]
           readStub       <- mkReadStub { (n, _) =>
                         if n == 0 then ZIO.succeed(ReadResourcesSequenceV2(Seq.empty))
                         else ZIO.fail(failure)
                       }
-          exportService = mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf)
-          result       <- exportService
+          exportService =
+            mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf, appConfig)
+          result <- exportService
                       .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
                       .flatMap(_.runDrain)
                       .exit
@@ -478,9 +517,11 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           listsResponder <- ZIO.service[ListsResponder]
           csvService     <- ZIO.service[CsvService]
           sf             <- ZIO.service[StringFormatter]
+          appConfig      <- ZIO.service[AppConfig]
           readStub       <- mkReadStub((_, _) => ZIO.never)
-          exportService   = mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf)
-          resultOpt      <-
+          exportService   =
+            mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf, appConfig)
+          resultOpt <-
             exportService
               .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
               .flatMap(_.take(1).runCollect)
@@ -507,9 +548,19 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           listsResponder <- ZIO.service[ListsResponder]
           csvService     <- ZIO.service[CsvService]
           sf             <- ZIO.service[StringFormatter]
+          appConfig      <- ZIO.service[AppConfig]
           readStub       <- mkReadStub((_, _) => ZIO.never)
           exportService   =
-            ExportService(iriConverter, ontologyRepo, readStub, failingFindResources, listsResponder, csvService, sf)
+            ExportService(
+              iriConverter,
+              ontologyRepo,
+              readStub,
+              failingFindResources,
+              listsResponder,
+              csvService,
+              sf,
+              appConfig,
+            )
           exit <- exportService
                     .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
                     .exit

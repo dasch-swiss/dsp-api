@@ -17,6 +17,7 @@ import scala.collection.immutable.ListMap
 import scala.util.chaining.scalaUtilChainingOps
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -69,6 +70,7 @@ final case class ExportService(
   private val listsResponder: ListsResponder,
   private val csvService: CsvService,
   private val sf: StringFormatter,
+  private val appConfig: AppConfig,
 ) {
   private given StringFormatter                = sf
   private val footnoteTagIri: SmartIri         = OntologyConstants.Standoff.StandoffFootnoteTag.toSmartIri
@@ -143,10 +145,11 @@ final case class ExportService(
     language: LanguageCode,
     includeIris: Boolean,
     includeArkUrls: Boolean,
-    // batchSize/parallelism are production values; overridable only so tests can force resources across batch
-    // boundaries and so the tuning IT (ExportStreamingIT) can sweep the matrix.
-    batchSize: Int = 500,
-    parallelism: Int = 5,
+    // batchSize/parallelism default to the operational values from AppConfig (`app.export`), overridable per
+    // deployment via env var. The explicit params exist only so tests can force resources across batch boundaries
+    // and so the tuning IT (ExportStreamingIT) can sweep the matrix.
+    batchSize: Int = appConfig.`export`.batchSize,
+    parallelism: Int = appConfig.`export`.parallelism,
   ): Task[ZStream[Any, Throwable, Byte]] = {
     case class StreamingExportContext(
       orderedIris: Seq[ResourceIri],
