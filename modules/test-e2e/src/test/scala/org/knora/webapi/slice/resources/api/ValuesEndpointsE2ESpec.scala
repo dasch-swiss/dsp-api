@@ -4180,6 +4180,37 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
         } yield assertTrue(valueTexts == Seq("Delta", "Bravo"))
       },
+      test("POST /v2/resources with explicit order colliding with injected array-position order returns 400") {
+        // "First" has explicit order 1; "Second" has no explicit order but sits at JSON array position 1,
+        // so injectOrderIndices assigns it orderIndex 1 → both resolve to order 1 → collision.
+        val jsonLd =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : [
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "First",
+             |      "knora-api:valueHasOrder" : {
+             |        "@type" : "xsd:integer",
+             |        "@value" : 1
+             |      }
+             |    },
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "Second"
+             |    }
+             |  ],
+             |  "knora-api:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+             |  "rdfs:label" : "mixed order collision test",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+             |  }
+             |}""".stripMargin
+        TestApiClient.postJsonLd(uri"/v2/resources", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
+      },
     ),
     suite("PUT /v2/values/order")(
       test("successfully reorder 3 values (reverse order)") {

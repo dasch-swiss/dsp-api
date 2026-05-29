@@ -385,6 +385,9 @@ final case class ApiComplexV2JsonLdRequestParser(
       .unit
   }
 
+  private def validateNonNegativeOrder(order: Int): IO[String, Unit] =
+    ZIO.fail(s"knora-api:valueHasOrder must be non-negative, got $order").when(order < 0).unit
+
   /**
    * Rejects writes that contain the placeholder sentinel in any of the
    * sentinel-bearing FileValue fields (`internalFilename`, `copyrightHolder`,
@@ -392,9 +395,6 @@ final case class ApiComplexV2JsonLdRequestParser(
    * switch is disabled on this deployment. Reads are never gated; this check
    * applies only to create/update of file values.
    */
-  private def validateNonNegativeOrder(order: Int): IO[String, Unit] =
-    ZIO.fail(s"knora-api:valueHasOrder must be non-negative, got $order").when(order < 0).unit
-
   private def ensurePlaceholderAllowed(values: Iterable[ValueContentV2]): IO[String, Unit] =
     val offending = values.toList.flatMap {
       case fvc: FileValueContentV2 => fvc.fileValue.placeholderFields
@@ -449,7 +449,7 @@ final case class ApiComplexV2JsonLdRequestParser(
           iri -> values.sortBy(_.orderHint.getOrElse(Int.MaxValue))
         }
         ZIO.foreachDiscard(grouped) { case (propIri, values) =>
-          val orders = values.flatMap(_.orderHint)
+          val orders = values.zipWithIndex.map { case (v, idx) => v.orderHint.getOrElse(idx) }
           ZIO
             .fail(s"Duplicate knora-api:valueHasOrder for property <$propIri> in the same request")
             .when(orders.distinct.size != orders.size)
