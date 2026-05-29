@@ -4180,9 +4180,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
         } yield assertTrue(valueTexts == Seq("Delta", "Bravo"))
       },
-      test("POST /v2/resources with explicit order colliding with injected array-position order returns 400") {
-        // "First" has explicit order 1; "Second" has no explicit order but sits at JSON array position 1,
-        // so injectOrderIndices assigns it orderIndex 1 → both resolve to order 1 → collision.
+      test("POST /v2/resources with explicit order 1 and one value with no explicit order returns 201") {
+        // "First" has explicit order 1; "Second" has no explicit order. Only explicit-vs-explicit
+        // duplicates are rejected at parse time — this mixed case must succeed.
         val jsonLd =
           s"""{
              |  "@type" : "anything:Thing",
@@ -4201,7 +4201,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    }
              |  ],
              |  "knora-api:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
-             |  "rdfs:label" : "mixed order collision test",
+             |  "rdfs:label" : "mixed order no-collision test",
              |  "@context" : {
              |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
@@ -4209,7 +4209,10 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
              |  }
              |}""".stripMargin
-        TestApiClient.postJsonLd(uri"/v2/resources", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", jsonLd, anythingUser1)
+          .flatMap(_.assert200)
+          .as(assertCompletes)
       },
     ),
     suite("PUT /v2/values/order")(
