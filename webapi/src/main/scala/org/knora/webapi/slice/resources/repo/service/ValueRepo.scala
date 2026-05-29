@@ -17,6 +17,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.language.implicitConversions
 
+import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
@@ -277,18 +278,17 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
            )
     } yield ()
 
-  private def checkDuplicateOrder(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): Task[Unit] = {
-    import dsp.errors.BadRequestException
-    import Rdf.literalOf
-    val existingValue    = variable("existingValue")
-    val resourcePattern  = iri(resourceIri.value).has(iri(propertyIri.toString), existingValue)
-    val valuePattern     = existingValue
-                             .has(KB.valueHasOrder, literalOf(order))
-                             .andHas(KB.isDeleted, literalOf(false))
-    val ask              = Ask(s"""ASK WHERE {
-                                  |  ${resourcePattern.getQueryString}
-                                  |  ${valuePattern.getQueryString}
-                                  |}""".stripMargin)
+  // rdf4j sparqlbuilder 5.2.2 does not include an AskQuery builder (same constraint as the BIND workaround
+  // in InsertValueQueryBuilder). All interpolated values here are typed (InternalIri, SmartIri, Int) — no
+  // injection risk. The OntologyConstants strings are compile-time constants.
+  def checkDuplicateOrder(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): Task[Unit] = {
+    val ask = Ask(
+      s"""ASK WHERE {
+         |  <${resourceIri.value}> <${propertyIri.toString}> ?existingValue .
+         |  ?existingValue <${KnoraBase.ValueHasOrder}> $order ;
+         |                 <${KnoraBase.IsDeleted}> false .
+         |}""".stripMargin,
+    )
     triplestore
       .query(ask)
       .flatMap(exists =>

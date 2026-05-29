@@ -57,6 +57,7 @@ object CreateLinkQuery extends QueryBuilderHelper {
     newValueUUID: UUID,
     creationDate: Instant,
     maybeComment: Option[String],
+    valueHasOrder: Option[Int] = None,
   ): IO[SparqlGenerationException, ModifyQuery] =
     for {
       _ <- failIf(!linkUpdate.insertDirectLink, "linkUpdate.insertDirectLink must be true in this SPARQL template")
@@ -142,28 +143,38 @@ object CreateLinkQuery extends QueryBuilderHelper {
           Seq.empty
         }
 
-      // Subquery for next order value
-      val order                       = variable("order")
-      val maxOrder                    = variable("maxOrder")
-      val otherValue                  = variable("otherLinkValue")
-      val orderSubquery: GraphPattern = GraphPatterns
-        .select()
-        .select(
-          Expressions.max(order).as(maxOrder),
-          Expressions
-            .iff(
-              Expressions.bound(maxOrder),
-              Expressions.add(maxOrder, literalOf(1)),
-              literalOf(0),
+      // Determine next order: use explicit value when supplied, otherwise MAX(existing) + 1.
+      val orderPattern: GraphPattern =
+        valueHasOrder match {
+          case Some(explicitOrder) =>
+            // rdf4j 5.2.2 does not support BIND(literal AS var); wrap in IF(true, ...) as equivalent.
+            Expressions.bind(
+              Expressions.iff(literalOf(true), literalOf(explicitOrder), literalOf(0)),
+              nextOrder,
             )
-            .as(nextOrder),
-        )
-        .where(
-          resource.has(linkValueProperty, otherValue),
-          otherValue.has(KB.valueHasOrder, order).andHas(KB.isDeleted, literalOf(false)),
-        )
+          case None =>
+            val order      = variable("order")
+            val maxOrder   = variable("maxOrder")
+            val otherValue = variable("otherLinkValue")
+            GraphPatterns
+              .select()
+              .select(
+                Expressions.max(order).as(maxOrder),
+                Expressions
+                  .iff(
+                    Expressions.bound(maxOrder),
+                    Expressions.add(maxOrder, literalOf(1)),
+                    literalOf(0),
+                  )
+                  .as(nextOrder),
+              )
+              .where(
+                resource.has(linkValueProperty, otherValue),
+                otherValue.has(KB.valueHasOrder, order).andHas(KB.isDeleted, literalOf(false)),
+              )
+        }
 
-      val wherePatterns = baseWherePatterns ++ linkTargetValidationPatterns :+ orderSubquery
+      val wherePatterns = baseWherePatterns ++ linkTargetValidationPatterns :+ orderPattern
 
       Queries
         .MODIFY()

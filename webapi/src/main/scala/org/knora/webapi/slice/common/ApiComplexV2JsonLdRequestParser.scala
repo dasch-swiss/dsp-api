@@ -433,13 +433,16 @@ final case class ApiComplexV2JsonLdRequestParser(
       .toSeq
     ZIO
       .foreach(valueStatements) { stmt =>
-        val valueResource  = stmt.getObject.asResource()
-        val explicitOrder  = valueResource.objectIntOption(ValueHasOrder).toOption.flatten
-        val injectedOrder  = readOrderIndex(valueResource)
-        val resolvedOrder  = explicitOrder.orElse(injectedOrder)
-        valueStatementAsContent(stmt, shortcode).map { case (propIri, value) =>
-          (propIri.smartIri, value.copy(orderHint = resolvedOrder))
-        }
+        val valueResource = stmt.getObject.asResource()
+        val explicitOrder = valueResource.objectIntOption(ValueHasOrder).toOption.flatten
+        val injectedOrder = readOrderIndex(valueResource)
+        val resolvedOrder = explicitOrder.orElse(injectedOrder)
+        ZIO
+          .fail(s"knora-api:valueHasOrder must be non-negative, got ${explicitOrder.get}")
+          .when(explicitOrder.exists(_ < 0)) *>
+          valueStatementAsContent(stmt, shortcode).map { case (propIri, value) =>
+            (propIri.smartIri, value.copy(orderHint = resolvedOrder))
+          }
       }
       .flatMap { pairs =>
         val grouped = pairs.groupMap(_._1)(_._2).map { case (iri, values) =>
@@ -570,10 +573,10 @@ final case class ApiComplexV2JsonLdRequestParser(
         valuePermissions  <- v.hasPermissionsOption
         valueHasOrder     <- v.valueHasOrderOption
         _                 <- ZIO.foreach(valueHasOrder)(order =>
-                               ZIO
-                                 .fail(s"knora-api:valueHasOrder must be non-negative, got $order")
-                                 .when(order < 0),
-                             )
+               ZIO
+                 .fail(s"knora-api:valueHasOrder must be non-negative, got $order")
+                 .when(order < 0),
+             )
         valueContent <- getValueContent(v, resourceIri.shortcode)
         _            <- ensurePlaceholderAllowed(Seq(valueContent))
       } yield CreateValueV2(

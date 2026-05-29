@@ -377,6 +377,7 @@ final class ValuesResponderV2(
           maybeCreationDate = valueCreationDate,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
+          valueHasOrder = valueHasOrder,
         )
 
       case ordinaryValueContent =>
@@ -510,9 +511,8 @@ final class ValuesResponderV2(
     maybeCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
+    valueHasOrder: Option[Int],
   ) =
-    // Make a new value UUID.
-
     for {
       newValueUUID             <- ValuesResponderV2.makeNewValueUUID(maybeValueIri, maybeValueUUID)
       sparqlTemplateLinkUpdate <-
@@ -531,6 +531,13 @@ final class ValuesResponderV2(
           case None                          => Instant.now
         }
 
+      // Duplicate-order check: use the link value property IRI (the property that attaches the LinkValue to the resource).
+      linkValuePropertyIri = (sparqlTemplateLinkUpdate.linkPropertyIri.toInternalSchema.toIri + "Value").toSmartIri
+      resourceIriInternal <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
+      _                   <- ZIO.foreach(valueHasOrder)(order =>
+             valueRepo.checkDuplicateOrder(resourceIriInternal, linkValuePropertyIri, order),
+           )
+
       // Generate a SPARQL update.
       sparqlUpdate <- CreateLinkQuery.build(
                         project = resourceInfo.projectADM,
@@ -539,6 +546,7 @@ final class ValuesResponderV2(
                         newValueUUID = newValueUUID,
                         creationDate = creationDate,
                         maybeComment = linkValueContent.comment,
+                        valueHasOrder = valueHasOrder,
                       )
 
       _ <- triplestoreService.query(Update(sparqlUpdate))
