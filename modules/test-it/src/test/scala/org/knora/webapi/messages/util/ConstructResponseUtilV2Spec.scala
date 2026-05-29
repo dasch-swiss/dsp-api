@@ -274,7 +274,7 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
       for {
         resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
         mainResourcesAndValueRdfData <-
-          constructResponseUtilV2(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
+          constructResponseUtilV2ZIO(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
         resourceSequence <- constructResponseUtilV2ZIO(
                               _.createApiResponse(
                                 mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
