@@ -1,17 +1,18 @@
 package org.knora.webapi.slice.ontology
 
 import org.apache.jena.riot.Lang
-import org.knora.webapi.core.TestAppConfig
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.common.jena.ModelOps
 import zio.ZIO
 import zio.test.*
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+
+import org.knora.webapi.core.TestAppConfig
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.jena.ModelOps
 
 object OntologyTransformerSpec extends ZIOSpecDefault {
 
@@ -197,8 +198,150 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  private val iriRefValues = suite("IRI-Ref Values")(
+    test("ListValue") {
+      runTransform(
+        jsonLd = resourceWithValueJsonLd(
+          valueProp = s"${onto}testListProp",
+          valueClass = s"${knoraApi}ListValue",
+          inner = s""""${knoraApi}listValueAsListNode": { "@id": "http://rdfh.ch/lists/9999/WF8qwFbGQg228GJUlqOLzw" }""",
+        ),
+        expectedTurtle = expectedResourceWithSimpleValue(
+          propLocalName = "testListProp",
+          valueClass = "ListValue",
+          valueHasProp = "valueHasListNode",
+          valueLiteral = "<http://rdfh.ch/lists/9999/WF8qwFbGQg228GJUlqOLzw>",
+        ),
+      )
+    },
+    test("LinkValue (stage 1: IRI rewrite only, no reification yet)") {
+      runTransform(
+        jsonLd = resourceWithValueJsonLd(
+          valueProp = s"${onto}testHasLinkToValue",
+          valueClass = s"${knoraApi}LinkValue",
+          inner =
+            s""""${knoraApi}linkValueHasTargetIri": { "@id": "http://rdfh.ch/9999/CV9Lea7hSESPWPuILr8dyw" }""",
+        ),
+        expectedTurtle = expectedResourceWithSimpleValue(
+          propLocalName = "testHasLinkToValue",
+          valueClass = "LinkValue",
+          valueHasProp = "linkValueHasTargetIri",
+          valueLiteral = "<http://rdfh.ch/9999/CV9Lea7hSESPWPuILr8dyw>",
+        ),
+      )
+    },
+  )
+
+  private val textValues = suite("Text Values")(
+    test("simple text") {
+      runTransform(
+        jsonLd = resourceWithValueJsonLd(
+          valueProp = s"${onto}testSimpleText",
+          valueClass = s"${knoraApi}TextValue",
+          inner = s""""${knoraApi}valueAsString": { "@type": "${xsd}string", "@value": "Text" }""",
+        ),
+        expectedTurtle = expectedResourceWithSimpleValue(
+          propLocalName = "testSimpleText",
+          valueClass = "TextValue",
+          valueHasProp = "valueHasString",
+          valueLiteral = "\"Text\"",
+        ),
+      )
+    },
+    test("simple text with comment") {
+      runTransform(
+        jsonLd = resourceWithValueJsonLd(
+          valueProp = s"${onto}testSimpleText",
+          valueClass = s"${knoraApi}TextValue",
+          inner = s""""${knoraApi}valueAsString": { "@type": "${xsd}string", "@value": "Text 1" },
+                     |    "${knoraApi}valueHasComment": { "@type": "${xsd}string", "@value": "comment" }""".stripMargin,
+        ),
+        expectedTurtle = s"""
+                            | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+                            | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+                            | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                            |
+                            | <$resourceIri>
+                            |     rdfs:label "test" ;
+                            |     onto:testSimpleText [
+                            |         a                          knora-base:TextValue ;
+                            |         knora-base:valueHasString  "Text 1" ;
+                            |         knora-base:valueHasComment "comment"
+                            |     ] .
+                            |""".stripMargin,
+      )
+    },
+    test("rich text") {
+      runTransform(
+        jsonLd = resourceWithValueJsonLd(
+          valueProp = s"${onto}testRichtext",
+          valueClass = s"${knoraApi}TextValue",
+          inner = s""""${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<text>Text</text>" },
+                     |    "${knoraApi}textValueHasMapping": { "@id": "http://rdfh.ch/standoff/mappings/StandardMapping" }""".stripMargin,
+        ),
+        expectedTurtle = s"""
+                            | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+                            | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+                            | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                            |
+                            | <$resourceIri>
+                            |     rdfs:label "test" ;
+                            |     onto:testRichtext [
+                            |         a                              knora-base:TextValue ;
+                            |         knora-base:textValueAsXml      "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<text>Text</text>" ;
+                            |         knora-base:textValueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>
+                            |     ] .
+                            |""".stripMargin,
+      )
+    },
+  )
+
+  private val dateValues = suite("Date Values")(
+    test("DateValue GREGORIAN with eras") {
+      runTransform(
+        jsonLd = resourceWithValueJsonLd(
+          valueProp = s"${onto}testSubDate1",
+          valueClass = s"${knoraApi}DateValue",
+          inner = s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "GREGORIAN" },
+                     |    "${knoraApi}dateValueHasStartYear":  { "@type": "${xsd}integer", "@value": 1800 },
+                     |    "${knoraApi}dateValueHasStartMonth": { "@type": "${xsd}integer", "@value": 1 },
+                     |    "${knoraApi}dateValueHasStartDay":   { "@type": "${xsd}integer", "@value": 1 },
+                     |    "${knoraApi}dateValueHasStartEra":   { "@type": "${xsd}string",  "@value": "CE" },
+                     |    "${knoraApi}dateValueHasEndYear":    { "@type": "${xsd}integer", "@value": 1900 },
+                     |    "${knoraApi}dateValueHasEndMonth":   { "@type": "${xsd}integer", "@value": 1 },
+                     |    "${knoraApi}dateValueHasEndDay":     { "@type": "${xsd}integer", "@value": 1 },
+                     |    "${knoraApi}dateValueHasEndEra":     { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
+        ),
+        expectedTurtle = s"""
+                            | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+                            | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+                            | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+                            | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                            |
+                            | <$resourceIri>
+                            |     rdfs:label "test" ;
+                            |     onto:testSubDate1 [
+                            |         a                                 knora-base:DateValue ;
+                            |         knora-base:dateValueHasCalendar   "GREGORIAN" ;
+                            |         knora-base:dateValueHasStartYear  "1800"^^xsd:integer ;
+                            |         knora-base:dateValueHasStartMonth "1"^^xsd:integer ;
+                            |         knora-base:dateValueHasStartDay   "1"^^xsd:integer ;
+                            |         knora-base:dateValueHasStartEra   "CE" ;
+                            |         knora-base:dateValueHasEndYear    "1900"^^xsd:integer ;
+                            |         knora-base:dateValueHasEndMonth   "1"^^xsd:integer ;
+                            |         knora-base:dateValueHasEndDay     "1"^^xsd:integer ;
+                            |         knora-base:dateValueHasEndEra     "CE"
+                            |     ] .
+                            |""".stripMargin,
+      )
+    },
+  )
+
   override def spec = suite("OntologyTransformerSpec")(
     simpleScalarValues,
+    iriRefValues,
+    textValues,
+    dateValues,
   ).provide(OntologyTransformer.layer, StringFormatter.test, TestAppConfig.layer())
 
 }
