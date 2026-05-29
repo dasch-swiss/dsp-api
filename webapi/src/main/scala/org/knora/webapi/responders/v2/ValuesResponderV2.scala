@@ -534,7 +534,10 @@ final class ValuesResponderV2(
       // Duplicate-order check: use the link value property IRI (the property that attaches the LinkValue to the resource).
       linkValuePropertyIri = (sparqlTemplateLinkUpdate.linkPropertyIri.toInternalSchema.toIri + "Value").toSmartIri
       resourceIriInternal <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
-      _                   <- ZIO.foreach(valueHasOrder)(order =>
+      // IriLocker serialises concurrent writes per resource IRI within a single JVM instance,
+      // making the ASK check + INSERT effectively atomic under single-instance deployment.
+      // Multi-instance deployments do not share this lock; a race window exists there.
+      _ <- ZIO.foreach(valueHasOrder)(order =>
              valueRepo.checkDuplicateOrder(resourceIriInternal, linkValuePropertyIri, order),
            )
 

@@ -3943,8 +3943,8 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           resource    <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
           valuesArray <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
           valueTexts   = valuesArray.value.collect { case obj: JsonLDObject =>
-                           obj.getRequiredString(KA.ValueAsString).toOption
-                         }.flatten
+                         obj.getRequiredString(KA.ValueAsString).toOption
+                       }.flatten
         } yield assertTrue(valueTexts == Seq("Echo", "Alpha", "Bravo", "Delta"))
       },
       test("POST /v2/values with negative knora-api:valueHasOrder returns 400") {
@@ -4102,8 +4102,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                  |  }
                  |}""".stripMargin,
             )
-          createResponse <- TestApiClient.postJsonLdDocument(uri"/v2/values", createJson, anythingUser1).flatMap(_.assert200)
-          valueIri       <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+          createResponse <-
+            TestApiClient.postJsonLdDocument(uri"/v2/values", createJson, anythingUser1).flatMap(_.assert200)
+          valueIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
 
           // PUT the value including valueHasOrder — must be silently ignored, returning 200
           putJson <-
@@ -4129,6 +4130,55 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
             )
           _ <- TestApiClient.putJsonLdDocument(uri"/v2/values", putJson, anythingUser1).flatMap(_.assert200)
         } yield assertCompletes
+      },
+      test("POST /v2/resources stores the explicit knora-api:valueHasOrder — values returned in supplied order") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+        val jsonLd =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : [
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "Bravo",
+             |      "knora-api:valueHasOrder" : {
+             |        "@type" : "xsd:integer",
+             |        "@value" : 5
+             |      }
+             |    },
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "Delta",
+             |      "knora-api:valueHasOrder" : {
+             |        "@type" : "xsd:integer",
+             |        "@value" : 2
+             |      }
+             |    }
+             |  ],
+             |  "knora-api:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+             |  "rdfs:label" : "explicit order storage test",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", jsonLd, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          resIri      <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
+          resource    <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+          valueTexts   = valuesArray.value.collect { case obj: JsonLDObject =>
+                         obj.getRequiredString(KA.ValueAsString).toOption
+                       }.flatten
+
+        } yield assertTrue(valueTexts == Seq("Delta", "Bravo"))
       },
     ),
     suite("PUT /v2/values/order")(

@@ -993,8 +993,8 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("createResourceRequestV2 accepts explicit knora-api:valueHasOrder on a value") {
       for {
-        _    <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
-        uuid <- Random.nextUUID
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        uuid   <- Random.nextUUID
         result <- service(
                     _.createResourceRequestV2(
                       """{
@@ -1026,8 +1026,8 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("createResourceRequestV2 rejects duplicate knora-api:valueHasOrder for same property") {
       for {
-        _    <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
-        uuid <- Random.nextUUID
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        uuid   <- Random.nextUUID
         actual <- service(
                     _.createResourceRequestV2(
                       """{

@@ -32,10 +32,10 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_String_Property
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.resources.repo.CheckDuplicateOrderQuery
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.resources.repo.service.value.queries.InsertValueQueryBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -260,6 +260,9 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     valueHasOrder: Option[Int] = None,
   ): Task[Unit] =
     for {
+      // IriLocker serialises concurrent writes per resource IRI within a single JVM instance,
+      // making the ASK check + INSERT effectively atomic under single-instance deployment.
+      // Multi-instance deployments do not share this lock; a race window exists there.
       _ <- ZIO.foreach(valueHasOrder)(order => checkDuplicateOrder(resourceIri, propertyIri, order))
       _ <- triplestore.query(
              InsertValueQueryBuilder.createValueQuery(
@@ -278,19 +281,9 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
            )
     } yield ()
 
-  // rdf4j sparqlbuilder 5.2.2 does not include an AskQuery builder (same constraint as the BIND workaround
-  // in InsertValueQueryBuilder). All interpolated values here are typed (InternalIri, SmartIri, Int) — no
-  // injection risk. The OntologyConstants strings are compile-time constants.
-  def checkDuplicateOrder(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): Task[Unit] = {
-    val ask = Ask(
-      s"""ASK WHERE {
-         |  <${resourceIri.value}> <${propertyIri.toString}> ?existingValue .
-         |  ?existingValue <${KnoraBase.ValueHasOrder}> $order ;
-         |                 <${KnoraBase.IsDeleted}> false .
-         |}""".stripMargin,
-    )
+  def checkDuplicateOrder(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): Task[Unit] =
     triplestore
-      .query(ask)
+      .query(CheckDuplicateOrderQuery.build(resourceIri, propertyIri, order))
       .flatMap(exists =>
         ZIO
           .fail(
@@ -301,7 +294,6 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
           .when(exists),
       )
       .unit
-  }
 
   def updateValue(
     dataNamedGraph: InternalIri,

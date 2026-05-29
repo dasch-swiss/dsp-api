@@ -32,11 +32,11 @@ import scala.util.chaining.scalaUtilChainingOps
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagAttributeV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate

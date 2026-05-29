@@ -571,10 +571,10 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueUuid         <- v.valueHasUuidOption
         valueCreationDate <- v.valueCreationDateOption
         valuePermissions  <- v.hasPermissionsOption
-        valueHasOrder <- v.valueHasOrderOption
-        _             <- ZIO.foreach(valueHasOrder)(validateNonNegativeOrder)
-        valueContent <- getValueContent(v, resourceIri.shortcode)
-        _            <- ensurePlaceholderAllowed(Seq(valueContent))
+        valueHasOrder     <- v.valueHasOrderOption
+        _                 <- ZIO.foreach(valueHasOrder)(validateNonNegativeOrder)
+        valueContent      <- getValueContent(v, resourceIri.shortcode)
+        _                 <- ensurePlaceholderAllowed(Seq(valueContent))
       } yield CreateValueV2(
         resourceIri,
         r.resourceClassSmartIri,
