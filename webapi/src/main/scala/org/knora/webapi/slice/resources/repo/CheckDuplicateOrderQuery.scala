@@ -22,9 +22,11 @@ object CheckDuplicateOrderQuery extends QueryBuilderHelper {
     val pattern1      = iri(resourceIri.value).has(toRdfIri(propertyIri), existingValue)
     val pattern2      = existingValue.has(KB.valueHasOrder, literalOf(order))
     // OPTIONAL so values lacking knora-base:isDeleted (e.g. legacy data) are treated as non-deleted.
-    val optional = s"OPTIONAL { ${existingValue.getQueryString} ${KB.isDeleted.getQueryString} ${isDeletedVar.getQueryString} }"
-    val filter   = s"FILTER(!BOUND(${isDeletedVar.getQueryString}) || ${isDeletedVar.getQueryString} = ${literalOf(false).getQueryString})"
-    val where    = List(pattern1, pattern2).map(_.getQueryString).mkString("\n  ")
+    val optional =
+      s"OPTIONAL { ${existingValue.getQueryString} ${KB.isDeleted.getQueryString} ${isDeletedVar.getQueryString} }"
+    val filter =
+      s"FILTER(!BOUND(${isDeletedVar.getQueryString}) || ${isDeletedVar.getQueryString} = ${literalOf(false).getQueryString})"
+    val where = List(pattern1, pattern2).map(_.getQueryString).mkString("\n  ")
     Ask(s"""
            |ASK
            |WHERE {
