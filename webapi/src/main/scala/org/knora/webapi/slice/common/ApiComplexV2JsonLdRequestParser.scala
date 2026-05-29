@@ -441,19 +441,19 @@ final case class ApiComplexV2JsonLdRequestParser(
         val resolvedOrder = explicitOrder.orElse(readOrderIndex(valueResource))
         ZIO.foreach(explicitOrder)(validateNonNegativeOrder) *>
           valueStatementAsContent(stmt, shortcode).map { case (propIri, value) =>
-            (propIri.smartIri, value.copy(orderHint = resolvedOrder))
+            (propIri.smartIri, value.copy(orderHint = resolvedOrder), explicitOrder)
           }
       }
-      .flatMap { pairs =>
-        val grouped = pairs.groupMap(_._1)(_._2).map { case (iri, values) =>
-          iri -> values.sortBy(_.orderHint.getOrElse(Int.MaxValue))
+      .flatMap { triples =>
+        val grouped = triples.groupMap(_._1)(t => (t._2, t._3)).map { case (iri, pairs) =>
+          iri -> pairs.sortBy(_._1.orderHint.getOrElse(Int.MaxValue))
         }
-        ZIO.foreachDiscard(grouped) { case (propIri, values) =>
-          val orders = values.zipWithIndex.map { case (v, idx) => v.orderHint.getOrElse(idx) }
+        ZIO.foreachDiscard(grouped) { case (propIri, pairs) =>
+          val explicitOrders = pairs.flatMap(_._2)
           ZIO
             .fail(s"Duplicate knora-api:valueHasOrder for property <$propIri> in the same request")
-            .when(orders.distinct.size != orders.size)
-        } *> ZIO.succeed(grouped)
+            .when(explicitOrders.distinct.size != explicitOrders.size)
+        } *> ZIO.succeed(grouped.map { case (iri, pairs) => iri -> pairs.map(_._1) })
       }
 
   private def valueStatementAsContent(

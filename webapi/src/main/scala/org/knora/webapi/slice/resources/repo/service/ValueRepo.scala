@@ -281,9 +281,10 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
            )
     } yield ()
 
-  def checkDuplicateOrder(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): Task[Unit] =
+  def checkDuplicateOrder(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): IO[BadRequestException, Unit] =
     triplestore
       .query(CheckDuplicateOrderQuery.build(resourceIri, propertyIri, order))
+      .orDie
       .flatMap(exists =>
         ZIO
           .fail(

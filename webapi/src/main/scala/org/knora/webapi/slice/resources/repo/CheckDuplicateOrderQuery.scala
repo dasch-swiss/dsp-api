@@ -18,7 +18,7 @@ object CheckDuplicateOrderQuery extends QueryBuilderHelper {
 
   def build(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): Ask = {
     val existingValue = variable("existingValue")
-    val pattern1      = iri(resourceIri.value).has(iri(propertyIri.toString), existingValue)
+    val pattern1      = iri(resourceIri.value).has(toRdfIri(propertyIri), existingValue)
     val pattern2      = existingValue.has(KB.valueHasOrder, literalOf(order)).andHas(KB.isDeleted, literalOf(false))
     val where         = List(pattern1, pattern2).map(_.getQueryString).mkString("\n  ")
     Ask(s"""
