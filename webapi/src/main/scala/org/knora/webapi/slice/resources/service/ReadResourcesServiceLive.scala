@@ -24,6 +24,7 @@ import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
+import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
 
 trait ReadResourcesService {
   def readResourcesSequence(
@@ -106,70 +107,83 @@ final case class ReadResourcesServiceLive(
     showDeletedValues: Boolean = false,
     skipRetrievalChecks: Boolean = false,
     standoffTagFilter: Option[SmartIri] = None,
-  ): Task[ReadResourcesSequenceV2] = {
-    val resourceIriStrings = resourceIris.distinct.map(_.value)
-    for {
-      resourcesWithValues <-
-        triplestore
-          .query(
-            Construct(
-              GetResourcePropertiesAndValuesQuery.build(
-                resourceIris = resourceIriStrings,
-                preview = preview,
-                withDeleted = withDeleted,
-                maybePropertyIri = propertyIri,
-                maybeValueUuid = valueUuid,
-                maybeVersionDate = versionDate.map(_.value),
-                queryAllNonStandoff = true,
-                queryStandoff = queryStandoff,
-                standoffTagFilter = standoffTagFilter,
+  ): Task[ReadResourcesSequenceV2] =
+    if (resourceIris.isEmpty)
+      ZIO.succeed(ReadResourcesSequenceV2.Empty)
+    else {
+      val resourceIriStrings = resourceIris.distinct.map(_.value)
+      for {
+        resourcesWithValues <-
+          triplestore
+            .query(
+              Construct(
+                GetResourcePropertiesAndValuesQuery.build(
+                  resourceIris = resourceIriStrings,
+                  preview = preview,
+                  withDeleted = withDeleted,
+                  maybePropertyIri = propertyIri,
+                  maybeValueUuid = valueUuid,
+                  maybeVersionDate = versionDate.map(_.value),
+                  queryAllNonStandoff = true,
+                  queryStandoff = queryStandoff,
+                  standoffTagFilter = standoffTagFilter,
+                ),
+                if (queryStandoff) SparqlTimeout.Maintenance else SparqlTimeout.Standard,
               ),
-              if (queryStandoff) SparqlTimeout.Maintenance else SparqlTimeout.Standard,
-            ),
+            )
+            .flatMap(_.asExtended)
+            .flatMap(constructResponseUtilV2.splitMainResourcesAndValueRdfData(_, requestingUser))
+
+        mappings <-
+          ZIO.when(queryStandoff) {
+            constructResponseUtilV2.mappingsFromQueryResults(resourcesWithValues.resources)
+          }
+
+        readSequence <-
+          constructResponseUtilV2.createApiResponse(
+            mainResourcesAndValueRdfData = resourcesWithValues,
+            orderByResourceIri = resourceIriStrings,
+            pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
+            mappings = mappings.getOrElse(Map.empty),
+            queryStandoff = queryStandoff,
+            versionDate = versionDate.map(_.value),
+            calculateMayHaveMoreResults = false,
+            targetSchema = targetSchema,
+            requestingUser = requestingUser,
           )
-          .flatMap(_.asExtended)
-          .flatMap(constructResponseUtilV2.splitMainResourcesAndValueRdfData(_, requestingUser))
 
-      mappings <-
-        ZIO.when(queryStandoff) {
-          constructResponseUtilV2.mappingsFromQueryResults(resourcesWithValues.resources)
-        }
+        regionPreviewValues =
+          readSequence.resources.flatMap(_.values.values.flatten).map(_.valueContent).collect {
+            case x: RegionPreviewValueContentV2 => x
+          }
 
-      readSequence <-
-        constructResponseUtilV2.createApiResponse(
-          mainResourcesAndValueRdfData = resourcesWithValues,
-          orderByResourceIri = resourceIriStrings,
-          pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
-          mappings = mappings.getOrElse(Map.empty),
-          queryStandoff = queryStandoff,
-          versionDate = versionDate.map(_.value),
-          calculateMayHaveMoreResults = false,
-          targetSchema = targetSchema,
-          requestingUser = requestingUser,
-        )
+        regionsAndImages <- findRegionsAndStillImages(regionPreviewValues, targetSchema, requestingUser)
 
-      _ <-
-        ZIO.foreach(readSequence.checkResourceIris(resourceIris.toSet, readSequence)) { throwable =>
-          if (skipRetrievalChecks)
-            ZIO.logError(throwable.toString)
-          else
-            ZIO.fail(throwable)
-        }
+        _ = println(s"regionsAndImages: $regionsAndImages")
 
-      _ <-
-        ZIO.when(failOnMissingValueUuid) {
-          ZIO.foreach(valueUuid) { valueUuid =>
-            val msg      = (u: String) => s"Value with UUID ${u} not found (maybe you do not have permission to see it)"
-            val matching = readSequence.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == valueUuid)))
-            ZIO.unless(matching) {
-              ZIO.fail(NotFoundException(msg(UuidUtil.base64Encode(valueUuid))))
+        _ <-
+          ZIO.foreach(readSequence.checkResourceIris(resourceIris.toSet, readSequence)) { throwable =>
+            if (skipRetrievalChecks)
+              ZIO.logError(throwable.toString)
+            else
+              ZIO.fail(throwable)
+          }
+
+        _ <-
+          ZIO.when(failOnMissingValueUuid) {
+            ZIO.foreach(valueUuid) { valueUuid =>
+              val msg      = (u: String) => s"Value with UUID ${u} not found (maybe you do not have permission to see it)"
+              val matching =
+                readSequence.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == valueUuid)))
+              ZIO.unless(matching) {
+                ZIO.fail(NotFoundException(msg(UuidUtil.base64Encode(valueUuid))))
+              }
             }
           }
-        }
-    } yield readSequence
-      .focus(_.resources)
-      .modify(_.map(r => if (markDeletions) r.markDeleted(versionDate, showDeletedValues) else r))
-  }
+      } yield readSequence
+        .focus(_.resources)
+        .modify(_.map(r => if (markDeletions) r.markDeleted(versionDate, showDeletedValues) else r))
+    }
 
   def readResourcesSequencePar(
     resourceIris: Seq[ResourceIri],
@@ -200,6 +214,18 @@ final case class ReadResourcesServiceLive(
       }
       .withParallelism(5)
       .map(_.fold(ReadResourcesSequenceV2(Seq.empty))(_ ++ _))
+
+  private def findRegionsAndStillImages(
+    regionPreviews: Seq[RegionPreviewValueContentV2],
+    ts: ApiV2Schema,
+    user: User,
+  ): Task[ReadResourcesSequenceV2] =
+    for {
+      regions  <- readResourcesSequence_(regionPreviews.map(_.regionIri), targetSchema = ts, requestingUser = user)
+      imageIris = regions.resources.flatMap(_.isRegionOfValueReferredIri.toList)
+      images   <- readResourcesSequence_(imageIris, targetSchema = ts, requestingUser = user)
+      aggregate = (regions ++ images)
+    } yield aggregate
 
   def readResourcesSequence(
     resourceIris: Seq[ResourceIri],
