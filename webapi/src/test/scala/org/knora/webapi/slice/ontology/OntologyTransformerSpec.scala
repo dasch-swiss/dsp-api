@@ -219,8 +219,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
         jsonLd = resourceWithValueJsonLd(
           valueProp = s"${onto}testHasLinkToValue",
           valueClass = s"${knoraApi}LinkValue",
-          inner =
-            s""""${knoraApi}linkValueHasTargetIri": { "@id": "http://rdfh.ch/9999/CV9Lea7hSESPWPuILr8dyw" }""",
+          inner = s""""${knoraApi}linkValueHasTargetIri": { "@id": "http://rdfh.ch/9999/CV9Lea7hSESPWPuILr8dyw" }""",
         ),
         expectedTurtle = expectedResourceWithSimpleValue(
           propLocalName = "testHasLinkToValue",
@@ -276,22 +275,24 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
         jsonLd = resourceWithValueJsonLd(
           valueProp = s"${onto}testRichtext",
           valueClass = s"${knoraApi}TextValue",
-          inner = s""""${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<text>Text</text>" },
-                     |    "${knoraApi}textValueHasMapping": { "@id": "http://rdfh.ch/standoff/mappings/StandardMapping" }""".stripMargin,
+          inner =
+            s""""${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<text>Text</text>" },
+               |    "${knoraApi}textValueHasMapping": { "@id": "http://rdfh.ch/standoff/mappings/StandardMapping" }""".stripMargin,
         ),
-        expectedTurtle = s"""
-                            | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
-                            | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
-                            | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                            |
-                            | <$resourceIri>
-                            |     rdfs:label "test" ;
-                            |     onto:testRichtext [
-                            |         a                              knora-base:TextValue ;
-                            |         knora-base:textValueAsXml      "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<text>Text</text>" ;
-                            |         knora-base:textValueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>
-                            |     ] .
-                            |""".stripMargin,
+        expectedTurtle =
+          s"""
+             | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+             | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+             | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+             |
+             | <$resourceIri>
+             |     rdfs:label "test" ;
+             |     onto:testRichtext [
+             |         a                              knora-base:TextValue ;
+             |         knora-base:textValueAsXml      "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<text>Text</text>" ;
+             |         knora-base:textValueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>
+             |     ] .
+             |""".stripMargin,
       )
     },
   )
@@ -302,15 +303,16 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
         jsonLd = resourceWithValueJsonLd(
           valueProp = s"${onto}testSubDate1",
           valueClass = s"${knoraApi}DateValue",
-          inner = s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "GREGORIAN" },
-                     |    "${knoraApi}dateValueHasStartYear":  { "@type": "${xsd}integer", "@value": 1800 },
-                     |    "${knoraApi}dateValueHasStartMonth": { "@type": "${xsd}integer", "@value": 1 },
-                     |    "${knoraApi}dateValueHasStartDay":   { "@type": "${xsd}integer", "@value": 1 },
-                     |    "${knoraApi}dateValueHasStartEra":   { "@type": "${xsd}string",  "@value": "CE" },
-                     |    "${knoraApi}dateValueHasEndYear":    { "@type": "${xsd}integer", "@value": 1900 },
-                     |    "${knoraApi}dateValueHasEndMonth":   { "@type": "${xsd}integer", "@value": 1 },
-                     |    "${knoraApi}dateValueHasEndDay":     { "@type": "${xsd}integer", "@value": 1 },
-                     |    "${knoraApi}dateValueHasEndEra":     { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
+          inner =
+            s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "GREGORIAN" },
+               |    "${knoraApi}dateValueHasStartYear":  { "@type": "${xsd}integer", "@value": 1800 },
+               |    "${knoraApi}dateValueHasStartMonth": { "@type": "${xsd}integer", "@value": 1 },
+               |    "${knoraApi}dateValueHasStartDay":   { "@type": "${xsd}integer", "@value": 1 },
+               |    "${knoraApi}dateValueHasStartEra":   { "@type": "${xsd}string",  "@value": "CE" },
+               |    "${knoraApi}dateValueHasEndYear":    { "@type": "${xsd}integer", "@value": 1900 },
+               |    "${knoraApi}dateValueHasEndMonth":   { "@type": "${xsd}integer", "@value": 1 },
+               |    "${knoraApi}dateValueHasEndDay":     { "@type": "${xsd}integer", "@value": 1 },
+               |    "${knoraApi}dateValueHasEndEra":     { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
         ),
         expectedTurtle = s"""
                             | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
