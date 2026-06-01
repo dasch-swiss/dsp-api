@@ -1,10 +1,24 @@
 name: CI-build-and-test
 
 on:
+  # Run on every push to main so Codecov gets a fresh coverage report for each
+  # main commit. Without this the PR "base" coverage is frozen at the last main
+  # commit that ever had a report uploaded, and every PR is compared against a
+  # stale baseline.
+  push:
+    branches:
+      - main
   pull_request:
     types: [opened, reopened, synchronize]
     branches-ignore:
       - "**/graphite-base/**"
+
+# Least-privilege token plus the OIDC scope Codecov needs for tokenless uploads.
+# `checks: write` is required by dorny/test-reporter.
+permissions:
+  contents: read
+  checks: write
+  id-token: write
 
 env:
   JAVA_VERSION: 25
@@ -37,13 +51,17 @@ jobs:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: ./target/scala-3.3.7/coverage-report/cobertura.xml
       - name: Upload coverage data to codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
+          use_oidc: true
           files: ./target/scala-3.3.7/coverage-report/cobertura.xml
+          flags: unit
+          fail_ci_if_error: true
 
   test-bagit:
     name: Test bagit
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' # gate-only; no coverage upload
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
@@ -62,6 +80,7 @@ jobs:
   test-jwt:
     name: Test jwt
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' # gate-only; no coverage upload
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
@@ -80,6 +99,7 @@ jobs:
   test-shacl-validator:
     name: Test shacl-validator
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' # gate-only; no coverage upload
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
@@ -129,9 +149,12 @@ jobs:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: ./target/scala-3.3.7/coverage-report/cobertura.xml
       - name: Upload coverage data to codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
+          use_oidc: true
           files: ./target/scala-3.3.7/coverage-report/cobertura.xml
+          flags: integration
+          fail_ci_if_error: true
 
   test-e2e:
     name: Build and E2E test
@@ -153,7 +176,7 @@ jobs:
             make docker-build-fuseki-image
           fi
       - name: Run end-to-end tests
-        run: ./sbtx "test-e2e/test"
+        run: ./sbtx -v coverage "test-e2e/test" coverageAggregate
       - name: WebApi E2E Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
@@ -161,9 +184,22 @@ jobs:
           name: WebApi E2E Test Results
           path: ./modules/test-e2e/target/test-reports/TEST-*.xml
           reporter: java-junit
+      - name: Upload coverage data to codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: ./target/scala-3.3.7/coverage-report/cobertura.xml
+      - name: Upload coverage data to codecov
+        uses: codecov/codecov-action@v5
+        with:
+          use_oidc: true
+          files: ./target/scala-3.3.7/coverage-report/cobertura.xml
+          flags: e2e
+          fail_ci_if_error: true
 
   test-ingest-integration:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' # gate-only; no coverage upload
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v4
@@ -184,19 +220,15 @@ jobs:
           name: WebApi Ingest Integration Test Results
           path: ./modules/test-ingest-integration/target/test-reports/TEST-*.xml
           reporter: java-junit
-      - name: Upload coverage data to codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ./target/scala-3.3.7/coverage-report/cobertura.xml
-      - name: Upload coverage data to codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./target/scala-3.3.7/coverage-report/cobertura.xml
+      # No coverage upload here: these tests exercise the ingest service via a
+      # Docker container, so in-process scoverage instrumentation records 0%.
+      # Uploading that report only dilutes the merged coverage. Ingest unit-test
+      # coverage is uploaded by the `build-and-test` job instead.
 
   test-docs-build:
     name: Test docs
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' # gate-only; no coverage upload
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
@@ -218,6 +250,7 @@ jobs:
   check-fuseki-version-consistency:
     name: Check Fuseki version consistency
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' # gate-only; no coverage upload
     steps:
       - uses: actions/checkout@v4
       - name: Assert fuseki/Dockerfile, Dependencies.scala, and docker-compose.yml agree
@@ -236,6 +269,7 @@ jobs:
   check-formatting:
     name: Check formatting
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' # gate-only; no coverage upload
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
@@ -247,6 +281,7 @@ jobs:
   docker-healthcheck:
     name: Run the healthcheck from the container
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' # gate-only; no coverage upload
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
