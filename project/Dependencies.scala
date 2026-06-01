@@ -127,7 +127,7 @@ object Dependencies {
   // test
   val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.4"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.5"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.13.2"
 
