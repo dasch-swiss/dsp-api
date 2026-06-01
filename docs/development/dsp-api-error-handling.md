@@ -17,7 +17,7 @@ A *recoverable failure* is one a caller could reasonably handle: a 4xx response,
 
 ### Exception hierarchy
 
-dsp-api uses a sealed hierarchy of `Exception` subtypes as the failure values. These are not thrown — they're carried in the ZIO error channel.
+In the responders and v2 rest services, dsp-api uses a sealed hierarchy of `Exception` subtypes as the failure values. These are not thrown — they're carried in the ZIO error channel. Newer (v3) code instead uses service-specific error models that the v3 rest services map to responses (see [Style C](#style-c--v3-typed-errors-with-explicit-variants-mandatory-for-new-v3-code)); this hierarchy is **not** the convention for new v3 code.
 
 ```scala
 sealed trait KnoraException extends Serializable
@@ -156,10 +156,10 @@ Rules:
 
 | You want to…                                             | Use                                                 |
 |----------------------------------------------------------|-----------------------------------------------------|
-| Reject a malformed request                               | `ZIO.fail(BadRequestException(...))`                |
-| Signal a missing resource                                | `ZIO.fail(NotFoundException(...))` or `.someOrFail` |
+| Reject a malformed request (admin / v2)                  | `ZIO.fail(BadRequestException(...))`                |
+| Signal a missing resource (admin / v2)                   | `ZIO.fail(NotFoundException(...))` or `.someOrFail` |
 | Narrow the error channel to one or two cases             | `IO[E, A]` with `ZIO.fail`                          |
-| Fail a new v3 endpoint                                   | `IO[V3ErrorInfo, A]` matching a declared variant    |
+| Reject / fail a new v3 endpoint                          | `IO[V3ErrorInfo, A]` matching a declared variant    |
 | Mark a branch as unreachable                             | `ZIO.dieMessage("invariant statement")`             |
 | Discard a typed error you can't recover from             | `.orDieWith(e => SomeException(s"…$e…"))`           |
 | Bridge a non-effectful Java API or legacy throwing block | `ZIO.attempt { … }`                                 |

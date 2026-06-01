@@ -17,7 +17,7 @@ Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplest
 
 - `*Endpoints.scala` — Tapir endpoint definitions only.
 - `*ServerEndpoints.scala` — wiring of endpoint to RestService method. `.zServerLogic(_ => …)` for public, `.serverLogic(restService.x)` for secured.
-- `*RestService.scala` — handler logic. Every secured method has the curried shape `def x(user: User)(args…): Task[Resp]`. The body follows: **auth check → business logic → `format.toExternal(...)`**.
+- `*RestService.scala` — handler logic: auth and presentation only, with a minimal amount of business logic. The actual business logic lives in plain `*Service`s. Every secured method uses multiple parameter lists `def x(user: User)(args…): Task[Resp]`, which lets the `*ServerEndpoints` wire it concisely without enumerating every param. The body follows: **auth check → delegate to service → `format.toExternal(...)`**.
 - Register new endpoints in `CompleteApiServerEndpoints`.
 - Request / response DTOs live in a sibling object inside the `*Endpoints.scala` file (or a `*RequestsAndResponses.scala` next to it), not in a separate `model/` package.
 
@@ -29,10 +29,10 @@ Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplest
 
 ### IRI handling
 
-- At the API boundary: `ZIO.fromEither(X.from(iri)).mapError(BadRequestException.apply)`.
+- At the API boundary (admin / v2): `ZIO.fromEither(X.from(iri)).mapError(BadRequestException.apply)`. In v3, map the failure to the endpoint's typed `V3ErrorInfo` variant instead of `BadRequestException`.
 - **No `unsafeFrom` in RestServices or responders**, and **never `.die` on `X.from(...)` failures** — a malformed client IRI is a 400, not a 500.
 - Layer-specific failure mapping (`BadRequestException` in RestServices, domain errors in services, `InconsistentRepositoryDataException` in repos): see `docs/development/dsp-api-iri-handling.md`.
-- V3 endpoints accept SmartIri-backed IRIs as `IriDto` and convert via `IriConverter` in the RestService: see `docs/development/dsp-api-v3-iri-handling.md`.
+- V3 endpoints: only SmartIri-backed IRIs (ontology, resource-class, property/value IRIs, which have schema-dependent representations) are accepted as `IriDto` and converted via `IriConverter` in the RestService. Simple IRIs (`ProjectIri`, `UserIri`, `ResourceIri`, `ValueIri`, …) use the typed value object directly in the endpoint definition: see `docs/development/dsp-api-v3-iri-handling.md`.
 
 ### Error handling
 
@@ -46,13 +46,15 @@ Never concatenate query strings. Use rdf4j SparqlBuilder via the helpers in `sli
 ### Imports & formatting
 
 - No fully-qualified class names in code bodies — import at the top of the file.
-- Order: stdlib / ZIO → third-party → internal `org.knora.*` (alphabetical within each group), single blank line between groups.
+- Import order is handled automatically by `sbt fmt`; don't hand-order imports.
 - Scalafmt via `sbt fmt`; CI runs `sbt check`.
 - Every source file carries the Apache-2.0 + SPDX header (managed by `sbt headerCreateAll` / `headerCheckAll`).
 
 ### Naming in human-readable text
 
-The legacy name "Knora" lives on in packages (`org.knora.webapi`) and class names — leave them. Do **not** use "Knora" in commit messages, PR titles, docs, comments, spec files, or learning documents. Use "dsp-api".
+The legacy name "Knora" lives on in packages (`org.knora.webapi`) and class names — leave them. The same applies to the `knora-base` / `knora-admin` ontologies, which were never renamed and are in active use: identifiers that refer to them (e.g. a `toKnoraBaseOntology` method) keep the name — renaming them would be misleading.
+
+Do **not** use "Knora" in free-form human-readable text — commit messages, PR titles, docs prose, comments, spec files, or learning documents. Use "dsp-api". (Code identifiers that name a real Knora package, class, or ontology are exempt, per above.)
 
 ## Testing Conventions
 
@@ -60,6 +62,7 @@ The legacy name "Knora" lives on in packages (`org.knora.webapi`) and class name
 - New repo traits ship an in-memory companion under `webapi/src/test/.../service/<Name>InMemory.scala`.
 - Test data: prefer self-contained fixtures next to the component. Only fall back to shared `test_data/` sets when unavoidable. When adding to a shared set, verify an actual *instance* of the scenario exists — not just that the schema supports it.
 - Test locations: unit → `webapi/src/test/scala/`; integration → `modules/test-it/`; ingest integration → `modules/test-ingest-integration/`; E2E → `modules/test-e2e/`; shared utilities → `modules/testkit/`.
+- For large or generated string output (SPARQL, serialized responses), mix in `GoldenTest` and assert with `assertGolden(actual, "suffix")`. The expected value is stored next to the spec under `src/test/resources/`; regenerate with `rewrite = true` (or `rewriteAll = true`) and inspect the `git diff`. See `webapi/src/test/scala/org/knora/webapi/GoldenTest.scala`.
 
 ## Commit Conventions
 
@@ -78,6 +81,8 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/). The mapping
 | `chore:`     | Maintenances               |
 
 Breaking changes use `!` (e.g. `feat!:`). Do not use "Knora" in commit messages; use "dsp-api".
+
+An optional scope in parentheses marks the affected release artifact, e.g. `feat(dsp-api): …`, `fix(sipi): …`.
 
 ## PR Template
 
