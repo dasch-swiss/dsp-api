@@ -96,7 +96,7 @@ object Dependencies {
   val rdf4jSparql = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
 
   // logging
-  val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.17" // the logging interface
+  val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.18" // the logging interface
 
   // input validation
   val commonsValidator =
