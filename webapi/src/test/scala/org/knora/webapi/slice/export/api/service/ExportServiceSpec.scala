@@ -6,22 +6,31 @@
 package org.knora.webapi.slice.api.v3.export_
 
 import _root_.org.knora.webapi.responders.IriService
+import zio.*
 import zio.Scope
 import zio.ZIO
 import zio.ZLayer
 import zio.test.*
 
+import java.nio.charset.StandardCharsets
+
+import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.GoldenTest
+import org.knora.webapi.Rendering
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
@@ -31,8 +40,10 @@ import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
+import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
@@ -41,11 +52,13 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.standoff.service.StandoffMappingServiceFake
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
@@ -67,6 +80,9 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   def footnoteClassIri: ResourceClassIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/1612/Data#FootnoteTestClass")(using sf)
 
+  def orderingTestClassIri: ResourceClassIri =
+    ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/1612/Data#OrderingTestClass")(using sf)
+
   val user       = TestDataFactory.User.rootUser
   val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw")
 
@@ -87,29 +103,37 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("ExportServiceSpec")(
+      triplestoreSuite,
+      streamingBehaviorSuite,
+    )
+
+  private val triplestoreSuite =
+    suite("with triplestore")(
       test("basic") {
         for {
           _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
-          exportedCsv   <-
-            exportService.exportResources(
-              project,
-              resourceClassIri,
-              List(
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#Place")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextParagraph")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextRich")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#FunkList")),
-              ),
-              user,
-              LanguageCode.EN,
-              includeIris = true,
-              includeArkUrls = false,
-            )
-          csv <- exportService.toCsv(exportedCsv)
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                resourceClassIri,
+                List(
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#Place")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextParagraph")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextRich")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#FunkList")),
+                ),
+                user,
+                LanguageCode.EN,
+                includeIris = true,
+                includeArkUrls = false,
+              )
+              .flatMap(_.runCollect)
+          csv = new String(bytes.toArray, StandardCharsets.UTF_8)
         } yield assertGolden(csv, "basic")
       },
       test("with includeIris = false and includeArkUrls = false") {
@@ -118,23 +142,25 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
-          exportedCsv   <-
-            exportService.exportResources(
-              project,
-              resourceClassIri,
-              List(
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#Place")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextParagraph")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextRich")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#FunkList")),
-              ),
-              user,
-              LanguageCode.DE,
-              includeIris = false,
-              includeArkUrls = false,
-            )
-          csv <- exportService.toCsv(exportedCsv)
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                resourceClassIri,
+                List(
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#Place")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextParagraph")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextRich")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#FunkList")),
+                ),
+                user,
+                LanguageCode.DE,
+                includeIris = false,
+                includeArkUrls = false,
+              )
+              .flatMap(_.runCollect)
+          csv = new String(bytes.toArray, StandardCharsets.UTF_8)
         } yield assertGolden(csv, "includeIrisFalse")
       },
       test("superclass export returns instances of subclasses") {
@@ -143,17 +169,19 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
-          exportedCsv   <-
-            exportService.exportResources(
-              project,
-              superClassIri,
-              List.empty,
-              user,
-              LanguageCode.EN,
-              includeIris = true,
-              includeArkUrls = false,
-            )
-          csv <- exportService.toCsv(exportedCsv)
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                superClassIri,
+                List.empty,
+                user,
+                LanguageCode.EN,
+                includeIris = true,
+                includeArkUrls = false,
+              )
+              .flatMap(_.runCollect)
+          csv = new String(bytes.toArray, StandardCharsets.UTF_8)
         } yield assertGolden(csv, "superclassExport")
       },
       test("with includeArkUrls = true") {
@@ -162,23 +190,25 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
-          exportedCsv   <-
-            exportService.exportResources(
-              project,
-              resourceClassIri,
-              List(
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#Place")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextParagraph")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextRich")),
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#FunkList")),
-              ),
-              user,
-              LanguageCode.EN,
-              includeIris = false,
-              includeArkUrls = true,
-            )
-          csv <- exportService.toCsv(exportedCsv)
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                resourceClassIri,
+                List(
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#Place")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextParagraph")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextRich")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#FunkList")),
+                ),
+                user,
+                LanguageCode.EN,
+                includeIris = false,
+                includeArkUrls = true,
+              )
+              .flatMap(_.runCollect)
+          csv = new String(bytes.toArray, StandardCharsets.UTF_8)
         } yield assertGolden(csv, "includeArkUrlsTrue")
       },
       test("with footnotes in text value") {
@@ -187,19 +217,21 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
-          exportedCsv   <-
-            exportService.exportResources(
-              project,
-              footnoteClassIri,
-              List(
-                PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextRich")),
-              ),
-              user,
-              LanguageCode.EN,
-              includeIris = false,
-              includeArkUrls = false,
-            )
-          csv <- exportService.toCsv(exportedCsv)
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                footnoteClassIri,
+                List(
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextRich")),
+                ),
+                user,
+                LanguageCode.EN,
+                includeIris = false,
+                includeArkUrls = false,
+              )
+              .flatMap(_.runCollect)
+          csv = new String(bytes.toArray, StandardCharsets.UTF_8)
         } yield assertGolden(csv, "withFootnotes")
       },
       test("exportResourcesOai") {
@@ -209,6 +241,88 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           exportService <- ZIO.service[ExportService]
           json          <- exportService.exportResourcesOai(project, user)
         } yield assertGolden(json, "oai")
+      },
+      test("resources are exported in alphabetical label order") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                orderingTestClassIri,
+                List.empty,
+                user,
+                LanguageCode.EN,
+                includeIris = false,
+                includeArkUrls = false,
+              )
+              .flatMap(_.runCollect)
+          csv    = new String(bytes.toArray, StandardCharsets.UTF_8)
+          lines  = csv.trim.split("\r\n").toList
+          labels = lines.tail.map(line => line.split(",").last)
+        } yield assertTrue(labels == List("Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Mike", "Mike"))
+      },
+      test("resources sharing a label are ordered by resource IRI") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                orderingTestClassIri,
+                List.empty,
+                user,
+                LanguageCode.EN,
+                includeIris = false,
+                includeArkUrls = false,
+              )
+              .flatMap(_.runCollect)
+          csv   = new String(bytes.toArray, StandardCharsets.UTF_8)
+          lines = csv.trim.split("\r\n").toList
+          // The "Resource IRI" column is always the first column. Two resources share the label "Mike"
+          // and were inserted in reverse-IRI order; they must come out sorted by resource IRI ascending.
+          mikeIris = lines.tail.filter(_.endsWith(",Mike")).map(_.split(",").head)
+        } yield assertTrue(
+          mikeIris == List("http://rdfh.ch/1612/ordering-Mike-1", "http://rdfh.ch/1612/ordering-Mike-2"),
+        )
+      },
+      test("link-value labels resolve across batch boundaries") {
+        // Resource1 (TfZ6…) links to Resource2 (wQtV…) and vice versa. With batchSize = 1 each resource is its
+        // own batch, so a link target lives in a different batch than its source. The cross-batch link-label
+        // map (built once over all exported IRIs, not per batch) must still resolve each link to the target's
+        // label — a regression to a per-batch map would yield an empty link column here.
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                resourceClassIri,
+                List(
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
+                ),
+                user,
+                LanguageCode.EN,
+                includeIris = false,
+                includeArkUrls = false,
+                batchSize = 1,
+              )
+              .flatMap(_.runCollect)
+          csv          = new String(bytes.toArray, StandardCharsets.UTF_8)
+          lines        = csv.trim.split("\r\n").toList
+          resource1Row = lines.find(_.startsWith("http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA,")).getOrElse("")
+          resource2Row = lines.find(_.startsWith("http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w,")).getOrElse("")
+        } yield assertTrue(resource1Row.split(",").last == "Resource2") &&
+          assertTrue(resource2Row.split(",").last == "Resource1")
       },
     ).provide(
       ConstructResponseUtilV2.layer,
@@ -246,4 +360,234 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       PasswordService.layer,
       KnoraUserService.layer,
     )
+
+  private val streamingBehaviorSuite = {
+    val nIris    = 600
+    val fakeIris = (0 until nIris)
+      .map(i => ResourceIri.from(s"http://rdfh.ch/0001/test$i").fold(e => throw new RuntimeException(e), identity))
+      .toSeq
+
+    val stubFindResources: FindResourcesService = new FindResourcesService {
+      def findResources(p: KnoraProject, c: Option[ResourceClassIri]): Task[Seq[ResourceIri]] =
+        ZIO.succeed(Seq.empty)
+      def findResourceIrisOrderedByLabel(p: KnoraProject, c: ResourceClassIri): Task[Seq[(ResourceIri, String)]] =
+        ZIO.succeed(fakeIris.map(iri => (iri, "")))
+    }
+
+    def mkExportService(
+      iriConverter: IriConverter,
+      ontologyRepo: OntologyRepo,
+      readResources: ReadResourcesService,
+      listsResponder: ListsResponder,
+      csvService: CsvService,
+      sf: StringFormatter,
+      appConfig: AppConfig,
+    ): ExportService =
+      ExportService(
+        iriConverter,
+        ontologyRepo,
+        readResources,
+        stubFindResources,
+        listsResponder,
+        csvService,
+        sf,
+        appConfig,
+      )
+
+    def mkReadStub(
+      onCall: (Int, Seq[ResourceIri]) => Task[ReadResourcesSequenceV2],
+    ): ZIO[Any, Nothing, ReadResourcesService] =
+      Ref.make(0).map { counter =>
+        new ReadResourcesService {
+          def readResourcesSequence(
+            resourceIris: Seq[ResourceIri],
+            propertyIri: Option[SmartIri] = None,
+            valueUuid: Option[java.util.UUID] = None,
+            preview: Boolean = false,
+            targetSchema: ApiV2Schema,
+            requestingUser: User,
+            withDeleted: Boolean = true,
+            queryStandoff: Boolean = false,
+            skipRetrievalChecks: Boolean = false,
+            standoffTagFilter: Option[SmartIri] = None,
+          ): Task[ReadResourcesSequenceV2] =
+            counter.getAndUpdate(_ + 1).flatMap(n => onCall(n, resourceIris))
+          def readResourcesSequencePar(
+            resourceIris: Seq[ResourceIri],
+            propertyIri: Option[SmartIri] = None,
+            valueUuid: Option[java.util.UUID] = None,
+            preview: Boolean = false,
+            targetSchema: ApiV2Schema,
+            requestingUser: User,
+            withDeleted: Boolean = true,
+            queryStandoff: Boolean = false,
+            skipRetrievalChecks: Boolean = false,
+            standoffTagFilter: Option[SmartIri] = None,
+          ): Task[ReadResourcesSequenceV2] = null
+          def getResources(
+            resourceIris: Seq[ResourceIri],
+            propertyIri: Option[SmartIri] = None,
+            targetSchema: ApiV2Schema,
+            schemaOptions: Set[Rendering],
+            requestingUser: User,
+          ): Task[ReadResourcesSequenceV2] = null
+          def getResourcesWithDeletedResource(
+            resourceIris: Seq[ResourceIri],
+            propertyIri: Option[SmartIri] = None,
+            valueUuid: Option[java.util.UUID] = None,
+            versionDate: Option[VersionDate] = None,
+            withDeleted: Boolean = true,
+            showDeletedValues: Boolean = false,
+            targetSchema: ApiV2Schema,
+            schemaOptions: Set[Rendering],
+            requestingUser: User,
+          ): Task[ReadResourcesSequenceV2] = null
+          def getResourcePreviewWithDeletedResource(
+            resourceIris: Seq[ResourceIri],
+            withDeleted: Boolean = true,
+            targetSchema: ApiV2Schema,
+            requestingUser: User,
+          ): Task[ReadResourcesSequenceV2] = null
+          def getResourcePreview(
+            resourceIris: Seq[ResourceIri],
+            withDeleted: Boolean = true,
+            targetSchema: ApiV2Schema,
+            requestingUser: User,
+          ): Task[ReadResourcesSequenceV2] = null
+        }
+      }
+
+    suite("streaming behavior")(
+      test("batchSize defaults to the configured app.export.batch-size") {
+        // Fix-confirmation for the review point that batch size must be a config value, not a hard-coded literal.
+        // stubFindResources yields 600 IRIs; with the configured batch size of 100 the export must issue 6 batches
+        // of 100 (the old hard-coded 500 would have produced batches of 500 + 100). exportResources is called
+        // WITHOUT an explicit batchSize, so the value can only come from AppConfig.
+        for {
+          _              <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          project        <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          iriConverter   <- ZIO.service[IriConverter]
+          ontologyRepo   <- ZIO.service[OntologyRepo]
+          listsResponder <- ZIO.service[ListsResponder]
+          csvService     <- ZIO.service[CsvService]
+          sf             <- ZIO.service[StringFormatter]
+          appConfig      <- ZIO.service[AppConfig]
+          configured      = appConfig.copy(`export` = appConfig.`export`.copy(batchSize = 100))
+          batchSizes     <- Ref.make(Chunk.empty[Int])
+          readStub       <- mkReadStub { (_, iris) =>
+                        batchSizes.update(_ :+ iris.size).as(ReadResourcesSequenceV2(Seq.empty))
+                      }
+          exportService =
+            mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf, configured)
+          _ <- exportService
+                 .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
+                 .flatMap(_.runDrain)
+          sizes <- batchSizes.get
+        } yield assertTrue(sizes == Chunk.fill(6)(100))
+      },
+      test("mid-stream batch failure propagates through stream error channel") {
+        val failure = new RuntimeException("mid-stream batch failure")
+        for {
+          _              <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          project        <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          iriConverter   <- ZIO.service[IriConverter]
+          ontologyRepo   <- ZIO.service[OntologyRepo]
+          listsResponder <- ZIO.service[ListsResponder]
+          csvService     <- ZIO.service[CsvService]
+          sf             <- ZIO.service[StringFormatter]
+          appConfig      <- ZIO.service[AppConfig]
+          readStub       <- mkReadStub { (n, _) =>
+                        if n == 0 then ZIO.succeed(ReadResourcesSequenceV2(Seq.empty))
+                        else ZIO.fail(failure)
+                      }
+          exportService =
+            mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf, appConfig)
+          result <- exportService
+                      .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
+                      .flatMap(_.runDrain)
+                      .exit
+        } yield assertTrue(result.isFailure)
+      },
+      test("stream emits first byte before any batch completes") {
+        for {
+          _              <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          project        <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          iriConverter   <- ZIO.service[IriConverter]
+          ontologyRepo   <- ZIO.service[OntologyRepo]
+          listsResponder <- ZIO.service[ListsResponder]
+          csvService     <- ZIO.service[CsvService]
+          sf             <- ZIO.service[StringFormatter]
+          appConfig      <- ZIO.service[AppConfig]
+          readStub       <- mkReadStub((_, _) => ZIO.never)
+          exportService   =
+            mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf, appConfig)
+          resultOpt <-
+            exportService
+              .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
+              .flatMap(_.take(1).runCollect)
+              .timeout(2.seconds)
+        } yield assertTrue(resultOpt.isDefined) && assertTrue(resultOpt.get.nonEmpty)
+      },
+      test("setup failure surfaces as an effect failure before the stream is consumed") {
+        // Regression guard: setup (ordered-IRI fetch, link-labels, vocabularies, header) runs inside the returned
+        // Task, so a setup failure must fail the effect itself — observable WITHOUT draining the stream body. If
+        // setup were deferred into the ZStream, this failure would only appear after the 200 OK was committed,
+        // yielding a silently-truncated success instead of a 5xx.
+        val failure                                    = new RuntimeException("setup failure")
+        val failingFindResources: FindResourcesService = new FindResourcesService {
+          def findResources(p: KnoraProject, c: Option[ResourceClassIri]): Task[Seq[ResourceIri]] =
+            ZIO.succeed(Seq.empty)
+          def findResourceIrisOrderedByLabel(p: KnoraProject, c: ResourceClassIri): Task[Seq[(ResourceIri, String)]] =
+            ZIO.fail(failure)
+        }
+        for {
+          _              <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          project        <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          iriConverter   <- ZIO.service[IriConverter]
+          ontologyRepo   <- ZIO.service[OntologyRepo]
+          listsResponder <- ZIO.service[ListsResponder]
+          csvService     <- ZIO.service[CsvService]
+          sf             <- ZIO.service[StringFormatter]
+          appConfig      <- ZIO.service[AppConfig]
+          readStub       <- mkReadStub((_, _) => ZIO.never)
+          exportService   =
+            ExportService(
+              iriConverter,
+              ontologyRepo,
+              readStub,
+              failingFindResources,
+              listsResponder,
+              csvService,
+              sf,
+              appConfig,
+            )
+          exit <- exportService
+                    .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
+                    .exit
+        } yield assertTrue(exit.isFailure)
+      },
+    ).provide(
+      AppConfig.layer,
+      CacheManager.layer,
+      CsvService.layer,
+      emptyDataset,
+      IriConverter.layer,
+      KnoraProjectRepoLive.layer,
+      KnoraProjectService.layer,
+      LicenseRepo.layer,
+      OntologyCacheLive.layer,
+      OntologyRepoLive.layer,
+      StringFormatter.test,
+      TriplestoreServiceInMemory.layer,
+      ListsResponder.layer,
+      IriService.layer,
+      AuthorizationRestService.layer,
+      PredicateObjectMapper.layer,
+      KnoraGroupService.layer,
+      KnoraGroupRepoLive.layer,
+      KnoraUserRepoLive.layer,
+      PasswordService.layer,
+      KnoraUserService.layer,
+    )
+  }
 }

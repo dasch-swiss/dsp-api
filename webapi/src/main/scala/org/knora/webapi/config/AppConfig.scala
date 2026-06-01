@@ -31,9 +31,22 @@ final case class AppConfig(
   jwt: JwtConfig,
   dspIngest: DspIngestConfig,
   features: Features,
+  `export`: ExportConfig,
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
 }
+
+/**
+ * Tuning knobs for the streaming CSV export (`POST /v3/export/resources`).
+ *
+ * `batchSize` is the number of resources fetched and encoded per triplestore round-trip; `parallelism` is how many
+ * batches are fetched concurrently. These are operational knobs — they live in config so the values can be changed per
+ * deployment (e.g. when prod moves to different hardware) without a code change, release and redeploy.
+ */
+final case class ExportConfig(
+  batchSize: Int,
+  parallelism: Int,
+)
 
 final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String]) {
   def issuerAsString(): String = issuer.getOrElse(
