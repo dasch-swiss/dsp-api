@@ -12,6 +12,7 @@ import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.ModelOps
 
 object OntologyTransformerSpec extends ZIOSpecDefault {
@@ -20,6 +21,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
 
   private val shortcode   = Shortcode.unsafeFrom("9999")
   private val resourceIri = ResourceIri.makeNew(shortcode)
+  private val valueIri    = ValueIri.makeNew(resourceIri)
 
   private val onto     = "http://0.0.0.0:3333/ontology/9999/onto/v2#"
   private val knoraApi = "http://api.knora.org/ontology/knora-api/v2#"
@@ -46,6 +48,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
        |    "@id": "$resourceIri",
        |    "rdfs:label": "test",
        |    "$valueProp": {
+       |      "@id": "$valueIri",
        |      "@type": "$valueClass",
        |      $inner
        |    },
@@ -70,10 +73,11 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
        |
        | <$resourceIri>
        |     rdfs:label  "test" ;
-       |     onto:$propLocalName [
-       |         a                        knora-base:$valueClass ;
-       |         knora-base:$valueHasProp $valueLiteral
-       |     ] .
+       |     onto:$propLocalName <$valueIri> .
+       |
+       | <$valueIri>
+       |     a                        knora-base:$valueClass ;
+       |     knora-base:$valueHasProp $valueLiteral .
        |""".stripMargin
 
   private def runTransform(jsonLd: String, expectedTurtle: String) =
@@ -262,11 +266,12 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |
                             | <$resourceIri>
                             |     rdfs:label "test" ;
-                            |     onto:testSimpleText [
-                            |         a                          knora-base:TextValue ;
-                            |         knora-base:valueHasString  "Text 1" ;
-                            |         knora-base:valueHasComment "comment"
-                            |     ] .
+                            |     onto:testSimpleText <$valueIri> .
+                            |
+                            | <$valueIri>
+                            |     a                          knora-base:TextValue ;
+                            |     knora-base:valueHasString  "Text 1" ;
+                            |     knora-base:valueHasComment "comment" .
                             |""".stripMargin,
       )
     },
@@ -287,11 +292,12 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
              |
              | <$resourceIri>
              |     rdfs:label "test" ;
-             |     onto:testRichtext [
-             |         a                              knora-base:TextValue ;
-             |         knora-base:textValueAsXml      "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<text>Text</text>" ;
-             |         knora-base:textValueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>
-             |     ] .
+             |     onto:testRichtext <$valueIri> .
+             |
+             | <$valueIri>
+             |     a                              knora-base:TextValue ;
+             |     knora-base:textValueAsXml      "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<text>Text</text>" ;
+             |     knora-base:textValueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> .
              |""".stripMargin,
       )
     },
@@ -322,18 +328,19 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |
                             | <$resourceIri>
                             |     rdfs:label "test" ;
-                            |     onto:testSubDate1 [
-                            |         a                                 knora-base:DateValue ;
-                            |         knora-base:dateValueHasCalendar   "GREGORIAN" ;
-                            |         knora-base:dateValueHasStartYear  "1800"^^xsd:integer ;
-                            |         knora-base:dateValueHasStartMonth "1"^^xsd:integer ;
-                            |         knora-base:dateValueHasStartDay   "1"^^xsd:integer ;
-                            |         knora-base:dateValueHasStartEra   "CE" ;
-                            |         knora-base:dateValueHasEndYear    "1900"^^xsd:integer ;
-                            |         knora-base:dateValueHasEndMonth   "1"^^xsd:integer ;
-                            |         knora-base:dateValueHasEndDay     "1"^^xsd:integer ;
-                            |         knora-base:dateValueHasEndEra     "CE"
-                            |     ] .
+                            |     onto:testSubDate1 <$valueIri> .
+                            |
+                            | <$valueIri>
+                            |     a                                 knora-base:DateValue ;
+                            |     knora-base:dateValueHasCalendar   "GREGORIAN" ;
+                            |     knora-base:dateValueHasStartYear  "1800"^^xsd:integer ;
+                            |     knora-base:dateValueHasStartMonth "1"^^xsd:integer ;
+                            |     knora-base:dateValueHasStartDay   "1"^^xsd:integer ;
+                            |     knora-base:dateValueHasStartEra   "CE" ;
+                            |     knora-base:dateValueHasEndYear    "1900"^^xsd:integer ;
+                            |     knora-base:dateValueHasEndMonth   "1"^^xsd:integer ;
+                            |     knora-base:dateValueHasEndDay     "1"^^xsd:integer ;
+                            |     knora-base:dateValueHasEndEra     "CE" .
                             |""".stripMargin,
       )
     },
