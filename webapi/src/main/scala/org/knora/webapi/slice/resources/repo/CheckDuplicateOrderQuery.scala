@@ -21,11 +21,11 @@ object CheckDuplicateOrderQuery extends QueryBuilderHelper {
   def build(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): Ask = {
     val existingValue = variable("existingValue")
     val isDeletedVar  = variable("isDeleted")
-    val pattern1        = iri(resourceIri.value).has(toRdfIri(propertyIri), existingValue)
-    val pattern2        = existingValue.has(KB.valueHasOrder, literalOf(order))
+    val pattern1      = iri(resourceIri.value).has(toRdfIri(propertyIri), existingValue)
+    val pattern2      = existingValue.has(KB.valueHasOrder, literalOf(order))
     // OPTIONAL so values lacking knora-base:isDeleted (e.g. legacy data) are treated as non-deleted.
     val optionalDeleted = GraphPatterns.optional(existingValue.has(KB.isDeleted, isDeletedVar))
-    val where = GraphPatterns
+    val where           = GraphPatterns
       .and(pattern1, pattern2, optionalDeleted)
       .filter(
         Expressions.or(
