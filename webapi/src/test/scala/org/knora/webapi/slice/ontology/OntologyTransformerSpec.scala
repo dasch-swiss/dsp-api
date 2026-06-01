@@ -12,10 +12,13 @@ import zio.test.*
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Instant
 
 import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.ModelOps
@@ -87,12 +90,36 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
        |     knora-base:$valueHasProp $valueLiteral .
        |""".stripMargin
 
+  /** Stage-1 contract: drives the package-private `toInternalSchema` (IRI rewrite only). */
   private def runTransform(jsonLd: String, expectedTurtle: String) =
     ZIO.scoped {
       for {
         inputPath  <- ZIO.acquireRelease(writeTempFile(".jsonld", jsonLd).orDie)(deleteIfExists)
-        outputPath <- transformer(_.toKnoraBase(inputPath))
-        _          <- ZIO.addFinalizer(deleteIfExists(outputPath))
+        outputPath <- transformer(_.toInternalSchema(inputPath))
+        actualNQ   <- ZIO.attempt(new String(Files.readAllBytes(outputPath), StandardCharsets.UTF_8))
+        actual     <- ModelOps.from(actualNQ, Lang.NTRIPLES)
+        expected   <- ModelOps.fromTurtle(expectedTurtle)
+        iso         = actual.isIsomorphicWith(expected)
+      } yield assertTrue(iso)
+    }
+
+  // ---- Stage 2 ----
+
+  private val knownInstant = Instant.parse("2026-01-01T00:00:00Z")
+
+  private val ctx = ConversionContext(
+    attachedToUser = UserIri.unsafeFrom("http://rdfh.ch/users/exampleUser"),
+    attachedToProject = ProjectIri.unsafeFrom("http://rdfh.ch/projects/9999"),
+    permissions = "CR knora-admin:Creator|V knora-admin:KnownUser",
+  )
+
+  /** Stage-2: drives the full `toKnoraBase` with a fixed clock so synthesised dates are deterministic. */
+  private def runTransformStage2(jsonLd: String, expectedTurtle: String) =
+    ZIO.scoped {
+      for {
+        inputPath  <- ZIO.acquireRelease(writeTempFile(".jsonld", jsonLd).orDie)(deleteIfExists)
+        _          <- TestClock.setTime(knownInstant)
+        outputPath <- transformer(_.toKnoraBase(inputPath, ctx))
         actualNQ   <- ZIO.attempt(new String(Files.readAllBytes(outputPath), StandardCharsets.UTF_8))
         actual     <- ModelOps.from(actualNQ, Lang.NTRIPLES)
         expected   <- ModelOps.fromTurtle(expectedTurtle)
@@ -356,11 +383,45 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  private val resourceMetadata = suite("Stage 2 — Resource metadata synthesis")(
+    test("synthesises attachedToUser, attachedToProject, hasPermissions, creationDate and isDeleted on the resource") {
+      runTransformStage2(
+        jsonLd = resourceWithValueJsonLd(
+          valueProp = s"${onto}testBoolean",
+          valueClass = s"${knoraApi}BooleanValue",
+          inner = s""""${knoraApi}booleanValueAsBoolean": { "@type": "${xsd}boolean", "@value": true }""",
+        ),
+        expectedTurtle = s"""
+                            | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                            | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+                            | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+                            | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+                            | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                            |
+                            | <$resourceIri>
+                            |     a                            onto:Example ;
+                            |     rdfs:label                   "test" ;
+                            |     onto:testBoolean             <$valueIri> ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.value}> ;
+                            |     knora-base:attachedToProject <${ctx.attachedToProject.value}> ;
+                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:creationDate      "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:isDeleted         false .
+                            |
+                            | <$valueIri>
+                            |     a                          knora-base:BooleanValue ;
+                            |     knora-base:valueHasBoolean "true"^^xsd:boolean .
+                            |""".stripMargin,
+      )
+    },
+  )
+
   override def spec = suite("OntologyTransformerSpec")(
     simpleScalarValues,
     iriRefValues,
     textValues,
     dateValues,
+    resourceMetadata,
   ).provide(OntologyTransformer.layer, StringFormatter.test, TestAppConfig.layer())
 
 }
