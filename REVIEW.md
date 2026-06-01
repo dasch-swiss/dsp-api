@@ -14,7 +14,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 ### Services & API layering
 
-- [ ] New services are `final case class … private (…)` with `ZLayer.derive` in the companion — **no** new trait + `*Live` split for plain domain services
+- [ ] New services are `final class (…)` with `ZLayer.derive` in the companion — **no** new trait + `*Live` split for plain domain services
 - [ ] Trait + `*Live` is acceptable only for repos and explicit test seams; any such new repo ships an in-memory companion at `webapi/src/test/.../service/<Name>InMemory.scala`
 - [ ] Endpoints split across the three tiers: `*Endpoints` (definition) → `*ServerEndpoints` (wiring) → `*RestService` (logic) — and registered in `CompleteApiServerEndpoints`
 - [ ] Secured RestService methods are curried `def x(user: User)(args…): Task[Resp]` (Tapir wiring depends on this)

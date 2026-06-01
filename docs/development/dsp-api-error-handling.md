@@ -102,7 +102,7 @@ When a branch represents state we believe is unreachable — a `None` after we'v
 
 ### Use `dieMessage` and `orDieWith`, not bare `die` / `orDie`
 
-`ZIO.dieMessage(String)` and `.orDieWith(e => Throwable)` exist precisely to attach an explanation. The message states the invariant in code — like Rust's `expect("…")` vs `unwrap()`. No comment needed.
+`ZIO.dieMessage(String)` and `.orDieWith(e => Throwable)` exist precisely to attach an explanation. The message states the invariant in code. No comment needed.
 
 ```scala
 // ✓ Carries the invariant

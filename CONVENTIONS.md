@@ -10,7 +10,7 @@ Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplest
 
 ### Services
 
-- `final case class ServiceName(private val …)` with `val layer = ZLayer.derive[ServiceName]` in the companion. No trait + `*Live` split for new domain services.
+- `final class ServiceName(val …)` with `val layer = ZLayer.derive[ServiceName]` in the companion. No trait + `*Live` split for new domain services.
 - **Carve-out**: trait + `*Live` is allowed for repos and other seams that need in-memory test doubles (`KnoraGroupRepo` / `KnoraGroupRepoLive`, `OntologyRepo`, `JwtService`, `Authenticator`). New repo traits ship an in-memory companion at `webapi/src/test/.../service/<Name>InMemory.scala`.
 
 ### API layer — three-tier split (mandatory)
@@ -23,8 +23,9 @@ Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplest
 
 ### Value objects
 
-- `final case class X private (value: …)` extending the appropriate `*Value` base, with `object X extends StringValueCompanion[X]` (or `WithFrom[I, X]`).
-- Smart constructor: `def from(value): Either[String, X]`. `unsafeFrom` is for known-good inputs only. Codecs declared with `given`. Full pattern in `docs/development/dsp-api-value-types.md`.
+- `final case class X private (value: I)` extending the appropriate `*Value` base, with `object X extends  WithFrom[I, X]` or a specialized companion e.g. StringValueCompanion[X]` in case `I` is `String`.
+- Smart constructor: `def from(value): Either[String, X]`. `unsafeFrom` is for known-good inputs only, checks invariants and throws if invalid. Codecs declared with `given`. Full pattern in `docs/development/dsp-api-value-types.md`.
+-  Factory functions should be named `makeNew`
 
 ### IRI handling
 
