@@ -105,6 +105,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
 
   // ---- Stage 2 ----
 
+  private val valueIri2    = ValueIri.makeNew(resourceIri)
   private val knownInstant = Instant.parse("2026-01-01T00:00:00Z")
 
   private val ctx = ConversionContext(
@@ -402,15 +403,72 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |     a                            onto:Example ;
                             |     rdfs:label                   "test" ;
                             |     onto:testBoolean             <$valueIri> ;
-                            |     knora-base:attachedToUser    <${ctx.attachedToUser.value}> ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
                             |     knora-base:attachedToProject <${ctx.attachedToProject.value}> ;
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
                             |     knora-base:creationDate      "$knownInstant"^^xsd:dateTimeStamp ;
                             |     knora-base:isDeleted         false .
                             |
                             | <$valueIri>
-                            |     a                          knora-base:BooleanValue ;
-                            |     knora-base:valueHasBoolean "true"^^xsd:boolean .
+                            |     a                            knora-base:BooleanValue ;
+                            |     knora-base:valueHasBoolean   "true"^^xsd:boolean ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:valueHasUUID      "${valueIri.valueId.value}" ;
+                            |     knora-base:isDeleted         false .
+                            |""".stripMargin,
+      )
+    },
+    test("synthesises value metadata independently on each sibling value of the same property") {
+      runTransformStage2(
+        jsonLd = s"""
+                    |[{
+                    |    "@id": "$resourceIri",
+                    |    "@type": "${onto}Example",
+                    |    "rdfs:label": "test",
+                    |    "${onto}testInt": [
+                    |      { "@id": "$valueIri",  "@type": "${knoraApi}IntValue",
+                    |        "${knoraApi}intValueAsInt": { "@type": "${xsd}int", "@value": "1" } },
+                    |      { "@id": "$valueIri2", "@type": "${knoraApi}IntValue",
+                    |        "${knoraApi}intValueAsInt": { "@type": "${xsd}int", "@value": "2" } }
+                    |    ],
+                    |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+                    |}]""".stripMargin,
+        expectedTurtle = s"""
+                            | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                            | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+                            | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+                            | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+                            | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                            |
+                            | <$resourceIri>
+                            |     a                            onto:Example ;
+                            |     rdfs:label                   "test" ;
+                            |     onto:testInt                 <$valueIri>, <$valueIri2> ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                            |     knora-base:attachedToProject <${ctx.attachedToProject.value}> ;
+                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:creationDate      "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:isDeleted         false .
+                            |
+                            | <$valueIri>
+                            |     a                            knora-base:IntValue ;
+                            |     knora-base:valueHasInteger   "1"^^xsd:int ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:valueHasUUID      "${valueIri.valueId.value}" ;
+                            |     knora-base:isDeleted         false .
+                            |
+                            | <$valueIri2>
+                            |     a                            knora-base:IntValue ;
+                            |     knora-base:valueHasInteger   "2"^^xsd:int ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:valueHasUUID      "${valueIri2.valueId.value}" ;
+                            |     knora-base:isDeleted         false .
                             |""".stripMargin,
       )
     },

@@ -10,6 +10,7 @@ import org.apache.jena.graph.Node
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
 import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.RDFNode
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFParser
 import org.apache.jena.riot.system.StreamRDF
@@ -36,6 +37,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.RdfDataMgr
 
 final case class TransformerError(message: String)
@@ -95,6 +97,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       now   <- Clock.instant
       model <- RdfDataMgr.loadModel(nq, Lang.NTRIPLES)
       _     <- ZIO.attempt(addResourceMetadata(model, ctx, now))
+      _     <- ZIO.attempt(addValueMetadata(model, ctx, now))
       kb    <- tempFile("onto-transformer-kb-", ".nq")
       _     <- RdfDataMgr.write(model, kb, Lang.NTRIPLES)
     } yield kb)
@@ -141,6 +144,39 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       r.addProperty(hasPermissions, ctx.permissions)
       r.addProperty(creationDate, creationDateLit)
       r.addProperty(isDeleted, falseLit)
+    }
+  }
+
+  /**
+   * Step 2 — synthesise the cardinality-1 `knora-base` metadata on every value. Values are identified by IRI shape
+   * ([[ValueIri.from]] succeeds) and keep their input IRI; `valueHasUUID` is the IRI's own UUID segment. Any incoming
+   * system metadata is dropped first so synthesized values win. `valueHasString` is deferred.
+   */
+  private def addValueMetadata(model: Model, ctx: ConversionContext, now: Instant): Unit = {
+    val attachedToUser    = model.createProperty(KnoraBase.AttachedToUser)
+    val hasPermissions    = model.createProperty(KnoraBase.HasPermissions)
+    val isDeleted         = model.createProperty(KnoraBase.IsDeleted)
+    val valueCreationDate = model.createProperty(KnoraBase.ValueCreationDate)
+    val valueHasUUID      = model.createProperty(KnoraBase.ValueHasUUID)
+
+    val userResource    = model.createResource(ctx.attachedToUser.value)
+    val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTimeStamp)
+    val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
+
+    def asValueIri(n: RDFNode): Option[ValueIri] =
+      Option.when(n.isURIResource)(n.asResource.getURI).flatMap(ValueIri.from(_).toOption)
+
+    model.listSubjects().asScala.toList.flatMap(s => asValueIri(s).map((s, _))).foreach { case (v, iri) =>
+      v.removeAll(attachedToUser)
+        .removeAll(hasPermissions)
+        .removeAll(valueCreationDate)
+        .removeAll(valueHasUUID)
+        .removeAll(isDeleted)
+      v.addProperty(attachedToUser, userResource)
+      v.addProperty(hasPermissions, ctx.permissions)
+      v.addProperty(valueCreationDate, creationDateLit)
+      v.addProperty(valueHasUUID, iri.valueId.value)
+      v.addProperty(isDeleted, falseLit)
     }
   }
 
