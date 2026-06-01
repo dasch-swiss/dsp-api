@@ -166,6 +166,11 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
         rdfs:label       "SubClass1"@en;
         rdfs:subClassOf  <http://www.knora.org/ontology/1612/Data#SuperClass1> .
 
+<http://www.knora.org/ontology/1612/Data#OrderingTestClass>
+        rdf:type         owl:Class;
+        rdfs:label       "OrderingTestClass"@en;
+        rdfs:subClassOf  knora-base:Resource .
+
 <http://www.knora.org/ontology/1612/Data>
         rdf:type                      owl:Ontology;
         rdfs:comment                  "Comment";

@@ -49,6 +49,17 @@ object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
           .flatMap(_.assert200)
           .map(assertGolden(_, "withArkUrls"))
       },
+      test("streams the response chunked (no buffered Content-Length)") {
+        // Proves the endpoint streams rather than buffers: a chunked response carries no Content-Length, whereas
+        // the pre-streaming buffered body set one. This is the only assertion that exercises REQ-1.1 on the wire.
+        TestExportApiClient
+          .postExportResources(request, anythingAdminUser)
+          .map { response =>
+            val transferEncoding = response.header("Transfer-Encoding")
+            val contentLength    = response.header("Content-Length")
+            assertTrue(transferEncoding.exists(_.toLowerCase.contains("chunked")) || contentLength.isEmpty)
+          }
+      },
     ),
   )
 }
