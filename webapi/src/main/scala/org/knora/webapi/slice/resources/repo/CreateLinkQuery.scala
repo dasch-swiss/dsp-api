@@ -67,7 +67,7 @@ object CreateLinkQuery extends QueryBuilderHelper {
       val dataGraph         = graphIri(project)
       val resource          = toRdfIri(resourceIri)
       val linkProperty      = toRdfIri(linkUpdate.linkPropertyIri)
-      val linkValueProperty = Rdf.iri(linkUpdate.linkPropertyIri.toInternalSchema.toIri + "Value")
+      val linkValueProperty = toRdfIri(linkUpdate.linkPropertyIri.toInternalSchema.fromLinkPropToLinkValueProp)
       val linkTarget        = Rdf.iri(linkUpdate.linkTargetIri)
       val newLinkValue      = Rdf.iri(linkUpdate.newLinkValueIri.value)
 

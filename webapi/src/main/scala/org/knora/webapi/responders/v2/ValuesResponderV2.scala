@@ -532,7 +532,7 @@ final class ValuesResponderV2(
         }
 
       // Duplicate-order check: use the link value property IRI (the property that attaches the LinkValue to the resource).
-      linkValuePropertyIri = (sparqlTemplateLinkUpdate.linkPropertyIri.toInternalSchema.toIri + "Value").toSmartIri
+      linkValuePropertyIri = sparqlTemplateLinkUpdate.linkPropertyIri.toInternalSchema.fromLinkPropToLinkValueProp
       resourceIriInternal <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
       // IriLocker serialises concurrent writes per resource IRI within a single JVM instance,
       // making the ASK check + INSERT effectively atomic under single-instance deployment.
