@@ -176,7 +176,7 @@ object Dependencies {
   val topbraidShacl        = "org.topbraid" % "shacl" % TopbraidShaclVersion
 
   val shaclValidatorDependencies     = Seq(topbraidShacl, zio)
-  val slf4jSimple                    = "org.slf4j" % "slf4j-simple" % "2.0.17"
+  val slf4jSimple                    = "org.slf4j" % "slf4j-simple" % "2.0.18"
   val shaclValidatorTestDependencies = Seq(zioTest, zioTestSbt, slf4jSimple).map(_ % Test)
 
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
