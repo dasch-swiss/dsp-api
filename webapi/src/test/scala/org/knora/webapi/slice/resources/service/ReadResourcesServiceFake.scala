@@ -26,6 +26,9 @@ final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) ex
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
+    queryStandoff: Boolean = false,
+    skipRetrievalChecks: Boolean = false,
+    standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2] =
     ZIO.succeed(ReadResourcesSequenceV2(readResources, Set.empty, false))
 

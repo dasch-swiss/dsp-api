@@ -34,6 +34,9 @@ trait ReadResourcesService {
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
+    queryStandoff: Boolean = false,
+    skipRetrievalChecks: Boolean = false,
+    standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2]
 
   def readResourcesSequencePar(
@@ -209,6 +212,9 @@ final case class ReadResourcesServiceLive(
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
+    queryStandoff: Boolean = false,
+    skipRetrievalChecks: Boolean = false,
+    standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2] =
     readResourcesSequence_(
       resourceIris,
@@ -218,6 +224,9 @@ final case class ReadResourcesServiceLive(
       targetSchema,
       requestingUser,
       withDeleted = withDeleted,
+      queryStandoff = queryStandoff,
+      skipRetrievalChecks = skipRetrievalChecks,
+      standoffTagFilter = standoffTagFilter,
     )
 
   def getResources(

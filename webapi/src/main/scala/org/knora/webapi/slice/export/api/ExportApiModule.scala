@@ -8,6 +8,7 @@ package org.knora.webapi.slice.`export`.api
 import zio.URLayer
 import zio.ZLayer
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.responders.admin.ListsResponder
@@ -23,6 +24,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object ExportApiModule { self =>
   type Dependencies =
     // format: off
+    AppConfig &
     ConstructResponseUtilV2 &
     CsvService &
     IriConverter &
