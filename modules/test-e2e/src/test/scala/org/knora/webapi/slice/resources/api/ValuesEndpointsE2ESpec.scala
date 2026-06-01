@@ -4180,9 +4180,9 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
         } yield assertTrue(valueTexts == Seq("Delta", "Bravo"))
       },
-      test("POST /v2/resources with explicit order 1 and one value with no explicit order returns 201") {
-        // "First" has explicit order 1; "Second" has no explicit order. Only explicit-vs-explicit
-        // duplicates are rejected at parse time — this mixed case must succeed.
+      test("POST /v2/resources with explicit order 5 and one value with no explicit order returns 201") {
+        // "First" has explicit order 5; "Second" has no explicit order (injected index 1).
+        // Orders 5 and 1 do not collide, so this mixed case must succeed.
         val jsonLd =
           s"""{
              |  "@type" : "anything:Thing",
@@ -4192,7 +4192,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |      "knora-api:valueAsString" : "First",
              |      "knora-api:valueHasOrder" : {
              |        "@type" : "xsd:integer",
-             |        "@value" : 1
+             |        "@value" : 5
              |      }
              |    },
              |    {
