@@ -27,7 +27,7 @@ object PlaceholderIri extends WithFrom[String, PlaceholderIri] {
     else Left(s"<$value> is not a placeholder IRI.")
 }
 
-final case class ResourceId private (override val value: String) extends StableIri
+final case class ResourceId private (override val value: String) extends StringValue
 
 object ResourceId extends WithFrom[String, ResourceId] {
   private val ResourceIdRegex: Regex = """^[A-Za-z0-9_-]+$""".r
@@ -64,7 +64,7 @@ object ResourceIri extends WithFrom[String, ResourceIri] {
   def from(iri: SmartIri): Either[String, ResourceIri] = from(iri.toString)
 }
 
-final case class ValueId private (override val value: String) extends StableIri
+final case class ValueId private (override val value: String) extends StringValue
 
 object ValueId extends WithFrom[String, ValueId] {
   private val ValueIdRegex: Regex = """^[A-Za-z0-9_-]+$""".r
