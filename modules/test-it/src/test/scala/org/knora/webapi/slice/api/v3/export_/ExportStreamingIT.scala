@@ -23,8 +23,14 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
  *
  * Two purposes:
  *   1. Tuning vehicle -- emits per-combo timings so we can pick production defaults from data, not guesses.
- *   2. Regression guard -- the matrix asserts that the production combo (5, 500) completes within a generous wall-time
+ *   2. Regression guard -- the matrix asserts that the production combo (5, 100) completes within a generous wall-time
  *      budget and produces the expected number of CSV rows.
+ *
+ * Caveat: this IT `runCollect`s the whole stream and measures *total throughput*. It does NOT observe the
+ * inter-flush gap that drives the real production failure mode (a single slow in-order batch going silent past the
+ * ingress 60s idle timeout). incunabula `page` is also light-text data; rich-text/standoff classes have far higher
+ * per-batch latency. Treat these timings as a throughput sanity check, not as validation of the idle-timeout fix --
+ * that lives in the conservative `app.export.batch-size` default.
  *
  * Excluded from default CI because it is multi-minute (Fuseki testcontainer startup + incunabula bulk-load + matrix).
  * Run on demand with: `sbt "test-it/testOnly *ExportStreamingIT"`.
@@ -75,7 +81,7 @@ object ExportStreamingIT extends E2EZSpec {
                     } yield (parallelism, batchSize, java.time.Duration.ofNanos(t1 - t0), lines)
 
         // Warmup: prime Fuseki query plan cache + JVM JIT for the production combo. Discarded.
-        _ <- runOnce(5, 500)
+        _ <- runOnce(5, 100)
 
         results <- ZIO.foreach(matrix) { case (p, b) => runOnce(p, b) }
 
@@ -87,8 +93,8 @@ object ExportStreamingIT extends E2EZSpec {
 
         // All combos must produce the same number of CSV lines (1 header + N data rows, deterministic order).
         lineCounts = results.map(_._4).distinct
-        // Production combo (5, 500) is the regression guard.
-        production = results.find { case (p, b, _, _) => p == 5 && b == 500 }.get
+        // Production combo (5, 100) is the regression guard.
+        production = results.find { case (p, b, _, _) => p == 5 && b == 100 }.get
       } yield assertTrue(
         lineCounts.size == 1,                                // all combos agree on row count
         lineCounts.head > 1000,                              // sanity: incunabula:page has 4024 instances
