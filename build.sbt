@@ -447,7 +447,7 @@ lazy val ingest = {
       name          := "dsp-ingest",
       headerLicense := projectLicense,
       libraryDependencies ++= db ++ tapir ++ metrics ++ zioSeq ++ zioSttpClient ++ openTelemetryWithSentry ++ Seq(
-        "commons-io"  % "commons-io"                        % "2.21.0",
+        "commons-io"  % "commons-io"                        % "2.22.0",
         "dev.zio"    %% "zio-config"                        % ZioConfigVersion,
         "dev.zio"    %% "zio-config-magnolia"               % ZioConfigVersion,
         "dev.zio"    %% "zio-config-typesafe"               % ZioConfigVersion,
