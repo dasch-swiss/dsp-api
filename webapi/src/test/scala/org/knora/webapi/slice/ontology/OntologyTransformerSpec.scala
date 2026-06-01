@@ -46,6 +46,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
     s"""
        |[{
        |    "@id": "$resourceIri",
+       |    "@type": "${onto}Example",
        |    "rdfs:label": "test",
        |    "$valueProp": {
        |      "@id": "$valueIri",
@@ -72,6 +73,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
        | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
        |
        | <$resourceIri>
+       |     a           onto:Example ;
        |     rdfs:label  "test" ;
        |     onto:$propLocalName <$valueIri> .
        |
@@ -265,6 +267,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                             |
                             | <$resourceIri>
+                            |     a          onto:Example ;
                             |     rdfs:label "test" ;
                             |     onto:testSimpleText <$valueIri> .
                             |
@@ -291,6 +294,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
              | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
              |
              | <$resourceIri>
+             |     a          onto:Example ;
              |     rdfs:label "test" ;
              |     onto:testRichtext <$valueIri> .
              |
@@ -327,6 +331,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                             |
                             | <$resourceIri>
+                            |     a          onto:Example ;
                             |     rdfs:label "test" ;
                             |     onto:testSubDate1 <$valueIri> .
                             |
