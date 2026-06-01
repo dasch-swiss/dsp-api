@@ -1067,7 +1067,46 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
         fails(containsString("Duplicate knora-api:valueHasOrder")),
       )
     },
-    test("createResourceRequestV2 accepts explicit order alongside a value with no explicit order") {
+    test("createResourceRequestV2 rejects explicit valueHasOrder that collides with implicit array-position order") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        uuid   <- Random.nextUUID
+        actual <- service(
+                    _.createResourceRequestV2(
+                      """{
+                        |  "@type": "ex:Thing",
+                        |  "rdfs:label": "test resource",
+                        |  "ka:attachedToProject": { "@id": "http://rdfh.ch/projects/0001" },
+                        |  "ex:hasInteger": [
+                        |    {
+                        |      "@type": "ka:IntValue",
+                        |      "ka:intValueAsInt": 1,
+                        |      "ka:valueHasOrder": {
+                        |        "@type": "xsd:integer",
+                        |        "@value": 1
+                        |      }
+                        |    },
+                        |    {
+                        |      "@type": "ka:IntValue",
+                        |      "ka:intValueAsInt": 2
+                        |    }
+                        |  ],
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                        |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                        |  }
+                        |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  ).exit
+      } yield assert(actual)(
+        fails(containsString("Duplicate knora-api:valueHasOrder")),
+      )
+    },
+    test("createResourceRequestV2 accepts explicit valueHasOrder that does not collide with any implicit order") {
       for {
         _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
         uuid   <- Random.nextUUID
@@ -1083,7 +1122,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |      "ka:intValueAsInt": 1,
                         |      "ka:valueHasOrder": {
                         |        "@type": "xsd:integer",
-                        |        "@value": 1
+                        |        "@value": 5
                         |      }
                         |    },
                         |    {

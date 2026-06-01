@@ -449,10 +449,10 @@ final case class ApiComplexV2JsonLdRequestParser(
           iri -> pairs.sortBy(_._1.orderHint.getOrElse(Int.MaxValue))
         }
         ZIO.foreachDiscard(grouped) { case (propIri, pairs) =>
-          val explicitOrders = pairs.flatMap(_._2)
+          val resolvedOrders = pairs.flatMap(_._1.orderHint)
           ZIO
             .fail(s"Duplicate knora-api:valueHasOrder for property <$propIri> in the same request")
-            .when(explicitOrders.distinct.size != explicitOrders.size)
+            .when(resolvedOrders.distinct.size != resolvedOrders.size)
         } *> ZIO.succeed(grouped.map { case (iri, pairs) => iri -> pairs.map(_._1) })
       }
 
