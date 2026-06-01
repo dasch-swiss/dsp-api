@@ -157,7 +157,7 @@ object Dependencies {
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
-    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.40.0",
+    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.41.1",
   )
 
   val integrationTestDependencies = Seq(
