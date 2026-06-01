@@ -111,7 +111,7 @@ object Dependencies {
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.84"
 
   // caching
-  val ehcache = "org.ehcache" % "ehcache" % "3.11.1"
+  val ehcache = "org.ehcache" % "ehcache" % "3.12.0"
 
   // other
   val gwtServlet     = "com.google.gwt"          % "gwt-servlet"      % "2.10.0"
