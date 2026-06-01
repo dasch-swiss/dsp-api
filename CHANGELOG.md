@@ -1,5 +1,26 @@
 # Changelog
 
+## [35.10.0](https://github.com/dasch-swiss/dsp-api/compare/v35.9.0...v35.10.0) (2026-06-01)
+
+
+### Maintenances
+
+* Dependency updates ([#4120](https://github.com/dasch-swiss/dsp-api/issues/4120)) ([54a9e27](https://github.com/dasch-swiss/dsp-api/commit/54a9e27633d651ec8236150fc3ee275917bf02fd))
+* Upgrade Apache Jena Fuseki to 6.1.0 (DEV-5935) ([#4121](https://github.com/dasch-swiss/dsp-api/issues/4121)) ([1a475ed](https://github.com/dasch-swiss/dsp-api/commit/1a475edeeb127ac417d05e6c2d2945384977e86f))
+* Upgrade Jena to 6.1.0 and TopBraid SHACL to 1.5.0 ([#4123](https://github.com/dasch-swiss/dsp-api/issues/4123)) ([b054b54](https://github.com/dasch-swiss/dsp-api/commit/b054b549e3258f5903012e7e58dfd4a09578e39c))
+
+
+### Enhancements
+
+* Add OntologyTransformer for JSON-LD to Knora base conversion ([#4133](https://github.com/dasch-swiss/dsp-api/issues/4133)) ([5158c32](https://github.com/dasch-swiss/dsp-api/commit/5158c32d39bb069980efe867013919dcdc9aa43f))
+* Add placeholder for FileValue and introduce allow-placeholder feature switch (DEV-6567) ([#4119](https://github.com/dasch-swiss/dsp-api/issues/4119)) ([caee0e6](https://github.com/dasch-swiss/dsp-api/commit/caee0e6209af2cf246bbe79108b36b0b77fa2cff))
+* stream CSV export response chunked from dsp-api ([#4124](https://github.com/dasch-swiss/dsp-api/issues/4124)) ([4f0f308](https://github.com/dasch-swiss/dsp-api/commit/4f0f3087672cb5ebcd961804c0ff0be4c004963d))
+
+
+### Bug Fixes
+
+* **export:** lower CSV export batch-size default to 100 (DEV-6336) ([#4132](https://github.com/dasch-swiss/dsp-api/issues/4132)) ([c2c3522](https://github.com/dasch-swiss/dsp-api/commit/c2c3522ffeaa30b674cc4c6d22dd98e55a5eafe8))
+
 ## [35.9.0](https://github.com/dasch-swiss/dsp-api/compare/v35.8.1...v35.9.0) (2026-05-12)
 
 
