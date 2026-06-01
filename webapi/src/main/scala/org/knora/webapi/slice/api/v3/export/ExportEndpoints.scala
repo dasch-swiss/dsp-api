@@ -5,15 +5,14 @@
 
 package org.knora.webapi.slice.api.v3.`export`
 
-import sttp.model.HeaderNames
+import sttp.capabilities.zio.ZioStreams
 import sttp.model.MediaType
 import sttp.model.MediaTypes
+import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
-
-import java.nio.charset.StandardCharsets
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.v3.ApiV3
@@ -47,9 +46,9 @@ final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends Endpoint
         ),
       ),
     )
-    .out(stringBodyAnyFormat(Codec.string.format(ExportEndpoints.Csv()), StandardCharsets.UTF_8))
-    .out(header[MediaType](HeaderNames.ContentType))
+    .out(statusCode(StatusCode.Ok))
     .out(header[String]("Content-Disposition"))
+    .out(streamBinaryBody(ZioStreams)(ExportEndpoints.Csv()))
 
   val postExportResourcesOai = baseEndpoints
     .withUser(
@@ -69,7 +68,7 @@ final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends Endpoint
 object ExportEndpoints {
   private[`export`] val layer = ZLayer.derive[ExportEndpoints]
 
-  private case class Csv() extends CodecFormat {
+  private[`export`] case class Csv() extends CodecFormat {
     override val mediaType: MediaType = new MediaTypes {}.TextCsv
   }
 }
