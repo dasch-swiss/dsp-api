@@ -8,11 +8,11 @@ package org.knora.sparqlbuilder
 import zio.test.*
 
 /**
- * Approach A: Doobie-style Fragment + `sparql"..."` interpolator
+ * Doobie-style Fragment + `sparql"..."` interpolator.
  *
- * Demonstrates the library API against benchmark queries from the spike.
+ * Demonstrates the library API against the benchmark queries.
  */
-object ApproachASpec extends ZIOSpecDefault {
+object SparqlInterpolatorSpec extends ZIOSpecDefault {
 
   // -- Common vocabulary (would live in the adapter layer in production) --
   val knoraBase      = "http://www.knora.org/ontology/knora-base#"
@@ -26,7 +26,7 @@ object ApproachASpec extends ZIOSpecDefault {
   val rdfType        = Iri.trusted(rdf + "type")
   val rdfsSubClassOf = Iri.trusted(rdfs + "subClassOf")
 
-  override def spec = suite("Approach A: Fragment + sparql interpolator")(
+  override def spec = suite("Fragment + sparql interpolator")(
     simpleSelectSuite,
     isNodeUsedBenchmark,
     deletePropertyBenchmark,
@@ -80,7 +80,7 @@ object ApproachASpec extends ZIOSpecDefault {
       val guiAttr        = Iri.trusted("http://www.knora.org/ontology/salsah-gui#guiAttribute")
       val valHasListNode = Iri.trusted(knoraBase + "valueHasListNode")
 
-      // Approach A version of IsNodeUsedQuery
+      // IsNodeUsedQuery
       val query = SparqlQuery.ask
         .where(
           Fragments.union(

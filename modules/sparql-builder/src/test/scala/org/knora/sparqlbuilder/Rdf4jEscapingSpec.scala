@@ -10,17 +10,17 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.test.*
 
 /**
- * Approach D: String interpolator + RDF4J escaping under the hood
+ * RDF4J escaping under the hood — the recommended escaping backend.
  *
- * Same API surface as Approach A (sparql"..." interpolator, Fragment, SparqlQuery builders),
- * but delegates string escaping to RDF4J's `SparqlBuilderUtils` / `RdfLiteral.StringLiteral`
- * instead of custom hand-rolled escaping.
+ * Same API surface as the interpolator (sparql"..." interpolator, Fragment, SparqlQuery
+ * builders), but delegates string escaping to RDF4J's `SparqlBuilderUtils` /
+ * `RdfLiteral.StringLiteral` instead of the current custom hand-rolled escaping.
  *
- * This prototype demonstrates the implementation strategy dimension — the API is identical
- * to Approach A, but the escaping backend is different. We compare the output of both
- * escaping strategies to validate correctness.
+ * This pins down the recommended implementation strategy: the API is unchanged, only the
+ * escaping backend differs. We compare the output of both escaping strategies to validate
+ * correctness and motivate the swap (see docs/sparql-builder-approaches/decision.md).
  */
-object ApproachDSpec extends ZIOSpecDefault {
+object Rdf4jEscapingSpec extends ZIOSpecDefault {
 
   // -- RDF4J-backed literal escaping --
 
@@ -32,7 +32,7 @@ object ApproachDSpec extends ZIOSpecDefault {
   def customStringLiteral(value: String): String =
     Literal.string(value).render
 
-  override def spec = suite("Approach D: Interpolator + RDF4J escaping")(
+  override def spec = suite("Interpolator + RDF4J escaping")(
     escapingComparisonSuite,
     rdf4jEscapingInjectionSuite,
     apiEquivalenceSuite,
@@ -143,10 +143,10 @@ object ApproachDSpec extends ZIOSpecDefault {
   // -------------------------------------------------------------------------
   // API equivalence — same API, different backend
   // -------------------------------------------------------------------------
-  val apiEquivalenceSuite = suite("API equivalence with Approach A")(
-    test("same query using Approach A API produces identical output") {
-      // This test demonstrates that Approach D is purely an implementation swap.
-      // The API surface (sparql"...", SparqlQuery, Fragment) is identical to Approach A.
+  val apiEquivalenceSuite = suite("API equivalence")(
+    test("same query using the interpolator API produces identical output") {
+      // This test demonstrates that switching escaping backends is purely an
+      // implementation swap. The API surface (sparql"...", SparqlQuery, Fragment) is unchanged.
       val s             = Variable("s")
       val p             = Variable("p")
       val o             = Variable("o")
@@ -167,7 +167,7 @@ object ApproachDSpec extends ZIOSpecDefault {
         .limit(25)
         .render
 
-      // The API is the same as Approach A — the only difference would be
+      // The API is unchanged — the only difference would be
       // which escaping function Literal.string() calls internally.
       assertTrue(
         query.contains("SELECT ?s ?p ?o"),
