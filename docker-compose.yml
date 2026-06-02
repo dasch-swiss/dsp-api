@@ -65,9 +65,16 @@ services:
       - SIPI_WEBAPI_PORT=3333
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST=0.0.0.0
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3333
-    # entrypoint: [ "valgrind", "--leak-check=yes", "/sipi/sipi" ] ## uncomment to run SIPI under valgrind
-    # command: --config=/sipi/config/sipi.docker-test-config.lua ## command variant to start the sipi container with test routes enabled
-    command: --config=/sipi/config/sipi.docker-config.lua
+    # entrypoint: [ "valgrind", "--leak-check=yes", "/sbin/sipi" ] ## uncomment to run SIPI under valgrind
+    # command: server --config=/sipi/config/sipi.docker-test-config.lua ## command variant to start the sipi container with test routes enabled
+    # Sipi v5 requires an explicit verb-noun subcommand; `server` runs the IIIF server.
+    command: server --config=/sipi/config/sipi.docker-config.lua
+    healthcheck:
+      test: ["CMD", "/sbin/sipi", "health", "--port", "1024"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:
