@@ -8,10 +8,12 @@ package org.knora.webapi.slice.common
 import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.PropertyPath
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
@@ -113,4 +115,8 @@ trait QueryBuilderHelper {
 
   inline def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
     ZIO.fail(SparqlGenerationException(message)).when(condition).unit
+
+  // rdf4j 5.2.2 does not support BIND(literal AS var); wrap in IF(true, ...) as equivalent.
+  def bindExplicitOrder(value: Int, target: Variable): GraphPattern =
+    Expressions.bind(Expressions.iff(Rdf.literalOf(true), Rdf.literalOf(value), Rdf.literalOf(0)), target)
 }

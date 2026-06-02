@@ -526,6 +526,7 @@ case class CreateValueV2(
   valueUUID: Option[UUID] = None,
   valueCreationDate: Option[Instant] = None,
   permissions: Option[String] = None,
+  valueHasOrder: Option[Int] = None,
 )
 
 /** A trait for classes representing information to be updated in a value. */

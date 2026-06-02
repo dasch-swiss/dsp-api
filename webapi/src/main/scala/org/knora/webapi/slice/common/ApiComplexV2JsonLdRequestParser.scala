@@ -277,6 +277,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     def newValueVersionIriOption: IO[String, Option[String]] = ZIO.fromEither(r.objectUriOption(NewValueVersionIri))
     def valueCreationDateOption: IO[String, Option[Instant]] = ZIO.fromEither(r.objectInstantOption(ValueCreationDate))
     def valueHasUuidOption: IO[String, Option[UUID]]         = ZIO.fromEither(r.objectUuidOption(ValueHasUUID))
+    def valueHasOrderOption: IO[String, Option[Int]]         = ZIO.fromEither(r.objectIntOption(ValueHasOrder))
   }
 
   private object ValueResource {
@@ -384,6 +385,9 @@ final case class ApiComplexV2JsonLdRequestParser(
       .unit
   }
 
+  private def validateNonNegativeOrder(order: Int): IO[String, Unit] =
+    ZIO.fail(s"knora-api:valueHasOrder must be non-negative, got $order").when(order < 0).unit
+
   /**
    * Rejects writes that contain the placeholder sentinel in any of the
    * sentinel-bearing FileValue fields (`internalFilename`, `copyrightHolder`,
@@ -433,16 +437,26 @@ final case class ApiComplexV2JsonLdRequestParser(
     ZIO
       .foreach(valueStatements) { stmt =>
         val valueResource = stmt.getObject.asResource()
-        val orderIdx      = readOrderIndex(valueResource)
-        valueStatementAsContent(stmt, shortcode).map { case (propIri, value) =>
-          (propIri.smartIri, value.copy(orderHint = orderIdx))
-        }
+        for
+          explicitOrder <- ZIO.fromEither(valueResource.objectIntOption(ValueHasOrder))
+          resolvedOrder  = explicitOrder.orElse(readOrderIndex(valueResource))
+          _             <- ZIO.foreach(explicitOrder)(validateNonNegativeOrder)
+          result        <- valueStatementAsContent(stmt, shortcode).map { case (propIri, value) =>
+                      (propIri.smartIri, value.copy(orderHint = resolvedOrder), explicitOrder)
+                    }
+        yield result
       }
-      .map(
-        _.groupMap(_._1)(_._2).map { case (iri, values) =>
-          iri -> values.sortBy(_.orderHint.getOrElse(Int.MaxValue))
-        },
-      )
+      .flatMap { triples =>
+        val grouped = triples.groupMap(_._1)(t => (t._2, t._3)).map { case (iri, pairs) =>
+          iri -> pairs.sortBy(_._1.orderHint.getOrElse(Int.MaxValue))
+        }
+        ZIO.foreachDiscard(grouped) { case (propIri, pairs) =>
+          val explicitOrders = pairs.flatMap(_._2)
+          ZIO
+            .fail(s"Duplicate knora-api:valueHasOrder for property <$propIri> in the same request")
+            .when(explicitOrders.distinct.size != explicitOrders.size)
+        } *> ZIO.succeed(grouped.map { case (iri, pairs) => iri -> pairs.map(_._1) })
+      }
 
   private def valueStatementAsContent(
     statement: Statement,
@@ -559,6 +573,8 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueUuid         <- v.valueHasUuidOption
         valueCreationDate <- v.valueCreationDateOption
         valuePermissions  <- v.hasPermissionsOption
+        valueHasOrder     <- v.valueHasOrderOption
+        _                 <- ZIO.foreach(valueHasOrder)(validateNonNegativeOrder)
         valueContent      <- getValueContent(v, resourceIri.shortcode)
         _                 <- ensurePlaceholderAllowed(Seq(valueContent))
       } yield CreateValueV2(
@@ -570,6 +586,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueUuid,
         valueCreationDate,
         valuePermissions,
+        valueHasOrder,
       )
     }
 

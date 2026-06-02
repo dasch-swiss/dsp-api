@@ -401,7 +401,8 @@ final class CreateResourceV2Handler(
                             valuesToCreate
                               .sortBy(_.orderHint.getOrElse(Int.MaxValue))
                               .zipWithIndex
-                              .map { case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
+                              .map { case (valueToCreate: GenerateSparqlForValueInNewResourceV2, idx: Int) =>
+                                val valueHasOrder = valueToCreate.orderHint.getOrElse(idx)
                                 (propertyIri, valueToCreate, valueHasOrder)
                               }
                         }.toList
