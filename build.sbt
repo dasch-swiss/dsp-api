@@ -2,6 +2,8 @@ import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper.*
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.Docker
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.dockerRepository
 import com.typesafe.sbt.packager.docker.Cmd
+import com.typesafe.sbt.packager.docker.DockerPermissionStrategy
+import com.typesafe.sbt.packager.docker.DockerStageBreak
 import com.typesafe.sbt.packager.docker.ExecCmd
 import sbt.*
 import sbt.Keys.version
@@ -112,41 +114,52 @@ addCommandAlias("test-e2e", "test-e2e/test")
 // DSP's custom SIPI
 //////////////////////////////////////
 
+// Sipi v5.0.0 ships a distroless `daschswiss/sipi` image (rules_oci on
+// distroless_base) with the static binary at `/sbin/sipi` and the runtime
+// tree at `/sipi/{config,scripts,server,images,cache}`. This subproject is a
+// thin overlay: COPY our Lua scripts on top of `/sipi/scripts/` and set an
+// exec-form HEALTHCHECK that uses `sipi health` (no curl, no shell).
+//
+// We override `Docker / dockerCommands` wholesale because the plugin's
+// default JVM scaffolding (USER/WORKDIR/useradd/chmod/ADD universal-staging/
+// ENTRYPOINT) is irrelevant for an overlay-only image and depends on a
+// shell that distroless doesn't ship. `dockerPermissionStrategy := None`
+// makes the no-chmod intent explicit. No `USER` directive is emitted —
+// the container inherits root from the upstream base because Sipi reads
+// NFS-mounted assets owned by orchestrator-controlled uids.
 lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
   .enablePlugins(DockerPlugin)
   .settings(
-    Compile / packageDoc / mappings := Seq(),
-    Compile / packageSrc / mappings := Seq(),
-    Docker / dockerRepository       := Some("daschswiss"),
-    Docker / packageName            := "knora-sipi",
-    dockerUpdateLatest              := true,
-    dockerBaseImage                 := Dependencies.sipiImage,
-    dockerBuildxPlatforms           := Seq("linux/arm64/v8", "linux/amd64"),
-    Docker / maintainer             := "support@dasch.swiss",
+    Compile / packageDoc / mappings   := Seq(),
+    Compile / packageSrc / mappings   := Seq(),
+    Docker / dockerRepository         := Some("daschswiss"),
+    Docker / packageName              := "knora-sipi",
+    Docker / maintainer               := "support@dasch.swiss",
+    dockerUpdateLatest                := true,
+    dockerBuildxPlatforms             := Seq("linux/arm64/v8", "linux/amd64"),
+    Docker / dockerPermissionStrategy := DockerPermissionStrategy.None,
+    // Already declared on the upstream `daschswiss/sipi` OCI image; we
+    // re-declare here so sbt-native-packager's validation reports happy.
     Docker / dockerExposedPorts ++= Seq(1024),
-    Docker / defaultLinuxInstallLocation := "/sipi",
-    Universal / mappings ++= {
-      directory("sipi/scripts")
+    // Stage our Lua scripts into the Docker build context at scripts/<name>.
+    Docker / mappings := directory("sipi/scripts").map { case (f, _) =>
+      f -> s"scripts/${f.getName}"
     },
-    dockerCommands += Cmd(
-      """HEALTHCHECK --interval=30s --timeout=30s --retries=4 --start-period=30s \
-        |CMD bash /sipi/scripts/healthcheck.sh || exit 1""".stripMargin,
+    Docker / dockerCommands := Seq(
+      Cmd("FROM", Dependencies.sipiImage),
+      Cmd("LABEL", "maintainer=support@dasch.swiss"),
+      Cmd("COPY", "scripts/", "/sipi/scripts/"),
+      Cmd("EXPOSE", "1024"),
+      Cmd(
+        "HEALTHCHECK",
+        "--interval=30s",
+        "--timeout=10s",
+        "--retries=3",
+        "--start-period=30s",
+        "CMD",
+        """["/sbin/sipi", "health", "--port", "1024"]""",
+      ),
     ),
-    // use filterNot to return all items that do NOT meet the criteria
-    dockerCommands := dockerCommands.value.filterNot {
-
-      // ExecCmd is a case class, and args is a varargs variable, so you need to bind it with @
-      // remove ENTRYPOINT
-      case ExecCmd("ENTRYPOINT", args @ _*) => true
-
-      // remove CMD
-      case ExecCmd("CMD", args @ _*) => true
-
-      case Cmd("USER", args @ _*) => true
-
-      // don't filter the rest; don't filter out anything that doesn't match a pattern
-      case cmd => false
-    },
   )
 
 //////////////////////////////////////
@@ -464,26 +477,36 @@ lazy val ingest = {
         "dev.zio" %% "zio-logging"               % ZioLoggingVersion,
         "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion,
       ) ++ ingestTest,
-      testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-      Docker / dockerRepository            := Some("daschswiss"),
-      Docker / packageName                 := "dsp-ingest",
-      dockerExposedPorts                   := Seq(3340),
+      testFrameworks            := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+      Docker / dockerRepository := Some("daschswiss"),
+      Docker / packageName      := "dsp-ingest",
+      dockerExposedPorts        := Seq(3340),
+      // Kept at /sipi: dsp-ingest's app tree at /sipi/{bin,lib,conf}
+      // doesn't collide with the Sipi runtime tree at
+      // /sipi/{config,scripts,server,images,cache} — disjoint subfolder
+      // names merge cleanly under /sipi/ via Docker's `COPY` semantics.
       Docker / defaultLinuxInstallLocation := "/sipi",
       dockerUpdateLatest                   := true,
-      dockerBaseImage                      := s"daschswiss/knora-sipi:$knoraSipiVersion",
-      dockerBuildxPlatforms                := Seq("linux/arm64/v8", "linux/amd64"),
+      // Was: s"daschswiss/knora-sipi:$knoraSipiVersion". Sipi v5.0.0 is
+      // distroless (no apt-get, no chmod), so we can't keep deriving from
+      // it. Move to a Debian + Temurin 25 JRE base that matches knora-api
+      // (build.sbt:233) and extract the Sipi runtime via a multi-stage
+      // COPY --from=sipi-source below.
+      dockerBaseImage       := "eclipse-temurin:25-jre-noble",
+      dockerBuildxPlatforms := Seq("linux/arm64/v8", "linux/amd64"),
+      // Exec-form HEALTHCHECK. `eclipse-temurin:25-jre-noble` doesn't ship
+      // curl, but we extract the static `/sbin/sipi` binary below. `sipi
+      // health` probes `http://127.0.0.1:<port>/health` and exits 0/1 — the
+      // exact contract dsp-ingest's /health endpoint already satisfies, so
+      // we reuse the binary we already need instead of apt-installing curl.
       dockerCommands += Cmd(
-        """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
-          |CMD curl -sS --fail 'http://localhost:3340/health' || exit 1""".stripMargin,
-      ),
-      // Install Temurin Java 25 https://adoptium.net/de/installation/linux/
-      dockerCommands += Cmd(
-        "RUN",
-        "apt-get update && apt install -y wget apt-transport-https gpg && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null",
-      ),
-      dockerCommands += Cmd(
-        "RUN",
-        "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt-get update && apt-get install -y temurin-25-jre && rm -rf /var/lib/apt/lists/*",
+        "HEALTHCHECK",
+        "--interval=30s",
+        "--timeout=10s",
+        "--retries=3",
+        "--start-period=30s",
+        "CMD",
+        """["/sbin/sipi", "health", "--port", "3340"]""",
       ),
       // Add Opentelemetry java agent and Grafana Pyroscope extension
       dockerCommands += Cmd(
@@ -500,9 +523,34 @@ lazy val ingest = {
       // to avoid duplicate spans (dsp-ingest traces these manually via sttp4 tracing backend and ZIO middleware)
       dockerCommands += Cmd("ENV", """OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED="false""""),
       dockerCommands += Cmd("ENV", """OTEL_INSTRUMENTATION_NETTY_ENABLED="false""""),
-      dockerCommands := dockerCommands.value.filterNot {
-        case Cmd("USER", args @ _*) => true
-        case cmd                    => false
+      // Single transformation that combines three responsibilities:
+      //   1. Strip the plugin-default `USER` directive — Sipi reads NFS-
+      //      mounted assets owned by orchestrator-controlled uids, so the
+      //      container runs as root (uid=0). See knora-api at line 268
+      //      and the original filterNot block this replaces.
+      //   2. Prepend a Sipi-extraction builder stage. Sipi v5's binary is
+      //      static and the runtime tree is just files, so they can be
+      //      COPY --from=`-extracted onto any base image.
+      //   3. Append COPY --from=sipi-source directives so they land
+      //      inside the runtime stage (after the plugin's default
+      //      MultiStage stage0 → final-stage chown chain).
+      Docker / dockerCommands := {
+        val cmds = (Docker / dockerCommands).value.filterNot {
+          case Cmd("USER", _*) => true
+          case _               => false
+        }
+        val sipiSourceStage = Seq(
+          Cmd("FROM", s"daschswiss/knora-sipi:$knoraSipiVersion", "AS", "sipi-source"),
+          DockerStageBreak,
+        )
+        val copyFromSipi = Seq(
+          Cmd("COPY", "--from=sipi-source", "/sbin/sipi", "/sbin/sipi"),
+          Cmd("COPY", "--from=sipi-source", "/sipi", "/sipi"),
+          Cmd("COPY", "--from=sipi-source", "/usr/bin/tini", "/usr/bin/tini"),
+          Cmd("COPY", "--from=sipi-source", "/usr/bin/ffmpeg", "/usr/bin/ffmpeg"),
+          Cmd("COPY", "--from=sipi-source", "/usr/bin/ffprobe", "/usr/bin/ffprobe"),
+        )
+        sipiSourceStage ++ cmds ++ copyFromSipi
       },
     )
 }

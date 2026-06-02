@@ -175,6 +175,11 @@ jobs:
           if echo "$CHANGED" | grep -q "^fuseki/"; then
             make docker-build-fuseki-image
           fi
+      - name: Build sipi image locally
+        # `SipiTestContainer` runs `daschswiss/knora-sipi:latest`. The registry
+        # version lags the PR; build the PR's version locally so the CLI surface
+        # matches (relevant across major Sipi base bumps, e.g. v4 -> v5).
+        run: make docker-build-sipi-image
       - name: Run end-to-end tests
         run: ./sbtx -v coverage "test-e2e/test" coverageAggregate
       - name: WebApi E2E Test Report
@@ -287,7 +292,13 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Build image locally
-        run: make docker-build-dsp-api-image
+      - name: Build images locally
+        # Build both knora-api and knora-sipi so docker compose picks up the
+        # PR's images. The registry's :latest for knora-sipi lags by a merge,
+        # which matters across major Sipi base-image bumps (e.g. v4 -> v5
+        # changed CLI surface and the compose `command:`).
+        run: |
+          make docker-build-dsp-api-image
+          make docker-build-sipi-image
       - name: Spin up the API container and wait for all healthchecks (incl. db and sipi) to pass
         run: docker compose up --wait api
