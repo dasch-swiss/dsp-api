@@ -10,7 +10,9 @@ import org.apache.jena.graph.Node
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
 import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.RDFNode
+import org.apache.jena.rdf.model.Resource
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFParser
 import org.apache.jena.riot.system.StreamRDF
@@ -33,7 +35,11 @@ import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
+import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.CalendarDateRangeV2
+import org.knora.webapi.messages.util.CalendarNameV2
+import org.knora.webapi.messages.util.DateEraV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.ResourceIri
@@ -98,6 +104,8 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       model <- RdfDataMgr.loadModel(nq, Lang.NTRIPLES)
       _     <- ZIO.attempt(addResourceMetadata(model, ctx, now))
       _     <- ZIO.attempt(addValueMetadata(model, ctx, now))
+      _     <- ZIO.attempt(convertDateValues(model))
+      _     <- ZIO.attempt(addValueHasString(model))
       kb    <- tempFile("onto-transformer-kb-", ".nq")
       _     <- RdfDataMgr.write(model, kb, Lang.NTRIPLES)
     } yield kb)
@@ -163,9 +171,6 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
     val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTimeStamp)
     val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
 
-    def asValueIri(n: RDFNode): Option[ValueIri] =
-      Option.when(n.isURIResource)(n.asResource.getURI).flatMap(ValueIri.from(_).toOption)
-
     model.listSubjects().asScala.toList.flatMap(s => asValueIri(s).map((s, _))).foreach { case (v, iri) =>
       v.removeAll(attachedToUser)
         .removeAll(hasPermissions)
@@ -179,6 +184,137 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       v.addProperty(isDeleted, falseLit)
     }
   }
+
+  /**
+   * Step 3 — collapse the v2 `dateValueHas{Calendar,Start*,End*}` properties of every `DateValue` into the
+   * `knora-base` JDN form: `valueHasCalendar`, `valueHasStart/EndJDN`, `valueHasStart/EndPrecision`, plus a
+   * `valueHasString` rendering of the date range. Eras are not stored in `knora-base`; they only feed the JDN math.
+   * JDN computation and the date-range string are delegated to [[CalendarDateRangeV2]].
+   */
+  private def convertDateValues(model: Model): Unit = {
+    val rdfType   = model.createProperty(Rdf.Type)
+    val dateValue = KnoraBase.DateValue
+
+    // The v2 date properties, renamed into the knora-base namespace by stage 1.
+    val srcCalendar   = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasCalendar")
+    val srcStartYear  = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasStartYear")
+    val srcStartMonth = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasStartMonth")
+    val srcStartDay   = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasStartDay")
+    val srcStartEra   = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasStartEra")
+    val srcEndYear    = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasEndYear")
+    val srcEndMonth   = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasEndMonth")
+    val srcEndDay     = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasEndDay")
+    val srcEndEra     = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasEndEra")
+    val srcProps      =
+      List(
+        srcCalendar,
+        srcStartYear,
+        srcStartMonth,
+        srcStartDay,
+        srcStartEra,
+        srcEndYear,
+        srcEndMonth,
+        srcEndDay,
+        srcEndEra,
+      )
+
+    val valueHasCalendar       = model.createProperty(KnoraBase.ValueHasCalendar)
+    val valueHasStartJDN       = model.createProperty(KnoraBase.ValueHasStartJDN)
+    val valueHasEndJDN         = model.createProperty(KnoraBase.ValueHasEndJDN)
+    val valueHasStartPrecision = model.createProperty(KnoraBase.ValueHasStartPrecision)
+    val valueHasEndPrecision   = model.createProperty(KnoraBase.ValueHasEndPrecision)
+    val valueHasString         = model.createProperty(KnoraBase.ValueHasString)
+
+    def stringOf(v: Resource, p: Property): Option[String] =
+      Option(v.getProperty(p)).map(_.getObject).collect { case n if n.isLiteral => n.asLiteral.getLexicalForm }
+    def intOf(v: Resource, p: Property): Option[Int] =
+      Option(v.getProperty(p)).map(_.getObject).collect { case n if n.isLiteral => n.asLiteral.getInt }
+    def eraOf(v: Resource, p: Property): Option[DateEraV2] =
+      stringOf(v, p).flatMap(DateEraV2.fromString(_).toOption)
+
+    val dateValues = model.listSubjects().asScala.toList.filter { s =>
+      asValueIri(s).isDefined &&
+      Option(s.getProperty(rdfType)).map(_.getObject).exists(n => n.isURIResource && n.asResource.getURI == dateValue)
+    }
+
+    def required[A](opt: Option[A], what: String, v: Resource): A =
+      opt.getOrElse(throw new IllegalArgumentException(s"DateValue $v has no $what"))
+
+    dateValues.foreach { v =>
+      val calendarStr  = required(stringOf(v, srcCalendar), "calendar", v)
+      val calendarName =
+        CalendarNameV2.fromString(calendarStr).fold(msg => throw new IllegalArgumentException(msg), identity)
+
+      val range = CalendarDateRangeV2
+        .fromComponents(
+          calendarName,
+          required(intOf(v, srcStartYear), "start year", v),
+          intOf(v, srcStartMonth),
+          intOf(v, srcStartDay),
+          eraOf(v, srcStartEra),
+          required(intOf(v, srcEndYear), "end year", v),
+          intOf(v, srcEndMonth),
+          intOf(v, srcEndDay),
+          eraOf(v, srcEndEra),
+        )
+        .fold(msg => throw new IllegalArgumentException(msg), identity)
+      val (startJDN, endJDN) = range.toJulianDayRange
+
+      srcProps.foreach(v.removeAll)
+      v.addProperty(valueHasCalendar, calendarStr)
+      v.addProperty(valueHasStartJDN, model.createTypedLiteral(startJDN.toString, XSDDatatype.XSDinteger))
+      v.addProperty(valueHasEndJDN, model.createTypedLiteral(endJDN.toString, XSDDatatype.XSDinteger))
+      v.addProperty(valueHasStartPrecision, range.startCalendarDate.precision.toString)
+      v.addProperty(valueHasEndPrecision, range.endCalendarDate.precision.toString)
+      v.addProperty(valueHasString, range.toString)
+    }
+  }
+
+  /**
+   * Step 2 (`valueHasString`) — derive the plain-text `knora-base:valueHasString` from each value's content. Scalar
+   * values use the lexical form of their content literal; `ListValue` falls back to the list-node IRI. `TextValue`
+   * already carries `valueHasString` from the stage-1 rename and is left untouched. `DateValue` (step 3), `LinkValue`
+   * (step 4), rich text (step 5) and file values (step 6) are handled where those structures are built.
+   */
+  private def addValueHasString(model: Model): Unit = {
+    val rdfType          = model.createProperty(Rdf.Type)
+    val valueHasString   = model.createProperty(KnoraBase.ValueHasString)
+    val valueHasListNode = model.createProperty(KnoraBase.ValueHasListNode)
+
+    val literalContent: Map[String, Property] = Map(
+      KnoraBase.BooleanValue -> KnoraBase.ValueHasBoolean,
+      KnoraBase.IntValue     -> KnoraBase.ValueHasInteger,
+      KnoraBase.DecimalValue -> KnoraBase.ValueHasDecimal,
+      KnoraBase.ColorValue   -> KnoraBase.ValueHasColor,
+      KnoraBase.UriValue     -> KnoraBase.ValueHasUri,
+      KnoraBase.GeonameValue -> KnoraBase.ValueHasGeonameCode,
+      KnoraBase.TimeValue    -> KnoraBase.ValueHasTimeStamp,
+    ).map { case (cls, prop) => cls -> model.createProperty(prop) }
+
+    def iriOf(v: Resource, p: Property): Option[String] =
+      Option(v.getProperty(p)).map(_.getObject).collect { case n if n.isURIResource => n.asResource.getURI }
+
+    def typeOf(v: Resource): Option[String] = iriOf(v, rdfType)
+
+    def lexicalOf(v: Resource, p: Property): Option[String] =
+      Option(v.getProperty(p)).map(_.getObject).collect { case n if n.isLiteral => n.asLiteral.getLexicalForm }
+
+    model.listSubjects().asScala.toList.filter(isValue).foreach { v =>
+      if (!v.hasProperty(valueHasString)) {
+        val string = typeOf(v).flatMap {
+          case cls if literalContent.contains(cls) => lexicalOf(v, literalContent(cls))
+          case KnoraBase.ListValue                 => iriOf(v, valueHasListNode)
+          case _                                   => None
+        }
+        string.foreach(v.addProperty(valueHasString, _))
+      }
+    }
+  }
+
+  private def asValueIri(n: RDFNode): Option[ValueIri] =
+    Option.when(n.isURIResource)(n.asResource.getURI).flatMap(ValueIri.from(_).toOption)
+
+  private def isValue(n: RDFNode): Boolean = asValueIri(n).isDefined
 
   private def rewritingSink(downstream: StreamRDF): StreamRDF = {
     def rewriteUri(uri: String): String =
