@@ -416,6 +416,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
                             |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
                             |     knora-base:valueHasUUID      "${valueIri.valueId.value}" ;
+                            |     knora-base:valueHasString    "true" ;
                             |     knora-base:isDeleted         false .
                             |""".stripMargin,
       )
@@ -459,6 +460,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
                             |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
                             |     knora-base:valueHasUUID      "${valueIri.valueId.value}" ;
+                            |     knora-base:valueHasString    "1" ;
                             |     knora-base:isDeleted         false .
                             |
                             | <$valueIri2>
@@ -468,8 +470,128 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
                             |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
                             |     knora-base:valueHasUUID      "${valueIri2.valueId.value}" ;
+                            |     knora-base:valueHasString    "2" ;
                             |     knora-base:isDeleted         false .
                             |""".stripMargin,
+      )
+    },
+  )
+
+  /** Full expected `knora-base` graph for a single-value resource, including synthesised resource + value metadata. */
+  private def expectedStage2SingleValue(
+    propLocalName: String,
+    valueClass: String,
+    valueContent: String,
+    valueHasString: String,
+  ): String =
+    s"""
+       | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+       | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+       | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+       | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+       | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+       |
+       | <$resourceIri>
+       |     a                            onto:Example ;
+       |     rdfs:label                   "test" ;
+       |     onto:$propLocalName          <$valueIri> ;
+       |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+       |     knora-base:attachedToProject <${ctx.attachedToProject.value}> ;
+       |     knora-base:hasPermissions    "${ctx.permissions}" ;
+       |     knora-base:creationDate      "$knownInstant"^^xsd:dateTimeStamp ;
+       |     knora-base:isDeleted         false .
+       |
+       | <$valueIri>
+       |     a                            knora-base:$valueClass ;
+       |     $valueContent ;
+       |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+       |     knora-base:hasPermissions    "${ctx.permissions}" ;
+       |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
+       |     knora-base:valueHasUUID      "${valueIri.valueId.value}" ;
+       |     knora-base:valueHasString    "$valueHasString" ;
+       |     knora-base:isDeleted         false .
+       |""".stripMargin
+
+  private val valueHasString = suite("Stage 2 — valueHasString")(
+    test("ColorValue uses the hex string") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testColor",
+          s"${knoraApi}ColorValue",
+          s""""${knoraApi}colorValueAsColor": { "@type": "${xsd}string", "@value": "#00ff00" }""",
+        ),
+        expectedStage2SingleValue("testColor", "ColorValue", """knora-base:valueHasColor "#00ff00"""", "#00ff00"),
+      )
+    },
+    test("DecimalValue uses the decimal lexical form") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testDecimal",
+          s"${knoraApi}DecimalValue",
+          s""""${knoraApi}decimalValueAsDecimal": { "@type": "${xsd}decimal", "@value": "2.71" }""",
+        ),
+        expectedStage2SingleValue(
+          "testDecimal",
+          "DecimalValue",
+          """knora-base:valueHasDecimal "2.71"^^xsd:decimal""",
+          "2.71",
+        ),
+      )
+    },
+    test("GeonameValue uses the geoname code") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testGeoname",
+          s"${knoraApi}GeonameValue",
+          s""""${knoraApi}geonameValueAsGeonameCode": { "@type": "${xsd}string", "@value": "1111111" }""",
+        ),
+        expectedStage2SingleValue(
+          "testGeoname",
+          "GeonameValue",
+          """knora-base:valueHasGeonameCode "1111111"""",
+          "1111111",
+        ),
+      )
+    },
+    test("TimeValue uses the timestamp lexical form") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testTimeValue",
+          s"${knoraApi}TimeValue",
+          s""""${knoraApi}timeValueAsTimeStamp": { "@type": "${xsd}dateTimeStamp", "@value": "2019-10-23T13:45:12.01-14:00" }""",
+        ),
+        expectedStage2SingleValue(
+          "testTimeValue",
+          "TimeValue",
+          """knora-base:valueHasTimeStamp "2019-10-23T13:45:12.01-14:00"^^xsd:dateTimeStamp""",
+          "2019-10-23T13:45:12.01-14:00",
+        ),
+      )
+    },
+    test("UriValue uses the URI") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testUriValue",
+          s"${knoraApi}UriValue",
+          s""""${knoraApi}uriValueAsUri": { "@type": "${xsd}anyURI", "@value": "https://dasch.swiss" }""",
+        ),
+        expectedStage2SingleValue(
+          "testUriValue",
+          "UriValue",
+          """knora-base:valueHasUri "https://dasch.swiss"^^xsd:anyURI""",
+          "https://dasch.swiss",
+        ),
+      )
+    },
+    test("ListValue falls back to the list-node IRI") {
+      val node = "http://rdfh.ch/lists/9999/WF8qwFbGQg228GJUlqOLzw"
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testListProp",
+          s"${knoraApi}ListValue",
+          s""""${knoraApi}listValueAsListNode": { "@id": "$node" }""",
+        ),
+        expectedStage2SingleValue("testListProp", "ListValue", s"knora-base:valueHasListNode <$node>", node),
       )
     },
   )
@@ -480,6 +602,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
     textValues,
     dateValues,
     resourceMetadata,
+    valueHasString,
   ).provide(OntologyTransformer.layer, StringFormatter.test, TestAppConfig.layer())
 
 }

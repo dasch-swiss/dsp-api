@@ -10,7 +10,9 @@ import org.apache.jena.graph.Node
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
 import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.RDFNode
+import org.apache.jena.rdf.model.Resource
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFParser
 import org.apache.jena.riot.system.StreamRDF
@@ -33,6 +35,7 @@ import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
+import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -98,6 +101,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       model <- RdfDataMgr.loadModel(nq, Lang.NTRIPLES)
       _     <- ZIO.attempt(addResourceMetadata(model, ctx, now))
       _     <- ZIO.attempt(addValueMetadata(model, ctx, now))
+      _     <- ZIO.attempt(addValueHasString(model))
       kb    <- tempFile("onto-transformer-kb-", ".nq")
       _     <- RdfDataMgr.write(model, kb, Lang.NTRIPLES)
     } yield kb)
@@ -163,9 +167,6 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
     val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTimeStamp)
     val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
 
-    def asValueIri(n: RDFNode): Option[ValueIri] =
-      Option.when(n.isURIResource)(n.asResource.getURI).flatMap(ValueIri.from(_).toOption)
-
     model.listSubjects().asScala.toList.flatMap(s => asValueIri(s).map((s, _))).foreach { case (v, iri) =>
       v.removeAll(attachedToUser)
         .removeAll(hasPermissions)
@@ -179,6 +180,52 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       v.addProperty(isDeleted, falseLit)
     }
   }
+
+  /**
+   * Step 2 (`valueHasString`) — derive the plain-text `knora-base:valueHasString` from each value's content. Scalar
+   * values use the lexical form of their content literal; `ListValue` falls back to the list-node IRI. `TextValue`
+   * already carries `valueHasString` from the stage-1 rename and is left untouched. `DateValue` (step 3), `LinkValue`
+   * (step 4), rich text (step 5) and file values (step 6) are handled where those structures are built.
+   */
+  private def addValueHasString(model: Model): Unit = {
+    val rdfType          = model.createProperty(Rdf.Type)
+    val valueHasString   = model.createProperty(KnoraBase.ValueHasString)
+    val valueHasListNode = model.createProperty(KnoraBase.ValueHasListNode)
+
+    val literalContent: Map[String, Property] = Map(
+      KnoraBase.BooleanValue -> KnoraBase.ValueHasBoolean,
+      KnoraBase.IntValue     -> KnoraBase.ValueHasInteger,
+      KnoraBase.DecimalValue -> KnoraBase.ValueHasDecimal,
+      KnoraBase.ColorValue   -> KnoraBase.ValueHasColor,
+      KnoraBase.UriValue     -> KnoraBase.ValueHasUri,
+      KnoraBase.GeonameValue -> KnoraBase.ValueHasGeonameCode,
+      KnoraBase.TimeValue    -> KnoraBase.ValueHasTimeStamp,
+    ).map { case (cls, prop) => cls -> model.createProperty(prop) }
+
+    def iriOf(v: Resource, p: Property): Option[String] =
+      Option(v.getProperty(p)).map(_.getObject).collect { case n if n.isURIResource => n.asResource.getURI }
+
+    def typeOf(v: Resource): Option[String] = iriOf(v, rdfType)
+
+    def lexicalOf(v: Resource, p: Property): Option[String] =
+      Option(v.getProperty(p)).map(_.getObject).collect { case n if n.isLiteral => n.asLiteral.getLexicalForm }
+
+    model.listSubjects().asScala.toList.filter(isValue).foreach { v =>
+      if (!v.hasProperty(valueHasString)) {
+        val string = typeOf(v).flatMap {
+          case cls if literalContent.contains(cls) => lexicalOf(v, literalContent(cls))
+          case KnoraBase.ListValue                 => iriOf(v, valueHasListNode)
+          case _                                   => None
+        }
+        string.foreach(v.addProperty(valueHasString, _))
+      }
+    }
+  }
+
+  private def asValueIri(n: RDFNode): Option[ValueIri] =
+    Option.when(n.isURIResource)(n.asResource.getURI).flatMap(ValueIri.from(_).toOption)
+
+  private def isValue(n: RDFNode): Boolean = asValueIri(n).isDefined
 
   private def rewritingSink(downstream: StreamRDF): StreamRDF = {
     def rewriteUri(uri: String): String =
