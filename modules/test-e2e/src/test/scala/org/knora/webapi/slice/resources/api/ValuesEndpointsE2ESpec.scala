@@ -3881,6 +3881,340 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         valueInts == Seq(100, 200, 300),
       )
     },
+    suite("knora-api:valueHasOrder on POST /v2/values")(
+      test("explicit order is respected: values are returned in supplied order, not creation order") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+        val createResourceJson =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "Echo"
+             |  },
+             |  "knora-api:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+             |  "rdfs:label" : "explicit order test resource",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+             |  }
+             |}""".stripMargin
+
+        def addTextWithOrder(resourceIri: String, text: String, order: Int): String =
+          s"""{
+             |  "@id" : "$resourceIri",
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "$text",
+             |    "knora-api:valueHasOrder" : {
+             |      "@type" : "xsd:integer",
+             |      "@value" : $order
+             |    }
+             |  },
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          // Create resource with "Echo" at default order 0
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          // Add values with explicit non-sequential orders; creation order is intentionally non-alphabetical
+          _ <- TestApiClient
+                 .postJsonLdDocument(uri"/v2/values", addTextWithOrder(resourceIri, "Delta", 3), anythingUser1)
+                 .flatMap(_.assert200)
+          _ <- TestApiClient
+                 .postJsonLdDocument(uri"/v2/values", addTextWithOrder(resourceIri, "Alpha", 1), anythingUser1)
+                 .flatMap(_.assert200)
+          _ <- TestApiClient
+                 .postJsonLdDocument(uri"/v2/values", addTextWithOrder(resourceIri, "Bravo", 2), anythingUser1)
+                 .flatMap(_.assert200)
+
+          // Read resource: values must be sorted by their stored order, not by creation order
+          resIri      <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
+          resource    <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+          valueTexts   = valuesArray.value.collect { case obj: JsonLDObject =>
+                         obj.getRequiredString(KA.ValueAsString).toOption
+                       }.flatten
+        } yield assertTrue(valueTexts == Seq("Echo", "Alpha", "Bravo", "Delta"))
+      },
+      test("POST /v2/values with negative knora-api:valueHasOrder returns 400") {
+        val jsonLd =
+          s"""{
+             |  "@id" : "${AThing.iri}",
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : {
+             |    "@type" : "knora-api:TextValue",
+             |    "knora-api:valueAsString" : "should be rejected",
+             |    "knora-api:valueHasOrder" : {
+             |      "@type" : "xsd:integer",
+             |      "@value" : -1
+             |    }
+             |  },
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+             |  }
+             |}""".stripMargin
+        TestApiClient.postJsonLd(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
+      },
+      test("POST /v2/values with duplicate knora-api:valueHasOrder returns 400") {
+        val createResourceJson =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasInteger" : {
+             |    "@type" : "knora-api:IntValue",
+             |    "knora-api:intValueAsInt" : 10,
+             |    "knora-api:valueHasOrder" : {
+             |      "@type" : "xsd:integer",
+             |      "@value" : 999
+             |    }
+             |  },
+             |  "knora-api:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+             |  "rdfs:label" : "duplicate order test resource",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          // Try to add a second value with the same order 999 — must be rejected
+          duplicateJson =
+            s"""{
+               |  "@id" : "$resourceIri",
+               |  "@type" : "anything:Thing",
+               |  "anything:hasInteger" : {
+               |    "@type" : "knora-api:IntValue",
+               |    "knora-api:intValueAsInt" : 20,
+               |    "knora-api:valueHasOrder" : {
+               |      "@type" : "xsd:integer",
+               |      "@value" : 999
+               |    }
+               |  },
+               |  "@context" : {
+               |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+               |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+               |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+               |  }
+               |}""".stripMargin
+          errorMessage <- TestApiClient.postJsonLd(uri"/v2/values", duplicateJson, anythingUser1).flatMap(_.assert400)
+        } yield assertTrue(errorMessage.contains("already has knora-api:valueHasOrder 999"))
+      },
+      test("POST /v2/resources with collision in knora-api:valueHasOrder returns 400") {
+        val jsonLd =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : [
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "First",
+             |      "knora-api:valueHasOrder" : {
+             |        "@type" : "xsd:integer",
+             |        "@value" : 0
+             |      }
+             |    },
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "Second",
+             |      "knora-api:valueHasOrder" : {
+             |        "@type" : "xsd:integer",
+             |        "@value" : 0
+             |      }
+             |    }
+             |  ],
+             |  "knora-api:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+             |  "rdfs:label" : "collision test",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+             |  }
+             |}""".stripMargin
+        TestApiClient.postJsonLd(uri"/v2/resources", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
+      },
+      test("POST /v2/resources with mixed explicit and array-position orders (no collision) returns 201") {
+        val jsonLd =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : [
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "Delta",
+             |      "knora-api:valueHasOrder" : {
+             |        "@type" : "xsd:integer",
+             |        "@value" : 3
+             |      }
+             |    },
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "Alpha"
+             |    }
+             |  ],
+             |  "knora-api:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+             |  "rdfs:label" : "mixed order test",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+             |  }
+             |}""".stripMargin
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", jsonLd, anythingUser1)
+          .flatMap(_.assert200)
+          .as(assertCompletes)
+      },
+      test("PUT /v2/values with knora-api:valueHasOrder in body is silently ignored: returns 200") {
+        val resourceIri: IRI = AThing.iri
+        for {
+          // Create a value first so we have a value IRI to update
+          createJson <-
+            ZIO.succeed(
+              s"""{
+                 |  "@id" : "$resourceIri",
+                 |  "@type" : "anything:Thing",
+                 |  "anything:hasInteger" : {
+                 |    "@type" : "knora-api:IntValue",
+                 |    "knora-api:intValueAsInt" : 77
+                 |  },
+                 |  "@context" : {
+                 |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                 |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                 |  }
+                 |}""".stripMargin,
+            )
+          createResponse <-
+            TestApiClient.postJsonLdDocument(uri"/v2/values", createJson, anythingUser1).flatMap(_.assert200)
+          valueIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          // PUT the value including valueHasOrder — must be silently ignored, returning 200
+          putJson <-
+            ZIO.succeed(
+              s"""{
+                 |  "@id" : "$resourceIri",
+                 |  "@type" : "anything:Thing",
+                 |  "anything:hasInteger" : {
+                 |    "@id" : "$valueIri",
+                 |    "@type" : "knora-api:IntValue",
+                 |    "knora-api:intValueAsInt" : 78,
+                 |    "knora-api:valueHasOrder" : {
+                 |      "@type" : "xsd:integer",
+                 |      "@value" : 99
+                 |    }
+                 |  },
+                 |  "@context" : {
+                 |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                 |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                 |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+                 |  }
+                 |}""".stripMargin,
+            )
+          _ <- TestApiClient.putJsonLdDocument(uri"/v2/values", putJson, anythingUser1).flatMap(_.assert200)
+        } yield assertCompletes
+      },
+      test("POST /v2/resources stores the explicit knora-api:valueHasOrder — values returned in supplied order") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+        val jsonLd =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : [
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "Bravo",
+             |      "knora-api:valueHasOrder" : {
+             |        "@type" : "xsd:integer",
+             |        "@value" : 5
+             |      }
+             |    },
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "Delta",
+             |      "knora-api:valueHasOrder" : {
+             |        "@type" : "xsd:integer",
+             |        "@value" : 2
+             |      }
+             |    }
+             |  ],
+             |  "knora-api:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+             |  "rdfs:label" : "explicit order storage test",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+             |  }
+             |}""".stripMargin
+
+        for {
+          createResponse <- TestApiClient
+                              .postJsonLdDocument(uri"/v2/resources", jsonLd, anythingUser1)
+                              .flatMap(_.assert200)
+          resourceIri <- ZIO.fromEither(createResponse.body.getRequiredString(JsonLDKeywords.ID))
+
+          resIri      <- ZIO.attempt(ResourceIri.unsafeFrom(resourceIri))
+          resource    <- TestResourcesApiClient.getResource(resIri, anythingUser1).flatMap(_.assert200)
+          valuesArray <- ZIO.fromEither(resource.body.getRequiredArray(propertyIri.toString))
+          valueTexts   = valuesArray.value.collect { case obj: JsonLDObject =>
+                         obj.getRequiredString(KA.ValueAsString).toOption
+                       }.flatten
+
+        } yield assertTrue(valueTexts == Seq("Delta", "Bravo"))
+      },
+      test("POST /v2/resources with explicit order 5 and one value with no explicit order returns 201") {
+        // "First" has explicit order 5; "Second" has no explicit order (injected index 1).
+        // Orders 5 and 1 do not collide, so this mixed case must succeed.
+        val jsonLd =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasText" : [
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "First",
+             |      "knora-api:valueHasOrder" : {
+             |        "@type" : "xsd:integer",
+             |        "@value" : 5
+             |      }
+             |    },
+             |    {
+             |      "@type" : "knora-api:TextValue",
+             |      "knora-api:valueAsString" : "Second"
+             |    }
+             |  ],
+             |  "knora-api:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+             |  "rdfs:label" : "mixed order no-collision test",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+             |  }
+             |}""".stripMargin
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", jsonLd, anythingUser1)
+          .flatMap(_.assert200)
+          .as(assertCompletes)
+      },
+    ),
     suite("PUT /v2/values/order")(
       test("successfully reorder 3 values (reverse order)") {
         val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri

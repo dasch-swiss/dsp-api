@@ -307,6 +307,7 @@ final class ValuesResponderV2(
           valueCreationDate = valueToCreate.valueCreationDate,
           valueCreator = requestingUser.id,
           valuePermissions = newValuePermissionLiteral,
+          valueHasOrder = valueToCreate.valueHasOrder,
         )
 
     } yield CreateValueResponseV2(
@@ -363,6 +364,7 @@ final class ValuesResponderV2(
     valueCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
+    valueHasOrder: Option[Int],
   ): ZIO[Any, Throwable, UnverifiedValueV2] =
     value match {
       case linkValueContent: LinkValueContentV2 =>
@@ -375,6 +377,7 @@ final class ValuesResponderV2(
           maybeCreationDate = valueCreationDate,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
+          valueHasOrder = valueHasOrder,
         )
 
       case ordinaryValueContent =>
@@ -388,6 +391,7 @@ final class ValuesResponderV2(
           maybeValueCreationDate = valueCreationDate,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
+          valueHasOrder = valueHasOrder,
         )
     }
 
@@ -415,6 +419,7 @@ final class ValuesResponderV2(
     maybeValueCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
+    valueHasOrder: Option[Int],
   ) =
     for {
 
@@ -475,6 +480,7 @@ final class ValuesResponderV2(
              valueCreator = valueCreatorInternal,
              valuePermissions = valuePermissions,
              creationDate = creationDate,
+             valueHasOrder = valueHasOrder,
            )
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
@@ -505,9 +511,8 @@ final class ValuesResponderV2(
     maybeCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI,
+    valueHasOrder: Option[Int],
   ) =
-    // Make a new value UUID.
-
     for {
       newValueUUID             <- ValuesResponderV2.makeNewValueUUID(maybeValueIri, maybeValueUUID)
       sparqlTemplateLinkUpdate <-
@@ -526,6 +531,16 @@ final class ValuesResponderV2(
           case None                          => Instant.now
         }
 
+      // Duplicate-order check: use the link value property IRI (the property that attaches the LinkValue to the resource).
+      linkValuePropertyIri = sparqlTemplateLinkUpdate.linkPropertyIri.toInternalSchema.fromLinkPropToLinkValueProp
+      resourceIriInternal <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
+      // IriLocker serialises concurrent writes per resource IRI within a single JVM instance,
+      // making the ASK check + INSERT effectively atomic under single-instance deployment.
+      // Multi-instance deployments do not share this lock; a race window exists there.
+      _ <- ZIO.foreach(valueHasOrder)(order =>
+             valueRepo.checkDuplicateOrder(resourceIriInternal, linkValuePropertyIri, order),
+           )
+
       // Generate a SPARQL update.
       sparqlUpdate <- CreateLinkQuery.build(
                         project = resourceInfo.projectADM,
@@ -534,6 +549,7 @@ final class ValuesResponderV2(
                         newValueUUID = newValueUUID,
                         creationDate = creationDate,
                         maybeComment = linkValueContent.comment,
+                        valueHasOrder = valueHasOrder,
                       )
 
       _ <- triplestoreService.query(Update(sparqlUpdate))
