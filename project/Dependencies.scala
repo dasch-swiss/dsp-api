@@ -117,7 +117,7 @@ object Dependencies {
   val gwtServlet     = "com.google.gwt"          % "gwt-servlet"      % "2.10.0"
   val icu4j          = "com.ibm.icu"             % "icu4j"            % "78.3"
   val jakartaJSON    = "org.glassfish"           % "jakarta.json"     % "2.0.1"
-  val saxonHE        = "net.sf.saxon"            % "Saxon-HE"         % "12.9"
+  val saxonHE        = "net.sf.saxon"            % "Saxon-HE"         % "13.0"
   val scalaGraph     = "org.scala-graph"        %% "graph-core"       % "2.0.2"
   val titaniumJSONLD = "com.apicatalog"          % "titanium-json-ld" % "1.7.0"
   val xmlunitCore    = "org.xmlunit"             % "xmlunit-core"     % "2.11.0"
