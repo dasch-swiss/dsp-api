@@ -37,6 +37,10 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.CalendarDateRangeV2
+import org.knora.webapi.messages.util.CalendarDateV2
+import org.knora.webapi.messages.util.CalendarNameV2
+import org.knora.webapi.messages.util.DateEraV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.ResourceIri
@@ -101,6 +105,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       model <- RdfDataMgr.loadModel(nq, Lang.NTRIPLES)
       _     <- ZIO.attempt(addResourceMetadata(model, ctx, now))
       _     <- ZIO.attempt(addValueMetadata(model, ctx, now))
+      _     <- ZIO.attempt(convertDateValues(model))
       _     <- ZIO.attempt(addValueHasString(model))
       kb    <- tempFile("onto-transformer-kb-", ".nq")
       _     <- RdfDataMgr.write(model, kb, Lang.NTRIPLES)
@@ -178,6 +183,88 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       v.addProperty(valueCreationDate, creationDateLit)
       v.addProperty(valueHasUUID, iri.valueId.value)
       v.addProperty(isDeleted, falseLit)
+    }
+  }
+
+  /**
+   * Step 3 — collapse the v2 `dateValueHas{Calendar,Start*,End*}` properties of every `DateValue` into the
+   * `knora-base` JDN form: `valueHasCalendar`, `valueHasStart/EndJDN`, `valueHasStart/EndPrecision`, plus a
+   * `valueHasString` rendering of the date range. Eras are not stored in `knora-base`; they only feed the JDN math.
+   * JDN computation and the date-range string are delegated to [[CalendarDateRangeV2]].
+   */
+  private def convertDateValues(model: Model): Unit = {
+    val rdfType   = model.createProperty(Rdf.Type)
+    val dateValue = KnoraBase.DateValue
+
+    // The v2 date properties, renamed into the knora-base namespace by stage 1.
+    val srcCalendar   = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasCalendar")
+    val srcStartYear  = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasStartYear")
+    val srcStartMonth = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasStartMonth")
+    val srcStartDay   = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasStartDay")
+    val srcStartEra   = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasStartEra")
+    val srcEndYear    = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasEndYear")
+    val srcEndMonth   = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasEndMonth")
+    val srcEndDay     = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasEndDay")
+    val srcEndEra     = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "dateValueHasEndEra")
+    val srcProps      =
+      List(
+        srcCalendar,
+        srcStartYear,
+        srcStartMonth,
+        srcStartDay,
+        srcStartEra,
+        srcEndYear,
+        srcEndMonth,
+        srcEndDay,
+        srcEndEra,
+      )
+
+    val valueHasCalendar       = model.createProperty(KnoraBase.ValueHasCalendar)
+    val valueHasStartJDN       = model.createProperty(KnoraBase.ValueHasStartJDN)
+    val valueHasEndJDN         = model.createProperty(KnoraBase.ValueHasEndJDN)
+    val valueHasStartPrecision = model.createProperty(KnoraBase.ValueHasStartPrecision)
+    val valueHasEndPrecision   = model.createProperty(KnoraBase.ValueHasEndPrecision)
+    val valueHasString         = model.createProperty(KnoraBase.ValueHasString)
+
+    def stringOf(v: Resource, p: Property): Option[String] =
+      Option(v.getProperty(p)).map(_.getObject).collect { case n if n.isLiteral => n.asLiteral.getLexicalForm }
+    def intOf(v: Resource, p: Property): Option[Int] =
+      Option(v.getProperty(p)).map(_.getObject).collect { case n if n.isLiteral => n.asLiteral.getInt }
+    def eraOf(v: Resource, p: Property): Option[DateEraV2] =
+      stringOf(v, p).flatMap(DateEraV2.fromString(_).toOption)
+
+    val dateValues = model.listSubjects().asScala.toList.filter { s =>
+      asValueIri(s).isDefined &&
+      Option(s.getProperty(rdfType)).map(_.getObject).exists(n => n.isURIResource && n.asResource.getURI == dateValue)
+    }
+
+    dateValues.foreach { v =>
+      val calendarStr =
+        stringOf(v, srcCalendar).getOrElse(throw new IllegalArgumentException(s"DateValue $v has no calendar"))
+      val calendarName =
+        CalendarNameV2.fromString(calendarStr).fold(msg => throw new IllegalArgumentException(msg), identity)
+      val startYear =
+        intOf(v, srcStartYear).getOrElse(throw new IllegalArgumentException(s"DateValue $v has no start year"))
+
+      val start =
+        CalendarDateV2(calendarName, startYear, intOf(v, srcStartMonth), intOf(v, srcStartDay), eraOf(v, srcStartEra))
+      val end = CalendarDateV2(
+        calendarName,
+        intOf(v, srcEndYear).getOrElse(startYear),
+        intOf(v, srcEndMonth).orElse(intOf(v, srcStartMonth)),
+        intOf(v, srcEndDay).orElse(intOf(v, srcStartDay)),
+        eraOf(v, srcEndEra).orElse(eraOf(v, srcStartEra)),
+      )
+      val range              = CalendarDateRangeV2(start, end)
+      val (startJDN, endJDN) = range.toJulianDayRange
+
+      srcProps.foreach(v.removeAll)
+      v.addProperty(valueHasCalendar, calendarStr)
+      v.addProperty(valueHasStartJDN, model.createTypedLiteral(startJDN.toString, XSDDatatype.XSDinteger))
+      v.addProperty(valueHasEndJDN, model.createTypedLiteral(endJDN.toString, XSDDatatype.XSDinteger))
+      v.addProperty(valueHasStartPrecision, start.precision.toString)
+      v.addProperty(valueHasEndPrecision, end.precision.toString)
+      v.addProperty(valueHasString, range.toString)
     }
   }
 

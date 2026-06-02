@@ -596,6 +596,115 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  /** Drives a GREGORIAN `DateValue` through stage 2 and asserts the collapsed JDN form. */
+  private def runDateStage2(
+    inner: String,
+    startJDN: Int,
+    endJDN: Int,
+    startPrecision: String,
+    endPrecision: String,
+    dateString: String,
+  ) =
+    runTransformStage2(
+      jsonLd = resourceWithValueJsonLd(s"${onto}testSubDate1", s"${knoraApi}DateValue", inner),
+      expectedTurtle = s"""
+                          | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                          | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+                          | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+                          | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+                          | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                          |
+                          | <$resourceIri>
+                          |     a                            onto:Example ;
+                          |     rdfs:label                   "test" ;
+                          |     onto:testSubDate1            <$valueIri> ;
+                          |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                          |     knora-base:attachedToProject <${ctx.attachedToProject.value}> ;
+                          |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                          |     knora-base:creationDate      "$knownInstant"^^xsd:dateTimeStamp ;
+                          |     knora-base:isDeleted         false .
+                          |
+                          | <$valueIri>
+                          |     a                                 knora-base:DateValue ;
+                          |     knora-base:valueHasCalendar       "GREGORIAN" ;
+                          |     knora-base:valueHasStartJDN       $startJDN ;
+                          |     knora-base:valueHasEndJDN         $endJDN ;
+                          |     knora-base:valueHasStartPrecision "$startPrecision" ;
+                          |     knora-base:valueHasEndPrecision   "$endPrecision" ;
+                          |     knora-base:valueHasString         "$dateString" ;
+                          |     knora-base:attachedToUser         <${ctx.attachedToUser}> ;
+                          |     knora-base:hasPermissions         "${ctx.permissions}" ;
+                          |     knora-base:valueCreationDate      "$knownInstant"^^xsd:dateTimeStamp ;
+                          |     knora-base:valueHasUUID           "${valueIri.valueId.value}" ;
+                          |     knora-base:isDeleted              false .
+                          |""".stripMargin,
+    )
+
+  private val dateValuesStage2 = suite("Stage 2 — DateValue → JDN")(
+    test("day-precision range") {
+      runDateStage2(
+        inner = s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "GREGORIAN" },
+                   |    "${knoraApi}dateValueHasStartYear":  { "@type": "${xsd}integer", "@value": 1800 },
+                   |    "${knoraApi}dateValueHasStartMonth": { "@type": "${xsd}integer", "@value": 1 },
+                   |    "${knoraApi}dateValueHasStartDay":   { "@type": "${xsd}integer", "@value": 2 },
+                   |    "${knoraApi}dateValueHasStartEra":   { "@type": "${xsd}string",  "@value": "CE" },
+                   |    "${knoraApi}dateValueHasEndYear":    { "@type": "${xsd}integer", "@value": 1900 },
+                   |    "${knoraApi}dateValueHasEndMonth":   { "@type": "${xsd}integer", "@value": 3 },
+                   |    "${knoraApi}dateValueHasEndDay":     { "@type": "${xsd}integer", "@value": 4 },
+                   |    "${knoraApi}dateValueHasEndEra":     { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
+        startJDN = 2378498,
+        endJDN = 2415083,
+        startPrecision = "DAY",
+        endPrecision = "DAY",
+        dateString = "GREGORIAN:1800-01-02 CE:1900-03-04 CE",
+      )
+    },
+    test("month-precision range (no day fields)") {
+      runDateStage2(
+        inner = s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "GREGORIAN" },
+                   |    "${knoraApi}dateValueHasStartYear":  { "@type": "${xsd}integer", "@value": 1800 },
+                   |    "${knoraApi}dateValueHasStartMonth": { "@type": "${xsd}integer", "@value": 3 },
+                   |    "${knoraApi}dateValueHasStartEra":   { "@type": "${xsd}string",  "@value": "CE" },
+                   |    "${knoraApi}dateValueHasEndYear":    { "@type": "${xsd}integer", "@value": 1900 },
+                   |    "${knoraApi}dateValueHasEndMonth":   { "@type": "${xsd}integer", "@value": 5 },
+                   |    "${knoraApi}dateValueHasEndEra":     { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
+        startJDN = 2378556,
+        endJDN = 2415171,
+        startPrecision = "MONTH",
+        endPrecision = "MONTH",
+        dateString = "GREGORIAN:1800-03 CE:1900-05 CE",
+      )
+    },
+    test("year-precision range (no month or day fields)") {
+      runDateStage2(
+        inner = s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "GREGORIAN" },
+                   |    "${knoraApi}dateValueHasStartYear":  { "@type": "${xsd}integer", "@value": 1800 },
+                   |    "${knoraApi}dateValueHasStartEra":   { "@type": "${xsd}string",  "@value": "CE" },
+                   |    "${knoraApi}dateValueHasEndYear":    { "@type": "${xsd}integer", "@value": 1900 },
+                   |    "${knoraApi}dateValueHasEndEra":     { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
+        startJDN = 2378497,
+        endJDN = 2415385,
+        startPrecision = "YEAR",
+        endPrecision = "YEAR",
+        dateString = "GREGORIAN:1800 CE:1900 CE",
+      )
+    },
+    test("single date (only start fields) collapses to one date") {
+      runDateStage2(
+        inner = s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "GREGORIAN" },
+                   |    "${knoraApi}dateValueHasStartYear":  { "@type": "${xsd}integer", "@value": 1800 },
+                   |    "${knoraApi}dateValueHasStartMonth": { "@type": "${xsd}integer", "@value": 1 },
+                   |    "${knoraApi}dateValueHasStartDay":   { "@type": "${xsd}integer", "@value": 2 },
+                   |    "${knoraApi}dateValueHasStartEra":   { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
+        startJDN = 2378498,
+        endJDN = 2378498,
+        startPrecision = "DAY",
+        endPrecision = "DAY",
+        dateString = "GREGORIAN:1800-01-02 CE",
+      )
+    },
+  )
+
   override def spec = suite("OntologyTransformerSpec")(
     simpleScalarValues,
     iriRefValues,
@@ -603,6 +712,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
     dateValues,
     resourceMetadata,
     valueHasString,
+    dateValuesStage2,
   ).provide(OntologyTransformer.layer, StringFormatter.test, TestAppConfig.layer())
 
 }
