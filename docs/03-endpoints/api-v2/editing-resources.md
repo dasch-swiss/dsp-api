@@ -177,7 +177,14 @@ A custom value IRI must be the IRI of the containing resource, followed by a `/v
 An optional custom UUID of a value can also be given by adding `knora-api:valueHasUUID`. Each custom UUID must
 be [base64url-encoded](https://tools.ietf.org/html/rfc4648#section-5) without padding. Each value of the new resource
 can also have a custom creation date specified by adding `knora-api:creationDate`
-(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)). For example:
+(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)).
+
+Each value node in the array may carry an optional `knora-api:valueHasOrder` field to override the
+default array-position-based order (0, 1, 2, …). Returns 400 if two or more values for the same
+property each carry an explicit `knora-api:valueHasOrder` with the same integer. Values without an
+explicit order are assigned one at insert time and do not collide with explicit orders at parse time.
+
+For example:
 
 ```json
 {

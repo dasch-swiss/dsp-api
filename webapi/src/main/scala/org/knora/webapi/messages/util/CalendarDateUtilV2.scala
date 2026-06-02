@@ -8,6 +8,7 @@ package org.knora.webapi.messages.util
 import com.ibm.icu.util.*
 
 import java.util.Date
+import scala.util.Try
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -550,6 +551,32 @@ object CalendarDateRangeV2 {
       )
     }
   }
+
+  /**
+   * Builds a [[CalendarDateRangeV2]] from its individual start/end components. A single date is expressed as equal
+   * start and end components. The component constraints enforced by [[CalendarDateV2]] and [[CalendarDateRangeV2]]
+   * (e.g. a day requires a month, Gregorian/Julian dates require an era) are returned as a `Left` rather than thrown.
+   * This does not check that the dates are valid in their calendar; call `toJulianDayRange` on the result for that.
+   *
+   * @return the date range, or a `Left` describing why the components are invalid.
+   */
+  def fromComponents(
+    calendarName: CalendarNameV2,
+    startYear: Int,
+    startMonth: Option[Int],
+    startDay: Option[Int],
+    startEra: Option[DateEraV2],
+    endYear: Int,
+    endMonth: Option[Int],
+    endDay: Option[Int],
+    endEra: Option[DateEraV2],
+  ): Either[String, CalendarDateRangeV2] =
+    Try(
+      CalendarDateRangeV2(
+        CalendarDateV2(calendarName, startYear, startMonth, startDay, startEra),
+        CalendarDateV2(calendarName, endYear, endMonth, endDay, endEra),
+      ),
+    ).toEither.left.map(_.getMessage)
 }
 
 /**

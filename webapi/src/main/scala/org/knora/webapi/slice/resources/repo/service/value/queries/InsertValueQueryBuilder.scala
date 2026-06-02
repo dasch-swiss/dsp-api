@@ -13,7 +13,6 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.Bind
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
@@ -37,12 +36,13 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagAttributeV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object InsertValueQueryBuilder {
+object InsertValueQueryBuilder extends QueryBuilderHelper {
   def createValueQuery(
     dataNamedGraph: InternalIri,
     resourceIri: InternalIri,
@@ -54,6 +54,7 @@ object InsertValueQueryBuilder {
     valueCreator: InternalIri,
     valuePermissions: String,
     creationDate: Instant,
+    valueHasOrder: Option[Int] = None,
   ): Update = {
     val value = valueInitial.toOntologySchema(InternalSchema)
 
@@ -114,6 +115,7 @@ object InsertValueQueryBuilder {
       currentVar,
       currentValue,
       currentValueUUID,
+      valueHasOrder,
     )
 
     val query = Queries
@@ -497,6 +499,7 @@ object InsertValueQueryBuilder {
     currentVar: Variable,
     currentValue: Option[InternalIri],
     currentValueUUID: Variable,
+    valueHasOrder: Option[Int],
   ): List[GraphPattern] = {
     val resourceClass = variable("resourceClass")
     val valueType     = variable("valueType")
@@ -642,28 +645,33 @@ object InsertValueQueryBuilder {
           ),
         )
       case None =>
-        // Create case: append at end using MAX(order) + 1
-        val maxOrder   = variable("maxOrder")
-        val order      = variable("order")
-        val otherValue = variable("otherValue")
-        List(
-          GraphPatterns
-            .select()
-            .select(
-              Expressions.max(order).as(maxOrder),
-              Expressions
-                .iff(
-                  Expressions.bound(maxOrder),
-                  Expressions.add(maxOrder, literalOf(1)),
-                  literalOf(0),
+        valueHasOrder match {
+          case Some(explicitOrder) =>
+            List(bindExplicitOrder(explicitOrder, nextOrder))
+          case None =>
+            // Create case: append at end using MAX(order) + 1
+            val maxOrder   = variable("maxOrder")
+            val order      = variable("order")
+            val otherValue = variable("otherValue")
+            List(
+              GraphPatterns
+                .select()
+                .select(
+                  Expressions.max(order).as(maxOrder),
+                  Expressions
+                    .iff(
+                      Expressions.bound(maxOrder),
+                      Expressions.add(maxOrder, literalOf(1)),
+                      literalOf(0),
+                    )
+                    .as(nextOrder),
                 )
-                .as(nextOrder),
+                .where(
+                  iri(resourceIri.value).has(iri(propertyIri.toString), otherValue),
+                  otherValue.has(KB.valueHasOrder, order).andHas(KB.isDeleted, literalOf(false)),
+                ),
             )
-            .where(
-              iri(resourceIri.value).has(iri(propertyIri.toString), otherValue),
-              otherValue.has(KB.valueHasOrder, order).andHas(KB.isDeleted, literalOf(false)),
-            ),
-        )
+        }
     }
 
     List(

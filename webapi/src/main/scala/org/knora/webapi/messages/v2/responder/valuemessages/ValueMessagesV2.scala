@@ -526,6 +526,7 @@ case class CreateValueV2(
   valueUUID: Option[UUID] = None,
   valueCreationDate: Option[Instant] = None,
   permissions: Option[String] = None,
+  valueHasOrder: Option[Int] = None,
 )
 
 /** A trait for classes representing information to be updated in a value. */
@@ -874,16 +875,17 @@ object DateValueContentV2 {
 
       calendarName <- r.objectString(DateValueHasCalendar, CalendarNameV2.fromString)
 
-      // validate the combination of start/end dates and calendarName
-      _ <- if (startMonth.isEmpty && startDay.isDefined) Left(s"Start day defined, missing start month") else Right(())
-      _ <- if (endMonth.isEmpty && endDay.isDefined) Left(s"End day defined, missing end month") else Right(())
-      _ <- if (calendarName.isInstanceOf[CalendarNameGregorianOrJulian] && (startEra.isEmpty || endEra.isEmpty))
-             Left(s"Era is required in calendar $calendarName")
-           else Right(())
-
-      startDate          = CalendarDateV2(calendarName, startYear, startMonth, startDay, startEra)
-      endDate            = CalendarDateV2(calendarName, endYear, endMonth, endDay, endEra)
-      dateRange          = CalendarDateRangeV2(startDate, endDate)
+      dateRange <- CalendarDateRangeV2.fromComponents(
+                     calendarName,
+                     startYear,
+                     startMonth,
+                     startDay,
+                     startEra,
+                     endYear,
+                     endMonth,
+                     endDay,
+                     endEra,
+                   )
       startEnd          <- Try(dateRange.toJulianDayRange).toEither.left.map(_.getMessage)
       (startJdn, endJdn) = startEnd
 
@@ -892,8 +894,8 @@ object DateValueContentV2 {
       ApiV2Complex,
       startJdn,
       endJdn,
-      startDate.precision,
-      endDate.precision,
+      dateRange.startCalendarDate.precision,
+      dateRange.endCalendarDate.precision,
       calendarName,
       comment,
     )
