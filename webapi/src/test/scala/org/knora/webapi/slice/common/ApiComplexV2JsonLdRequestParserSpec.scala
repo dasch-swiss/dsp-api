@@ -1067,11 +1067,13 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
         fails(containsString("Duplicate knora-api:valueHasOrder")),
       )
     },
-    test("createResourceRequestV2 rejects explicit valueHasOrder that collides with implicit array-position order") {
+    test(
+      "createResourceRequestV2 accepts explicit valueHasOrder that equals another value's implicit index",
+    ) {
       for {
         _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
         uuid   <- Random.nextUUID
-        actual <- service(
+        result <- service(
                     _.createResourceRequestV2(
                       """{
                         |  "@type": "ex:Thing",
@@ -1101,10 +1103,8 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                       TestDataFactory.User.rootUser,
                       uuid,
                     ),
-                  ).exit
-      } yield assert(actual)(
-        fails(containsString("Duplicate knora-api:valueHasOrder")),
-      )
+                  )
+      } yield assertTrue(result.createResource.flatValues.size == 2)
     },
     test("createResourceRequestV2 accepts explicit valueHasOrder that does not collide with any implicit order") {
       for {
@@ -1142,6 +1142,34 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                     ),
                   )
       } yield assertTrue(result.createResource.flatValues.size == 2)
+    },
+    test("createResourceRequestV2 rejects non-integer knora-api:valueHasOrder") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        uuid   <- Random.nextUUID
+        actual <- service(
+                    _.createResourceRequestV2(
+                      """{
+                        |  "@type": "ex:Thing",
+                        |  "rdfs:label": "test resource",
+                        |  "ka:attachedToProject": { "@id": "http://rdfh.ch/projects/0001" },
+                        |  "ex:hasInteger": {
+                        |    "@type": "ka:IntValue",
+                        |    "ka:intValueAsInt": 42,
+                        |    "ka:valueHasOrder": "abc"
+                        |  },
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                        |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                        |  }
+                        |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  ).exit
+      } yield assert(actual)(fails(anything))
     },
   ).provide(
     AdministrativePermissionRepoInMemory.layer,
