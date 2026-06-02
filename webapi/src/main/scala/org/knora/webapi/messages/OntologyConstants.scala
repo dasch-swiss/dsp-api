@@ -630,6 +630,7 @@ object OntologyConstants {
     val ValueAsString: IRI      = KnoraApiV2PrefixExpansion + "valueAsString"
     val ValueCreationDate: IRI  = KnoraApiV2PrefixExpansion + "valueCreationDate"
     val ValueHasUUID: IRI       = KnoraApiV2PrefixExpansion + "valueHasUUID"
+    val ValueHasOrder: IRI      = KnoraApiV2PrefixExpansion + "valueHasOrder"
     val ValueHasComment: IRI    = KnoraApiV2PrefixExpansion + "valueHasComment"
     val NewValueVersionIri: IRI = KnoraApiV2PrefixExpansion + "newValueVersionIri"
 

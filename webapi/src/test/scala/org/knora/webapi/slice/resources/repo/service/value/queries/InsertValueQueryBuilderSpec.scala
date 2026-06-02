@@ -55,6 +55,7 @@ object InsertValueQueryBuilderTestSupport {
       value: ValueContentV2,
       linkUpdates: Seq[SparqlTemplateLinkUpdate] = Seq.empty,
       newUuidOrCurrentIri: Either[UUID, InternalIri] = Left(testValueUUID),
+      valueHasOrder: Option[Int] = None,
     ): String =
       InsertValueQueryBuilder
         .createValueQuery(
@@ -68,6 +69,7 @@ object InsertValueQueryBuilderTestSupport {
           valueCreator = testUserIri,
           valuePermissions = testPermissions,
           creationDate = testCreationDate,
+          valueHasOrder = valueHasOrder,
         )
         .sparql
 
@@ -1153,6 +1155,25 @@ object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
           builderQuery.contains("MAX( ?order )"),
           builderQuery.contains("?maxOrder + 1"),
           !builderQuery.contains("?existingOrder"),
+        )
+      },
+      test("Create query with explicit order binds the supplied integer directly") {
+        for {
+          testValue    <- ZIO.succeed(TestDataFactory.createTextValue())
+          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue, valueHasOrder = Some(5)))
+        } yield assertTrue(
+          builderQuery.contains("BIND( IF( true, 5, 0 ) AS ?nextOrder )"),
+          !builderQuery.contains("MAX( ?order )"),
+          !builderQuery.contains("?maxOrder"),
+        )
+      },
+      test("Create query with explicit order 0 binds 0 directly") {
+        for {
+          testValue    <- ZIO.succeed(TestDataFactory.createTextValue())
+          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue, valueHasOrder = Some(0)))
+        } yield assertTrue(
+          builderQuery.contains("BIND( IF( true, 0, 0 ) AS ?nextOrder )"),
+          !builderQuery.contains("MAX( ?order )"),
         )
       },
     ),

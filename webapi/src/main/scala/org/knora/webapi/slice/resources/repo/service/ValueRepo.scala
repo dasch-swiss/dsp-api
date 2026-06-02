@@ -17,6 +17,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.language.implicitConversions
 
+import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
@@ -31,6 +32,7 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_String_Property
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.resources.repo.CheckDuplicateOrderQuery
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.resources.repo.service.value.queries.InsertValueQueryBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -255,21 +257,43 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     valueCreator: InternalIri,
     valuePermissions: String,
     creationDate: Instant,
+    valueHasOrder: Option[Int] = None,
   ): Task[Unit] =
-    triplestore.query(
-      InsertValueQueryBuilder.createValueQuery(
-        dataNamedGraph,
-        resourceIri,
-        propertyIri,
-        newValueIri,
-        Left(newValueUUID),
-        value,
-        linkUpdates,
-        valueCreator,
-        valuePermissions,
-        creationDate,
-      ),
-    )
+    for {
+      // IriLocker serialises concurrent writes per resource IRI within a single JVM instance,
+      // making the ASK check + INSERT effectively atomic under single-instance deployment.
+      // Multi-instance deployments do not share this lock; a race window exists there.
+      _ <- ZIO.foreach(valueHasOrder)(order => checkDuplicateOrder(resourceIri, propertyIri, order))
+      _ <- triplestore.query(
+             InsertValueQueryBuilder.createValueQuery(
+               dataNamedGraph,
+               resourceIri,
+               propertyIri,
+               newValueIri,
+               Left(newValueUUID),
+               value,
+               linkUpdates,
+               valueCreator,
+               valuePermissions,
+               creationDate,
+               valueHasOrder,
+             ),
+           )
+    } yield ()
+
+  def checkDuplicateOrder(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): Task[Unit] =
+    triplestore
+      .query(CheckDuplicateOrderQuery.build(resourceIri, propertyIri, order))
+      .flatMap(exists =>
+        ZIO
+          .fail(
+            BadRequestException(
+              s"A non-deleted value for property <$propertyIri> on resource <${resourceIri.value}> already has knora-api:valueHasOrder $order",
+            ),
+          )
+          .when(exists),
+      )
+      .unit
 
   def updateValue(
     dataNamedGraph: InternalIri,

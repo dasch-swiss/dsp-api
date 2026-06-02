@@ -163,28 +163,7 @@ final case class GroupRestService(
 
 ## Error Handling
 
-Sealed trait hierarchy with case class subtypes:
-
-```scala
-sealed trait KnoraException extends Serializable
-
-abstract class RequestRejectedException(msg: String) extends Exception(msg) with KnoraException
-abstract class InternalServerException(msg: String) extends Exception(msg) with KnoraException
-
-final case class NotFoundException(message: String) extends RequestRejectedException(message)
-object NotFoundException {
-  val notFound: NotFoundException = NotFoundException("The requested data was not found")
-  def from(iri: GroupIri): NotFoundException = NotFoundException(s"Group $iri was not found")
-  implicit val codec: JsonCodec[NotFoundException] = DeriveJsonCodec.gen[NotFoundException]
-}
-```
-
-**Rules:**
-
-- `RequestRejectedException` → 4xx errors
-- `InternalServerException` → 5xx errors
-- Each concrete error: `final case class` with smart constructors
-- Companion objects include `DeriveJsonCodec.gen`
+See [`dsp-api-error-handling.md`](dsp-api-error-handling.md) for the full rules: when to use the ZIO error channel (recoverable failures) vs. the `die` family (invariant violations), the `RequestRejectedException` / `InternalServerException` hierarchy, typed `IO[E, A]` vs. `Task[A]`, the V3 typed-error pattern, and the narrow legacy carve-out for `throw`.
 
 ## Authentication
 

@@ -102,6 +102,19 @@ If permissions are not given, configurable default permissions are used (see
 [Default Object Access Permissions](../../05-internals/design/api-admin/administration.md#default-object-access-permissions)
 ).
 
+**`knora-api:valueHasOrder` (optional)** — A non-negative integer (0–2,147,483,647) that sets the
+position of the value among other values of the same property on the same resource. When omitted, the
+API assigns `MAX(existing orders) + 1`. When supplied, the integer is stored as-is; gaps are permitted
+and are not compacted.
+
+Returns 400 if the integer is negative or exceeds 2,147,483,647. Returns 400 if another non-deleted
+value for the same resource and property already holds the same order integer.
+
+**Compatibility note**: `PUT /v2/values/order` compacts the order of all non-deleted values for a
+property into a dense 0-based sequence (0, 1, 2, …). If you created values with intentional gaps or
+non-sequential positions using `knora-api:valueHasOrder`, calling `PUT /v2/values/order` afterward
+will overwrite those positions and compact them.
+
 To create a value, the user must have **modify permission** on the containing resource.
 
 The response is a JSON-LD document containing:
