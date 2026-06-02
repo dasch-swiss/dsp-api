@@ -875,17 +875,9 @@ object DateValueContentV2 {
 
       calendarName <- r.objectString(DateValueHasCalendar, CalendarNameV2.fromString)
 
-      dateRange <- CalendarDateRangeV2.fromComponents(
-                     calendarName,
-                     startYear,
-                     startMonth,
-                     startDay,
-                     startEra,
-                     endYear,
-                     endMonth,
-                     endDay,
-                     endEra,
-                   )
+      startComponent    <- DateComponent.from(startYear, startMonth, startDay).left.map("start " + _)
+      endComponent      <- DateComponent.from(endYear, endMonth, endDay).left.map("end " + _)
+      dateRange         <- CalendarDateRangeV2.fromComponents(calendarName, startComponent, startEra, endComponent, endEra)
       startEnd          <- Try(dateRange.toJulianDayRange).toEither.left.map(_.getMessage)
       (startJdn, endJdn) = startEnd
 

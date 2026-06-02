@@ -39,6 +39,7 @@ import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarDateRangeV2
 import org.knora.webapi.messages.util.CalendarNameV2
+import org.knora.webapi.messages.util.DateComponent
 import org.knora.webapi.messages.util.DateEraV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -241,6 +242,13 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
     def required[A](opt: Option[A], what: String, v: Resource): A =
       opt.getOrElse(throw new IllegalArgumentException(s"DateValue $v has no $what"))
 
+    def componentOf(v: Resource, yearP: Property, monthP: Property, dayP: Property, what: String): DateComponent = {
+      val year = required(intOf(v, yearP), s"$what year", v)
+      DateComponent
+        .from(year, intOf(v, monthP), intOf(v, dayP))
+        .fold(_ => throw new IllegalArgumentException(s"DateValue $v has a $what day but no $what month"), identity)
+    }
+
     dateValues.foreach { v =>
       val calendarStr  = required(stringOf(v, srcCalendar), "calendar", v)
       val calendarName =
@@ -249,13 +257,9 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       val range = CalendarDateRangeV2
         .fromComponents(
           calendarName,
-          required(intOf(v, srcStartYear), "start year", v),
-          intOf(v, srcStartMonth),
-          intOf(v, srcStartDay),
+          componentOf(v, srcStartYear, srcStartMonth, srcStartDay, "start"),
           eraOf(v, srcStartEra),
-          required(intOf(v, srcEndYear), "end year", v),
-          intOf(v, srcEndMonth),
-          intOf(v, srcEndDay),
+          componentOf(v, srcEndYear, srcEndMonth, srcEndDay, "end"),
           eraOf(v, srcEndEra),
         )
         .fold(msg => throw new IllegalArgumentException(msg), identity)

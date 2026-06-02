@@ -15,6 +15,8 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 
+import DateComponent.*
+
 /**
  * Indicates the era (CE or BCE) in Gregorian and Julian calendar dates.
  */
@@ -156,27 +158,51 @@ case object CalendarNameIslamic extends CalendarNameIslamicCivil {
   override def toString: String = StringFormatter.CalendarIslamic
 }
 
+sealed trait DateComponent {
+  def year: Int
+  def precision: DatePrecisionV2
+  override def toString: String = this match {
+    case YearMonthDay(year, month, day) =>
+      f"$year%04d${StringFormatter.PrecisionSeparator}$month%02d${StringFormatter.PrecisionSeparator}$day%02d"
+    case YearMonth(year, month) =>
+      f"$year%04d${StringFormatter.PrecisionSeparator}$month%02d"
+    case Year(year) =>
+      f"$year%04d"
+  }
+}
+object DateComponent {
+  case class YearMonthDay(year: Int, month: Int, day: Int) extends DateComponent {
+    val precision: DatePrecisionV2 = DatePrecisionDay
+  }
+  case class YearMonth(year: Int, month: Int) extends DateComponent {
+    val precision: DatePrecisionV2 = DatePrecisionMonth
+  }
+  case class Year(year: Int) extends DateComponent {
+    val precision: DatePrecisionV2 = DatePrecisionYear
+  }
+
+  def from(year: Int, month: Option[Int], day: Option[Int]): Either[String, DateComponent] =
+    (month, day) match {
+      case (Some(m), Some(d)) => Right(DateComponent.YearMonthDay(year, m, d))
+      case (Some(m), None)    => Right(DateComponent.YearMonth(year, m))
+      case (None, None)       => Right(DateComponent.Year(year))
+      case (None, Some(_))    => Left(s"day given without month")
+    }
+}
+
 /**
  * Represents a date as values that are suitable for constructing human-readable representations.
  *
  * @param calendarName the name of the calendar.
- * @param year         the date's year.
- * @param maybeMonth   the date's month, if given.
- * @param maybeDay     the date's day, if given.
+ * @param component    the date's component values, as a year, month, and day, or just a year and month, or just a year, depending on the date's precision.
  * @param maybeEra     the date's era, if the calendar supports it. An era is required in Gregorian and
  *                     Julian calendars.
  */
 case class CalendarDateV2(
   calendarName: CalendarNameV2,
-  year: Int,
-  maybeMonth: Option[Int],
-  maybeDay: Option[Int],
+  component: DateComponent,
   maybeEra: Option[DateEraV2],
 ) {
-  if (maybeMonth.isEmpty && maybeDay.isDefined) {
-    throw AssertionException(s"Invalid date: CalendarDateV2($calendarName, $year, $maybeMonth, $maybeDay, $maybeEra)")
-  }
-
   calendarName match {
     case _: CalendarNameGregorianOrJulian =>
       if (maybeEra.isEmpty) {
@@ -189,39 +215,36 @@ case class CalendarDateV2(
   /**
    * The precision of this date.
    */
-  lazy val precision: DatePrecisionV2 =
-    (maybeMonth, maybeDay) match {
-      case (Some(_), Some(_)) => DatePrecisionDay
-      case (Some(_), None)    => DatePrecisionMonth
-      case (None, None)       => DatePrecisionYear
-      case _                  => throw AssertionException("Unreachable code")
-    }
+  lazy val precision: DatePrecisionV2 = component.precision
+
+  /**
+   * The year of this date.
+   */
+  def year: Int = component.year
+
+  /**
+   * The month of this date, if its precision includes a month.
+   */
+  def maybeMonth: Option[Int] = component match {
+    case YearMonthDay(_, month, _) => Some(month)
+    case YearMonth(_, month)       => Some(month)
+    case Year(_)                   => None
+  }
+
+  /**
+   * The day of this date, if its precision includes a day.
+   */
+  def maybeDay: Option[Int] = component match {
+    case YearMonthDay(_, _, day) => Some(day)
+    case _                       => None
+  }
 
   /**
    * Returns this date in Knora API v2 simple format, without the calendar.
    */
-  override def toString: String = {
-    val eraString = maybeEra match {
-      case Some(era) => s"${StringFormatter.EraSeparator}$era"
-      case None      => ""
-    }
-
-    (maybeMonth, maybeDay) match {
-      case (Some(month), Some(day)) =>
-        // Day precision: include the year, the month, and the day.
-        f"$year%04d${StringFormatter.PrecisionSeparator}$month%02d${StringFormatter.PrecisionSeparator}$day%02d$eraString"
-
-      case (Some(month), None) =>
-        // Month precision: include the year and the month.
-        f"$year%04d${StringFormatter.PrecisionSeparator}$month%02d$eraString"
-
-      case (None, None) =>
-        // Year precision: just include the year.
-        f"$year%04d$eraString"
-
-      case _ => throw AssertionException("Unreachable code")
-    }
-  }
+  override def toString: String =
+    val eraString = maybeEra.map(era => s"${StringFormatter.EraSeparator}$era").getOrElse("")
+    s"${component.toString}$eraString"
 
   /**
    * Constructs a [[Calendar]] based on the calendar name and era, to be used in subsequent date conversions.
@@ -270,8 +293,8 @@ case class CalendarDateV2(
     //
     // Month is 0-based.
     try {
-      precision match {
-        case DatePrecisionYear =>
+      component match {
+        case Year(year) =>
           // first day of the given year
           val startCalendar: Calendar = makeBaseCalendar
           startCalendar.set(Calendar.YEAR, year)
@@ -286,26 +309,26 @@ case class CalendarDateV2(
 
           (startCalendar.get(Calendar.JULIAN_DAY), endCalendar.get(Calendar.JULIAN_DAY))
 
-        case DatePrecisionMonth =>
+        case YearMonth(year, month) =>
           // first day of the given month in the given year
           val startCalendar: Calendar = makeBaseCalendar
           startCalendar.set(Calendar.YEAR, year)
-          startCalendar.set(Calendar.MONTH, maybeMonth.get - 1)
+          startCalendar.set(Calendar.MONTH, month - 1)
           startCalendar.set(Calendar.DAY_OF_MONTH, startCalendar.getActualMinimum(Calendar.DAY_OF_MONTH))
 
           // last day of the given month in the given year
           val endCalendar: Calendar = makeBaseCalendar
           endCalendar.set(Calendar.YEAR, year)
-          endCalendar.set(Calendar.MONTH, maybeMonth.get - 1)
+          endCalendar.set(Calendar.MONTH, month - 1)
           endCalendar.set(Calendar.DAY_OF_MONTH, endCalendar.getActualMaximum(Calendar.DAY_OF_MONTH))
 
           (startCalendar.get(Calendar.JULIAN_DAY), endCalendar.get(Calendar.JULIAN_DAY))
 
-        case DatePrecisionDay =>
+        case YearMonthDay(year, month, day) =>
           val singleCalendar: Calendar = makeBaseCalendar
           singleCalendar.set(Calendar.YEAR, year)
-          singleCalendar.set(Calendar.MONTH, maybeMonth.get - 1)
-          singleCalendar.set(Calendar.DAY_OF_MONTH, maybeDay.get)
+          singleCalendar.set(Calendar.MONTH, month - 1)
+          singleCalendar.set(Calendar.DAY_OF_MONTH, day)
 
           (singleCalendar.get(Calendar.JULIAN_DAY), singleCalendar.get(Calendar.JULIAN_DAY))
       }
@@ -359,32 +382,9 @@ object CalendarDateV2 {
 
     // Return a CalendarDateV2 in the requested precision.
     precision match {
-      case DatePrecisionYear =>
-        CalendarDateV2(
-          calendarName = calendarName,
-          year = year,
-          maybeMonth = None,
-          maybeDay = None,
-          maybeEra = maybeEra,
-        )
-
-      case DatePrecisionMonth =>
-        CalendarDateV2(
-          calendarName = calendarName,
-          year = year,
-          maybeMonth = Some(month),
-          maybeDay = None,
-          maybeEra = maybeEra,
-        )
-
-      case DatePrecisionDay =>
-        CalendarDateV2(
-          calendarName = calendarName,
-          year = year,
-          maybeMonth = Some(month),
-          maybeDay = Some(day),
-          maybeEra = maybeEra,
-        )
+      case DatePrecisionYear  => CalendarDateV2(calendarName, Year(year), maybeEra)
+      case DatePrecisionMonth => CalendarDateV2(calendarName, YearMonth(year, month), maybeEra)
+      case DatePrecisionDay   => CalendarDateV2(calendarName, YearMonthDay(year, month, day), maybeEra)
     }
   }
 
@@ -424,30 +424,20 @@ object CalendarDateV2 {
     try {
       dateSegments.length match {
         case 1 => // year precision
-          CalendarDateV2(
-            calendarName = calendarName,
-            year = dateSegments.head.toInt,
-            maybeMonth = None,
-            maybeDay = None,
-            maybeEra = maybeEra,
-          )
+          CalendarDateV2(calendarName, Year(dateSegments.head.toInt), maybeEra)
 
         case 2 => // month precision
           CalendarDateV2(
-            calendarName = calendarName,
-            year = dateSegments.head.toInt,
-            maybeMonth = Some(dateSegments(1).toInt),
-            maybeDay = None,
-            maybeEra = maybeEra,
+            calendarName,
+            YearMonth(dateSegments.head.toInt, dateSegments(1).toInt),
+            maybeEra,
           )
 
         case 3 => // day precision
           CalendarDateV2(
-            calendarName = calendarName,
-            year = dateSegments.head.toInt,
-            maybeMonth = Some(dateSegments(1).toInt),
-            maybeDay = Some(dateSegments(2).toInt),
-            maybeEra = maybeEra,
+            calendarName,
+            YearMonthDay(dateSegments.head.toInt, dateSegments(1).toInt, dateSegments(2).toInt),
+            maybeEra,
           )
 
         case _ => throw BadRequestException(s"Invalid date: $dateStr")
@@ -562,19 +552,15 @@ object CalendarDateRangeV2 {
    */
   def fromComponents(
     calendarName: CalendarNameV2,
-    startYear: Int,
-    startMonth: Option[Int],
-    startDay: Option[Int],
+    startComponent: DateComponent,
     startEra: Option[DateEraV2],
-    endYear: Int,
-    endMonth: Option[Int],
-    endDay: Option[Int],
+    endComponent: DateComponent,
     endEra: Option[DateEraV2],
   ): Either[String, CalendarDateRangeV2] =
     Try(
       CalendarDateRangeV2(
-        CalendarDateV2(calendarName, startYear, startMonth, startDay, startEra),
-        CalendarDateV2(calendarName, endYear, endMonth, endDay, endEra),
+        CalendarDateV2(calendarName, startComponent, startEra),
+        CalendarDateV2(calendarName, endComponent, endEra),
       ),
     ).toEither.left.map(_.getMessage)
 }

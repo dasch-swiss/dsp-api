@@ -10,6 +10,7 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.messages.util.DateComponent.*
 
 /**
  * Tests [[CalendarDateUtilV2]].
@@ -91,9 +92,7 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
       val ok1 = checkSingleDate(
         calendarDate = CalendarDateV2(
           calendarName = CalendarNameJulian,
-          year = 1291,
-          maybeMonth = Some(8),
-          maybeDay = Some(1),
+          component = YearMonthDay(1291, 8, 1),
           maybeEra = Some(DateEraCE),
         ),
         expectedStartJDN = 2192808,
@@ -105,9 +104,7 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
       val ok2 = checkSingleDate(
         calendarDate = CalendarDateV2(
           calendarName = CalendarNameJulian,
-          year = 4713,
-          maybeMonth = Some(1),
-          maybeDay = Some(1),
+          component = YearMonthDay(4713, 1, 1),
           maybeEra = Some(DateEraBCE),
         ),
         expectedStartJDN = 0,
@@ -122,9 +119,7 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
       val ok1 = checkSingleDate(
         calendarDate = CalendarDateV2(
           calendarName = CalendarNameGregorian,
-          year = 1969,
-          maybeMonth = Some(3),
-          maybeDay = Some(10),
+          component = YearMonthDay(1969, 3, 10),
           maybeEra = Some(DateEraCE),
         ),
         expectedStartJDN = 2440291,
@@ -137,16 +132,12 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
         calendarDateRange = CalendarDateRangeV2(
           startCalendarDate = CalendarDateV2(
             calendarName = CalendarNameGregorian,
-            year = 1291,
-            maybeMonth = Some(8),
-            maybeDay = None,
+            component = YearMonth(1291, 8),
             maybeEra = Some(DateEraCE),
           ),
           endCalendarDate = CalendarDateV2(
             calendarName = CalendarNameGregorian,
-            year = 1969,
-            maybeMonth = Some(3),
-            maybeDay = Some(10),
+            component = YearMonthDay(1969, 3, 10),
             maybeEra = Some(DateEraCE),
           ),
         ),
@@ -160,16 +151,12 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
         calendarDateRange = CalendarDateRangeV2(
           startCalendarDate = CalendarDateV2(
             calendarName = CalendarNameGregorian,
-            year = 2005,
-            maybeMonth = Some(9),
-            maybeDay = None,
+            component = YearMonth(2005, 9),
             maybeEra = Some(DateEraCE),
           ),
           endCalendarDate = CalendarDateV2(
             calendarName = CalendarNameGregorian,
-            year = 2015,
-            maybeMonth = Some(7),
-            maybeDay = None,
+            component = YearMonth(2015, 7),
             maybeEra = Some(DateEraCE),
           ),
         ),
@@ -285,9 +272,7 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
       val ok1 = checkSingleDate(
         calendarDate = CalendarDateV2(
           calendarName = CalendarNameIslamic,
-          year = 1432,
-          maybeMonth = Some(8),
-          maybeDay = Some(29),
+          component = YearMonthDay(1432, 8, 29),
           maybeEra = None,
         ),
         expectedStartJDN = 2455774,
@@ -300,16 +285,12 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
         calendarDateRange = CalendarDateRangeV2(
           startCalendarDate = CalendarDateV2(
             calendarName = CalendarNameIslamic,
-            year = 1432,
-            maybeMonth = Some(8),
-            maybeDay = Some(29),
+            component = YearMonthDay(1432, 8, 29),
             maybeEra = None,
           ),
           endCalendarDate = CalendarDateV2(
             calendarName = CalendarNameIslamic,
-            year = 1436,
-            maybeMonth = Some(9),
-            maybeDay = Some(14),
+            component = YearMonthDay(1436, 9, 14),
             maybeEra = None,
           ),
         ),
@@ -324,119 +305,37 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
       test("builds a Gregorian day-precision range") {
         val result = CalendarDateRangeV2.fromComponents(
           CalendarNameGregorian,
-          1800,
-          Some(1),
-          Some(2),
+          YearMonthDay(1800, 1, 2),
           Some(DateEraCE),
-          1900,
-          Some(3),
-          Some(4),
+          YearMonthDay(1900, 3, 4),
           Some(DateEraCE),
         )
         val range = result.toOption.get
         assertTrue(
           result.isRight,
-          range.startCalendarDate == CalendarDateV2(CalendarNameGregorian, 1800, Some(1), Some(2), Some(DateEraCE)),
-          range.endCalendarDate == CalendarDateV2(CalendarNameGregorian, 1900, Some(3), Some(4), Some(DateEraCE)),
+          range.startCalendarDate == CalendarDateV2(CalendarNameGregorian, YearMonthDay(1800, 1, 2), Some(DateEraCE)),
+          range.endCalendarDate == CalendarDateV2(CalendarNameGregorian, YearMonthDay(1900, 3, 4), Some(DateEraCE)),
           range.toJulianDayRange == (2378498, 2415083),
-        )
-      },
-      test("infers precision from the components (year, month, day)") {
-        val year = CalendarDateRangeV2.fromComponents(
-          CalendarNameGregorian,
-          1800,
-          None,
-          None,
-          Some(DateEraCE),
-          1900,
-          None,
-          None,
-          Some(DateEraCE),
-        )
-        val month = CalendarDateRangeV2.fromComponents(
-          CalendarNameGregorian,
-          1800,
-          Some(3),
-          None,
-          Some(DateEraCE),
-          1900,
-          Some(5),
-          None,
-          Some(DateEraCE),
-        )
-        val day = CalendarDateRangeV2.fromComponents(
-          CalendarNameGregorian,
-          1800,
-          Some(1),
-          Some(2),
-          Some(DateEraCE),
-          1900,
-          Some(3),
-          Some(4),
-          Some(DateEraCE),
-        )
-        assertTrue(
-          year.toOption.get.startCalendarDate.precision == DatePrecisionYear,
-          month.toOption.get.startCalendarDate.precision == DatePrecisionMonth,
-          day.toOption.get.startCalendarDate.precision == DatePrecisionDay,
         )
       },
       test("allows an absent era for the ISLAMIC calendar") {
         val result =
           CalendarDateRangeV2.fromComponents(
             CalendarNameIslamic,
-            1432,
-            Some(8),
-            Some(29),
+            YearMonthDay(1432, 8, 29),
             None,
-            1436,
-            Some(9),
-            Some(14),
+            YearMonthDay(1436, 9, 14),
             None,
           )
         assertTrue(result.isRight)
-      },
-      test("returns a Left when a start day is given without a start month") {
-        val result =
-          CalendarDateRangeV2.fromComponents(
-            CalendarNameGregorian,
-            1800,
-            None,
-            Some(2),
-            Some(DateEraCE),
-            1900,
-            Some(3),
-            Some(4),
-            Some(DateEraCE),
-          )
-        assertTrue(result.isLeft)
-      },
-      test("returns a Left when an end day is given without an end month") {
-        val result =
-          CalendarDateRangeV2.fromComponents(
-            CalendarNameGregorian,
-            1800,
-            Some(1),
-            Some(2),
-            Some(DateEraCE),
-            1900,
-            None,
-            Some(4),
-            Some(DateEraCE),
-          )
-        assertTrue(result.isLeft)
       },
       test("returns a Left when a Gregorian start date has no era") {
         val result =
           CalendarDateRangeV2.fromComponents(
             CalendarNameGregorian,
-            1800,
-            Some(1),
-            Some(2),
+            YearMonthDay(1800, 1, 2),
             None,
-            1900,
-            Some(3),
-            Some(4),
+            YearMonthDay(1900, 3, 4),
             Some(DateEraCE),
           )
         assertTrue(result.isLeft)
@@ -445,13 +344,9 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
         val result =
           CalendarDateRangeV2.fromComponents(
             CalendarNameJulian,
-            1800,
-            Some(1),
-            Some(2),
+            YearMonthDay(1800, 1, 2),
             Some(DateEraCE),
-            1900,
-            Some(3),
-            Some(4),
+            YearMonthDay(1900, 3, 4),
             None,
           )
         assertTrue(result.isLeft)
