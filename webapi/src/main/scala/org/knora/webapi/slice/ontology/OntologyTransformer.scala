@@ -105,6 +105,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       _     <- ZIO.attempt(addResourceMetadata(model, ctx, now))
       _     <- ZIO.attempt(addValueMetadata(model, ctx, now))
       _     <- ZIO.attempt(convertDateValues(model))
+      _     <- ZIO.attempt(convertLinkValues(model))
       _     <- ZIO.attempt(addValueHasString(model))
       kb    <- tempFile("onto-transformer-kb-", ".nq")
       _     <- RdfDataMgr.write(model, kb, Lang.NTRIPLES)
@@ -143,7 +144,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
     val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTimeStamp)
     val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
 
-    val resources = model.listSubjects().asScala.toList.filter { s =>
+    val resources = model.listSubjects().asScala.filter { s =>
       s.isURIResource && ResourceIri.from(s.getURI).isRight
     }
     resources.foreach { r =>
@@ -171,7 +172,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
     val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTimeStamp)
     val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
 
-    model.listSubjects().asScala.toList.flatMap(s => asValueIri(s).map((s, _))).foreach { case (v, iri) =>
+    model.listSubjects().asScala.flatMap(s => asValueIri(s).map((s, _))).foreach { case (v, iri) =>
       v.removeAll(attachedToUser)
         .removeAll(hasPermissions)
         .removeAll(valueCreationDate)
@@ -232,7 +233,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
     def eraOf(v: Resource, p: Property): Option[DateEraV2] =
       stringOf(v, p).flatMap(DateEraV2.fromString(_).toOption)
 
-    val dateValues = model.listSubjects().asScala.toList.filter { s =>
+    val dateValues = model.listSubjects().asScala.filter { s =>
       asValueIri(s).isDefined &&
       Option(s.getProperty(rdfType)).map(_.getObject).exists(n => n.isURIResource && n.asResource.getURI == dateValue)
     }
@@ -271,6 +272,56 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
   }
 
   /**
+   * Step 4 — reify every `LinkValue` as an `rdf:Statement` and add the direct-link triple, mirroring
+   * `ResourcesRepoLive.buildLinkValuePatterns`. The link property is found from the unique `<resource> <linkProp>
+   * <value>` edge; the direct property is the link property without its `Value` suffix. The `linkValueHasTargetIri`
+   * is replaced by `rdf:subject`/`rdf:predicate`/`rdf:object` plus `valueHasRefCount` (1 for an explicit link) and a
+   * `valueHasString` of the target IRI. Standoff-derived links (step 5) will find-and-bump these by
+   * `(resource, directProp, target)` rather than duplicate them.
+   */
+  private def convertLinkValues(model: Model): Unit = {
+    val rdfType            = model.createProperty(Rdf.Type)
+    val linkValueType      = KnoraBase.LinkValue
+    val linkValueHasTarget = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "linkValueHasTargetIri")
+    val rdfSubject         = model.createProperty(Rdf.Subject)
+    val rdfPredicate       = model.createProperty(Rdf.Predicate)
+    val rdfObject          = model.createProperty(Rdf.Object)
+    val valueHasRefCount   = model.createProperty(KnoraBase.ValueHasRefCount)
+    val valueHasString     = model.createProperty(KnoraBase.ValueHasString)
+
+    val linkValues = model.listSubjects().asScala.filter { s =>
+      isValue(s) &&
+      Option(s.getProperty(rdfType))
+        .map(_.getObject)
+        .exists(n => n.isURIResource && n.asResource.getURI == linkValueType)
+    }
+
+    linkValues.foreach { v =>
+      val parent = model.listStatements(null, null, v).asScala.toList match {
+        case st :: Nil => st
+        case other     =>
+          throw new IllegalArgumentException(s"LinkValue $v must have exactly one incoming edge, found ${other.size}")
+      }
+      val resource = parent.getSubject
+      val linkProp = parent.getPredicate.getURI
+      val target   = Option(v.getProperty(linkValueHasTarget))
+        .map(_.getObject)
+        .collect { case n if n.isURIResource => n.asResource }
+        .getOrElse(throw new IllegalArgumentException(s"LinkValue $v has no linkValueHasTargetIri"))
+
+      val directProp = model.createProperty(linkProp.stripSuffix("Value"))
+
+      resource.addProperty(directProp, target)
+      v.removeAll(linkValueHasTarget)
+      v.addProperty(rdfSubject, resource)
+      v.addProperty(rdfPredicate, model.createResource(directProp.getURI))
+      v.addProperty(rdfObject, target)
+      v.addProperty(valueHasRefCount, model.createTypedLiteral("1", XSDDatatype.XSDinteger))
+      v.addProperty(valueHasString, target.getURI)
+    }
+  }
+
+  /**
    * Step 2 (`valueHasString`) — derive the plain-text `knora-base:valueHasString` from each value's content. Scalar
    * values use the lexical form of their content literal; `ListValue` falls back to the list-node IRI. `TextValue`
    * already carries `valueHasString` from the stage-1 rename and is left untouched. `DateValue` (step 3), `LinkValue`
@@ -299,7 +350,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
     def lexicalOf(v: Resource, p: Property): Option[String] =
       Option(v.getProperty(p)).map(_.getObject).collect { case n if n.isLiteral => n.asLiteral.getLexicalForm }
 
-    model.listSubjects().asScala.toList.filter(isValue).foreach { v =>
+    model.listSubjects().asScala.filter(isValue).foreach { v =>
       if (!v.hasProperty(valueHasString)) {
         val string = typeOf(v).flatMap {
           case cls if literalContent.contains(cls) => lexicalOf(v, literalContent(cls))
