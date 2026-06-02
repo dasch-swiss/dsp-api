@@ -38,7 +38,6 @@ import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarDateRangeV2
-import org.knora.webapi.messages.util.CalendarDateV2
 import org.knora.webapi.messages.util.CalendarNameV2
 import org.knora.webapi.messages.util.DateEraV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -238,32 +237,35 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       Option(s.getProperty(rdfType)).map(_.getObject).exists(n => n.isURIResource && n.asResource.getURI == dateValue)
     }
 
+    def required[A](opt: Option[A], what: String, v: Resource): A =
+      opt.getOrElse(throw new IllegalArgumentException(s"DateValue $v has no $what"))
+
     dateValues.foreach { v =>
-      val calendarStr =
-        stringOf(v, srcCalendar).getOrElse(throw new IllegalArgumentException(s"DateValue $v has no calendar"))
+      val calendarStr  = required(stringOf(v, srcCalendar), "calendar", v)
       val calendarName =
         CalendarNameV2.fromString(calendarStr).fold(msg => throw new IllegalArgumentException(msg), identity)
-      val startYear =
-        intOf(v, srcStartYear).getOrElse(throw new IllegalArgumentException(s"DateValue $v has no start year"))
 
-      val start =
-        CalendarDateV2(calendarName, startYear, intOf(v, srcStartMonth), intOf(v, srcStartDay), eraOf(v, srcStartEra))
-      val end = CalendarDateV2(
-        calendarName,
-        intOf(v, srcEndYear).getOrElse(startYear),
-        intOf(v, srcEndMonth).orElse(intOf(v, srcStartMonth)),
-        intOf(v, srcEndDay).orElse(intOf(v, srcStartDay)),
-        eraOf(v, srcEndEra).orElse(eraOf(v, srcStartEra)),
-      )
-      val range              = CalendarDateRangeV2(start, end)
+      val range = CalendarDateRangeV2
+        .fromComponents(
+          calendarName,
+          required(intOf(v, srcStartYear), "start year", v),
+          intOf(v, srcStartMonth),
+          intOf(v, srcStartDay),
+          eraOf(v, srcStartEra),
+          required(intOf(v, srcEndYear), "end year", v),
+          intOf(v, srcEndMonth),
+          intOf(v, srcEndDay),
+          eraOf(v, srcEndEra),
+        )
+        .fold(msg => throw new IllegalArgumentException(msg), identity)
       val (startJDN, endJDN) = range.toJulianDayRange
 
       srcProps.foreach(v.removeAll)
       v.addProperty(valueHasCalendar, calendarStr)
       v.addProperty(valueHasStartJDN, model.createTypedLiteral(startJDN.toString, XSDDatatype.XSDinteger))
       v.addProperty(valueHasEndJDN, model.createTypedLiteral(endJDN.toString, XSDDatatype.XSDinteger))
-      v.addProperty(valueHasStartPrecision, start.precision.toString)
-      v.addProperty(valueHasEndPrecision, end.precision.toString)
+      v.addProperty(valueHasStartPrecision, range.startCalendarDate.precision.toString)
+      v.addProperty(valueHasEndPrecision, range.endCalendarDate.precision.toString)
       v.addProperty(valueHasString, range.toString)
     }
   }

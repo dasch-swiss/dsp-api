@@ -689,13 +689,17 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
         dateString = "GREGORIAN:1800 CE:1900 CE",
       )
     },
-    test("single date (only start fields) collapses to one date") {
+    test("single date (equal start and end) collapses to one date") {
       runDateStage2(
         inner = s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "GREGORIAN" },
                    |    "${knoraApi}dateValueHasStartYear":  { "@type": "${xsd}integer", "@value": 1800 },
                    |    "${knoraApi}dateValueHasStartMonth": { "@type": "${xsd}integer", "@value": 1 },
                    |    "${knoraApi}dateValueHasStartDay":   { "@type": "${xsd}integer", "@value": 2 },
-                   |    "${knoraApi}dateValueHasStartEra":   { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
+                   |    "${knoraApi}dateValueHasStartEra":   { "@type": "${xsd}string",  "@value": "CE" },
+                   |    "${knoraApi}dateValueHasEndYear":    { "@type": "${xsd}integer", "@value": 1800 },
+                   |    "${knoraApi}dateValueHasEndMonth":   { "@type": "${xsd}integer", "@value": 1 },
+                   |    "${knoraApi}dateValueHasEndDay":     { "@type": "${xsd}integer", "@value": 2 },
+                   |    "${knoraApi}dateValueHasEndEra":     { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
         startJDN = 2378498,
         endJDN = 2378498,
         startPrecision = "DAY",

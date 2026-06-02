@@ -320,5 +320,142 @@ object CalendarDateUtilV2Spec extends ZIOSpecDefault {
 
       assertTrue(ok1, ok2)
     },
+    suite("fromComponents")(
+      test("builds a Gregorian day-precision range") {
+        val result = CalendarDateRangeV2.fromComponents(
+          CalendarNameGregorian,
+          1800,
+          Some(1),
+          Some(2),
+          Some(DateEraCE),
+          1900,
+          Some(3),
+          Some(4),
+          Some(DateEraCE),
+        )
+        val range = result.toOption.get
+        assertTrue(
+          result.isRight,
+          range.startCalendarDate == CalendarDateV2(CalendarNameGregorian, 1800, Some(1), Some(2), Some(DateEraCE)),
+          range.endCalendarDate == CalendarDateV2(CalendarNameGregorian, 1900, Some(3), Some(4), Some(DateEraCE)),
+          range.toJulianDayRange == (2378498, 2415083),
+        )
+      },
+      test("infers precision from the components (year, month, day)") {
+        val year = CalendarDateRangeV2.fromComponents(
+          CalendarNameGregorian,
+          1800,
+          None,
+          None,
+          Some(DateEraCE),
+          1900,
+          None,
+          None,
+          Some(DateEraCE),
+        )
+        val month = CalendarDateRangeV2.fromComponents(
+          CalendarNameGregorian,
+          1800,
+          Some(3),
+          None,
+          Some(DateEraCE),
+          1900,
+          Some(5),
+          None,
+          Some(DateEraCE),
+        )
+        val day = CalendarDateRangeV2.fromComponents(
+          CalendarNameGregorian,
+          1800,
+          Some(1),
+          Some(2),
+          Some(DateEraCE),
+          1900,
+          Some(3),
+          Some(4),
+          Some(DateEraCE),
+        )
+        assertTrue(
+          year.toOption.get.startCalendarDate.precision == DatePrecisionYear,
+          month.toOption.get.startCalendarDate.precision == DatePrecisionMonth,
+          day.toOption.get.startCalendarDate.precision == DatePrecisionDay,
+        )
+      },
+      test("allows an absent era for the ISLAMIC calendar") {
+        val result =
+          CalendarDateRangeV2.fromComponents(
+            CalendarNameIslamic,
+            1432,
+            Some(8),
+            Some(29),
+            None,
+            1436,
+            Some(9),
+            Some(14),
+            None,
+          )
+        assertTrue(result.isRight)
+      },
+      test("returns a Left when a start day is given without a start month") {
+        val result =
+          CalendarDateRangeV2.fromComponents(
+            CalendarNameGregorian,
+            1800,
+            None,
+            Some(2),
+            Some(DateEraCE),
+            1900,
+            Some(3),
+            Some(4),
+            Some(DateEraCE),
+          )
+        assertTrue(result.isLeft)
+      },
+      test("returns a Left when an end day is given without an end month") {
+        val result =
+          CalendarDateRangeV2.fromComponents(
+            CalendarNameGregorian,
+            1800,
+            Some(1),
+            Some(2),
+            Some(DateEraCE),
+            1900,
+            None,
+            Some(4),
+            Some(DateEraCE),
+          )
+        assertTrue(result.isLeft)
+      },
+      test("returns a Left when a Gregorian start date has no era") {
+        val result =
+          CalendarDateRangeV2.fromComponents(
+            CalendarNameGregorian,
+            1800,
+            Some(1),
+            Some(2),
+            None,
+            1900,
+            Some(3),
+            Some(4),
+            Some(DateEraCE),
+          )
+        assertTrue(result.isLeft)
+      },
+      test("returns a Left when a Julian end date has no era") {
+        val result =
+          CalendarDateRangeV2.fromComponents(
+            CalendarNameJulian,
+            1800,
+            Some(1),
+            Some(2),
+            Some(DateEraCE),
+            1900,
+            Some(3),
+            Some(4),
+            None,
+          )
+        assertTrue(result.isLeft)
+      },
+    ),
   )
 }
