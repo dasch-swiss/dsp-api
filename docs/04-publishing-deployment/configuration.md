@@ -71,6 +71,7 @@ via its environment variable or in `application.conf` under
 | app.features.disable-last-modification-date-check     | DISABLE_LAST_MODIFICATION_DATE_CHECK     | false         |
 | app.features.allow-import-migration-bagit             | ALLOW_IMPORT_MIGRATION_BAGIT             | true          |
 | app.features.allow-placeholder                        | ALLOW_PLACEHOLDER                        | true          |
+| app.features.allow-project-data-import                | ALLOW_PROJECT_DATA_IMPORT                | false         |
 
 ### `allow-erase-projects`
 
@@ -129,3 +130,11 @@ License urn:dasch:placeholder is the placeholder license and is not allowed on t
 
 This is checked at the server level — the placeholder license is rejected
 even if a project has explicitly enabled it.
+
+### `allow-project-data-import`
+
+Controls whether the project data-graph import endpoints are available.
+See [Project Data Import](../03-endpoints/api-v3/project-data-import.md)
+for the endpoint reference.
+
+When the flag is disabled, the data-graph import endpoints return `404 Not Found`.

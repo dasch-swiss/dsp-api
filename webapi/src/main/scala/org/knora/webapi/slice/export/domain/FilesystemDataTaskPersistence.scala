@@ -113,6 +113,8 @@ object FilesystemDataTaskPersistence {
     ZLayer(ZIO.serviceWithZIO[ProjectMigrationStorageService](_.exportsDir)) >>> layer >>> ZLayer(restore)
   def importLayer: URLayer[ProjectMigrationStorageService, DataTaskState] =
     ZLayer(ZIO.serviceWithZIO[ProjectMigrationStorageService](_.importsDir)) >>> layer >>> ZLayer(restore)
+  def dataImportLayer: URLayer[ProjectDataImportStorageService, DataTaskState] =
+    ZLayer(ZIO.serviceWithZIO[ProjectDataImportStorageService](_.dataImportsDir)) >>> layer >>> ZLayer(restore)
 
   private def restore = for {
     // Restore the current task from the filesystem if it exists,

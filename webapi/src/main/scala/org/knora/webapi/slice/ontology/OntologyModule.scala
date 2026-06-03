@@ -31,12 +31,13 @@ object OntologyModule { self =>
     OntologyCache &
     OntologyCacheHelpers &
     OntologyRepo &
+    OntologyTransformer &
     OntologyTriplestoreHelpers &
     ValueRepo
     // format: on
 
   val layer: URLayer[self.Dependencies, self.Provided] =
-    (OntologyCacheLive.layer ++ PredicateRepositoryLive.layer ++ ValueRepo.layer) >+>
+    (OntologyCacheLive.layer ++ PredicateRepositoryLive.layer ++ ValueRepo.layer ++ OntologyTransformer.layer) >+>
       OntologyRepoLive.layer >+>
       (CardinalityService.layer ++ OntologyCacheHelpers.layer ++ OntologyTriplestoreHelpers.layer)
 }

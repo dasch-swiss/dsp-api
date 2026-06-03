@@ -171,6 +171,7 @@ final case class Features(
   triggerCompactionAfterProjectErasure: Boolean,
   allowImportMigrationBagit: Boolean,
   allowPlaceholder: Boolean,
+  allowProjectDataImport: Boolean,
 )
 
 object AppConfig {
@@ -205,6 +206,7 @@ object AppConfig {
          |* TRIGGER_COMPACTION_AFTER_PROJECT_ERASURE: ${c.features.triggerCompactionAfterProjectErasure}
          |* ALLOW_IMPORT_MIGRATION_BAGIT : ${c.features.allowImportMigrationBagit}
          |* ALLOW_PLACEHOLDER: ${c.features.allowPlaceholder}
+         |* ALLOW_PROJECT_DATA_IMPORT: ${c.features.allowProjectDataImport}
          |""".stripMargin,
     )
 

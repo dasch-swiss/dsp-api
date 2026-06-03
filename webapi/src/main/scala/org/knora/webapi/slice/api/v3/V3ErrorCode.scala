@@ -28,6 +28,7 @@ enum V3ErrorCode(val template: String):
   case export_failed      extends V3ErrorCode("Export '{id}' failed for project '{projectIri}'.")
   case import_exists      extends V3ErrorCode("Import '{id}' exists for project '{projectIri}'.")
   case import_in_progress extends V3ErrorCode("Import '{id}' in progress for project '{projectIri}'.")
+  case data_graph_exists  extends V3ErrorCode("The data graph for project '{projectIri}' already exists.")
   // V3ErrorCode.BadRequest errors
   case invalid_ontology_mapping_iri extends V3ErrorCode("Invalid OntologyMappingIri: '{iri}'.")
 
@@ -38,7 +39,7 @@ object V3ErrorCode:
     property_not_found.type
 
   type Conflicts = export_exists.type | export_failed.type | export_in_progress.type | import_exists.type |
-    import_in_progress.type
+    import_in_progress.type | data_graph_exists.type
 
   given Schema[V3ErrorCode] = Schema.derivedEnumeration[V3ErrorCode].defaultStringBased
 

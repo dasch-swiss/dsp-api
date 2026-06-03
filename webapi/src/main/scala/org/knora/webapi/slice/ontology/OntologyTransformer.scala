@@ -9,11 +9,13 @@ import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.Node
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
+import org.apache.jena.query.DatasetFactory
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.RDFNode
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.riot.Lang
+import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.riot.RDFParser
 import org.apache.jena.riot.system.StreamRDF
 import org.apache.jena.riot.system.StreamRDFBase
@@ -40,8 +42,9 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarDateRangeV2
 import org.knora.webapi.messages.util.CalendarNameV2
 import org.knora.webapi.messages.util.DateEraV2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.RdfDataMgr
@@ -53,11 +56,13 @@ final case class TransformerError(message: String)
  *
  * @param attachedToUser    the user every imported resource and value is attached to.
  * @param attachedToProject the project every imported resource belongs to; overrides any value in the input.
+ *                          Also determines the data named graph every output quad is assigned to — derived from
+ *                          the project, never from payload content (`@graph` declarations in the input are ignored).
  * @param permissions       the formatted `knora-base:hasPermissions` string used for every resource and value.
  */
 final case class ConversionContext(
   attachedToUser: UserIri,
-  attachedToProject: ProjectIri,
+  attachedToProject: KnoraProject,
   permissions: String,
 )
 
@@ -96,7 +101,8 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
 
   /**
    * Stage 2 — structural transformations on the stage-1 NQuads to produce valid `knora-base`. Loads the bounded
-   * intermediate file into a Jena [[Model]] so cross-triple context is available.
+   * intermediate file into a Jena [[Model]] so cross-triple context is available. The output is written as NQuads
+   * with every quad assigned to the project's data named graph, ready to stream into the triplestore.
    */
   private def restructure(nq: Path, ctx: ConversionContext): ZIO[Scope, TransformerError, Path] =
     (for {
@@ -108,9 +114,22 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       _     <- ZIO.attempt(convertLinkValues(model))
       _     <- ZIO.attempt(addValueHasString(model))
       kb    <- tempFile("onto-transformer-kb-", ".nq")
-      _     <- RdfDataMgr.write(model, kb, Lang.NTRIPLES)
+      graph  = ProjectService.projectDataNamedGraphV2(ctx.attachedToProject)
+      _     <- writeNQuads(model, graph.value, kb)
     } yield kb)
       .mapError(e => TransformerError(s"Failed to restructure RDF: ${e.getMessage}"))
+
+  /** Writes the model as NQuads with every quad assigned to the given named graph. */
+  private def writeNQuads(model: Model, graph: String, target: Path): zio.Task[Unit] =
+    ZIO.attemptBlocking {
+      val dataset = DatasetFactory.create()
+      try {
+        dataset.addNamedModel(graph, model)
+        val os = new BufferedOutputStream(new FileOutputStream(target.toFile))
+        try RDFDataMgr.write(os, dataset, Lang.NQUADS)
+        finally os.close()
+      } finally dataset.close()
+    }
 
   /**
    * A temp file under the configured `tmpDatadir`, scoped to the surrounding `Scope`: created on acquire, deleted on
@@ -140,8 +159,8 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
     val isDeleted         = model.createProperty(KnoraBase.IsDeleted)
 
     val userResource    = model.createResource(ctx.attachedToUser.value)
-    val projectResource = model.createResource(ctx.attachedToProject.value)
-    val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTimeStamp)
+    val projectResource = model.createResource(ctx.attachedToProject.id.value)
+    val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTime)
     val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
 
     val resources = model.listSubjects().asScala.filter { s =>
@@ -169,7 +188,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
     val valueHasUUID      = model.createProperty(KnoraBase.ValueHasUUID)
 
     val userResource    = model.createResource(ctx.attachedToUser.value)
-    val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTimeStamp)
+    val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTime)
     val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
 
     model.listSubjects().asScala.flatMap(s => asValueIri(s).map((s, _))).foreach { case (v, iri) =>
@@ -383,14 +402,11 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
         downstream.triple(
           Triple.create(rewriteNode(t.getSubject), rewriteNode(t.getPredicate), rewriteNode(t.getObject)),
         )
+      // The output graph is derived solely from the project; `@graph` declarations in the payload are ignored,
+      // so quads are flattened to triples here.
       override def quad(q: Quad): Unit =
-        downstream.quad(
-          Quad.create(
-            rewriteNode(q.getGraph),
-            rewriteNode(q.getSubject),
-            rewriteNode(q.getPredicate),
-            rewriteNode(q.getObject),
-          ),
+        downstream.triple(
+          Triple.create(rewriteNode(q.getSubject), rewriteNode(q.getPredicate), rewriteNode(q.getObject)),
         )
     }
   }
