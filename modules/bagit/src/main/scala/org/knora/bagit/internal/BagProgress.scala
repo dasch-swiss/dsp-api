@@ -11,8 +11,8 @@ package org.knora.bagit.internal
  * The decision of *when* to emit a progress line is percentage-driven (one line per `stepPercent`
  * of bytes packed, so the number of lines is bounded regardless of file count) with a wall-clock
  * floor (emit at least once per `maxGap`, so progress is still reported when many small files cross
- * no step for a long time). [[BagCreator]] evaluates this after each file is packed — inline, with no
- * background fiber — and supplies the clock and logging. Keeping these functions free of effects and
+ * no step for a long time). [[BagCreator]] evaluates this after each file is packed (inline, with no
+ * background fiber) and supplies the clock and logging. Keeping these functions free of effects and
  * mutable state makes them deterministically testable.
  */
 object BagProgress {
