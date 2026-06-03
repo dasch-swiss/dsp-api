@@ -6,17 +6,18 @@
 package org.knora.bagit.internal
 
 /**
- * Pure helpers for the BagIt payload-packing progress heartbeat.
+ * Pure helpers for the BagIt payload-packing progress log.
  *
  * The decision of *when* to emit a progress line is percentage-driven (one line per `stepPercent`
  * of bytes packed, so the number of lines is bounded regardless of file count) with a wall-clock
- * floor (never stay silent longer than `maxGap`, so a single huge file or a slow disk still shows
- * signs of life). Keeping these functions free of effects and mutable state makes them
- * deterministically testable; [[BagCreator]] supplies the clock, counters and logging.
+ * floor (emit at least once per `maxGap`, so progress is still reported when many small files cross
+ * no step for a long time). [[BagCreator]] evaluates this after each file is packed — inline, with no
+ * background fiber — and supplies the clock and logging. Keeping these functions free of effects and
+ * mutable state makes them deterministically testable.
  */
 object BagProgress {
 
-  /** Reporter bookkeeping carried between heartbeat ticks. */
+  /** Throttling bookkeeping carried from one packed file to the next. */
   final case class ReporterState(lastEmitNanos: Long, lastStep: Int)
 
   /**
@@ -68,7 +69,7 @@ object BagProgress {
   def startLine(totalFiles: Long, totalBytes: Long): String =
     s"BagIt: packing $totalFiles files, ${formatBytes(totalBytes)}"
 
-  /** The periodic heartbeat line logged while packing. */
+  /** The progress line logged after a file is packed. */
   def progressLine(
     filesDone: Long,
     totalFiles: Long,
