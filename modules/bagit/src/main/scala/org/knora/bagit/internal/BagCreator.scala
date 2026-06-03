@@ -6,8 +6,10 @@
 package org.knora.bagit.internal
 
 import zio.*
+import zio.durationInt
 import zio.nio.file.Path
 
+import java.io.File
 import java.io.IOException
 import java.security.MessageDigest
 import java.time.LocalDate
@@ -18,6 +20,12 @@ import org.knora.bagit.ChecksumAlgorithm
 import org.knora.bagit.domain.*
 
 object BagCreator {
+
+  /** Emit a progress line each time cumulative packed bytes cross a step of this many percent. */
+  private val ProgressStepPercent = 10
+
+  /** Emit a progress line at least this often (evaluated after each file) even if no new step was crossed. */
+  private val ProgressMaxGap = 5.minutes
 
   def createBag(
     payloadEntries: List[PayloadEntry],
@@ -38,7 +46,7 @@ object BagCreator {
   private def writePayloadFile(
     zos: ZipOutputStream,
     zipPath: String,
-    sourceFile: java.io.File,
+    sourceFile: File,
     algorithms: List[ChecksumAlgorithm],
   ): IO[IOException, (String, Map[ChecksumAlgorithm, String], Long)] =
     ZIO.scoped {
@@ -65,29 +73,73 @@ object BagCreator {
       } yield result
     }
 
+  /** Flattens the payload entries into the concrete (zip path, source file) pairs to be written. */
+  private def collectFiles(entries: List[PayloadEntry]): List[(String, File)] =
+    entries.flatMap {
+      case PayloadEntry.File(relativePath, sourcePath) =>
+        List((s"data/$relativePath", sourcePath.toFile))
+      case PayloadEntry.Directory(prefix, sourcePath) =>
+        val baseDir = sourcePath.toFile
+        JioHelper.walkDirectory(baseDir).map { file =>
+          val rel     = baseDir.toPath.relativize(file.toPath).toString.replace('\\', '/')
+          val zipPath = if (prefix.isEmpty) s"data/$rel" else s"data/$prefix/$rel"
+          (zipPath, file)
+        }
+    }
+
   private def writePayloadEntries(
     zos: ZipOutputStream,
     entries: List[PayloadEntry],
     algorithms: List[ChecksumAlgorithm],
   ): IO[IOException, (Map[String, Map[ChecksumAlgorithm, String]], Long, Long)] =
-    ZIO
-      .foreach(entries) {
-        case PayloadEntry.File(relativePath, sourcePath) =>
-          writePayloadFile(zos, s"data/$relativePath", sourcePath.toFile, algorithms).map(List(_))
-        case PayloadEntry.Directory(prefix, sourcePath) =>
-          val baseDir = sourcePath.toFile
-          ZIO.foreach(JioHelper.walkDirectory(baseDir)) { file =>
-            val rel     = baseDir.toPath.relativize(file.toPath).toString.replace('\\', '/')
-            val zipPath = if (prefix.isEmpty) s"data/$rel" else s"data/$prefix/$rel"
-            writePayloadFile(zos, zipPath, file, algorithms)
-          }
-      }
-      .map { results =>
-        val flat      = results.flatten
-        val checksums = flat.map { case (path, cs, _) => path -> cs }.toMap
-        val bytes     = flat.map(_._3).sum
-        (checksums, bytes, flat.size.toLong)
-      }
+    for {
+      files      <- ZIO.attemptBlocking(collectFiles(entries)).refineToOrDie[IOException]
+      totalFiles  = files.size.toLong
+      totalBytes <- ZIO.attemptBlocking(files.iterator.map(_._2.length()).sum).refineToOrDie[IOException]
+      start      <- Clock.nanoTime
+      _          <- ZIO.logDebug(BagProgress.startLine(totalFiles, totalBytes))
+      progress   <- Ref.make(BagProgress.ReporterState(start, 0))
+      bytesDone  <- Ref.make(0L)
+      results    <- ZIO.foreach(files.zipWithIndex) { case ((zipPath, file), idx) =>
+                   writePayloadFile(zos, zipPath, file, algorithms).tap { case (_, _, fileBytes) =>
+                     logProgress(progress, bytesDone, fileBytes, idx + 1L, totalFiles, totalBytes, start)
+                   }
+                 }
+      elapsed <- Clock.nanoTime.map(_ - start)
+      _       <- ZIO.logDebug(BagProgress.doneLine(totalFiles, totalBytes, elapsed))
+    } yield {
+      val checksums = results.map { case (path, cs, _) => path -> cs }.toMap
+      val bytes     = results.map(_._3).sum
+      (checksums, bytes, results.size.toLong)
+    }
+
+  /**
+   * Emits a progress line after a file is packed, throttled to one line per [[ProgressStepPercent]] of bytes
+   * with a [[ProgressMaxGap]] wall-clock floor. Runs inline (no background fiber), so it cannot affect the
+   * completion or interruption of the surrounding packing effect.
+   */
+  private def logProgress(
+    progress: Ref[BagProgress.ReporterState],
+    bytesDone: Ref[Long],
+    fileBytes: Long,
+    filesDone: Long,
+    totalFiles: Long,
+    totalBytes: Long,
+    startNanos: Long,
+  ): UIO[Unit] =
+    if (totalBytes <= 0L) ZIO.unit
+    else
+      for {
+        done  <- bytesDone.updateAndGet(_ + fileBytes)
+        now   <- Clock.nanoTime
+        step   = BagProgress.stepIndex(done, totalBytes, ProgressStepPercent)
+        state <- progress.get
+        _     <- ZIO
+               .logInfo(BagProgress.progressLine(filesDone, totalFiles, done, totalBytes, now - startNanos))
+               .zipRight(progress.set(BagProgress.ReporterState(now, step)))
+               .when(BagProgress.shouldEmit(state, step, now, ProgressMaxGap.toNanos))
+               .unit
+      } yield ()
 
   private def writeTagFiles(
     zos: ZipOutputStream,

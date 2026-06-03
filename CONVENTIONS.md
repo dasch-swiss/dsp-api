@@ -50,6 +50,14 @@ Never concatenate query strings. Use rdf4j SparqlBuilder via the helpers in `sli
 - Scalafmt via `sbt fmt`; CI runs `sbt check`.
 - Every source file carries the Apache-2.0 + SPDX header (managed by `sbt headerCreateAll` / `headerCheckAll`).
 
+### Static analysis (Codacy)
+
+CI runs Codacy and reports new issues (pre-existing ones are grandfathered). It is **advisory** — not a required check — but keep new/changed **production** source (`src/main`) clear of its common triggers. Test sources are excluded (`.codacy.yml`), so test-only idioms never trip it.
+
+- **ASCII only** in source — no smart punctuation (`…`, `→`, `≥`, curly quotes); write `...`, `->`, `>=`. (The `©` in the licence header is exempt.)
+- **Prefer immutable `val`s and recursion / collection combinators** over `var` and `while`. This isn't an absolute ban — a mutable loop is fine where it is genuinely the clearest option (e.g. a tight byte-copy loop) — but Codacy flags every *new* occurrence, so reach for `@tailrec` / folds first and only keep a `var`/`while` when it really reads better.
+- **Methods ≤ 50 lines** in production source — split long ones. (This rule is intentionally **not** applied to tests: long ZIO `spec` methods are fine, which is why `src/test/**` is excluded from Codacy.)
+
 ### Naming in human-readable text
 
 The legacy name "Knora" lives on in packages (`org.knora.webapi`) and class names — leave them. The same applies to the `knora-base` / `knora-admin` ontologies, which were never renamed and are in active use: identifiers that refer to them (e.g. a `toKnoraBaseOntology` method) keep the name — renaming them would be misleading.

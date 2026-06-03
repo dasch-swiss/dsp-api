@@ -128,5 +128,28 @@ object BagCreatorSpec extends ZIOSpecDefault {
         }
       }
     },
+    test("creates a valid bag when all payload files are empty (zero total bytes, no reporter)") {
+      ZIO.scoped {
+        for {
+          tempDir  <- Files.createTempDirectoryScoped(Some("bagit-empty-test"), Seq.empty)
+          dirPath   = tempDir / "empty-files"
+          _        <- Files.createDirectory(dirPath)
+          _        <- Files.createFile(dirPath / "a.txt")
+          _        <- Files.createFile(dirPath / "b.txt")
+          outputZip = tempDir / "empty-bag.zip"
+          result   <- BagCreator.createBag(
+                      List(PayloadEntry.Directory("data-dir", dirPath)),
+                      List(ChecksumAlgorithm.SHA256),
+                      Some(BagInfo(sourceOrganization = Some("Test"))),
+                      outputZip,
+                    )
+          zipEntries <- unzipEntries(result)
+        } yield assertTrue(
+          zipEntries.contains("data/data-dir/a.txt"),
+          zipEntries.contains("data/data-dir/b.txt"),
+          zipEntries.contains("manifest-sha256.txt"),
+        )
+      }
+    },
   )
 }
