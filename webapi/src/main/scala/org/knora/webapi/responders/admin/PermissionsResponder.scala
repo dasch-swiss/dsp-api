@@ -142,25 +142,6 @@ final class PermissionsResponder(
       .findByProjectAndForWhat(projectIri, forWhat)
       .map(_.map(DefaultObjectAccessPermissionADM.from).toSet.flatMap(_.hasPermissions))
 
-  /**
-   * Returns a string containing default object permissions statements ready for usage during creation of a new resource.
-   * The permissions include any default object access permissions defined for the resource class and on any groups the
-   * user is member of.
-   * The default object access permissions are determined with the following precedence:
-   *
-   *  1. ProjectAdmin
-   *  2. ProjectEntity
-   *  3. SystemEntity
-   *  4. CustomGroups
-   *  5. ProjectMember
-   *  6. KnownUser
-   *
-   * @param projectIri       the IRI of the project.
-   * @param resourceClassIri the IRI of the resource class for which the default object access permissions are requested.
-   * @param propertyIri      the IRI of the property for which the default object access permissions are requested.
-   * @param targetUser       the user for which the permissions need to be calculated.
-   * @return an optional string with object access permission statements
-   */
   private def calculatePermissionWithPrecedence(
     permissionsTasksInOrderOfPrecedence: List[Task[Option[Set[PermissionADM]]]],
   ): Task[Option[Set[PermissionADM]]] =
@@ -198,6 +179,25 @@ final class PermissionsResponder(
   private val fallbackDoap: Set[PermissionADM] =
     Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.Creator.id.value))
 
+  /**
+   * Returns a string containing default object permissions statements ready for usage during creation of a new resource.
+   * The permissions include any default object access permissions defined for the resource class and on any groups the
+   * user is member of.
+   * The default object access permissions are determined with the following precedence:
+   *
+   *  1. ProjectAdmin
+   *  2. ProjectEntity
+   *  3. SystemEntity
+   *  4. CustomGroups
+   *  5. ProjectMember
+   *  6. KnownUser
+   *
+   * @param projectIri       the IRI of the project.
+   * @param resourceClassIri the IRI of the resource class for which the default object access permissions are requested.
+   * @param propertyIri      the IRI of the property for which the default object access permissions are requested.
+   * @param targetUser       the user for which the permissions need to be calculated.
+   * @return an optional string with object access permission statements
+   */
   private def defaultObjectAccessPermissionsStringForEntityGetADM(
     projectIri: ProjectIri,
     resourceClassIri: ResourceClassIri,
