@@ -33,7 +33,7 @@ object BagProgress {
   def percentDone(bytesDone: Long, totalBytes: Long): Int =
     if (totalBytes <= 0L) 0 else math.min(99, ((bytesDone.toDouble / totalBytes) * 100).toInt)
 
-  /** Which `stepPercent`-sized progress bucket the current byte count falls into (e.g. 0, 1, 2, … for 10% steps). */
+  /** Which `stepPercent`-sized progress bucket the current byte count falls into (e.g. 0, 1, 2, ... for 10% steps). */
   def stepIndex(bytesDone: Long, totalBytes: Long, stepPercent: Int): Int =
     percentDone(bytesDone, totalBytes) / stepPercent
 
@@ -44,12 +44,13 @@ object BagProgress {
 
   /** Human-readable byte count using decimal (1000-based) units, e.g. `15.4 GB`. */
   def formatBytes(bytes: Long): String = {
-    val units = Array("B", "KB", "MB", "GB", "TB", "PB")
+    val units = Vector("B", "KB", "MB", "GB", "TB", "PB")
+    @annotation.tailrec
+    def reduce(value: Double, idx: Int): (Double, Int) =
+      if (value >= 1000.0 && idx < units.size - 1) reduce(value / 1000.0, idx + 1) else (value, idx)
     if (bytes < 1000L) s"$bytes B"
     else {
-      var value = bytes.toDouble
-      var idx   = 0
-      while (value >= 1000.0 && idx < units.length - 1) { value /= 1000.0; idx += 1 }
+      val (value, idx) = reduce(bytes.toDouble, 0)
       f"$value%.1f ${units(idx)}"
     }
   }
