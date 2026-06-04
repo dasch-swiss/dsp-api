@@ -243,6 +243,7 @@ object PermissionDeleteResponseADM {
 case class PermissionsDataADM(
   groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI, Seq[IRI]],
   administrativePermissionsPerProject: Map[IRI, Set[PermissionADM]] = Map.empty[IRI, Set[PermissionADM]],
+  oaiExportCapable: Boolean = false,
 ) {
 
   /**

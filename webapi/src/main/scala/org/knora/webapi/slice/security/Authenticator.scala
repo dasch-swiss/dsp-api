@@ -9,6 +9,7 @@ import org.apache.commons.codec.binary.Base32
 import zio.*
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
@@ -94,10 +95,19 @@ final case class AuthenticatorLive(
   private def createToken(user: User) = scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _))
 
   override def authenticate(jwtToken: String): IO[AuthenticatorError, User] = for {
-    _       <- ZIO.fail(BadCredentials).when(invalidTokens.contains(jwtToken))
-    userIri <-
-      jwtService.extractUserIriFromToken(jwtToken).logError.some.map(UserIri.from).right.orElseFail(BadCredentials)
-    user <- getUserByIri(userIri)
+    _    <- ZIO.fail(BadCredentials).when(invalidTokens.contains(jwtToken))
+    user <-
+      if (jwtToken == appConfig.knoraApi.oaiExportSecret && appConfig.knoraApi.oaiExportSecret.nonEmpty)
+        ZIO.succeed(KnoraSystemInstances.Users.AnonymousUserWithOaiExportCapability)
+      else
+        jwtService
+          .extractUserIriFromToken(jwtToken)
+          .logError
+          .some
+          .map(UserIri.from)
+          .right
+          .orElseFail(BadCredentials)
+          .flatMap(getUserByIri)
   } yield user
 
   private def getUserByIri(iri: UserIri): IO[AuthenticatorError, User] =

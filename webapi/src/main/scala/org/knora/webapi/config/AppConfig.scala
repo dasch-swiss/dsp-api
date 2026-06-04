@@ -65,6 +65,7 @@ final case class KnoraApi(
   externalHost: String,
   externalPort: Int,
   externalZioPort: Int,
+  oaiExportSecret: String = "",
 ) {
   val internalKnoraApiBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
                                                                       ":" + internalPort

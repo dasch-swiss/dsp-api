@@ -58,9 +58,7 @@ final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends Endpoint
     )
     .post
     .in(ApiV3.basePath / "export" / "resources" / "oai")
-    .description(
-      "Export resources to CSV format. Publicly accessible. Requires appropriate object access permissions on the resources.",
-    )
+    .description("Export resources for OAI, not publicly accessible.")
     .in(jsonBody[ExportRequestOai].example(ExportRequestOai(shortcode = Shortcode.unsafeFrom("0803"))))
     .out(stringBody)
 }

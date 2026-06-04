@@ -40,6 +40,12 @@ object KnoraSystemInstances {
     val AnonymousUser: User = toUser(KnoraUserRepo.builtIn.AnonymousUser)
 
     /**
+     * Represents the anonymous user with OAI-PHM export capability.
+     */
+    val AnonymousUserWithOaiExportCapability: User =
+      toUser(KnoraUserRepo.builtIn.AnonymousUser).copy(permissions = PermissionsDataADM(oaiExportCapable = true))
+
+    /**
      * Represents the system user used internally.
      */
     val SystemUser: User = toUser(KnoraUserRepo.builtIn.SystemUser)
