@@ -2,3 +2,6 @@
 exclude_paths:
   - "docs/**"
   - "**/*.md"
+  # Test sources follow different idioms (e.g. long ZIO `spec` methods) that the default
+  # patterns flag unhelpfully; analyse production code only.
+  - "**/src/test/**"
