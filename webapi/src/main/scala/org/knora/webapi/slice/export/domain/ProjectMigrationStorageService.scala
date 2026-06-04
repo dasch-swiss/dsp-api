@@ -21,13 +21,10 @@ final class ProjectMigrationStorageService() { self =>
   val importsDir: UIO[Path] = basePath.map(_ / "imports")
 
   def exportDir(taskId: DataTaskId): UIO[Path] =
-    self.exportsDir.map(_ / taskId.value).tap(ensureDirExists(_, taskId))
+    self.exportsDir.map(_ / taskId.value).tap(DataTaskStorage.ensureDirExists(_, taskId))
 
   def importDir(taskId: DataTaskId): UIO[Path] =
-    self.importsDir.map(_ / taskId.value).tap(ensureDirExists(_, taskId))
-
-  private def ensureDirExists(path: Path, taskId: DataTaskId): UIO[Unit] =
-    Files.createDirectories(path).logError(s"$taskId: Failed to create directory at $path").orDie
+    self.importsDir.map(_ / taskId.value).tap(DataTaskStorage.ensureDirExists(_, taskId))
 
   def exportBagItZipPath(taskId: DataTaskId): UIO[Path] = exportDir(taskId).map(_ / "bagit.zip")
   def importBagItZipPath(taskId: DataTaskId): UIO[Path] = importDir(taskId).map(_ / "bagit.zip")
@@ -53,14 +50,7 @@ final class ProjectMigrationStorageService() { self =>
       .flatMap { case (tempPath, _) => importBagItZipPath(taskId).map((tempPath, _)) }
 
   private def scopedTempDir(taskId: DataTaskId, baseDir: Path): URIO[Scope, (Path, Path)] =
-    val tempPath = baseDir / "temp"
-    for {
-      _ <- ensureDirExists(tempPath, taskId)
-      _ <- ZIO.acquireRelease(Files.createDirectories(tempPath).logError.orDie.as(tempPath)) { (path: Path) =>
-             ZIO.logInfo(s"$taskId: Deleting temp directory $path") *>
-               Files.deleteRecursive(path).logError(s"$taskId: Failed deleting temp directory $path").orDie
-           }
-    } yield (tempPath, baseDir)
+    DataTaskStorage.scopedTempDir(taskId, baseDir).map((_, baseDir))
 }
 
 object ProjectMigrationStorageService {

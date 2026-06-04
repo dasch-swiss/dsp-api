@@ -783,11 +783,37 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  private val graphHandling = suite("Stage 1 — @graph handling")(
+    test("flattens @graph declarations from the payload (the target graph comes from the project)") {
+      runTransform(
+        jsonLd = s"""
+                    |{
+                    |  "@id": "http://example.org/ignored-graph",
+                    |  "@graph": [{
+                    |      "@id": "$resourceIri",
+                    |      "@type": "${onto}Example",
+                    |      "rdfs:label": "test"
+                    |  }],
+                    |  "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+                    |}""".stripMargin,
+        expectedTurtle = s"""
+                            | PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                            | PREFIX onto: <http://www.knora.org/ontology/9999/onto#>
+                            |
+                            | <$resourceIri>
+                            |     a          onto:Example ;
+                            |     rdfs:label "test" .
+                            |""".stripMargin,
+      )
+    },
+  )
+
   override def spec = suite("OntologyTransformerSpec")(
     simpleScalarValues,
     iriRefValues,
     textValues,
     dateValues,
+    graphHandling,
     resourceMetadata,
     valueHasString,
     dateValuesStage2,

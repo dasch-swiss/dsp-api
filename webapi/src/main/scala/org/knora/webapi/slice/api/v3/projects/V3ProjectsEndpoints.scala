@@ -56,7 +56,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
   private val importIdPathVar = path[DataTaskId]("importId")
 
   /** The streamed knora-api JSON-LD payload of a data-graph import. */
-  private case class JsonLdCodecFormat() extends CodecFormat {
+  private case object JsonLdCodecFormat extends CodecFormat {
     override val mediaType: MediaType = MediaType("application", "ld+json")
   }
 
@@ -161,6 +161,8 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     )
 
   // import a project data graph
+  // Two distinct 409s: `import_exists` (a previous data-graph import task still exists — the per-kind task mutex)
+  // and `data_graph_exists` (the create-only precondition — the project already has a data graph).
   val postProjectIriDataImports = self.base
     .secured(
       oneOf(
@@ -171,7 +173,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .post
     .in(dataImportsBase)
     .in(
-      streamBinaryBody(ZioStreams)(JsonLdCodecFormat())
+      streamBinaryBody(ZioStreams)(JsonLdCodecFormat)
         .description("The project's data graph as knora-api (v2 external) JSON-LD"),
     )
     .out(statusCode(StatusCode.Accepted))

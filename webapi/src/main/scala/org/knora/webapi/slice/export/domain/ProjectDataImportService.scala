@@ -19,7 +19,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.ontology.ConversionContext
 import org.knora.webapi.slice.ontology.OntologyTransformer
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
@@ -35,7 +34,6 @@ final class ProjectDataImportService(
   transformer: OntologyTransformer,
   validator: ProjectMigrationImportValidator,
   triplestore: TriplestoreService,
-  ontologyCache: OntologyCache,
 ) { self =>
 
   /** Whether the project's data named graph already contains any triples (create-only precondition, R7). */
@@ -72,14 +70,16 @@ final class ProjectDataImportService(
         ctx          = ConversionContext(createdBy.userIri, project, permissions)
         transformed <- transformer
                          .toKnoraBase(jsonLdPath.toFile.toPath, ctx)
-                         .mapError(e => new RuntimeException(e.message))
+                         .mapError(e => new RuntimeException(s"Transformation failed: ${e.message}"))
         _ <- ZIO.logInfo(s"$taskId: Transformed data to knora-base for project '${project.id}'")
 
         _ <- validate(taskId, project, Path.fromJava(transformed))
         _ <- ZIO.logInfo(s"$taskId: Validation passed for project '${project.id}'")
 
         // Re-verify the create-only precondition immediately before the upload: a data graph may have appeared
-        // since the synchronous check in the RestService (e.g. via a concurrent migration import).
+        // since the synchronous check in the RestService (e.g. via a concurrent migration import). This narrows but
+        // does not fully close the race window — acceptable for an admin-only, single-in-flight-task operation.
+        // Wording kept aligned with `V3ErrorCode.data_graph_exists`.
         _ <- ZIO
                .fail(new RuntimeException(s"The data graph for project '${project.id}' already exists."))
                .whenZIO(dataGraphExists(project))
@@ -89,15 +89,18 @@ final class ProjectDataImportService(
         _ <- state.complete(taskId).ignore
         _ <- ZIO.logInfo(s"$taskId: Data import completed for project '${project.id}'")
       } yield ()
-    }.logError.catchAll(e =>
+    }.catchAll(e =>
       ZIO.logError(s"$taskId: Data import failed for project '${project.id}' with error: ${e.getMessage}") *>
         state.fail(taskId, Option(e.getMessage).getOrElse(e.getClass.getSimpleName)).ignore,
     )
 
   /**
    * SHACL-validates the transformed NQuads, adapting the migration import's validation: the project's ontology
-   * graphs and the admin data graph (the data shapes check `attachedToUser` references against
-   * `knora-admin:User` instances) are fetched from the triplestore — the payload carries instance data only.
+   * graphs are fetched from the triplestore — the payload carries instance data only. The data shapes also check
+   * `attachedToUser` references against `knora-admin:User` instances, so a projection of the user typing triples
+   * is included in the data files (only the typing triples — downloading the full admin graph would scale with
+   * instance size, not import size). Including it in the data chunk means the shared validator's placeholder scan
+   * also runs over it, which is harmless for typing-only triples.
    */
   private def validate(taskId: DataTaskId, project: KnoraProject, dataFile: Path): ZIO[Scope, Throwable, Unit] = for {
     graphs <- projectService.getOntologyGraphsForProject(project)
@@ -106,17 +109,21 @@ final class ProjectDataImportService(
            .when(graphs.isEmpty)
     _             <- ZIO.logInfo(s"$taskId: Fetching ontologies '${graphs.map(_.value).mkString(",")}' for validation")
     tempDir       <- storage.tempDataImportScoped(taskId)
-    ontologyFiles <- ZIO.foreach(Chunk.fromIterable(graphs).zipWithIndex) { (g, i) =>
+    ontologyFiles <- ZIO.foreachPar(Chunk.fromIterable(graphs).zipWithIndex) { (g, i) =>
                        val file = tempDir / s"ontology-${i + 1}.nq"
                        Files.createFile(file) *> triplestore.downloadGraph(g, file, NQuads).as(file)
                      }
+    ontologyFilesNec <- ZIO
+                          .fromOption(NonEmptyChunk.fromChunk(ontologyFiles))
+                          .orDieWith(_ => new IllegalStateException("ontologyFiles is empty despite non-empty graphs"))
     adminFile = tempDir / "admin.nq"
-    _        <- Files.createFile(adminFile) *> triplestore.downloadGraph(adminDataNamedGraph, adminFile, NQuads)
-    _        <- validator.validate(NonEmptyChunk.fromChunk(ontologyFiles).get, NonEmptyChunk(adminFile, dataFile), project.id)
+    _        <- triplestore.queryToFile(AdminUsersQuery.build, adminDataNamedGraph, adminFile, NQuads)
+    _        <- validator.validate(ontologyFilesNec, NonEmptyChunk(adminFile, dataFile), project.id)
   } yield ()
 
+  // No ontology cache refresh: a data-graph import adds no ontology triples.
   private def uploadToTriplestore(nqFile: Path): Task[Unit] =
-    triplestore.uploadNQuads(ZStream.fromFile(nqFile.toFile)) *> ontologyCache.refreshCache().unit
+    triplestore.uploadNQuads(ZStream.fromFile(nqFile.toFile))
 
   def getImportStatus(importId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = state.find(importId)
 
@@ -136,7 +143,7 @@ final class ProjectDataImportService(
 object ProjectDataImportService {
   val layer: URLayer[
     KnoraProjectService & PermissionsResponder & OntologyTransformer & ProjectMigrationImportValidator &
-      TriplestoreService & OntologyCache,
+      TriplestoreService,
     ProjectDataImportService,
   ] = (ProjectDataImportStorageService.layer >+> FilesystemDataTaskPersistence.dataImportLayer) >>>
     ZLayer.derive[ProjectDataImportService]
