@@ -1,5 +1,39 @@
 # Changelog
 
+## [36.0.0](https://github.com/dasch-swiss/dsp-api/compare/v35.10.0...v36.0.0) (2026-06-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **sipi:** adopt v5.0.0 (CLI subcommands + distroless base) ([#4084](https://github.com/dasch-swiss/dsp-api/issues/4084))
+
+### Maintenances
+
+* bump Sipi to v5.0.1 ([#4141](https://github.com/dasch-swiss/dsp-api/issues/4141)) ([2d6fabf](https://github.com/dasch-swiss/dsp-api/commit/2d6fabfd4b4fd4514f6d3e19760d5135c9d99fe1))
+* Dependency updates ([#4130](https://github.com/dasch-swiss/dsp-api/issues/4130)) ([54c485a](https://github.com/dasch-swiss/dsp-api/commit/54c485a28d96244636c6fa89087ffe0307f1360b))
+* isolate coverage upload in its own CI job ([#4143](https://github.com/dasch-swiss/dsp-api/issues/4143)) ([24b009d](https://github.com/dasch-swiss/dsp-api/commit/24b009dfcee286a481bed6d60676c3377835c0a1))
+
+
+### Documentation
+
+* Add CONVENTIONS.md and REVIEW.md ([#4125](https://github.com/dasch-swiss/dsp-api/issues/4125)) ([d084544](https://github.com/dasch-swiss/dsp-api/commit/d0845448176730ce918b74b77f7801a0e5de9600))
+
+
+### Enhancements
+
+* Add create-only project data-graph import endpoints (v3) ([#4140](https://github.com/dasch-swiss/dsp-api/issues/4140)) ([e71d787](https://github.com/dasch-swiss/dsp-api/commit/e71d78735348a8934e553ee83818c4a65cac114d))
+* **ontology:** Reify LinkValues in transformer ([#4138](https://github.com/dasch-swiss/dsp-api/issues/4138)) ([9ab70c0](https://github.com/dasch-swiss/dsp-api/commit/9ab70c0fc36c2ee02616b46eeb75856a06700c41))
+* **ontology:** Synthesise resource and value metadata in transformer ([#4134](https://github.com/dasch-swiss/dsp-api/issues/4134)) ([dbb1787](https://github.com/dasch-swiss/dsp-api/commit/dbb1787d85256a242abb1d0841a0656febdcfcb8))
+* **ontology:** Synthesise valueHasString and convert dates to JDN in transformer ([#4136](https://github.com/dasch-swiss/dsp-api/issues/4136)) ([6869d6d](https://github.com/dasch-swiss/dsp-api/commit/6869d6d214d89d8ecba380ca484ab5db9c17ad5c))
+* optional explicit value order on create (DEV-6573) ([#4126](https://github.com/dasch-swiss/dsp-api/issues/4126)) ([916d1bc](https://github.com/dasch-swiss/dsp-api/commit/916d1bc2fc93c07592b414672b51217d7e488f21))
+* **project-migration:** log progress while packing BagIt export payloads ([#4139](https://github.com/dasch-swiss/dsp-api/issues/4139)) ([580999f](https://github.com/dasch-swiss/dsp-api/commit/580999fded8af4f6e84bdaccd07d8c74965fd3a7))
+* **sipi:** adopt v5.0.0 (CLI subcommands + distroless base) ([#4084](https://github.com/dasch-swiss/dsp-api/issues/4084)) ([74c565a](https://github.com/dasch-swiss/dsp-api/commit/74c565ac627614ba1e0876f3fcd6903039bc7d33))
+
+
+### Bug Fixes
+
+* **ci:** Repair Codecov coverage reporting ([#4131](https://github.com/dasch-swiss/dsp-api/issues/4131)) ([347fbb8](https://github.com/dasch-swiss/dsp-api/commit/347fbb8c97ee9639e9a04d428cb61992780acbdf))
+
 ## [35.10.0](https://github.com/dasch-swiss/dsp-api/compare/v35.9.0...v35.10.0) (2026-06-01)
 
 
