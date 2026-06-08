@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.ontology
 
 import org.apache.jena.riot.Lang
+import zio.NonEmptyChunk
 import zio.ZIO
 import zio.test.*
 
@@ -13,14 +14,19 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
+import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
+import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.ModelOps
 
 object OntologyTransformerSpec extends ZIOSpecDefault {
@@ -108,24 +114,48 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
   private val valueIri2    = ValueIri.makeNew(resourceIri)
   private val knownInstant = Instant.parse("2026-01-01T00:00:00Z")
 
+  private val project = KnoraProject(
+    ProjectIri.unsafeFrom("http://rdfh.ch/projects/9999"),
+    Shortname.unsafeFrom("onto"),
+    shortcode,
+    None,
+    NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Some description"))),
+    List.empty,
+    None,
+    Status.Active,
+    SelfJoin.CannotJoin,
+    RestrictedView.default,
+    Set.empty,
+    Set.empty,
+  )
+
   private val ctx = ConversionContext(
     attachedToUser = UserIri.unsafeFrom("http://rdfh.ch/users/exampleUser"),
-    attachedToProject = ProjectIri.unsafeFrom("http://rdfh.ch/projects/9999"),
+    attachedToProject = project,
     permissions = "CR knora-admin:Creator|V knora-admin:KnownUser",
   )
 
-  /** Stage-2: drives the full `toKnoraBase` with a fixed clock so synthesised dates are deterministic. */
+  private val dataNamedGraph = ProjectService.projectDataNamedGraphV2(project).value
+
+  /**
+   * Stage-2: drives the full `toKnoraBase` with a fixed clock so synthesised dates are deterministic. The output is
+   * NQuads with every quad in the project's data named graph; the assertion extracts that named model and checks
+   * nothing landed in any other graph.
+   */
   private def runTransformStage2(jsonLd: String, expectedTurtle: String) =
     ZIO.scoped {
       for {
-        inputPath  <- ZIO.acquireRelease(writeTempFile(".jsonld", jsonLd).orDie)(deleteIfExists)
-        _          <- TestClock.setTime(knownInstant)
-        outputPath <- transformer(_.toKnoraBase(inputPath, ctx))
-        actualNQ   <- ZIO.attempt(new String(Files.readAllBytes(outputPath), StandardCharsets.UTF_8))
-        actual     <- ModelOps.from(actualNQ, Lang.NTRIPLES)
-        expected   <- ModelOps.fromTurtle(expectedTurtle)
-        iso         = actual.isIsomorphicWith(expected)
-      } yield assertTrue(iso)
+        inputPath   <- ZIO.acquireRelease(writeTempFile(".jsonld", jsonLd).orDie)(deleteIfExists)
+        _           <- TestClock.setTime(knownInstant)
+        outputPath  <- transformer(_.toKnoraBase(inputPath, ctx))
+        actualNQ    <- ZIO.attempt(new String(Files.readAllBytes(outputPath), StandardCharsets.UTF_8))
+        dataset     <- DatasetOps.from(actualNQ, Lang.NQUADS).mapError(new RuntimeException(_))
+        graphNames   = dataset.listModelNames().asScala.map(_.getURI).toList
+        actual       = dataset.getNamedModel(dataNamedGraph)
+        defaultEmpty = dataset.getDefaultModel.isEmpty
+        expected    <- ModelOps.fromTurtle(expectedTurtle)
+        iso          = actual.isIsomorphicWith(expected)
+      } yield assertTrue(iso, defaultEmpty, graphNames == List(dataNamedGraph))
     }
 
   private val simpleScalarValues = suite("Simple Scalar Values")(
@@ -404,9 +434,9 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |     rdfs:label                   "test" ;
                             |     onto:testBoolean             <$valueIri> ;
                             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-                            |     knora-base:attachedToProject <${ctx.attachedToProject.value}> ;
+                            |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
-                            |     knora-base:creationDate      "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:isDeleted         false .
                             |
                             | <$valueIri>
@@ -414,7 +444,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |     knora-base:valueHasBoolean   "true"^^xsd:boolean ;
                             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
-                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
                             |     knora-base:valueHasString    "true" ;
                             |     knora-base:isDeleted         false .
@@ -448,9 +478,9 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |     rdfs:label                   "test" ;
                             |     onto:testInt                 <$valueIri>, <$valueIri2> ;
                             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-                            |     knora-base:attachedToProject <${ctx.attachedToProject.value}> ;
+                            |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
-                            |     knora-base:creationDate      "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:isDeleted         false .
                             |
                             | <$valueIri>
@@ -458,7 +488,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |     knora-base:valueHasInteger   "1"^^xsd:int ;
                             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
-                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
                             |     knora-base:valueHasString    "1" ;
                             |     knora-base:isDeleted         false .
@@ -468,7 +498,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |     knora-base:valueHasInteger   "2"^^xsd:int ;
                             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
-                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:valueHasUUID      "${valueIri2.valueId.value}" ;
                             |     knora-base:valueHasString    "2" ;
                             |     knora-base:isDeleted         false .
@@ -496,9 +526,9 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
        |     rdfs:label                   "test" ;
        |     onto:$propLocalName          <$valueIri> ;
        |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-       |     knora-base:attachedToProject <${ctx.attachedToProject.value}> ;
+       |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
        |     knora-base:hasPermissions    "${ctx.permissions}" ;
-       |     knora-base:creationDate      "$knownInstant"^^xsd:dateTimeStamp ;
+       |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
        |     knora-base:isDeleted         false .
        |
        | <$valueIri>
@@ -506,7 +536,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
        |     $valueContent ;
        |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
        |     knora-base:hasPermissions    "${ctx.permissions}" ;
-       |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
+       |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
        |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
        |     knora-base:valueHasString    "$valueHasString" ;
        |     knora-base:isDeleted         false .
@@ -619,9 +649,9 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                           |     rdfs:label                   "test" ;
                           |     onto:testSubDate1            <$valueIri> ;
                           |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-                          |     knora-base:attachedToProject <${ctx.attachedToProject.value}> ;
+                          |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
                           |     knora-base:hasPermissions    "${ctx.permissions}" ;
-                          |     knora-base:creationDate      "$knownInstant"^^xsd:dateTimeStamp ;
+                          |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
                           |     knora-base:isDeleted         false .
                           |
                           | <$valueIri>
@@ -634,7 +664,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                           |     knora-base:valueHasString         "$dateString" ;
                           |     knora-base:attachedToUser         <${ctx.attachedToUser}> ;
                           |     knora-base:hasPermissions         "${ctx.permissions}" ;
-                          |     knora-base:valueCreationDate      "$knownInstant"^^xsd:dateTimeStamp ;
+                          |     knora-base:valueCreationDate      "$knownInstant"^^xsd:dateTime ;
                           |     knora-base:valueHasUUID           "${valueIri.valueId}" ;
                           |     knora-base:isDeleted              false .
                           |""".stripMargin,
@@ -731,9 +761,9 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |     onto:testHasLinkToValue      <$valueIri> ;
                             |     onto:testHasLinkTo           <$target> ;
                             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-                            |     knora-base:attachedToProject <${ctx.attachedToProject.value}> ;
+                            |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
-                            |     knora-base:creationDate      "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:isDeleted         false .
                             |
                             | <$valueIri>
@@ -745,9 +775,34 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
                             |     knora-base:valueHasString    "$target" ;
                             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
-                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTimeStamp ;
+                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
                             |     knora-base:isDeleted         false .
+                            |""".stripMargin,
+      )
+    },
+  )
+
+  private val graphHandling = suite("Stage 1 — @graph handling")(
+    test("flattens @graph declarations from the payload (the target graph comes from the project)") {
+      runTransform(
+        jsonLd = s"""
+                    |{
+                    |  "@id": "http://example.org/ignored-graph",
+                    |  "@graph": [{
+                    |      "@id": "$resourceIri",
+                    |      "@type": "${onto}Example",
+                    |      "rdfs:label": "test"
+                    |  }],
+                    |  "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+                    |}""".stripMargin,
+        expectedTurtle = s"""
+                            | PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                            | PREFIX onto: <http://www.knora.org/ontology/9999/onto#>
+                            |
+                            | <$resourceIri>
+                            |     a          onto:Example ;
+                            |     rdfs:label "test" .
                             |""".stripMargin,
       )
     },
@@ -758,6 +813,7 @@ object OntologyTransformerSpec extends ZIOSpecDefault {
     iriRefValues,
     textValues,
     dateValues,
+    graphHandling,
     resourceMetadata,
     valueHasString,
     dateValuesStage2,

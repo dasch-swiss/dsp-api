@@ -43,6 +43,7 @@ nav:
           - Stores Endpoint: 03-endpoints/api-admin/stores.md
       - API V3:
           - Project Migration Export/Import: 03-endpoints/api-v3/project-migration.md
+          - Project Data Import: 03-endpoints/api-v3/project-data-import.md
       - Util API:
           - Version: 03-endpoints/api-util/version.md
       - Instrumentation API:

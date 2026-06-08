@@ -47,12 +47,18 @@ object DataTaskStatusResponse {
 
 class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
 
-  private val basePath    = ApiV3.V3ProjectsProjectIri
-  private val exportsBase = basePath / "exports"
-  private val importsBase = basePath / "imports"
+  private val basePath        = ApiV3.V3ProjectsProjectIri
+  private val exportsBase     = basePath / "exports"
+  private val importsBase     = basePath / "imports"
+  private val dataImportsBase = basePath / "data-imports"
 
   private val exportIdPathVar = path[DataTaskId]("exportId")
   private val importIdPathVar = path[DataTaskId]("importId")
+
+  /** The streamed knora-api JSON-LD payload of a data-graph import. */
+  private case object JsonLdCodecFormat extends CodecFormat {
+    override val mediaType: MediaType = MediaType("application", "ld+json")
+  }
 
   // trigger an export
   val postProjectIriExports = self.base
@@ -152,6 +158,60 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .description(
       "Checks the status of an import. " +
         "The response will indicate whether the import is still in progress, has completed successfully, or has failed.",
+    )
+
+  // import a project data graph
+  // Two distinct 409s: `import_exists` (a previous data-graph import task still exists — the per-kind task mutex)
+  // and `data_graph_exists` (the create-only precondition — the project already has a data graph).
+  val postProjectIriDataImports = self.base
+    .secured(
+      oneOf(
+        notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.feature_missing),
+        conflictVariant(V3ErrorCode.import_exists, V3ErrorCode.data_graph_exists),
+      ),
+    )
+    .post
+    .in(dataImportsBase)
+    .in(
+      streamBinaryBody(ZioStreams)(JsonLdCodecFormat)
+        .description("The project's data graph as knora-api (v2 external) JSON-LD"),
+    )
+    .out(statusCode(StatusCode.Accepted))
+    .out(jsonBody[DataTaskStatusResponse])
+    .description(
+      "Initiates an import of a project's data graph from a knora-api JSON-LD payload. " +
+        "The import will be performed asynchronously, and the response will contain an import ID that can be used to check the status of the import. " +
+        "The import is create-only: it fails if the project already has a data graph. " +
+        "An import can only be triggered when no other data-graph import exists.",
+    )
+
+  // get the status of a data-graph import
+  val getProjectIriDataImportsImportId = self.base
+    .secured(oneOf(notFoundVariant(V3ErrorCode.import_not_found, V3ErrorCode.feature_missing)))
+    .get
+    .in(dataImportsBase / importIdPathVar)
+    .out(statusCode(StatusCode.Ok))
+    .out(jsonBody[DataTaskStatusResponse])
+    .description(
+      "Checks the status of a data-graph import. " +
+        "The response will indicate whether the import is still in progress, has completed successfully, or has failed.",
+    )
+
+  // delete a data-graph import
+  val deleteProjectIriDataImportsImportId = self.base
+    .secured(
+      oneOf(
+        notFoundVariant(V3ErrorCode.import_not_found, V3ErrorCode.feature_missing),
+        conflictVariant(V3ErrorCode.import_in_progress),
+      ),
+    )
+    .delete
+    .in(dataImportsBase / importIdPathVar)
+    .out(statusCode(StatusCode.NoContent))
+    .description(
+      "Deletes a data-graph import. " +
+        "Only imports in state failed or completed can be deleted. " +
+        "If it is still in progress, the response will be 409 Conflict.",
     )
 
   // delete an import

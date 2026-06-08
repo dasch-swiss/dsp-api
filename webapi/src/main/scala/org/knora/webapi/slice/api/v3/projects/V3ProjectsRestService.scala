@@ -16,6 +16,7 @@ import org.knora.webapi.slice.`export`.domain.ExportFailedError
 import org.knora.webapi.slice.`export`.domain.ExportInProgressError
 import org.knora.webapi.slice.`export`.domain.ImportExistsError
 import org.knora.webapi.slice.`export`.domain.ImportInProgressError
+import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationExportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -26,6 +27,7 @@ import org.knora.webapi.slice.api.v3.NotFound
 import org.knora.webapi.slice.api.v3.V3Authorizer
 import org.knora.webapi.slice.api.v3.V3ErrorCode.Conflicts
 import org.knora.webapi.slice.api.v3.V3ErrorCode.NotFounds
+import org.knora.webapi.slice.api.v3.V3ErrorCode.data_graph_exists
 import org.knora.webapi.slice.api.v3.V3ErrorCode.export_exists
 import org.knora.webapi.slice.api.v3.V3ErrorCode.export_failed
 import org.knora.webapi.slice.api.v3.V3ErrorCode.export_in_progress
@@ -39,6 +41,7 @@ final class V3ProjectsRestService(
   auth: V3Authorizer,
   exportService: ProjectMigrationExportService,
   importService: ProjectMigrationImportService,
+  dataImportService: ProjectDataImportService,
   projectService: KnoraProjectService,
 ) {
 
@@ -141,6 +144,58 @@ final class V3ProjectsRestService(
       for {
         _ <- auth.ensureSystemAdmin(user)
         _ <- importService
+               .deleteImport(importId)
+               .mapError {
+                 case Some(ImportInProgressError(t)) => conflict(import_in_progress, t.projectIri, t.id)
+                 case None                           => notFound(import_not_found, projectIri, importId)
+               }
+      } yield ()
+    }
+
+  private val failDataImportFeatureMissing: IO[V3ErrorInfo, Unit] = ZIO
+    .fail(NotFound.featureMissing("allowProjectDataImport"))
+    .unlessZIO(AppConfig.features(_.allowProjectDataImport))
+    .unit
+
+  private def dataGraphExistsConflict(projectIri: ProjectIri): Conflict =
+    Conflict(
+      data_graph_exists,
+      data_graph_exists.template.replace("{projectIri}", projectIri.value),
+      Map("projectIri" -> projectIri.value),
+    )
+
+  def triggerProjectDataImportCreate(
+    user: User,
+  )(projectIri: ProjectIri, stream: ZStream[Any, Throwable, Byte]): IO[V3ErrorInfo, DataTaskStatusResponse] =
+    failDataImportFeatureMissing.zipRight(for {
+      project <- ensureSystemAdminAndProjectExists(user, projectIri)
+      // Create-only precondition (synchronous, so the client receives a real 409). It is re-verified inside the
+      // import task immediately before the upload.
+      _ <- ZIO
+             .fail(dataGraphExistsConflict(projectIri))
+             .whenZIO(dataImportService.dataGraphExists(project).orDie)
+      state <-
+        dataImportService
+          .importDataGraph(project, user, stream)
+          .mapError { case ImportExistsError(t) => conflict(import_exists, t.projectIri, t.id) }
+    } yield DataTaskStatusResponse.from(state))
+
+  def getProjectDataImportStatus(
+    user: User,
+  )(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
+    failDataImportFeatureMissing.zipRight {
+      for {
+        _     <- auth.ensureSystemAdmin(user)
+        state <-
+          dataImportService.getImportStatus(importId).orElseFail(notFound(import_not_found, projectIri, importId))
+      } yield DataTaskStatusResponse.from(state)
+    }
+
+  def deleteProjectDataImport(user: User)(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, Unit] =
+    failDataImportFeatureMissing.zipRight {
+      for {
+        _ <- auth.ensureSystemAdmin(user)
+        _ <- dataImportService
                .deleteImport(importId)
                .mapError {
                  case Some(ImportInProgressError(t)) => conflict(import_in_progress, t.projectIri, t.id)

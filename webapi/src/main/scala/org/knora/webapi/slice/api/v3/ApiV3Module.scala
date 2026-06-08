@@ -9,6 +9,7 @@ import sttp.tapir.*
 import zio.*
 
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationExportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -43,6 +44,7 @@ object ApiV3Module {
     KnoraProjectService &
     OntologyCache &
     OntologyRepo &
+    ProjectDataImportService &
     ProjectMigrationExportService &
     ProjectMigrationImportService &
     ResourcesRepo &

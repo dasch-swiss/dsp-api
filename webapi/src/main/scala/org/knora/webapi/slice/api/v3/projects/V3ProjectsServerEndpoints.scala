@@ -19,6 +19,9 @@ final class V3ProjectsServerEndpoints(endpoints: V3ProjectsEndpoints, restServic
     endpoints.postProjectIriImports.serverLogic(restService.triggerProjectImportCreate),
     endpoints.getProjectIriImportsImportId.serverLogic(restService.getProjectImportStatus),
     endpoints.deleteProjectIriImportsImportId.serverLogic(restService.deleteProjectImport),
+    endpoints.postProjectIriDataImports.serverLogic(restService.triggerProjectDataImportCreate),
+    endpoints.getProjectIriDataImportsImportId.serverLogic(restService.getProjectDataImportStatus),
+    endpoints.deleteProjectIriDataImportsImportId.serverLogic(restService.deleteProjectDataImport),
   )
 }
 

@@ -142,6 +142,43 @@ final class PermissionsResponder(
       .findByProjectAndForWhat(projectIri, forWhat)
       .map(_.map(DefaultObjectAccessPermissionADM.from).toSet.flatMap(_.hasPermissions))
 
+  private def calculatePermissionWithPrecedence(
+    permissionsTasksInOrderOfPrecedence: List[Task[Option[Set[PermissionADM]]]],
+  ): Task[Option[Set[PermissionADM]]] =
+    ZIO.foldLeft(permissionsTasksInOrderOfPrecedence)(None: Option[Set[PermissionADM]]) { (acc, task) =>
+      if (acc.isDefined) {
+        ZIO.succeed(acc)
+      } else {
+        task.flatMap {
+          (acc, _) match
+            case (None, Some(permissions)) if permissions.nonEmpty => ZIO.some(permissions)
+            case _                                                 => ZIO.succeed(acc)
+        }
+      }
+    }
+
+  private def projectAdminDoap(projectIri: ProjectIri, targetUser: User): Task[Option[Set[PermissionADM]]] =
+    findDoapPermissionADM(projectIri, List(builtIn.ProjectAdmin.id))
+      .when(targetUser.isProjectAdmin(projectIri) || targetUser.isSystemAdmin)
+
+  private def customGroupsDoap(projectIri: ProjectIri, targetUser: User): Task[Option[Set[PermissionADM]]] = {
+    val otherGroups =
+      targetUser.permissions.groupsPerProject.getOrElse(projectIri.value, Seq.empty).map(GroupIri.unsafeFrom) diff
+        List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
+    ZIO.when(otherGroups.distinct.nonEmpty)(findDoapPermissionADM(projectIri, otherGroups))
+  }
+
+  private def projectMembersDoap(projectIri: ProjectIri, targetUser: User): Task[Option[Set[PermissionADM]]] =
+    findDoapPermissionADM(projectIri, List(builtIn.ProjectMember.id))
+      .when(targetUser.isProjectMember(projectIri) || targetUser.isSystemAdmin)
+
+  private def knownUserDoap(projectIri: ProjectIri, targetUser: User): Task[Option[Set[PermissionADM]]] =
+    findDoapPermissionADM(projectIri, List(builtIn.KnownUser.id))
+      .when(!targetUser.isAnonymousUser)
+
+  private val fallbackDoap: Set[PermissionADM] =
+    Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.Creator.id.value))
+
   /**
    * Returns a string containing default object permissions statements ready for usage during creation of a new resource.
    * The permissions include any default object access permissions defined for the resource class and on any groups the
@@ -169,25 +206,6 @@ final class PermissionsResponder(
     targetUser: User,
   ): Task[DefaultObjectAccessPermissionsStringResponseADM] = {
 
-    def calculatePermissionWithPrecedence(
-      permissionsTasksInOrderOfPrecedence: List[Task[Option[Set[PermissionADM]]]],
-    ): Task[Option[Set[PermissionADM]]] =
-      ZIO.foldLeft(permissionsTasksInOrderOfPrecedence)(None: Option[Set[PermissionADM]]) { (acc, task) =>
-        if (acc.isDefined) {
-          ZIO.succeed(acc)
-        } else {
-          task.flatMap {
-            (acc, _) match
-              case (None, Some(permissions)) if permissions.nonEmpty => ZIO.some(permissions)
-              case _                                                 => ZIO.succeed(acc)
-          }
-        }
-      }
-
-    val projectAdmin =
-      findDoapPermissionADM(projectIri, List(builtIn.ProjectAdmin.id))
-        .when(targetUser.isProjectAdmin(projectIri) || targetUser.isSystemAdmin)
-
     val resourceClassProperty = ZIO
       .when(entityType == EntityType.Property)(
         ZIO
@@ -214,40 +232,40 @@ final class PermissionsResponder(
           .flatMap(p => findDoapPermissionADM(projectIri, ForWhat(p)))
       }
 
-    val customGroups = {
-      val otherGroups =
-        targetUser.permissions.groupsPerProject.getOrElse(projectIri.value, Seq.empty).map(GroupIri.unsafeFrom) diff
-          List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
-      ZIO.when(otherGroups.distinct.nonEmpty)(findDoapPermissionADM(projectIri, otherGroups))
-    }
-
-    val projectMembers = ZIO
-      .when(targetUser.isProjectMember(projectIri) || targetUser.isSystemAdmin)(
-        findDoapPermissionADM(projectIri, List(builtIn.ProjectMember.id)),
-      )
-
-    val knownUser = ZIO.when(!targetUser.isAnonymousUser)(
-      findDoapPermissionADM(projectIri, List(builtIn.KnownUser.id)),
-    )
-
     val permissionTasks: List[Task[Option[Set[PermissionADM]]]] =
       List(
-        projectAdmin,
+        projectAdminDoap(projectIri, targetUser),
         resourceClassProperty,
         resourceClass,
         property,
-        customGroups,
-        projectMembers,
-        knownUser,
+        customGroupsDoap(projectIri, targetUser),
+        projectMembersDoap(projectIri, targetUser),
+        knownUserDoap(projectIri, targetUser),
       )
 
     for {
       permissions <- calculatePermissionWithPrecedence(permissionTasks)
-      result       = permissions
-                 .getOrElse(Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.Creator.id.value)))
-      resultStr = PermissionUtilADM.formatPermissionADMs(result, DOAP)
+      result       = permissions.getOrElse(fallbackDoap)
+      resultStr    = PermissionUtilADM.formatPermissionADMs(result, DOAP)
     } yield DefaultObjectAccessPermissionsStringResponseADM(resultStr)
   }
+
+  /**
+   * Resolves the default object access permissions literal for a project data-graph import, where a single user
+   * creates every resource and value and no per-entity (resource class / property) DOAPs are applied. Group-based
+   * precedence only: ProjectAdmin → custom groups → ProjectMember → KnownUser → fallback (`CR knora-admin:Creator`).
+   * Since the importer is always a system admin, the project's ProjectAdmin-group DOAP has first precedence and
+   * applies uniformly to all resources and values.
+   */
+  def newDataImportDefaultObjectAccessPermissions(projectIri: ProjectIri, targetUser: User): Task[String] =
+    calculatePermissionWithPrecedence(
+      List(
+        projectAdminDoap(projectIri, targetUser),
+        customGroupsDoap(projectIri, targetUser),
+        projectMembersDoap(projectIri, targetUser),
+        knownUserDoap(projectIri, targetUser),
+      ),
+    ).map(permissions => PermissionUtilADM.formatPermissionADMs(permissions.getOrElse(fallbackDoap), DOAP))
 
   private def validate(
     req: CreateDefaultObjectAccessPermissionAPIRequestADM,
