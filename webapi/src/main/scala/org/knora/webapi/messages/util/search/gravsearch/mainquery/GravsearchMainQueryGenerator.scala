@@ -177,7 +177,7 @@ object GravsearchMainQueryGenerator {
           // e.g. a LinkValue node (`.../values/...`). Such rows are spurious and must be skipped rather than
           // crashing the whole request — see DEV-6604.
           ResourceIri.from(resultRow.rowMap(mainResourceVar.variableName)) match {
-            case Left(_) => acc
+            case Left(_)           => acc
             case Right(mainResIri) =>
               // the the variables representing value objects and their Iris
               val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
