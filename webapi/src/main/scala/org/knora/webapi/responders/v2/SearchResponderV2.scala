@@ -853,7 +853,7 @@ final class SearchResponderV2Live(
             : GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris =
             GravsearchMainQueryGenerator.getValueObjectVarsAndIrisPerMainResource(
               prequeryResponse = prequeryResponse,
-              transformer = gravsearchToPrequeryTransformer,
+              valueObjectVariablesConcat = gravsearchToPrequeryTransformer.valueObjectVariablesGroupConcat,
               mainResourceVar = mainResourceVar,
             )
 

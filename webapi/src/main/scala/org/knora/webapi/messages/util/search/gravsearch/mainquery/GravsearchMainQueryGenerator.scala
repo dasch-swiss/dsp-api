@@ -157,57 +157,60 @@ object GravsearchMainQueryGenerator {
    * Collects object variables and their values per main resource from the results returned by the prequery.
    * Value objects variables and their Iris are grouped by main resource.
    *
-   * @param prequeryResponse the results returned by the prequery.
-   * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
-   * @param mainResourceVar  the variable representing the main resource.
+   * @param prequeryResponse              the results returned by the prequery.
+   * @param valueObjectVariablesConcat    the GROUP_CONCAT value-object variables present in the prequery's WHERE clause
+   *                                      (i.e. `transformer.valueObjectVariablesGroupConcat`).
+   * @param mainResourceVar               the variable representing the main resource.
    * @return [[ValueObjectVariablesAndValueObjectIris]].
    */
   def getValueObjectVarsAndIrisPerMainResource(
     prequeryResponse: SparqlSelectResult,
-    transformer: GravsearchToPrequeryTransformer,
+    valueObjectVariablesConcat: Set[QueryVariable],
     mainResourceVar: QueryVariable,
   ): ValueObjectVariablesAndValueObjectIris = {
-
-    // value objects variables present in the prequery's WHERE clause
-    val valueObjectVariablesConcat = transformer.valueObjectVariablesGroupConcat
 
     val valueObjVarsAndIris: Map[ResourceIri, Map[QueryVariable, Set[IRI]]] =
       prequeryResponse.results.bindings.foldLeft(Map.empty[ResourceIri, Map[QueryVariable, Set[IRI]]]) {
         (acc: Map[ResourceIri, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
-          // the main resource's Iri
-          val mainResIri: ResourceIri = ResourceIri.unsafeFrom(resultRow.rowMap(mainResourceVar.variableName))
+          // The main resource's Iri. For some incoming-link shapes (variable-predicate searches such as
+          // `searchIncomingLinks`) the prequery can bind the main resource variable to a non-resource IRI,
+          // e.g. a LinkValue node (`.../values/...`). Such rows are spurious and must be skipped rather than
+          // crashing the whole request — see DEV-6604.
+          ResourceIri.from(resultRow.rowMap(mainResourceVar.variableName)) match {
+            case Left(_) => acc
+            case Right(mainResIri) =>
+              // the the variables representing value objects and their Iris
+              val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
+                (valueObjVarConcat: QueryVariable) =>
+                  // check if key exists: the variable representing value objects
+                  // could be contained in an OPTIONAL or a UNION and be unbound
+                  // It would be suppressed by `VariableResultsRow` in that case.
 
-          // the the variables representing value objects and their Iris
-          val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
-            (valueObjVarConcat: QueryVariable) =>
-              // check if key exists: the variable representing value objects
-              // could be contained in an OPTIONAL or a UNION and be unbound
-              // It would be suppressed by `VariableResultsRow` in that case.
+                  // this logic works like in the case of dependent resources, see `getDependentResourceIrisPerMainResource` above.
+                  val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
 
-              // this logic works like in the case of dependent resources, see `getDependentResourceIrisPerMainResource` above.
-              val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
+                  val valueObjIris: Set[IRI] = valueObjIrisOption match {
 
-              val valueObjIris: Set[IRI] = valueObjIrisOption match {
+                    case Some(valObjIris) =>
+                      // IRIs are concatenated by GROUP_CONCAT using a separator, split them.
+                      // Ignore empty strings, which could result from unbound variables in a UNION.
+                      valObjIris.split(StringFormatter.INFORMATION_SEPARATOR_ONE).toSet.filter(_.nonEmpty)
 
-                case Some(valObjIris) =>
-                  // IRIs are concatenated by GROUP_CONCAT using a separator, split them.
-                  // Ignore empty strings, which could result from unbound variables in a UNION.
-                  valObjIris.split(StringFormatter.INFORMATION_SEPARATOR_ONE).toSet.filter(_.nonEmpty)
+                    case None => Set.empty[IRI] // since variable was inside aan OPTIONAL or UNION
 
-                case None => Set.empty[IRI] // since variable was inside aan OPTIONAL or UNION
+                  }
 
-              }
+                  valueObjVarConcat -> valueObjIris
+              }.toMap
 
-              valueObjVarConcat -> valueObjIris
-          }.toMap
-
-          val valueObjVarToIrisErrorHandlingMap = new ErrorHandlingMap(
-            valueObjVarToIris,
-            { (key: QueryVariable) =>
-              throw GravsearchException(s"variable not found: $key")
-            },
-          )
-          acc + (mainResIri -> valueObjVarToIrisErrorHandlingMap)
+              val valueObjVarToIrisErrorHandlingMap = new ErrorHandlingMap(
+                valueObjVarToIris,
+                { (key: QueryVariable) =>
+                  throw GravsearchException(s"variable not found: $key")
+                },
+              )
+              acc + (mainResIri -> valueObjVarToIrisErrorHandlingMap)
+          }
       }
 
     ValueObjectVariablesAndValueObjectIris(
