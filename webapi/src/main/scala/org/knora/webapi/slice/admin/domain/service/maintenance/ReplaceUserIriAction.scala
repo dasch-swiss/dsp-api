@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.service.maintenance
 
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
@@ -18,11 +17,12 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-final case class ReplaceUserIriAction(triplestoreService: TriplestoreService) {
+final case class ReplaceUserIriAction(triplestoreService: TriplestoreService) extends QueryBuilderHelper {
 
   def execute(oldIri: UserIri, newIri: UserIri, requester: User): Task[Unit] =
     for {
@@ -40,8 +40,8 @@ final case class ReplaceUserIriAction(triplestoreService: TriplestoreService) {
   private def existsInAdminGraph(iri: UserIri): Ask = {
     val adminGraphIri = Rdf.iri(AdminConstants.adminDataNamedGraph.value)
     val iriRdf        = Rdf.iri(iri.value)
-    val p             = SparqlBuilder.`var`("p")
-    val o             = SparqlBuilder.`var`("o")
+    val p             = variable("p")
+    val o             = variable("o")
     Ask(s"""ASK { ${GraphPatterns.tp(iriRdf, p, o).from(adminGraphIri).getQueryString} }""")
   }
 
@@ -49,11 +49,11 @@ final case class ReplaceUserIriAction(triplestoreService: TriplestoreService) {
     val adminGraphIri = Rdf.iri(AdminConstants.adminDataNamedGraph.value)
     val oldIriRdf     = Rdf.iri(oldIri.value)
     val newIriRdf     = Rdf.iri(newIri.value)
-    val p             = SparqlBuilder.`var`("p")
-    val o             = SparqlBuilder.`var`("o")
-    val s             = SparqlBuilder.`var`("s")
-    val p2            = SparqlBuilder.`var`("p2")
-    val g             = SparqlBuilder.`var`("g")
+    val p             = variable("p")
+    val o             = variable("o")
+    val s             = variable("s")
+    val p2            = variable("p2")
+    val g             = variable("g")
 
     val partA = Queries
       .MODIFY()
