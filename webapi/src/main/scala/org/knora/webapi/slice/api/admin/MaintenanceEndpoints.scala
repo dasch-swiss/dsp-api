@@ -49,7 +49,7 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
     .out(statusCode(StatusCode.NoContent))
     .description(
       "Replace a user IRI across the entire database (admin graph + all project data graphs). " +
-        "SystemAdmin only. Irreversible — no undo mechanism. Not idempotent: retrying after success returns 404.",
+        "SystemAdmin only. Irreversible -- no undo mechanism. Not idempotent: retrying after success returns 404.",
     )
 }
 

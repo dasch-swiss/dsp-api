@@ -58,7 +58,7 @@ object ReplaceUserIriActionSpec extends ZIOSpecDefault {
   private def service = ZIO.serviceWithZIO[ReplaceUserIriAction]
 
   val spec: Spec[Any, Throwable] = suite("ReplaceUserIriAction")(
-    suite("execute — happy path")(
+    suite("execute - happy path")(
       test("removes oldIri as subject from admin graph") {
         for {
           _      <- TestTripleStore.setDatasetFromTriG(baseFixture)
@@ -113,7 +113,7 @@ object ReplaceUserIriActionSpec extends ZIOSpecDefault {
         } yield assertTrue(exists)
       },
     ),
-    suite("execute — validation failures")(
+    suite("execute - validation failures")(
       test("fails with NotFoundException when oldIri is not in admin graph") {
         val absentIri = UserIri.unsafeFrom("http://rdfh.ch/users/nonexistent")
         for {
