@@ -25,6 +25,7 @@ object MaintenanceReplaceUserIriInProjectE2ESpec extends E2EZSpec {
   private val adminGraph           = AdminConstants.adminDataNamedGraph.value
   private val anythingShortcode    = "0001"
   private val anythingProjectGraph = "http://www.knora.org/data/0001/anything"
+  private val builtInUserIri       = "http://www.knora.org/ontology/knora-admin#SystemUser"
 
   private def endpointFor(shortcode: String) =
     uri"/admin/maintenance/projects/$shortcode/replace-user-iri"
@@ -93,6 +94,19 @@ object MaintenanceReplaceUserIriInProjectE2ESpec extends E2EZSpec {
           normalUser,
         )
         .map(response => assertTrue(response.code == StatusCode.Forbidden))
+    },
+    test("does not reject a built-in user IRI as oldIri (re-attributing SystemUser refs is valid)") {
+      // No isBuiltInUser guard is applied at the RestService level for
+      // this endpoint. A built-in oldIri is intentionally accepted - re-attributing references
+      // stamped under SystemUser/AnonymousUser to a real project member is a valid use case.
+      // The call proceeds to domain validation, so the response is not 400 BadRequest.
+      TestApiClient
+        .postJson[Json, Json](
+          endpointFor(anythingShortcode),
+          replaceBody(builtInUserIri, "http://rdfh.ch/users/e2e-new"),
+          rootUser,
+        )
+        .map(response => assertTrue(response.code != StatusCode.BadRequest))
     },
     test("returns 400 when oldIri and newIri are equal") {
       TestApiClient
@@ -171,27 +185,31 @@ object MaintenanceReplaceUserIriInProjectE2ESpec extends E2EZSpec {
       } yield assertTrue(response.code == StatusCode.NotFound)
     },
     test("returns 204 and replaces references only in the target project graph") {
-      val oldIri          = UserIri.unsafeFrom("http://rdfh.ch/users/e2e-proj-old-204")
-      val newIri          = UserIri.unsafeFrom("http://rdfh.ch/users/e2e-proj-new-204")
-      val anythingProject = "http://rdfh.ch/projects/0001"
+      val oldIri            = UserIri.unsafeFrom("http://rdfh.ch/users/e2e-proj-old-204")
+      val newIri            = UserIri.unsafeFrom("http://rdfh.ch/users/e2e-proj-new-204")
+      val anythingProject   = "http://rdfh.ch/projects/0001"
+      val otherProjectGraph = "http://www.knora.org/data/0803/images"
       for {
         _        <- insertUserInAdminGraph(oldIri)
         _        <- insertUserInAdminGraph(newIri)
         _        <- addProjectMembership(newIri, anythingProject)
         _        <- insertRefInProjectGraph(oldIri, anythingProjectGraph)
+        _        <- insertRefInProjectGraph(oldIri, otherProjectGraph)
         response <- TestApiClient.postJson[Json, Json](
                       endpointFor(anythingShortcode),
                       replaceBody(oldIri.value, newIri.value),
                       rootUser,
                     )
-        oldInProject <- existsAsObjectInGraph(oldIri, anythingProjectGraph)
-        newInProject <- existsAsObjectInGraph(newIri, anythingProjectGraph)
-        oldInAdmin   <- existsInAdminGraph(oldIri)
+        oldInProject    <- existsAsObjectInGraph(oldIri, anythingProjectGraph)
+        newInProject    <- existsAsObjectInGraph(newIri, anythingProjectGraph)
+        oldInAdmin      <- existsInAdminGraph(oldIri)
+        oldInOtherGraph <- existsAsObjectInGraph(oldIri, otherProjectGraph)
       } yield assertTrue(
         response.code == StatusCode.NoContent,
         !oldInProject,
         newInProject,
         oldInAdmin,
+        oldInOtherGraph,
       )
     },
   )
