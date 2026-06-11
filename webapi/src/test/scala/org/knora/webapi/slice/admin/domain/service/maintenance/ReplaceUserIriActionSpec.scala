@@ -19,12 +19,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object ReplaceUserIriActionSpec extends ZIOSpecDefault {
 
-  private val adminGraph  = AdminConstants.adminDataNamedGraph.value
-  private val oldIri      = UserIri.unsafeFrom("http://rdfh.ch/users/old-user")
-  private val newIri      = UserIri.unsafeFrom("http://rdfh.ch/users/new-user")
+  private val adminGraph    = AdminConstants.adminDataNamedGraph.value
+  private val oldIri        = UserIri.unsafeFrom("http://rdfh.ch/users/old-user")
+  private val newIri        = UserIri.unsafeFrom("http://rdfh.ch/users/new-user")
   private val projectGraph1 = "http://www.knora.org/data/0001/TestProject"
   private val projectGraph2 = "http://www.knora.org/data/0002/AnotherProject"
-  private val requester   = TestDataFactory.User.rootUser
+  private val requester     = TestDataFactory.User.rootUser
 
   private val baseFixture =
     s"""
@@ -85,12 +85,14 @@ object ReplaceUserIriActionSpec extends ZIOSpecDefault {
           _      <- TestTripleStore.setDatasetFromTriG(baseFixture)
           _      <- service(_.execute(oldIri, newIri, requester))
           exists <- ZIO.serviceWithZIO[TriplestoreService](
-                      _.query(Ask(
-                        s"""ASK { GRAPH <$projectGraph1>
-                           |  { <http://rdfh.ch/0001/resource1>
-                           |    <http://www.knora.org/ontology/knora-base#attachedToUser>
-                           |    <${newIri.value}> . } }""".stripMargin,
-                      )),
+                      _.query(
+                        Ask(
+                          s"""ASK { GRAPH <$projectGraph1>
+                             |  { <http://rdfh.ch/0001/resource1>
+                             |    <http://www.knora.org/ontology/knora-base#attachedToUser>
+                             |    <${newIri.value}> . } }""".stripMargin,
+                        ),
+                      ),
                     )
         } yield assertTrue(exists)
       },
@@ -99,12 +101,14 @@ object ReplaceUserIriActionSpec extends ZIOSpecDefault {
           _      <- TestTripleStore.setDatasetFromTriG(baseFixture)
           _      <- service(_.execute(oldIri, newIri, requester))
           exists <- ZIO.serviceWithZIO[TriplestoreService](
-                      _.query(Ask(
-                        s"""ASK { GRAPH <$projectGraph2>
-                           |  { <http://rdfh.ch/0002/resource2>
-                           |    <http://www.knora.org/ontology/knora-base#deletedBy>
-                           |    <${newIri.value}> . } }""".stripMargin,
-                      )),
+                      _.query(
+                        Ask(
+                          s"""ASK { GRAPH <$projectGraph2>
+                             |  { <http://rdfh.ch/0002/resource2>
+                             |    <http://www.knora.org/ontology/knora-base#deletedBy>
+                             |    <${newIri.value}> . } }""".stripMargin,
+                        ),
+                      ),
                     )
         } yield assertTrue(exists)
       },

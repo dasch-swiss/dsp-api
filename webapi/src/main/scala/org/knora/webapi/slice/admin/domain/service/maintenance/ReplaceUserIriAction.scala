@@ -27,11 +27,14 @@ final case class ReplaceUserIriAction(triplestoreService: TriplestoreService) {
   def execute(oldIri: UserIri, newIri: UserIri, requester: User): Task[Unit] =
     for {
       oldExists <- triplestoreService.query(existsInAdminGraph(oldIri))
-      _         <- ZIO.when(!oldExists)(ZIO.fail(NotFoundException(s"User IRI ${oldIri.value} not found in admin named graph.")))
+      _         <-
+        ZIO.when(!oldExists)(ZIO.fail(NotFoundException(s"User IRI ${oldIri.value} not found in admin named graph.")))
       newExists <- triplestoreService.query(existsInAdminGraph(newIri))
-      _         <- ZIO.when(newExists)(ZIO.fail(ConflictException(s"User IRI ${newIri.value} already exists in admin named graph.")))
-      _         <- triplestoreService.query(replaceUpdate(oldIri, newIri))
-      _         <- ZIO.logInfo(s"Replaced user IRI ${oldIri.value} with ${newIri.value} (requested by ${requester.id})")
+      _         <- ZIO.when(newExists)(
+             ZIO.fail(ConflictException(s"User IRI ${newIri.value} already exists in admin named graph.")),
+           )
+      _ <- triplestoreService.query(replaceUpdate(oldIri, newIri))
+      _ <- ZIO.logInfo(s"Replaced user IRI ${oldIri.value} with ${newIri.value} (requested by ${requester.id})")
     } yield ()
 
   private def existsInAdminGraph(iri: UserIri): Ask = {

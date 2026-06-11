@@ -31,10 +31,10 @@ object MaintenanceReplaceUserIriE2ESpec extends E2EZSpec {
   private def insertUserInAdminGraph(iri: UserIri): ZIO[TriplestoreService, Throwable, Unit] =
     ZIO.serviceWithZIO[TriplestoreService](
       _.query(Update(s"""INSERT DATA {
-                         |  GRAPH <$adminGraph> {
-                         |    <${iri.value}> <http://www.knora.org/ontology/knora-admin#email> "test@example.com" .
-                         |  }
-                         |}""".stripMargin)),
+                        |  GRAPH <$adminGraph> {
+                        |    <${iri.value}> <http://www.knora.org/ontology/knora-admin#email> "test@example.com" .
+                        |  }
+                        |}""".stripMargin)),
     )
 
   private def existsInAdminGraph(iri: UserIri): ZIO[TriplestoreService, Throwable, Boolean] =
