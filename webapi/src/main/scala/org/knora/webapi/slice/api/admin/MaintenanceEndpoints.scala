@@ -44,7 +44,7 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Execute a maintenance action. Requires SystemAdmin permissions.")
 
   val postReplaceUserIri = baseEndpoints.securedEndpoint.post
-    .in("admin" / "maintenance" / "users" / "replace-iri")
+    .in(maintenanceBase / "users" / "replace-iri")
     .in(jsonBody[ReplaceUserIriRequest])
     .out(statusCode(StatusCode.NoContent))
     .description(
