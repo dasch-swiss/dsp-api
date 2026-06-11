@@ -14,14 +14,9 @@ import zio.json.*
 import zio.json.ast.*
 
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.api.admin.MaintenanceEndpoints.ReplaceUserIriRequest
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
-
-final case class ReplaceUserIriRequest(oldIri: UserIri, newIri: UserIri)
-object ReplaceUserIriRequest {
-  given JsonCodec[ReplaceUserIriRequest] = DeriveJsonCodec.gen
-  given Schema[ReplaceUserIriRequest]    = Schema.derived
-}
 
 final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -60,4 +55,10 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
 
 object MaintenanceEndpoints {
   val layer = ZLayer.derive[MaintenanceEndpoints]
+
+  final case class ReplaceUserIriRequest(oldIri: UserIri, newIri: UserIri)
+  object ReplaceUserIriRequest {
+    given JsonCodec[ReplaceUserIriRequest] = DeriveJsonCodec.gen
+    given Schema[ReplaceUserIriRequest]    = Schema.derived
+  }
 }

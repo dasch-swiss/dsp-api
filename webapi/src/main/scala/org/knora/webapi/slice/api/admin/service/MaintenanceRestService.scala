@@ -15,7 +15,7 @@ import zio.json.ast.Json
 import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
-import org.knora.webapi.slice.api.admin.ReplaceUserIriRequest
+import org.knora.webapi.slice.api.admin.MaintenanceEndpoints.ReplaceUserIriRequest
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.ProjectsWithBakfilesReport
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.fixTopLeftAction
 import org.knora.webapi.slice.common.api.AuthorizationRestService

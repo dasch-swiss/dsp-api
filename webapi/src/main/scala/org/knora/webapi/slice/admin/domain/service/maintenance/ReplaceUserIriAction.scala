@@ -35,8 +35,11 @@ final case class ReplaceUserIriAction(triplestoreService: TriplestoreService) {
     } yield ()
 
   private def existsInAdminGraph(iri: UserIri): Ask = {
-    val adminGraph = AdminConstants.adminDataNamedGraph.value
-    Ask(s"ASK { GRAPH <$adminGraph> { <${iri.value}> ?p ?o . } }")
+    val adminGraphIri = Rdf.iri(AdminConstants.adminDataNamedGraph.value)
+    val iriRdf        = Rdf.iri(iri.value)
+    val p             = SparqlBuilder.`var`("p")
+    val o             = SparqlBuilder.`var`("o")
+    Ask(s"""ASK { ${GraphPatterns.tp(iriRdf, p, o).from(adminGraphIri).getQueryString} }""")
   }
 
   private def replaceUpdate(oldIri: UserIri, newIri: UserIri): Update = {
