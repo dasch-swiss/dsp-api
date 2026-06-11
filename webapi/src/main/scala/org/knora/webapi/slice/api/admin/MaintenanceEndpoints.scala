@@ -13,8 +13,15 @@ import zio.ZLayer
 import zio.json.*
 import zio.json.ast.*
 
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
+
+final case class ReplaceUserIriRequest(oldIri: UserIri, newIri: UserIri)
+object ReplaceUserIriRequest {
+  given JsonCodec[ReplaceUserIriRequest] = DeriveJsonCodec.gen
+  given Schema[ReplaceUserIriRequest]    = Schema.derived
+}
 
 final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -40,6 +47,15 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
     )
     .out(statusCode(StatusCode.Accepted))
     .description("Execute a maintenance action. Requires SystemAdmin permissions.")
+
+  val postReplaceUserIri = baseEndpoints.securedEndpoint.post
+    .in("admin" / "maintenance" / "users" / "replace-iri")
+    .in(jsonBody[ReplaceUserIriRequest])
+    .out(statusCode(StatusCode.NoContent))
+    .description(
+      "Replace a user IRI across the entire database (admin graph + all project data graphs). " +
+        "SystemAdmin only. Irreversible — no undo mechanism. Not idempotent: retrying after success returns 404.",
+    )
 }
 
 object MaintenanceEndpoints {

@@ -178,6 +178,16 @@ object EditConflictException {
 }
 
 /**
+ * An exception indicating that the request conflicts with the current state of the server (HTTP 409).
+ *
+ * @param message a description of the error.
+ */
+final case class ConflictException(message: String) extends RequestRejectedException(message)
+object ConflictException {
+  given codec: JsonCodec[ConflictException] = DeriveJsonCodec.gen[ConflictException]
+}
+
+/**
  * An exception indicating that the submitted standoff is not valid.
  *
  * @param message a description of the error.

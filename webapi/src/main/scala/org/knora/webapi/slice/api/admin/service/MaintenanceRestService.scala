@@ -15,6 +15,7 @@ import zio.json.ast.Json
 import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
+import org.knora.webapi.slice.api.admin.ReplaceUserIriRequest
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.ProjectsWithBakfilesReport
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.fixTopLeftAction
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -48,6 +49,21 @@ final case class MaintenanceRestService(
     for {
       report <- getParamsAs[ProjectsWithBakfilesReport](topLeftParams, fixTopLeftAction)
       _      <- maintenanceService.fixTopLeftDimensions(report).logError.forkDaemon
+    } yield ()
+
+  def replaceUserIri(user: User)(req: ReplaceUserIriRequest): Task[Unit] =
+    for {
+      _ <- securityService.ensureSystemAdmin(user)
+      _ <- ZIO.when(req.oldIri.isBuiltInUser || req.newIri.isBuiltInUser)(
+             ZIO.fail(BadRequestException("Cannot replace built-in user IRIs.")),
+           )
+      _ <- ZIO.when(req.oldIri == req.newIri)(
+             ZIO.fail(BadRequestException("oldIri and newIri must be different.")),
+           )
+      _ <- ZIO.when(req.oldIri == user.userIri)(
+             ZIO.fail(BadRequestException("A user cannot replace their own IRI.")),
+           )
+      _ <- maintenanceService.replaceUserIri(req.oldIri, req.newIri, user)
     } yield ()
 }
 
