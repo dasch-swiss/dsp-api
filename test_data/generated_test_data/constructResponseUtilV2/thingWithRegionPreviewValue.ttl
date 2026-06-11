@@ -1,0 +1,29 @@
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://rdfh.ch/0001/thing-with-region-preview> a <http://www.knora.org/ontology/0001/anything#Thing>,
+    knora-base:Resource;
+  <http://www.knora.org/ontology/0001/anything#hasRegionPreview> <http://rdfh.ch/0001/thing-with-region-preview/values/XcRF1s0uSXemB5YXeC7djw>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:creationDate "2025-05-11T10:00:00.000000Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:hasValue <http://rdfh.ch/0001/thing-with-region-preview/values/XcRF1s0uSXemB5YXeC7djw>;
+  knora-base:isDeleted false;
+  knora-base:isMainResource true;
+  rdfs:label "thing with region preview value" .
+
+<http://rdfh.ch/0001/thing-with-region-preview/values/XcRF1s0uSXemB5YXeC7djw> a knora-base:RegionPreviewValue;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:isDeleted false;
+  knora-base:isRegionPreviewOf <http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w>;
+  knora-base:valueCreationDate "2025-05-11T10:00:00.000000Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w";
+  knora-base:valueHasUUID "XcRF1s0uSXemB5YXeC7djw";
+  knora-base:internalFilename "B1D0OkEgfFp-Cew2Seur7Wi.jp2";
+  knora-base:dimX 512;
+  knora-base:dimY 256 .

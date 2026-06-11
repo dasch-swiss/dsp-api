@@ -21,8 +21,20 @@
     anything:hasOtherThingValue  <http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/MIbQMDn6T12QMS0GDlEDSg> ;
     anything:hasOtherThing       <http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg> ;
     anything:hasInteger          <http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/c8zmKe-eRjWMOGIOw-5GyA> ;
+    anything:hasRegionPreview    <http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/Hn3kAqXyTbiB1RkF0r5Q7w> ;
     rdfs:label                   "thing with hidden thing" ;
     knora-base:isDeleted         false .
+
+<http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/Hn3kAqXyTbiB1RkF0r5Q7w>
+    a                              knora-base:RegionPreviewValue ;
+    knora-base:attachedToUser      <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+    knora-base:hasPermissions      "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:valueHasUUID        "Hn3kAqXyTbiB1RkF0r5Q7w"^^xsd:string ;
+    knora-base:isDeleted           false ;
+    knora-base:valueCreationDate   "2026-05-20T10:00:00.000000Z"^^xsd:dateTime ;
+    knora-base:valueHasOrder       0 ;
+    knora-base:valueHasString      "http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w" ;
+    knora-base:isRegionPreviewOf   <http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w> .
 
 <http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/c8zmKe-eRjWMOGIOw-5GyA>
     a                            knora-base:IntValue ;

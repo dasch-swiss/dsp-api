@@ -89,6 +89,7 @@ object GravsearchTypeInspectionUtil {
     OntologyConstants.KnoraApiV2Complex.IntervalValue,
     OntologyConstants.KnoraApiV2Complex.TimeValue,
     OntologyConstants.KnoraApiV2Complex.FileValue,
+    OntologyConstants.KnoraApiV2Complex.RegionPreviewValue,
   )
 
   /**

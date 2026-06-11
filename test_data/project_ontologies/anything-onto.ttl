@@ -367,6 +367,14 @@
     knora-base:objectClassConstraint  knora-base:LinkValue .
 
 
+:hasRegionPreview
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasValue ;
+    rdfs:label                        "has region preview"@en ;
+    knora-base:subjectClassConstraint :Thing ;
+    knora-base:objectClassConstraint  knora-base:RegionPreviewValue .
+
+
 #################################################################
 #
 #    Standoff Properties
@@ -472,7 +480,11 @@
                             [ rdf:type            owl:Restriction ;
                               owl:onProperty      :hasTimeStamp ;
                               owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder "13"^^xsd:nonNegativeInteger ] ;
+                              salsah-gui:guiOrder "13"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :hasRegionPreview ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "14"^^xsd:nonNegativeInteger ] ;
     knora-base:resourceIcon "thing.png" ;
     rdfs:label              "Ding"@de,
                             "Chose"@fr,

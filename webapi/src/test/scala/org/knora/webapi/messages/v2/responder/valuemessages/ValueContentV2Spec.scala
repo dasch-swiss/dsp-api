@@ -30,14 +30,43 @@ object ValueContentV2Spec extends ZIOSpecDefault {
   private val shortcode0001 = KnoraProject.Shortcode.unsafeFrom("0001")
 
   override def spec: Spec[Any, Option[Throwable]] =
-    suite("ValueContentV2.getFileInfo")(
-      suite("Given the asset is ingested")(
-        test("When getting file metadata from dsp-ingest, then it should succeed") {
-          for {
-            ingested <- ValueContentV2.getFileInfo(shortcode0001, jsonLdObj).some
-          } yield assertTrue(ingested.metadata == expected)
+    suite("ValueContentV2")(
+      suite("getFileInfo")(
+        suite("Given the asset is ingested")(
+          test("When getting file metadata from dsp-ingest, then it should succeed") {
+            for {
+              ingested <- ValueContentV2.getFileInfo(shortcode0001, jsonLdObj).some
+            } yield assertTrue(ingested.metadata == expected)
+          },
+        ).provide(mockSipi()),
+      ),
+      suite("GeomValueContentV2.parsePoints")(
+        test("parses a rectangle geometry into its list of points") {
+          val geom =
+            """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.3979668674698795,"y":0.24423475150602414},{"x":0.4906285297439759,"y":0.42000423569277123}],"type":"rectangle"}"""
+          val result = GeomValueContentV2.parsePoints(geom)
+          assertTrue(
+            result == Right(
+              List(
+                GeomValueContentV2.Point(0.3979668674698795, 0.24423475150602414),
+                GeomValueContentV2.Point(0.4906285297439759, 0.42000423569277123),
+              ),
+            ),
+          )
         },
-      ).provide(mockSipi()),
+        test("returns an empty list when the points array is empty") {
+          val result = GeomValueContentV2.parsePoints("""{"points":[]}""")
+          assertTrue(result == Right(List.empty))
+        },
+        test("returns a Left when the input is not valid JSON") {
+          val result = GeomValueContentV2.parsePoints("not json")
+          assertTrue(result.isLeft)
+        },
+        test("returns a Left when the points field is missing") {
+          val result = GeomValueContentV2.parsePoints("""{"type":"rectangle"}""")
+          assertTrue(result.isLeft)
+        },
+      ),
     )
 
   private def mockSipi() = ZLayer.succeed(new SipiService {
