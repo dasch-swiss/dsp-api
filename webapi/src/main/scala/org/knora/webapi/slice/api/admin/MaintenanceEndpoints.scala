@@ -51,6 +51,15 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
       "Replace a user IRI across the entire database (admin graph + all project data graphs). " +
         "SystemAdmin only. Irreversible -- no undo mechanism. Not idempotent: retrying after success returns 404.",
     )
+
+  val postReplaceUserIriInProject = baseEndpoints.securedEndpoint.post
+    .in(maintenanceBase / "projects" / AdminPathVariables.projectShortcode / "replace-user-iri")
+    .in(jsonBody[ReplaceUserIriRequest])
+    .out(statusCode(StatusCode.NoContent))
+    .description(
+      "Re-attribute all references to a user IRI within a single project's data graph. " +
+        "Both user accounts remain intact. SystemAdmin only. Not idempotent: retrying after success returns 404.",
+    )
 }
 
 object MaintenanceEndpoints {

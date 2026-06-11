@@ -9,6 +9,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -19,6 +20,7 @@ final case class MaintenanceService(
   knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
   replaceIriAction: ReplaceUserIriAction,
+  replaceIriInProjectAction: ReplaceUserIriInProjectAction,
 ) {
   def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] =
     ZIO.logInfo(s"Starting fix top left maintenance") *>
@@ -27,6 +29,9 @@ final case class MaintenanceService(
 
   def replaceUserIri(oldIri: UserIri, newIri: UserIri, requester: User): Task[Unit] =
     replaceIriAction.execute(oldIri, newIri, requester)
+
+  def replaceUserIriInProject(shortcode: Shortcode, oldIri: UserIri, newIri: UserIri, requester: User): Task[Unit] =
+    replaceIriInProjectAction.execute(shortcode, oldIri, newIri, requester)
 }
 
 object MaintenanceService {
