@@ -33,6 +33,7 @@ final case class BaseEndpoints(authenticator: Authenticator) {
       oneOfVariant[EditConflictException](
         statusCode(StatusCode.BadRequest).and(jsonBody[EditConflictException]),
       ),
+      oneOfVariant[ConflictException](statusCode(StatusCode.Conflict).and(jsonBody[ConflictException])),
       oneOfVariant[OntologyConstraintException](
         statusCode(StatusCode.BadRequest).and(jsonBody[OntologyConstraintException]),
       ),

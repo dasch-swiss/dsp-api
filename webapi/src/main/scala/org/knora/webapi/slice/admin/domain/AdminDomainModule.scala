@@ -14,6 +14,7 @@ import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
+import org.knora.webapi.slice.admin.domain.service.maintenance.ReplaceUserIriAction
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -56,7 +57,7 @@ object AdminDomainModule { self =>
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     (AdministrativePermissionService.layer ++ DefaultObjectAccessPermissionService.layer ++
-      KnoraProjectService.layer ++ PasswordService.layer) >+>
+      KnoraProjectService.layer ++ PasswordService.layer ++ ReplaceUserIriAction.layer) >+>
       (KnoraUserService.layer ++ LegalInfoService.layer ++ MaintenanceService.layer ++ ProjectService.layer) >+>
       KnoraGroupService.layer >+>
       (ProjectEraseService.layer ++ GroupService.layer) >+>
