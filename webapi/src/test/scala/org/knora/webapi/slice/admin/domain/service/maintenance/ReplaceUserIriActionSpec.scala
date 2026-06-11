@@ -8,6 +8,8 @@ package org.knora.webapi.slice.admin.domain.service.maintenance
 import zio.ZIO
 import zio.test.*
 
+import dsp.errors.ConflictException
+import dsp.errors.NotFoundException
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants
@@ -119,7 +121,7 @@ object ReplaceUserIriActionSpec extends ZIOSpecDefault {
         for {
           _   <- TestTripleStore.setDatasetFromTriG(baseFixture)
           res <- service(_.execute(absentIri, newIri, requester)).exit
-        } yield assert(res)(Assertion.failsWithA[dsp.errors.NotFoundException])
+        } yield assert(res)(Assertion.failsWithA[NotFoundException])
       },
       test("fails with ConflictException when newIri already exists in admin graph") {
         val conflictFixture = baseFixture +
@@ -131,7 +133,7 @@ object ReplaceUserIriActionSpec extends ZIOSpecDefault {
         for {
           _   <- TestTripleStore.setDatasetFromTriG(conflictFixture)
           res <- service(_.execute(oldIri, newIri, requester)).exit
-        } yield assert(res)(Assertion.failsWithA[dsp.errors.ConflictException])
+        } yield assert(res)(Assertion.failsWithA[ConflictException])
       },
     ),
   ).provide(
