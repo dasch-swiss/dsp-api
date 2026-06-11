@@ -13,6 +13,7 @@ import zio.json.JsonDecoder
 import zio.json.ast.Json
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.api.admin.MaintenanceEndpoints.ReplaceUserIriRequest
@@ -64,6 +65,16 @@ final case class MaintenanceRestService(
              ZIO.fail(BadRequestException("A user cannot replace their own IRI.")),
            )
       _ <- maintenanceService.replaceUserIri(req.oldIri, req.newIri, user)
+    } yield ()
+
+  def replaceUserIriInProject(user: User)(input: (Shortcode, ReplaceUserIriRequest)): Task[Unit] =
+    val (shortcode, req) = input
+    for {
+      _ <- securityService.ensureSystemAdmin(user)
+      _ <- ZIO.when(req.oldIri == req.newIri)(
+             ZIO.fail(BadRequestException("oldIri and newIri must be different.")),
+           )
+      _ <- maintenanceService.replaceUserIriInProject(shortcode, req.oldIri, req.newIri, user)
     } yield ()
 }
 

@@ -20,6 +20,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.admin.domain.service.maintenance.ReplaceUserIriAction
+import org.knora.webapi.slice.admin.domain.service.maintenance.ReplaceUserIriInProjectAction
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.*
 import org.knora.webapi.slice.common.service.IriConverter
@@ -124,6 +125,7 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
     MaintenanceService.layer,
     OntologyRepoInMemory.emptyLayer,
     ReplaceUserIriAction.layer,
+    ReplaceUserIriInProjectAction.layer,
     StringFormatter.test,
     emptyDatasetRefLayer >>> TriplestoreServiceInMemory.layer,
   )
