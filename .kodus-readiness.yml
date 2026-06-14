@@ -1,6 +1,5 @@
 criteria:
   # Kodus does not recognise Scala tooling — supplemental assessment script handles
   # linter, formatter, type-checker, test-framework, test-files-exist, ci-runs-linters.
-  # These two criteria genuinely cannot be evaluated from the local filesystem:
+  # This criterion genuinely cannot be evaluated from the local filesystem:
   bundle-analysis: false   # N/A — Scala/JVM backend, no frontend bundle
-  branch-protection: false # Requires GitHub API; checked by assess.py
