@@ -1,5 +1,18 @@
 # Changelog
 
+## [36.1.0](https://github.com/dasch-swiss/dsp-api/compare/v36.0.0...v36.1.0) (2026-06-11)
+
+
+### Enhancements
+
+* **maintenance:** add POST /admin/maintenance/users/replace-iri endpoint ([#4146](https://github.com/dasch-swiss/dsp-api/issues/4146)) ([d736166](https://github.com/dasch-swiss/dsp-api/commit/d736166d5ee78374aaa0c9c2eff96b40c6461f16))
+* **maintenance:** add replace-user-iri-in-project endpoint ([#4147](https://github.com/dasch-swiss/dsp-api/issues/4147)) ([42c7a03](https://github.com/dasch-swiss/dsp-api/commit/42c7a03f89fd83538ee4da125d7aa0e96fe099ea))
+
+
+### Bug Fixes
+
+* **search:** Skip non-resource IRIs in incoming-links search (DEV-6604) ([#4144](https://github.com/dasch-swiss/dsp-api/issues/4144)) ([e482084](https://github.com/dasch-swiss/dsp-api/commit/e4820841bacbb033704bc02ddaf6cbe497cc6e81))
+
 ## [36.0.0](https://github.com/dasch-swiss/dsp-api/compare/v35.10.0...v36.0.0) (2026-06-08)
 
 
