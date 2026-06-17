@@ -366,6 +366,7 @@ lazy val testkit: Project = Project(id = "testkit", base = file("modules/testkit
       Dependencies.testcontainers,
       Dependencies.wiremock,
       Dependencies.dataFaker,
+      Dependencies.openTelemetrySdkTesting,
     ),
     publish / skip := true,
     name           := "testkit",
