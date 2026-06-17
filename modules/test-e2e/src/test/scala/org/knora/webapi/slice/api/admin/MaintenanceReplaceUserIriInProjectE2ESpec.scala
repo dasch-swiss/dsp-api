@@ -108,6 +108,27 @@ object MaintenanceReplaceUserIriInProjectE2ESpec extends E2EZSpec {
         )
         .map(response => assertTrue(response.code != StatusCode.BadRequest))
     },
+    test("returns 204 when oldIri is a built-in user IRI with references in the project graph") {
+      val newIri          = UserIri.unsafeFrom("http://rdfh.ch/users/e2e-proj-builtin-new")
+      val systemUserIri   = UserIri.unsafeFrom(builtInUserIri)
+      val anythingProject = "http://rdfh.ch/projects/0001"
+      for {
+        _        <- insertUserInAdminGraph(newIri)
+        _        <- addProjectMembership(newIri, anythingProject)
+        _        <- insertRefInProjectGraph(systemUserIri, anythingProjectGraph)
+        response <- TestApiClient.postJson[Json, Json](
+                      endpointFor(anythingShortcode),
+                      replaceBody(builtInUserIri, newIri.value),
+                      rootUser,
+                    )
+        oldGone  <- existsAsObjectInGraph(systemUserIri, anythingProjectGraph)
+        newThere <- existsAsObjectInGraph(newIri, anythingProjectGraph)
+      } yield assertTrue(
+        response.code == StatusCode.NoContent,
+        !oldGone,
+        newThere,
+      )
+    },
     test("returns 400 when oldIri and newIri are equal") {
       TestApiClient
         .postJson[Json, Json](
