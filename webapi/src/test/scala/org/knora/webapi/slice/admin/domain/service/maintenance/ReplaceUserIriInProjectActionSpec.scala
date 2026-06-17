@@ -107,6 +107,29 @@ object ReplaceUserIriInProjectActionSpec extends ZIOSpecDefault {
         } yield assertTrue(exists)
       },
     ),
+    suite("execute - built-in user as oldIri")(
+      test("replaces oldIri with newIri when oldIri is a built-in user IRI") {
+        val systemUserIri = UserIri.unsafeFrom("http://www.knora.org/ontology/knora-admin#SystemUser")
+        val fixture       =
+          s"""
+             |@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+             |@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+             |<$adminGraph> {
+             |  <${newIri.value}> knora-admin:email "new@example.com" ;
+             |                    knora-admin:isInProject <${testProject.id.value}> .
+             |}
+             |<$projectAGraph> {
+             |  <http://rdfh.ch/resource1> knora-base:attachedToUser <${systemUserIri.value}> .
+             |}
+             |""".stripMargin
+        for {
+          _      <- createProject
+          _      <- TestTripleStore.setDatasetFromTriG(fixture)
+          _      <- service(_.execute(testProject.shortcode, systemUserIri, newIri, requester))
+          exists <- askObjectInGraph(newIri, projectAGraph)
+        } yield assertTrue(exists)
+      },
+    ),
     suite("execute - validation failures")(
       test("fails with NotFoundException when project is not found") {
         val unknownShortcode = Shortcode.unsafeFrom("FFFF")

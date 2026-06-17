@@ -36,10 +36,11 @@ final case class ReplaceUserIriInProjectAction(
       project <- knoraProjectService
                    .findByShortcode(shortcode)
                    .someOrFail(NotFoundException(s"project ${shortcode.value} not found."))
-      oldExists <- triplestoreService.query(existsInAdminGraph(oldIri))
-      _         <- ZIO.when(!oldExists)(
-             ZIO.fail(NotFoundException(s"user IRI ${oldIri.value} not found in admin named graph.")),
-           )
+      _ <- ZIO.unless(oldIri.isBuiltInUser) {
+             triplestoreService
+               .query(existsInAdminGraph(oldIri))
+               .filterOrFail(identity)(NotFoundException(s"user IRI ${oldIri.value} not found in admin named graph."))
+           }
       newExists <- triplestoreService.query(existsInAdminGraph(newIri))
       _         <- ZIO.when(!newExists)(
              ZIO.fail(NotFoundException(s"user IRI ${newIri.value} not found in admin named graph.")),
