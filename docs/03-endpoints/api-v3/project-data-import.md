@@ -4,10 +4,8 @@ The project data import API creates a new project's data graph from a [knora-api
 JSON-LD payload. The server transforms the payload into the internal knora-base representation, validates it, and
 streams it into the triplestore.
 
-Unlike the [Project Migration Export/Import](project-migration.md) — which moves a complete project (admin data,
-ontologies, permissions, assets) between instances as a BagIt package — the data import handles **instance data
-only**. The project and its ontologies must already exist on the instance, and the project's data graph must not
-exist yet (create-only).
+The data import handles **instance data only** — the resources and their values. The project and its ontologies
+must already exist on the instance, and the project's data graph must not exist yet (create-only).
 
 ## Endpoints
 
@@ -71,10 +69,9 @@ The upload to Fuseki is **atomic** — if the upload fails, no partial data is w
 
 ## Import Validation
 
-Before anything is written to the triplestore, the transformed data is SHACL-validated against the same data shapes
-used by the [migration import](project-migration.md#shacl-validation). The project's ontologies are fetched from
-the triplestore to support the validation. Validation failure fails the task with a descriptive error message and
-leaves the triplestore untouched.
+Before anything is written to the triplestore, the transformed data is SHACL-validated against the knora-base data
+shapes. The project's ontologies are fetched from the triplestore to support the validation. Validation failure
+fails the task with a descriptive error message and leaves the triplestore untouched.
 
 ## Typical Workflow
 
