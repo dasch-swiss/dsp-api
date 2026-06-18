@@ -160,6 +160,9 @@ object Dependencies {
     "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.40.0",
   )
 
+  // In-memory span exporter for the span-assertion test harness (testkit).
+  val openTelemetrySdkTesting = "io.opentelemetry" % "opentelemetry-sdk-testing" % otelVersion
+
   val integrationTestDependencies = Seq(
     rdf4jClient,
     testcontainers,
