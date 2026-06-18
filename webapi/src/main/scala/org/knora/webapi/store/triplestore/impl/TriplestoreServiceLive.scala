@@ -166,6 +166,7 @@ case class TriplestoreServiceLive(
       .post(targetHostUri.addPath(paths.update))
       .body(query.sparql)
       .contentType(mimeTypeApplicationSparqlUpdate)
+      .readTimeout(FiniteDuration(triplestoreConfig.maintenanceTimeout.toSeconds + 20, TimeUnit.SECONDS))
 
     trackQueryDuration(query, doHttpRequest(request)).unit
   }
