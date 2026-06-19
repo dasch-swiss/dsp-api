@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.data.SpanData
 import zio.*
+import zio.telemetry.opentelemetry.tracing.Tracing
 import zio.test.*
 
 import scala.jdk.CollectionConverters.*
@@ -33,12 +34,14 @@ import org.knora.webapi.testservices.SpanAssertions
  *
  * Verifies the span-topology acceptance criteria (REQ-1.1/1.2/1.4/1.7/1.9):
  *   - a full-path search emits the root `gravsearch` span + all 7 stage spans, each a child of the root;
+ *   - the root nests under an active SERVER-kind span (FiberRef auto-parenting);
  *   - the triplestore CLIENT span (sttp backend) nests under the `prequery.execute`/`mainquery.execute` spans;
  *   - an empty-result search omits the three main-query spans;
  *   - the count path emits exactly the four prequery-side stages.
  *
- * The root span nesting under the HTTP SERVER span (REQ-1.1) is not asserted here (no HTTP request in the call
- * path); it is covered by the FiberRef auto-parenting the harness proves and verified in production (Phase 4).
+ * The SERVER parent is a synthetic span opened in-test (rather than a real HTTP request) because
+ * `E2EZSpec`'s in-process server does not share this exporter; the real APP→ingress→gravsearch correlation
+ * is verified in production (Phase 4).
  */
 object SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
 
@@ -120,6 +123,16 @@ object SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
         SpanAssertions.isParentChild(spans, "gravsearch", "gravsearch.mainquery.execute") &&
         SpanAssertions.isParentChild(spans, "gravsearch", "gravsearch.result_transform") &&
         SpanAssertions.hasAttributeKey(spans, "gravsearch", shapeKey)
+    },
+    test("the gravsearch root nests under an active SERVER-kind span (REQ-1.1)") {
+      for {
+        spans <- spansAfter(
+                   ZIO.serviceWithZIO[Tracing](
+                     _.span("test.server", SpanKind.SERVER)(runGravsearch(bookByTitleQuery(existingTitle))),
+                   ),
+                 )
+      } yield SpanAssertions.hasSpan(spans, "test.server") &&
+        SpanAssertions.isParentChild(spans, "test.server", "gravsearch")
     },
     test("the triplestore CLIENT span nests under the prequery.execute and mainquery.execute stage spans (REQ-1.4)") {
       for {
