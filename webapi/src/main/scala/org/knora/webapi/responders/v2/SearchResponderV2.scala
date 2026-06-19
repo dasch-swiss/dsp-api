@@ -1468,8 +1468,14 @@ object SearchResponderV2 {
       "is_fulltext"        -> isFulltext,
     )
 
+    // Only ontology predicate names (Decision 4) — never instance/data IRIs. `setShapeOnRoot` runs right
+    // after parse, before type inspection validates predicates, so a parseable query may carry an instance
+    // IRI (e.g. `?s <http://rdfh.ch/...> ?o`) in the predicate position; the `isKnoraEntityIri` guard keeps
+    // those (and any non-ontology IRI) out of the span attribute (REQ-1.3).
     val predicates =
-      statementPatterns.collect { case StatementPattern(_, p: IriRef, _) => localName(p.iri) }.distinct.sorted
+      statementPatterns.collect {
+        case StatementPattern(_, p: IriRef, _) if p.iri.isKnoraEntityIri => localName(p.iri)
+      }.distinct.sorted
 
     val tokens =
       (resultType.label +:

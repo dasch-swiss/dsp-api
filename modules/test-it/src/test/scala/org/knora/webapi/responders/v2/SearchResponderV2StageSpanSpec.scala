@@ -66,5 +66,18 @@ object SearchResponderV2StageSpanSpec extends ZIOSpecDefault {
         } yield SpanAssertions.hasGravsearchExitReason(spans, stage, "interrupted") &&
           SpanAssertions.hasErrorStatus(spans, stage)).provide(InMemoryTracing.layer)
       },
+      test("a defect (die) yields an ERROR span and records no exception event") {
+        // User-supplied data (e.g. a FILTER literal) reaches the responder through the typed error channel
+        // (parse/triplestore failures), which the test above proves is sanitized. A defect is an unexpected
+        // code-level throw; the guaranteed invariant here is that no `recordException` event is attached
+        // (so the message is not leaked as a span event). The status description for a defect carries the
+        // library's `cause.prettyPrint` (a code stacktrace, not user query text) — an accepted residual.
+        (for {
+          tracing <- ZIO.service[Tracing]
+          _       <- SearchResponderV2.stageSpan(tracing, stage)(ZIO.die(new RuntimeException(sentinel))).exit
+          spans   <- InMemoryTracing.finishedSpans
+        } yield SpanAssertions.hasErrorStatus(spans, stage) &&
+          assertTrue(SpanAssertions.findSpan(spans, stage).exists(_.getEvents.isEmpty))).provide(InMemoryTracing.layer)
+      },
     )
 }

@@ -69,5 +69,25 @@ object GravsearchQueryShapeSpec extends ZIOSpecDefault {
         val shape = shapeOf(bookQueryWithTitleFilter("anything"), QueryResultType.Count)
         assertTrue(shape.label.startsWith("count"))
       },
+      test("schema_predicates contains ontology predicate names only, never an instance IRI in predicate position") {
+        // A parseable query whose predicate position holds an instance (data) IRI — shape is derived right
+        // after parse, before type inspection would reject it, so the derivation itself must exclude it.
+        val query =
+          """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |CONSTRUCT {
+            |    ?book knora-api:isMainResource true .
+            |} WHERE {
+            |    ?book a incunabula:book .
+            |    ?book a knora-api:Resource .
+            |    ?book incunabula:title ?title .
+            |    ?book <http://rdfh.ch/0803/SECRETINSTANCEID> ?x .
+            |}""".stripMargin
+        val shape = shapeOf(query, QueryResultType.ResourceList)
+        assertTrue(
+          shape.predicates.contains("title"),
+          !shape.predicates.exists(_.contains("SECRETINSTANCEID")),
+        )
+      },
     )
 }
