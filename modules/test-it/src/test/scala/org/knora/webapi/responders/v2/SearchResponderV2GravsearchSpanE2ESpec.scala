@@ -81,16 +81,18 @@ object SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
   private val existingTitle = "Zeitglöcklein des Lebens und Leidens Christi"
 
   private val readSpans: UIO[Chunk[SpanData]] =
-    ZIO.succeed(Chunk.fromIterable(exporter.getFinishedSpanItems.asScala))
+    ZIO.succeed(Chunk.fromIterable(exporter.getFinishedSpanItems.asScala.toList))
 
-  /** Reset the exporter, run the request, then wait until the `gravsearch` root span has been exported. */
-  private def spansAfter[R](request: ZIO[R, Throwable, Any]): ZIO[R, Throwable, Chunk[SpanData]] =
+  /** Reset the exporter, run the request, give the synchronous exporter a moment, then read the spans. */
+  private def spansAfter[R](label: String)(request: ZIO[R, Throwable, Any]): ZIO[R, Throwable, Chunk[SpanData]] =
     for {
       _     <- ZIO.succeed(exporter.reset())
       _     <- request
-      spans <- (ZIO.sleep(25.millis) *> readSpans)
-                 .repeatWhile(!_.exists(_.getName == "gravsearch"))
-                 .timeoutFail(new RuntimeException("gravsearch root span never appeared"))(5.seconds)
+      _     <- ZIO.sleep(1.second)
+      spans <- readSpans
+      _     <- Console
+             .printLine(s"[GRAVSEARCH-SPAN-DIAG] $label: ${spans.size} spans: ${spans.map(_.getName).mkString(", ")}")
+             .orDie
     } yield spans
 
   /** `child` exists and its direct parent is a span of the given kind. */
@@ -113,7 +115,7 @@ object SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
     ) {
       for {
         spans <-
-          spansAfter(
+          spansAfter("full-path")(
             TestApiClient.postSparql(uri"/v2/searchextended", bookByTitleQuery(existingTitle)).flatMap(_.assert200),
           )
       } yield assertTrue(stageSpans.forall(s => spans.exists(_.getName == s))) &&
@@ -130,7 +132,7 @@ object SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
     test("the triplestore CLIENT span nests under the prequery.execute and mainquery.execute stage spans (REQ-1.4)") {
       for {
         spans <-
-          spansAfter(
+          spansAfter("client-nesting")(
             TestApiClient.postSparql(uri"/v2/searchextended", bookByTitleQuery(existingTitle)).flatMap(_.assert200),
           )
       } yield assertTrue(
@@ -140,7 +142,7 @@ object SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
     },
     test("an empty-result Gravsearch omits the main-query and result-transform spans (REQ-1.9)") {
       for {
-        spans <- spansAfter(
+        spans <- spansAfter("empty-result")(
                    TestApiClient
                      .postSparql(uri"/v2/searchextended", bookByTitleQuery("a title that matches no book at all"))
                      .flatMap(_.assert200),
@@ -152,7 +154,7 @@ object SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
     },
     test("a count Gravsearch emits exactly the four prequery-side stages (REQ-1.7)") {
       for {
-        spans <- spansAfter(
+        spans <- spansAfter("count")(
                    TestApiClient
                      .postSparql(uri"/v2/searchextended/count", bookByTitleQuery(existingTitle))
                      .flatMap(_.assert200),

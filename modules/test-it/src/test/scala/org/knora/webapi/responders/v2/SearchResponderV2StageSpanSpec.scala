@@ -6,9 +6,12 @@
 package org.knora.webapi.responders.v2
 
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
 import zio.test.*
+
+import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.testservices.InMemoryTracing
 import org.knora.webapi.testservices.SpanAssertions
@@ -65,6 +68,16 @@ object SearchResponderV2StageSpanSpec extends ZIOSpecDefault {
           spans <- InMemoryTracing.finishedSpans
         } yield SpanAssertions.hasGravsearchExitReason(spans, stage, "interrupted") &&
           SpanAssertions.hasErrorStatus(spans, stage)).provide(InMemoryTracing.layer)
+      },
+      test("layerFor wires spans into the externally held exporter") {
+        // Isolates the E2E seam: a span created through a Tracing built by `layerFor(exporter)` must land in
+        // that same externally held `exporter` (which is how the E2E topology spec reads spans).
+        val exporter = InMemorySpanExporter.create()
+        (for {
+          _    <- ZIO.serviceWithZIO[Tracing](_.span("x")(ZIO.unit))
+          names = exporter.getFinishedSpanItems.asScala.map(_.getName).toList
+        } yield assertTrue(names.contains("x")))
+          .provide(InMemoryTracing.layerFor(exporter))
       },
       test("a defect (die) yields an ERROR span and records no exception event") {
         // User-supplied data (e.g. a FILTER literal) reaches the responder through the typed error channel
