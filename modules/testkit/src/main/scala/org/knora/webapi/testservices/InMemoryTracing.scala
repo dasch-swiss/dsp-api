@@ -84,6 +84,19 @@ object InMemoryTracing {
       OpenTelemetry.tracing("dsp-api-test"),
     )
 
+  /**
+   * Like [[layer]] but backed by an externally supplied exporter, so a caller can hold the exporter
+   * reference and read [[InMemorySpanExporter#getFinishedSpanItems]] directly (e.g. when wiring this as the
+   * application's OTel layer in an end-to-end spec, where the exporter is not exposed in the test env).
+   */
+  def layerFor(exporter: InMemorySpanExporter): ULayer[api.OpenTelemetry & Tracing & ContextStorage] =
+    ZLayer.make[api.OpenTelemetry & Tracing & ContextStorage](
+      ZLayer.succeed(exporter),
+      openTelemetryLayer,
+      OpenTelemetry.contextZIO,
+      OpenTelemetry.tracing("dsp-api-test"),
+    )
+
   /** All spans that have finished (and been exported) so far, in completion order. */
   val finishedSpans: URIO[InMemorySpanExporter, Chunk[SpanData]] =
     ZIO.serviceWith[InMemorySpanExporter](exporter => Chunk.fromIterable(exporter.getFinishedSpanItems.asScala))

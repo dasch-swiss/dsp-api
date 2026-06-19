@@ -5,12 +5,15 @@
 
 package org.knora.webapi
 
+import io.opentelemetry.api
 import net.datafaker.Faker
 import sttp.client4.UriContext
 import sttp.model.StatusCode
 import zio.*
 import zio.json.ast.Json
 import zio.logging.*
+import zio.telemetry.opentelemetry.context.ContextStorage
+import zio.telemetry.opentelemetry.tracing.Tracing
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -24,6 +27,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.api.ApiModule
 import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestClientsModule
 
@@ -39,10 +43,17 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
     },
   )
 
-  override val bootstrap: ULayer[E2EZSpec.Environment] =
+  /**
+   * The OpenTelemetry layer the application under test runs with. Defaults to the stdout-exporter setup;
+   * instrumentation specs override it (e.g. with an in-memory span exporter) to assert on emitted spans.
+   * `bootstrap` is `lazy` so an override that depends on subclass state is initialised in time.
+   */
+  protected def otelLayer: ULayer[api.OpenTelemetry & Tracing & ContextStorage] = OtelSetup.layer
+
+  override lazy val bootstrap: ULayer[E2EZSpec.Environment] =
     testLogger >>>
       TestContainerLayers.all >+>
-      LayersLive.remainingLayer >+>
+      LayersLive.remainingLayer(otelLayer) >+>
       ApiModule.layer >+>
       TestClientsModule.layer
 
