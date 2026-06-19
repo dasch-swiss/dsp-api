@@ -162,11 +162,12 @@ case class TriplestoreServiceLive(
    * @return [[Unit]].
    */
   override def query(query: Update): Task[Unit] = {
-    val request = authenticatedRequest
+    val readTimeout = FiniteDuration(resolveTimeout(query).toSeconds, TimeUnit.SECONDS)
+    val request     = authenticatedRequest
       .post(targetHostUri.addPath(paths.update))
       .body(query.sparql)
       .contentType(mimeTypeApplicationSparqlUpdate)
-      .readTimeout(FiniteDuration(triplestoreConfig.maintenanceTimeout.toSeconds + 20, TimeUnit.SECONDS))
+      .readTimeout(readTimeout)
 
     trackQueryDuration(query, doHttpRequest(request)).unit
   }
@@ -372,15 +373,17 @@ case class TriplestoreServiceLive(
     sendStreamingRequest(request, s"Triplestore returned error for graph '${graphIri.value}'")
   }
 
+  private def resolveTimeout(query: SparqlQuery): Duration = query.timeout match {
+    case SparqlTimeout.Standard    => triplestoreConfig.queryTimeout
+    case SparqlTimeout.Maintenance => triplestoreConfig.maintenanceTimeout
+    case SparqlTimeout.Gravsearch  => triplestoreConfig.gravsearchTimeout
+  }
+
   private def executeSparqlQuery(
     query: SparqlQuery,
     acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
   ): Task[String] = {
-    val timeout: Duration = query.timeout match {
-      case SparqlTimeout.Standard    => triplestoreConfig.queryTimeout
-      case SparqlTimeout.Maintenance => triplestoreConfig.maintenanceTimeout
-      case SparqlTimeout.Gravsearch  => triplestoreConfig.gravsearchTimeout
-    }
+    val timeout: Duration = resolveTimeout(query)
 
     val params      = Map(("query", query.sparql), ("timeout", timeout.toSeconds.toString))
     val uri         = targetHostUri.addPath(paths.query)
