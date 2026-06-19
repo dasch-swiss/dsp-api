@@ -5,7 +5,12 @@
 
 package org.knora.webapi.responders.v2
 
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
 import zio.*
+import zio.telemetry.opentelemetry.tracing.StatusMapper
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -88,6 +93,21 @@ case class ResourceCountV2(numberOfResources: Int) extends KnoraJsonLDResponseV2
 trait SearchResponderV2 {
 
   /**
+   * Telemetry used to open the root `gravsearch` span and its per-stage child spans. Declared as an
+   * abstract member (rather than injected only into the `Live` constructor) so the `IRI`-overload
+   * default methods below can open the root + `gravsearch.parse` spans before delegating.
+   */
+  protected def tracing: Tracing
+
+  /** Opens an INTERNAL stage span with uniform sanitized-error + interrupt handling (Decision 3). */
+  protected final def stageSpan[A](name: String)(effect: Task[A]): Task[A] =
+    SearchResponderV2.stageSpan(tracing, name)(effect)
+
+  /** Sets `gravsearch.query.shape` + per-flag attributes + `gravsearch.schema_predicates` on the root span. */
+  protected final def setShapeOnRoot(query: ConstructQuery, resultType: SearchResponderV2.QueryResultType): UIO[Unit] =
+    SearchResponderV2.setShapeOnRoot(tracing, query, resultType)
+
+  /**
    * Performs a search using a Gravsearch query provided by the client.
    *
    * @param query            a Gravsearch query provided by the client.
@@ -107,10 +127,13 @@ trait SearchResponderV2 {
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[ReadResourcesSequenceV2] =
-    for {
-      q <- ZIO.attempt(GravsearchParser.parseQuery(query))
-      r <- gravsearchV2(q, rendering, user, limitToProject)
-    } yield r
+    stageSpan("gravsearch") {
+      for {
+        q <- stageSpan("gravsearch.parse")(ZIO.attempt(GravsearchParser.parseQuery(query)))
+        _ <- setShapeOnRoot(q, SearchResponderV2.QueryResultType.ResourceList)
+        r <- gravsearchV2(q, rendering, user, limitToProject)
+      } yield r
+    }
 
   /**
    * Performs a count query for a Gravsearch query provided by the user.
@@ -121,10 +144,13 @@ trait SearchResponderV2 {
    */
   def gravsearchCountV2(query: ConstructQuery, user: User, limitToProject: Option[ProjectIri]): Task[ResourceCountV2]
   def gravsearchCountV2(query: IRI, user: User, limitToProject: Option[ProjectIri]): Task[ResourceCountV2] =
-    for {
-      q <- ZIO.attempt(GravsearchParser.parseQuery(query))
-      r <- gravsearchCountV2(q, user, limitToProject)
-    } yield r
+    stageSpan("gravsearch") {
+      for {
+        q <- stageSpan("gravsearch.parse")(ZIO.attempt(GravsearchParser.parseQuery(query)))
+        _ <- setShapeOnRoot(q, SearchResponderV2.QueryResultType.Count)
+        r <- gravsearchCountV2(q, user, limitToProject)
+      } yield r
+    }
 
   /**
    * Performs a Gravsearchquery to find resources that link to the specified resource.
@@ -301,6 +327,7 @@ final class SearchResponderV2Live(
   iriConverter: IriConverter,
   constructTransformer: ConstructTransformer,
   ontologyRepo: OntologyRepo,
+  override protected val tracing: Tracing,
 ) extends SearchResponderV2 {
 
   private implicit val sf: StringFormatter = stringFormatter
@@ -674,7 +701,8 @@ final class SearchResponderV2Live(
           .when(query.offset != 0)
 
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(query.whereClause)
+      typeInspectionResult <-
+        stageSpan("gravsearch.type_inspection")(gravsearchTypeInspectionRunner.inspectTypes(query.whereClause))
 
       whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(query.whereClause)
 
@@ -684,43 +712,46 @@ final class SearchResponderV2Live(
       // Create a Select prequery
       querySchema <-
         ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-      gravsearchToCountTransformer: GravsearchToCountPrequeryTransformer =
-        new GravsearchToCountPrequeryTransformer(
-          constructClause = query.constructClause,
-          typeInspectionResult = typeInspectionResult,
-          querySchema = querySchema,
-        )
 
-      prequery <-
-        queryTraverser.transformConstructToSelect(
-          inputQuery = query.copy(
-            whereClause = whereClauseWithoutAnnotations,
-            orderBy = Seq.empty[OrderCriterion], // count queries do not need any sorting criteria
-          ),
-          transformer = gravsearchToCountTransformer,
-        )
+      countSparql <- stageSpan("gravsearch.prequery.generate") {
+                       for {
+                         gravsearchToCountTransformer <-
+                           ZIO.succeed(
+                             new GravsearchToCountPrequeryTransformer(
+                               constructClause = query.constructClause,
+                               typeInspectionResult = typeInspectionResult,
+                               querySchema = querySchema,
+                             ),
+                           )
+                         prequery <-
+                           queryTraverser.transformConstructToSelect(
+                             inputQuery = query.copy(
+                               whereClause = whereClauseWithoutAnnotations,
+                               orderBy = Seq.empty[OrderCriterion], // count queries do not need any sorting criteria
+                             ),
+                             transformer = gravsearchToCountTransformer,
+                           )
+                         selectTransformer: SelectTransformer =
+                           new SelectTransformer(
+                             simulateInference = gravsearchToCountTransformer.useInference,
+                             sparqlTransformerLive,
+                             gravsearchToCountTransformer.mainResourceVariable,
+                             stringFormatter,
+                           )
+                         ontologiesForInferenceMaybe <-
+                           limitToProject.fold(
+                             inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
+                           )(getProjectOntologies)
+                         countQuery <- queryTraverser.transformSelectToSelect(
+                                         inputQuery = prequery,
+                                         transformer = selectTransformer,
+                                         ontologiesForInferenceMaybe,
+                                         limitToProject,
+                                       )
+                       } yield countQuery.toSparql
+                     }
 
-      selectTransformer: SelectTransformer =
-        new SelectTransformer(
-          simulateInference = gravsearchToCountTransformer.useInference,
-          sparqlTransformerLive,
-          gravsearchToCountTransformer.mainResourceVariable,
-          stringFormatter,
-        )
-
-      ontologiesForInferenceMaybe <-
-        limitToProject.fold(
-          inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
-        )(getProjectOntologies)
-
-      countQuery <- queryTraverser.transformSelectToSelect(
-                      inputQuery = prequery,
-                      transformer = selectTransformer,
-                      ontologiesForInferenceMaybe,
-                      limitToProject,
-                    )
-
-      countResponse <- triplestore.query(Select.gravsearch(countQuery.toSparql))
+      countResponse <- stageSpan("gravsearch.prequery.execute")(triplestore.query(Select.gravsearch(countSparql)))
 
       _ <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -742,7 +773,8 @@ final class SearchResponderV2Live(
 
     for {
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult          <- gravsearchTypeInspectionRunner.inspectTypes(query.whereClause)
+      typeInspectionResult <-
+        stageSpan("gravsearch.type_inspection")(gravsearchTypeInspectionRunner.inspectTypes(query.whereClause))
       whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(query.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
@@ -752,58 +784,63 @@ final class SearchResponderV2Live(
       querySchema <-
         ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"InputQuery has no querySchema"))
 
-      gravsearchToPrequeryTransformer <-
-        ZIO.attempt(
-          new GravsearchToPrequeryTransformer(
-            constructClause = query.constructClause,
-            typeInspectionResult = typeInspectionResult,
-            querySchema = querySchema,
-            appConfig = appConfig,
-          ),
-        )
-
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
-      ontologiesForInferenceMaybe <-
-        limitToProject.fold(
-          inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
-        )(getProjectOntologies)
-
-      prequery <-
-        queryTraverser.transformConstructToSelect(
-          inputQuery = query.copy(whereClause = whereClauseWithoutAnnotations),
-          transformer = gravsearchToPrequeryTransformer,
-        )
-
-      // variable representing the main resources
-      mainResourceVar: QueryVariable = gravsearchToPrequeryTransformer.mainResourceVariable
-
-      selectTransformer: SelectTransformer =
-        new SelectTransformer(
-          simulateInference = gravsearchToPrequeryTransformer.useInference,
-          sparqlTransformerLive,
-          mainResourceVar,
-          stringFormatter,
-        )
-
-      // Convert the preprocessed query to a non-triplestore-specific query.
-
-      transformedPrequery <-
-        queryTraverser
-          .transformSelectToSelect(
-            inputQuery = prequery,
-            transformer = selectTransformer,
-            limitInferenceToOntologies = ontologiesForInferenceMaybe,
-            limitResultsToProject = limitToProject,
-          )
-
-      prequerySparql = transformedPrequery.toSparql
+      // Generate the prequery: build the transformers, resolve the ontologies relevant for inference, and
+      // turn the input query into a triplestore-specific SELECT prequery.
+      prequeryGenerated <- stageSpan("gravsearch.prequery.generate") {
+                             for {
+                               gravsearchToPrequeryTransformer <-
+                                 ZIO.attempt(
+                                   new GravsearchToPrequeryTransformer(
+                                     constructClause = query.constructClause,
+                                     typeInspectionResult = typeInspectionResult,
+                                     querySchema = querySchema,
+                                     appConfig = appConfig,
+                                   ),
+                                 )
+                               ontologiesForInferenceMaybe <-
+                                 limitToProject.fold(
+                                   inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
+                                 )(getProjectOntologies)
+                               prequery <-
+                                 queryTraverser.transformConstructToSelect(
+                                   inputQuery = query.copy(whereClause = whereClauseWithoutAnnotations),
+                                   transformer = gravsearchToPrequeryTransformer,
+                                 )
+                               mainResourceVar: QueryVariable       = gravsearchToPrequeryTransformer.mainResourceVariable
+                               selectTransformer: SelectTransformer =
+                                 new SelectTransformer(
+                                   simulateInference = gravsearchToPrequeryTransformer.useInference,
+                                   sparqlTransformerLive,
+                                   mainResourceVar,
+                                   stringFormatter,
+                                 )
+                               transformedPrequery <-
+                                 queryTraverser
+                                   .transformSelectToSelect(
+                                     inputQuery = prequery,
+                                     transformer = selectTransformer,
+                                     limitInferenceToOntologies = ontologiesForInferenceMaybe,
+                                     limitResultsToProject = limitToProject,
+                                   )
+                             } yield (
+                               transformedPrequery.toSparql,
+                               gravsearchToPrequeryTransformer,
+                               mainResourceVar,
+                               ontologiesForInferenceMaybe,
+                             )
+                           }
+      (prequerySparql, gravsearchToPrequeryTransformer, mainResourceVar, ontologiesForInferenceMaybe) =
+        prequeryGenerated
 
       prequeryResponseNotMerged <-
-        triplestore
-          .query(Select.gravsearch(prequerySparql))
-          .logError(s"Gravsearch timed out for prequery:\n$prequerySparql")
+        stageSpan("gravsearch.prequery.execute")(
+          triplestore
+            .query(Select.gravsearch(prequerySparql))
+            .logError(s"Gravsearch timed out for prequery:\n$prequerySparql"),
+        )
 
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.size
 
@@ -876,26 +913,37 @@ final class SearchResponderV2Live(
           )
 
           for {
-            mainQuery         <- constructTransformer.transform(mainQuery, ontologiesForInferenceMaybe).map(_.toSparql)
-            mainQueryResponse <- triplestore.query(Construct.gravsearch(mainQuery)).flatMap(_.asExtended)
+            mainQuerySparql <-
+              stageSpan("gravsearch.mainquery.generate")(
+                constructTransformer.transform(mainQuery, ontologiesForInferenceMaybe).map(_.toSparql),
+              )
+            mainQueryResponse <-
+              stageSpan("gravsearch.mainquery.execute")(
+                triplestore.query(Construct.gravsearch(mainQuerySparql)).flatMap(_.asExtended),
+              )
 
-            // Filter out values that the user doesn't have permission to see.
-            queryResultsFilteredForPermissions <-
-              constructResponseUtilV2.splitMainResourcesAndValueRdfData(mainQueryResponse, user)
+            result <-
+              stageSpan("gravsearch.result_transform") {
+                for {
+                  // Filter out values that the user doesn't have permission to see.
+                  queryResultsFilteredForPermissions <-
+                    constructResponseUtilV2.splitMainResourcesAndValueRdfData(mainQueryResponse, user)
 
-            // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
-            queryResWithFullGraphPatternOnlyRequestedValues: ConstructResponseRdfData.RdfResources =
-              MainQueryResultProcessor
-                .getRequestedValuesFromResultsWithFullGraphPattern(
-                  queryResultsFilteredForPermissions.resources,
-                  valueObjectVarsAndIrisPerMainResource,
-                  allResourceVariablesFromTypeInspection,
-                  dependentResourceIrisFromTypeInspection,
-                  gravsearchToPrequeryTransformer,
+                  // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
+                  queryResWithFullGraphPatternOnlyRequestedValues: ConstructResponseRdfData.RdfResources =
+                    MainQueryResultProcessor
+                      .getRequestedValuesFromResultsWithFullGraphPattern(
+                        queryResultsFilteredForPermissions.resources,
+                        valueObjectVarsAndIrisPerMainResource,
+                        allResourceVariablesFromTypeInspection,
+                        dependentResourceIrisFromTypeInspection,
+                        gravsearchToPrequeryTransformer,
+                      )
+                } yield queryResultsFilteredForPermissions.copy(
+                  resources = queryResWithFullGraphPatternOnlyRequestedValues,
                 )
-          } yield queryResultsFilteredForPermissions.copy(
-            resources = queryResWithFullGraphPatternOnlyRequestedValues,
-          )
+              }
+          } yield result
 
         } else {
           // the prequery returned no results, no further query is necessary
@@ -1312,6 +1360,159 @@ final class SearchResponderV2Live(
         ontologyIris.toSet + stringFormatter.toSmartIri(OntologyConstants.KnoraBase.KnoraBaseOntologyIri),
       )
     }
+}
+
+object SearchResponderV2 {
+
+  /** The result type of a Gravsearch execution, used as the leading token of `gravsearch.query.shape`. */
+  enum QueryResultType(val label: String) {
+    case Count        extends QueryResultType("count")
+    case ResourceList extends QueryResultType("resource-list")
+  }
+
+  // ---- span helpers (Decision 3: uniform interrupt + sanitized-error handling) ----------------------
+
+  /**
+   * LOAD-BEARING: this MUST map to UNSET, never ERROR. zio-telemetry's `setFailureStatus` does
+   * {{{
+   *   if (statusCode == ERROR) span.setStatus(ERROR, cause.prettyPrint) // would leak the FILTER literal
+   *   else                     span.setStatus(statusCode)               // UNSET, which the OTel SDK no-ops
+   * }}}
+   * so mapping to UNSET is the ONLY reason `cause.prettyPrint` (the error string + stacktrace, which for a
+   * SPARQL parse failure echoes the offending FILTER literal) never reaches the span status description.
+   * The OTel-Java SDK has no ERROR-immutability guard: if this mapper is ever changed to ERROR, the
+   * library's `setStatus(ERROR, prettyPrint)` runs after ours and overwrites our sanitized description, so
+   * the leak returns silently. Locked by the description-equality regression test, not by run ordering.
+   */
+  private val unsetOnFailure: StatusMapper[Throwable, Any] =
+    StatusMapper.failureNoException[Throwable](_ => StatusCode.UNSET)
+
+  /** Writes the sanitized ERROR status (`"<stage>: <Class>"`, no message) + `error.type` onto the raw span. */
+  private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable]): Unit = {
+    val kind = cause.failureOption.map(_.getClass.getSimpleName).getOrElse("defect")
+    val _    = span.setStatus(StatusCode.ERROR, s"$stage: $kind")
+    cause.failureOption.foreach { e =>
+      val _ = span.setAttribute("error.type", e.getClass.getSimpleName)
+    }
+  }
+
+  /**
+   * Opens an INTERNAL span named `name`, applying uniform interrupt + sanitized-error handling so a stage
+   * failure yields an ERROR span whose description is exactly `"<stage>: <ClassName>"` (no raw
+   * message/stacktrace), and an interruption carries `gravsearch.exit_reason=interrupted` (REQ-1.6, REQ-1.11).
+   *
+   * The raw OTel span is captured up front (inside the span's context) and written to directly in the
+   * `tapErrorCause`/`onExit` finalizers — rather than resolved via `getCurrentSpanUnsafe` at finalizer time,
+   * which during interruption teardown no longer points at this span. Both finalizers run before the
+   * library's span-end (release), so the writes land; the library's own status-setter then runs with the
+   * `unsetOnFailure` mapper (a no-op `setStatus(UNSET)`), leaving our sanitized status intact.
+   */
+  def stageSpan[A](tracing: Tracing, name: String)(effect: Task[A]): Task[A] =
+    tracing.span(name, SpanKind.INTERNAL, statusMapper = unsetOnFailure) {
+      tracing.getCurrentSpanUnsafe.flatMap { span =>
+        effect
+          .tapErrorCause(cause => ZIO.succeed(markSanitizedError(span, name, cause)))
+          .onExit {
+            case Exit.Failure(cause) if cause.isInterrupted =>
+              ZIO.succeed {
+                val _ = span.setAttribute("gravsearch.exit_reason", "interrupted")
+                val _ = span.setStatus(StatusCode.ERROR, "interrupted")
+              }
+            case _ => ZIO.unit
+          }
+      }
+    }
+
+  // ---- query shape (Decision 4: bounded, human-readable, literal-invariant) ------------------------
+
+  final case class QueryShape(label: String, predicates: Seq[String], flags: Map[String, Boolean])
+
+  /** Sets the derived shape on the current (root) span: the bounded label, per-flag booleans and predicates. */
+  def setShapeOnRoot(tracing: Tracing, query: ConstructQuery, resultType: QueryResultType): UIO[Unit] =
+    tracing.getCurrentSpanUnsafe.map { span =>
+      val shape = queryShape(query, resultType)
+      val _     = span.setAttribute("gravsearch.query.shape", shape.label)
+      val _     = span.setAttribute("gravsearch.schema_predicates", shape.predicates.mkString(","))
+      shape.flags.foreach { case (flag, value) =>
+        val _ = span.setAttribute(s"gravsearch.shape.$flag", value)
+      }
+    }
+
+  /**
+   * Derives the low-cardinality `gravsearch.query.shape` from the parsed [[ConstructQuery]] AST: a result-type
+   * token + the structural boolean flags that are set + bucketed pattern/join counts (e.g.
+   * `resource-list|has_filter|has_order_by|patterns:4-7|joins:1`). Only structure is used — never literal
+   * values — so two queries differing only in a FILTER literal yield the same shape (REQ-1.3).
+   */
+  def queryShape(query: ConstructQuery, resultType: QueryResultType): QueryShape = {
+    val flat = flattenPatterns(query.whereClause.patterns)
+
+    val statementPatterns = flat.collect { case s: StatementPattern => s }
+    val statementCount    = statementPatterns.size
+    val joinCount         = flat.count(p => p.isInstanceOf[OptionalPattern] || p.isInstanceOf[UnionPattern])
+
+    val hasLinkTraversal = statementPatterns.exists(_.pred match {
+      case IriRef(_, propertyPathOperator) => propertyPathOperator.nonEmpty
+      case _                               => false
+    })
+    val isFulltext =
+      flat.collect { case FilterPattern(expr) => expr }.flatMap(functionLocalNames).exists(_.startsWith("match"))
+
+    val flags = scala.collection.immutable.ListMap(
+      "has_filter"         -> flat.exists(_.isInstanceOf[FilterPattern]),
+      "has_optional"       -> flat.exists(_.isInstanceOf[OptionalPattern]),
+      "has_union"          -> flat.exists(_.isInstanceOf[UnionPattern]),
+      "has_order_by"       -> query.orderBy.nonEmpty,
+      "has_offset"         -> (query.offset > 0),
+      "has_link_traversal" -> hasLinkTraversal,
+      "is_fulltext"        -> isFulltext,
+    )
+
+    val predicates =
+      statementPatterns.collect { case StatementPattern(_, p: IriRef, _) => localName(p.iri) }.distinct.sorted
+
+    val tokens =
+      (resultType.label +:
+        flags.collect { case (flag, true) => flag }.toSeq) :+
+        s"patterns:${bucket(statementCount)}" :+
+        s"joins:${bucket(joinCount)}"
+
+    QueryShape(tokens.mkString("|"), predicates, flags)
+  }
+
+  /**
+   * Flattens nested group patterns (OPTIONAL / UNION / MINUS / FILTER NOT EXISTS) into a single sequence,
+   * keeping the group nodes themselves so their presence and counts are observable.
+   */
+  private def flattenPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] =
+    patterns.flatMap {
+      case p @ OptionalPattern(ps)        => p +: flattenPatterns(ps)
+      case p @ UnionPattern(blocks)       => p +: blocks.flatMap(flattenPatterns)
+      case p @ MinusPattern(ps)           => p +: flattenPatterns(ps)
+      case p @ FilterNotExistsPattern(ps) => p +: flattenPatterns(ps)
+      case p                              => Seq(p)
+    }
+
+  /** All function-call local names referenced anywhere in a FILTER expression tree. */
+  private def functionLocalNames(expr: Expression): Seq[String] =
+    expr match {
+      case FunctionCallExpression(functionIri, _) => Seq(localName(functionIri.iri))
+      case CompareExpression(l, _, r)             => functionLocalNames(l) ++ functionLocalNames(r)
+      case AndExpression(l, r)                    => functionLocalNames(l) ++ functionLocalNames(r)
+      case OrExpression(l, r)                     => functionLocalNames(l) ++ functionLocalNames(r)
+      case ArithmeticExpression(l, _, r)          => functionLocalNames(l) ++ functionLocalNames(r)
+      case _                                      => Seq.empty
+    }
+
+  /** The local name of an IRI (after the last `#` or `/`), keeping shape tokens/predicates bounded. */
+  private def localName(iri: SmartIri): String = {
+    val s         = iri.toString
+    val afterHash = s.substring(s.lastIndexOf('#') + 1)
+    afterHash.substring(afterHash.lastIndexOf('/') + 1)
+  }
+
+  private def bucket(n: Int): String =
+    if (n == 0) "0" else if (n == 1) "1" else if (n <= 3) "2-3" else if (n <= 7) "4-7" else "8+"
 }
 
 object SearchResponderV2Live {
