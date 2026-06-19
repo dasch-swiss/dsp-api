@@ -24,6 +24,7 @@ import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class ReplaceUserIriInProjectAction(
@@ -100,6 +101,7 @@ final case class ReplaceUserIriInProjectAction(
         .delete(GraphPatterns.tp(s, p, oldIriRdf))
         .insert(GraphPatterns.tp(s, p, newIriRdf))
         .where(GraphPatterns.tp(s, p, oldIriRdf)),
+      SparqlTimeout.Maintenance,
     )
   }
 }

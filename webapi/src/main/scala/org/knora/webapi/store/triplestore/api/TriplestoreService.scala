@@ -215,10 +215,11 @@ object TriplestoreService {
       def gravsearch(query: String): Construct         = Construct(query, SparqlTimeout.Gravsearch)
     }
 
-    case class Update(sparql: String) extends SparqlQuery
+    case class Update(sparql: String, override val timeout: SparqlTimeout = SparqlTimeout.Standard) extends SparqlQuery
     object Update {
-      def apply(query: ModifyQuery): Update     = Update(query.getQueryString)
-      def apply(query: InsertDataQuery): Update = Update(query.getQueryString)
+      def apply(query: ModifyQuery): Update                         = Update(query.getQueryString)
+      def apply(query: ModifyQuery, timeout: SparqlTimeout): Update = Update(query.getQueryString, timeout)
+      def apply(query: InsertDataQuery): Update                     = Update(query.getQueryString)
     }
   }
 }

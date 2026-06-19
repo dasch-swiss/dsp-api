@@ -20,6 +20,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class ReplaceUserIriAction(triplestoreService: TriplestoreService) extends QueryBuilderHelper {
@@ -70,7 +71,7 @@ final case class ReplaceUserIriAction(triplestoreService: TriplestoreService) ex
       .into(g)
       .where(GraphPatterns.tp(s, p2, oldIriRdf).from(g))
 
-    Update(partA.getQueryString + ";\n" + partB.getQueryString)
+    Update(partA.getQueryString + ";\n" + partB.getQueryString, SparqlTimeout.Maintenance)
   }
 }
 
