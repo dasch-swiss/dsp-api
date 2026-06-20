@@ -24,6 +24,7 @@ import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.api.admin.CopyrightHolderAddRequest
 import org.knora.webapi.slice.api.admin.CopyrightHolderReplaceRequest
 import org.knora.webapi.slice.api.admin.ProjectLicenseDto
+import org.knora.webapi.slice.api.admin.ResourceSideLegalInfo
 import org.knora.webapi.slice.api.admin.model.FilterAndOrder
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 
@@ -109,6 +110,28 @@ final case class ProjectsLegalInfoRestService(
       project <- projects.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project $shortcode not found"))
       _       <- projects.replaceCopyrightHolder(project.id, req.`old-value`, req.`new-value`)
     } yield ()
+
+  def setResourceSideLegalInfo(user: User)(
+    shortcode: Shortcode,
+    req: ResourceSideLegalInfo,
+  ): Task[ResourceSideLegalInfo] =
+    for {
+      project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+      _       <- ZIO
+             .fail(
+               BadRequestException(
+                 "Invalid data license: only Creative Commons licenses are allowed " +
+                   s"(${LicenseIri.CC_LICENSES.map(_.value).toList.sorted.mkString(", ")}).",
+               ),
+             )
+             .when(req.dataLicense.exists(license => !LicenseIri.CC_LICENSES.contains(license)))
+      updated <- projects.setResourceSideLegalInfo(
+                   project.id,
+                   req.dataLicense,
+                   req.dataCopyrightHolder,
+                   req.dataAuthorship,
+                 )
+    } yield ResourceSideLegalInfo(updated.dataLicense, updated.dataCopyrightHolder, updated.dataAuthorship)
 }
 
 object ProjectsLegalInfoRestService {

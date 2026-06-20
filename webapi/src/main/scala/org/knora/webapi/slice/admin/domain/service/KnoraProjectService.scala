@@ -13,6 +13,7 @@ import zio.ZLayer
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
@@ -174,6 +175,26 @@ final case class KnoraProjectService(
   def removeAllCopyrightHolder(iri: ProjectIri): Task[KnoraProject] =
     withProjectFromDb(iri) { project =>
       projectRepo.save(project.copy(allowedCopyrightHolders = Set.empty))
+    }
+
+  /**
+   * Sets the resource-side (data) legal info of a project: the data license, the copyright holder and the
+   * default authorship. Each value replaces the current one; passing `None`/`List.empty` clears it.
+   */
+  def setResourceSideLegalInfo(
+    projectIri: ProjectIri,
+    dataLicense: Option[LicenseIri],
+    dataCopyrightHolder: Option[CopyrightHolder],
+    dataAuthorship: List[Authorship],
+  ): Task[KnoraProject] =
+    withProjectFromDb(projectIri) { project =>
+      projectRepo.save(
+        project.copy(
+          dataLicense = dataLicense,
+          dataCopyrightHolder = dataCopyrightHolder,
+          dataAuthorship = dataAuthorship,
+        ),
+      )
     }
 }
 

@@ -269,6 +269,35 @@
     knora-base:objectClassConstraint  knora-base:License .
 
 
+### http://www.knora.org/ontology/knora-admin#hasDataLicense
+
+:hasDataLicense
+    rdf:type                          rdf:Property ;
+    rdfs:comment                      "The license applied to the data (resource records) of a project."@en ;
+    knora-base:subjectClassConstraint :knoraProject ;
+    knora-base:objectClassConstraint  knora-base:License .
+
+
+###  http://www.knora.org/ontology/knora-admin#hasDataCopyrightHolder
+
+:hasDataCopyrightHolder
+    rdf:type                            owl:DatatypeProperty ;
+    rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
+    rdfs:comment                        "The copyright holder applied to the data (resource records) of a project."@en ;
+    knora-base:subjectClassConstraint   :knoraProject ;
+    knora-base:objectDatatypeConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/knora-admin#hasDataAuthorship
+
+:hasDataAuthorship
+    rdf:type                            owl:DatatypeProperty ;
+    rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
+    rdfs:comment                        "A default authorship for the data (resource records) of a project."@en ;
+    knora-base:subjectClassConstraint   :knoraProject ;
+    knora-base:objectDatatypeConstraint xsd:string .
+
+
 ###  http://www.knora.org/ontology/knora-admin#username
 
 :username
@@ -407,6 +436,15 @@
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasEnabledLicense ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasDataLicense ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasDataCopyrightHolder ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasDataAuthorship ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     rdfs:comment    "Represents a project that uses Knora."@en .
 

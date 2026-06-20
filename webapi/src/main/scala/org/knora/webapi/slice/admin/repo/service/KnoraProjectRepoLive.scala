@@ -14,6 +14,7 @@ import zio.*
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
@@ -53,6 +54,9 @@ final case class KnoraProjectRepoLive(
       Vocabulary.KnoraAdmin.projectRestrictedViewWatermark,
       Vocabulary.KnoraAdmin.hasAllowedCopyrightHolder,
       Vocabulary.KnoraAdmin.hasEnabledLicense,
+      Vocabulary.KnoraAdmin.hasDataLicense,
+      Vocabulary.KnoraAdmin.hasDataCopyrightHolder,
+      Vocabulary.KnoraAdmin.hasDataAuthorship,
     ),
   )
 
@@ -107,8 +111,12 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
         selfjoin                <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
         allowedCopyrightHolders <-
           resource.getStringLiterals(hasAllowedCopyrightHolder)(CopyrightHolder.from).map(_.toSet)
-        enabledLicenses <- resource.getObjectIrisConvert(hasEnabledLicense)(LicenseIri.from).map(_.toSet)
-        restrictedView  <- getRestrictedView
+        enabledLicenses     <- resource.getObjectIrisConvert(hasEnabledLicense)(LicenseIri.from).map(_.toSet)
+        dataLicense         <- resource.getObjectIrisConvert(hasDataLicense)(LicenseIri.from).map(_.headOption)
+        dataCopyrightHolder <-
+          resource.getStringLiterals(hasDataCopyrightHolder)(CopyrightHolder.from).map(_.headOption)
+        dataAuthorship <- resource.getStringLiterals(hasDataAuthorship)(Authorship.from).map(_.toList)
+        restrictedView <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),
         shortcode = shortcode,
@@ -122,6 +130,9 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
         restrictedView = restrictedView,
         allowedCopyrightHolders = allowedCopyrightHolders,
         enabledLicenses = enabledLicenses,
+        dataLicense = dataLicense,
+        dataCopyrightHolder = dataCopyrightHolder,
+        dataAuthorship = dataAuthorship,
       )
     }
 
@@ -151,6 +162,15 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
       )
       project.enabledLicenses.foreach(licenseIri =>
         pattern.andHas(Vocabulary.KnoraAdmin.hasEnabledLicense, Rdf.iri(licenseIri.value)),
+      )
+      project.dataLicense.foreach(licenseIri =>
+        pattern.andHas(Vocabulary.KnoraAdmin.hasDataLicense, Rdf.iri(licenseIri.value)),
+      )
+      project.dataCopyrightHolder.foreach(holder =>
+        pattern.andHas(Vocabulary.KnoraAdmin.hasDataCopyrightHolder, holder.value),
+      )
+      project.dataAuthorship.foreach(authorship =>
+        pattern.andHas(Vocabulary.KnoraAdmin.hasDataAuthorship, authorship.value),
       )
       pattern
     }

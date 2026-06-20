@@ -41,6 +41,9 @@ case class KnoraProject(
   restrictedView: RestrictedView,
   allowedCopyrightHolders: Set[CopyrightHolder],
   enabledLicenses: Set[LicenseIri],
+  dataLicense: Option[LicenseIri] = None,
+  dataCopyrightHolder: Option[CopyrightHolder] = None,
+  dataAuthorship: List[Authorship] = List.empty,
 ) extends EntityWithId[ProjectIri]
 
 object KnoraProject {
