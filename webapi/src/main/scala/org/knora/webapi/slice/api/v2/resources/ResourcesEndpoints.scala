@@ -187,6 +187,16 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.contentTypeHeader)
     .description("Update resource metadata. Requires appropriate object access permissions on the resource.")
 
+  val putResourcesAuthorship = baseEndpoints.withUserEndpoint.put
+    .in(base / "authorship")
+    .in(ApiV2.Inputs.formatOptions)
+    .in(stringJsonBody)
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      "Update a resource's authorship (data side). Requires Modify object access permission on the resource.",
+    )
+
   val endpoints: Seq[AnyEndpoint] = Seq(
     getResourcesIiifManifest,
     getResourcesPreview,
@@ -202,6 +212,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     postResourcesDelete,
     postResources,
     putResources,
+    putResourcesAuthorship,
   ).map(_.endpoint).map(_.tag("V2 Resources"))
 }
 

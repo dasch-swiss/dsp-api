@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseResourceRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.UpdateResourceAuthorshipRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.UpdateResourceMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
@@ -172,6 +173,28 @@ final case class ApiComplexV2JsonLdRequestParser(
       lastModificationDate,
       label,
       permissions,
+      newModificationDate,
+      requestingUser,
+      uuid,
+    )
+  }
+
+  def updateResourceAuthorshipRequestV2(
+    str: String,
+    requestingUser: User,
+    uuid: UUID,
+  ): IO[String, UpdateResourceAuthorshipRequestV2] = ZIO.scoped {
+    for {
+      r                    <- RootResource.fromJsonLd(str)
+      resourceIri          <- r.resourceIriOrFail
+      resourceAuthorship   <- r.resourceAuthorship
+      lastModificationDate <- r.lastModificationDateOption
+      newModificationDate  <- r.newModificationDateOption
+    } yield UpdateResourceAuthorshipRequestV2(
+      resourceIri,
+      r.resourceClassSmartIri,
+      resourceAuthorship,
+      lastModificationDate,
       newModificationDate,
       requestingUser,
       uuid,

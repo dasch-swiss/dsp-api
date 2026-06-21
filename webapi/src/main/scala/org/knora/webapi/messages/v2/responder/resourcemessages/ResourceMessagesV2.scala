@@ -669,6 +669,80 @@ case class UpdateResourceMetadataResponseV2(
 }
 
 /**
+ * Represents a request to update a resource's per-resource (data-side) authorship.
+ *
+ * @param resourceIri               the IRI of the resource.
+ * @param resourceClassIri          the IRI of the resource class.
+ * @param resourceAuthorship        the new authorship; an empty sequence clears it.
+ * @param maybeLastModificationDate the resource's last modification date, if any.
+ * @param maybeNewModificationDate  the resource's new last modification date, if any.
+ */
+case class UpdateResourceAuthorshipRequestV2(
+  resourceIri: ResourceIri,
+  resourceClassIri: SmartIri,
+  resourceAuthorship: Seq[Authorship],
+  maybeLastModificationDate: Option[Instant] = None,
+  maybeNewModificationDate: Option[Instant] = None,
+  requestingUser: User,
+  apiRequestID: UUID,
+)
+
+/**
+ * Represents a response after updating a resource's per-resource (data-side) authorship.
+ *
+ * @param resourceIri          the IRI of the resource.
+ * @param resourceClassIri     the IRI of the resource class.
+ * @param lastModificationDate the resource's last modification date.
+ * @param resourceAuthorship   the resource's authorship after the update.
+ */
+case class UpdateResourceAuthorshipResponseV2(
+  resourceIri: ResourceIri,
+  resourceClassIri: SmartIri,
+  lastModificationDate: Instant,
+  resourceAuthorship: Seq[Authorship],
+) extends KnoraJsonLDResponseV2 {
+
+  override protected def toJsonLDDocument(
+    targetSchema: ApiV2Schema,
+    appConfig: AppConfig,
+    schemaOptions: Set[Rendering],
+  ): JsonLDDocument = {
+
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val knoraApiPrefixExpansion: IRI = targetSchema match {
+      case ApiV2Simple  => KnoraApiV2Simple.KnoraApiV2PrefixExpansion
+      case ApiV2Complex => KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+    }
+
+    val context: JsonLDObject = JsonLDUtil.makeContext(
+      fixedPrefixes = Map(
+        "rdf"                          -> Rdf.RdfPrefixExpansion,
+        "rdfs"                         -> Rdfs.RdfsPrefixExpansion,
+        "xsd"                          -> Xsd.XsdPrefixExpansion,
+        KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion,
+      ),
+    )
+
+    val body = JsonLDObject(
+      Map(
+        KnoraApiV2Complex.ResourceIri          -> JsonLDString(resourceIri.value),
+        KnoraApiV2Complex.ResourceClassIri     -> JsonLDString(resourceClassIri.toString),
+        KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+          value = lastModificationDate.toString,
+          datatype = Xsd.DateTimeStamp.toSmartIri,
+        ),
+        KnoraApiV2Complex.HasResourceAuthorship -> JsonLDArray(
+          resourceAuthorship.map(authorship => JsonLDString(authorship.value)),
+        ),
+      ),
+    )
+
+    JsonLDDocument(body = body, context = context)
+  }
+}
+
+/**
  * Represents a request to mark a resource as deleted or to erase it from the triplestore.
  * This request deletes or erases depending on which http route it was sent through.
  *

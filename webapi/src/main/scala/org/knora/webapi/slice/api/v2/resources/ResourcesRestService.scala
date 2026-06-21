@@ -199,6 +199,18 @@ final case class ResourcesRestService(
       response <- renderer.render(result, formatOptions)
     } yield response
 
+  def updateResourceAuthorship(
+    user: User,
+  )(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =
+    for {
+      uuid    <- Random.nextUUID
+      request <- requestParser
+                   .updateResourceAuthorshipRequestV2(jsonLd, user, uuid)
+                   .mapError(BadRequestException.apply)
+      result   <- resourcesService.updateResourceAuthorshipV2(request)
+      response <- renderer.render(result, formatOptions)
+    } yield response
+
   private def parseResourceIri(iri: String): IO[BadRequestException, ResourceIri] =
     ZIO.fromEither(ResourceIri.from(iri)).mapError(BadRequestException.apply)
 

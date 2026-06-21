@@ -47,6 +47,7 @@ import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.resources.repo.ChangeResourceAuthorshipQuery
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
 import org.knora.webapi.slice.resources.repo.DeleteResourceQuery
 import org.knora.webapi.slice.resources.repo.EraseResourceQuery
@@ -212,6 +213,89 @@ final class ResourcesResponderV2(
         maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
         maybePermissions = updateResourceMetadataRequestV2.maybePermissions,
         lastModificationDate = newLmd.value,
+      ),
+    )
+
+  /**
+   * Updates a resource's per-resource (data-side) authorship, gated by `Modify` permission on the resource.
+   *
+   * @param request the update request.
+   * @return an [[UpdateResourceAuthorshipResponseV2]].
+   */
+  def updateResourceAuthorshipV2(
+    request: UpdateResourceAuthorshipRequestV2,
+  ): Task[UpdateResourceAuthorshipResponseV2] =
+    IriLocker.runWithIriLock(request.apiRequestID, request.resourceIri)(
+      for {
+        // Get the metadata of the resource to be updated.
+        resourcesSeq <- getResourcePreviewWithDeletedResource(
+                          resourceIris = Seq(request.resourceIri),
+                          targetSchema = ApiV2Complex,
+                          requestingUser = request.requestingUser,
+                        )
+
+        resource: ReadResourceV2 <- resourcesSeq.toResource(request.resourceIri)
+        internalResourceClassIri  = request.resourceClassIri.toOntologySchema(InternalSchema)
+
+        // Make sure that the resource's class is what the client thinks it is.
+        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
+               val msg =
+                 s"Resource <${resource.resourceIri}> is not a member of class <${request.resourceClassIri}>"
+               ZIO.fail(BadRequestException(msg))
+             }
+
+        _ <- ensureNoConflictingChange(resource, request.maybeLastModificationDate)
+
+        // Check that the user has permission to modify the resource.
+        _ <- resourceUtilV2.checkResourcePermission(
+               resource,
+               Permission.ObjectAccess.Modify,
+               request.requestingUser,
+             )
+
+        // Do the update.
+        project <- projectService
+                     .findById(resource.projectADM.id)
+                     .someOrFail(NotFoundException.notFound(resource.projectADM.id))
+        resourceClassIri <- iriConverter
+                              .asResourceClassIri(internalResourceClassIri)
+                              .mapError(BadRequestException.apply)
+        lmdAndUpdate <- ChangeResourceAuthorshipQuery.build(
+                          project,
+                          request.resourceIri,
+                          resourceClassIri,
+                          request.maybeLastModificationDate.map(LastModificationDate.from),
+                          request.maybeNewModificationDate.map(LastModificationDate.from),
+                          request.resourceAuthorship,
+                        )
+        (newLmd, updateQuery) = lmdAndUpdate
+        _                    <- triplestore.query(updateQuery)
+
+        // Verify that the update was performed by checking the new last modification date.
+        updatedResourcesSeq <-
+          getResourcePreviewWithDeletedResource(
+            resourceIris = Seq(request.resourceIri),
+            targetSchema = ApiV2Complex,
+            requestingUser = request.requestingUser,
+          )
+
+        _ <- ZIO.when(updatedResourcesSeq.resources.size != 1) {
+               ZIO.fail(AssertionException(s"Expected one resource, got ${updatedResourcesSeq.resources.size}"))
+             }
+
+        updatedResource: ReadResourceV2 = updatedResourcesSeq.resources.head
+
+        _ <- ZIO.when(!updatedResource.lastModificationDate.contains(newLmd.value)) {
+               val msg =
+                 s"Updated resource has last modification date ${updatedResource.lastModificationDate}, expected $newLmd"
+               ZIO.fail(UpdateNotPerformedException(msg))
+             }
+
+      } yield UpdateResourceAuthorshipResponseV2(
+        resourceIri = request.resourceIri,
+        resourceClassIri = request.resourceClassIri,
+        lastModificationDate = newLmd.value,
+        resourceAuthorship = request.resourceAuthorship,
       ),
     )
 
