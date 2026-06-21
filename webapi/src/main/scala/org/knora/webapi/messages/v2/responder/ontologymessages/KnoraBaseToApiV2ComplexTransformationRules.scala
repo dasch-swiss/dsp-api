@@ -168,6 +168,11 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfCommentEn("Specifies the license under which a work can be used.")
     .withSubjectType(KA.FileValue)
 
+  private val HasResourceAuthorship = makeOwlDatatypeProperty(KA.HasResourceAuthorship, XSD.STRING)
+    .withRdfLabelEn("has resource authorship")
+    .withRdfCommentEn("Credit, Moral Rights, Author(s) of the resource record (data side)")
+    .withSubjectType(KA.Resource)
+
   private val ValueAsString = makeOwlDatatypeProperty(KA.ValueAsString, XSD.STRING)
     .withSubjectType(KA.Value)
     .withRdfCommentEn("A plain string representation of a value")
@@ -669,6 +674,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     HasAuthorship,
     HasIncomingLinkValue,
     HasLicense,
+    HasResourceAuthorship,
     IntValueAsInt,
     IntervalValueHasEnd,
     IntervalValueHasStart,

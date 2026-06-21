@@ -25,6 +25,7 @@ import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.admin.model.Project
@@ -263,6 +264,7 @@ case class ReadResourceV2(
   lastModificationDate: Option[Instant],
   versionDate: Option[Instant],
   deletionInfo: Option[DeletionInfo],
+  resourceAuthorship: Seq[Authorship] = Seq.empty,
 ) extends ResourceV2
     with KnoraReadV2[ReadResourceV2] {
 
@@ -361,7 +363,17 @@ case class ReadResourceV2(
         )
       }
 
-      requiredMetadataForComplexSchema ++ deletionInfoAsJsonLD ++ lastModDateAsJsonLD ++ versionDateAsJsonLD
+      // The per-resource (data-side) authorship, emitted only when set.
+      val resourceAuthorshipAsJsonLD: Option[(IRI, JsonLDValue)] =
+        if (resourceAuthorship.nonEmpty) {
+          Some(
+            KnoraApiV2Complex.HasResourceAuthorship -> JsonLDArray(
+              resourceAuthorship.map(authorship => JsonLDString(authorship.value)),
+            ),
+          )
+        } else { None }
+
+      requiredMetadataForComplexSchema ++ deletionInfoAsJsonLD ++ lastModDateAsJsonLD ++ versionDateAsJsonLD ++ resourceAuthorshipAsJsonLD
     } else {
       Map.empty[IRI, JsonLDValue]
     }
@@ -504,6 +516,7 @@ case class CreateResourceV2(
   projectADM: Project,
   permissions: Option[String] = None,
   creationDate: Option[Instant] = None,
+  resourceAuthorship: Seq[Authorship] = Seq.empty,
 ) extends ResourceV2 {
   lazy val flatValues: Iterable[CreateValueInNewResourceV2] = values.values.flatten
 

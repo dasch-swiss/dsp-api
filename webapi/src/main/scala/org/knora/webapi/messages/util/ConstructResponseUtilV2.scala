@@ -586,6 +586,11 @@ final class ConstructResponseUtilV2(
     val resourceLastModificationDate =
       resourceWithValueRdfData.maybeDateTimeObject(OntologyConstants.KnoraBase.LastModificationDate.toSmartIri)
     val resourceDeletionInfo = deletionInfoOf(resourceWithValueRdfData)
+    val resourceAuthorship   =
+      resourceWithValueRdfData
+        .maybeStringListObject(OntologyConstants.KnoraBase.HasResourceAuthorship.toSmartIri)
+        .map(_.map(Authorship.unsafeFrom).toSeq)
+        .getOrElse(Seq.empty)
 
     for {
       projectIri <- ZIO.fromEither(ProjectIri.from(resourceAttachedToProject)).mapError(BadRequestException.apply)
@@ -611,6 +616,7 @@ final class ConstructResponseUtilV2(
       lastModificationDate = resourceLastModificationDate,
       versionDate = versionDate,
       deletionInfo = resourceDeletionInfo,
+      resourceAuthorship = resourceAuthorship,
     )
   }
 
