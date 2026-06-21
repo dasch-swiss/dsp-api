@@ -47,6 +47,15 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 - `just stack-stop` - Stop the stack
 - `just stack-init-test` - Initialize with test data
 
+### Bazel & the Nix dev shell
+
+The custom Sipi Docker image is built with **Bazel** (`rules_oci`), not sbt. Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper; the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
+
+- **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command make docker-build-sipi-image`.
+- `make docker-build-sipi-image` - build the Sipi image and load it into the local Docker daemon (`:latest` plus the git-describe version tag); runs `bazel run //sipi:load`.
+- `make docker-publish-sipi-image` - build and push the multi-arch image; runs `bazel run //sipi:push`.
+- The dsp-api and dsp-ingest images stay on sbt. `make docker-build` / `make docker-publish` build all three in order (Sipi first, since dsp-ingest derives from it).
+
 ## Architecture
 
 ### Module Structure
@@ -120,6 +129,7 @@ Each slice typically contains:
 - JDK Temurin 25
 - sbt
 - Docker Desktop
+- Nix (with flakes) + direnv — provides the Bazel dev shell used to build the Sipi image (see "Bazel & the Nix dev shell" above)
 - just (optional)
 - Scala 3.3.X
 
