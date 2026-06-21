@@ -1,0 +1,38 @@
+"""dsp-api Bazel module.
+
+Scope today: build the `knora-sipi` OCI image (a thin overlay on the upstream
+Sipi image). The Scala build (knora-api, dsp-ingest) stays on sbt.
+"""
+
+module(
+    name = "dsp_api",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "rules_oci", version = "2.3.0")
+bazel_dep(name = "rules_pkg", version = "1.2.0")
+bazel_dep(name = "platforms", version = "1.0.0")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+
+# Upstream Sipi image (daschswiss/sipi:v5.0.1), pinned per-arch by manifest
+# digest. Pulling each platform's single image manifest directly avoids
+# index/variant matching — the arm64 entry of the v5.0.1 index carries a `v8`
+# variant, which a bare `linux/arm64` platform request does not match. The tag
+# is recorded in `Dependencies.sipiImage` (build.sbt); bump both together.
+# Index digest: sha256:aa9e049e075782cf6ec792668462088dde7e4ec644f419c3a5dca55c404d31e4
+oci.pull(
+    name = "sipi_base_amd64",
+    image = "index.docker.io/daschswiss/sipi",
+    digest = "sha256:a137157aed6284c789fe9af723beb484e5f5623ebeccd33b62dcabac4964ec56",
+)
+oci.pull(
+    name = "sipi_base_arm64",
+    image = "index.docker.io/daschswiss/sipi",
+    digest = "sha256:9e2e2ee1612d03bbb20746302ddd91a4ad0bc78ce43957710ab6e3f43c9faafe",
+)
+use_repo(
+    oci,
+    "sipi_base_amd64",
+    "sipi_base_arm64",
+)

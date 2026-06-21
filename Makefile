@@ -52,12 +52,16 @@ docker-publish-dsp-api-image: # publish dsp-api image to Dockerhub
 	export DOCKER_BUILDKIT=1; $(SBTX) "webapi / Docker / publish"
 
 .PHONY: docker-build-sipi-image
-docker-build-sipi-image: # build and publish sipi docker image locally
-	 export DOCKER_BUILDKIT=1; $(SBTX) "sipi / Docker / publishLocal"
+docker-build-sipi-image: # build the knora-sipi image with Bazel + load it into the local Docker daemon (:latest and :<version>)
+	@TAG=$$($(MAKE) -s docker-image-tag | tr -d '[:space:]'); \
+		bazel run //sipi:load && \
+		docker tag daschswiss/knora-sipi:latest "daschswiss/knora-sipi:$$TAG" && \
+		echo "Loaded daschswiss/knora-sipi: latest + $$TAG"
 
 .PHONY: docker-publish-sipi-image
-docker-publish-sipi-image: # publish sipi image to Dockerhub
-	export DOCKER_BUILDKIT=1; $(SBTX) "sipi / Docker / publish"
+docker-publish-sipi-image: # build + publish the multi-arch knora-sipi image with Bazel (tags: latest + <version>)
+	@TAG=$$($(MAKE) -s docker-image-tag | tr -d '[:space:]'); \
+		bazel run //sipi:push -- -t latest -t "$$TAG"
 
 .PHONY: docker-publish-ingest-image
 docker-publish-ingest-image: # publish ingest image to Dockerhub

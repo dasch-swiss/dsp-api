@@ -1,0 +1,8 @@
+# Bazel configuration for dsp-api.
+#
+# Scope today: the `knora-sipi` OCI image build (rules_oci). The Scala build
+# stays on sbt — see build.sbt and the Makefile docker-* targets. Image tags
+# are passed explicitly by the Makefile, so no workspace-status stamping here.
+
+common --incompatible_disallow_empty_glob
+build --show_timestamps
