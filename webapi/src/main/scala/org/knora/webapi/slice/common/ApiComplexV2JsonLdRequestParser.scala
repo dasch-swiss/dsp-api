@@ -435,6 +435,9 @@ final case class ApiComplexV2JsonLdRequestParser(
       AttachedToUser,
       HasPermissions,
       CreationDate,
+      // Resource-level (data-side) authorship is read separately (RootResource.resourceAuthorship),
+      // not as a value property — exclude it so it is not parsed as a value.
+      HasResourceAuthorship,
     )
     val valueStatements = r
       .listProperties()
