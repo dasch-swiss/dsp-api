@@ -27,7 +27,6 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
@@ -619,13 +618,12 @@ final class ResourcesResponderV2(
                    val msg = s"When a Gravsearch template Iri is provided, also a header XSLT Iri has to be provided."
                    ZIO.fail(BadRequestException(msg))
                  }
-            // get the template
+            // get the template (passed as a String so it routes through the IRI overload: root + parse spans + shape)
             query <- getGravsearchTemplate(templateIri, requestingUser)
                        .map(_.replace("$resourceIri", resourceIri.value))
-                       .mapAttempt(GravsearchParser.parseQuery)
 
             resource <- searchResponderV2
-                          .gravsearchV2(query, apiV2SchemaWithOption(MarkupRendering.Xml), requestingUser)
+                          .gravsearchV2(query, apiV2SchemaWithOption(MarkupRendering.Xml), requestingUser, None)
                           .flatMap(_.toResource(resourceIri))
           } yield resource
 
@@ -1150,13 +1148,12 @@ final class ResourcesResponderV2(
       // Make a Gravsearch query.
       gravsearchQueryForIncomingLinks <- ZIO.succeed(GetIncomingImageLinksGravsearchQuery.build(resourceIri))
 
-      // Run the query.
-
-      parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
-      searchResponse        <- searchResponderV2.gravsearchV2(
-                          parsedGravsearchQuery,
+      // Run the query, routed through the IRI overload so it gets the root + parse spans + shape.
+      searchResponse <- searchResponderV2.gravsearchV2(
+                          gravsearchQueryForIncomingLinks,
                           apiV2SchemaWithOption(MarkupRendering.Standoff),
                           requestingUser,
+                          None,
                         )
 
       resource     <- searchResponse.toResource(resourceIri)

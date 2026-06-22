@@ -5,6 +5,7 @@
 
 package org.knora.webapi.core
 
+import io.opentelemetry.api
 import zio.*
 import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.telemetry.opentelemetry.tracing.Tracing
@@ -96,7 +97,9 @@ object LayersLive { self =>
     io.opentelemetry.api.OpenTelemetry
     // format: on
 
-  val remainingLayer: URLayer[AppConfigurations, Environment] =
+  def remainingLayer(
+    otelLayer: ULayer[api.OpenTelemetry & Tracing & ContextStorage] = OtelSetup.layer,
+  ): URLayer[AppConfigurations, Environment] =
     ZLayer.makeSome[
       AppConfig & DspIngestConfig & Sipi & Triplestore & GraphRoute & JwtConfig,
       self.Environment,
@@ -120,7 +123,7 @@ object LayersLive { self =>
       ListsResponder.layer,
       OntologyModule.layer,
       OntologyResponderV2.layer,
-      OtelSetup.layer,
+      otelLayer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,
@@ -143,5 +146,5 @@ object LayersLive { self =>
 
   private val loggerAndConfig: ULayer[AppConfigurations] = Logger.fromEnv() >>> AppConfig.layer
 
-  val bootstrap: ULayer[AppConfigurations & Environment] = loggerAndConfig >+> LayersLive.remainingLayer
+  val bootstrap: ULayer[AppConfigurations & Environment] = loggerAndConfig >+> LayersLive.remainingLayer()
 }
