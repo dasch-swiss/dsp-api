@@ -88,13 +88,18 @@ object SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
   private val readSpans: UIO[Chunk[SpanData]] =
     ZIO.succeed(Chunk.fromIterable(exporter.getFinishedSpanItems.asScala.toList))
 
-  /** Reset the exporter, run the responder call, give the synchronous exporter a moment, then read the spans. */
+  /**
+   * Reset the exporter, run the responder call, then read the captured spans. The exporter is a
+   * synchronous [[SimpleSpanProcessor]], so spans are visible as soon as the awaited request ends;
+   * poll until they appear (bounded) instead of a fixed delay - prompt on success, and resilient to
+   * a span finishing on a detached fiber under CI load without paying a flat 500ms per scenario.
+   * Every scenario expects at least one span, so `nonEmpty` is a valid settle condition.
+   */
   private def spansAfter[R](request: ZIO[R, Throwable, Any]): ZIO[R, Throwable, Chunk[SpanData]] =
     for {
       _     <- ZIO.succeed(exporter.reset())
       _     <- request
-      _     <- ZIO.sleep(500.millis)
-      spans <- readSpans
+      spans <- readSpans.repeatUntil(_.nonEmpty).timeoutTo(Chunk.empty[SpanData])(identity)(2.seconds)
     } yield spans
 
   private def runGravsearch(query: String) =
