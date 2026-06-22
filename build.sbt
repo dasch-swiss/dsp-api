@@ -401,8 +401,8 @@ lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
     // spec in its own JVM so its exporter-backed layer is the one in effect — every other spec
     // keeps sharing a single JVM as before.
     Test / testGrouping := {
-      val opts                = (Test / forkOptions).value
-      val (isolated, shared)  = (Test / definedTests).value.partition(
+      val opts               = (Test / forkOptions).value
+      val (isolated, shared) = (Test / definedTests).value.partition(
         _.name.contains("SearchResponderV2GravsearchSpanE2ESpec"),
       )
       val groups = Tests.Group("shared", shared, Tests.SubProcess(opts)) +:
