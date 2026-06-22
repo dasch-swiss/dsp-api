@@ -1,5 +1,32 @@
 # Changelog
 
+## [36.2.0](https://github.com/dasch-swiss/dsp-api/compare/v36.1.0...v36.2.0) (2026-06-19)
+
+
+### Maintenances
+
+* add .kodus-readiness.yml to skip N/A agent-readiness criteria ([#4148](https://github.com/dasch-swiss/dsp-api/issues/4148)) ([c461e80](https://github.com/dasch-swiss/dsp-api/commit/c461e80cad544a80354888ff03ef672bfd446822))
+
+
+### Documentation
+
+* clarify project data import is unrelated to project migration ([#4151](https://github.com/dasch-swiss/dsp-api/issues/4151)) ([ca13a81](https://github.com/dasch-swiss/dsp-api/commit/ca13a81544965f448eb4ee32c126daf335879785))
+
+
+### Enhancements
+
+* **maintenance:** increase the time-out for the `TriplestoreService` in the maintenance endpoint (DEV-6655) ([#4154](https://github.com/dasch-swiss/dsp-api/issues/4154)) ([e67ea33](https://github.com/dasch-swiss/dsp-api/commit/e67ea33f244ecc89b5dcfb835479249387bfd79c))
+
+
+### Bug Fixes
+
+* **maintenance:** allow built-in user IRIs as oldIri in replace-user-iri-in-project (DEV-6650) ([#4152](https://github.com/dasch-swiss/dsp-api/issues/4152)) ([68efd47](https://github.com/dasch-swiss/dsp-api/commit/68efd473dd889f4ea96dd5e6f259fe5c92c943c7))
+
+
+### Tests
+
+* **Observability:** add span-assertion test harness ([#4153](https://github.com/dasch-swiss/dsp-api/issues/4153)) ([9da239a](https://github.com/dasch-swiss/dsp-api/commit/9da239a6244150ac6cb615309ecea4decdaf27b6))
+
 ## [36.1.0](https://github.com/dasch-swiss/dsp-api/compare/v36.0.0...v36.1.0) (2026-06-11)
 
 
