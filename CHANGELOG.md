@@ -1,5 +1,12 @@
 # Changelog
 
+## [36.3.0](https://github.com/dasch-swiss/dsp-api/compare/v36.2.0...v36.3.0) (2026-06-22)
+
+
+### Enhancements
+
+* **Observability:** instrument SearchResponderV2 with per-stage Gravsearch spans (DEV-6635) ([#4155](https://github.com/dasch-swiss/dsp-api/issues/4155)) ([4bfff0f](https://github.com/dasch-swiss/dsp-api/commit/4bfff0f5ec3b0cb0aa9fe451f2d55c9f7473e968))
+
 ## [36.2.0](https://github.com/dasch-swiss/dsp-api/compare/v36.1.0...v36.2.0) (2026-06-19)
 
 
