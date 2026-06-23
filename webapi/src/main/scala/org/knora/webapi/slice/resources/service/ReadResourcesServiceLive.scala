@@ -94,7 +94,23 @@ trait ReadResourcesService {
   ): Task[ReadResourcesSequenceV2]
 }
 
-// Raitis TODO: add scaladoc
+/**
+ * Live implementation of [[ReadResourcesService]].
+ *
+ * Core: `readResourcesSequence_` is the core of this unit. It runs the triplestore query. It rebuilds the resources with
+ * [[ConstructResponseUtilV2]]. It then post-processes every read.
+ *
+ * Public API: Every public trait method is a thin wrapper. Each one calls `readResourcesSequence_`. Each one just fixes a set of
+ * flags: preview, version date, deletion handling, standoff querying, and so on.
+ *
+ * Post-processing: this step augments each `RegionPreviewValue` in the response. For each one, it fetches the referenced
+ * region, to get its geometry. It also fetches the still image that the region is `isRegionOf`, to get the internal
+ * filename. From those, it builds the IIIF preview URL.
+ *
+ * Those extra fetches are only used to build the URL. They are not added to the returned sequence.
+ *
+ * This is the only reason the service depends on [[AppConfig]]: it needs the Sipi base URL.
+ */
 final case class ReadResourcesServiceLive(
   private val appConfig: AppConfig,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
