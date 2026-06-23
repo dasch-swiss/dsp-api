@@ -850,7 +850,8 @@ object ConstructResponseUtilV2SpecFullData {
               valueContent = RegionPreviewValueContentV2(
                 ontologySchema = InternalSchema,
                 regionIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w"),
-                iiifUrl = Some("http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/512,256/0/default.jpg"),
+                // The iiifUrl is computed in ReadResourcesServiceLive (not ConstructResponseUtilV2), so it is None here.
+                iiifUrl = None,
               ),
               valueIri = ValueIri.unsafeFrom(
                 "http://rdfh.ch/0001/thing-with-region-preview/values/XcRF1s0uSXemB5YXeC7djw",

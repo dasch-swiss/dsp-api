@@ -464,8 +464,9 @@ final class ConstructResponseUtilV2(
   private def makeRegionPreviewValueContentV2(
     valueObject: ValueRdfData,
     valueCommentOption: Option[String],
-    projectShortcode: String,
   ): Task[RegionPreviewValueContentV2] = {
+    // The `iiifUrl` is computed downstream in ReadResourcesServiceLive, where the referenced region's
+    // geometry and the still image's internal filename are available.
     val regionIriStr = valueObject.requireIriObject(OntologyConstants.KnoraBase.IsRegionPreviewOf.toSmartIri)
     ZIO
       .fromEither(ResourceIri.from(regionIriStr))
@@ -473,18 +474,10 @@ final class ConstructResponseUtilV2(
         InconsistentRepositoryDataException(s"Could not parse region IRI <$regionIriStr>: $e")
       }
       .map { regionIri =>
-        val maybeFilename = valueObject.maybeStringObject(OntologyConstants.KnoraBase.InternalFilename.toSmartIri)
-        val maybeDimX     = valueObject.maybeIntObject(OntologyConstants.KnoraBase.DimX.toSmartIri)
-        val maybeDimY     = valueObject.maybeIntObject(OntologyConstants.KnoraBase.DimY.toSmartIri)
-        val iiifUrl       = for {
-          filename <- maybeFilename
-          dimX     <- maybeDimX
-          dimY     <- maybeDimY
-        } yield s"${appConfig.sipi.externalBaseUrl}/$projectShortcode/$filename/full/$dimX,$dimY/0/default.jpg"
         RegionPreviewValueContentV2(
           ontologySchema = InternalSchema,
           regionIri = regionIri,
-          iiifUrl = iiifUrl.orElse(Some(appConfig.sipi.externalBaseUrl)),
+          iiifUrl = None,
           comment = valueCommentOption,
         )
       }
@@ -533,7 +526,6 @@ final class ConstructResponseUtilV2(
     versionDate: Option[Instant] = None,
     targetSchema: ApiV2Schema,
     requestingUser: User,
-    projectShortcode: String,
   ): Task[ValueContentV2] = {
     val valueObjectValueHasString =
       valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasString.toSmartIri)
@@ -572,7 +564,7 @@ final class ConstructResponseUtilV2(
           requestingUser,
         )
       case OntologyConstants.KnoraBase.RegionPreviewValue =>
-        makeRegionPreviewValueContentV2(valueObject, valueCommentOption, projectShortcode)
+        makeRegionPreviewValueContentV2(valueObject, valueCommentOption)
       case fileValueClass if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
         makeFileValueContentV2(fileValueClass, valueObject, valueCommentOption)
       case other => throw NotImplementedException(s"Not implemented yet: $other")
@@ -632,7 +624,6 @@ final class ConstructResponseUtilV2(
                               queryStandoff,
                               targetSchema,
                               requestingUser,
-                              project.shortcode.value,
                             )
                           }
                           .map(property -> _)
@@ -686,7 +677,6 @@ final class ConstructResponseUtilV2(
     queryStandoff: Boolean,
     targetSchema: ApiV2Schema,
     requestingUser: User,
-    projectShortcode: String,
   ): Task[ReadValueV2] =
     for {
       valueContent <- createValueContentV2FromValueRdfData(
@@ -695,7 +685,6 @@ final class ConstructResponseUtilV2(
                         queryStandoff = queryStandoff,
                         targetSchema = targetSchema,
                         requestingUser = requestingUser,
-                        projectShortcode = projectShortcode,
                       )
       previousValueIri <- ZIO.foreach(
                             valObj.maybeIriObject(OntologyConstants.KnoraBase.PreviousValue.toSmartIri),

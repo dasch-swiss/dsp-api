@@ -23,7 +23,4 @@
   knora-base:valueCreationDate "2025-05-11T10:00:00.000000Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w";
-  knora-base:valueHasUUID "XcRF1s0uSXemB5YXeC7djw";
-  knora-base:internalFilename "B1D0OkEgfFp-Cew2Seur7Wi.jp2";
-  knora-base:dimX 512;
-  knora-base:dimY 256 .
+  knora-base:valueHasUUID "XcRF1s0uSXemB5YXeC7djw" .
