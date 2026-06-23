@@ -7,6 +7,7 @@ package org.knora.webapi.messages.v2.responder.listsmessages
 
 import zio.test.*
 
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
@@ -18,16 +19,16 @@ import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.slice.common.domain.LanguageCode
 
 /**
- * Tests for the new helpers on [[ListResponderResponseV2]] that drive
+ * Tests the language-handling helpers on [[ListResponderResponseV2]] that drive
  * `?allLanguages=true` emission for `rdfs:label` and `rdfs:comment`.
  *
- * Decisions defended:
- *   - D2 (omission): an empty / untagged-only sequence yields `None` in all-languages mode.
- *   - D3 (sort): output array is sorted by BCP-47 tag, regardless of input order.
- *   - D5 (skip untagged): `PlainStringLiteralV2` entries are dropped.
- *   - D6 (last-wins dedup): repeated tags collapse via `.toMap`, last entry wins.
- *   - D8 (legacy unchanged): with `allLanguages=false` the helper preserves the
- *     single-string shape and language selection of the legacy code path.
+ * Behaviours covered:
+ *   - all-languages mode omits the field when no language-tagged literals exist
+ *   - all-languages output is sorted by BCP-47 tag
+ *   - untagged (`PlainStringLiteralV2`) entries are skipped
+ *   - repeated tags collapse via `.toMap`, last entry wins
+ *   - legacy single-string mode preserves the existing language-selection behaviour
+ *   - `labelEntry` / `commentEntry` attach the correct predicate IRI
  */
 object ListsMessagesV2Spec extends ZIOSpecDefault {
 
@@ -44,39 +45,13 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
     StringLiteralSequenceV2(literals.toVector)
 
   def spec: Spec[Any, Any] = suite("lists v2 label/comment emission helpers")(
-    stringLiteralsToLangMapTests,
     labelOrCommentJsonAllLanguagesTests,
     labelOrCommentJsonLegacyTests,
-  )
-
-  private val stringLiteralsToLangMapTests = suite("stringLiteralsToLangMap")(
-    test("skips PlainStringLiteralV2 and applies last-wins dedup on repeated tags (D5, D6)") {
-      // Mixed input: two German entries (de wins last), one English, one untagged.
-      val input = seqOf(
-        lit("a", LanguageCode.DE),
-        lit("b", LanguageCode.EN),
-        plain("c"),
-        lit("a2", LanguageCode.DE),
-      )
-      val actual = sut.stringLiteralsToLangMap(input)
-      assertTrue(
-        actual == Map("de" -> "a2", "en" -> "b"),
-      )
-    },
-    test("empty sequence yields empty map") {
-      val actual = sut.stringLiteralsToLangMap(StringLiteralSequenceV2.empty)
-      assertTrue(actual.isEmpty)
-    },
-    test("untagged-only sequence yields empty map (D5)") {
-      val input  = seqOf(plain("only-untagged"))
-      val actual = sut.stringLiteralsToLangMap(input)
-      assertTrue(actual.isEmpty)
-    },
+    entryHelperTests,
   )
 
   private val labelOrCommentJsonAllLanguagesTests = suite("labelOrCommentJson (allLanguages=true)")(
-    test("non-alphabetical input is sorted by language tag (D3 — defeats Learning #7)") {
-      // Input order [fr, de, en] must produce output sorted as [de, en, fr].
+    test("non-alphabetical input is sorted by language tag") {
       val input = seqOf(
         lit("Bonjour", LanguageCode.FR),
         lit("Hallo", LanguageCode.DE),
@@ -103,7 +78,32 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
       )
       assertTrue(actual.contains(expected))
     },
-    test("empty sequence returns None (D2 omission)") {
+    test("untagged literals are skipped and last-wins applies on repeated tags") {
+      val input = seqOf(
+        lit("a", LanguageCode.DE),
+        lit("b", LanguageCode.EN),
+        plain("c"),
+        lit("a2", LanguageCode.DE),
+      )
+      val actual = sut.labelOrCommentJson(
+        seq = input,
+        allLanguages = true,
+        userLang = "en",
+        fallbackLang = "en",
+      )
+      val expected = JsonLDArray(
+        Seq(
+          JsonLDObject(
+            Map(JsonLDKeywords.VALUE -> JsonLDString("a2"), JsonLDKeywords.LANGUAGE -> JsonLDString("de")),
+          ),
+          JsonLDObject(
+            Map(JsonLDKeywords.VALUE -> JsonLDString("b"), JsonLDKeywords.LANGUAGE -> JsonLDString("en")),
+          ),
+        ),
+      )
+      assertTrue(actual.contains(expected))
+    },
+    test("empty sequence returns None (field is omitted)") {
       val actual = sut.labelOrCommentJson(
         seq = StringLiteralSequenceV2.empty,
         allLanguages = true,
@@ -112,7 +112,7 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
       )
       assertTrue(actual.isEmpty)
     },
-    test("untagged-only sequence returns None (D2 + D5)") {
+    test("untagged-only sequence returns None") {
       val actual = sut.labelOrCommentJson(
         seq = seqOf(plain("untagged")),
         allLanguages = true,
@@ -124,7 +124,7 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
   )
 
   private val labelOrCommentJsonLegacyTests = suite("labelOrCommentJson (allLanguages=false)")(
-    test("returns a single JsonLDString picked by userLang (D8 unchanged)") {
+    test("returns a single JsonLDString picked by userLang") {
       val input = seqOf(
         lit("Hallo", LanguageCode.DE),
         lit("Hello", LanguageCode.EN),
@@ -138,7 +138,7 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
       )
       assertTrue(actual.contains(JsonLDString("Hallo")))
     },
-    test("falls back to fallbackLang when userLang is missing (D8 unchanged)") {
+    test("falls back to fallbackLang when userLang is missing") {
       val input = seqOf(
         lit("Hello", LanguageCode.EN),
         lit("Bonjour", LanguageCode.FR),
@@ -150,6 +150,27 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
         fallbackLang = "en",
       )
       assertTrue(actual.contains(JsonLDString("Hello")))
+    },
+  )
+
+  private val entryHelperTests = suite("labelEntry / commentEntry")(
+    test("labelEntry attaches rdfs:label as the key") {
+      val input  = seqOf(lit("Hello", LanguageCode.EN))
+      val actual = sut.labelEntry(input, allLanguages = false, userLang = "en", fallbackLang = "en")
+      assertTrue(actual.map(_._1).contains(OntologyConstants.Rdfs.Label))
+    },
+    test("commentEntry attaches rdfs:comment as the key") {
+      val input  = seqOf(lit("note", LanguageCode.EN))
+      val actual = sut.commentEntry(input, allLanguages = false, userLang = "en", fallbackLang = "en")
+      assertTrue(actual.map(_._1).contains(OntologyConstants.Rdfs.Comment))
+    },
+    test("labelEntry returns None when no value would be emitted") {
+      val actual = sut.labelEntry(StringLiteralSequenceV2.empty, allLanguages = true, "en", "en")
+      assertTrue(actual.isEmpty)
+    },
+    test("commentEntry returns None when no value would be emitted") {
+      val actual = sut.commentEntry(StringLiteralSequenceV2.empty, allLanguages = true, "en", "en")
+      assertTrue(actual.isEmpty)
     },
   )
 }
