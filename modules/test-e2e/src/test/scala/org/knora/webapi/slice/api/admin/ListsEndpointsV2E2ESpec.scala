@@ -86,6 +86,42 @@ object ListsEndpointsV2E2ESpec extends E2EZSpec {
         .flatMap(_.assert200)
         .map(actual => assertTrue(actual == expected))
     },
+    test("return the imagesList in all-languages JSON-LD shape when allLanguages=true") {
+      val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/73d0ec0302")
+      val expected =
+        readAsJsonLd(Paths.get("test_data/generated_test_data/listsR2RV2/imagesListAllLanguages.jsonld"))
+      TestApiClient
+        .getJsonLdDocument(uri"/v2/lists/$listIri?allLanguages=true")
+        .flatMap(_.assert200)
+        .map(actual => assertTrue(actual == expected))
+    },
+    test("return the anything treelist in all-languages JSON-LD shape when allLanguages=true") {
+      val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")
+      val expected =
+        readAsJsonLd(Paths.get("test_data/generated_test_data/listsR2RV2/treelistAllLanguages.jsonld"))
+      TestApiClient
+        .getJsonLdDocument(uri"/v2/lists/$listIri?allLanguages=true")
+        .flatMap(_.assert200)
+        .map(actual => assertTrue(actual == expected))
+    },
+    test("return the anything othertreelist in all-languages JSON-LD shape when allLanguages=true") {
+      val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/otherTreeList")
+      val expected =
+        readAsJsonLd(Paths.get("test_data/generated_test_data/listsR2RV2/othertreelistAllLanguages.jsonld"))
+      TestApiClient
+        .getJsonLdDocument(uri"/v2/lists/$listIri?allLanguages=true")
+        .flatMap(_.assert200)
+        .map(actual => assertTrue(actual == expected))
+    },
+    test("return a treelist node in all-languages JSON-LD shape when allLanguages=true") {
+      val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
+      val expected =
+        readAsJsonLd(Paths.get("test_data/generated_test_data/listsR2RV2/treelistnodeAllLanguages.jsonld"))
+      TestApiClient
+        .getJsonLdDocument(uri"/v2/node/$listIri?allLanguages=true")
+        .flatMap(_.assert200)
+        .map(actual => assertTrue(actual == expected))
+    },
     test("perform a request for a node in Turtle") {
       val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/4348fb82f2")
       val expected = readAsTurtle(Paths.get("test_data/generated_test_data/listsR2RV2/imagesListNode.ttl"))
