@@ -11,6 +11,7 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.*
+import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.util.rdf
 import org.knora.webapi.messages.util.rdf.*
@@ -40,6 +41,40 @@ trait ListResponderResponseV2 {
       iri -> stringVals.getPreferredLanguage(userLang, fallbackLang),
     ).collect { case (iri: IRI, Some(strVal: String)) =>
       iri -> JsonLDString(strVal)
+    }
+
+  /**
+   * Collapses a [[StringLiteralSequenceV2]] into a map from BCP-47 language tag to value.
+   * Untagged literals (`PlainStringLiteralV2`) are skipped (REQ-1.8, D5). When multiple
+   * literals share the same language tag, the last one wins via `.toMap` (REQ-1.9, D6).
+   */
+  protected def stringLiteralsToLangMap(seq: StringLiteralSequenceV2): Map[String, String] =
+    seq.stringLiterals.collect { case LanguageTaggedStringLiteralV2(value, language) =>
+      language.value -> value
+    }.toMap
+
+  /**
+   * Builds the JSON-LD value for an `rdfs:label` or `rdfs:comment` field, dispatching on
+   * the `allLanguages` flag.
+   *
+   *   - When `allLanguages` is `true`, returns a [[JsonLDArray]] of language-tagged objects
+   *     (sorted alphabetically by language tag — REQ-1.7, D3) or `None` when the underlying
+   *     sequence has no language-tagged literals (REQ-1.6, D2 — field is then omitted from
+   *     the surrounding `JsonLDObject` via `++ Option`).
+   *   - When `allLanguages` is `false`, returns the legacy single [[JsonLDString]] picked by
+   *     the user's preferred language with the configured fallback (REQ-1.10, D8 unchanged).
+   */
+  protected def labelOrCommentJson(
+    seq: StringLiteralSequenceV2,
+    allLanguages: Boolean,
+    userLang: String,
+    fallbackLang: String,
+  ): Option[JsonLDValue] =
+    if (allLanguages) {
+      val tagged = stringLiteralsToLangMap(seq)
+      if (tagged.nonEmpty) Some(JsonLDUtil.objectsWithLangsToJsonLDArray(tagged)) else None
+    } else {
+      seq.getPreferredLanguage(userLang, fallbackLang).map(JsonLDString.apply)
     }
 
 }
@@ -72,15 +107,12 @@ case class ListGetResponseV2(
      * @return a [[JsonLDObject]] representing the node.
      */
     def makeNode(node: ListChildNodeADM): JsonLDObject = {
-      val label: Map[IRI, JsonLDString] =
-        makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, node.labels, userLang, fallbackLang)
-      val comment: Map[IRI, JsonLDString] =
-        makeMapIriToJSONLDString(
-          OntologyConstants.Rdfs.Comment,
-          node.comments,
-          userLang,
-          fallbackLang,
-        )
+      val label: Option[(IRI, JsonLDValue)] =
+        labelOrCommentJson(node.labels, allLanguages, userLang, fallbackLang)
+          .map(OntologyConstants.Rdfs.Label -> _)
+      val comment: Option[(IRI, JsonLDValue)] =
+        labelOrCommentJson(node.comments, allLanguages, userLang, fallbackLang)
+          .map(OntologyConstants.Rdfs.Comment -> _)
 
       val position: Map[IRI, JsonLDInt] = Map(
         OntologyConstants.KnoraBase.ListNodePosition.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDInt(
@@ -107,7 +139,7 @@ case class ListGetResponseV2(
       )
 
       JsonLDObject(
-        Map(
+        Map[IRI, JsonLDValue](
           "@id"   -> JsonLDString(node.id),
           "@type" -> JsonLDString(
             OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
@@ -118,11 +150,13 @@ case class ListGetResponseV2(
 
     val listinfo = list.listinfo
 
-    val label: Map[IRI, JsonLDString] =
-      makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, listinfo.labels, userLang, fallbackLang)
+    val label: Option[(IRI, JsonLDValue)] =
+      labelOrCommentJson(listinfo.labels, allLanguages, userLang, fallbackLang)
+        .map(OntologyConstants.Rdfs.Label -> _)
 
-    val comment: Map[IRI, JsonLDString] =
-      makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, listinfo.comments, userLang, fallbackLang)
+    val comment: Option[(IRI, JsonLDValue)] =
+      labelOrCommentJson(listinfo.comments, allLanguages, userLang, fallbackLang)
+        .map(OntologyConstants.Rdfs.Comment -> _)
 
     val children: Map[IRI, JsonLDArray] = if (list.children.nonEmpty) {
       Map(
@@ -142,7 +176,7 @@ case class ListGetResponseV2(
     )
 
     val body = rdf.JsonLDObject(
-      Map(
+      Map[IRI, JsonLDValue](
         "@id"   -> JsonLDString(listinfo.id),
         "@type" -> JsonLDString(
           OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
@@ -192,18 +226,20 @@ case class NodeGetResponseV2(
 
       case root: ListRootNodeInfoADM => {
 
-        val label: Map[IRI, JsonLDString] =
-          makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, root.labels, userLang, fallbackLang)
+        val label: Option[(IRI, JsonLDValue)] =
+          labelOrCommentJson(root.labels, allLanguages, userLang, fallbackLang)
+            .map(OntologyConstants.Rdfs.Label -> _)
 
-        val comment: Map[IRI, JsonLDString] =
-          makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, root.comments, userLang, fallbackLang)
+        val comment: Option[(IRI, JsonLDValue)] =
+          labelOrCommentJson(root.comments, allLanguages, userLang, fallbackLang)
+            .map(OntologyConstants.Rdfs.Comment -> _)
 
         val position: Map[IRI, JsonLDInt] = Map.empty[IRI, JsonLDInt]
 
-        val rootNode = Map.empty[IRI, JsonLDString]
+        val rootNode = Map.empty[IRI, JsonLDValue]
 
         JsonLDObject(
-          Map(
+          Map[IRI, JsonLDValue](
             "@id"   -> JsonLDString(root.id),
             "@type" -> JsonLDString(
               OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
@@ -214,11 +250,13 @@ case class NodeGetResponseV2(
 
       case child: ListChildNodeInfoADM => {
 
-        val label: Map[IRI, JsonLDString] =
-          makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, child.labels, userLang, fallbackLang)
+        val label: Option[(IRI, JsonLDValue)] =
+          labelOrCommentJson(child.labels, allLanguages, userLang, fallbackLang)
+            .map(OntologyConstants.Rdfs.Label -> _)
 
-        val comment: Map[IRI, JsonLDString] =
-          makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, child.comments, userLang, fallbackLang)
+        val comment: Option[(IRI, JsonLDValue)] =
+          labelOrCommentJson(child.comments, allLanguages, userLang, fallbackLang)
+            .map(OntologyConstants.Rdfs.Comment -> _)
 
         val position: Map[IRI, JsonLDInt] = Map(
           OntologyConstants.KnoraBase.ListNodePosition.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDInt(
@@ -232,7 +270,7 @@ case class NodeGetResponseV2(
         )
 
         JsonLDObject(
-          Map(
+          Map[IRI, JsonLDValue](
             "@id"   -> JsonLDString(child.id),
             "@type" -> JsonLDString(
               OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
