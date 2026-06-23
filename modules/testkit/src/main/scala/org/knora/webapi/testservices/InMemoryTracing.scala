@@ -42,44 +42,58 @@ object InMemoryTracing {
   private val exporterLayer: ULayer[InMemorySpanExporter] =
     ZLayer.scoped(ZIO.fromAutoCloseable(ZIO.succeed(InMemorySpanExporter.create())))
 
-  private val openTelemetryLayer: URLayer[InMemorySpanExporter, api.OpenTelemetry] = {
+  // Builds an OpenTelemetry SDK that exports finished spans to the given exporter. Closes over the exporter
+  // directly (no `ZIO.service` indirection) so the SDK provably writes to that exact instance.
+  private def openTelemetrySdk(exporter: InMemorySpanExporter): RIO[Scope, api.OpenTelemetry] = {
     val traceparentPropagator = ContextPropagators.create(
       TextMapPropagator.composite(
         W3CTraceContextPropagator.getInstance,
       ),
     )
-    ZLayer.scoped {
-      for {
-        exporter       <- ZIO.service[InMemorySpanExporter]
-        spanProcessor  <- ZIO.fromAutoCloseable(ZIO.succeed(SimpleSpanProcessor.create(exporter)))
-        tracerProvider <-
-          ZIO.fromAutoCloseable(
-            ZIO.succeed(
-              SdkTracerProvider
-                .builder()
-                .setResource(Resource.create(Attributes.of(ServiceAttributes.SERVICE_NAME, "dsp-api-test")))
-                .addSpanProcessor(spanProcessor)
-                .build(),
-            ),
-          )
-        openTelemetry <-
-          ZIO.fromAutoCloseable(
-            ZIO.succeed(
-              OpenTelemetrySdk
-                .builder()
-                .setTracerProvider(tracerProvider)
-                .setPropagators(traceparentPropagator)
-                .build,
-            ),
-          )
-      } yield openTelemetry
-    }
+    for {
+      spanProcessor  <- ZIO.fromAutoCloseable(ZIO.succeed(SimpleSpanProcessor.create(exporter)))
+      tracerProvider <-
+        ZIO.fromAutoCloseable(
+          ZIO.succeed(
+            SdkTracerProvider
+              .builder()
+              .setResource(Resource.create(Attributes.of(ServiceAttributes.SERVICE_NAME, "dsp-api-test")))
+              .addSpanProcessor(spanProcessor)
+              .build(),
+          ),
+        )
+      openTelemetry <-
+        ZIO.fromAutoCloseable(
+          ZIO.succeed(
+            OpenTelemetrySdk
+              .builder()
+              .setTracerProvider(tracerProvider)
+              .setPropagators(traceparentPropagator)
+              .build,
+          ),
+        )
+    } yield openTelemetry
   }
+
+  private val openTelemetryLayer: URLayer[InMemorySpanExporter, api.OpenTelemetry] =
+    ZLayer.scoped(ZIO.serviceWithZIO[InMemorySpanExporter](openTelemetrySdk).orDie)
 
   val layer: ULayer[api.OpenTelemetry & Tracing & ContextStorage & InMemorySpanExporter] =
     ZLayer.make[api.OpenTelemetry & Tracing & ContextStorage & InMemorySpanExporter](
       exporterLayer,
       openTelemetryLayer,
+      OpenTelemetry.contextZIO,
+      OpenTelemetry.tracing("dsp-api-test"),
+    )
+
+  /**
+   * Like [[layer]] but backed by an externally supplied exporter, so a caller can hold the exporter
+   * reference and read [[InMemorySpanExporter#getFinishedSpanItems]] directly (e.g. when wiring this as the
+   * application's OTel layer in an end-to-end spec, where the exporter is not exposed in the test env).
+   */
+  def layerFor(exporter: InMemorySpanExporter): ULayer[api.OpenTelemetry & Tracing & ContextStorage] =
+    ZLayer.make[api.OpenTelemetry & Tracing & ContextStorage](
+      ZLayer.scoped(openTelemetrySdk(exporter)).orDie,
       OpenTelemetry.contextZIO,
       OpenTelemetry.tracing("dsp-api-test"),
     )

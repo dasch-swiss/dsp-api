@@ -394,6 +394,21 @@ lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
     Test / parallelExecution  := false,
     Test / testOptions += Tests.Argument("-oDF"), // full stack traces and durations
     Test / baseDirectory := (ThisBuild / baseDirectory).value,
+    // SearchResponderV2GravsearchSpanE2ESpec asserts on the OpenTelemetry spans captured by an
+    // in-memory exporter that it wires in via the overridable `E2EZSpec.otelLayer`. In a shared
+    // forked JVM the OTel `Tracing` service is effectively shared across specs (the first spec to
+    // build it wins), which silently bypasses the override and leaves the exporter empty. Run that
+    // spec in its own JVM so its exporter-backed layer is the one in effect — every other spec
+    // keeps sharing a single JVM as before.
+    Test / testGrouping := {
+      val opts               = (Test / forkOptions).value
+      val (isolated, shared) = (Test / definedTests).value.partition(
+        _.name.contains("SearchResponderV2GravsearchSpanE2ESpec"),
+      )
+      val groups = Tests.Group("shared", shared, Tests.SubProcess(opts)) +:
+        isolated.map(t => Tests.Group(t.name, Seq(t), Tests.SubProcess(opts)))
+      groups.filter(_.tests.nonEmpty)
+    },
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,
   )
   .settings(LocalSettings.localScalacOptions: _*)

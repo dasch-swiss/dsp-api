@@ -25,7 +25,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionT
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.*
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
@@ -1560,9 +1559,8 @@ final class ValuesResponderV2(
           propertyIris = propertyIrisForGravsearchQuery,
         )
 
-      // Run the query.
-      query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
-      searchResponse <- searchResponderV2.gravsearchV2(query, SchemaRendering.default, requestingUser)
+      // Run the query, routed through the IRI overload so it gets the root + parse spans + shape.
+      searchResponse <- searchResponderV2.gravsearchV2(gravsearchQuery, SchemaRendering.default, requestingUser, None)
       result         <- searchResponse.toResource(resourceIri)
     } yield result
 
