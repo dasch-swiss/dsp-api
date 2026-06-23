@@ -9213,6 +9213,21 @@
             "@id": "knora-api:hasValue"
         },
         {
+            "rdfs:label": "is an IIIF URL",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:iiifUrl",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "IIIF URL for the region preview"
+        },
+        {
             "rdfs:label": "Integer value as integer",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
