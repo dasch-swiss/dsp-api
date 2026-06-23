@@ -54,6 +54,11 @@ nav:
   - Publishing and Deployment:
       - Publishing: 04-publishing-deployment/publishing.md
       - Configuration: 04-publishing-deployment/configuration.md
+  - Observability:
+      - Overview: observability/index.md
+      - Gravsearch Trace Runbook: observability/gravsearch-trace-runbook.md
+      - TraceQL Recipes: observability/traceql-recipes.md
+      - Instrumentation Recipe: observability/instrumentation-recipe.md
   - DSP Internals:
       - Design:
           - Architectural Decision Records (ADR):
