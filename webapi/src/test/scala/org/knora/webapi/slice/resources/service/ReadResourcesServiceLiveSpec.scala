@@ -17,17 +17,18 @@ import org.knora.webapi.InternalSchema
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadLinkValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
@@ -88,98 +89,103 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
     suite("ReadResourcesServiceLive")(
       test("readResourcesSequence returns a ReadResourceV2 matching the triplestore data") {
         val projectADM = Project(
-          id          = KnoraProject.ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
-          shortname   = Shortname.unsafeFrom("anything"),
-          shortcode   = Shortcode.unsafeFrom("0001"),
-          longname    = Some(Longname.unsafeFrom("Anything Project")),
+          id = KnoraProject.ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
+          shortname = Shortname.unsafeFrom("anything"),
+          shortcode = Shortcode.unsafeFrom("0001"),
+          longname = Some(Longname.unsafeFrom("Anything Project")),
           description = Seq(PlainStringLiteralV2("Anything Project")),
-          keywords    = List("arbitrary test data", "things"),
-          logo        = None,
-          ontologies  = List.empty,
-          status      = Status.Active,
-          selfjoin    = SelfJoin.CannotJoin,
+          keywords = List("arbitrary test data", "things"),
+          logo = None,
+          ontologies = List.empty,
+          status = Status.Active,
+          selfjoin = SelfJoin.CannotJoin,
           allowedCopyrightHolders = Set.empty,
-          enabledLicenses         = Set.empty,
+          enabledLicenses = Set.empty,
         )
 
         val nestedResource = ReadResourceV2(
-          resourceIri          = ResourceIri.unsafeFrom("http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"),
-          label                = "Uniform",
-          resourceClassIri     = sf.toSmartIri("http://www.knora.org/ontology/0001/anything#Thing"),
-          attachedToUser       = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-          projectADM           = projectADM,
-          permissions          = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-          userPermission       = Permission.ObjectAccess.ChangeRights,
-          values               = Map.empty,
-          creationDate         = Instant.parse("2016-10-17T17:16:04.916Z"),
+          resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"),
+          label = "Uniform",
+          resourceClassIri = sf.toSmartIri("http://www.knora.org/ontology/0001/anything#Thing"),
+          attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+          projectADM = projectADM,
+          permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+          userPermission = Permission.ObjectAccess.ChangeRights,
+          values = Map.empty,
+          creationDate = Instant.parse("2016-10-17T17:16:04.916Z"),
           lastModificationDate = None,
-          versionDate          = None,
-          deletionInfo         = None,
+          versionDate = None,
+          deletionInfo = None,
         )
 
         val linkValue = ReadLinkValueV2(
-          valueIri         = ValueIri.unsafeFrom("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ/values/xB88vMy-Tc2ZCVh9Km7rVw"),
-          attachedToUser   = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-          permissions      = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-          userPermission   = Permission.ObjectAccess.ChangeRights,
+          valueIri = ValueIri.unsafeFrom("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ/values/xB88vMy-Tc2ZCVh9Km7rVw"),
+          attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+          permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-10-17T17:16:04.916Z"),
-          valueHasUUID     = UUID.fromString("c41f3cbc-ccbe-4dcd-9909-587d2a6eeb57"),
-          valueContent     = LinkValueContentV2(
-            ontologySchema      = InternalSchema,
+          valueHasUUID = UUID.fromString("c41f3cbc-ccbe-4dcd-9909-587d2a6eeb57"),
+          valueContent = LinkValueContentV2(
+            ontologySchema = InternalSchema,
             referredResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"),
             referredResourceExists = true,
-            isIncomingLink      = false,
-            nestedResource      = Some(nestedResource),
-            comment             = None,
+            isIncomingLink = false,
+            nestedResource = Some(nestedResource),
+            comment = None,
           ),
           valueHasRefCount = 1,
           previousValueIri = None,
-          deletionInfo     = None,
+          deletionInfo = None,
         )
 
         val expected = ReadResourceV2(
-          resourceIri      = resourceIri,
-          label            = "Sierra",
+          resourceIri = resourceIri,
+          label = "Sierra",
           resourceClassIri = sf.toSmartIri("http://www.knora.org/ontology/0001/anything#Thing"),
-          attachedToUser   = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-          projectADM       = projectADM,
-          permissions      = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-          userPermission   = Permission.ObjectAccess.ChangeRights,
-          values           = Map(
+          attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+          projectADM = projectADM,
+          permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+          userPermission = Permission.ObjectAccess.ChangeRights,
+          values = Map(
             sf.toSmartIri("http://www.knora.org/ontology/0001/anything#isPartOfOtherThingValue") -> Seq(linkValue),
           ),
-          creationDate         = Instant.parse("2016-10-17T17:16:04.916Z"),
+          creationDate = Instant.parse("2016-10-17T17:16:04.916Z"),
           lastModificationDate = None,
-          versionDate          = None,
-          deletionInfo         = None,
+          versionDate = None,
+          deletionInfo = None,
         )
 
         for {
           _        <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           sequence <- ZIO.serviceWithZIO[ReadResourcesService](
                         _.readResourcesSequence(
-                          resourceIris   = Seq(resourceIri),
-                          targetSchema   = ApiV2Complex,
+                          resourceIris = Seq(resourceIri),
+                          targetSchema = ApiV2Complex,
                           requestingUser = TestDataFactory.User.rootUser,
                         ),
                       )
         } yield assertTrue(sequence.resources == Seq(expected))
       },
-      test("readResourcesSequence dies when the resource contains a RegionPreviewValue") {
+      test("readResourcesSequence augments a RegionPreviewValue with a IIIF URL computed from the region geometry") {
         val regionPreviewHostResourceIri =
           ResourceIri.unsafeFrom("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg")
+        // pct:x,y,w,h is the bounding box of the region's geometry (in percent); /full/ serves it at native size.
+        val expectedIiifUrl =
+          "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:39.796687,24.423475,9.266166,17.576948/full/0/default.jpg"
         for {
-          _ <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
-          exit <- ZIO
-                    .serviceWithZIO[ReadResourcesService](
-                      _.readResourcesSequence(
-                        resourceIris   = Seq(regionPreviewHostResourceIri),
-                        targetSchema   = ApiV2Complex,
-                        requestingUser = TestDataFactory.User.rootUser,
-                      ),
-                    )
-                    .exit
-        } yield assertTrue(exit.isFailure) && assert(exit)(Assertion.dies(Assertion.anything))
+          _        <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          sequence <- ZIO.serviceWithZIO[ReadResourcesService](
+                        _.readResourcesSequence(
+                          resourceIris = Seq(regionPreviewHostResourceIri),
+                          targetSchema = ApiV2Complex,
+                          requestingUser = TestDataFactory.User.rootUser,
+                        ),
+                      )
+          iiifUrls = sequence.resources
+                       .flatMap(_.values.values.flatten)
+                       .map(_.valueContent)
+                       .collect { case rp: RegionPreviewValueContentV2 => rp.iiifUrl }
+        } yield assertTrue(iiifUrls == Seq(Some(expectedIiifUrl)))
       },
     ).provide(
       AppConfig.layer,

@@ -41,8 +41,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValu
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntervalValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageVectorFileValueContentV2

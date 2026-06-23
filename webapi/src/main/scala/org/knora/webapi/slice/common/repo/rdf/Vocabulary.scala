@@ -159,7 +159,7 @@ object Vocabulary {
 
     val hasTextValueType: Iri  = iri(kb + "hasTextValueType")
     val isRegionPreviewOf: Iri = iri(kb + "isRegionPreviewOf")
-    val isRegionOf: Iri = iri(kb + "isRegionOf")
+    val isRegionOf: Iri        = iri(kb + "isRegionOf")
 
     val UnformattedText: Iri     = iri(kb + "UnformattedText")
     val FormattedText: Iri       = iri(kb + "FormattedText")

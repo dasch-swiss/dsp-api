@@ -16,6 +16,7 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -32,7 +33,6 @@ import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
-import org.knora.webapi.messages.OntologyConstants
 
 /**
  * Represents a IIIF manifest for the images that are `knora-base:isPartOf` the specified

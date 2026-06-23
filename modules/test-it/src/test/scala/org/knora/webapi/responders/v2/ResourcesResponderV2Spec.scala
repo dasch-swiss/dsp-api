@@ -5,48 +5,28 @@
 
 package org.knora.webapi.responders.v2
 
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
-import org.xmlunit.diff.Diff
 import zio.*
 import zio.test.*
-import zio.test.Assertion.*
 
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.UUID.*
 
 import dsp.errors.*
-import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
-import org.knora.webapi.E2EZSpec.failsWithMessageEqualTo
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
-import org.knora.webapi.messages.util.CalendarNameGregorian
-import org.knora.webapi.messages.util.DatePrecisionYear
-import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.models.filemodels.*
-import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.api.v2.GraphDirection
-import org.knora.webapi.slice.api.v2.VersionDate
-import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
-import org.knora.webapi.slice.common.ValueIri
-import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.resources.repo.GetStandoffTagByUUIDQuery
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
