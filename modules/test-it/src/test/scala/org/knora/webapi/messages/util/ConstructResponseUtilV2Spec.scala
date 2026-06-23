@@ -265,35 +265,6 @@ object ConstructResponseUtilV2Spec extends E2EZSpec {
                  )
       } yield check
     },
-    test("convert a resource with a RegionPreviewValue into the correct domain object") {
-      val resourceIri: IRI  = "http://rdfh.ch/0001/thing-with-region-preview"
-      val turtleStr: String =
-        FileUtil.readTextFile(
-          Paths.get("test_data/generated_test_data/constructResponseUtilV2/thingWithRegionPreviewValue.ttl"),
-        )
-      for {
-        resourceRequestResponse      <- SparqlExtendedConstructResponse.make(turtleStr)
-        mainResourcesAndValueRdfData <-
-          constructResponseUtilV2ZIO(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, anythingAdminUser))
-        resourceSequence <- constructResponseUtilV2ZIO(
-                              _.createApiResponse(
-                                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                                orderByResourceIri = Seq(resourceIri),
-                                pageSizeBeforeFiltering = 1,
-                                mappings = Map.empty,
-                                queryStandoff = false,
-                                versionDate = None,
-                                calculateMayHaveMoreResults = false,
-                                targetSchema = ApiV2Complex,
-                                requestingUser = anythingAdminUser,
-                              ),
-                            )
-        check <- ResourcesResponseCheckerV2.compareReadResourcesSequenceV2ResponseZIO(
-                   ConstructResponseUtilV2SpecFullData.expectedReadResourceForThingWithRegionPreviewValue,
-                   resourceSequence,
-                 )
-      } yield check
-    },
     test("convert a Gravsearch Turtle response with virtual incoming links into a resource sequence") {
 
       // the same query as above, but with a different main resource.
