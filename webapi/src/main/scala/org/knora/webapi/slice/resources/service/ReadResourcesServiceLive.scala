@@ -13,10 +13,17 @@ import java.util.UUID
 import dsp.errors.NotFoundException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
+import org.knora.webapi.messages.v2.responder.valuemessages.GeomValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ReadOtherValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ResourceIri
@@ -24,7 +31,6 @@ import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
-import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
 
 trait ReadResourcesService {
   def readResourcesSequence(
@@ -90,6 +96,7 @@ trait ReadResourcesService {
 
 // Raitis TODO: add scaladoc
 final case class ReadResourcesServiceLive(
+  private val appConfig: AppConfig,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val triplestore: TriplestoreService,
@@ -142,7 +149,7 @@ final case class ReadResourcesServiceLive(
             constructResponseUtilV2.mappingsFromQueryResults(resourcesWithValues.resources)
           }
 
-        readSequence <-
+        baseSequence <-
           constructResponseUtilV2.createApiResponse(
             mainResourcesAndValueRdfData = resourcesWithValues,
             orderByResourceIri = resourceIriStrings,
@@ -155,14 +162,7 @@ final case class ReadResourcesServiceLive(
             requestingUser = requestingUser,
           )
 
-        regionPreviewValues =
-          readSequence.resources.flatMap(_.values.values.flatten).map(_.valueContent).collect {
-            case x: RegionPreviewValueContentV2 => x
-          }
-
-        regionsAndImages <- findRegionsAndStillImages(regionPreviewValues, targetSchema, requestingUser)
-
-        _ = println(s"regionsAndImages: $regionsAndImages")
+        readSequence <- augmentRegionPreviewValues(baseSequence, targetSchema, requestingUser)
 
         _ <-
           ZIO.foreach(readSequence.checkResourceIris(resourceIris.toSet, readSequence)) { throwable =>
@@ -218,17 +218,93 @@ final case class ReadResourcesServiceLive(
       .withParallelism(5)
       .map(_.fold(ReadResourcesSequenceV2(Seq.empty))(_ ++ _))
 
-  private def findRegionsAndStillImages(
-    regionPreviews: Seq[RegionPreviewValueContentV2],
+  /**
+   * Augments every [[RegionPreviewValueContentV2]] in `seq` with a computed IIIF URL.
+   *
+   * For each referenced region we fetch the region resource (for its geometry) and the still image
+   * the region is `isRegionOf` (for its internal filename and project shortcode). The geometry's
+   * bounding box becomes the IIIF region selector `pct:x,y,w,h`, and the URL is rendered at full size:
+   * `{sipiBaseUrl}/{shortcode}/{filename}/pct:x,y,w,h/full/0/default.jpg`.
+   */
+  private def augmentRegionPreviewValues(
+    seq: ReadResourcesSequenceV2,
     ts: ApiV2Schema,
     user: User,
-  ): Task[ReadResourcesSequenceV2] =
-    for {
-      regions  <- readResourcesSequence_(regionPreviews.map(_.regionIri), targetSchema = ts, requestingUser = user)
-      imageIris = regions.resources.flatMap(_.isRegionOfValueReferredIri.toList)
-      images   <- readResourcesSequence_(imageIris, targetSchema = ts, requestingUser = user)
-      aggregate = (regions ++ images)
-    } yield aggregate
+  ): Task[ReadResourcesSequenceV2] = {
+    val regionIris = seq.resources
+      .flatMap(_.values.values.flatten)
+      .map(_.valueContent)
+      .collect { case rp: RegionPreviewValueContentV2 => rp.regionIri }
+      .distinct
+
+    if (regionIris.isEmpty) ZIO.succeed(seq)
+    else
+      for {
+        regions  <- readResourcesSequence_(regionIris, targetSchema = ts, requestingUser = user)
+        imageIris = regions.resources.flatMap(_.isRegionOfValueReferredIri.toList).distinct
+        images   <- readResourcesSequence_(imageIris, targetSchema = ts, requestingUser = user)
+        iiifUrls  = regionIiifUrls(regions, images)
+      } yield seq
+        .focus(_.resources)
+        .modify(_.map(r => augmentResourceRegionPreviews(r, iiifUrls)))
+  }
+
+  /** Builds a `regionIri -> iiifUrl` map from the fetched region and image resources. */
+  private def regionIiifUrls(
+    regions: ReadResourcesSequenceV2,
+    images: ReadResourcesSequenceV2,
+  ): Map[ResourceIri, String] = {
+    val imagesByIri = images.resources.map(img => img.resourceIri -> img).toMap
+    regions.resources.flatMap { region =>
+      for {
+        regionSelector <- geometryToIiifRegion(region)
+        imageIri       <- region.isRegionOfValueReferredIri
+        image          <- imagesByIri.get(imageIri)
+        stillImage     <- image.values.values.flatten.map(_.valueContent).collectFirst {
+                        case si: StillImageFileValueContentV2 => si
+                      }
+      } yield region.resourceIri ->
+        s"${appConfig.sipi.externalBaseUrl}/${image.projectADM.shortcode}/${stillImage.fileValue.internalFilename}/$regionSelector/full/0/default.jpg"
+    }.toMap
+  }
+
+  /** Derives the IIIF `pct:x,y,w,h` region selector from a region resource's geometry value. */
+  private def geometryToIiifRegion(region: ReadResourceV2): Option[String] =
+    region.values.values.flatten
+      .map(_.valueContent)
+      .collectFirst { case geom: GeomValueContentV2 => geom }
+      .flatMap(geom => GeomValueContentV2.parsePoints(geom.valueHasGeometry).toOption)
+      .filter(_.nonEmpty)
+      .map { points =>
+        val xs                     = points.map(_.x)
+        val ys                     = points.map(_.y)
+        val minX                   = xs.min
+        val minY                   = ys.min
+        val w                      = xs.max - minX
+        val h                      = ys.max - minY
+        def pct(d: Double): String =
+          BigDecimal(d * 100).setScale(6, BigDecimal.RoundingMode.HALF_UP).bigDecimal.toPlainString
+        s"pct:${pct(minX)},${pct(minY)},${pct(w)},${pct(h)}"
+      }
+
+  /** Replaces the `iiifUrl` on each [[RegionPreviewValueContentV2]] of `resource` using `iiifUrls`. */
+  private def augmentResourceRegionPreviews(
+    resource: ReadResourceV2,
+    iiifUrls: Map[ResourceIri, String],
+  ): ReadResourceV2 =
+    resource
+      .focus(_.values)
+      .modify(
+        _.view
+          .mapValues(_.map {
+            case rov @ ReadOtherValueV2(_, _, _, _, _, _, rp: RegionPreviewValueContentV2, _, _) =>
+              iiifUrls
+                .get(rp.regionIri)
+                .fold(rov: ReadValueV2)(url => rov.copy(valueContent = rp.copy(iiifUrl = Some(url))))
+            case readValue => readValue
+          })
+          .toMap,
+      )
 
   def readResourcesSequence(
     resourceIris: Seq[ResourceIri],
