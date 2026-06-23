@@ -13,13 +13,13 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
-import org.knora.webapi.messages.util.rdf
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 
 /**
- * Cached `ApiV2Complex` IRI strings shared by both list responders. Lifted out of the
- * `toJsonLDDocument` bodies so the SmartIri conversions run once per JVM.
+ * Cached `ApiV2Complex` IRI strings and the shared JSON-LD context object used by both
+ * list responders. Lifted out of the `toJsonLDDocument` bodies so the SmartIri
+ * conversions and the context object are constructed once per JVM.
  */
 private[listsmessages] object ListV2Iris {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -33,6 +33,18 @@ private[listsmessages] object ListV2Iris {
   val attachedToProject: IRI =
     OntologyConstants.KnoraBase.AttachedToProject.toSmartIri.toOntologySchema(ApiV2Complex).toString
   val isRootNode: IRI = OntologyConstants.KnoraBase.IsRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString
+
+  val sharedContext: JsonLDObject = JsonLDObject(
+    Map(
+      OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
+        OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
+      ),
+      "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
+      "rdf"  -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+      "owl"  -> JsonLDString("http://www.w3.org/2002/07/owl#"),
+      "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#"),
+    ),
+  )
 }
 
 /**
@@ -117,73 +129,42 @@ case class ListGetResponseV2(
     import ListV2Iris.*
 
     def makeNode(node: ListChildNodeADM): JsonLDObject = {
-      val label   = labelEntry(node.labels, allLanguages, userLang, fallbackLang)
-      val comment = commentEntry(node.comments, allLanguages, userLang, fallbackLang)
-
-      val position: Map[IRI, JsonLDInt] = Map(
-        listNodePosition -> JsonLDInt(node.position),
-      )
-
-      val children: Map[IRI, JsonLDArray] = if (node.children.nonEmpty) {
-        Map(
-          hasSubListNode -> JsonLDArray(node.children.map(makeNode)),
-        )
-      } else {
-        Map.empty[IRI, JsonLDArray]
-      }
-
-      val nodeHasRootNode: Map[IRI, JsonLDObject] = Map(
-        hasRootNode -> JsonLDUtil.iriToJsonLDObject(node.hasRootNode),
+      val label    = labelEntry(node.labels, allLanguages, userLang, fallbackLang)
+      val comment  = commentEntry(node.comments, allLanguages, userLang, fallbackLang)
+      val children = Option.when(node.children.nonEmpty)(
+        hasSubListNode -> JsonLDArray(node.children.map(makeNode)),
       )
 
       JsonLDObject(
         Map[IRI, JsonLDValue](
-          "@id"   -> JsonLDString(node.id),
-          "@type" -> JsonLDString(listNodeType),
-        ) ++ position ++ nodeHasRootNode ++ children ++ label ++ comment,
+          "@id"            -> JsonLDString(node.id),
+          "@type"          -> JsonLDString(listNodeType),
+          listNodePosition -> JsonLDInt(node.position),
+          hasRootNode      -> JsonLDUtil.iriToJsonLDObject(node.hasRootNode),
+        ) ++ children ++ label ++ comment,
       )
     }
 
     val listinfo = list.listinfo
 
-    val label   = labelEntry(listinfo.labels, allLanguages, userLang, fallbackLang)
-    val comment = commentEntry(listinfo.comments, allLanguages, userLang, fallbackLang)
-
-    val children: Map[IRI, JsonLDArray] = if (list.children.nonEmpty) {
-      Map(
-        hasSubListNode -> JsonLDArray(
-          list.children.map(childNode => makeNode(childNode.asInstanceOf[ListChildNodeADM])),
-        ),
-      )
-    } else {
-      Map.empty[IRI, JsonLDArray]
-    }
-
-    val project: Map[IRI, JsonLDObject] = Map(
-      attachedToProject -> JsonLDUtil.iriToJsonLDObject(listinfo.projectIri),
-    )
-
-    val body = rdf.JsonLDObject(
-      Map[IRI, JsonLDValue](
-        "@id"      -> JsonLDString(listinfo.id),
-        "@type"    -> JsonLDString(listNodeType),
-        isRootNode -> JsonLDBoolean(true),
-      ) ++ project ++ children ++ label ++ comment,
-    )
-
-    val context = JsonLDObject(
-      Map(
-        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
-          OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
-        ),
-        "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
-        "rdf"  -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
-        "owl"  -> JsonLDString("http://www.w3.org/2002/07/owl#"),
-        "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#"),
+    val label    = labelEntry(listinfo.labels, allLanguages, userLang, fallbackLang)
+    val comment  = commentEntry(listinfo.comments, allLanguages, userLang, fallbackLang)
+    val children = Option.when(list.children.nonEmpty)(
+      hasSubListNode -> JsonLDArray(
+        list.children.map(childNode => makeNode(childNode.asInstanceOf[ListChildNodeADM])),
       ),
     )
 
-    JsonLDDocument(body, context)
+    val body = JsonLDObject(
+      Map[IRI, JsonLDValue](
+        "@id"             -> JsonLDString(listinfo.id),
+        "@type"           -> JsonLDString(listNodeType),
+        isRootNode        -> JsonLDBoolean(true),
+        attachedToProject -> JsonLDUtil.iriToJsonLDObject(listinfo.projectIri),
+      ) ++ children ++ label ++ comment,
+    )
+
+    JsonLDDocument(body, sharedContext)
   }
 }
 
@@ -227,35 +208,17 @@ case class NodeGetResponseV2(
         val label   = labelEntry(child.labels, allLanguages, userLang, fallbackLang)
         val comment = commentEntry(child.comments, allLanguages, userLang, fallbackLang)
 
-        val position: Map[IRI, JsonLDInt] = Map(
-          listNodePosition -> JsonLDInt(child.position),
-        )
-
-        val rootNode = Map(
-          hasRootNode -> JsonLDUtil.iriToJsonLDObject(child.hasRootNode),
-        )
-
         JsonLDObject(
           Map[IRI, JsonLDValue](
-            "@id"   -> JsonLDString(child.id),
-            "@type" -> JsonLDString(listNodeType),
-          ) ++ rootNode ++ label ++ comment ++ position,
+            "@id"            -> JsonLDString(child.id),
+            "@type"          -> JsonLDString(listNodeType),
+            listNodePosition -> JsonLDInt(child.position),
+            hasRootNode      -> JsonLDUtil.iriToJsonLDObject(child.hasRootNode),
+          ) ++ label ++ comment,
         )
     }
 
-    val context = JsonLDObject(
-      Map(
-        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
-          OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
-        ),
-        "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
-        "rdf"  -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
-        "owl"  -> JsonLDString("http://www.w3.org/2002/07/owl#"),
-        "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#"),
-      ),
-    )
-
-    JsonLDDocument(body, context)
+    JsonLDDocument(body, sharedContext)
   }
 
 }
