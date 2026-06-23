@@ -10,7 +10,12 @@ import zio.test.*
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.JsonLDArray
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDObject
+import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.messages.util.rdf.JsonLDValue
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.testservices.ResponseOps.*
@@ -20,6 +25,17 @@ object ListsV2E2Spec extends E2EZSpec {
 
   private def v2listsListIri(iri: ListIri) = uri"/v2/lists/${iri.value}"
   private def v2nodeListIri(iri: ListIri)  = uri"/v2/node/${iri.value}"
+
+  /** Recursively checks whether any nested [[JsonLDObject]] contains `key` as one of its predicates. */
+  private def containsKeyAnywhere(value: JsonLDValue, key: String): Boolean = value match {
+    case obj: JsonLDObject => obj.value.contains(key) || obj.value.values.exists(containsKeyAnywhere(_, key))
+    case arr: JsonLDArray  => arr.value.exists(containsKeyAnywhere(_, key))
+    case _                 => false
+  }
+
+  /** Reads the `rdfs:label` of the top-level object as a plain [[JsonLDString]] (legacy single-language mode). */
+  private def rootLabel(doc: JsonLDDocument): Option[JsonLDString] =
+    doc.body.value.get("rdfs:label").collect { case s: JsonLDString => s }
 
   private val knownRootNode    = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
   private val knownSubNode     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
@@ -236,7 +252,8 @@ object ListsV2E2Spec extends E2EZSpec {
           bodyStr <- TestApiClient
                        .getJsonLd(uri"/v2/lists/${otherTreeListIri.value}?allLanguages=true")
                        .flatMap(_.assert200)
-        } yield assertTrue(!bodyStr.contains("\"rdfs:comment\""))
+          doc = JsonLDUtil.parseJsonLD(bodyStr)
+        } yield assertTrue(!containsKeyAnywhere(doc.body, "rdfs:comment"))
       },
     ),
     suite("when allLanguages is omitted (default mode)")(
@@ -246,10 +263,8 @@ object ListsV2E2Spec extends E2EZSpec {
           bodyStr <- TestApiClient
                        .getJsonLd(v2listsListIri(treeListRoot), SharedTestDataADM.anythingUser1)
                        .flatMap(_.assert200)
-        } yield assertTrue(
-          bodyStr.contains("\"Listenwurzel\""),
-          !bodyStr.contains("\"Tree list root\""),
-        )
+          doc = JsonLDUtil.parseJsonLD(bodyStr)
+        } yield assertTrue(rootLabel(doc).contains(JsonLDString("Listenwurzel")))
       },
       test("returns the user-profile language's label for an English-speaking user (REQ-2.5)") {
         // beolUser has lang = "en" — must receive the English label.
@@ -257,10 +272,8 @@ object ListsV2E2Spec extends E2EZSpec {
           bodyStr <- TestApiClient
                        .getJsonLd(v2listsListIri(treeListRoot), SharedTestDataADM.beolUser)
                        .flatMap(_.assert200)
-        } yield assertTrue(
-          bodyStr.contains("\"Tree list root\""),
-          !bodyStr.contains("\"Listenwurzel\""),
-        )
+          doc = JsonLDUtil.parseJsonLD(bodyStr)
+        } yield assertTrue(rootLabel(doc).contains(JsonLDString("Tree list root")))
       },
     ),
   )

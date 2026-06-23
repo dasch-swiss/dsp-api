@@ -31,18 +31,9 @@ import org.knora.webapi.slice.common.domain.LanguageCode
  */
 object ListsMessagesV2Spec extends ZIOSpecDefault {
 
-  // Expose protected helpers for unit testing.
-  private object Helpers extends ListResponderResponseV2 {
-    def callStringLiteralsToLangMap(seq: StringLiteralSequenceV2): Map[String, String] =
-      stringLiteralsToLangMap(seq)
-
-    def callLabelOrCommentJson(
-      seq: StringLiteralSequenceV2,
-      allLanguages: Boolean,
-      userLang: String,
-      fallbackLang: String,
-    ) = labelOrCommentJson(seq, allLanguages, userLang, fallbackLang)
-  }
+  // The helpers under test are `private[listsmessages]` on the trait; instantiate
+  // it once here so the spec can drive them directly without an access shim.
+  private val sut: ListResponderResponseV2 = new ListResponderResponseV2 {}
 
   private def lit(value: String, lang: LanguageCode): StringLiteralV2 =
     LanguageTaggedStringLiteralV2(value, lang)
@@ -67,18 +58,18 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
         plain("c"),
         lit("a2", LanguageCode.DE),
       )
-      val actual = Helpers.callStringLiteralsToLangMap(input)
+      val actual = sut.stringLiteralsToLangMap(input)
       assertTrue(
         actual == Map("de" -> "a2", "en" -> "b"),
       )
     },
     test("empty sequence yields empty map") {
-      val actual = Helpers.callStringLiteralsToLangMap(StringLiteralSequenceV2.empty)
+      val actual = sut.stringLiteralsToLangMap(StringLiteralSequenceV2.empty)
       assertTrue(actual.isEmpty)
     },
     test("untagged-only sequence yields empty map (D5)") {
       val input  = seqOf(plain("only-untagged"))
-      val actual = Helpers.callStringLiteralsToLangMap(input)
+      val actual = sut.stringLiteralsToLangMap(input)
       assertTrue(actual.isEmpty)
     },
   )
@@ -91,7 +82,7 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
         lit("Hallo", LanguageCode.DE),
         lit("Hello", LanguageCode.EN),
       )
-      val actual = Helpers.callLabelOrCommentJson(
+      val actual = sut.labelOrCommentJson(
         seq = input,
         allLanguages = true,
         userLang = "en",
@@ -113,7 +104,7 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
       assertTrue(actual.contains(expected))
     },
     test("empty sequence returns None (D2 omission)") {
-      val actual = Helpers.callLabelOrCommentJson(
+      val actual = sut.labelOrCommentJson(
         seq = StringLiteralSequenceV2.empty,
         allLanguages = true,
         userLang = "en",
@@ -122,7 +113,7 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
       assertTrue(actual.isEmpty)
     },
     test("untagged-only sequence returns None (D2 + D5)") {
-      val actual = Helpers.callLabelOrCommentJson(
+      val actual = sut.labelOrCommentJson(
         seq = seqOf(plain("untagged")),
         allLanguages = true,
         userLang = "en",
@@ -139,7 +130,7 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
         lit("Hello", LanguageCode.EN),
         lit("Bonjour", LanguageCode.FR),
       )
-      val actual = Helpers.callLabelOrCommentJson(
+      val actual = sut.labelOrCommentJson(
         seq = input,
         allLanguages = false,
         userLang = "de",
@@ -152,7 +143,7 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
         lit("Hello", LanguageCode.EN),
         lit("Bonjour", LanguageCode.FR),
       )
-      val actual = Helpers.callLabelOrCommentJson(
+      val actual = sut.labelOrCommentJson(
         seq = input,
         allLanguages = false,
         userLang = "de",

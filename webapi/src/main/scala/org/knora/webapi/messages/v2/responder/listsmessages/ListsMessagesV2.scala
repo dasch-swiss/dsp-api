@@ -23,32 +23,11 @@ import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 trait ListResponderResponseV2 {
 
   /**
-   * Given an Iri and a [[StringLiteralSequenceV2]], gets he string value in the user's preferred language.
-   *
-   * @param iri          the Iri pointing to the string value.
-   * @param stringVals   the string values to choose from.
-   * @param userLang     the user's preferred language.
-   * @param fallbackLang the fallback language if the preferred language is not available.
-   * @return a [[Map[IRI, JsonLDString]] (empty in case no string value is available).
-   */
-  def makeMapIriToJSONLDString(
-    iri: IRI,
-    stringVals: StringLiteralSequenceV2,
-    userLang: String,
-    fallbackLang: String,
-  ): Map[IRI, JsonLDString] =
-    Map(
-      iri -> stringVals.getPreferredLanguage(userLang, fallbackLang),
-    ).collect { case (iri: IRI, Some(strVal: String)) =>
-      iri -> JsonLDString(strVal)
-    }
-
-  /**
    * Collapses a [[StringLiteralSequenceV2]] into a map from BCP-47 language tag to value.
    * Untagged literals (`PlainStringLiteralV2`) are skipped (REQ-1.8, D5). When multiple
    * literals share the same language tag, the last one wins via `.toMap` (REQ-1.9, D6).
    */
-  protected def stringLiteralsToLangMap(seq: StringLiteralSequenceV2): Map[String, String] =
+  private[listsmessages] def stringLiteralsToLangMap(seq: StringLiteralSequenceV2): Map[String, String] =
     seq.stringLiterals.collect { case LanguageTaggedStringLiteralV2(value, language) =>
       language.value -> value
     }.toMap
@@ -58,13 +37,13 @@ trait ListResponderResponseV2 {
    * the `allLanguages` flag.
    *
    *   - When `allLanguages` is `true`, returns a [[JsonLDArray]] of language-tagged objects
-   *     (sorted alphabetically by language tag — REQ-1.7, D3) or `None` when the underlying
-   *     sequence has no language-tagged literals (REQ-1.6, D2 — field is then omitted from
-   *     the surrounding `JsonLDObject` via `++ Option`).
+   *     (sort by language tag is delegated to `JsonLDUtil.objectsWithLangsToJsonLDArray` —
+   *     REQ-1.7, D3) or `None` when the underlying sequence has no language-tagged literals
+   *     (REQ-1.6, D2 — field is then omitted from the surrounding `JsonLDObject` via `++ Option`).
    *   - When `allLanguages` is `false`, returns the legacy single [[JsonLDString]] picked by
    *     the user's preferred language with the configured fallback (REQ-1.10, D8 unchanged).
    */
-  protected def labelOrCommentJson(
+  private[listsmessages] def labelOrCommentJson(
     seq: StringLiteralSequenceV2,
     allLanguages: Boolean,
     userLang: String,
