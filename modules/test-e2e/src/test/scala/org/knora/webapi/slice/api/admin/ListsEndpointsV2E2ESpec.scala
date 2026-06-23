@@ -25,44 +25,48 @@ object ListsEndpointsV2E2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = List(incunabulaRdfData, imagesRdfData, anythingRdfData)
 
-  /**
-   * Cases driving the `?allLanguages=true` fixture comparisons. Each case is
-   * (test label, route segment `lists` or `node`, list/node IRI, fixture filename).
-   */
-  private val allLanguagesFixtureCases: Seq[(String, String, String, String)] = Seq(
-    (
-      "return the imagesList in all-languages JSON-LD shape when allLanguages=true",
-      "lists",
-      "http://rdfh.ch/lists/00FF/73d0ec0302",
-      "imagesListAllLanguages.jsonld",
+  /** Which v2 route a fixture case exercises. */
+  private enum Route(val segment: String) {
+    case Lists extends Route("lists")
+    case Node  extends Route("node")
+  }
+
+  /** A single `?allLanguages=true` fixture-comparison case. */
+  private case class AllLangCase(label: String, route: Route, iri: String, fixture: String)
+
+  /** Cases driving the `?allLanguages=true` fixture comparisons. */
+  private val allLanguagesFixtureCases: Seq[AllLangCase] = Seq(
+    AllLangCase(
+      label = "return the imagesList in all-languages JSON-LD shape when allLanguages=true",
+      route = Route.Lists,
+      iri = "http://rdfh.ch/lists/00FF/73d0ec0302",
+      fixture = "imagesListAllLanguages.jsonld",
     ),
-    (
-      "return the anything treelist in all-languages JSON-LD shape when allLanguages=true",
-      "lists",
-      "http://rdfh.ch/lists/0001/treeList",
-      "treelistAllLanguages.jsonld",
+    AllLangCase(
+      label = "return the anything treelist in all-languages JSON-LD shape when allLanguages=true",
+      route = Route.Lists,
+      iri = "http://rdfh.ch/lists/0001/treeList",
+      fixture = "treelistAllLanguages.jsonld",
     ),
-    (
-      "return the anything othertreelist in all-languages JSON-LD shape when allLanguages=true",
-      "lists",
-      "http://rdfh.ch/lists/0001/otherTreeList",
-      "othertreelistAllLanguages.jsonld",
+    AllLangCase(
+      label = "return the anything othertreelist in all-languages JSON-LD shape when allLanguages=true",
+      route = Route.Lists,
+      iri = "http://rdfh.ch/lists/0001/otherTreeList",
+      fixture = "othertreelistAllLanguages.jsonld",
     ),
-    (
-      "return a treelist node in all-languages JSON-LD shape when allLanguages=true",
-      "node",
-      "http://rdfh.ch/lists/0001/treeList01",
-      "treelistnodeAllLanguages.jsonld",
+    AllLangCase(
+      label = "return a treelist node in all-languages JSON-LD shape when allLanguages=true",
+      route = Route.Node,
+      iri = "http://rdfh.ch/lists/0001/treeList01",
+      fixture = "treelistnodeAllLanguages.jsonld",
     ),
   )
 
-  private val allLanguagesFixtureTests = allLanguagesFixtureCases.map { case (label, route, iri, fixture) =>
-    test(label) {
-      val listIri  = ListIri.unsafeFrom(iri)
-      val expected = readAsJsonLd(Paths.get(s"test_data/generated_test_data/listsR2RV2/$fixture"))
-      val path     =
-        if (route == "lists") uri"/v2/lists/$listIri?allLanguages=true"
-        else uri"/v2/node/$listIri?allLanguages=true"
+  private val allLanguagesFixtureTests = allLanguagesFixtureCases.map { c =>
+    test(c.label) {
+      val listIri  = ListIri.unsafeFrom(c.iri)
+      val expected = readAsJsonLd(Paths.get(s"test_data/generated_test_data/listsR2RV2/${c.fixture}"))
+      val path     = uri"/v2/${c.route.segment}/$listIri?allLanguages=true"
       TestApiClient
         .getJsonLdDocument(path)
         .flatMap(_.assert200)

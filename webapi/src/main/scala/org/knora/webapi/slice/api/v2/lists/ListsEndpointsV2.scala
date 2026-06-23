@@ -20,17 +20,9 @@ final class ListsEndpointsV2(base: BaseEndpoints) {
       .description("The iri to a list.")
       .example(ListIri.unsafeFrom("http://rdfh.ch/lists/0001/" + UuidUtil.makeRandomBase64EncodedUuid))
 
-  private val allLanguages =
-    query[Boolean]("allLanguages")
-      .default(false)
-      .description(
-        "If true, return rdfs:label and rdfs:comment as JSON-LD arrays of language-tagged objects " +
-          "(sorted alphabetically by tag). Default false preserves the legacy single-string shape.",
-      )
-
   val getV2Lists = base.withUserEndpoint.get
     .in("v2" / "lists" / listIri)
-    .in(allLanguages)
+    .in(ApiV2.Inputs.allLanguages)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
@@ -38,7 +30,7 @@ final class ListsEndpointsV2(base: BaseEndpoints) {
 
   val getV2Node = base.withUserEndpoint.get
     .in("v2" / "node" / listIri)
-    .in(allLanguages)
+    .in(ApiV2.Inputs.allLanguages)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
