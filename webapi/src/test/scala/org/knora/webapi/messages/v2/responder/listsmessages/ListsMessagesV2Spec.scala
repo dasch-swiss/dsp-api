@@ -43,7 +43,7 @@ object ListsMessagesV2Spec extends ZIOSpecDefault {
   private def seqOf(literals: StringLiteralV2*): StringLiteralSequenceV2 =
     StringLiteralSequenceV2(literals.toVector)
 
-  def spec: Spec[Any, Any] = suite("ListsMessagesV2Spec")(
+  def spec: Spec[Any, Any] = suite("lists v2 label/comment emission helpers")(
     stringLiteralsToLangMapTests,
     labelOrCommentJsonAllLanguagesTests,
     labelOrCommentJsonLegacyTests,

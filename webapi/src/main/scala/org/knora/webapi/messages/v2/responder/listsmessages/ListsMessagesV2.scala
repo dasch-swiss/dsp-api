@@ -51,7 +51,7 @@ trait ListResponderResponseV2 {
   ): Option[JsonLDValue] =
     if (allLanguages) {
       val tagged = stringLiteralsToLangMap(seq)
-      if (tagged.nonEmpty) Some(JsonLDUtil.objectsWithLangsToJsonLDArray(tagged)) else None
+      Option.when(tagged.nonEmpty)(JsonLDUtil.objectsWithLangsToJsonLDArray(tagged))
     } else {
       seq.getPreferredLanguage(userLang, fallbackLang).map(JsonLDString.apply)
     }
