@@ -49,8 +49,12 @@ trait ListResponderResponseV2 {
  * @param userLang     the user's preferred language.
  * @param fallbackLang the fallback language if the preferred language is not available.
  */
-case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: String)
-    extends KnoraJsonLDResponseV2
+case class ListGetResponseV2(
+  list: ListADM,
+  userLang: String,
+  fallbackLang: String,
+  allLanguages: Boolean = false,
+) extends KnoraJsonLDResponseV2
     with ListResponderResponseV2 {
 
   def toJsonLDDocument(
@@ -168,8 +172,12 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
  * @param userLang     the user's preferred language.
  * @param fallbackLang the fallback language if the preferred language is not available.
  */
-case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLang: String)
-    extends KnoraJsonLDResponseV2
+case class NodeGetResponseV2(
+  node: ListNodeInfoADM,
+  userLang: String,
+  fallbackLang: String,
+  allLanguages: Boolean = false,
+) extends KnoraJsonLDResponseV2
     with ListResponderResponseV2 {
 
   def toJsonLDDocument(
