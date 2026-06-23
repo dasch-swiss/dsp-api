@@ -2038,9 +2038,11 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                       uuid,
                     ),
                   )
+        // Authorship is a plain multi-valued datatype property (no rdf:List, no ORDER BY on read),
+        // so order does not round-trip through the triplestore. Compare as an unordered set.
       } yield assertTrue(
-        result.createResource.resourceAuthorship ==
-          Seq(Authorship.unsafeFrom("Lotte Reiniger"), Authorship.unsafeFrom("Hilma af Klint")),
+        result.createResource.resourceAuthorship.toSet ==
+          Set(Authorship.unsafeFrom("Lotte Reiniger"), Authorship.unsafeFrom("Hilma af Klint")),
       )
     },
     test("createResourceRequestV2 leaves resourceAuthorship empty when none is provided") {
