@@ -25,8 +25,52 @@ object ListsEndpointsV2E2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = List(incunabulaRdfData, imagesRdfData, anythingRdfData)
 
-  // FIXME: Move to correct package. These are tests for /v2/lists
-  val e2eSpec = suite("The lists v2 endpoint")(
+  /**
+   * Cases driving the `?allLanguages=true` fixture comparisons. Each case is
+   * (test label, route segment `lists` or `node`, list/node IRI, fixture filename).
+   */
+  private val allLanguagesFixtureCases: Seq[(String, String, String, String)] = Seq(
+    (
+      "return the imagesList in all-languages JSON-LD shape when allLanguages=true",
+      "lists",
+      "http://rdfh.ch/lists/00FF/73d0ec0302",
+      "imagesListAllLanguages.jsonld",
+    ),
+    (
+      "return the anything treelist in all-languages JSON-LD shape when allLanguages=true",
+      "lists",
+      "http://rdfh.ch/lists/0001/treeList",
+      "treelistAllLanguages.jsonld",
+    ),
+    (
+      "return the anything othertreelist in all-languages JSON-LD shape when allLanguages=true",
+      "lists",
+      "http://rdfh.ch/lists/0001/otherTreeList",
+      "othertreelistAllLanguages.jsonld",
+    ),
+    (
+      "return a treelist node in all-languages JSON-LD shape when allLanguages=true",
+      "node",
+      "http://rdfh.ch/lists/0001/treeList01",
+      "treelistnodeAllLanguages.jsonld",
+    ),
+  )
+
+  private val allLanguagesFixtureTests = allLanguagesFixtureCases.map { case (label, route, iri, fixture) =>
+    test(label) {
+      val listIri  = ListIri.unsafeFrom(iri)
+      val expected = readAsJsonLd(Paths.get(s"test_data/generated_test_data/listsR2RV2/$fixture"))
+      val path     =
+        if (route == "lists") uri"/v2/lists/$listIri?allLanguages=true"
+        else uri"/v2/node/$listIri?allLanguages=true"
+      TestApiClient
+        .getJsonLdDocument(path)
+        .flatMap(_.assert200)
+        .map(actual => assertTrue(actual == expected))
+    }
+  }
+
+  private val explicitTests = Seq(
     test("perform a request for a list in JSON-LD") {
       val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/73d0ec0302")
       val expected = readAsJsonLd(Paths.get("test_data/generated_test_data/listsR2RV2/imagesList.jsonld"))
@@ -86,42 +130,6 @@ object ListsEndpointsV2E2ESpec extends E2EZSpec {
         .flatMap(_.assert200)
         .map(actual => assertTrue(actual == expected))
     },
-    test("return the imagesList in all-languages JSON-LD shape when allLanguages=true") {
-      val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/73d0ec0302")
-      val expected =
-        readAsJsonLd(Paths.get("test_data/generated_test_data/listsR2RV2/imagesListAllLanguages.jsonld"))
-      TestApiClient
-        .getJsonLdDocument(uri"/v2/lists/$listIri?allLanguages=true")
-        .flatMap(_.assert200)
-        .map(actual => assertTrue(actual == expected))
-    },
-    test("return the anything treelist in all-languages JSON-LD shape when allLanguages=true") {
-      val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")
-      val expected =
-        readAsJsonLd(Paths.get("test_data/generated_test_data/listsR2RV2/treelistAllLanguages.jsonld"))
-      TestApiClient
-        .getJsonLdDocument(uri"/v2/lists/$listIri?allLanguages=true")
-        .flatMap(_.assert200)
-        .map(actual => assertTrue(actual == expected))
-    },
-    test("return the anything othertreelist in all-languages JSON-LD shape when allLanguages=true") {
-      val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/otherTreeList")
-      val expected =
-        readAsJsonLd(Paths.get("test_data/generated_test_data/listsR2RV2/othertreelistAllLanguages.jsonld"))
-      TestApiClient
-        .getJsonLdDocument(uri"/v2/lists/$listIri?allLanguages=true")
-        .flatMap(_.assert200)
-        .map(actual => assertTrue(actual == expected))
-    },
-    test("return a treelist node in all-languages JSON-LD shape when allLanguages=true") {
-      val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
-      val expected =
-        readAsJsonLd(Paths.get("test_data/generated_test_data/listsR2RV2/treelistnodeAllLanguages.jsonld"))
-      TestApiClient
-        .getJsonLdDocument(uri"/v2/node/$listIri?allLanguages=true")
-        .flatMap(_.assert200)
-        .map(actual => assertTrue(actual == expected))
-    },
     test("perform a request for a node in Turtle") {
       val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/4348fb82f2")
       val expected = readAsTurtle(Paths.get("test_data/generated_test_data/listsR2RV2/imagesListNode.ttl"))
@@ -140,5 +148,10 @@ object ListsEndpointsV2E2ESpec extends E2EZSpec {
         .mapAttempt(RdfModel.fromRdfXml)
         .map(actual => assertTrue(actual == expected))
     },
+  )
+
+  // FIXME: Move to correct package. These are tests for /v2/lists
+  val e2eSpec = suite("The lists v2 endpoint")(
+    (explicitTests ++ allLanguagesFixtureTests)*,
   )
 }
