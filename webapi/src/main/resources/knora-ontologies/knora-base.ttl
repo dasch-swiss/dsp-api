@@ -2835,7 +2835,7 @@
 # This property is generated on the fly and not present in the database
 
 :iiifUrl
-    rdf:type                owl:ObjectProperty ;
+    rdf:type                owl:DatatypeProperty ;
     rdfs:label              "is an IIIF URL"@en ;
     rdfs:comment            "IIIF URL for the region preview"@en ;
     rdfs:subPropertyOf      :valueHas ;

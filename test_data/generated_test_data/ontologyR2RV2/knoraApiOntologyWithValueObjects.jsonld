@@ -9217,7 +9217,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "@type": "owl:ObjectProperty",
+            "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },

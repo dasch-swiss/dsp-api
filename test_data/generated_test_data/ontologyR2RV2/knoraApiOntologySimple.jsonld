@@ -1665,7 +1665,7 @@
         {
             "rdfs:label": "is an IIIF URL",
             "rdfs:comment": "IIIF URL for the region preview",
-            "@type": "owl:ObjectProperty",
+            "@type": "owl:DatatypeProperty",
             "knora-api:subjectType": {
                 "@id": "knora-api:RegionPreviewValue"
             },
