@@ -9,6 +9,7 @@ import sttp.model.StatusCode
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDArray
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
@@ -35,7 +36,7 @@ object ListsV2E2Spec extends E2EZSpec {
 
   /** Reads the `rdfs:label` of the top-level object as a plain [[JsonLDString]] (legacy single-language mode). */
   private def rootLabel(doc: JsonLDDocument): Option[JsonLDString] =
-    doc.body.value.get("rdfs:label").collect { case s: JsonLDString => s }
+    doc.body.value.get(OntologyConstants.Rdfs.Label).collect { case s: JsonLDString => s }
 
   private val knownRootNode    = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
   private val knownSubNode     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
@@ -253,7 +254,7 @@ object ListsV2E2Spec extends E2EZSpec {
                        .getJsonLd(uri"/v2/lists/${otherTreeListIri.value}?allLanguages=true")
                        .flatMap(_.assert200)
           doc = JsonLDUtil.parseJsonLD(bodyStr)
-        } yield assertTrue(!containsKeyAnywhere(doc.body, "rdfs:comment"))
+        } yield assertTrue(!containsKeyAnywhere(doc.body, OntologyConstants.Rdfs.Comment))
       },
     ),
     suite("when allLanguages is omitted (default mode)")(
