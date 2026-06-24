@@ -7,6 +7,8 @@ package org.knora.webapi.slice.resources.service
 
 import zio.Scope
 import zio.ZIO
+import zio.json.DecoderOps
+import zio.json.ast.Json
 import zio.test.*
 
 import java.time.Instant
@@ -20,6 +22,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
+import org.knora.webapi.messages.util.rdf.JsonLD
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
@@ -186,6 +189,47 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
                        .map(_.valueContent)
                        .collect { case rp: RegionPreviewValueContentV2 => rp.iiifUrl }
         } yield assertTrue(iiifUrls == Seq(Some(expectedIiifUrl)))
+      },
+      test(
+        "readResourcesSequence renders the RegionPreviewValue (including the computed IIIF URL) into the JSON-LD response body",
+      ) {
+        val regionPreviewHostResourceIri =
+          ResourceIri.unsafeFrom("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg")
+        // `knora-api:iiifUrl` is the only field computed at read time: pct:x,y,w,h is the bounding box of the region's geometry (in percent)
+        val expectedRegionPreview =
+          """{
+            |  "@id": "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/Hn3kAqXyTbiB1RkF0r5Q7w",
+            |  "@type": "knora-api:RegionPreviewValue",
+            |  "knora-api:isRegionPreviewOf": { "@id": "http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w" },
+            |  "knora-api:iiifUrl": "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:39.796687,24.423475,9.266166,17.576948/full/0/default.jpg",
+            |  "knora-api:valueHasUUID": "Hn3kAqXyTbiB1RkF0r5Q7w",
+            |  "knora-api:valueCreationDate": { "@value": "2026-05-20T10:00:00Z", "@type": "xsd:dateTimeStamp" },
+            |  "knora-api:attachedToUser": { "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q" },
+            |  "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+            |  "knora-api:userHasPermission": "CR",
+            |  "knora-api:arkUrl": { "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/55UrkgTKR2SEQgnsLWI9mgR/Hn3kAqXyTbiB1RkF0r5Q7wB", "@type": "xsd:anyURI" },
+            |  "knora-api:versionArkUrl": { "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/55UrkgTKR2SEQgnsLWI9mgR/Hn3kAqXyTbiB1RkF0r5Q7wB.20260520T100000Z", "@type": "xsd:anyURI" }
+            |}""".stripMargin.fromJson[Json]
+        for {
+          appConfig <- ZIO.service[AppConfig]
+          _         <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          sequence  <- ZIO.serviceWithZIO[ReadResourcesService](
+                        _.readResourcesSequence(
+                          resourceIris = Seq(regionPreviewHostResourceIri),
+                          targetSchema = ApiV2Complex,
+                          requestingUser = TestDataFactory.User.rootUser,
+                        ),
+                      )
+          regionPreview = sequence
+                            .format(JsonLD, ApiV2Complex, Set.empty, appConfig)
+                            .fromJson[Json]
+                            .flatMap {
+                              case Json.Obj(fields) =>
+                                fields.collectFirst { case ("anything:hasRegionPreview", v) => v }
+                                  .toRight("no anything:hasRegionPreview field in response")
+                              case other => Left(s"expected a JSON object, got: $other")
+                            }
+        } yield assertTrue(regionPreview == expectedRegionPreview)
       },
     ).provide(
       AppConfig.layer,

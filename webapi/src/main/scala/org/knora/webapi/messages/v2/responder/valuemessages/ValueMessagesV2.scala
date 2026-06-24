@@ -2534,6 +2534,7 @@ object LinkValueContentV2 {
  *
  * @param ontologySchema   the ontology schema.
  * @param regionIri        the IRI of the Region resource this value points to.
+ * @param iiifUrl          the IIIF preview URL for the region, computed at read time in `ReadResourcesServiceLive`.
  * @param comment          a comment on this [[RegionPreviewValueContentV2]], if any.
  */
 case class RegionPreviewValueContentV2(
@@ -2558,7 +2559,10 @@ case class RegionPreviewValueContentV2(
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
-    JsonLDObject(Map(IsRegionPreviewOf -> JsonLDUtil.iriToJsonLDObject(regionIri.value)))
+    JsonLDObject(
+      Map(IsRegionPreviewOf -> JsonLDUtil.iriToJsonLDObject(regionIri.value)) ++
+        iiifUrl.map(url => IiifUrl -> JsonLDString(url)),
+    )
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
