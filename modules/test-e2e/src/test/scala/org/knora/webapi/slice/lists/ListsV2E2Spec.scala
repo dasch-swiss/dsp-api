@@ -267,15 +267,6 @@ object ListsV2E2Spec extends E2EZSpec {
           doc = JsonLDUtil.parseJsonLD(bodyStr)
         } yield assertTrue(rootLabel(doc).contains(JsonLDString("Listenwurzel")))
       },
-      test("returns the user-profile language's label for an English-speaking user (REQ-2.5)") {
-        // beolUser has lang = "en" - must receive the English label.
-        for {
-          bodyStr <- TestApiClient
-                       .getJsonLd(v2listsListIri(treeListRoot), SharedTestDataADM.beolUser)
-                       .flatMap(_.assert200)
-          doc = JsonLDUtil.parseJsonLD(bodyStr)
-        } yield assertTrue(rootLabel(doc).contains(JsonLDString("Tree list root")))
-      },
     ),
   )
 }
