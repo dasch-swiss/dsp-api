@@ -234,7 +234,7 @@ object ListsV2E2Spec extends E2EZSpec {
       test(
         "returns the same JSON-LD response regardless of the caller's profile language (REQ-1.5, REQ-2.3)",
       ) {
-        // anythingUser1.lang = "de", beolUser.lang = "en", anonymous = no Accept-Language → JWT-driven user lang.
+        // anythingUser1.lang = "de", beolUser.lang = "en", anonymous = no Accept-Language -> JWT-driven user lang.
         // With allLanguages=true, userLang/fallbackLang must NOT affect the emitted label/comment arrays.
         val uri = uri"/v2/lists/${treeListRoot.value}?allLanguages=true"
         for {
@@ -258,7 +258,7 @@ object ListsV2E2Spec extends E2EZSpec {
     ),
     suite("when allLanguages is omitted (default mode)")(
       test("returns the user-profile language's label for the anything treelist root (REQ-2.5)") {
-        // anythingUser1 has lang = "de" — must receive the German label.
+        // anythingUser1 has lang = "de" - must receive the German label.
         for {
           bodyStr <- TestApiClient
                        .getJsonLd(v2listsListIri(treeListRoot), SharedTestDataADM.anythingUser1)
@@ -267,7 +267,7 @@ object ListsV2E2Spec extends E2EZSpec {
         } yield assertTrue(rootLabel(doc).contains(JsonLDString("Listenwurzel")))
       },
       test("returns the user-profile language's label for an English-speaking user (REQ-2.5)") {
-        // beolUser has lang = "en" — must receive the English label.
+        // beolUser has lang = "en" - must receive the English label.
         for {
           bodyStr <- TestApiClient
                        .getJsonLd(v2listsListIri(treeListRoot), SharedTestDataADM.beolUser)

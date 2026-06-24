@@ -67,7 +67,7 @@ trait ListResponderResponseV2 {
     labelOrCommentJson(seq, allLanguages, userLang, fallbackLang).map(OntologyConstants.Rdfs.Label -> _)
 
   /**
-   * Builds the optional `(rdfs:comment, JsonLDValue)` entry for a node — same dispatch
+   * Builds the optional `(rdfs:comment, JsonLDValue)` entry for a node - same dispatch
    * rules as [[labelEntry]].
    */
   private[listsmessages] def commentEntry(
