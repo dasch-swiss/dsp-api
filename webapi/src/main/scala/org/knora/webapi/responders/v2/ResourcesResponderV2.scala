@@ -291,6 +291,15 @@ final class ResourcesResponderV2(
                ZIO.fail(UpdateNotPerformedException(msg))
              }
 
+        // Verify that the authorship itself was persisted (order-insensitive), not just the modification date.
+        // Without this, a no-op update would be reported as a success while leaving the authorship unchanged.
+        _ <- ZIO.when(updatedResource.resourceAuthorship.toSet != request.resourceAuthorship.toSet) {
+               val msg =
+                 s"Updated resource authorship ${updatedResource.resourceAuthorship.map(_.value).sorted}, " +
+                   s"expected ${request.resourceAuthorship.map(_.value).sorted}"
+               ZIO.fail(UpdateNotPerformedException(msg))
+             }
+
       } yield UpdateResourceAuthorshipResponseV2(
         resourceIri = request.resourceIri,
         resourceClassIri = request.resourceClassIri,

@@ -85,12 +85,15 @@ object ChangeResourceAuthorshipQuery extends QueryBuilderHelper {
         List(resourceTypePattern, lastModPattern, authorshipPattern)
       }
 
+      // Use `WITH <graph>` (not `.from`/`.into`) so the named project graph is applied to the WHERE
+      // clause as well as DELETE/INSERT. With `.from`/`.into` the WHERE stays ungraphed and, on a
+      // triplestore without a union default graph (e.g. production Fuseki), matches nothing — making
+      // the whole update a silent no-op. `with` is a Scala keyword, hence the backticks.
       val query = Queries
         .MODIFY()
         .prefix(KB.NS, RDFS.NS, XSD.NS, RDF.NS)
-        .from(dataGraph)
+        .`with`(dataGraph)
         .delete(deletePatterns: _*)
-        .into(dataGraph)
         .insert(insertPatterns: _*)
         .where(wherePatterns: _*)
 
