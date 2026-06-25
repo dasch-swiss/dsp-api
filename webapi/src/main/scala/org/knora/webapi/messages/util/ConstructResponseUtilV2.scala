@@ -589,7 +589,9 @@ final class ConstructResponseUtilV2(
     val resourceAuthorship   =
       resourceWithValueRdfData
         .maybeStringListObject(OntologyConstants.KnoraBase.HasResourceAuthorship.toSmartIri)
-        .map(_.map(Authorship.unsafeFrom).toSeq)
+        // Skip values that fail validation rather than dying: out-of-band data (e.g. ingested via tools)
+        // must not make the whole resource unreadable (a 500). See DEV-6475.
+        .map(_.flatMap(a => Authorship.from(a).toOption).toSeq)
         .getOrElse(Seq.empty)
 
     for {
