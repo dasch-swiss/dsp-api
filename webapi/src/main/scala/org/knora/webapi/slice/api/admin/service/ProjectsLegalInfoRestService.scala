@@ -69,7 +69,7 @@ final case class ProjectsLegalInfoRestService(
     filterAndOrder: FilterAndOrder,
   )(using o: Ordering[A]): PagedResponse[A] =
     val filtered = all
-      .filter(a => filterAndOrder.filter.forall(_.toLowerCase.r.findFirstIn(a.toString.toLowerCase).isDefined))
+      .filter(a => filterAndOrder.filter.forall(f => a.toString.toLowerCase.contains(f.toLowerCase)))
       .sorted(filterAndOrder.ordering[A])
     val slice = filtered.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
     PagedResponse.from(slice, filtered.size, pageAndSize)
