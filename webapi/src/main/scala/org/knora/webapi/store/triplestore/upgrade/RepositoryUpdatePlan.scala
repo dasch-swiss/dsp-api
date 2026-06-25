@@ -36,6 +36,9 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(versionNumber = 41, plugin = new UpgradePluginPR3383()),
       PluginForKnoraBaseVersion(versionNumber = 50, plugin = new UpgradePluginPR3612()),
       PluginForKnoraBaseVersion(versionNumber = 51, plugin = new MigrateOnlyBuiltInGraphs()),
+      // resource-side legal metadata added new built-in properties (hasData*/hasResourceAuthorship, DEV-6475);
+      // reload the built-in graphs so existing v51 repositories pick them up.
+      PluginForKnoraBaseVersion(versionNumber = 52, plugin = new MigrateOnlyBuiltInGraphs()),
     )
 
   /**
