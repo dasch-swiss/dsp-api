@@ -64,7 +64,7 @@ object ChangeResourceAuthorshipQuery extends QueryBuilderHelper {
         lastModDelete ::: authorshipDelete
       }
 
-      // INSERT the new last modification date and one triple per new authorship value (none when empty ⇒ cleared).
+      // INSERT the new last modification date and one triple per new authorship value (none when empty => cleared).
       val insertPatterns: List[TriplePattern] = {
         val modificationDateInsert = resource.has(KB.lastModificationDate, toRdfLiteral(newModificationDate))
         val authorshipInsert       = authorship.map(a => resource.has(KB.hasResourceAuthorship, a.value)).toList
@@ -87,7 +87,7 @@ object ChangeResourceAuthorshipQuery extends QueryBuilderHelper {
 
       // Use `WITH <graph>` (not `.from`/`.into`) so the named project graph is applied to the WHERE
       // clause as well as DELETE/INSERT. With `.from`/`.into` the WHERE stays ungraphed and, on a
-      // triplestore without a union default graph (e.g. production Fuseki), matches nothing — making
+      // triplestore without a union default graph (e.g. production Fuseki), matches nothing -- making
       // the whole update a silent no-op. `with` is a Scala keyword, hence the backticks.
       val query = Queries
         .MODIFY()
