@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.api.admin
+package org.knora.webapi.slice.api.v2.lists
 
 import sttp.client4.*
 import zio.test.*
@@ -154,7 +154,6 @@ object ListsEndpointsV2E2ESpec extends E2EZSpec {
     },
   )
 
-  // FIXME: Move to correct package. These are tests for /v2/lists
   val e2eSpec = suite("The lists v2 endpoint")(
     (explicitTests ++ allLanguagesFixtureTests)*,
   )
