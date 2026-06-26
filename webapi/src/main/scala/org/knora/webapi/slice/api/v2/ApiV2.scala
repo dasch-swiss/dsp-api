@@ -146,6 +146,20 @@ object ApiV2 {
       .map { case (format, schema, rendering) => FormatOptions(format, schema, rendering) }(s =>
         (s.rdfFormat, s.schema, s.rendering),
       )
+
+    /**
+     * Shared `allLanguages` query parameter input used by the v2 ontology and lists
+     * endpoints. When `true`, `rdfs:label` and `rdfs:comment` are returned as JSON-LD
+     * arrays of language-tagged objects (sorted alphabetically by BCP-47 tag). Default
+     * `false` preserves the legacy single-string shape in the user's preferred language.
+     */
+    val allLanguages: EndpointInput.Query[Boolean] =
+      query[Boolean]("allLanguages")
+        .default(false)
+        .description(
+          "If true, return rdfs:label and rdfs:comment as JSON-LD arrays of language-tagged objects " +
+            "(sorted alphabetically by tag). Default false preserves the legacy single-string shape.",
+        )
   }
 
   object Outputs {

@@ -9,8 +9,15 @@ import sttp.model.StatusCode
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.JsonLDArray
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDObject
+import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.messages.util.rdf.JsonLDValue
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
@@ -20,8 +27,21 @@ object ListsV2E2Spec extends E2EZSpec {
   private def v2listsListIri(iri: ListIri) = uri"/v2/lists/${iri.value}"
   private def v2nodeListIri(iri: ListIri)  = uri"/v2/node/${iri.value}"
 
-  private val knownRootNode = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
-  private val knownSubNode  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+  /** Recursively checks whether any nested [[JsonLDObject]] contains `key` as one of its predicates. */
+  private def containsKeyAnywhere(value: JsonLDValue, key: String): Boolean = value match {
+    case obj: JsonLDObject => obj.value.contains(key) || obj.value.values.exists(containsKeyAnywhere(_, key))
+    case arr: JsonLDArray  => arr.value.exists(containsKeyAnywhere(_, key))
+    case _                 => false
+  }
+
+  /** Reads the `rdfs:label` of the top-level object as a plain [[JsonLDString]] (legacy single-language mode). */
+  private def rootLabel(doc: JsonLDDocument): Option[JsonLDString] =
+    doc.body.value.get(OntologyConstants.Rdfs.Label).collect { case s: JsonLDString => s }
+
+  private val knownRootNode    = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
+  private val knownSubNode     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+  private val treeListRoot     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")
+  private val otherTreeListIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/otherTreeList")
 
   override def rdfDataObjects: List[RdfDataObject] =
     List(
@@ -209,6 +229,43 @@ object ListsV2E2Spec extends E2EZSpec {
                  }
               }"""),
         )
+      },
+    ),
+    suite("when ?allLanguages=true")(
+      test(
+        "returns the same JSON-LD response regardless of the caller's profile language (REQ-1.5, REQ-2.3)",
+      ) {
+        // anythingUser1.lang = "de", beolUser.lang = "en", anonymous = no Accept-Language -> JWT-driven user lang.
+        // With allLanguages=true, userLang/fallbackLang must NOT affect the emitted label/comment arrays.
+        val uri = uri"/v2/lists/${treeListRoot.value}?allLanguages=true"
+        for {
+          asAnonymous <- TestApiClient.getJsonLd(uri).flatMap(_.assert200)
+          asGerman    <- TestApiClient.getJsonLd(uri, SharedTestDataADM.anythingUser1).flatMap(_.assert200)
+          asEnglish   <- TestApiClient.getJsonLd(uri, SharedTestDataADM.beolUser).flatMap(_.assert200)
+        } yield assertTrue(
+          JsonLDUtil.parseJsonLD(asAnonymous) == JsonLDUtil.parseJsonLD(asGerman),
+          JsonLDUtil.parseJsonLD(asGerman) == JsonLDUtil.parseJsonLD(asEnglish),
+        )
+      },
+      test("omits rdfs:comment when no comments are present anywhere in the list (REQ-2.4)") {
+        // otherTreeList has no rdfs:comment on any node, so allLanguages mode must omit the key entirely (D2 omission).
+        for {
+          bodyStr <- TestApiClient
+                       .getJsonLd(uri"/v2/lists/${otherTreeListIri.value}?allLanguages=true")
+                       .flatMap(_.assert200)
+          doc = JsonLDUtil.parseJsonLD(bodyStr)
+        } yield assertTrue(!containsKeyAnywhere(doc.body, OntologyConstants.Rdfs.Comment))
+      },
+    ),
+    suite("when allLanguages is omitted (default mode)")(
+      test("returns the user-profile language's label for the anything treelist root (REQ-2.5)") {
+        // anythingUser1 has lang = "de" - must receive the German label.
+        for {
+          bodyStr <- TestApiClient
+                       .getJsonLd(v2listsListIri(treeListRoot), SharedTestDataADM.anythingUser1)
+                       .flatMap(_.assert200)
+          doc = JsonLDUtil.parseJsonLD(bodyStr)
+        } yield assertTrue(rootLabel(doc).contains(JsonLDString("Listenwurzel")))
       },
     ),
   )
