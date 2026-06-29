@@ -48,7 +48,8 @@ lazy val buildTime   = sys.env.getOrElse("BUILD_TIME", "dev")
 
 lazy val knoraSipiVersion = gitVersion
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, testkit, it, e2e, bagit, jwt, shaclValidator)
+lazy val aggregatedProjects: Seq[ProjectReference] =
+  Seq(webapi, sipi, testkit, it, e2e, bagit, jwt, shaclValidator, sparqlBuilder)
 
 lazy val year           = java.time.LocalDate.now().getYear
 lazy val projectLicense = Some(
@@ -79,6 +80,7 @@ lazy val root: Project = Project(id = "root", file("."))
     bagit,
     jwt,
     shaclValidator,
+    sparqlBuilder,
   )
   .settings(
     // values set for all sub-projects
@@ -100,11 +102,11 @@ lazy val root: Project = Project(id = "root", file("."))
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias(
   "headerCreateAll",
-  "; all webapi/headerCreate webapi/Test/headerCreate testkit/headerCreate test-it/headerCreate test-it/Test/headerCreate test-e2e/headerCreate test-e2e/Test/headerCreate bagit/headerCreate bagit/Test/headerCreate jwt/headerCreate jwt/Test/headerCreate shacl-validator/headerCreate shacl-validator/Test/headerCreate",
+  "; all webapi/headerCreate webapi/Test/headerCreate testkit/headerCreate test-it/headerCreate test-it/Test/headerCreate test-e2e/headerCreate test-e2e/Test/headerCreate bagit/headerCreate bagit/Test/headerCreate jwt/headerCreate jwt/Test/headerCreate shacl-validator/headerCreate shacl-validator/Test/headerCreate sparql-builder/headerCreate sparql-builder/Test/headerCreate",
 )
 addCommandAlias(
   "headerCheckAll",
-  "; all webapi/headerCheck webapi/Test/headerCheck testkit/headerCheck test-it/headerCheck test-it/Test/headerCheck test-e2e/headerCheck test-e2e/Test/headerCheck bagit/headerCheck bagit/Test/headerCheck jwt/headerCheck jwt/Test/headerCheck shacl-validator/headerCheck shacl-validator/Test/headerCheck",
+  "; all webapi/headerCheck webapi/Test/headerCheck testkit/headerCheck test-it/headerCheck test-it/Test/headerCheck test-e2e/headerCheck test-e2e/Test/headerCheck bagit/headerCheck bagit/Test/headerCheck jwt/headerCheck jwt/Test/headerCheck shacl-validator/headerCheck shacl-validator/Test/headerCheck sparql-builder/headerCheck sparql-builder/Test/headerCheck",
 )
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
 addCommandAlias("test-it", "test-it/test")
@@ -187,7 +189,7 @@ val customScalacOptions = Seq(
 )
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
-  .dependsOn(bagit, jwt, shaclValidator)
+  .dependsOn(bagit, jwt, shaclValidator, sparqlBuilder)
   .settings(buildSettings)
   .settings(
     inConfig(Test) {
@@ -343,6 +345,22 @@ lazy val shaclValidator: Project = Project(id = "shacl-validator", base = file("
     libraryDependencies ++= Dependencies.shaclValidatorDependencies ++ Dependencies.shaclValidatorTestDependencies,
     publish / skip := true,
     name           := "shacl-validator",
+  )
+  .enablePlugins(HeaderPlugin)
+
+//////////////////////////////////////
+// SPARQL BUILDER (query construction library)
+//////////////////////////////////////
+
+lazy val sparqlBuilder: Project = Project(id = "sparql-builder", base = file("modules/sparql-builder"))
+  .settings(buildSettings)
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    logLevel := Level.Info,
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    libraryDependencies ++= Dependencies.sparqlBuilderDependencies ++ Dependencies.sparqlBuilderTestDependencies,
+    publish / skip := true,
+    name           := "sparql-builder",
   )
   .enablePlugins(HeaderPlugin)
 

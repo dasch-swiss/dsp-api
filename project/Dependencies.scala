@@ -89,11 +89,11 @@ object Dependencies {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
 
   // rdf and graph libraries
-  val jenaCore    = "org.apache.jena"   % "jena-core"           % JenaVersion
-  val jenaText    = "org.apache.jena"   % "jena-text"           % JenaVersion
-  val rdf4jClient = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
-  val rdf4jShacl  = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
-  val rdf4jSparql = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
+  val jenaCore = "org.apache.jena"   % "jena-core" % JenaVersion
+  val jenaText = "org.apache.jena"   % "jena-text" % JenaVersion
+  val rdf4jClient      = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
+  val rdf4jShacl       = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
+  val rdf4jSparql      = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
 
   // logging
   val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.17" // the logging interface
@@ -181,6 +181,9 @@ object Dependencies {
   val shaclValidatorDependencies     = Seq(topbraidShacl, zio)
   val slf4jSimple                    = "org.slf4j" % "slf4j-simple" % "2.0.17"
   val shaclValidatorTestDependencies = Seq(zioTest, zioTestSbt, slf4jSimple).map(_ % Test)
+
+  val sparqlBuilderDependencies     = Seq(rdf4jSparql)
+  val sparqlBuilderTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
 
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
