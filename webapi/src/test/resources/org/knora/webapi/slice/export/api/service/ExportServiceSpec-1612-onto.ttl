@@ -171,6 +171,11 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
         rdfs:label       "OrderingTestClass"@en;
         rdfs:subClassOf  knora-base:Resource .
 
+<http://www.knora.org/ontology/1612/Data#ImageTestClass>
+        rdf:type         owl:Class;
+        rdfs:label       "ImageTestClass"@en;
+        rdfs:subClassOf  knora-base:StillImageRepresentation .
+
 <http://www.knora.org/ontology/1612/Data>
         rdf:type                      owl:Ontology;
         rdfs:comment                  "Comment";

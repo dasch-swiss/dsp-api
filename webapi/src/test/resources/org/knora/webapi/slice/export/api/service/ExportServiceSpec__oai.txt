@@ -369,5 +369,34 @@
     "datePublished" : "2026-03-18T10:00:00Z",
     "typeOfData" : "Text",
     "keywords" : []
+  },
+  {
+    "id" : "http://rdfh.ch/1612/ImageResource",
+    "pid" : "http://0.0.0.0:3336/ark:/72163/1/1612/ImageResourceP",
+    "label" : {
+      "en" : "ImageResource"
+    },
+    "accessRights" : "Full Open Access",
+    "legalInfo" : {
+      "license" : {
+        "licenseIdentifier" : "public domain",
+        "licenseDate" : "2023-01-01",
+        "licenseURI" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "copyrightHolder" : "DaSCH",
+      "authorship" : [
+        "DaSCH"
+      ]
+    },
+    "howToCite" : "ImageResource",
+    "publisher" : "DaSCH",
+    "dateCreated" : "2026-03-19T10:00:00Z",
+    "datePublished" : "2026-03-19T10:00:00Z",
+    "typeOfData" : "Image",
+    "keywords" : [],
+    "file" : {
+      "mimeType" : "image/jp2",
+      "url" : "http://localhost:3340/projects/1612/assets/B1D0OkEgfFp-Cew2Seur7Wi/original"
+    }
   }
 ]

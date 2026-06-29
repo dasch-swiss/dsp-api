@@ -490,6 +490,32 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
         knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
         knora-base:isDeleted          false .
 
+<http://rdfh.ch/1612/ImageResource>
+        rdf:type                          <http://www.knora.org/ontology/1612/Data#ImageTestClass>;
+        rdfs:label                        "ImageResource";
+        knora-base:hasStillImageFileValue <http://rdfh.ch/1612/ImageResource/values/imageFileVal>;
+        knora-base:attachedToProject      <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser         <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate           "2026-03-19T10:00:00.000000Z"^^xsd:dateTime;
+        knora-base:hasPermissions         "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted              false .
+
+<http://rdfh.ch/1612/ImageResource/values/imageFileVal>
+        rdf:type                      knora-base:StillImageFileValue;
+        knora-base:valueHasUUID       "imageFileValUUID000000"^^xsd:string;
+        knora-base:valueHasString     "B1D0OkEgfFp-Cew2Seur7Wi.jp2";
+        knora-base:originalFilename   "test.tiff";
+        knora-base:originalMimeType   "image/tiff";
+        knora-base:internalFilename   "B1D0OkEgfFp-Cew2Seur7Wi.jp2";
+        knora-base:internalMimeType   "image/jp2";
+        knora-base:dimX               512;
+        knora-base:dimY               256;
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:valueCreationDate  "2026-03-19T10:00:00.000000Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false .
+
 <http://rdfh.ch/lists/1612/PCkZVGmXQ9uMnkpyEU-4-Q>
         rdf:type                      knora-base:ListNode;
         rdfs:comment                  "Vocabulary of Funk"@en;
