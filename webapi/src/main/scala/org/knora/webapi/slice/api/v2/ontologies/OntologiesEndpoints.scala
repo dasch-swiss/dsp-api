@@ -42,7 +42,7 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val resourceClassIriPath = path[IriDto].name("resourceClassIri")
   private val classIriPath         = path[IriDto].name("classIri")
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
-  private val allLanguages         = query[Boolean]("allLanguages").default(false)
+  private val allLanguages         = ApiV2.Inputs.allLanguages
 
   val getOntologyPathSegments = baseEndpoints.withUserEndpoint.get
     .in("ontology" / paths)
