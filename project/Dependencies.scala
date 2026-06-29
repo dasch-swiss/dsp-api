@@ -24,13 +24,13 @@ object Dependencies {
   val ZioConfigVersion            = "4.0.7"
   val ZioLoggingVersion           = "2.5.3"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.5.5"
+  val ZioMetricsConnectorsVersion = "2.5.6"
 
   val ZioPreludeVersion = "1.0.0-RC47"
-  val ZioSchemaVersion  = "1.8.3"
+  val ZioSchemaVersion  = "1.8.5"
 
   val ZioMockVersion = "1.0.0-RC12"
-  val ZioVersion     = "2.1.25"
+  val ZioVersion     = "2.1.26"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
@@ -65,7 +65,7 @@ object Dependencies {
     "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.4.4"        % Test,
   )
 
-  val SttpClientVersion = "4.0.15"
+  val SttpClientVersion = "4.0.25"
   val zioSttpClient     = Seq(
     "com.softwaremill.sttp.client4" %% "zio"      % SttpClientVersion,
     "com.softwaremill.sttp.client4" %% "zio-json" % SttpClientVersion,
@@ -96,7 +96,7 @@ object Dependencies {
   val rdf4jSparql = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
 
   // logging
-  val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.17" // the logging interface
+  val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.18" // the logging interface
 
   // input validation
   val commonsValidator =
@@ -104,7 +104,7 @@ object Dependencies {
 
   // authentication
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "7.0.4" exclude (
+    "org.springframework.security" % "spring-security-core" % "7.0.5" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -127,14 +127,14 @@ object Dependencies {
   // test
   val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.4"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.5"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.13.2"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.13.15"
+  val tapirVersion = "1.13.19"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -153,7 +153,7 @@ object Dependencies {
   val openTelemetryWithSentry = Seq(
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
     "com.softwaremill.sttp.tapir"   %% "tapir-opentelemetry-tracing"         % tapirVersion,
-    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.15",
+    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.17",
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
@@ -179,7 +179,7 @@ object Dependencies {
   val topbraidShacl        = "org.topbraid" % "shacl" % TopbraidShaclVersion
 
   val shaclValidatorDependencies     = Seq(topbraidShacl, zio)
-  val slf4jSimple                    = "org.slf4j" % "slf4j-simple" % "2.0.17"
+  val slf4jSimple                    = "org.slf4j" % "slf4j-simple" % "2.0.18"
   val shaclValidatorTestDependencies = Seq(zioTest, zioTestSbt, slf4jSimple).map(_ % Test)
 
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
