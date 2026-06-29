@@ -42,6 +42,16 @@ object LegalInfo {
   )
 }
 
+// A downloadable file belonging to a record: its MIME type and a direct download link.
+final case class FileLink(
+  mimeType: String,
+  url: String,
+)
+
+object FileLink {
+  implicit val codec: JsonCodec[FileLink] = DeriveJsonCodec.gen[FileLink]
+}
+
 final case class MetadataRecord(
   id: String,
   pid: String,
@@ -58,6 +68,7 @@ final case class MetadataRecord(
   typeOfData: Option[String],
   size: Option[String],
   keywords: List[LangString],
+  file: Option[FileLink],
 )
 
 object MetadataRecord {

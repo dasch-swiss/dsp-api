@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagStringAttributeV2
 import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
@@ -40,6 +41,7 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v3.`export`.FileLink
 import org.knora.webapi.slice.api.v3.`export`.LegalInfo
 import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
@@ -112,6 +114,7 @@ final case class ExportService(
                     typeOfData = typeOfDataOf(r),
                     size = None,
                     keywords = List.empty,
+                    file = fileLinkOf(project, r),
                   )
                 }
     } yield records.toJsonPretty
@@ -135,6 +138,16 @@ final case class ExportService(
       case _: AudioFileValueContentV2                                                => "Sound"
       case _: TextFileValueContentV2                                                 => "Text"
       case _: TextValueContentV2                                                     => "Text"
+    }
+
+  private def fileLinkOf(project: KnoraProject, r: ReadResourceV2): Option[FileLink] =
+    r.values.values.flatten.map(_.valueContent).collectFirst { case fc: FileValueContentV2 =>
+      val internalFilename = fc.fileValue.internalFilename
+      val assetId          = internalFilename.takeWhile(_ != '.')
+      FileLink(
+        mimeType = fc.fileValue.internalMimeType,
+        url = s"${appConfig.dspIngest.baseUrl}/projects/${project.shortcode.value}/assets/$assetId/original",
+      )
     }
 
   def exportResources(
