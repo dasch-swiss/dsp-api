@@ -1,5 +1,22 @@
 # Changelog
 
+## [36.4.0](https://github.com/dasch-swiss/dsp-api/compare/v36.3.0...v36.4.0) (2026-06-29)
+
+
+### Maintenances
+
+* skip CI checks on the release PR (DEV-6678) ([#4162](https://github.com/dasch-swiss/dsp-api/issues/4162)) ([13ee9b6](https://github.com/dasch-swiss/dsp-api/commit/13ee9b64374f63564507af5074a071a47c844d1c))
+
+
+### Documentation
+
+* **observability:** Gravsearch trace runbook, TraceQL + instrumentation recipes (DEV-6636) ([#4161](https://github.com/dasch-swiss/dsp-api/issues/4161)) ([334fc01](https://github.com/dasch-swiss/dsp-api/commit/334fc01427a5ffd1d1e080dcc7ff003b020a837f))
+
+
+### Enhancements
+
+* **lists:** add allLanguages query parameter ([#4163](https://github.com/dasch-swiss/dsp-api/issues/4163)) ([9bd6eee](https://github.com/dasch-swiss/dsp-api/commit/9bd6eee4f9278717fba1844c27b7537d8e8e5b45))
+
 ## [36.3.0](https://github.com/dasch-swiss/dsp-api/compare/v36.2.0...v36.3.0) (2026-06-22)
 
 
