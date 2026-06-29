@@ -41,6 +41,10 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 - [ ] No string concatenation in SPARQL — use rdf4j SparqlBuilder via the helpers in `slice/common/repo` (see `docs/development/dsp-api-sparql-queries.md`)
 
+### Observability
+
+- [ ] Tracing/telemetry changes follow `docs/observability/instrumentation-recipe.md`: bounded span names, a bounded query shape on the root, **no raw query text / instance IRIs / user IDs in attributes**, failure status-mapper maps to `UNSET` (keeps `cause.prettyPrint` out of span status), interruptions set `exit_reason`
+
 ### Tests
 
 - [ ] New tests: `object XSpec extends ZIOSpecDefault`; layers via `.provide(...)`; `TestAspect.withLiveClock` for time-dependent tests

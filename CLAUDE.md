@@ -200,6 +200,22 @@ See also `CONVENTIONS.md` (work-phase agent reference card — code/testing/comm
 `docs/development/`) and `REVIEW.md` (review-phase checklist). Update these alongside `docs/development/` whenever a
 convention changes.
 
+### Observability
+
+When working on observability — OpenTelemetry tracing, spans, metrics, or anything that emits or
+reads telemetry (e.g. instrumenting a responder, adding span attributes, debugging a slow request via
+traces) — read `docs/observability/` first. Key entry points:
+
+- `docs/observability/index.md` — what is instrumented and where the traces live.
+- `docs/observability/instrumentation-recipe.md` — the mandatory pattern for adding per-stage tracing
+  to a responder (root + stage spans, bounded query shape, sanitized errors, `exit_reason`). Follow
+  it rather than re-deriving; the load-bearing `UNSET` status-mapper rule prevents leaking user data
+  into span status.
+- `docs/observability/gravsearch-trace-runbook.md` and `docs/observability/traceql-recipes.md` — how
+  to read traces and query them in Grafana.
+- `docs/observability/using-grafana.md` — how to run those queries in the Grafana UI and from Claude
+  Code via the Grafana MCP server.
+
 ### Markdown Formatting
 
 After editing any markdown files, run the `/fix-markdownlint` skill to ensure proper formatting.

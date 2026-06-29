@@ -20,13 +20,17 @@ and how to add new instrumentation.
 ## Where to look
 
 Traces live in the **`grafanacloud-dasch-traces`** Tempo datasource. Open **Grafana → Explore**,
-select that datasource, and use the **TraceQL** query tab. The metrics endpoint
+select that datasource, and use the **TraceQL** query tab. See [Using Grafana](using-grafana.md) for
+the UI walkthrough, the local-stack equivalent, and how to run all of this from Claude Code via the
+Grafana MCP server. The metrics endpoint
 ([Metrics Endpoint](../03-endpoints/instrumentation/metrics.md)) and health endpoint remain the
 place for Prometheus-format metrics and liveness — tracing complements them, it does not replace
 them.
 
 ## Guides
 
+- **[Using Grafana](using-grafana.md)** — where Grafana lives (cloud and local stack), the Explore /
+  TraceQL UI flow, and how to run every recipe from Claude Code via the Grafana MCP server.
 - **[Gravsearch Trace Runbook](gravsearch-trace-runbook.md)** — find a slow Gravsearch trace, read
   the per-stage time decomposition, and interpret each span and attribute (including the cases where
   *absent* spans are normal, not broken instrumentation).

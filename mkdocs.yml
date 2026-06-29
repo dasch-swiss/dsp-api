@@ -56,6 +56,7 @@ nav:
       - Configuration: 04-publishing-deployment/configuration.md
   - Observability:
       - Overview: observability/index.md
+      - Using Grafana: observability/using-grafana.md
       - Gravsearch Trace Runbook: observability/gravsearch-trace-runbook.md
       - TraceQL Recipes: observability/traceql-recipes.md
       - Instrumentation Recipe: observability/instrumentation-recipe.md
