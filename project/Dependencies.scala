@@ -18,7 +18,7 @@ object Dependencies {
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion = "5.2.2"
+  val Rdf4jVersion = "5.3.1"
   val JenaVersion  = "6.1.0"
 
   val ZioConfigVersion            = "4.0.7"
@@ -111,7 +111,7 @@ object Dependencies {
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.84"
 
   // caching
-  val ehcache = "org.ehcache" % "ehcache" % "3.11.1"
+  val ehcache = "org.ehcache" % "ehcache" % "3.12.0"
 
   // other
   val gwtServlet     = "com.google.gwt"          % "gwt-servlet"      % "2.10.0"
@@ -120,7 +120,7 @@ object Dependencies {
   val saxonHE        = "net.sf.saxon"            % "Saxon-HE"         % "13.0"
   val scalaGraph     = "org.scala-graph"        %% "graph-core"       % "2.0.2"
   val titaniumJSONLD = "com.apicatalog"          % "titanium-json-ld" % "1.7.0"
-  val xmlunitCore    = "org.xmlunit"             % "xmlunit-core"     % "2.11.0"
+  val xmlunitCore    = "org.xmlunit"             % "xmlunit-core"     % "2.12.0"
   val scalaCsv       = "com.github.tototoshi"   %% "scala-csv"        % "2.0.0"
   val scalaXml       = "org.scala-lang.modules" %% "scala-xml"        % "2.4.0"
 
@@ -148,7 +148,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % tapirVersion,
   )
 
-  val otelVersion = "1.60.1"
+  val otelVersion = "1.62.0"
 
   val openTelemetryWithSentry = Seq(
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
@@ -157,7 +157,7 @@ object Dependencies {
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
-    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.40.0",
+    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.41.1",
   )
 
   // In-memory span exporter for the span-assertion test harness (testkit).
@@ -215,7 +215,7 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion        = "12.1.1"
+  val flywayVersion        = "12.7.0"
   val otelAgentVersion     = "v2.26.1"
   val otelPyroscopeVersion = "v1.1.0"
   val hikariVersion        = "7.0.2"
