@@ -27,16 +27,19 @@ final class ListsV2RestService(appConfig: AppConfig, listsResponder: ListsRespon
    *
    * @param user           the user making the request.
    * @param listIri        the Iri of the list's root node.
+   * @param allLanguages   if true, return rdfs:label and rdfs:comment as language-tagged arrays.
    * @param opts           the format options
    *
    * @return the rendered response and the media type
    */
-  def getList(user: User)(listIri: ListIri, opts: FormatOptions): Task[(RenderedResponse, MediaType)] =
+  def getList(
+    user: User,
+  )(listIri: ListIri, allLanguages: Boolean, opts: FormatOptions): Task[(RenderedResponse, MediaType)] =
     listsResponder
       .listGetRequestADM(listIri)
       .flatMap(r => ZIO.getOrFailWith(NotFoundException(s"List $listIri not found."))(r.asOpt[ListGetResponseADM]))
       .map(_.list)
-      .map(ListGetResponseV2(_, user.lang, appConfig.fallbackLanguage))
+      .map(ListGetResponseV2(_, user.lang, appConfig.fallbackLanguage, allLanguages))
       .flatMap(renderer.render(_, opts))
 
   /**
@@ -44,18 +47,21 @@ final class ListsV2RestService(appConfig: AppConfig, listsResponder: ListsRespon
    *
    * @param user           the user making the request.
    * @param nodeIri              the Iri of the list node.
+   * @param allLanguages   if true, return rdfs:label and rdfs:comment as language-tagged arrays.
    * @param opts           the format options
    *
    * @return the rendered response and the media type
    */
-  def getNode(user: User)(nodeIri: ListIri, opts: FormatOptions): Task[(RenderedResponse, MediaType)] =
+  def getNode(
+    user: User,
+  )(nodeIri: ListIri, allLanguages: Boolean, opts: FormatOptions): Task[(RenderedResponse, MediaType)] =
     listsResponder
       .listNodeInfoGetRequestADM(nodeIri)
       .flatMap(r =>
         ZIO.getOrFailWith(NotFoundException(s"Node $nodeIri not found."))(r.asOpt[ChildNodeInfoGetResponseADM]),
       )
       .map(_.nodeinfo)
-      .map(NodeGetResponseV2(_, user.lang, appConfig.fallbackLanguage))
+      .map(NodeGetResponseV2(_, user.lang, appConfig.fallbackLanguage, allLanguages))
       .flatMap(renderer.render(_, opts))
 }
 
