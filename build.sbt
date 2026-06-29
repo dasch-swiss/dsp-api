@@ -43,6 +43,11 @@ val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim + 
 
 ThisBuild / version := gitVersion
 
+// sttp-client4 4.0.25 pulls in zio-json 0.9.0, while some transitive deps (zio-schema-json,
+// tapir-json-zio) still request 0.7.x. zio-json is API-compatible across this range, so allow
+// the higher version to be selected instead of failing on the early-semver eviction check.
+ThisBuild / libraryDependencySchemes += "dev.zio" %% "zio-json" % VersionScheme.Always
+
 lazy val buildCommit = ("git rev-parse --short HEAD" !!).trim
 lazy val buildTime   = sys.env.getOrElse("BUILD_TIME", "dev")
 
