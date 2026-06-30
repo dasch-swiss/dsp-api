@@ -115,8 +115,8 @@ object GravsearchParser {
        */
       def nameToVar(sourceName: String): algebra.Var =
         valueConstants.get(sourceName) match {
-          case Some(valueConstant) => new algebra.Var(sourceName, valueConstant.getValue(), false, true)
-          case None                => new algebra.Var(sourceName, null, false, false)
+          case Some(valueConstant) => algebra.Var.of(sourceName, valueConstant.getValue(), false, true)
+          case None                => algebra.Var.of(sourceName, null, false, false)
         }
 
       // Convert each ConstructStatementWithConstants to a StatementPattern for use in the CONSTRUCT clause.
