@@ -338,7 +338,10 @@
 :hasRegionPreview
     rdf:type                owl:ObjectProperty ;
     rdfs:subPropertyOf      :hasValue ;
-    rdfs:label              "has Region preview"@en ;
+    rdfs:label              "hat Regionsvorschau"@de,
+                            "has Region preview"@en,
+                            "a un aperçu de région"@fr,
+                            "ha anteprima di regione"@it ;
     rdfs:comment            "Points to a region"@en ;
     :isEditable             true ;
     salsah-gui:guiElement   salsah-gui:RegionPreview ;
@@ -2815,7 +2818,10 @@
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :isRegionPreviewOf ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:label      "region preview value"@en ;
+    rdfs:label      "Regionsvorschauwert"@de,
+                    "region preview value"@en,
+                    "valeur d'aperçu de région"@fr,
+                    "valore di anteprima di regione"@it ;
     rdfs:comment    "Represents a direct reference to a Region resource, without link-value reification."@en .
 
 
@@ -2823,7 +2829,10 @@
 
 :isRegionPreviewOf
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "is region preview of"@en ;
+    rdfs:label              "ist Regionsvorschau von"@de,
+                            "is region preview of"@en,
+                            "est aperçu de région de"@fr,
+                            "è anteprima di regione di"@it ;
     rdfs:comment            "Points directly to the Region that this preview value represents."@en ;
     rdfs:subPropertyOf      :valueHas ;
     :subjectClassConstraint :RegionPreviewValue ;
@@ -2836,7 +2845,10 @@
 
 :iiifUrl
     rdf:type                owl:DatatypeProperty ;
-    rdfs:label              "is an IIIF URL"@en ;
+    rdfs:label              "IIIF-URL"@de,
+                            "is an IIIF URL"@en,
+                            "URL IIIF"@fr,
+                            "URL IIIF"@it ;
     rdfs:comment            "IIIF URL for the region preview"@en ;
     rdfs:subPropertyOf      :valueHas ;
     :subjectClassConstraint :RegionPreviewValue ;

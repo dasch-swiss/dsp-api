@@ -172,9 +172,9 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
       test("readResourcesSequence augments a RegionPreviewValue with a IIIF URL computed from the region geometry") {
         val regionPreviewHostResourceIri =
           ResourceIri.unsafeFrom("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg")
-        // pct:x,y,w,h is the bounding box of the region's geometry (in percent); /full/ serves it at native size.
+        // pct:x,y,w,h is the bounding box of the region's geometry (in percent); /max/ serves it at the largest available size.
         val expectedIiifUrl =
-          "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:39.796687,24.423475,9.266166,17.576948/full/0/default.jpg"
+          "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:39.796687,24.423475,9.266166,17.576948/max/0/default.jpg"
         for {
           _        <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           sequence <- ZIO.serviceWithZIO[ReadResourcesService](
@@ -201,7 +201,7 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
             |  "@id": "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/Hn3kAqXyTbiB1RkF0r5Q7w",
             |  "@type": "knora-api:RegionPreviewValue",
             |  "knora-api:isRegionPreviewOf": { "@id": "http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w" },
-            |  "knora-api:iiifUrl": "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:39.796687,24.423475,9.266166,17.576948/full/0/default.jpg",
+            |  "knora-api:iiifUrl": "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:39.796687,24.423475,9.266166,17.576948/max/0/default.jpg",
             |  "knora-api:valueHasUUID": "Hn3kAqXyTbiB1RkF0r5Q7w",
             |  "knora-api:valueCreationDate": { "@value": "2026-05-20T10:00:00Z", "@type": "xsd:dateTimeStamp" },
             |  "knora-api:attachedToUser": { "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q" },

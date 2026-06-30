@@ -239,8 +239,8 @@ final case class ReadResourcesServiceLive(
    *
    * For each referenced region we fetch the region resource (for its geometry) and the still image
    * the region is `isRegionOf` (for its internal filename and project shortcode). The geometry's
-   * bounding box becomes the IIIF region selector `pct:x,y,w,h`, and the URL is rendered at full size:
-   * `{sipiBaseUrl}/{shortcode}/{filename}/pct:x,y,w,h/full/0/default.jpg`.
+   * bounding box becomes the IIIF region selector `pct:x,y,w,h`, and the URL is rendered at max size:
+   * `{sipiBaseUrl}/{shortcode}/{filename}/pct:x,y,w,h/max/0/default.jpg`.
    */
   private def augmentRegionPreviewValues(
     seq: ReadResourcesSequenceV2,
@@ -280,7 +280,7 @@ final case class ReadResourcesServiceLive(
                         case si: StillImageFileValueContentV2 => si
                       }
       } yield region.resourceIri ->
-        s"${appConfig.sipi.externalBaseUrl}/${image.projectADM.shortcode}/${stillImage.fileValue.internalFilename}/$regionSelector/full/0/default.jpg"
+        s"${appConfig.sipi.externalBaseUrl}/${image.projectADM.shortcode}/${stillImage.fileValue.internalFilename}/$regionSelector/max/0/default.jpg"
     }.toMap
   }
 
