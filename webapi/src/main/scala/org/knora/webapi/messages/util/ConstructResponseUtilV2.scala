@@ -461,6 +461,28 @@ final class ConstructResponseUtilV2(
       comment = valueCommentOption,
     )
 
+  private def makeRegionPreviewValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): Task[RegionPreviewValueContentV2] = {
+    // The `iiifUrl` is computed downstream in ReadResourcesServiceLive, where the referenced region's
+    // geometry and the still image's internal filename are available.
+    val regionIriStr = valueObject.requireIriObject(OntologyConstants.KnoraBase.IsRegionPreviewOf.toSmartIri)
+    ZIO
+      .fromEither(ResourceIri.from(regionIriStr))
+      .mapError { e =>
+        InconsistentRepositoryDataException(s"Could not parse region IRI <$regionIriStr>: $e")
+      }
+      .map { regionIri =>
+        RegionPreviewValueContentV2(
+          ontologySchema = InternalSchema,
+          regionIri = regionIri,
+          iiifUrl = None,
+          comment = valueCommentOption,
+        )
+      }
+  }
+
   /**
    * Builds a [[HierarchicalListValueContentV2]]. In the simple schema the list node label is required and
    * is fetched via [[ListsResponder]]; in the complex schema the label is omitted.
@@ -541,6 +563,8 @@ final class ConstructResponseUtilV2(
           targetSchema,
           requestingUser,
         )
+      case OntologyConstants.KnoraBase.RegionPreviewValue =>
+        makeRegionPreviewValueContentV2(valueObject, valueCommentOption)
       case fileValueClass if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
         makeFileValueContentV2(fileValueClass, valueObject, valueCommentOption)
       case other => throw NotImplementedException(s"Not implemented yet: $other")
@@ -594,7 +618,13 @@ final class ConstructResponseUtilV2(
       valueObjects <- ZIO.foreach(resourceWithValueRdfData.valuePropertyAssertions) { (property, valObjs) =>
                         ZIO
                           .foreach(sortValuesByOrderThenIri(valObjs)) { valObj =>
-                            buildReadValueV2(valObj, mappings, queryStandoff, targetSchema, requestingUser)
+                            buildReadValueV2(
+                              valObj,
+                              mappings,
+                              queryStandoff,
+                              targetSchema,
+                              requestingUser,
+                            )
                           }
                           .map(property -> _)
                       }

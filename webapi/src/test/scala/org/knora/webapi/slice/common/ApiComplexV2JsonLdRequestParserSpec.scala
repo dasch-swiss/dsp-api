@@ -42,6 +42,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV
 import org.knora.webapi.messages.v2.responder.valuemessages.IntervalValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageVectorFileValueContentV2
@@ -902,6 +903,34 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
           ),
         )
       }
+    },
+    test("should parse RegionPreviewValueContentV2") {
+      for {
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      """{
+                        |  "@id": "http://rdfh.ch/0001/a-thing",
+                        |  "@type": "ex:Thing",
+                        |  "ex:hasRegionPreview": {
+                        |    "@type": "ka:RegionPreviewValue",
+                        |    "ka:isRegionPreviewOf": {
+                        |      "@id": "http://rdfh.ch/0001/a-region"
+                        |    }
+                        |  },
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                        |  }
+                        |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        actual.valueContent == RegionPreviewValueContentV2(
+          ApiV2Complex,
+          ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-region"),
+          None,
+        ),
+      )
     },
     standOffSuite,
   )

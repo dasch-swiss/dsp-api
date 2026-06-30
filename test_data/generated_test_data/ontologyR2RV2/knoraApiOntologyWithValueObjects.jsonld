@@ -4289,6 +4289,129 @@
             "@id": "knora-api:Region"
         },
         {
+            "knora-api:isValueClass": true,
+            "rdfs:label": "region preview value",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Value"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToUser"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deletedBy"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPermissions"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isDeleted"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isRegionPreviewOf"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:userHasPermission"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueAsString"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueCreationDate"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueHasComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueHasUUID"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                }
+            ],
+            "rdfs:comment": "Represents a direct reference to a Region resource, without link-value reification.",
+            "@type": "owl:Class",
+            "@id": "knora-api:RegionPreviewValue"
+        },
+        {
             "knora-api:isResourceClass": true,
             "rdfs:label": "Representation",
             "rdfs:subClassOf": [
@@ -8860,6 +8983,26 @@
             "rdfs:label": "has permissions"
         },
         {
+            "rdfs:label": "has Region preview",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "knora-api:isEditable": true,
+            "knora-api:isResourceProperty": true,
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "salsah-gui:guiElement": {
+                "@id": "salsah-gui:RegionPreview"
+            },
+            "@id": "knora-api:hasRegionPreview",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Points to a region"
+        },
+        {
             "rdfs:label": "has Representation",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
@@ -9068,6 +9211,21 @@
                 "@id": "knora-api:Value"
             },
             "@id": "knora-api:hasValue"
+        },
+        {
+            "rdfs:label": "is an IIIF URL",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:iiifUrl",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "IIIF URL for the region preview"
         },
         {
             "rdfs:label": "Integer value as integer",
@@ -9331,6 +9489,21 @@
                 "@id": "knora-api:Region"
             },
             "rdfs:comment": "Region of interest within a digital object (e.g. an image)"
+        },
+        {
+            "rdfs:label": "is region preview of",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:Region"
+            },
+            "@id": "knora-api:isRegionPreviewOf",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "Points directly to the Region that this preview value represents."
         },
         {
             "rdfs:label": "is resource class",

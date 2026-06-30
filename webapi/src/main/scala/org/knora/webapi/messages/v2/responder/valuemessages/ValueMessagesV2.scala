@@ -8,6 +8,8 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 import org.apache.jena.rdf.model.Resource
 import zio.IO
 import zio.ZIO
+import zio.json.DeriveJsonDecoder
+import zio.json.JsonDecoder
 
 import java.net.URI
 import java.time.Instant
@@ -1456,6 +1458,15 @@ object GeomValueContentV2 {
     geom    <- ValuesValidator.validateGeometryString(geomStr).toRight(s"Invalid geometry string: $geomStr")
     comment <- objectCommentOption(r)
   } yield GeomValueContentV2(ApiV2Complex, geom, comment)
+
+  final case class Point(x: Double, y: Double)
+  private final case class GeomShape(points: List[Point])
+
+  private given JsonDecoder[Point]     = DeriveJsonDecoder.gen[Point]
+  private given JsonDecoder[GeomShape] = DeriveJsonDecoder.gen[GeomShape]
+
+  def parsePoints(valueHasGeometry: String): Either[String, List[Point]] =
+    JsonDecoder[GeomShape].decodeJson(valueHasGeometry).map(_.points)
 }
 
 /**
@@ -2516,6 +2527,57 @@ object LinkValueContentV2 {
              .unlessZIO(converter.isKnoraDataIri(targetIri).mapError(_.getMessage))
       resourceIri <- ZIO.fromEither(ResourceIri.from(targetIri))
     } yield LinkValueContentV2(ApiV2Complex, referredResourceIri = resourceIri, comment = comment)
+}
+
+/**
+ * Represents a region preview value, which directly references a Region resource without link-value reification.
+ *
+ * @param ontologySchema   the ontology schema.
+ * @param regionIri        the IRI of the Region resource this value points to.
+ * @param iiifUrl          the IIIF preview URL for the region, computed at read time in `ReadResourcesServiceLive`.
+ * @param comment          a comment on this [[RegionPreviewValueContentV2]], if any.
+ */
+case class RegionPreviewValueContentV2(
+  ontologySchema: OntologySchema,
+  regionIri: ResourceIri,
+  iiifUrl: Option[String] = None,
+  comment: Option[String] = None,
+) extends ValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.RegionPreviewValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  override def valueHasString: String = regionIri.value
+
+  override def toOntologySchema(targetSchema: OntologySchema): RegionPreviewValueContentV2 =
+    copy(ontologySchema = targetSchema)
+
+  override def toJsonLDValue(
+    targetSchema: ApiV2Schema,
+    projectADM: Project,
+    appConfig: AppConfig,
+    schemaOptions: Set[Rendering],
+  ): JsonLDValue =
+    JsonLDObject(
+      Map(IsRegionPreviewOf -> JsonLDUtil.iriToJsonLDObject(regionIri.value)) ++
+        iiifUrl.map(url => IiifUrl -> JsonLDString(url)),
+    )
+
+  override def unescape: ValueContentV2 =
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
+}
+
+/**
+ * Constructs [[RegionPreviewValueContentV2]] objects based on JSON-LD input.
+ */
+object RegionPreviewValueContentV2 {
+  def from(r: Resource): Either[String, RegionPreviewValueContentV2] =
+    for {
+      regionIriStr <- r.objectUri(IsRegionPreviewOf)
+      comment      <- objectCommentOption(r)
+      regionIri    <- ResourceIri.from(regionIriStr)
+    } yield RegionPreviewValueContentV2(ApiV2Complex, regionIri, comment)
 }
 
 /**

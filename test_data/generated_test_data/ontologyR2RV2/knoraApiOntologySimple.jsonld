@@ -716,6 +716,19 @@
             "@id": "knora-api:Region"
         },
         {
+            "rdfs:label": "region preview value",
+            "rdfs:subClassOf": {
+                "@type": "owl:Restriction",
+                "owl:onProperty": {
+                    "@id": "knora-api:isRegionPreviewOf"
+                },
+                "owl:cardinality": 1
+            },
+            "rdfs:comment": "Represents a direct reference to a Region resource, without link-value reification.",
+            "@type": "owl:Class",
+            "@id": "knora-api:RegionPreviewValue"
+        },
+        {
             "rdfs:label": "Representation",
             "rdfs:subClassOf": [
                 {
@@ -1486,6 +1499,21 @@
             "@id": "knora-api:hasMovingImageFile"
         },
         {
+            "rdfs:label": "has Region preview",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "rdfs:comment": "Points to a region",
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "@id": "knora-api:hasRegionPreview"
+        },
+        {
             "rdfs:label": "has Representation",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
@@ -1635,6 +1663,18 @@
             "@id": "knora-api:hasValue"
         },
         {
+            "rdfs:label": "is an IIIF URL",
+            "rdfs:comment": "IIIF URL for the region preview",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:iiifUrl"
+        },
+        {
             "rdfs:label": "is Annotation of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
@@ -1704,6 +1744,18 @@
                 "@id": "knora-api:Representation"
             },
             "@id": "knora-api:isRegionOf"
+        },
+        {
+            "rdfs:label": "is region preview of",
+            "rdfs:comment": "Points directly to the Region that this preview value represents.",
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Region"
+            },
+            "@id": "knora-api:isRegionPreviewOf"
         },
         {
             "rdfs:label": "Annotation of",
