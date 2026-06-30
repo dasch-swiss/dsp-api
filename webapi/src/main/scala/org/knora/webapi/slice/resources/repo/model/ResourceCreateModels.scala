@@ -23,6 +23,7 @@ final case class ResourceReadyToCreate(
   permissions: String,
   valueInfos: Seq[ValueInfo],
   standoffLinks: Seq[StandoffLinkValueInfo],
+  authorship: Seq[String] = Seq.empty,
 )
 
 final case class ValueInfo(

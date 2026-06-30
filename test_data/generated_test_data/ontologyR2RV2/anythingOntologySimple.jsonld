@@ -40,6 +40,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
@@ -80,6 +87,13 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
                     },
                     "owl:minCardinality": 0
                 },
@@ -283,6 +297,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
@@ -477,6 +498,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
@@ -538,6 +566,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
@@ -586,6 +621,13 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
                     },
                     "owl:minCardinality": 0
                 },
@@ -653,6 +695,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
@@ -714,6 +763,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
@@ -767,6 +823,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
@@ -807,6 +870,13 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
                     },
                     "owl:minCardinality": 0
                 },
@@ -860,6 +930,13 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
                     },
                     "owl:minCardinality": 0
                 },
@@ -1052,6 +1129,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
@@ -1109,6 +1193,13 @@
                         "@id": "knora-api:hasMovingImageFile"
                     },
                     "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0
                 },
                 {
                     "@type": "owl:Restriction",

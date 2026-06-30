@@ -91,6 +91,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0,
@@ -415,6 +423,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0,
@@ -728,6 +744,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0,
@@ -896,6 +920,14 @@
                         "@id": "knora-api:hasPermissions"
                     },
                     "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
                     "knora-api:isInherited": true
                 },
                 {
@@ -1551,6 +1583,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0,
@@ -2107,6 +2147,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0,
@@ -2535,6 +2583,14 @@
                         "@id": "knora-api:hasPermissions"
                     },
                     "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
                     "knora-api:isInherited": true
                 },
                 {
@@ -3432,6 +3488,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0,
@@ -4037,6 +4101,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0,
@@ -4203,6 +4275,14 @@
                         "@id": "knora-api:hasPermissions"
                     },
                     "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
                     "knora-api:isInherited": true
                 },
                 {
@@ -4500,6 +4580,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0,
@@ -4632,6 +4720,13 @@
                         "@id": "knora-api:hasPermissions"
                     },
                     "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0
                 },
                 {
                     "@type": "owl:Restriction",
@@ -4798,6 +4893,14 @@
                         "@id": "knora-api:hasPermissions"
                     },
                     "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
                     "knora-api:isInherited": true
                 },
                 {
@@ -6774,6 +6877,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0,
@@ -7236,6 +7347,14 @@
                         "@id": "knora-api:hasPermissions"
                     },
                     "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
                     "knora-api:isInherited": true
                 },
                 {
@@ -8005,6 +8124,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasSegmentBounds"
                     },
                     "owl:cardinality": 1,
@@ -8194,6 +8321,14 @@
                         "@id": "knora-api:hasPermissions"
                     },
                     "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
                     "knora-api:isInherited": true
                 },
                 {
@@ -9036,6 +9171,18 @@
                 "@id": "knora-api:LinkValue"
             },
             "@id": "knora-api:hasRepresentationValue"
+        },
+        {
+            "rdfs:label": "has resource authorship",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:hasResourceAuthorship",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Credit, Moral Rights, Author(s) of the resource record (data side)"
         },
         {
             "rdfs:label": "Timespan",

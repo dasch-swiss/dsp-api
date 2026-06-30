@@ -92,6 +92,9 @@ resource.
 
 - `lastModificationDate` (0-1): A timestamp indicating when the resource (or one of its values) was last modified.
 
+- `hasResourceAuthorship` (0-n): The authorship of the resource record (data side), each author has their own string
+  literal. This is the data-side counterpart to the file's `hasAuthorship`.
+
 - `seqnum` (0-1): The sequence number of the resource, if it is part of an ordered group of resources, such as the pages
   in a book.
 

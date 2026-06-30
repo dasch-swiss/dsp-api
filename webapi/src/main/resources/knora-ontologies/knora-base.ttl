@@ -20,7 +20,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v51" .
+    :ontologyVersion   "knora-base v52" .
 
 
 #################################################################
@@ -591,6 +591,15 @@
     rdfs:label                "has license"@en;
     rdfs:comment              "The license"@en ;
     :objectDatatypeConstraint :License .
+
+###  http://www.knora.org/ontology/knora-base#hasResourceAuthorship
+
+:hasResourceAuthorship
+    rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "has resource authorship"@en;
+    rdfs:comment              "Credit, Moral Rights, Author(s) of the resource record (data side)"@en ;
+    :subjectClassConstraint   :Resource ;
+    :objectDatatypeConstraint xsd:string .
 
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOf
 
@@ -1981,7 +1990,10 @@
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :deleteComment ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasResourceAuthorship ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     rdfs:label      "Ressource"@de,
                     "Resource"@en,
                     "Ressource"@fr,

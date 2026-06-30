@@ -41,6 +41,7 @@ object GetResourcePropertiesAndValuesQuery extends QueryBuilderHelper {
   private val resourcePermissions     = variable("resourcePermissions")
   private val creationDate            = variable("creationDate")
   private val lastModificationDate    = variable("lastModificationDate")
+  private val resourceAuthorship      = variable("resourceAuthorship")
   private val isDeleted               = variable("isDeleted")
   private val deletionDate            = variable("deletionDate")
   private val deleteComment           = variable("deleteComment")
@@ -128,7 +129,8 @@ object GetResourcePropertiesAndValuesQuery extends QueryBuilderHelper {
         .andHas(KnoraBase.attachedToUser, resourceCreator)
         .andHas(KnoraBase.hasPermissions, resourcePermissions)
         .andHas(KnoraBase.creationDate, creationDate)
-        .andHas(KnoraBase.lastModificationDate, lastModificationDate),
+        .andHas(KnoraBase.lastModificationDate, lastModificationDate)
+        .andHas(KnoraBase.hasResourceAuthorship, resourceAuthorship),
     )
 
     val deletedPatterns =
@@ -212,6 +214,9 @@ object GetResourcePropertiesAndValuesQuery extends QueryBuilderHelper {
     val lastModDateOptional: GraphPattern =
       resource.has(KnoraBase.lastModificationDate, lastModificationDate).optional()
 
+    val resourceAuthorshipOptional: GraphPattern =
+      resource.has(KnoraBase.hasResourceAuthorship, resourceAuthorship).optional()
+
     val valuesOptionalBlock: Seq[GraphPattern] =
       if (!preview)
         Seq(
@@ -230,7 +235,7 @@ object GetResourcePropertiesAndValuesQuery extends QueryBuilderHelper {
 
     Seq(resourceTypePattern, resourceMetadataPattern, deletedWherePattern) ++
       versionDateFilter ++
-      Seq(lastModDateOptional) ++
+      Seq(lastModDateOptional, resourceAuthorshipOptional) ++
       valuesOptionalBlock
   }
 

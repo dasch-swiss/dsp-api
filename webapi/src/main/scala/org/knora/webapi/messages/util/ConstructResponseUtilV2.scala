@@ -609,11 +609,31 @@ final class ConstructResponseUtilV2(
       resourceWithValueRdfData.requireDateTimeObject(OntologyConstants.KnoraBase.CreationDate.toSmartIri)
     val resourceLastModificationDate =
       resourceWithValueRdfData.maybeDateTimeObject(OntologyConstants.KnoraBase.LastModificationDate.toSmartIri)
-    val resourceDeletionInfo = deletionInfoOf(resourceWithValueRdfData)
+    val resourceDeletionInfo  = deletionInfoOf(resourceWithValueRdfData)
+    val rawResourceAuthorship =
+      resourceWithValueRdfData
+        .maybeStringListObject(OntologyConstants.KnoraBase.HasResourceAuthorship.toSmartIri)
+        .getOrElse(Seq.empty)
 
     for {
       projectIri <- ZIO.fromEither(ProjectIri.from(resourceAttachedToProject)).mapError(BadRequestException.apply)
-      project    <-
+      // Lenient on read: per the legal-metadata two-tier validation policy (strict on write,
+      // lenient on read), invalid authorship stored out-of-band (e.g. ingested via tools) must not
+      // make the whole resource unreadable (a 500). Skip such values, but log a warning so the bad
+      // data is discoverable rather than silently disappearing.
+      resourceAuthorship <- ZIO
+                              .foreach(rawResourceAuthorship) { raw =>
+                                ZIO
+                                  .fromEither(Authorship.from(raw))
+                                  .tapError(err =>
+                                    ZIO.logWarning(
+                                      s"Ignoring invalid authorship on resource <$resourceIri>: \"$raw\" ($err)",
+                                    ),
+                                  )
+                                  .option
+                              }
+                              .map(_.flatten)
+      project <-
         projectService.findById(projectIri).someOrFail(NotFoundException(s"Project '${projectIri.value}' not found"))
       valueObjects <- ZIO.foreach(resourceWithValueRdfData.valuePropertyAssertions) { (property, valObjs) =>
                         ZIO
@@ -641,6 +661,7 @@ final class ConstructResponseUtilV2(
       lastModificationDate = resourceLastModificationDate,
       versionDate = versionDate,
       deletionInfo = resourceDeletionInfo,
+      resourceAuthorship = resourceAuthorship,
     )
   }
 

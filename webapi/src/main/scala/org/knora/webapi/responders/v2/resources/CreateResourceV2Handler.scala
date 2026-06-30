@@ -519,6 +519,7 @@ final class CreateResourceV2Handler(
       permissions = resourcePermissions,
       valueInfos = newValueInfos,
       standoffLinks = linkUpdates,
+      authorship = internalCreateResource.resourceAuthorship.map(_.value),
     )
   }
 
