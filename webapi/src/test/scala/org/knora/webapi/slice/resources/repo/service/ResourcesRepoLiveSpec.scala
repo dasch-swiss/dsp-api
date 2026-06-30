@@ -489,6 +489,33 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     assertUpdateQueriesEqual(expected, result)
   }
 
+  private val createResourceWithAuthorshipTest = test("Create a new resource query with per-resource authorship") {
+    val resource = resourceDefinition.copy(authorship = Seq("Anne Author", "Bob Beispiel"))
+    val expected =
+      Update(s"""|
+                 |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                 |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |
+                 |INSERT DATA {
+                 |    GRAPH <${graphIri.value}> {
+                 |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+                 |            rdfs:label "$label" ;
+                 |            knora-base:isDeleted false ;
+                 |            knora-base:attachedToUser <${userIri.value}> ;
+                 |            knora-base:attachedToProject <${projectIri.value}> ;
+                 |            knora-base:hasPermissions "$permissions" ;
+                 |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+                 |            knora-base:hasResourceAuthorship "Anne Author" ;
+                 |            knora-base:hasResourceAuthorship "Bob Beispiel" .
+                 |    }
+                 |}
+                 |""".stripMargin)
+    val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+    assertUpdateQueriesEqual(expected, result)
+  }
+
   private val createResourceWithValueSuite = suite("Create new resource with any type of value")(
     test("Create a new resource with a link value") {
       val resource = resourceDefinition.copy(valueInfos = List(linkValueDefinition))
@@ -1415,6 +1442,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
   val tests: Spec[StringFormatter, Nothing] =
     suite("ResourcesRepoLiveSpec")(
       createResourceWithoutValuesTest,
+      createResourceWithAuthorshipTest,
       createResourceWithValueSuite,
       createResourceWithMultipleValuesTest,
       createResourceWithStandoffLinkTest,
