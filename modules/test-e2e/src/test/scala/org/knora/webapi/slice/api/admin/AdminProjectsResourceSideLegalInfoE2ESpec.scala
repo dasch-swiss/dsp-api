@@ -32,6 +32,12 @@ object AdminProjectsResourceSideLegalInfoE2ESpec extends E2EZSpec {
     dataAuthorship = List("Lotte Reiniger", "Hilma af Klint").map(Authorship.unsafeFrom),
   )
 
+  private val emptyInfo = ResourceSideLegalInfo(
+    dataLicense = None,
+    dataCopyrightHolder = None,
+    dataAuthorship = List.empty,
+  )
+
   val e2eSpec = suite("The resource-side legal info admin endpoint")(
     test("setting it as a system admin returns the saved values") {
       for {
@@ -57,6 +63,22 @@ object AdminProjectsResourceSideLegalInfoE2ESpec extends E2EZSpec {
         prj.dataLicense.contains(LicenseIri.CC_BY_4_0),
         prj.dataCopyrightHolder.contains(CopyrightHolder.unsafeFrom("University of Basel")),
         prj.dataAuthorship == List("Lotte Reiniger", "Hilma af Klint").map(Authorship.unsafeFrom),
+      )
+    },
+    test("clearing it with an empty payload removes the previously saved values") {
+      for {
+        _ <- TestApiClient
+               .putJson[ResourceSideLegalInfo, ResourceSideLegalInfo](resourceSideUri, validInfo, rootUser)
+               .flatMap(_.assert200)
+        cleared <- TestApiClient
+                     .putJson[ResourceSideLegalInfo, ResourceSideLegalInfo](resourceSideUri, emptyInfo, rootUser)
+                     .flatMap(_.assert200)
+        prj <- TestApiClient.getJson[ProjectGetResponse](projectUri, rootUser).flatMap(_.assert200).map(_.project)
+      } yield assertTrue(
+        cleared == emptyInfo,
+        prj.dataLicense.isEmpty,
+        prj.dataCopyrightHolder.isEmpty,
+        prj.dataAuthorship.isEmpty,
       )
     },
     test("a non-Creative-Commons license (CC0) is rejected with 400") {

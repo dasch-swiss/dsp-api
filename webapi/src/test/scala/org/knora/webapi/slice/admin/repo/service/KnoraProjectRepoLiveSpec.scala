@@ -17,6 +17,7 @@ import zio.test.check
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
@@ -49,6 +50,9 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     RestrictedView.default,
     Set("foo", "bar").map(CopyrightHolder.unsafeFrom),
     Set(LicenseIri.CC_BY_4_0, LicenseIri.CC_BY_NC_4_0),
+    Some(LicenseIri.CC_BY_4_0),
+    Some(CopyrightHolder.unsafeFrom("University of Basel")),
+    List(Authorship.unsafeFrom("Lotte Reiniger")),
   )
 
   private val someProjectTrig =
@@ -69,7 +73,10 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:hasSelfJoinEnabled false ;
         |    knora-admin:projectRestrictedViewSize "!128,128" ;
         |    knora-admin:hasAllowedCopyrightHolder "foo", "bar" ;
-        |    knora-admin:hasEnabledLicense <${LicenseIri.CC_BY_4_0}>, <${LicenseIri.CC_BY_NC_4_0}> .
+        |    knora-admin:hasEnabledLicense <${LicenseIri.CC_BY_4_0}>, <${LicenseIri.CC_BY_NC_4_0}> ;
+        |    knora-admin:hasDataLicense <${LicenseIri.CC_BY_4_0}> ;
+        |    knora-admin:hasDataCopyrightHolder "University of Basel" ;
+        |    knora-admin:hasDefaultDataAuthorship "Lotte Reiniger" .
         |}
         |""".stripMargin
 
