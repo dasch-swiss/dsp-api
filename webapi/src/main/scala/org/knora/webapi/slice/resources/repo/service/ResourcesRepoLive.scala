@@ -457,6 +457,8 @@ object ResourcesRepoLive {
           List(iri(valueIri).has(KB.valueHasTimeStamp, literalOfType(valueHasTimeStamp.toString(), XSD.DATETIME)))
         case GeonameValueInfo(valueHasGeonameCode) =>
           List(iri(valueIri).has(KB.valueHasGeonameCode, literalOf(valueHasGeonameCode)))
+        case RegionPreviewValueInfo(regionIri) =>
+          List(iri(valueIri).has(KB.isRegionPreviewOf, iri(regionIri.value)))
 
     private def buildLinkValuePatterns(
       v: LinkValueInfo,

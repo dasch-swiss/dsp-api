@@ -103,9 +103,31 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
     }
   }
 
+  private val ccLicensesSuite = suite("LicenseIri.CC_LICENSES (allowed resource-side data licenses)")(
+    test("is exactly the six Creative Commons 4.0 BY-family licenses") {
+      assertTrue(
+        LicenseIri.CC_LICENSES == Set(
+          LicenseIri.CC_BY_4_0,
+          LicenseIri.CC_BY_SA_4_0,
+          LicenseIri.CC_BY_NC_4_0,
+          LicenseIri.CC_BY_NC_SA_4_0,
+          LicenseIri.CC_BY_ND_4_0,
+          LicenseIri.CC_BY_NC_ND_4_0,
+        ),
+      )
+    },
+    test("excludes CC0 and the Public Domain Mark (data is always copyrighted)") {
+      assertTrue(
+        !LicenseIri.CC_LICENSES.contains(LicenseIri.CC_0_1_0),
+        !LicenseIri.CC_LICENSES.contains(LicenseIri.CC_PDM_1_0),
+      )
+    },
+  )
+
   val spec: Spec[Any, Nothing] = suite("Copyright And Licenses Model")(
     authorshipSuite,
     licenseIriSuite,
     licenseSuite,
+    ccLicensesSuite,
   )
 }

@@ -494,6 +494,15 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:minCardinality": 0,
+                    "salsah-gui:guiOrder": 14,
+                    "knora-api:isInherited": true,
+                    "owl:onProperty": {
+                        "@id": "anything:hasRegionPreview"
+                    }
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:minCardinality": 0,
                     "salsah-gui:guiOrder": 15,
                     "knora-api:isInherited": true,
                     "owl:onProperty": {
@@ -1013,6 +1022,14 @@
                     },
                     "owl:minCardinality": 0,
                     "salsah-gui:guiOrder": 13
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasRegionPreview"
+                    },
+                    "owl:minCardinality": 0,
+                    "salsah-gui:guiOrder": 14
                 },
                 {
                     "@type": "owl:Restriction",
@@ -2569,6 +2586,15 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:minCardinality": 0,
+                    "salsah-gui:guiOrder": 14,
+                    "knora-api:isInherited": true,
+                    "owl:onProperty": {
+                        "@id": "anything:hasRegionPreview"
+                    }
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:minCardinality": 0,
                     "salsah-gui:guiOrder": 15,
                     "knora-api:isInherited": true,
                     "owl:onProperty": {
@@ -3292,6 +3318,22 @@
                 "@id": "salsah-gui:SimpleText"
             },
             "@id": "anything:hasPictureTitle"
+        },
+        {
+            "rdfs:label": "has region preview",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "knora-api:isEditable": true,
+            "knora-api:isResourceProperty": true,
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "@id": "anything:hasRegionPreview"
         },
         {
             "rdfs:label": "Integer",

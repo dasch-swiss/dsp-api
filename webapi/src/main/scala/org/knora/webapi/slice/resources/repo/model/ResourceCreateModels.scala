@@ -93,6 +93,7 @@ enum TypeSpecificValueInfo {
   case IntervalValueInfo(valueHasIntervalStart: BigDecimal, valueHasIntervalEnd: BigDecimal)
   case TimeValueInfo(valueHasTimeStamp: Instant)
   case GeonameValueInfo(valueHasGeonameCode: String)
+  case RegionPreviewValueInfo(regionIri: InternalIri)
 }
 
 final case class StandoffLinkValueInfo(

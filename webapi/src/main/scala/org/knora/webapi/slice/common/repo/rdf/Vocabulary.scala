@@ -60,6 +60,9 @@ object Vocabulary {
     val projectShortname: Iri               = Rdf.iri(ka, "projectShortname")
     val hasAllowedCopyrightHolder: Iri      = Rdf.iri(ka, "hasAllowedCopyrightHolder")
     val hasEnabledLicense: Iri              = Rdf.iri(ka, "hasEnabledLicense")
+    val hasDataLicense: Iri                 = Rdf.iri(ka, "hasDataLicense")
+    val hasDataCopyrightHolder: Iri         = Rdf.iri(ka, "hasDataCopyrightHolder")
+    val hasDefaultDataAuthorship: Iri       = Rdf.iri(ka, "hasDefaultDataAuthorship")
 
     // permission properties
     val AdministrativePermission: Iri      = Rdf.iri(ka, "AdministrativePermission")
@@ -158,7 +161,8 @@ object Vocabulary {
     val standoffTagHasStart: Iri             = iri(kb + "standoffTagHasStart")
     val standoffTagHasEnd: Iri               = iri(kb + "standoffTagHasEnd")
 
-    val hasTextValueType: Iri = iri(kb + "hasTextValueType")
+    val hasTextValueType: Iri  = iri(kb + "hasTextValueType")
+    val isRegionPreviewOf: Iri = iri(kb + "isRegionPreviewOf")
 
     val UnformattedText: Iri     = iri(kb + "UnformattedText")
     val FormattedText: Iri       = iri(kb + "FormattedText")

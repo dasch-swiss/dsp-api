@@ -284,6 +284,21 @@
         <http://api.knora.org/ontology/salsah-gui/v2#guiElement>
                 <http://api.knora.org/ontology/salsah-gui/v2#Spinbox> .
 
+<http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview>
+        a       <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "has region preview";
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://api.knora.org/ontology/knora-api/v2#hasValue>;
+        <http://api.knora.org/ontology/knora-api/v2#isEditable>
+                true;
+        <http://api.knora.org/ontology/knora-api/v2#isResourceProperty>
+                true;
+        <http://api.knora.org/ontology/knora-api/v2#objectType>
+                <http://api.knora.org/ontology/knora-api/v2#RegionPreviewValue>;
+        <http://api.knora.org/ontology/knora-api/v2#subjectType>
+                <http://0.0.0.0:3333/ontology/0001/anything/v2#Thing> .
+
 <http://0.0.0.0:3333/ontology/0001/anything/v2#hasPictureTitle>
         a       <http://www.w3.org/2002/07/owl#ObjectProperty>;
         <http://www.w3.org/2000/01/rdf-schema#label>
@@ -692,15 +707,6 @@
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
                   <http://www.w3.org/2002/07/owl#maxCardinality>
                           1;
                   <http://www.w3.org/2002/07/owl#onProperty>
@@ -876,15 +882,6 @@
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
                   <http://api.knora.org/ontology/knora-api/v2#isInherited>
                           true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
                   <http://www.w3.org/2002/07/owl#cardinality>
                           1;
                   <http://www.w3.org/2002/07/owl#onProperty>
@@ -969,7 +966,7 @@
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
+                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
                 ];
         <http://api.knora.org/ontology/knora-api/v2#canBeInstantiated>
                 true;
@@ -1016,6 +1013,17 @@
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
                           <http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
+                          true;
+                  <http://api.knora.org/ontology/salsah-gui/v2#guiOrder>
+                          14;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          0;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview>
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
@@ -1295,15 +1303,6 @@
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
                   <http://api.knora.org/ontology/knora-api/v2#isInherited>
                           true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
                   <http://www.w3.org/2002/07/owl#cardinality>
                           1;
                   <http://www.w3.org/2002/07/owl#onProperty>
@@ -1388,7 +1387,7 @@
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
+                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
@@ -1397,7 +1396,7 @@
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
+                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue>
                 ];
         <http://api.knora.org/ontology/knora-api/v2#canBeInstantiated>
                 true;
@@ -1479,15 +1478,6 @@
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
                   <http://api.knora.org/ontology/knora-api/v2#isInherited>
                           true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
                   <http://www.w3.org/2002/07/owl#cardinality>
                           1;
                   <http://www.w3.org/2002/07/owl#onProperty>
@@ -1572,7 +1562,7 @@
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
+                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
@@ -1581,7 +1571,7 @@
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
+                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue>
                 ];
         <http://api.knora.org/ontology/knora-api/v2#canBeInstantiated>
                 true;
@@ -1667,15 +1657,6 @@
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
                           <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
@@ -1856,15 +1837,6 @@
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
                           <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
@@ -2057,15 +2029,6 @@
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
@@ -2250,15 +2213,6 @@
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
@@ -2431,15 +2385,6 @@
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
                           <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
@@ -2629,15 +2574,6 @@
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
                   <http://api.knora.org/ontology/knora-api/v2#isInherited>
                           true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
                   <http://www.w3.org/2002/07/owl#cardinality>
                           1;
                   <http://www.w3.org/2002/07/owl#onProperty>
@@ -2763,6 +2699,15 @@
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
                           <http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://api.knora.org/ontology/salsah-gui/v2#guiOrder>
+                          14;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          0;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview>
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
@@ -3011,15 +2956,6 @@
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
                   <http://api.knora.org/ontology/knora-api/v2#isInherited>
                           true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
                   <http://www.w3.org/2002/07/owl#cardinality>
                           1;
                   <http://www.w3.org/2002/07/owl#onProperty>
@@ -3104,7 +3040,7 @@
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
+                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
                 ];
         <http://api.knora.org/ontology/knora-api/v2#canBeInstantiated>
                 true;
@@ -3355,6 +3291,17 @@
                   <http://api.knora.org/ontology/knora-api/v2#isInherited>
                           true;
                   <http://api.knora.org/ontology/salsah-gui/v2#guiOrder>
+                          14;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          0;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
+                          true;
+                  <http://api.knora.org/ontology/salsah-gui/v2#guiOrder>
                           13;
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           0;
@@ -3606,15 +3553,6 @@
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
                   <http://api.knora.org/ontology/knora-api/v2#isInherited>
                           true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
                   <http://www.w3.org/2002/07/owl#cardinality>
                           1;
                   <http://www.w3.org/2002/07/owl#onProperty>
@@ -3699,7 +3637,7 @@
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
+                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;
@@ -3708,7 +3646,7 @@
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
+                          <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue>
                 ];
         <http://api.knora.org/ontology/knora-api/v2#canBeInstantiated>
                 true;
@@ -3794,15 +3732,6 @@
                           0;
                   <http://www.w3.org/2002/07/owl#onProperty>
                           <http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo>
-                ];
-        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-                [ a       <http://www.w3.org/2002/07/owl#Restriction>;
-                  <http://api.knora.org/ontology/knora-api/v2#isInherited>
-                          true;
-                  <http://www.w3.org/2002/07/owl#minCardinality>
-                          0;
-                  <http://www.w3.org/2002/07/owl#onProperty>
-                          <http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship>
                 ];
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ a       <http://www.w3.org/2002/07/owl#Restriction>;

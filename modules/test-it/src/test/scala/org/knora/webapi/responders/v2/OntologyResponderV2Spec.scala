@@ -119,6 +119,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
   val anythingHasOtherListItem: IRI        = anythingOntology + "hasOtherListItem"
   val anythingHasOtherThing: IRI           = anythingOntology + "hasOtherThing"
   val anythingHasOtherThingValue: IRI      = anythingOntology + "hasOtherThingValue"
+  val anythingHasRegionPreview: IRI        = anythingOntology + "hasRegionPreview"
   val anythingHasRichtext: IRI             = anythingOntology + "hasRichtext"
   val anythingHasText: IRI                 = anythingOntology + "hasText"
   val anythingHasThingDocument: IRI        = anythingOntology + "hasThingDocument"
@@ -2174,6 +2175,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingHasOtherListItem,
         anythingHasOtherThing,
         anythingHasOtherThingValue,
+        anythingHasRegionPreview,
         anythingHasRichtext,
         anythingHasText,
         anythingHasThingDocument,
@@ -2246,6 +2248,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingHasOtherListItem,
         anythingHasOtherThing,
         anythingHasOtherThingValue,
+        anythingHasRegionPreview,
         anythingHasRichtext,
         anythingHasText,
         anythingHasThingDocument,
@@ -2350,6 +2353,7 @@ object OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingHasOtherListItem,
         anythingHasOtherThing,
         anythingHasOtherThingValue,
+        anythingHasRegionPreview,
         anythingHasRichtext,
         anythingHasText,
         anythingHasThingDocument,
