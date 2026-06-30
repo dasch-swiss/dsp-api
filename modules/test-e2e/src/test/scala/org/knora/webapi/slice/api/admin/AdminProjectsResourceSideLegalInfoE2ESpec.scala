@@ -94,5 +94,15 @@ object AdminProjectsResourceSideLegalInfoE2ESpec extends E2EZSpec {
           TestApiClient.putJson[ResourceSideLegalInfo, ResourceSideLegalInfo](resourceSideUri, validInfo, anythingUser2)
       } yield assertTrue(response.code == StatusCode.Forbidden)
     },
+    test("a project admin of a different project gets 403") {
+      for {
+        response <-
+          TestApiClient.putJson[ResourceSideLegalInfo, ResourceSideLegalInfo](
+            resourceSideUri,
+            validInfo,
+            incunabulaProjectAdminUser,
+          )
+      } yield assertTrue(response.code == StatusCode.Forbidden)
+    },
   )
 }
