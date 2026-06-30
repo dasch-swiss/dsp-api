@@ -52,7 +52,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     Set(LicenseIri.CC_BY_4_0, LicenseIri.CC_BY_NC_4_0),
     Some(LicenseIri.CC_BY_4_0),
     Some(CopyrightHolder.unsafeFrom("University of Basel")),
-    List(Authorship.unsafeFrom("Lotte Reiniger")),
+    List("Hilma af Klint", "Lotte Reiniger").map(Authorship.unsafeFrom), // read back sorted by value
   )
 
   private val someProjectTrig =
@@ -76,7 +76,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:hasEnabledLicense <${LicenseIri.CC_BY_4_0}>, <${LicenseIri.CC_BY_NC_4_0}> ;
         |    knora-admin:hasDataLicense <${LicenseIri.CC_BY_4_0}> ;
         |    knora-admin:hasDataCopyrightHolder "University of Basel" ;
-        |    knora-admin:hasDefaultDataAuthorship "Lotte Reiniger" .
+        |    knora-admin:hasDefaultDataAuthorship "Lotte Reiniger", "Hilma af Klint" .
         |}
         |""".stripMargin
 

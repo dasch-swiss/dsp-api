@@ -26,10 +26,12 @@ object AdminProjectsResourceSideLegalInfoE2ESpec extends E2EZSpec {
   private val resourceSideUri = uri"/admin/projects/shortcode/$anythingShortcode/legal-info/resource"
   private val projectUri      = uri"/admin/projects/shortcode/$anythingShortcode"
 
+  // Authorship is stored as unordered RDF literals and read back sorted by value, so the fixture is
+  // kept in sorted order to round-trip equal through both the PUT response and the project GET.
   private val validInfo = ResourceSideLegalInfo(
     dataLicense = Some(LicenseIri.CC_BY_4_0),
     dataCopyrightHolder = Some(CopyrightHolder.unsafeFrom("University of Basel")),
-    dataAuthorship = List("Lotte Reiniger", "Hilma af Klint").map(Authorship.unsafeFrom),
+    dataAuthorship = List("Hilma af Klint", "Lotte Reiniger").map(Authorship.unsafeFrom),
   )
 
   private val emptyInfo = ResourceSideLegalInfo(
@@ -62,7 +64,7 @@ object AdminProjectsResourceSideLegalInfoE2ESpec extends E2EZSpec {
       } yield assertTrue(
         prj.dataLicense.contains(LicenseIri.CC_BY_4_0),
         prj.dataCopyrightHolder.contains(CopyrightHolder.unsafeFrom("University of Basel")),
-        prj.dataAuthorship == List("Lotte Reiniger", "Hilma af Klint").map(Authorship.unsafeFrom),
+        prj.dataAuthorship == validInfo.dataAuthorship,
       )
     },
     test("clearing it with an empty payload removes the previously saved values") {

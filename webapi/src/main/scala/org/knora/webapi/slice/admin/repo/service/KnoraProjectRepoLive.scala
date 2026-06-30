@@ -115,8 +115,9 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
         dataLicense         <- resource.getObjectIrisConvert(hasDataLicense)(LicenseIri.from).map(_.headOption)
         dataCopyrightHolder <-
           resource.getStringLiterals(hasDataCopyrightHolder)(CopyrightHolder.from).map(_.headOption)
-        defaultDataAuthorship <- resource.getStringLiterals(hasDefaultDataAuthorship)(Authorship.from).map(_.toList)
-        restrictedView        <- getRestrictedView
+        defaultDataAuthorship <-
+          resource.getStringLiterals(hasDefaultDataAuthorship)(Authorship.from).map(_.toList.sortBy(_.value))
+        restrictedView <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),
         shortcode = shortcode,
