@@ -22,6 +22,7 @@ final class ListsEndpointsV2(base: BaseEndpoints) {
 
   val getV2Lists = base.withUserEndpoint.get
     .in("v2" / "lists" / listIri)
+    .in(ApiV2.Inputs.allLanguages)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
@@ -29,6 +30,7 @@ final class ListsEndpointsV2(base: BaseEndpoints) {
 
   val getV2Node = base.withUserEndpoint.get
     .in("v2" / "node" / listIri)
+    .in(ApiV2.Inputs.allLanguages)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)

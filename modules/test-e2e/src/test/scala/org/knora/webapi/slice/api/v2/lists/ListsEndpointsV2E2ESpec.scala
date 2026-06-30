@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.api.admin
+package org.knora.webapi.slice.api.v2.lists
 
 import sttp.client4.*
 import zio.test.*
@@ -25,8 +25,56 @@ object ListsEndpointsV2E2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = List(incunabulaRdfData, imagesRdfData, anythingRdfData)
 
-  // FIXME: Move to correct package. These are tests for /v2/lists
-  val e2eSpec = suite("The lists v2 endpoint")(
+  /** Which v2 route a fixture case exercises. */
+  private enum Route(val segment: String) {
+    case Lists extends Route("lists")
+    case Node  extends Route("node")
+  }
+
+  /** A single `?allLanguages=true` fixture-comparison case. */
+  private case class AllLangCase(label: String, route: Route, iri: String, fixture: String)
+
+  /** Cases driving the `?allLanguages=true` fixture comparisons. */
+  private val allLanguagesFixtureCases: Seq[AllLangCase] = Seq(
+    AllLangCase(
+      label = "return the imagesList in all-languages JSON-LD shape when allLanguages=true",
+      route = Route.Lists,
+      iri = "http://rdfh.ch/lists/00FF/73d0ec0302",
+      fixture = "imagesListAllLanguages.jsonld",
+    ),
+    AllLangCase(
+      label = "return the anything treelist in all-languages JSON-LD shape when allLanguages=true",
+      route = Route.Lists,
+      iri = "http://rdfh.ch/lists/0001/treeList",
+      fixture = "treelistAllLanguages.jsonld",
+    ),
+    AllLangCase(
+      label = "return the anything othertreelist in all-languages JSON-LD shape when allLanguages=true",
+      route = Route.Lists,
+      iri = "http://rdfh.ch/lists/0001/otherTreeList",
+      fixture = "othertreelistAllLanguages.jsonld",
+    ),
+    AllLangCase(
+      label = "return a treelist node in all-languages JSON-LD shape when allLanguages=true",
+      route = Route.Node,
+      iri = "http://rdfh.ch/lists/0001/treeList01",
+      fixture = "treelistnodeAllLanguages.jsonld",
+    ),
+  )
+
+  private val allLanguagesFixtureTests = allLanguagesFixtureCases.map { c =>
+    test(c.label) {
+      val listIri  = ListIri.unsafeFrom(c.iri)
+      val expected = readAsJsonLd(Paths.get(s"test_data/generated_test_data/listsR2RV2/${c.fixture}"))
+      val path     = uri"/v2/${c.route.segment}/$listIri?allLanguages=true"
+      TestApiClient
+        .getJsonLdDocument(path)
+        .flatMap(_.assert200)
+        .map(actual => assertTrue(actual == expected))
+    }
+  }
+
+  private val explicitTests = Seq(
     test("perform a request for a list in JSON-LD") {
       val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/73d0ec0302")
       val expected = readAsJsonLd(Paths.get("test_data/generated_test_data/listsR2RV2/imagesList.jsonld"))
@@ -104,5 +152,9 @@ object ListsEndpointsV2E2ESpec extends E2EZSpec {
         .mapAttempt(RdfModel.fromRdfXml)
         .map(actual => assertTrue(actual == expected))
     },
+  )
+
+  val e2eSpec = suite("The lists v2 endpoint")(
+    (explicitTests ++ allLanguagesFixtureTests)*,
   )
 }
