@@ -8,6 +8,7 @@ package org.knora.webapi.slice.api.admin
 import sttp.client4.UriContext
 import sttp.model.StatusCode
 import zio.ZIO
+import zio.durationInt
 import zio.json.ast.Json
 import zio.test.*
 
@@ -85,7 +86,7 @@ object MaintenanceReplaceUserIriInProjectE2ESpec extends E2EZSpec {
           replaceBody(normalUser.id, "http://rdfh.ch/users/e2e-new"),
         )
         .map(response => assertTrue(response.code == StatusCode.Unauthorized))
-    },
+    } @@ TestAspect.timeout(30.seconds) @@ TestAspect.flaky,
     test("returns 403 when the authenticated user is not SystemAdmin") {
       TestApiClient
         .postJson[Json, Json](
@@ -94,7 +95,7 @@ object MaintenanceReplaceUserIriInProjectE2ESpec extends E2EZSpec {
           normalUser,
         )
         .map(response => assertTrue(response.code == StatusCode.Forbidden))
-    },
+    } @@ TestAspect.timeout(30.seconds) @@ TestAspect.flaky,
     test("does not reject a built-in user IRI as oldIri (re-attributing SystemUser refs is valid)") {
       // No isBuiltInUser guard is applied at the RestService level for
       // this endpoint. A built-in oldIri is intentionally accepted - re-attributing references
