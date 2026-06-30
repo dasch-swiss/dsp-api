@@ -11,6 +11,7 @@ import zio.test.*
 
 import java.time.Instant
 
+import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -22,7 +23,7 @@ import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
 
-object ChangeResourceAuthorshipQuerySpec extends ZIOSpecDefault {
+object ChangeResourceAuthorshipQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -47,16 +48,16 @@ object ChangeResourceAuthorshipQuerySpec extends ZIOSpecDefault {
   private val testLastModificationDate = LastModificationDate.from(Instant.parse("2023-08-01T10:30:00Z"))
   private val testNewModificationDate  = LastModificationDate.from(Instant.parse("2023-08-02T15:45:00Z"))
 
-  private val dataGraph = "http://www.knora.org/data/0001/anything"
-  private val ada       = Authorship.unsafeFrom("Ada Lovelace")
-  private val alan      = Authorship.unsafeFrom("Alan Turing")
+  private val ada  = Authorship.unsafeFrom("Ada Lovelace")
+  private val alan = Authorship.unsafeFrom("Alan Turing")
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("ChangeResourceAuthorshipQuerySpec")(
     suite("build")(
-      // Regression guard for the silent no-op bug: the update MUST use `WITH <graph>` so the named
-      // project graph applies to the WHERE clause too. With GRAPH-wrapped DELETE/INSERT and an
-      // ungraphed WHERE, the WHERE matches the (empty) default graph on production Fuseki and the
-      // whole update no-ops. So: `WITH <graph>` present, and no `GRAPH` wrapper anywhere.
+      // The generated query is compared against a golden file (src/test/resources/.../<suffix>.txt).
+      // Regression guard for the silent no-op bug: the golden output MUST scope the named project graph
+      // with `WITH <graph>` (and no `GRAPH` wrapper), so the WHERE clause matches the resource in its
+      // graph rather than the dataset default graph -- which is empty on a store without a union default
+      // graph (e.g. the in-memory triplestore used in tests) and would make the whole update no-op.
       test("scopes the named graph with WITH (not GRAPH-wrapped clauses) when setting authorship") {
         ChangeResourceAuthorshipQuery
           .build(
@@ -68,21 +69,7 @@ object ChangeResourceAuthorshipQuerySpec extends ZIOSpecDefault {
             authorship = Seq(ada, alan),
           )
           .map { case (lmd, update) =>
-            val q = update.sparql
-            assertTrue(
-              lmd == testNewModificationDate,
-              q.contains(s"WITH <$dataGraph>"),
-              !q.contains("GRAPH"),
-              // the new authorship values are inserted as string literals
-              q.contains("knora-base:hasResourceAuthorship \"Ada Lovelace\""),
-              q.contains("knora-base:hasResourceAuthorship \"Alan Turing\""),
-              // existing authorship is deleted via the bound variable, matched optionally in WHERE
-              q.contains("knora-base:hasResourceAuthorship ?oldAuthorship"),
-              q.contains("OPTIONAL { <http://rdfh.ch/0001/a-thing> knora-base:hasResourceAuthorship ?oldAuthorship"),
-              // the existing lastModificationDate is matched in WHERE and bumped to the new one
-              q.contains("knora-base:lastModificationDate \"2023-08-01T10:30:00Z\"^^xsd:dateTime"),
-              q.contains("knora-base:lastModificationDate \"2023-08-02T15:45:00Z\"^^xsd:dateTime"),
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "setAuthorship")
           }
       },
       test("inserts no authorship triples when clearing authorship (empty sequence)") {
@@ -96,16 +83,7 @@ object ChangeResourceAuthorshipQuerySpec extends ZIOSpecDefault {
             authorship = Seq.empty,
           )
           .map { case (lmd, update) =>
-            val q = update.sparql
-            assertTrue(
-              lmd == testNewModificationDate,
-              q.contains(s"WITH <$dataGraph>"),
-              !q.contains("GRAPH"),
-              // no authorship literal is inserted (clearing), but the existing one is still deleted
-              !q.contains("knora-base:hasResourceAuthorship \""),
-              q.contains("knora-base:hasResourceAuthorship ?oldAuthorship"),
-              q.contains("knora-base:lastModificationDate \"2023-08-02T15:45:00Z\"^^xsd:dateTime"),
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "clearAuthorship")
           }
       },
       test("uses FILTER NOT EXISTS for lastModificationDate when the resource was never modified") {
@@ -119,15 +97,7 @@ object ChangeResourceAuthorshipQuerySpec extends ZIOSpecDefault {
             authorship = Seq(ada),
           )
           .map { case (lmd, update) =>
-            val q = update.sparql
-            assertTrue(
-              lmd == testNewModificationDate,
-              q.contains(s"WITH <$dataGraph>"),
-              !q.contains("GRAPH"),
-              q.contains("FILTER NOT EXISTS"),
-              q.contains("knora-base:hasResourceAuthorship \"Ada Lovelace\""),
-              q.contains("knora-base:lastModificationDate \"2023-08-02T15:45:00Z\"^^xsd:dateTime"),
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "neverModified")
           }
       },
     ),

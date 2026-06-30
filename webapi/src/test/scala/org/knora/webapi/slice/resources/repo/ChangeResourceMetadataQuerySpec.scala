@@ -11,6 +11,7 @@ import zio.test.*
 
 import java.time.Instant
 
+import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -21,7 +22,7 @@ import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
 
-object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
+object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -46,14 +47,14 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
   private val testLastModificationDate = LastModificationDate.from(Instant.parse("2023-08-01T10:30:00Z"))
   private val testNewModificationDate  = LastModificationDate.from(Instant.parse("2023-08-02T15:45:00Z"))
 
-  private val dataGraph = "http://www.knora.org/data/0001/anything"
-
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("ChangeResourceMetadataQuerySpec")(
     suite("build")(
-      // Regression guard for the silent no-op bug (DEV-6669): the update MUST scope the named project
-      // graph with `WITH <graph>` so the WHERE clause matches the resource in its graph. With
-      // GRAPH-wrapped DELETE/INSERT and an ungraphed WHERE, the WHERE matches the (empty) default graph
-      // on production Fuseki and the whole update no-ops. So: `WITH <graph>` present, no `GRAPH` wrapper.
+      // The generated query is compared against a golden file (src/test/resources/.../<suffix>.txt).
+      // Regression guard for the silent no-op bug (DEV-6669): the golden output MUST scope the named
+      // project graph with `WITH <graph>` (and no `GRAPH` wrapper), so the WHERE clause matches the
+      // resource in its graph rather than the dataset default graph -- which is empty on a store without
+      // a union default graph (e.g. the in-memory triplestore used in tests) and would make the update
+      // no-op.
       test("should produce the correct query when changing only the label") {
         ChangeResourceMetadataQuery
           .build(
@@ -66,18 +67,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = None,
           )
           .map { case (lmd, update) =>
-            val q = update.sparql
-            assertTrue(
-              lmd == testNewModificationDate,
-              q.contains(s"WITH <$dataGraph>"),
-              !q.contains("GRAPH"),
-              q.contains("rdfs:label \"Updated Resource Label\""),
-              q.contains("rdfs:label ?oldLabel"),
-              q.contains("OPTIONAL { <http://rdfh.ch/0001/a-thing> rdfs:label ?oldLabel"),
-              q.contains("knora-base:lastModificationDate \"2023-08-01T10:30:00Z\"^^xsd:dateTime"),
-              q.contains("knora-base:lastModificationDate \"2023-08-02T15:45:00Z\"^^xsd:dateTime"),
-              !q.contains("knora-base:hasPermissions"),
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "label")
           }
       },
       test("should produce the correct query when changing only the permissions") {
@@ -92,15 +82,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser"),
           )
           .map { case (lmd, update) =>
-            val q = update.sparql
-            assertTrue(
-              lmd == testNewModificationDate,
-              q.contains(s"WITH <$dataGraph>"),
-              !q.contains("GRAPH"),
-              q.contains("knora-base:hasPermissions \"CR knora-admin:Creator|V knora-admin:KnownUser\""),
-              q.contains("knora-base:hasPermissions ?oldPermissions"),
-              !q.contains("rdfs:label"),
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "permissions")
           }
       },
       test("should produce the correct query when changing both label and permissions") {
@@ -115,16 +97,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = Some("CR knora-admin:Creator"),
           )
           .map { case (lmd, update) =>
-            val q = update.sparql
-            assertTrue(
-              lmd == testNewModificationDate,
-              q.contains(s"WITH <$dataGraph>"),
-              !q.contains("GRAPH"),
-              q.contains("rdfs:label \"New Label\""),
-              q.contains("rdfs:label ?oldLabel"),
-              q.contains("knora-base:hasPermissions \"CR knora-admin:Creator\""),
-              q.contains("knora-base:hasPermissions ?oldPermissions"),
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "labelAndPermissions")
           }
       },
       test("should produce the correct query when lastModificationDate is None (resource never modified before)") {
@@ -139,15 +112,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = None,
           )
           .map { case (lmd, update) =>
-            val q = update.sparql
-            assertTrue(
-              lmd == testNewModificationDate,
-              q.contains(s"WITH <$dataGraph>"),
-              !q.contains("GRAPH"),
-              q.contains("FILTER NOT EXISTS"),
-              q.contains("rdfs:label \"First Label\""),
-              q.contains("knora-base:lastModificationDate \"2023-08-02T15:45:00Z\"^^xsd:dateTime"),
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "neverModified")
           }
       },
       test("should handle special characters in labels") {
@@ -162,15 +127,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = None,
           )
           .map { case (lmd, update) =>
-            val q = update.sparql
-            assertTrue(
-              lmd == testNewModificationDate,
-              q.contains(s"WITH <$dataGraph>"),
-              !q.contains("GRAPH"),
-              // quotes and apostrophes are escaped in the emitted SPARQL string literal
-              q.contains("\\\"quotes\\\""),
-              q.contains("\\'apostrophes\\'"),
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "specialCharsLabel")
           }
       },
       test("should handle special characters in permissions") {
@@ -185,15 +142,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = Some("CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser"),
           )
           .map { case (lmd, update) =>
-            val q = update.sparql
-            assertTrue(
-              lmd == testNewModificationDate,
-              q.contains(s"WITH <$dataGraph>"),
-              !q.contains("GRAPH"),
-              q.contains(
-                "knora-base:hasPermissions \"CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser\"",
-              ),
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "specialCharsPermissions")
           }
       },
     ),
