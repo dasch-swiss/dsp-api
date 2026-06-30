@@ -158,7 +158,7 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     )
 
   val putProjectLegalInfoResourceSide = baseEndpoints.securedEndpoint.put
-    .in(base / "resource-side")
+    .in(base / "resource")
     .in(jsonBody[ResourceSideLegalInfo].example(ResourceSideLegalInfo.example))
     .out(jsonBody[ResourceSideLegalInfo].example(ResourceSideLegalInfo.example))
     .description(

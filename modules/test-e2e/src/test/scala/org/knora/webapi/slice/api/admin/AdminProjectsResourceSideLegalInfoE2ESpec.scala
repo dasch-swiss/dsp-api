@@ -23,7 +23,7 @@ object AdminProjectsResourceSideLegalInfoE2ESpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 
-  private val resourceSideUri = uri"/admin/projects/shortcode/$anythingShortcode/legal-info/resource-side"
+  private val resourceSideUri = uri"/admin/projects/shortcode/$anythingShortcode/legal-info/resource"
   private val projectUri      = uri"/admin/projects/shortcode/$anythingShortcode"
 
   private val validInfo = ResourceSideLegalInfo(
