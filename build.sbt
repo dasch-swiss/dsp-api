@@ -43,6 +43,11 @@ val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim + 
 
 ThisBuild / version := gitVersion
 
+// sttp-client4 4.0.25 pulls in zio-json 0.9.0, while some transitive deps (zio-schema-json,
+// tapir-json-zio) still request 0.7.x. zio-json is API-compatible across this range, so allow
+// the higher version to be selected instead of failing on the early-semver eviction check.
+ThisBuild / libraryDependencySchemes += "dev.zio" %% "zio-json" % VersionScheme.Always
+
 lazy val buildCommit = ("git rev-parse --short HEAD" !!).trim
 lazy val buildTime   = sys.env.getOrElse("BUILD_TIME", "dev")
 
@@ -476,7 +481,7 @@ lazy val ingest = {
       name          := "dsp-ingest",
       headerLicense := projectLicense,
       libraryDependencies ++= db ++ tapir ++ metrics ++ zioSeq ++ zioSttpClient ++ openTelemetryWithSentry ++ Seq(
-        "commons-io"  % "commons-io"                        % "2.21.0",
+        "commons-io"  % "commons-io"                        % "2.22.0",
         "dev.zio"    %% "zio-config"                        % ZioConfigVersion,
         "dev.zio"    %% "zio-config-magnolia"               % ZioConfigVersion,
         "dev.zio"    %% "zio-config-typesafe"               % ZioConfigVersion,
