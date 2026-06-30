@@ -93,10 +93,18 @@ object ChangeResourceMetadataQuery extends QueryBuilderHelper {
         List(resourceTypePattern, lastModPattern) ::: labelPattern ::: permissionsPattern
       }
 
-      // Use `WITH <graph>` (not `.from`/`.into`) so the named project graph is applied to the WHERE
-      // clause as well as DELETE/INSERT. With `.from`/`.into` the WHERE stays ungraphed and, on a
-      // triplestore without a union default graph (e.g. production Fuseki), matches nothing -- making
-      // the whole update a no-op. `with` is a Scala keyword, hence the backticks.
+      // Use `WITH <graph>` (not `.from`/`.into`) so the named project graph applies to the WHERE
+      // clause as well as DELETE/INSERT. With `.from`/`.into` the DELETE/INSERT are GRAPH-wrapped but
+      // the WHERE stays ungraphed, matching the dataset default graph. On a store without a union
+      // default graph (e.g. the in-memory triplestore used in tests) that default graph is empty, so
+      // the WHERE matches nothing and the whole update silently no-ops. `WITH` keeps it correct
+      // regardless of the union-default-graph setting (production enables it, so `.from`/`.into` would
+      // work there too, but at the cost of scanning the union of all graphs).
+      // Invariant: this is correct only because every WHERE pattern here matches the resource's own
+      // triples in the data graph (its asserted rdf:type, lastModificationDate, label, permissions). A
+      // pattern needing another graph (e.g. an ontology class or cardinality check) would not match
+      // under `WITH` and would require `USING <data> USING <ontology>` or explicit `GRAPH {}` blocks.
+      // `with` is a Scala keyword, hence the backticks.
       val query = Queries
         .MODIFY()
         .prefix(KB.NS, RDFS.NS, XSD.NS, RDF.NS)
