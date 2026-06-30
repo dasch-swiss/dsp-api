@@ -283,6 +283,27 @@ object LegalInfoE2ESpec extends E2EZSpec {
       } yield assert(onCreate)(hasSameElements(authors.map(_.value))) &&
         assert(onRead)(hasSameElements(authors.map(_.value)))
     },
+    test("editing a resource's authorship via PUT replaces it and is reflected when read back") {
+      val initial = List("Ada Lovelace").map(Authorship.unsafeFrom)
+      val updated = List("Lotte Reiniger", "Hilma af Klint").map(Authorship.unsafeFrom)
+      for {
+        createModel <- createThingWithResourceAuthorship(initial)
+        resourceIri <- resourceId(createModel)
+        _           <- putResourceAuthorship(resourceIri, updated).flatMap(_.assert200)
+        getModel    <- getResourceFromApi(resourceIri)
+        onRead      <- resourceAuthorshipValues(getModel)
+      } yield assert(onRead)(hasSameElements(updated.map(_.value)))
+    },
+    test("editing a resource's authorship to empty clears it") {
+      val initial = List("Ada Lovelace").map(Authorship.unsafeFrom)
+      for {
+        createModel <- createThingWithResourceAuthorship(initial)
+        resourceIri <- resourceId(createModel)
+        _           <- putResourceAuthorship(resourceIri, Nil).flatMap(_.assert200)
+        getModel    <- getResourceFromApi(resourceIri)
+        onRead      <- resourceAuthorshipValues(getModel)
+      } yield assertTrue(onRead.isEmpty)
+    },
   )
 
   val e2eSpec =
@@ -373,6 +394,23 @@ object LegalInfoE2ESpec extends E2EZSpec {
       responseBody <- TestApiClient.postJsonLd(uri"/v2/resources", jsonLd, rootUser).flatMap(_.assert200)
       model        <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
     } yield model
+  }
+
+  // PUT /v2/resources/authorship. A freshly created resource has no lastModificationDate, so the first
+  // edit needs none in the body; an empty list clears authorship.
+  private def putResourceAuthorship(resourceIri: ResourceIri, authorship: List[Authorship]) = {
+    val arr    = authorship.map(a => Json.Str(a.value).toString).mkString("[", ", ", "]")
+    val jsonLd =
+      s"""{
+         |  "@id" : "${resourceIri.value}",
+         |  "@type" : "anything:Thing",
+         |  "knora-api:hasResourceAuthorship" : $arr,
+         |  "@context" : {
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+         |  }
+         |}""".stripMargin
+    TestApiClient.putJsonLd(uri"/v2/resources/authorship", jsonLd, rootUser)
   }
 
   private def getValueFromApi(createResourceResponse: Model): ZIO[env, Throwable, Model] = for {
