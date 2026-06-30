@@ -43,7 +43,7 @@ case class KnoraProject(
   enabledLicenses: Set[LicenseIri],
   dataLicense: Option[LicenseIri] = None,
   dataCopyrightHolder: Option[CopyrightHolder] = None,
-  dataAuthorship: List[Authorship] = List.empty,
+  defaultDataAuthorship: List[Authorship] = List.empty,
 ) extends EntityWithId[ProjectIri]
 
 object KnoraProject {

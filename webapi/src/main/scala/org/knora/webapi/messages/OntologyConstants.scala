@@ -481,7 +481,7 @@ object OntologyConstants {
     val hasEnabledLicense: IRI              = KnoraAdminPrefixExpansion + "hasEnabledLicense"
     val hasDataLicense: IRI                 = KnoraAdminPrefixExpansion + "hasDataLicense"
     val hasDataCopyrightHolder: IRI         = KnoraAdminPrefixExpansion + "hasDataCopyrightHolder"
-    val hasDataAuthorship: IRI              = KnoraAdminPrefixExpansion + "hasDataAuthorship"
+    val hasDefaultDataAuthorship: IRI       = KnoraAdminPrefixExpansion + "hasDefaultDataAuthorship"
 
     /* Group */
     val UserGroup: IRI         = KnoraAdminPrefixExpansion + "UserGroup"

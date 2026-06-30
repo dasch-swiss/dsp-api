@@ -185,14 +185,14 @@ final case class KnoraProjectService(
     projectIri: ProjectIri,
     dataLicense: Option[LicenseIri],
     dataCopyrightHolder: Option[CopyrightHolder],
-    dataAuthorship: List[Authorship],
+    defaultDataAuthorship: List[Authorship],
   ): Task[KnoraProject] =
     withProjectFromDb(projectIri) { project =>
       projectRepo.save(
         project.copy(
           dataLicense = dataLicense,
           dataCopyrightHolder = dataCopyrightHolder,
-          dataAuthorship = dataAuthorship,
+          defaultDataAuthorship = defaultDataAuthorship,
         ),
       )
     }

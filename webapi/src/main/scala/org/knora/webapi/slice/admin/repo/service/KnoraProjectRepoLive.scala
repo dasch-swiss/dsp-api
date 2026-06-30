@@ -56,7 +56,7 @@ final case class KnoraProjectRepoLive(
       Vocabulary.KnoraAdmin.hasEnabledLicense,
       Vocabulary.KnoraAdmin.hasDataLicense,
       Vocabulary.KnoraAdmin.hasDataCopyrightHolder,
-      Vocabulary.KnoraAdmin.hasDataAuthorship,
+      Vocabulary.KnoraAdmin.hasDefaultDataAuthorship,
     ),
   )
 
@@ -115,8 +115,8 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
         dataLicense         <- resource.getObjectIrisConvert(hasDataLicense)(LicenseIri.from).map(_.headOption)
         dataCopyrightHolder <-
           resource.getStringLiterals(hasDataCopyrightHolder)(CopyrightHolder.from).map(_.headOption)
-        dataAuthorship <- resource.getStringLiterals(hasDataAuthorship)(Authorship.from).map(_.toList)
-        restrictedView <- getRestrictedView
+        defaultDataAuthorship <- resource.getStringLiterals(hasDefaultDataAuthorship)(Authorship.from).map(_.toList)
+        restrictedView        <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),
         shortcode = shortcode,
@@ -132,7 +132,7 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
         enabledLicenses = enabledLicenses,
         dataLicense = dataLicense,
         dataCopyrightHolder = dataCopyrightHolder,
-        dataAuthorship = dataAuthorship,
+        defaultDataAuthorship = defaultDataAuthorship,
       )
     }
 
@@ -169,8 +169,8 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
       project.dataCopyrightHolder.foreach(holder =>
         pattern.andHas(Vocabulary.KnoraAdmin.hasDataCopyrightHolder, holder.value),
       )
-      project.dataAuthorship.foreach(authorship =>
-        pattern.andHas(Vocabulary.KnoraAdmin.hasDataAuthorship, authorship.value),
+      project.defaultDataAuthorship.foreach(authorship =>
+        pattern.andHas(Vocabulary.KnoraAdmin.hasDefaultDataAuthorship, authorship.value),
       )
       pattern
     }

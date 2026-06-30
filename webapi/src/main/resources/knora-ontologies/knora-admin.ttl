@@ -288,12 +288,12 @@
     knora-base:objectDatatypeConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/knora-admin#hasDataAuthorship
+###  http://www.knora.org/ontology/knora-admin#hasDefaultDataAuthorship
 
-:hasDataAuthorship
+:hasDefaultDataAuthorship
     rdf:type                            owl:DatatypeProperty ;
     rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
-    rdfs:comment                        "A default authorship for the data (resource records) of a project."@en ;
+    rdfs:comment                        "The default authorship for a project's resources; not applied directly, only pre-fills each resource's own authorship."@en ;
     knora-base:subjectClassConstraint   :knoraProject ;
     knora-base:objectDatatypeConstraint xsd:string .
 
@@ -444,7 +444,7 @@
                       owl:onProperty     :hasDataCopyrightHolder ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
                     [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :hasDataAuthorship ;
+                      owl:onProperty     :hasDefaultDataAuthorship ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     rdfs:comment    "Represents a project that uses Knora."@en .
 

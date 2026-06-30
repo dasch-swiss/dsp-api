@@ -60,7 +60,7 @@ final case class ProjectService(
         knoraProject.enabledLicenses,
         knoraProject.dataLicense,
         knoraProject.dataCopyrightHolder,
-        knoraProject.dataAuthorship,
+        knoraProject.defaultDataAuthorship,
       ),
     )
 

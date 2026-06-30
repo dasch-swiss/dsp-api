@@ -62,7 +62,7 @@ object Vocabulary {
     val hasEnabledLicense: Iri              = Rdf.iri(ka, "hasEnabledLicense")
     val hasDataLicense: Iri                 = Rdf.iri(ka, "hasDataLicense")
     val hasDataCopyrightHolder: Iri         = Rdf.iri(ka, "hasDataCopyrightHolder")
-    val hasDataAuthorship: Iri              = Rdf.iri(ka, "hasDataAuthorship")
+    val hasDefaultDataAuthorship: Iri       = Rdf.iri(ka, "hasDefaultDataAuthorship")
 
     // permission properties
     val AdministrativePermission: Iri      = Rdf.iri(ka, "AdministrativePermission")
