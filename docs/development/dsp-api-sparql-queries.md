@@ -507,9 +507,45 @@ details on the query language and its internals.
 
 ## Testing Query Builders
 
+**Prefer golden tests as the default for query builders.** Snapshotting the full
+generated query keeps the entire SPARQL visible and reviewable in one file, verifies
+_clause placement_ (a triple is in DELETE vs INSERT vs WHERE) rather than mere substring
+presence, and stays readable as queries grow.
+
+**Avoid scattered `q.contains("...")` / `!q.contains("...")` substring assertions.** They
+are simultaneously brittle (they depend on exact serialization — spacing, escaping) and
+weak (they do not verify where a triple appears, so a query can be structurally wrong and
+still pass). Asserting the _absence_ of a keyword (e.g. `!q.contains("GRAPH")`) is
+especially fragile. Use a golden snapshot instead — a regression shows up as an obvious
+diff in the golden file.
+
+### Golden tests (preferred)
+
+Extend the spec with `GoldenTest` and snapshot the generated SPARQL. The golden file is
+written to the resources mirror of the spec's package
+(`src/test/scala/.../FooSpec.scala` → `src/test/resources/.../FooSpec__<suffix>.txt`).
+To create or update goldens, set `rewrite = true` on a call or `override val rewriteAll =
+true` on the spec, run once, then turn it off again; review the resulting diff.
+
+```scala
+object CreateLinkQuerySpec extends ZIOSpecDefault with GoldenTest {
+  test("should produce correct INSERT query") {
+    for {
+      query <- CreateLinkQuery.build(project, resourceIri, linkUpdate, uuid, instant, None)
+      result = replaceUuidPatterns(query.getQueryString) // normalise nondeterministic output (e.g. UUIDs)
+    } yield assertGolden(result, "createLink__basic")
+  }
+}
+```
+
+Golden comparison is exact-text, so the builder output must be deterministic; normalise
+any nondeterministic parts (random UUIDs, timestamps) before snapshotting, as
+`replaceUuidPatterns` does above. Triple _order_ is captured verbatim — fine for a
+deterministic builder.
+
 ### Direct string comparison
 
-For simple queries, compare the generated SPARQL string directly:
+For a trivial one-off query where an inline expectation reads better than a separate file:
 
 ```scala
 test("should produce correct DELETE query") {
@@ -520,23 +556,12 @@ test("should produce correct DELETE query") {
 }
 ```
 
-### Golden tests
-
-For complex queries, use the `GoldenTest` utility to compare against expected files:
-
-```scala
-test("should produce correct INSERT query") {
-  for {
-    query <- CreateLinkQuery.build(project, resourceIri, linkUpdate, uuid, instant, None)
-    result = replaceUuidPatterns(query.getQueryString)
-  } yield assertGolden(result, "createLink__basic")
-}
-```
-
 ### Apache Jena parsing for structural validation
 
-Parse the generated SPARQL with Apache Jena to verify it is syntactically valid,
-then inspect the parsed structure:
+When you need a _semantic_, order-insensitive check rather than an exact snapshot — for
+example asserting two queries are structurally equal regardless of formatting — parse the
+generated SPARQL with Apache Jena and compare or inspect the parsed structure (see
+`ResourcesRepoLiveSpec.assertUpdateQueriesEqual`):
 
 ```scala
 import org.apache.jena.update.UpdateFactory

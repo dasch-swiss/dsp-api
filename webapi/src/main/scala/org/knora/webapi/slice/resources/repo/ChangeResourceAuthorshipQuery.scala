@@ -16,6 +16,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
@@ -25,7 +26,7 @@ import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object ChangeResourceMetadataQuery extends QueryBuilderHelper {
+object ChangeResourceAuthorshipQuery extends QueryBuilderHelper {
 
   def build(
     project: KnoraProject,
@@ -33,11 +34,10 @@ object ChangeResourceMetadataQuery extends QueryBuilderHelper {
     resourceClassIri: ResourceClassIri,
     maybeLastModificationDate: Option[LastModificationDate],
     maybeNewModificationDate: Option[LastModificationDate],
-    maybeLabel: Option[String],
-    maybePermissions: Option[String],
+    authorship: Seq[Authorship],
   ): IO[BadRequestException, (LastModificationDate, Update)] = {
 
-    // Determine the new modification date: use submitted value if provided and valid, otherwise use current time
+    // Determine the new modification date: use the submitted value if provided and valid, otherwise use the current time.
     val newModificationDateEffect: IO[BadRequestException, LastModificationDate] =
       maybeNewModificationDate.fold(Clock.instant.map(LastModificationDate.from)) { submittedNewDate =>
         maybeLastModificationDate match {
@@ -53,44 +53,36 @@ object ChangeResourceMetadataQuery extends QueryBuilderHelper {
       val dataGraph               = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
       val resource                = toRdfIri(resourceIri)
       val resourceClass           = toRdfIri(resourceClassIri)
-      val oldLabel                = variable("oldLabel")
-      val oldPermissions          = variable("oldPermissions")
+      val oldAuthorship           = variable("oldAuthorship")
       val anyLastModificationDate = variable("anyLastModificationDate")
 
-      // Build DELETE patterns - delete old values only if we're replacing them
+      // DELETE the previous last modification date (if any) and all existing authorship triples.
       val deletePatterns: List[TriplePattern] = {
         val lastModDelete =
           maybeLastModificationDate.map(toRdfLiteral).map(resource.has(KB.lastModificationDate, _)).toList
-        val labelDelete       = maybeLabel.map(_ => resource.has(RDFS.LABEL, oldLabel)).toList
-        val permissionsDelete = maybePermissions.map(_ => resource.has(KB.hasPermissions, oldPermissions)).toList
-        lastModDelete ::: labelDelete ::: permissionsDelete
+        val authorshipDelete = List(resource.has(KB.hasResourceAuthorship, oldAuthorship))
+        lastModDelete ::: authorshipDelete
       }
 
-      // Build INSERT patterns - always insert new modification date, plus label and/or permissions if provided
+      // INSERT the new last modification date and one triple per new authorship value (none when empty => cleared).
       val insertPatterns: List[TriplePattern] = {
         val modificationDateInsert = resource.has(KB.lastModificationDate, toRdfLiteral(newModificationDate))
-        val labelInsert            = maybeLabel.map(resource.has(RDFS.LABEL, _)).toList
-        val permissionsInsert      = maybePermissions.map(resource.has(KB.hasPermissions, _)).toList
-        modificationDateInsert :: (labelInsert ::: permissionsInsert)
+        val authorshipInsert       = authorship.map(a => resource.has(KB.hasResourceAuthorship, a.value)).toList
+        modificationDateInsert :: authorshipInsert
       }
 
-      // Build WHERE patterns - check resource exists with correct type and lastModificationDate
+      // WHERE: the resource must exist with the expected class and lastModificationDate; bind existing authorship.
       val wherePatterns: List[GraphPattern] = {
         val resourceTypePattern = resource.isA(resourceClass)
 
         val lastModPattern: GraphPattern = maybeLastModificationDate match {
           case Some(lmd) => resource.has(KB.lastModificationDate, toRdfLiteral(lmd))
-          case None      => // If no lastModificationDate provided, ensure the resource doesn't have one
-            GraphPatterns.filterNotExists(resource.has(KB.lastModificationDate, anyLastModificationDate))
+          case None      => GraphPatterns.filterNotExists(resource.has(KB.lastModificationDate, anyLastModificationDate))
         }
 
-        val labelPattern =
-          maybeLabel.map(_ => resource.has(RDFS.LABEL, oldLabel).optional()).toList
+        val authorshipPattern = resource.has(KB.hasResourceAuthorship, oldAuthorship).optional()
 
-        val permissionsPattern =
-          maybePermissions.map(_ => resource.has(KB.hasPermissions, oldPermissions).optional()).toList
-
-        List(resourceTypePattern, lastModPattern) ::: labelPattern ::: permissionsPattern
+        List(resourceTypePattern, lastModPattern, authorshipPattern)
       }
 
       // `WITH <graph>` scopes the named graph to the WHERE clause too, not just DELETE/INSERT;

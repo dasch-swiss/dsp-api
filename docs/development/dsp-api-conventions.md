@@ -236,12 +236,14 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
 
 **Rules:**
 
+- **Every feature is tested** — unit tests for logic (parsers, query builders, services) and an integration/E2E round-trip for user-facing behaviour (write → read-back reflects the change). A feature merged without tests is under-tested and should be flagged in review.
 - `object XSpec extends ZIOSpecDefault`
 - `suite("description")(test("...") { ... })`
 - Use `.provide(layers...)` for dependency injection
 - Use `@@ TestAspect.withLiveClock` for time-dependent tests
 - Use `.exit` to capture `Exit[E, A]` for error testing
 - Use `check(Gen[T])` for property-based testing
+- **Query builders: prefer golden snapshots** (`GoldenTest` + `assertGolden`) over scattered `q.contains(...)` substring assertions — see `dsp-api-sparql-queries.md` § Testing Query Builders
 
 ## Naming Conventions
 

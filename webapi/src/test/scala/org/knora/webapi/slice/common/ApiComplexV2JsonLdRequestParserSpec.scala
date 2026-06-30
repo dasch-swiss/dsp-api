@@ -2096,6 +2096,32 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                   )
       } yield assertTrue(result.createResource.resourceAuthorship.isEmpty)
     },
+    test("updateResourceAuthorshipRequestV2 parses the resource IRI and the new authorship") {
+      for {
+        uuid   <- Random.nextUUID
+        result <- service(
+                    _.updateResourceAuthorshipRequestV2(
+                      """{
+                        |  "@id": "http://rdfh.ch/0001/a-thing",
+                        |  "@type": "ex:Thing",
+                        |  "ka:hasResourceAuthorship": [ "Lotte Reiniger", "Hilma af Klint" ],
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                        |  }
+                        |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  )
+        // Authorship is a plain multi-valued datatype property (no rdf:List, no ORDER BY on read),
+        // so order does not round-trip through the triplestore. Compare as an unordered set.
+      } yield assertTrue(
+        result.resourceIri.value == "http://rdfh.ch/0001/a-thing",
+        result.resourceAuthorship.toSet ==
+          Set(Authorship.unsafeFrom("Lotte Reiniger"), Authorship.unsafeFrom("Hilma af Klint")),
+      )
+    },
   ).provide(
     AdministrativePermissionRepoInMemory.layer,
     AdministrativePermissionService.layer,

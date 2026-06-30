@@ -1,0 +1,13 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+WITH <http://www.knora.org/data/0001/anything>
+DELETE { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
+<http://rdfh.ch/0001/a-thing> knora-base:hasResourceAuthorship ?oldAuthorship . }
+INSERT { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-02T15:45:00Z"^^xsd:dateTime .
+<http://rdfh.ch/0001/a-thing> knora-base:hasResourceAuthorship "Ada Lovelace" .
+<http://rdfh.ch/0001/a-thing> knora-base:hasResourceAuthorship "Alan Turing" . }
+WHERE { <http://rdfh.ch/0001/a-thing> a <http://www.knora.org/ontology/0001/anything#Thing> .
+<http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
+OPTIONAL { <http://rdfh.ch/0001/a-thing> knora-base:hasResourceAuthorship ?oldAuthorship . } }

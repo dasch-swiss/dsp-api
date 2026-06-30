@@ -11,6 +11,7 @@ import zio.test.*
 
 import java.time.Instant
 
+import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -20,9 +21,8 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
+object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -49,6 +49,12 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("ChangeResourceMetadataQuerySpec")(
     suite("build")(
+      // The generated query is compared against a golden file (src/test/resources/.../<suffix>.txt).
+      // Regression guard for the silent no-op bug (DEV-6669): the golden output MUST scope the named
+      // project graph with `WITH <graph>` (and no `GRAPH` wrapper), so the WHERE clause matches the
+      // resource in its graph rather than the dataset default graph -- which is empty on a store without
+      // a union default graph (e.g. the in-memory triplestore used in tests) and would make the update
+      // no-op.
       test("should produce the correct query when changing only the label") {
         ChangeResourceMetadataQuery
           .build(
@@ -61,20 +67,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = None,
           )
           .map { case (lmd, update) =>
-            assertTrue(
-              lmd == testNewModificationDate,
-              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                                 |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                 |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |<http://rdfh.ch/0001/a-thing> rdfs:label ?oldLabel . } }
-                                 |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-02T15:45:00Z"^^xsd:dateTime .
-                                 |<http://rdfh.ch/0001/a-thing> rdfs:label "Updated Resource Label" . } }
-                                 |WHERE { <http://rdfh.ch/0001/a-thing> a <http://www.knora.org/ontology/0001/anything#Thing> .
-                                 |<http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |OPTIONAL { <http://rdfh.ch/0001/a-thing> rdfs:label ?oldLabel . } }""".stripMargin,
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "label")
           }
       },
       test("should produce the correct query when changing only the permissions") {
@@ -89,20 +82,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser"),
           )
           .map { case (lmd, update) =>
-            assertTrue(
-              lmd == testNewModificationDate,
-              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                                 |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                 |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |<http://rdfh.ch/0001/a-thing> knora-base:hasPermissions ?oldPermissions . } }
-                                 |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-02T15:45:00Z"^^xsd:dateTime .
-                                 |<http://rdfh.ch/0001/a-thing> knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:KnownUser" . } }
-                                 |WHERE { <http://rdfh.ch/0001/a-thing> a <http://www.knora.org/ontology/0001/anything#Thing> .
-                                 |<http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |OPTIONAL { <http://rdfh.ch/0001/a-thing> knora-base:hasPermissions ?oldPermissions . } }""".stripMargin,
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "permissions")
           }
       },
       test("should produce the correct query when changing both label and permissions") {
@@ -117,23 +97,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = Some("CR knora-admin:Creator"),
           )
           .map { case (lmd, update) =>
-            assertTrue(
-              lmd == testNewModificationDate,
-              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                                 |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                 |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |<http://rdfh.ch/0001/a-thing> rdfs:label ?oldLabel .
-                                 |<http://rdfh.ch/0001/a-thing> knora-base:hasPermissions ?oldPermissions . } }
-                                 |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-02T15:45:00Z"^^xsd:dateTime .
-                                 |<http://rdfh.ch/0001/a-thing> rdfs:label "New Label" .
-                                 |<http://rdfh.ch/0001/a-thing> knora-base:hasPermissions "CR knora-admin:Creator" . } }
-                                 |WHERE { <http://rdfh.ch/0001/a-thing> a <http://www.knora.org/ontology/0001/anything#Thing> .
-                                 |<http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |OPTIONAL { <http://rdfh.ch/0001/a-thing> rdfs:label ?oldLabel . }
-                                 |OPTIONAL { <http://rdfh.ch/0001/a-thing> knora-base:hasPermissions ?oldPermissions . } }""".stripMargin,
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "labelAndPermissions")
           }
       },
       test("should produce the correct query when lastModificationDate is None (resource never modified before)") {
@@ -148,19 +112,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = None,
           )
           .map { case (lmd, update) =>
-            assertTrue(
-              lmd == testNewModificationDate,
-              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                                 |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                 |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> rdfs:label ?oldLabel . } }
-                                 |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-02T15:45:00Z"^^xsd:dateTime .
-                                 |<http://rdfh.ch/0001/a-thing> rdfs:label "First Label" . } }
-                                 |WHERE { <http://rdfh.ch/0001/a-thing> a <http://www.knora.org/ontology/0001/anything#Thing> .
-                                 |FILTER NOT EXISTS { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate ?anyLastModificationDate . }
-                                 |OPTIONAL { <http://rdfh.ch/0001/a-thing> rdfs:label ?oldLabel . } }""".stripMargin,
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "neverModified")
           }
       },
       test("should handle special characters in labels") {
@@ -175,20 +127,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = None,
           )
           .map { case (lmd, update) =>
-            assertTrue(
-              lmd == testNewModificationDate,
-              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                                 |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                 |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |<http://rdfh.ch/0001/a-thing> rdfs:label ?oldLabel . } }
-                                 |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-02T15:45:00Z"^^xsd:dateTime .
-                                 |<http://rdfh.ch/0001/a-thing> rdfs:label "Label with \"quotes\" and \'apostrophes\'" . } }
-                                 |WHERE { <http://rdfh.ch/0001/a-thing> a <http://www.knora.org/ontology/0001/anything#Thing> .
-                                 |<http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |OPTIONAL { <http://rdfh.ch/0001/a-thing> rdfs:label ?oldLabel . } }""".stripMargin,
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "specialCharsLabel")
           }
       },
       test("should handle special characters in permissions") {
@@ -203,20 +142,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault {
             maybePermissions = Some("CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser"),
           )
           .map { case (lmd, update) =>
-            assertTrue(
-              lmd == testNewModificationDate,
-              update.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                                 |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                 |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |<http://rdfh.ch/0001/a-thing> knora-base:hasPermissions ?oldPermissions . } }
-                                 |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-02T15:45:00Z"^^xsd:dateTime .
-                                 |<http://rdfh.ch/0001/a-thing> knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser" . } }
-                                 |WHERE { <http://rdfh.ch/0001/a-thing> a <http://www.knora.org/ontology/0001/anything#Thing> .
-                                 |<http://rdfh.ch/0001/a-thing> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |OPTIONAL { <http://rdfh.ch/0001/a-thing> knora-base:hasPermissions ?oldPermissions . } }""".stripMargin,
-            )
+            assertTrue(lmd == testNewModificationDate) && assertGolden(update.sparql, "specialCharsPermissions")
           }
       },
     ),
