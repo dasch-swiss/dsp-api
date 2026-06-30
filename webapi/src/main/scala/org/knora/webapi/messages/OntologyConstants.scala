@@ -479,6 +479,9 @@ object OntologyConstants {
     val HasSelfJoinEnabled: IRI             = KnoraAdminPrefixExpansion + "hasSelfJoinEnabled"
     val hasAllowedCopyrightHolder: IRI      = KnoraAdminPrefixExpansion + "hasAllowedCopyrightHolder"
     val hasEnabledLicense: IRI              = KnoraAdminPrefixExpansion + "hasEnabledLicense"
+    val hasDataLicense: IRI                 = KnoraAdminPrefixExpansion + "hasDataLicense"
+    val hasDataCopyrightHolder: IRI         = KnoraAdminPrefixExpansion + "hasDataCopyrightHolder"
+    val hasDefaultDataAuthorship: IRI       = KnoraAdminPrefixExpansion + "hasDefaultDataAuthorship"
 
     /* Group */
     val UserGroup: IRI         = KnoraAdminPrefixExpansion + "UserGroup"
