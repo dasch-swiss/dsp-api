@@ -125,7 +125,7 @@ object Dependencies {
   val scalaXml       = "org.scala-lang.modules" %% "scala-xml"        % "2.4.0"
 
   // test
-  val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
+  val dataFaker = "net.datafaker" % "datafaker" % "2.7.0"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.5"
 
