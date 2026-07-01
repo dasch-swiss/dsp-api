@@ -1,0 +1,67 @@
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_load", "oci_push")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+# The `knora-sipi` image is a thin overlay on the upstream Sipi image: copy the
+# DSP Lua scripts onto /sipi/scripts. Each per-arch base already runs as root
+# (User "0") and EXPOSEs 1024 — both inherited — so no USER directive is emitted
+# (Sipi reads NFS-mounted assets owned by orchestrator-controlled uids) and no
+# port needs re-declaring. This replaces the former sbt `sipi` project.
+
+# Layer: the Lua scripts at /sipi/scripts/<name>.
+pkg_tar(
+    name = "scripts_layer",
+    srcs = glob(["scripts/**"]),
+    package_dir = "/sipi/scripts",
+    strip_prefix = "scripts",
+)
+
+# Per-arch overlay images. Each inherits architecture/os/User/EXPOSE from its
+# single-arch base, so no platform transition or variant handling is needed.
+oci_image(
+    name = "image_amd64",
+    base = "@sipi_base_amd64",
+    labels = {"maintainer": "support@dasch.swiss"},
+    tars = [":scripts_layer"],
+)
+
+oci_image(
+    name = "image_arm64",
+    base = "@sipi_base_arm64",
+    labels = {"maintainer": "support@dasch.swiss"},
+    tars = [":scripts_layer"],
+)
+
+# Multi-arch index for publishing (mirrors the old buildx arm64+amd64 set).
+oci_image_index(
+    name = "index",
+    images = [
+        ":image_amd64",
+        ":image_arm64",
+    ],
+)
+
+# Host-arch image, selected for the local `oci_load` below.
+alias(
+    name = "image",
+    actual = select({
+        "@platforms//cpu:arm64": ":image_arm64",
+        "@platforms//cpu:x86_64": ":image_amd64",
+    }),
+)
+
+# `bazel run //sipi:load` — load the host-arch image into the local Docker
+# daemon as :latest (what SipiTestContainer and docker-compose reference). The
+# Makefile adds the git-describe version tag via `docker tag`.
+oci_load(
+    name = "load",
+    image = ":image",
+    repo_tags = ["daschswiss/knora-sipi:latest"],
+)
+
+# `bazel run //sipi:push -- -t latest -t <version>` — push the multi-arch index.
+# The Makefile passes the tags (version sourced from `make docker-image-tag`).
+oci_push(
+    name = "push",
+    image = ":index",
+    repository = "index.docker.io/daschswiss/knora-sipi",
+)
