@@ -215,7 +215,7 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion        = "12.7.0"
+  val flywayVersion        = "12.10.0"
   val otelAgentVersion     = "v2.26.1"
   val otelPyroscopeVersion = "v1.1.0"
   val hikariVersion        = "7.1.0"
