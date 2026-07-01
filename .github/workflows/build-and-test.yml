@@ -59,7 +59,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-unit
-          path: ./target/scala-3.3.7/coverage-report/cobertura.xml
+          path: ./target/scala-3.3.8/coverage-report/cobertura.xml
 
   test-bagit:
     name: Test bagit
@@ -151,7 +151,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-integration
-          path: ./target/scala-3.3.7/coverage-report/cobertura.xml
+          path: ./target/scala-3.3.8/coverage-report/cobertura.xml
 
   test-e2e:
     name: Build and E2E test
@@ -191,7 +191,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-e2e
-          path: ./target/scala-3.3.7/coverage-report/cobertura.xml
+          path: ./target/scala-3.3.8/coverage-report/cobertura.xml
 
   upload-coverage:
     name: Upload coverage

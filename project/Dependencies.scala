@@ -14,11 +14,11 @@ object Dependencies {
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v5.0.1"
 
-  val ScalaVersion = "3.3.7"
+  val ScalaVersion = "3.3.8"
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion = "5.3.1"
+  val Rdf4jVersion = "5.3.2"
   val JenaVersion  = "6.1.0"
 
   val ZioConfigVersion            = "4.0.7"
@@ -104,7 +104,7 @@ object Dependencies {
 
   // authentication
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "7.0.5" exclude (
+    "org.springframework.security" % "spring-security-core" % "7.0.6" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -134,7 +134,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.13.19"
+  val tapirVersion = "1.13.25"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -153,7 +153,7 @@ object Dependencies {
   val openTelemetryWithSentry = Seq(
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
     "com.softwaremill.sttp.tapir"   %% "tapir-opentelemetry-tracing"         % tapirVersion,
-    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.17",
+    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.18",
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
