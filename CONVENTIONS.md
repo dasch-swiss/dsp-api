@@ -70,11 +70,12 @@ Do **not** use "Knora" in free-form human-readable text — commit messages, PR 
 
 ## Testing Conventions
 
+- **Every feature is tested.** Logic (parsers, query builders, services) gets unit tests; user-facing behaviour gets an integration/E2E round-trip (write → read-back reflects the change). "It compiles" is not coverage — a feature merged without tests should be flagged in review (see `REVIEW.md`).
 - `object XSpec extends ZIOSpecDefault`; `suite("X should")(test("...") { … })`; layers via `.provide(...)`. Use `TestAspect.withLiveClock` for time-dependent tests.
 - New repo traits ship an in-memory companion under `webapi/src/test/.../service/<Name>InMemory.scala`.
 - Test data: prefer self-contained fixtures next to the component. Only fall back to shared `test_data/` sets when unavoidable. When adding to a shared set, verify an actual *instance* of the scenario exists — not just that the schema supports it.
 - Test locations: unit → `webapi/src/test/scala/`; integration → `modules/test-it/`; ingest integration → `modules/test-ingest-integration/`; E2E → `modules/test-e2e/`; shared utilities → `modules/testkit/`.
-- For large or generated string output (SPARQL, serialized responses), mix in `GoldenTest` and assert with `assertGolden(actual, "suffix")`. The expected value is stored next to the spec under `src/test/resources/`; regenerate with `rewrite = true` (or `rewriteAll = true`) and inspect the `git diff`. See `webapi/src/test/scala/org/knora/webapi/GoldenTest.scala`.
+- For large or generated string output (SPARQL, serialized responses), mix in `GoldenTest` and assert with `assertGolden(actual, "suffix")`. The expected value is stored next to the spec under `src/test/resources/`; regenerate with `rewrite = true` (or `rewriteAll = true`) and inspect the `git diff`. See `webapi/src/test/scala/org/knora/webapi/GoldenTest.scala`. This is the **preferred** way to test query builders — not scattered `q.contains(...)` substring assertions (see `docs/development/dsp-api-sparql-queries.md` § Testing Query Builders).
 
 ## Commit Conventions
 

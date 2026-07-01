@@ -48,6 +48,21 @@ object CopyrightHolderReplaceRequest {
   given JsonCodec[CopyrightHolderReplaceRequest] = DeriveJsonCodec.gen[CopyrightHolderReplaceRequest]
 }
 
+final case class ResourceSideLegalInfo(
+  dataLicense: Option[LicenseIri],
+  dataCopyrightHolder: Option[CopyrightHolder],
+  dataAuthorship: List[Authorship],
+)
+object ResourceSideLegalInfo {
+  given JsonCodec[ResourceSideLegalInfo] = DeriveJsonCodec.gen[ResourceSideLegalInfo]
+
+  val example: ResourceSideLegalInfo = ResourceSideLegalInfo(
+    Some(LicenseIri.CC_BY_4_0),
+    Some(CopyrightHolder.unsafeFrom("University of Basel")),
+    List("Lotte Reiniger", "Hilma af Klint").map(Authorship.unsafeFrom),
+  )
+}
+
 final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   private final val base = "admin" / "projects" / "shortcode" / projectShortcode / "legal-info"
@@ -140,6 +155,16 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .description(
       "Update a particular allowed copyright holder for use within this project, does not update existing values on assets. " +
         "The user must be a system admin.",
+    )
+
+  val putProjectLegalInfoResourceSide = baseEndpoints.securedEndpoint.put
+    .in(base / "resource")
+    .in(jsonBody[ResourceSideLegalInfo].example(ResourceSideLegalInfo.example))
+    .out(jsonBody[ResourceSideLegalInfo].example(ResourceSideLegalInfo.example))
+    .description(
+      "Set the resource-side (data) legal info for this project: the data license (Creative Commons only), " +
+        "the copyright holder and the default authorship, each applied to every resource record in the project. " +
+        "Returns the saved values. The user must be a system or project admin.",
     )
 }
 

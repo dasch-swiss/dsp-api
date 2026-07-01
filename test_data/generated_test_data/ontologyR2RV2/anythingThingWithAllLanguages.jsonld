@@ -106,6 +106,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasResourceAuthorship"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0,
@@ -326,6 +334,14 @@
                     },
                     "owl:minCardinality": 0,
                     "salsah-gui:guiOrder": 13
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasRegionPreview"
+                    },
+                    "owl:minCardinality": 0,
+                    "salsah-gui:guiOrder": 14
                 },
                 {
                     "@type": "owl:Restriction",

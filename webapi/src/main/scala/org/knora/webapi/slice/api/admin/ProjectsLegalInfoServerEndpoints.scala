@@ -22,6 +22,7 @@ final class ProjectsLegalInfoServerEndpoints(
     endpoints.getProjectCopyrightHolders.serverLogic(restService.findCopyrightHolders),
     endpoints.postProjectCopyrightHolders.serverLogic(restService.addCopyrightHolders),
     endpoints.putProjectCopyrightHolders.serverLogic(restService.replaceCopyrightHolder),
+    endpoints.putProjectLegalInfoResourceSide.serverLogic(restService.setResourceSideLegalInfo),
   )
 }
 

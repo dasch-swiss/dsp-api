@@ -23,6 +23,7 @@ final case class ResourceReadyToCreate(
   permissions: String,
   valueInfos: Seq[ValueInfo],
   standoffLinks: Seq[StandoffLinkValueInfo],
+  authorship: Seq[String] = Seq.empty,
 )
 
 final case class ValueInfo(
@@ -92,6 +93,7 @@ enum TypeSpecificValueInfo {
   case IntervalValueInfo(valueHasIntervalStart: BigDecimal, valueHasIntervalEnd: BigDecimal)
   case TimeValueInfo(valueHasTimeStamp: Instant)
   case GeonameValueInfo(valueHasGeonameCode: String)
+  case RegionPreviewValueInfo(regionIri: InternalIri)
 }
 
 final case class StandoffLinkValueInfo(

@@ -42,6 +42,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV
 import org.knora.webapi.messages.v2.responder.valuemessages.IntervalValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageVectorFileValueContentV2
@@ -902,6 +903,34 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
           ),
         )
       }
+    },
+    test("should parse RegionPreviewValueContentV2") {
+      for {
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      """{
+                        |  "@id": "http://rdfh.ch/0001/a-thing",
+                        |  "@type": "ex:Thing",
+                        |  "ex:hasRegionPreview": {
+                        |    "@type": "ka:RegionPreviewValue",
+                        |    "ka:isRegionPreviewOf": {
+                        |      "@id": "http://rdfh.ch/0001/a-region"
+                        |    }
+                        |  },
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                        |  }
+                        |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        actual.valueContent == RegionPreviewValueContentV2(
+          ApiV2Complex,
+          ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-region"),
+          None,
+        ),
+      )
     },
     standOffSuite,
   )
@@ -2015,6 +2044,110 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     appConfigLayerWith(true),
   )
 
+  private val resourceAuthorshipSuite = suite("resourceAuthorship (data side)")(
+    test("createResourceRequestV2 parses knora-api:hasResourceAuthorship onto the resource") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        uuid   <- Random.nextUUID
+        result <- service(
+                    _.createResourceRequestV2(
+                      """{
+                        |  "@type": "ex:Thing",
+                        |  "rdfs:label": "test resource",
+                        |  "ka:attachedToProject": { "@id": "http://rdfh.ch/projects/0001" },
+                        |  "ka:hasResourceAuthorship": [ "Lotte Reiniger", "Hilma af Klint" ],
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                        |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                        |  }
+                        |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  )
+        // Authorship is a plain multi-valued datatype property (no rdf:List, no ORDER BY on read),
+        // so order does not round-trip through the triplestore. Compare as an unordered set.
+      } yield assertTrue(
+        result.createResource.resourceAuthorship.toSet ==
+          Set(Authorship.unsafeFrom("Lotte Reiniger"), Authorship.unsafeFrom("Hilma af Klint")),
+      )
+    },
+    test("createResourceRequestV2 leaves resourceAuthorship empty when none is provided") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        uuid   <- Random.nextUUID
+        result <- service(
+                    _.createResourceRequestV2(
+                      """{
+                        |  "@type": "ex:Thing",
+                        |  "rdfs:label": "test resource",
+                        |  "ka:attachedToProject": { "@id": "http://rdfh.ch/projects/0001" },
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                        |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+                        |  }
+                        |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  )
+      } yield assertTrue(result.createResource.resourceAuthorship.isEmpty)
+    },
+    test("updateResourceAuthorshipRequestV2 parses the resource IRI and the new authorship") {
+      for {
+        uuid   <- Random.nextUUID
+        result <- service(
+                    _.updateResourceAuthorshipRequestV2(
+                      """{
+                        |  "@id": "http://rdfh.ch/0001/a-thing",
+                        |  "@type": "ex:Thing",
+                        |  "ka:hasResourceAuthorship": [ "Lotte Reiniger", "Hilma af Klint" ],
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                        |  }
+                        |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  )
+        // Authorship is a plain multi-valued datatype property (no rdf:List, no ORDER BY on read),
+        // so order does not round-trip through the triplestore. Compare as an unordered set.
+      } yield assertTrue(
+        result.resourceIri.value == "http://rdfh.ch/0001/a-thing",
+        result.resourceAuthorship.toSet ==
+          Set(Authorship.unsafeFrom("Lotte Reiniger"), Authorship.unsafeFrom("Hilma af Klint")),
+      )
+    },
+  ).provide(
+    AdministrativePermissionRepoInMemory.layer,
+    AdministrativePermissionService.layer,
+    ApiComplexV2JsonLdRequestParser.layer,
+    GroupService.layer,
+    IriConverter.layer,
+    IriService.layer,
+    KnoraGroupRepoInMemory.layer,
+    KnoraGroupService.layer,
+    KnoraProjectRepoInMemory.layer,
+    KnoraProjectService.layer,
+    KnoraUserRepoInMemory.layer,
+    KnoraUserService.layer,
+    KnoraUserToUserConverter.layer,
+    LicenseRepo.layer,
+    StandoffMappingServiceFake.layer,
+    OntologyRepoInMemory.emptyLayer,
+    PasswordService.layer,
+    ProjectService.layer,
+    SipiServiceMock.layer,
+    StringFormatter.test,
+    TriplestoreServiceInMemory.emptyLayer,
+    UserService.layer,
+    AppConfig.layer,
+  )
+
   val spec = suite("ApiComplexV2JsonLdRequestParser")(
     knoraApiValueModelSuite.provide(
       AdministrativePermissionRepoInMemory.layer,
@@ -2044,5 +2177,6 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     valueHasOrderSuite,
     placeholderDisabledSuite,
     placeholderAllowedSuite,
+    resourceAuthorshipSuite,
   )
 }

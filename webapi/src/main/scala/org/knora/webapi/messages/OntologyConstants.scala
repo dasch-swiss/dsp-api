@@ -268,6 +268,7 @@ object OntologyConstants {
     val HasCopyrightHolder: IRI      = KnoraBasePrefixExpansion + "hasCopyrightHolder"
     val HasAuthorship: IRI           = KnoraBasePrefixExpansion + "hasAuthorship"
     val HasLicense: IRI              = KnoraBasePrefixExpansion + "hasLicense"
+    val HasResourceAuthorship: IRI   = KnoraBasePrefixExpansion + "hasResourceAuthorship"
 
     val ResourceIcon: IRI = KnoraBasePrefixExpansion + "resourceIcon"
 
@@ -315,6 +316,11 @@ object OntologyConstants {
     val MovingImageFileValue: IRI        = KnoraBasePrefixExpansion + "MovingImageFileValue"
     val TextFileValue: IRI               = KnoraBasePrefixExpansion + "TextFileValue"
 
+    val RegionPreviewValue: IRI = KnoraBasePrefixExpansion + "RegionPreviewValue"
+    val IsRegionPreviewOf: IRI  = KnoraBasePrefixExpansion + "isRegionPreviewOf"
+    val IsRegionOf: IRI         = KnoraBasePrefixExpansion + "isRegionOf"
+    val IsRegionOfValue: IRI    = KnoraBasePrefixExpansion + "isRegionOfValue"
+
     val HasTextValueType: IRI         = KnoraBasePrefixExpansion + "hasTextValueType"
     val HasTextValuePropertyType: IRI = KnoraBasePrefixExpansion + "hasTextValuePropertyType"
     val TextValueType: IRI            = KnoraBasePrefixExpansion + "TextValueType"
@@ -359,6 +365,7 @@ object OntologyConstants {
       StillImageVectorFileValue,
       MovingImageFileValue,
       TextFileValue,
+      RegionPreviewValue,
     )
 
     val ListNode: IRI         = KnoraBasePrefixExpansion + "ListNode"
@@ -473,6 +480,9 @@ object OntologyConstants {
     val HasSelfJoinEnabled: IRI             = KnoraAdminPrefixExpansion + "hasSelfJoinEnabled"
     val hasAllowedCopyrightHolder: IRI      = KnoraAdminPrefixExpansion + "hasAllowedCopyrightHolder"
     val hasEnabledLicense: IRI              = KnoraAdminPrefixExpansion + "hasEnabledLicense"
+    val hasDataLicense: IRI                 = KnoraAdminPrefixExpansion + "hasDataLicense"
+    val hasDataCopyrightHolder: IRI         = KnoraAdminPrefixExpansion + "hasDataCopyrightHolder"
+    val hasDefaultDataAuthorship: IRI       = KnoraAdminPrefixExpansion + "hasDefaultDataAuthorship"
 
     /* Group */
     val UserGroup: IRI         = KnoraAdminPrefixExpansion + "UserGroup"
@@ -643,6 +653,7 @@ object OntologyConstants {
     val HasCopyrightHolder: IRI     = KnoraApiV2PrefixExpansion + "hasCopyrightHolder"
     val HasAuthorship: IRI          = KnoraApiV2PrefixExpansion + "hasAuthorship"
     val HasLicense: IRI             = KnoraApiV2PrefixExpansion + "hasLicense"
+    val HasResourceAuthorship: IRI  = KnoraApiV2PrefixExpansion + "hasResourceAuthorship"
     val UserHasPermission: String   = KnoraApiV2PrefixExpansion + "userHasPermission"
     val CreationDate: IRI           = KnoraApiV2PrefixExpansion + "creationDate"
     val LastModificationDate: IRI   = KnoraApiV2PrefixExpansion + "lastModificationDate"
@@ -750,6 +761,7 @@ object OntologyConstants {
       UriValue,
       GeonameValue,
       ColorValue,
+      RegionPreviewValue,
     ) ++ FileValueClasses
 
     val ResourceProperty: IRI     = KnoraApiV2PrefixExpansion + "resourceProperty"
@@ -835,6 +847,10 @@ object OntologyConstants {
     val UriValueAsUri: IRI = KnoraApiV2PrefixExpansion + "uriValueAsUri"
 
     val GeonameValueAsGeonameCode: IRI = KnoraApiV2PrefixExpansion + "geonameValueAsGeonameCode"
+
+    val RegionPreviewValue: IRI = KnoraApiV2PrefixExpansion + "RegionPreviewValue"
+    val IsRegionPreviewOf: IRI  = KnoraApiV2PrefixExpansion + "isRegionPreviewOf"
+    val IiifUrl: IRI            = KnoraApiV2PrefixExpansion + "iiifUrl"
 
     val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 
