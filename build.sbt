@@ -489,7 +489,7 @@ lazy val ingest = {
         "dev.zio"    %% "zio-json-interop-refined"          % ZioJsonVersion,
         "dev.zio"    %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
         "dev.zio"    %% "zio-metrics-connectors-prometheus" % ZioMetricsConnectorsVersion,
-        "eu.timepit" %% "refined"                           % "0.11.3",
+        "eu.timepit" %% "refined"                           % "0.11.4",
 
         // csv for reports
         "com.github.tototoshi" %% "scala-csv" % "2.0.0",
