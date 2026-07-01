@@ -73,7 +73,7 @@ object Dependencies {
 
   // refined
   val refined = Seq(
-    "eu.timepit" %% "refined"                  % "0.11.3",
+    "eu.timepit" %% "refined"                  % "0.11.4",
     "dev.zio"    %% "zio-json-interop-refined" % ZioJsonVersion,
   )
 
