@@ -1,5 +1,26 @@
 # Changelog
 
+## [36.5.0](https://github.com/dasch-swiss/dsp-api/compare/v36.4.0...v36.5.0) (2026-07-01)
+
+
+### Maintenances
+
+* integrate dependency updates ([#4127](https://github.com/dasch-swiss/dsp-api/issues/4127), [#4128](https://github.com/dasch-swiss/dsp-api/issues/4128), [#4129](https://github.com/dasch-swiss/dsp-api/issues/4129), [#4149](https://github.com/dasch-swiss/dsp-api/issues/4149)) ([#4165](https://github.com/dasch-swiss/dsp-api/issues/4165)) ([a91c1be](https://github.com/dasch-swiss/dsp-api/commit/a91c1be2ab5186a048e4ddcf959c8cb433257f62))
+
+
+### Enhancements
+
+* add per-resource authorship property with read and write-on-create (DEV-6662) ([#4157](https://github.com/dasch-swiss/dsp-api/issues/4157)) ([ca9273c](https://github.com/dasch-swiss/dsp-api/commit/ca9273c5cc4e812caaed42d8295e1797d9dbac12))
+* add post-create resource authorship edit endpoint (DEV-6669) ([#4158](https://github.com/dasch-swiss/dsp-api/issues/4158)) ([9df9bf5](https://github.com/dasch-swiss/dsp-api/commit/9df9bf5b640586b4607daeb5caf35ee9f20626eb))
+* add project-level resource-side legal metadata fields and endpoint (DEV-6661) ([#4156](https://github.com/dasch-swiss/dsp-api/issues/4156)) ([117f5ba](https://github.com/dasch-swiss/dsp-api/commit/117f5ba77f3fd33fea0622ab1590b00101d69ebe))
+* RegionPreviewValue support (DEV-6300) ([#4110](https://github.com/dasch-swiss/dsp-api/issues/4110)) ([2901a77](https://github.com/dasch-swiss/dsp-api/commit/2901a772e7e62523fbce945bc91c26aba7edd9ef))
+
+
+### Tests
+
+* fix ~60s e2e suite teardown hang from forked server fiber ([#4172](https://github.com/dasch-swiss/dsp-api/issues/4172)) ([ca5b21f](https://github.com/dasch-swiss/dsp-api/commit/ca5b21f4ba043d0c5bca6a40de22b1dae9baefa0))
+* harden flaky maintenance replace-user-iri auth e2e tests ([#4169](https://github.com/dasch-swiss/dsp-api/issues/4169)) ([bbf41e5](https://github.com/dasch-swiss/dsp-api/commit/bbf41e5cd078338e84af6ebc4cc8d58a118a3ae6))
+
 ## [36.4.0](https://github.com/dasch-swiss/dsp-api/compare/v36.3.0...v36.4.0) (2026-06-29)
 
 
