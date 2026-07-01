@@ -104,7 +104,7 @@ object Dependencies {
 
   // authentication
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "7.0.5" exclude (
+    "org.springframework.security" % "spring-security-core" % "7.0.6" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
