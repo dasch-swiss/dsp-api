@@ -157,7 +157,7 @@ object Dependencies {
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
-    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.41.1",
+    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.42.0",
   )
 
   // In-memory span exporter for the span-assertion test harness (testkit).
