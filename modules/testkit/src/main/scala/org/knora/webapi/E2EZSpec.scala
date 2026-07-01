@@ -64,7 +64,11 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
   private def prepare = for {
     _ <- Db.initWithTestData(rdfDataObjects)
     _ <- ZIO.serviceWithZIO[CacheManager](_.clearAll())
-    _ <- (DspApiServer.startup *> ZIO.never).provideSomeAuto(DspApiServer.layer).forkScoped
+    // Build the server layer into the spec Scope rather than forking `startup *> ZIO.never`:
+    // the forked keepalive fiber's interruption tangled with its nested layer scope and hung
+    // suite teardown ~60s before reaching the zio-http shutdown.
+    built <- DspApiServer.layer.build
+    _     <- built.get[DspApiServer].startup()
     // wait max 5 seconds until api is ready
     _ <- TestApiClient
            .getJson[Json](uri"/version")
