@@ -74,7 +74,10 @@ final case class ApiComplexV2JsonLdRequestParser(
         val modified = obj.fields.map {
           case (key, Json.Arr(values)) if !key.startsWith("@") =>
             val indexed = values.zipWithIndex.map {
-              case (Json.Obj(fields), idx) =>
+              // only node objects carry an order; JSON-LD value objects (those with an @value entry,
+              // e.g. a bare datatype property such as hasResourceAuthorship) must be left untouched,
+              // as an extra entry would make them an invalid value object during expansion
+              case (Json.Obj(fields), idx) if !fields.exists(_._1 == "@value") =>
                 Json.Obj(fields :+ (OrderIndexProperty -> Json.Num(idx)))
               case (other, _) => other
             }
