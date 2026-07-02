@@ -51,7 +51,7 @@ object CopyrightHolderReplaceRequest {
 final case class ResourceSideLegalInfo(
   dataLicense: Option[LicenseIri],
   dataCopyrightHolder: Option[CopyrightHolder],
-  dataAuthorship: List[Authorship],
+  defaultDataAuthorship: List[Authorship],
 )
 object ResourceSideLegalInfo {
   given JsonCodec[ResourceSideLegalInfo] = DeriveJsonCodec.gen[ResourceSideLegalInfo]

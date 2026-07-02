@@ -31,13 +31,13 @@ object AdminProjectsResourceSideLegalInfoE2ESpec extends E2EZSpec {
   private val validInfo = ResourceSideLegalInfo(
     dataLicense = Some(LicenseIri.CC_BY_4_0),
     dataCopyrightHolder = Some(CopyrightHolder.unsafeFrom("University of Basel")),
-    dataAuthorship = List("Hilma af Klint", "Lotte Reiniger").map(Authorship.unsafeFrom),
+    defaultDataAuthorship = List("Hilma af Klint", "Lotte Reiniger").map(Authorship.unsafeFrom),
   )
 
   private val emptyInfo = ResourceSideLegalInfo(
     dataLicense = None,
     dataCopyrightHolder = None,
-    dataAuthorship = List.empty,
+    defaultDataAuthorship = List.empty,
   )
 
   val e2eSpec = suite("The resource-side legal info admin endpoint")(
@@ -64,7 +64,7 @@ object AdminProjectsResourceSideLegalInfoE2ESpec extends E2EZSpec {
       } yield assertTrue(
         prj.dataLicense.contains(LicenseIri.CC_BY_4_0),
         prj.dataCopyrightHolder.contains(CopyrightHolder.unsafeFrom("University of Basel")),
-        prj.dataAuthorship == validInfo.dataAuthorship,
+        prj.defaultDataAuthorship == validInfo.defaultDataAuthorship,
       )
     },
     test("clearing it with an empty payload removes the previously saved values") {
@@ -80,7 +80,7 @@ object AdminProjectsResourceSideLegalInfoE2ESpec extends E2EZSpec {
         cleared == emptyInfo,
         prj.dataLicense.isEmpty,
         prj.dataCopyrightHolder.isEmpty,
-        prj.dataAuthorship.isEmpty,
+        prj.defaultDataAuthorship.isEmpty,
       )
     },
     test("a non-Creative-Commons license (CC0) is rejected with 400") {
