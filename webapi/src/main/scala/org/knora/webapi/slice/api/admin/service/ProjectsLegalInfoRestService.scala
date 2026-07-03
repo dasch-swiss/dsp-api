@@ -129,7 +129,7 @@ final case class ProjectsLegalInfoRestService(
                    project.id,
                    req.dataLicense,
                    req.dataCopyrightHolder,
-                   req.dataAuthorship,
+                   req.defaultDataAuthorship,
                  )
     } yield ResourceSideLegalInfo(updated.dataLicense, updated.dataCopyrightHolder, updated.defaultDataAuthorship)
 }
