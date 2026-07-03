@@ -97,9 +97,8 @@ object AdminUsersGroupMembershipsEndpointsE2ESpec extends E2EZSpec {
 
   private def addUserToGroup(user: UserDto, group: Group) =
     TestApiClient
-      .postJson[UserResponse, IRI](
+      .postJson[UserResponse](
         uri"/admin/users/iri/${user.id}/group-memberships/${group.groupIri}",
-        "",
         rootUser,
       )
       .flatMap(_.assert200)
