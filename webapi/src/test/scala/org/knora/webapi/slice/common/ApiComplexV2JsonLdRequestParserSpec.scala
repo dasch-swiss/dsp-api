@@ -2074,6 +2074,38 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
           Set(Authorship.unsafeFrom("Lotte Reiniger"), Authorship.unsafeFrom("Hilma af Klint")),
       )
     },
+    test("createResourceRequestV2 parses hasResourceAuthorship sent as typed value objects (dsp-tools serialisation)") {
+      for {
+        _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
+        uuid   <- Random.nextUUID
+        result <- service(
+                    _.createResourceRequestV2(
+                      """{
+                        |  "@type": "ex:Thing",
+                        |  "rdfs:label": "test resource",
+                        |  "ka:attachedToProject": { "@id": "http://rdfh.ch/projects/0001" },
+                        |  "ka:hasResourceAuthorship": [
+                        |    { "@value": "Lotte Reiniger", "@type": "xsd:string" },
+                        |    { "@value": "Hilma af Klint", "@type": "xsd:string" }
+                        |  ],
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                        |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                        |  }
+                        |}""".stripMargin,
+                      TestDataFactory.User.rootUser,
+                      uuid,
+                    ),
+                  )
+        // dsp-tools serialises the bare datatype property as JSON-LD value objects; the order-index
+        // injection must leave these untouched, otherwise expansion fails with INVALID_VALUE_OBJECT.
+      } yield assertTrue(
+        result.createResource.resourceAuthorship.toSet ==
+          Set(Authorship.unsafeFrom("Lotte Reiniger"), Authorship.unsafeFrom("Hilma af Klint")),
+      )
+    },
     test("createResourceRequestV2 leaves resourceAuthorship empty when none is provided") {
       for {
         _      <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(TestDataFactory.someProject))
