@@ -79,7 +79,7 @@ Each slice typically contains:
 ### Technology Stack
 - **Language**: Scala 3.3.5
 - **Framework**: ZIO 2.x for functional programming
-- **HTTP**: Pekko HTTP (Apache Pekko) with Tapir for endpoint definition
+- **HTTP**: zio-http as the HTTP server, with Tapir for endpoint definition
 - **Database**: Apache Jena Fuseki (RDF triplestore)
 - **Media Server**: Sipi (C++ media server)
 - **Testing**: ZIO Test framework, some ScalaTests exist but will be migrated to ZIO Test
