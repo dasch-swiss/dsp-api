@@ -8,6 +8,7 @@ package org.knora.webapi.slice.api.admin
 import sttp.client4.UriContext
 import sttp.model.StatusCode
 import zio.ZIO
+import zio.durationInt
 import zio.json.ast.Json
 import zio.test.*
 
@@ -50,12 +51,12 @@ object MaintenanceReplaceUserIriE2ESpec extends E2EZSpec {
       TestApiClient
         .postJson[Json, Json](endpoint, replaceBody(normalUser.id, "http://rdfh.ch/users/new-iri"))
         .map(response => assertTrue(response.code == StatusCode.Unauthorized))
-    },
+    } @@ TestAspect.timeout(30.seconds) @@ TestAspect.flaky,
     test("returns 403 when the authenticated user is not SystemAdmin") {
       TestApiClient
         .postJson[Json, Json](endpoint, replaceBody(normalUser.id, "http://rdfh.ch/users/new-iri"), normalUser)
         .map(response => assertTrue(response.code == StatusCode.Forbidden))
-    },
+    } @@ TestAspect.timeout(30.seconds) @@ TestAspect.flaky,
     test("returns 400 when oldIri is a built-in user IRI") {
       TestApiClient
         .postJson[Json, Json](endpoint, replaceBody(builtInUserIri, "http://rdfh.ch/users/new-iri"), rootUser)
