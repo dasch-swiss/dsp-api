@@ -29,5 +29,5 @@
   },
   "hooks": {},
   "includeCoAuthoredBy": true,
-  "enabledMcpjsonServers": []
+  "enabledMcpjsonServers": ["metals"]
 }

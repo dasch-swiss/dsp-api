@@ -140,6 +140,15 @@ When changes are hard to test with local test data (e.g. they need realistic dat
 - Test config: `webapi/src/test/resources/test.conf`
 - Docker config: `docker-compose.yml`
 
+### Scala language intelligence (Metals MCP)
+
+This repo ships a checked-in `metals` MCP server giving agents real Scala language intelligence (compiler
+diagnostics, type-aware usage search, symbol docs and lookup). **Prefer the `metals` MCP tools over direct
+`sbt`/`sbtx` calls** — e.g. use `compile-file` / `compile-module` instead of `sbt compile`, and `get-usages`
+instead of grep. It is much faster (incremental, no JVM/sbt startup per call) and more capable (structured
+diagnostics, type-aware navigation). For setup, the full tool list, usage pattern, and the worktree/LOOM
+caveats see `docs/development/dsp-api-metals-mcp.md`.
+
 ## API Structure
 
 ### Endpoint Definition
