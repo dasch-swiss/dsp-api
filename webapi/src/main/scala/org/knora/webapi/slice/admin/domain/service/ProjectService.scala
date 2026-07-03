@@ -82,7 +82,7 @@ final case class ProjectService(
       project.enabledLicenses,
       project.dataLicense,
       project.dataCopyrightHolder,
-      project.dataAuthorship,
+      project.defaultDataAuthorship,
     )
 
   def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =
