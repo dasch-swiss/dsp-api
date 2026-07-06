@@ -1,5 +1,46 @@
 # Changelog
 
+## [37.0.0](https://github.com/dasch-swiss/dsp-api/compare/v36.4.0...v37.0.0) (2026-07-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename project legal-info dataAuthorship to defaultDataAuthorship ([#4174](https://github.com/dasch-swiss/dsp-api/issues/4174))
+
+### Maintenances
+
+* add checked-in Metals MCP server for agent workflows ([#4176](https://github.com/dasch-swiss/dsp-api/issues/4176)) ([104f83f](https://github.com/dasch-swiss/dsp-api/commit/104f83fc8de275d0f92d33b6bd0594c81b307143))
+* integrate dependency updates ([#4127](https://github.com/dasch-swiss/dsp-api/issues/4127), [#4128](https://github.com/dasch-swiss/dsp-api/issues/4128), [#4129](https://github.com/dasch-swiss/dsp-api/issues/4129), [#4149](https://github.com/dasch-swiss/dsp-api/issues/4149)) ([#4165](https://github.com/dasch-swiss/dsp-api/issues/4165)) ([a91c1be](https://github.com/dasch-swiss/dsp-api/commit/a91c1be2ab5186a048e4ddcf959c8cb433257f62))
+* rename project legal-info dataAuthorship to defaultDataAuthorship ([#4174](https://github.com/dasch-swiss/dsp-api/issues/4174)) ([0edfb4b](https://github.com/dasch-swiss/dsp-api/commit/0edfb4b0500c37bed1bae9f20ca8083c6bfcb31b))
+
+
+### Documentation
+
+* consolidate AGENTS.md into CLAUDE.md ([#4178](https://github.com/dasch-swiss/dsp-api/issues/4178)) ([61131d6](https://github.com/dasch-swiss/dsp-api/commit/61131d664151744f81c13470744b02ac38b3329b))
+
+
+### Enhancements
+
+* add per-resource authorship property with read and write-on-create (DEV-6662) ([#4157](https://github.com/dasch-swiss/dsp-api/issues/4157)) ([ca9273c](https://github.com/dasch-swiss/dsp-api/commit/ca9273c5cc4e812caaed42d8295e1797d9dbac12))
+* add post-create resource authorship edit endpoint (DEV-6669) ([#4158](https://github.com/dasch-swiss/dsp-api/issues/4158)) ([9df9bf5](https://github.com/dasch-swiss/dsp-api/commit/9df9bf5b640586b4607daeb5caf35ee9f20626eb))
+* add project-level resource-side legal metadata fields and endpoint (DEV-6661) ([#4156](https://github.com/dasch-swiss/dsp-api/issues/4156)) ([117f5ba](https://github.com/dasch-swiss/dsp-api/commit/117f5ba77f3fd33fea0622ab1590b00101d69ebe))
+* RegionPreviewValue support (DEV-6300) ([#4110](https://github.com/dasch-swiss/dsp-api/issues/4110)) ([2901a77](https://github.com/dasch-swiss/dsp-api/commit/2901a772e7e62523fbce945bc91c26aba7edd9ef))
+
+
+### Bug Fixes
+
+* don't inject order index into JSON-LD value objects on resource create ([#4173](https://github.com/dasch-swiss/dsp-api/issues/4173)) ([a16368d](https://github.com/dasch-swiss/dsp-api/commit/a16368d4a7fb39b58f187a3581403e8ca21bb8fa))
+* prevent lost requests on keep-alive connections (root cause of e2e CI flakiness) ([#4179](https://github.com/dasch-swiss/dsp-api/issues/4179)) ([d5d79bd](https://github.com/dasch-swiss/dsp-api/commit/d5d79bd4204afec1c55d56289f3f153b011ef1f4))
+* raise ingest export/import timeout to 2 hours (DEV-6717) ([#4180](https://github.com/dasch-swiss/dsp-api/issues/4180)) ([c711ef1](https://github.com/dasch-swiss/dsp-api/commit/c711ef144c8e94060d5323835c267ade89d03445))
+
+
+### Tests
+
+* dedupe e2e console logger and harden flaky replace-user-iri auth tests ([#4175](https://github.com/dasch-swiss/dsp-api/issues/4175)) ([4c64031](https://github.com/dasch-swiss/dsp-api/commit/4c64031915249245a6101a4a8df86bcc01e624f9))
+* fix ~60s e2e suite teardown hang from forked server fiber ([#4172](https://github.com/dasch-swiss/dsp-api/issues/4172)) ([ca5b21f](https://github.com/dasch-swiss/dsp-api/commit/ca5b21f4ba043d0c5bca6a40de22b1dae9baefa0))
+* harden flaky maintenance replace-user-iri auth e2e tests ([#4169](https://github.com/dasch-swiss/dsp-api/issues/4169)) ([bbf41e5](https://github.com/dasch-swiss/dsp-api/commit/bbf41e5cd078338e84af6ebc4cc8d58a118a3ae6))
+* remove ExportStreamingIT benchmark sweep from CI ([#4177](https://github.com/dasch-swiss/dsp-api/issues/4177)) ([25e61dd](https://github.com/dasch-swiss/dsp-api/commit/25e61dd4ff6d177758f23491df6deecb5a09e4c7))
+
 ## [36.4.0](https://github.com/dasch-swiss/dsp-api/compare/v36.3.0...v36.4.0) (2026-06-29)
 
 
