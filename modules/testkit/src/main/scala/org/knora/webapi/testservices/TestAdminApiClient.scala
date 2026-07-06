@@ -241,21 +241,20 @@ case class TestAdminApiClient(private val apiClient: TestApiClient) {
     projectIri: ProjectIri,
     user: User,
   ): Task[Response[Either[String, UserResponse]]] =
-    apiClient.postJson[UserResponse, String](uri"/admin/users/iri/$userIri/project-memberships/$projectIri", "", user)
+    apiClient.postJson[UserResponse](uri"/admin/users/iri/$userIri/project-memberships/$projectIri", user)
 
   def addUserToProjectAdmin(
     userIri: UserIri,
     projectIri: ProjectIri,
     user: User,
   ): Task[Response[Either[String, UserResponse]]] =
-    apiClient.postJson[UserResponse, String](
+    apiClient.postJson[UserResponse](
       uri"/admin/users/iri/$userIri/project-admin-memberships/$projectIri",
-      "",
       user,
     )
 
   def addUserToGroup(userIri: UserIri, groupIri: GroupIri, user: User): Task[Response[Either[String, UserResponse]]] =
-    apiClient.postJson[UserResponse, String](uri"/admin/users/iri/$userIri/group-memberships/$groupIri", "", user)
+    apiClient.postJson[UserResponse](uri"/admin/users/iri/$userIri/group-memberships/$groupIri", user)
 
   def removeUserFromProject(
     userIri: UserIri,

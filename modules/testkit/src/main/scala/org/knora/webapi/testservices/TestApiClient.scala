@@ -153,6 +153,14 @@ final case class TestApiClient(
     sendRequest(request)
   }
 
+  /** POST without a request body, for endpoints that declare no body input. */
+  def postJson[A: JsonDecoder](relativeUri: Uri, user: User): Task[Response[Either[String, A]]] = {
+    val request = basicRequest
+      .post(relativeUri)
+      .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
+    sendRequest(request, Some(user))
+  }
+
   def postJsonReceiveString[B: JsonEncoder](
     relativeUri: Uri,
     body: B,
@@ -429,6 +437,13 @@ object TestApiClient {
     body: B,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.postJson(relativeUri, body))
+
+  /** POST without a request body, for endpoints that declare no body input. */
+  def postJson[A: JsonDecoder](
+    relativeUri: Uri,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postJson(relativeUri, user))
 
   def postJsonLd(
     relativeUri: Uri,
