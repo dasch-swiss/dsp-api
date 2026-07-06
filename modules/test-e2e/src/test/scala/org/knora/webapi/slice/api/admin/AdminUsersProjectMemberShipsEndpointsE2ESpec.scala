@@ -181,9 +181,8 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
   private def addUserToProject(userIri: UserIri, projectIri: ProjectIri, requestingUser: User = rootUser) =
     addLogTiming("POST project-memberships") {
       TestApiClient
-        .postJson[UserResponse, String](
+        .postJson[UserResponse](
           uri"/admin/users/iri/$userIri/project-memberships/$projectIri",
-          "",
           requestingUser,
         )
     }
@@ -191,9 +190,8 @@ object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
   private def addUserToProjectAsAdmin(userIri: UserIri, projectIri: ProjectIri, requestingUser: User = rootUser) =
     addLogTiming("POST project-admin-memberships") {
       TestApiClient
-        .postJson[UserResponse, String](
+        .postJson[UserResponse](
           uri"/admin/users/iri/$userIri/project-admin-memberships/$projectIri",
-          "",
           requestingUser,
         )
     }

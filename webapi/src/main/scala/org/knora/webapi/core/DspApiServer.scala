@@ -33,6 +33,7 @@ import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import zio.*
 import zio.http.*
 import zio.http.Server.Config.ResponseCompressionConfig
+import zio.http.Server.RequestStreaming
 import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.telemetry.opentelemetry.tracing.StatusMapper
 import zio.telemetry.opentelemetry.tracing.Tracing
@@ -171,6 +172,15 @@ object DspApiServer {
 
   def startup: RIO[DspApiServer, Unit] = ZIO.serviceWithZIO[DspApiServer](_.startup())
 
+  // With fully streamed request bodies (RequestStreaming.Enabled), zio-http (<= 3.11.3) leaves the
+  // connection with autoRead=false when a handler responds without consuming the body — e.g. a
+  // tapir security failure (401/403), an unmatched route, or an endpoint that declares no body
+  // input. If the body bytes arrive after the initial read burst, the channel never reads again and
+  // the next keep-alive request on it is silently dropped (the client times out). Hybrid mode
+  // aggregates bodies up to this size so they are always fully read, and streams only larger ones
+  // (the project-import zip upload); this was the root cause of the recurring e2e CI timeouts.
+  private val maxAggregatedRequestBodySize: Int = 1024 * 1024
+
   private val serverLayer = ZLayer
     .service[KnoraApi]
     .flatMap(cfg =>
@@ -179,7 +189,8 @@ object DspApiServer {
       ZLayer.fromZIO(ZIO.logInfo(s"Binding DSP API server to $host:$port")) >>>
         Server
           .defaultWith(
-            _.binding(cfg.get.internalHost, cfg.get.internalPort).enableRequestStreaming
+            _.binding(cfg.get.internalHost, cfg.get.internalPort)
+              .requestStreaming(RequestStreaming.Hybrid(maxAggregatedRequestBodySize))
               .responseCompression(ResponseCompressionConfig.default),
           ),
     )
