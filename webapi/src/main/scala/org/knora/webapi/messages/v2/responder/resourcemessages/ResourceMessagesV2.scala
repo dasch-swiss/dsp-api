@@ -16,6 +16,7 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -25,6 +26,7 @@ import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.admin.model.Project
@@ -263,6 +265,7 @@ case class ReadResourceV2(
   lastModificationDate: Option[Instant],
   versionDate: Option[Instant],
   deletionInfo: Option[DeletionInfo],
+  resourceAuthorship: Seq[Authorship] = Seq.empty,
 ) extends ResourceV2
     with KnoraReadV2[ReadResourceV2] {
 
@@ -361,7 +364,17 @@ case class ReadResourceV2(
         )
       }
 
-      requiredMetadataForComplexSchema ++ deletionInfoAsJsonLD ++ lastModDateAsJsonLD ++ versionDateAsJsonLD
+      // The per-resource (data-side) authorship, emitted only when set.
+      val resourceAuthorshipAsJsonLD: Option[(IRI, JsonLDValue)] =
+        if (resourceAuthorship.nonEmpty) {
+          Some(
+            KnoraApiV2Complex.HasResourceAuthorship -> JsonLDArray(
+              resourceAuthorship.map(authorship => JsonLDString(authorship.value)),
+            ),
+          )
+        } else { None }
+
+      requiredMetadataForComplexSchema ++ deletionInfoAsJsonLD ++ lastModDateAsJsonLD ++ versionDateAsJsonLD ++ resourceAuthorshipAsJsonLD
     } else {
       Map.empty[IRI, JsonLDValue]
     }
@@ -465,6 +478,17 @@ case class ReadResourceV2(
     deletionInfo
       .map(_ => asDeletedResource(versionDate))
       .getOrElse(if (showDeletedValues) this else withDeletedValues(versionDate))
+
+  def isRegionOfValueReferredIri(implicit sf: StringFormatter): Option[ResourceIri] = {
+    val isRegionOfValue = PropertyIri.unsafeFrom(OntologyConstants.KnoraBase.IsRegionOfValue.toSmartIri)
+
+    values
+      .get(isRegionOfValue.smartIri)
+      .toList
+      .flatten
+      .collect { case rlv: ReadLinkValueV2 => rlv.valueContent.referredResourceIri }
+      .headOption
+  }
 }
 
 /**
@@ -504,6 +528,7 @@ case class CreateResourceV2(
   projectADM: Project,
   permissions: Option[String] = None,
   creationDate: Option[Instant] = None,
+  resourceAuthorship: Seq[Authorship] = Seq.empty,
 ) extends ResourceV2 {
   lazy val flatValues: Iterable[CreateValueInNewResourceV2] = values.values.flatten
 
@@ -640,6 +665,80 @@ case class UpdateResourceMetadataResponseV2(
 
     JsonLDDocument(body = body, context = context)
 
+  }
+}
+
+/**
+ * Represents a request to update a resource's per-resource (data-side) authorship.
+ *
+ * @param resourceIri               the IRI of the resource.
+ * @param resourceClassIri          the IRI of the resource class.
+ * @param resourceAuthorship        the new authorship; an empty sequence clears it.
+ * @param maybeLastModificationDate the resource's last modification date, if any.
+ * @param maybeNewModificationDate  the resource's new last modification date, if any.
+ */
+case class UpdateResourceAuthorshipRequestV2(
+  resourceIri: ResourceIri,
+  resourceClassIri: SmartIri,
+  resourceAuthorship: Seq[Authorship],
+  maybeLastModificationDate: Option[Instant] = None,
+  maybeNewModificationDate: Option[Instant] = None,
+  requestingUser: User,
+  apiRequestID: UUID,
+)
+
+/**
+ * Represents a response after updating a resource's per-resource (data-side) authorship.
+ *
+ * @param resourceIri          the IRI of the resource.
+ * @param resourceClassIri     the IRI of the resource class.
+ * @param lastModificationDate the resource's last modification date.
+ * @param resourceAuthorship   the resource's authorship after the update.
+ */
+case class UpdateResourceAuthorshipResponseV2(
+  resourceIri: ResourceIri,
+  resourceClassIri: SmartIri,
+  lastModificationDate: Instant,
+  resourceAuthorship: Seq[Authorship],
+) extends KnoraJsonLDResponseV2 {
+
+  override protected def toJsonLDDocument(
+    targetSchema: ApiV2Schema,
+    appConfig: AppConfig,
+    schemaOptions: Set[Rendering],
+  ): JsonLDDocument = {
+
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val knoraApiPrefixExpansion: IRI = targetSchema match {
+      case ApiV2Simple  => KnoraApiV2Simple.KnoraApiV2PrefixExpansion
+      case ApiV2Complex => KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+    }
+
+    val context: JsonLDObject = JsonLDUtil.makeContext(
+      fixedPrefixes = Map(
+        "rdf"                          -> Rdf.RdfPrefixExpansion,
+        "rdfs"                         -> Rdfs.RdfsPrefixExpansion,
+        "xsd"                          -> Xsd.XsdPrefixExpansion,
+        KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion,
+      ),
+    )
+
+    val body = JsonLDObject(
+      Map(
+        KnoraApiV2Complex.ResourceIri          -> JsonLDString(resourceIri.value),
+        KnoraApiV2Complex.ResourceClassIri     -> JsonLDString(resourceClassIri.toString),
+        KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+          value = lastModificationDate.toString,
+          datatype = Xsd.DateTimeStamp.toSmartIri,
+        ),
+        KnoraApiV2Complex.HasResourceAuthorship -> JsonLDArray(
+          resourceAuthorship.map(authorship => JsonLDString(authorship.value)),
+        ),
+      ),
+    )
+
+    JsonLDDocument(body = body, context = context)
   }
 }
 
@@ -846,6 +945,10 @@ case class ReadResourcesSequenceV2(
   }
 
   def resourcesMap: Map[ResourceIri, ReadResourceV2] = resources.map(r => (r.resourceIri, r)).toMap
+}
+
+object ReadResourcesSequenceV2 {
+  val Empty: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(Seq())
 }
 
 /**

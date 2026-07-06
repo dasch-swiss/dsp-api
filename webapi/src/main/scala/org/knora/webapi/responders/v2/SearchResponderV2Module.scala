@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.v2
 
 import zio.*
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -26,7 +27,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object SearchResponderV2Module {
   type Dependencies = StandoffTagUtilV2 & AppConfig & TriplestoreService & ConstructResponseUtilV2 & OntologyCache &
-    OntologyCacheHelpers & OntologyRepo & IriConverter & StringFormatter & ProjectService
+    OntologyCacheHelpers & OntologyRepo & IriConverter & StringFormatter & ProjectService & Tracing
 
   type Provided = GravsearchTypeInspectionRunner & InferringGravsearchTypeInspector & OntologyInferencer &
     QueryTraverser & SearchResponderV2Live

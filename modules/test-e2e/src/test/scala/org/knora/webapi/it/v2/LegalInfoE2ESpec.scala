@@ -262,9 +262,56 @@ object LegalInfoE2ESpec extends E2EZSpec {
     }
   }
 
-  val e2eSpec = suite("Copyright Attribution and Licenses")(createResourceSuite, createValueSuite) @@ TestAspect.before(
-    enableLicenses,
+  private val resourceAuthorshipSuite = suite("Per-resource authorship (knora-base:hasResourceAuthorship)")(
+    test("a resource created without authorship should expose none in the creation response nor when read back") {
+      for {
+        createModel <- createThingWithResourceAuthorship(Nil)
+        resourceIri <- resourceId(createModel)
+        getModel    <- getResourceFromApi(resourceIri)
+        onCreate    <- resourceAuthorshipValues(createModel)
+        onRead      <- resourceAuthorshipValues(getModel)
+      } yield assertTrue(onCreate.isEmpty, onRead.isEmpty)
+    },
+    test("a resource created with authorship should expose it in the creation response and when read back") {
+      val authors = List("Anne Author", "Bob Beispiel").map(Authorship.unsafeFrom)
+      for {
+        createModel <- createThingWithResourceAuthorship(authors)
+        resourceIri <- resourceId(createModel)
+        getModel    <- getResourceFromApi(resourceIri)
+        onCreate    <- resourceAuthorshipValues(createModel)
+        onRead      <- resourceAuthorshipValues(getModel)
+      } yield assert(onCreate)(hasSameElements(authors.map(_.value))) &&
+        assert(onRead)(hasSameElements(authors.map(_.value)))
+    },
+    test("editing a resource's authorship via PUT replaces it and is reflected when read back") {
+      val initial = List("Ada Lovelace").map(Authorship.unsafeFrom)
+      val updated = List("Lotte Reiniger", "Hilma af Klint").map(Authorship.unsafeFrom)
+      for {
+        createModel <- createThingWithResourceAuthorship(initial)
+        resourceIri <- resourceId(createModel)
+        _           <- putResourceAuthorship(resourceIri, updated).flatMap(_.assert200)
+        getModel    <- getResourceFromApi(resourceIri)
+        onRead      <- resourceAuthorshipValues(getModel)
+      } yield assert(onRead)(hasSameElements(updated.map(_.value)))
+    },
+    test("editing a resource's authorship to empty clears it") {
+      val initial = List("Ada Lovelace").map(Authorship.unsafeFrom)
+      for {
+        createModel <- createThingWithResourceAuthorship(initial)
+        resourceIri <- resourceId(createModel)
+        _           <- putResourceAuthorship(resourceIri, Nil).flatMap(_.assert200)
+        getModel    <- getResourceFromApi(resourceIri)
+        onRead      <- resourceAuthorshipValues(getModel)
+      } yield assertTrue(onRead.isEmpty)
+    },
   )
+
+  val e2eSpec =
+    suite("Copyright Attribution and Licenses")(
+      createResourceSuite,
+      createValueSuite,
+      resourceAuthorshipSuite,
+    ) @@ TestAspect.before(enableLicenses)
 
   private def createStillImageResourceWithInfos(
     copyrightHolder: Option[CopyrightHolder] = Some(aCopyrightHolder),
@@ -321,6 +368,50 @@ object LegalInfoE2ESpec extends E2EZSpec {
     responseBody <- TestApiClient.getJsonLd(uri"/v2/resources/${resourceId.value}").flatMap(_.assert200)
     model        <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
+
+  private def createThingWithResourceAuthorship(authorship: List[Authorship]): ZIO[env, Throwable, Model] = {
+    // hasResourceAuthorship is a resource-node property, independent of any file value, so a plain Thing suffices.
+    val authorshipEntry =
+      if (authorship.isEmpty) ""
+      else {
+        val arr = authorship.map(a => Json.Str(a.value).toString).mkString("[", ", ", "]")
+        s""""knora-api:hasResourceAuthorship" : $arr,"""
+      }
+    val jsonLd =
+      s"""{
+         |  "@type" : "anything:Thing",
+         |  "knora-api:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+         |  "anything:hasBoolean" : { "@type" : "knora-api:BooleanValue", "knora-api:booleanValueAsBoolean" : true },
+         |  $authorshipEntry
+         |  "rdfs:label" : "thing with per-resource authorship",
+         |  "@context" : {
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+         |  }
+         |}""".stripMargin
+    for {
+      responseBody <- TestApiClient.postJsonLd(uri"/v2/resources", jsonLd, rootUser).flatMap(_.assert200)
+      model        <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
+    } yield model
+  }
+
+  // PUT /v2/resources/authorship. A freshly created resource has no lastModificationDate, so the first
+  // edit needs none in the body; an empty list clears authorship.
+  private def putResourceAuthorship(resourceIri: ResourceIri, authorship: List[Authorship]) = {
+    val arr    = authorship.map(a => Json.Str(a.value).toString).mkString("[", ", ", "]")
+    val jsonLd =
+      s"""{
+         |  "@id" : "${resourceIri.value}",
+         |  "@type" : "anything:Thing",
+         |  "knora-api:hasResourceAuthorship" : $arr,
+         |  "@context" : {
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+         |  }
+         |}""".stripMargin
+    TestApiClient.putJsonLd(uri"/v2/resources/authorship", jsonLd, rootUser)
+  }
 
   private def getValueFromApi(createResourceResponse: Model): ZIO[env, Throwable, Model] = for {
     valueId    <- valueId(createResourceResponse)
@@ -391,6 +482,16 @@ object LegalInfoE2ESpec extends E2EZSpec {
         model
           .singleSubjectWithPropertyOption(KA.HasAuthorship)
           .flatMap(_.traverse(_.objectStringList(KA.HasAuthorship))),
+      )
+      .mapError(Exception(_))
+
+  private def resourceAuthorshipValues(model: Model): Task[List[String]] =
+    ZIO
+      .fromEither(
+        model
+          .singleSubjectWithPropertyOption(KA.HasResourceAuthorship)
+          .flatMap(_.traverse(_.objectStringList(KA.HasResourceAuthorship)))
+          .map(_.getOrElse(List.empty)),
       )
       .mapError(Exception(_))
 

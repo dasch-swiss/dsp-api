@@ -342,15 +342,21 @@ object ResourcesRepoLive {
       resource: ResourceReadyToCreate,
       projectIri: InternalIri,
       creatorIri: InternalIri,
-    ): TriplePattern =
-      iri(resource.resourceIri.value)
-        .isA(iri(resource.resourceClassIri.value))
-        .andHas(RDFS.LABEL, literalOf(resource.resourceLabel))
-        .andHas(KB.isDeleted, literalOf(false))
-        .andHas(KB.attachedToUser, iri(creatorIri.value))
-        .andHas(KB.attachedToProject, iri(projectIri.value))
-        .andHas(KB.hasPermissions, literalOf(resource.permissions))
-        .andHas(KB.creationDate, literalOfType(resource.creationDate.toString(), XSD.DATETIME))
+    ): TriplePattern = {
+      val base =
+        iri(resource.resourceIri.value)
+          .isA(iri(resource.resourceClassIri.value))
+          .andHas(RDFS.LABEL, literalOf(resource.resourceLabel))
+          .andHas(KB.isDeleted, literalOf(false))
+          .andHas(KB.attachedToUser, iri(creatorIri.value))
+          .andHas(KB.attachedToProject, iri(projectIri.value))
+          .andHas(KB.hasPermissions, literalOf(resource.permissions))
+          .andHas(KB.creationDate, literalOfType(resource.creationDate.toString(), XSD.DATETIME))
+      // Per-resource (data-side) authorship: one triple per value, none when empty.
+      resource.authorship.foldLeft(base)((pattern, authorship) =>
+        pattern.andHas(KB.hasResourceAuthorship, literalOf(authorship)),
+      )
+    }
 
     def buildStandoffLinkPattern(
       standoffLink: StandoffLinkValueInfo,
@@ -451,6 +457,8 @@ object ResourcesRepoLive {
           List(iri(valueIri).has(KB.valueHasTimeStamp, literalOfType(valueHasTimeStamp.toString(), XSD.DATETIME)))
         case GeonameValueInfo(valueHasGeonameCode) =>
           List(iri(valueIri).has(KB.valueHasGeonameCode, literalOf(valueHasGeonameCode)))
+        case RegionPreviewValueInfo(regionIri) =>
+          List(iri(valueIri).has(KB.isRegionPreviewOf, iri(regionIri.value)))
 
     private def buildLinkValuePatterns(
       v: LinkValueInfo,

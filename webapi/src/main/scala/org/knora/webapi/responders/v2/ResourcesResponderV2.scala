@@ -27,7 +27,6 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
@@ -48,6 +47,7 @@ import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.resources.repo.ChangeResourceAuthorshipQuery
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
 import org.knora.webapi.slice.resources.repo.DeleteResourceQuery
 import org.knora.webapi.slice.resources.repo.EraseResourceQuery
@@ -213,6 +213,98 @@ final class ResourcesResponderV2(
         maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
         maybePermissions = updateResourceMetadataRequestV2.maybePermissions,
         lastModificationDate = newLmd.value,
+      ),
+    )
+
+  /**
+   * Updates a resource's per-resource (data-side) authorship, gated by `Modify` permission on the resource.
+   *
+   * @param request the update request.
+   * @return an [[UpdateResourceAuthorshipResponseV2]].
+   */
+  def updateResourceAuthorshipV2(
+    request: UpdateResourceAuthorshipRequestV2,
+  ): Task[UpdateResourceAuthorshipResponseV2] =
+    IriLocker.runWithIriLock(request.apiRequestID, request.resourceIri)(
+      for {
+        // Get the metadata of the resource to be updated.
+        resourcesSeq <- getResourcePreviewWithDeletedResource(
+                          resourceIris = Seq(request.resourceIri),
+                          targetSchema = ApiV2Complex,
+                          requestingUser = request.requestingUser,
+                        )
+
+        resource: ReadResourceV2 <- resourcesSeq.toResource(request.resourceIri)
+        internalResourceClassIri  = request.resourceClassIri.toOntologySchema(InternalSchema)
+
+        // Make sure that the resource's class is what the client thinks it is.
+        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
+               val msg =
+                 s"Resource <${resource.resourceIri}> is not a member of class <${request.resourceClassIri}>"
+               ZIO.fail(BadRequestException(msg))
+             }
+
+        _ <- ensureNoConflictingChange(resource, request.maybeLastModificationDate)
+
+        // Check that the user has permission to modify the resource.
+        _ <- resourceUtilV2.checkResourcePermission(
+               resource,
+               Permission.ObjectAccess.Modify,
+               request.requestingUser,
+             )
+
+        // Do the update.
+        project <- projectService
+                     .findById(resource.projectADM.id)
+                     .someOrFail(NotFoundException.notFound(resource.projectADM.id))
+        resourceClassIri <- iriConverter
+                              .asResourceClassIri(internalResourceClassIri)
+                              .mapError(BadRequestException.apply)
+        lmdAndUpdate <- ChangeResourceAuthorshipQuery.build(
+                          project,
+                          request.resourceIri,
+                          resourceClassIri,
+                          request.maybeLastModificationDate.map(LastModificationDate.from),
+                          request.maybeNewModificationDate.map(LastModificationDate.from),
+                          request.resourceAuthorship,
+                        )
+        (newLmd, updateQuery) = lmdAndUpdate
+        _                    <- triplestore.query(updateQuery)
+
+        // Verify that the update was performed by checking the new last modification date.
+        updatedResourcesSeq <-
+          getResourcePreviewWithDeletedResource(
+            resourceIris = Seq(request.resourceIri),
+            targetSchema = ApiV2Complex,
+            requestingUser = request.requestingUser,
+          )
+
+        _ <- ZIO.when(updatedResourcesSeq.resources.size != 1) {
+               ZIO.fail(AssertionException(s"Expected one resource, got ${updatedResourcesSeq.resources.size}"))
+             }
+
+        updatedResource: ReadResourceV2 = updatedResourcesSeq.resources.head
+
+        _ <- ZIO.when(!updatedResource.lastModificationDate.contains(newLmd.value)) {
+               val msg =
+                 s"Updated resource has last modification date ${updatedResource.lastModificationDate}, expected $newLmd"
+               ZIO.fail(UpdateNotPerformedException(msg))
+             }
+
+        // Verify that the authorship itself was persisted (order-insensitive), not just the modification date.
+        // Without this, a no-op update would be reported as a success while leaving the authorship unchanged.
+        _ <- ZIO.when(updatedResource.resourceAuthorship.toSet != request.resourceAuthorship.toSet) {
+               val msg =
+                 s"Updated resource authorship ${updatedResource.resourceAuthorship.map(_.value).sorted}, " +
+                   s"expected ${request.resourceAuthorship.map(_.value).sorted}"
+               ZIO.fail(UpdateNotPerformedException(msg))
+             }
+
+      } yield UpdateResourceAuthorshipResponseV2(
+        resourceIri = request.resourceIri,
+        resourceClassIri = request.resourceClassIri,
+        lastModificationDate = newLmd.value,
+        resourceAuthorship = request.resourceAuthorship,
       ),
     )
 
@@ -619,13 +711,12 @@ final class ResourcesResponderV2(
                    val msg = s"When a Gravsearch template Iri is provided, also a header XSLT Iri has to be provided."
                    ZIO.fail(BadRequestException(msg))
                  }
-            // get the template
+            // get the template (passed as a String so it routes through the IRI overload: root + parse spans + shape)
             query <- getGravsearchTemplate(templateIri, requestingUser)
                        .map(_.replace("$resourceIri", resourceIri.value))
-                       .mapAttempt(GravsearchParser.parseQuery)
 
             resource <- searchResponderV2
-                          .gravsearchV2(query, apiV2SchemaWithOption(MarkupRendering.Xml), requestingUser)
+                          .gravsearchV2(query, apiV2SchemaWithOption(MarkupRendering.Xml), requestingUser, None)
                           .flatMap(_.toResource(resourceIri))
           } yield resource
 
@@ -1150,13 +1241,12 @@ final class ResourcesResponderV2(
       // Make a Gravsearch query.
       gravsearchQueryForIncomingLinks <- ZIO.succeed(GetIncomingImageLinksGravsearchQuery.build(resourceIri))
 
-      // Run the query.
-
-      parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
-      searchResponse        <- searchResponderV2.gravsearchV2(
-                          parsedGravsearchQuery,
+      // Run the query, routed through the IRI overload so it gets the root + parse spans + shape.
+      searchResponse <- searchResponderV2.gravsearchV2(
+                          gravsearchQueryForIncomingLinks,
                           apiV2SchemaWithOption(MarkupRendering.Standoff),
                           requestingUser,
+                          None,
                         )
 
       resource     <- searchResponse.toResource(resourceIri)

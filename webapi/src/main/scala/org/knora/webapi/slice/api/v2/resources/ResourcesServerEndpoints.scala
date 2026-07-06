@@ -36,6 +36,7 @@ final class ResourcesServerEndpoints(resourcesEndpoints: ResourcesEndpoints, res
     resourcesEndpoints.postResourcesDelete.serverLogic(restService.deleteResource),
     resourcesEndpoints.postResources.serverLogic(restService.createResource),
     resourcesEndpoints.putResources.serverLogic(restService.updateResourceMetadata),
+    resourcesEndpoints.putResourcesAuthorship.serverLogic(restService.updateResourceAuthorship),
   )
 }
 

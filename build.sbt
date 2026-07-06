@@ -43,6 +43,11 @@ val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim + 
 
 ThisBuild / version := gitVersion
 
+// sttp-client4 4.0.25 pulls in zio-json 0.9.0, while some transitive deps (zio-schema-json,
+// tapir-json-zio) still request 0.7.x. zio-json is API-compatible across this range, so allow
+// the higher version to be selected instead of failing on the early-semver eviction check.
+ThisBuild / libraryDependencySchemes += "dev.zio" %% "zio-json" % VersionScheme.Always
+
 lazy val buildCommit = ("git rev-parse --short HEAD" !!).trim
 lazy val buildTime   = sys.env.getOrElse("BUILD_TIME", "dev")
 
@@ -352,6 +357,21 @@ lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
     Test / parallelExecution  := false,
     Test / testOptions += Tests.Argument("-oDF"), // full stack traces and durations
     Test / baseDirectory := (ThisBuild / baseDirectory).value,
+    // SearchResponderV2GravsearchSpanE2ESpec asserts on the OpenTelemetry spans captured by an
+    // in-memory exporter that it wires in via the overridable `E2EZSpec.otelLayer`. In a shared
+    // forked JVM the OTel `Tracing` service is effectively shared across specs (the first spec to
+    // build it wins), which silently bypasses the override and leaves the exporter empty. Run that
+    // spec in its own JVM so its exporter-backed layer is the one in effect — every other spec
+    // keeps sharing a single JVM as before.
+    Test / testGrouping := {
+      val opts               = (Test / forkOptions).value
+      val (isolated, shared) = (Test / definedTests).value.partition(
+        _.name.contains("SearchResponderV2GravsearchSpanE2ESpec"),
+      )
+      val groups = Tests.Group("shared", shared, Tests.SubProcess(opts)) +:
+        isolated.map(t => Tests.Group(t.name, Seq(t), Tests.SubProcess(opts)))
+      groups.filter(_.tests.nonEmpty)
+    },
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,
   )
   .settings(LocalSettings.localScalacOptions: _*)
@@ -419,7 +439,7 @@ lazy val ingest = {
       name          := "dsp-ingest",
       headerLicense := projectLicense,
       libraryDependencies ++= db ++ tapir ++ metrics ++ zioSeq ++ zioSttpClient ++ openTelemetryWithSentry ++ Seq(
-        "commons-io"  % "commons-io"                        % "2.21.0",
+        "commons-io"  % "commons-io"                        % "2.22.0",
         "dev.zio"    %% "zio-config"                        % ZioConfigVersion,
         "dev.zio"    %% "zio-config-magnolia"               % ZioConfigVersion,
         "dev.zio"    %% "zio-config-typesafe"               % ZioConfigVersion,

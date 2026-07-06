@@ -43,6 +43,10 @@ Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplest
 
 Never concatenate query strings. Use rdf4j SparqlBuilder via the helpers in `slice/common/repo`. See `docs/development/dsp-api-sparql-queries.md`.
 
+### Observability
+
+When adding or changing tracing/telemetry (spans, span attributes, metrics), read `docs/observability/` first — don't re-derive the pattern. Follow `docs/observability/instrumentation-recipe.md`: one root `INTERNAL` span per vertical plus bounded-name stage spans, a **bounded** query shape on the root (never raw query text, instance IRIs, or user IDs as attributes), and the load-bearing `UNSET` failure status-mapper that keeps `cause.prettyPrint` (user data) out of the span status. `docs/observability/using-grafana.md` covers reading/querying traces in Grafana and from Claude Code via the Grafana MCP server.
+
 ### Imports & formatting
 
 - No fully-qualified class names in code bodies — import at the top of the file.
@@ -66,11 +70,12 @@ Do **not** use "Knora" in free-form human-readable text — commit messages, PR 
 
 ## Testing Conventions
 
+- **Every feature is tested.** Logic (parsers, query builders, services) gets unit tests; user-facing behaviour gets an integration/E2E round-trip (write → read-back reflects the change). "It compiles" is not coverage — a feature merged without tests should be flagged in review (see `REVIEW.md`).
 - `object XSpec extends ZIOSpecDefault`; `suite("X should")(test("...") { … })`; layers via `.provide(...)`. Use `TestAspect.withLiveClock` for time-dependent tests.
 - New repo traits ship an in-memory companion under `webapi/src/test/.../service/<Name>InMemory.scala`.
 - Test data: prefer self-contained fixtures next to the component. Only fall back to shared `test_data/` sets when unavoidable. When adding to a shared set, verify an actual *instance* of the scenario exists — not just that the schema supports it.
 - Test locations: unit → `webapi/src/test/scala/`; integration → `modules/test-it/`; ingest integration → `modules/test-ingest-integration/`; E2E → `modules/test-e2e/`; shared utilities → `modules/testkit/`.
-- For large or generated string output (SPARQL, serialized responses), mix in `GoldenTest` and assert with `assertGolden(actual, "suffix")`. The expected value is stored next to the spec under `src/test/resources/`; regenerate with `rewrite = true` (or `rewriteAll = true`) and inspect the `git diff`. See `webapi/src/test/scala/org/knora/webapi/GoldenTest.scala`.
+- For large or generated string output (SPARQL, serialized responses), mix in `GoldenTest` and assert with `assertGolden(actual, "suffix")`. The expected value is stored next to the spec under `src/test/resources/`; regenerate with `rewrite = true` (or `rewriteAll = true`) and inspect the `git diff`. See `webapi/src/test/scala/org/knora/webapi/GoldenTest.scala`. This is the **preferred** way to test query builders — not scattered `q.contains(...)` substring assertions (see `docs/development/dsp-api-sparql-queries.md` § Testing Query Builders).
 
 ## Commit Conventions
 

@@ -370,6 +370,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     // properties
     val hasInteger                      = ontologyIri.makeProperty("hasInteger")
     val hasIntegerUsedByOtherOntologies = ontologyIri.makeProperty("hasIntegerUsedByOtherOntologies")
+    val hasRegionPreview                = ontologyIri.makeProperty("hasRegionPreview")
   }
 
   private val integerValueSuite = {
@@ -1207,6 +1208,39 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     )
   }
 
+  private val regionIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w")
+
+  private val regionPreviewValueSuite = {
+    val regionPreviewValueIri = new MutableTestIri
+
+    suite("RegionPreview Values")(
+      test("create a region preview value") {
+        val resourceIri  = aThingIri
+        val propertyIri  = Anything.hasRegionPreview.smartIri
+        val createParams = CreateValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = Anything.thingClass.smartIri,
+          propertyIri = propertyIri,
+          valueContent = RegionPreviewValueContentV2(ApiV2Complex, regionIri),
+        )
+        for {
+          maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
+          createValueResponse      <- valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID))
+          _                         = regionPreviewValueIri.set(createValueResponse.valueIri)
+          valueFromTriplestore     <- getValue(
+                                    resourceIri,
+                                    maybeResourceLastModDate,
+                                    propertyIri,
+                                    propertyIri,
+                                    regionPreviewValueIri.asValueIri,
+                                    anythingUser1,
+                                  )
+          actual <- asInstanceOf[RegionPreviewValueContentV2](valueFromTriplestore.valueContent)
+        } yield assertTrue(actual.regionIri == regionIri)
+      },
+    )
+  }
+
   override val e2eSpec = suite("ValuesResponderV2")(
     test("Load test data") {
       ZIO
@@ -1217,6 +1251,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
         .as(assertCompletes)
     },
     integerValueSuite,
+    regionPreviewValueSuite,
     test("create a text value without standoff") {
       val valueHasString = "Comment 1a"
       val propertyIri    = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri

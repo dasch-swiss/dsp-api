@@ -62,7 +62,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
        |    ?resourceValueProperty ?valueObject .
@@ -84,6 +85,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.w3.org/2000/01/rdf-schema#label> ?label .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |  OPTIONAL { ?resource ?resourceValueProperty ?valueObject .
        |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
        |?valueObject <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
@@ -111,7 +113,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
        |    ?resourceValueProperty ?valueObject .
@@ -133,6 +136,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.w3.org/2000/01/rdf-schema#label> ?label .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |}""".stripMargin
 
   private val expectedWithDeleted =
@@ -150,7 +154,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> ?isDeleted ;
        |    <http://www.knora.org/ontology/knora-base#deleteDate> ?deletionDate ;
        |    <http://www.knora.org/ontology/knora-base#deleteComment> ?deleteComment .
@@ -176,6 +181,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#deleteDate> ?deletionDate .
        |OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#deleteComment> ?deleteComment . } }
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |  OPTIONAL { ?resource ?resourceValueProperty ?valueObject .
        |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
        |?valueObject <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
@@ -203,7 +209,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
        |    ?resourceValueProperty ?valueObject .
@@ -227,6 +234,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |  { ?resource <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate .
        |FILTER ( ?creationDate <= "2019-08-30T10:36:54.024Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ) }
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |  OPTIONAL { ?resource ?resourceValueProperty ?currentValue .
        |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
        |FILTER NOT EXISTS { ?currentValue <http://www.knora.org/ontology/knora-base#deleteDate> ?currentValueDeleteDate .
@@ -263,7 +271,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
        |    ?resourceValueProperty ?valueObject .
@@ -288,6 +297,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.w3.org/2000/01/rdf-schema#label> ?label .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |  OPTIONAL { ?resource ?resourceValueProperty ?valueObject .
        |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
        |?valueObject <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
@@ -320,7 +330,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
        |    ?resourceValueProperty ?valueObject .
@@ -342,6 +353,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.w3.org/2000/01/rdf-schema#label> ?label .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |  OPTIONAL { ?resource ?resourceValueProperty ?valueObject .
        |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
        |{ ?resource ?resourceValueProperty ?valueObject .
@@ -371,7 +383,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
        |    ?resourceValueProperty ?valueObject .
@@ -393,6 +406,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.w3.org/2000/01/rdf-schema#label> ?label .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |  OPTIONAL { ?resource ?resourceValueProperty ?valueObject .
        |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
        |?valueObject <http://www.knora.org/ontology/knora-base#valueHasUUID> "EjRWeBI0EjQSNBI0VniQEg" .
@@ -421,7 +435,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
        |    ?resourceValueProperty ?valueObject .
@@ -443,6 +458,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.w3.org/2000/01/rdf-schema#label> ?label .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |  OPTIONAL { ?resource ?resourceValueProperty ?valueObject .
        |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
        |?valueObject <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
@@ -472,7 +488,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
        |    ?resourceValueProperty ?valueObject .
@@ -494,6 +511,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.w3.org/2000/01/rdf-schema#label> ?label .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |  OPTIONAL { ?resource ?resourceValueProperty ?valueObject .
        |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
        |?valueObject <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
@@ -521,7 +539,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
        |    ?resourceValueProperty ?valueObject .
@@ -539,6 +558,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.w3.org/2000/01/rdf-schema#label> ?label .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |  OPTIONAL { ?resource ?resourceValueProperty ?valueObject .
        |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
        |?valueObject <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
@@ -563,7 +583,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> ?isDeleted ;
        |    <http://www.knora.org/ontology/knora-base#deleteDate> ?deletionDate ;
        |    <http://www.knora.org/ontology/knora-base#deleteComment> ?deleteComment .
@@ -591,6 +612,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |  { ?resource <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate .
        |FILTER ( ?creationDate <= "2019-08-30T10:36:54.024Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ) }
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |  OPTIONAL { ?resource ?resourceValueProperty ?currentValue .
        |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
        |?currentValue <http://www.knora.org/ontology/knora-base#valueHasUUID> ?currentValueUUID .
@@ -625,7 +647,8 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
        |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
        |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate .
+       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
+       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
        |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
        |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
        |    ?resourceValueProperty ?valueObject .
@@ -649,6 +672,7 @@ object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |  { ?resource <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate .
        |FILTER ( ?creationDate <= "2019-08-30T10:36:54.024Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ) }
        |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
+       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
        |  OPTIONAL { ?resource ?resourceValueProperty ?currentValue .
        |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
        |FILTER NOT EXISTS { ?currentValue <http://www.knora.org/ontology/knora-base#deleteDate> ?currentValueDeleteDate .

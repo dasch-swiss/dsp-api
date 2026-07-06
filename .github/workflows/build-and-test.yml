@@ -23,10 +23,20 @@ permissions:
 env:
   JAVA_VERSION: 25
 
+# Release PRs (head branch `release-please--*`, opened by release-please) only
+# bump CHANGELOG.md and version.txt — no source changes — so every job below is
+# skipped for them via `!startsWith(github.head_ref, 'release-please')`. This
+# saves CI resources and lets the release PR go green immediately. On `push`
+# events `github.head_ref` is empty, so main pushes still run the full suite
+# (incl. the Codecov baseline). A required check skipped by a job-level `if:`
+# counts as passing in branch protection, so the release PR stays mergeable.
+# See DEV-6678.
+
 jobs:
   build-and-test:
     name: Build and test
     runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.head_ref, 'release-please') }}
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
@@ -54,7 +64,7 @@ jobs:
   test-bagit:
     name: Test bagit
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' # gate-only; no coverage upload
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
@@ -73,7 +83,7 @@ jobs:
   test-jwt:
     name: Test jwt
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' # gate-only; no coverage upload
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
@@ -92,7 +102,7 @@ jobs:
   test-shacl-validator:
     name: Test shacl-validator
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' # gate-only; no coverage upload
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
@@ -111,6 +121,7 @@ jobs:
   test-it:
     name: Build and IT test
     runs-on: ubuntu-latest # previously: buildjet-4vcpu-ubuntu-2204
+    if: ${{ !startsWith(github.head_ref, 'release-please') }}
     concurrency:
       group: ${{ github.ref }}-it
       cancel-in-progress: true
@@ -149,6 +160,7 @@ jobs:
   test-e2e:
     name: Build and E2E test
     runs-on: ubuntu-latest-large-runner
+    if: ${{ !startsWith(github.head_ref, 'release-please') }}
     concurrency:
       group: ${{ github.ref }}-e2e
       cancel-in-progress: true
@@ -245,7 +257,7 @@ jobs:
 
   test-ingest-integration:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' # gate-only; no coverage upload
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v4
@@ -278,7 +290,7 @@ jobs:
   test-docs-build:
     name: Test docs
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' # gate-only; no coverage upload
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
@@ -300,7 +312,7 @@ jobs:
   check-fuseki-version-consistency:
     name: Check Fuseki version consistency
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' # gate-only; no coverage upload
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - uses: actions/checkout@v4
       - name: Assert fuseki/Dockerfile, Dependencies.scala, and docker-compose.yml agree
@@ -319,7 +331,7 @@ jobs:
   check-formatting:
     name: Check formatting
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' # gate-only; no coverage upload
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
@@ -331,7 +343,7 @@ jobs:
   docker-healthcheck:
     name: Run the healthcheck from the container
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' # gate-only; no coverage upload
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main

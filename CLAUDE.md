@@ -98,7 +98,7 @@ Each slice typically contains:
 
 - **Language**: Scala 3.3.5
 - **Framework**: ZIO 2.x for functional programming
-- **HTTP**: Pekko HTTP (Apache Pekko) with Tapir for endpoint definition
+- **HTTP**: zio-http as the HTTP server, with Tapir for endpoint definition
 - **Database**: Apache Jena Fuseki (RDF triplestore)
 - **Media Server**: Sipi (C++ media server)
 - **Testing**: ZIO Test framework, some ScalaTests exist but will be migrated to ZIO Test
@@ -170,6 +170,15 @@ When changes are hard to test with local test data (e.g. they need realistic dat
 - Test config: `webapi/src/test/resources/test.conf`
 - Docker config: `docker-compose.yml`
 
+### Scala language intelligence (Metals MCP)
+
+This repo ships a checked-in `metals` MCP server giving agents real Scala language intelligence (compiler
+diagnostics, type-aware usage search, symbol docs and lookup). **Prefer the `metals` MCP tools over direct
+`sbt`/`sbtx` calls** — e.g. use `compile-file` / `compile-module` instead of `sbt compile`, and `get-usages`
+instead of grep. It is much faster (incremental, no JVM/sbt startup per call) and more capable (structured
+diagnostics, type-aware navigation). For setup, the full tool list, usage pattern, and the worktree/LOOM
+caveats see `docs/development/dsp-api-metals-mcp.md`.
+
 ## API Structure
 
 ### Endpoint Definition
@@ -236,6 +245,22 @@ the codebase. This includes structuring test suites, naming conventions, and usi
 See also `CONVENTIONS.md` (work-phase agent reference card — code/testing/commit conventions, with pointers into
 `docs/development/`) and `REVIEW.md` (review-phase checklist). Update these alongside `docs/development/` whenever a
 convention changes.
+
+### Observability
+
+When working on observability — OpenTelemetry tracing, spans, metrics, or anything that emits or
+reads telemetry (e.g. instrumenting a responder, adding span attributes, debugging a slow request via
+traces) — read `docs/observability/` first. Key entry points:
+
+- `docs/observability/index.md` — what is instrumented and where the traces live.
+- `docs/observability/instrumentation-recipe.md` — the mandatory pattern for adding per-stage tracing
+  to a responder (root + stage spans, bounded query shape, sanitized errors, `exit_reason`). Follow
+  it rather than re-deriving; the load-bearing `UNSET` status-mapper rule prevents leaking user data
+  into span status.
+- `docs/observability/gravsearch-trace-runbook.md` and `docs/observability/traceql-recipes.md` — how
+  to read traces and query them in Grafana.
+- `docs/observability/using-grafana.md` — how to run those queries in the Grafana UI and from Claude
+  Code via the Grafana MCP server.
 
 ### Markdown Formatting
 

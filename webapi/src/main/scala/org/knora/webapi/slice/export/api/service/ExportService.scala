@@ -146,8 +146,7 @@ final case class ExportService(
     includeIris: Boolean,
     includeArkUrls: Boolean,
     // batchSize/parallelism default to the operational values from AppConfig (`app.export`), overridable per
-    // deployment via env var. The explicit params exist only so tests can force resources across batch boundaries
-    // and so the tuning IT (ExportStreamingIT) can sweep the matrix.
+    // deployment via env var. The explicit params exist only so tests can force resources across batch boundaries.
     batchSize: Int = appConfig.`export`.batchSize,
     parallelism: Int = appConfig.`export`.parallelism,
   ): Task[ZStream[Any, Throwable, Byte]] = {

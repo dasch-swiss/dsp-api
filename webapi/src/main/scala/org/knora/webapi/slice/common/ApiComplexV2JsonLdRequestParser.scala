@@ -28,9 +28,11 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseResourceRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.UpdateResourceAuthorshipRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.UpdateResourceMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
@@ -72,7 +74,10 @@ final case class ApiComplexV2JsonLdRequestParser(
         val modified = obj.fields.map {
           case (key, Json.Arr(values)) if !key.startsWith("@") =>
             val indexed = values.zipWithIndex.map {
-              case (Json.Obj(fields), idx) =>
+              // only node objects carry an order; JSON-LD value objects (those with an @value entry,
+              // e.g. a bare datatype property such as hasResourceAuthorship) must be left untouched,
+              // as an extra entry would make them an invalid value object during expansion
+              case (Json.Obj(fields), idx) if !fields.exists(_._1 == "@value") =>
                 Json.Obj(fields :+ (OrderIndexProperty -> Json.Num(idx)))
               case (other, _) => other
             }
@@ -105,7 +110,11 @@ final case class ApiComplexV2JsonLdRequestParser(
       ZIO.fromEither(resource.objectInstantOption(LastModificationDate))
     def newModificationDateOption: IO[String, Option[Instant]] =
       ZIO.fromEither(resource.objectInstantOption(NewModificationDate))
-    def rdfsLabelOption: IO[String, Option[String]] = ZIO.fromEither(resource.objectStringOption(Rdfs.Label))
+    def rdfsLabelOption: IO[String, Option[String]]     = ZIO.fromEither(resource.objectStringOption(Rdfs.Label))
+    def resourceAuthorship: IO[String, Seq[Authorship]] =
+      ZIO
+        .fromEither(resource.objectStringListOption(HasResourceAuthorship, Authorship.from))
+        .map(_.getOrElse(List.empty))
   }
 
   private object RootResource {
@@ -167,6 +176,28 @@ final case class ApiComplexV2JsonLdRequestParser(
       lastModificationDate,
       label,
       permissions,
+      newModificationDate,
+      requestingUser,
+      uuid,
+    )
+  }
+
+  def updateResourceAuthorshipRequestV2(
+    str: String,
+    requestingUser: User,
+    uuid: UUID,
+  ): IO[String, UpdateResourceAuthorshipRequestV2] = ZIO.scoped {
+    for {
+      r                    <- RootResource.fromJsonLd(str)
+      resourceIri          <- r.resourceIriOrFail
+      resourceAuthorship   <- r.resourceAuthorship
+      lastModificationDate <- r.lastModificationDateOption
+      newModificationDate  <- r.newModificationDateOption
+    } yield UpdateResourceAuthorshipRequestV2(
+      resourceIri,
+      r.resourceClassSmartIri,
+      resourceAuthorship,
+      lastModificationDate,
       newModificationDate,
       requestingUser,
       uuid,
@@ -330,9 +361,10 @@ final case class ApiComplexV2JsonLdRequestParser(
       _            <- ZIO
              .fail("Resource IRI and project IRI must reference the same project")
              .when(r.resourceIri.exists(_.shortcode != project.shortcode))
-      attachedToUser <- attachedToUser(r.resource, requestingUser, project.id)
-      values         <- extractValues(r.resource, project.shortcode)
-      createResource  = CreateResourceV2(
+      attachedToUser     <- attachedToUser(r.resource, requestingUser, project.id)
+      values             <- extractValues(r.resource, project.shortcode)
+      resourceAuthorship <- r.resourceAuthorship
+      createResource      = CreateResourceV2(
                          r.resourceIri,
                          r.resourceClassSmartIri,
                          label,
@@ -340,6 +372,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                          project,
                          permissions,
                          creationDate,
+                         resourceAuthorship,
                        )
       _ <- ensurePlaceholderAllowed(createResource.flatValues.map(_.valueContent))
       _ <- checkMimeTypesForFileValueContents(createResource.flatValues)
@@ -428,6 +461,9 @@ final case class ApiComplexV2JsonLdRequestParser(
       AttachedToUser,
       HasPermissions,
       CreationDate,
+      // Resource-level (data-side) authorship is read separately (RootResource.resourceAuthorship),
+      // not as a value property — exclude it so it is not parsed as a value.
+      HasResourceAuthorship,
     )
     val valueStatements = r
       .listProperties()
@@ -626,6 +662,7 @@ final case class ApiComplexV2JsonLdRequestParser(
           case StillImageVectorFileValue   => withFileInfo(v, StillImageVectorFileValueContentV2.from)
           case TextValue                   => TextValueContentV2.from(v.r).provide(ZLayer.succeed(standoffMappingService))
           case TextFileValue               => withFileInfo(v, TextFileValueContentV2.from)
+          case RegionPreviewValue          => ZIO.fromEither(RegionPreviewValueContentV2.from(v.r))
           case TimeValue                   => ZIO.fromEither(TimeValueContentV2.from(v.r))
           case UriValue                    => ZIO.fromEither(UriValueContentV2.from(v.r))
           case unsupported                 => ZIO.fail(s"Unsupported value type: $unsupported")

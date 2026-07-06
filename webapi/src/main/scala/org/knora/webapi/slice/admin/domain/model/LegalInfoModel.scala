@@ -104,6 +104,21 @@ object LicenseIri                                                extends StringV
   val NOC_NC_1_0: LicenseIri       = LicenseIri("http://rdfh.ch/licenses/noc-nc-1.0")
   val PLACEHOLDER: LicenseIri      = LicenseIri(PlaceholderIri.instance.value)
 
+  /**
+   * The Creative Commons licenses allowed as a project's resource-side (data) license.
+   * Restricted to the CC-BY family: data is always copyrighted, so CC0 and the Public Domain Mark are excluded
+   * even though they share the `creativecommons.org` host.
+   */
+  val CC_LICENSES: Set[LicenseIri] =
+    Set(
+      CC_BY_4_0,
+      CC_BY_SA_4_0,
+      CC_BY_NC_4_0,
+      CC_BY_NC_SA_4_0,
+      CC_BY_ND_4_0,
+      CC_BY_NC_ND_4_0,
+    )
+
   val BUILT_IN: Set[LicenseIri] =
     Set(
       CC_BY_4_0,

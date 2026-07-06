@@ -40,9 +40,15 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 ### SPARQL
 
 - [ ] No string concatenation in SPARQL — use rdf4j SparqlBuilder via the helpers in `slice/common/repo` (see `docs/development/dsp-api-sparql-queries.md`)
+- [ ] Query builders are tested with **golden snapshots** (`GoldenTest`), not scattered `q.contains(...)` / `!q.contains(...)` substring assertions (brittle on serialization, blind to clause placement) — see `docs/development/dsp-api-sparql-queries.md` § Testing Query Builders
+
+### Observability
+
+- [ ] Tracing/telemetry changes follow `docs/observability/instrumentation-recipe.md`: bounded span names, a bounded query shape on the root, **no raw query text / instance IRIs / user IDs in attributes**, failure status-mapper maps to `UNSET` (keeps `cause.prettyPrint` out of span status), interruptions set `exit_reason`
 
 ### Tests
 
+- [ ] **Every new feature/endpoint is actually tested — flag it when it is not.** Logic (parsers, query builders, services) has unit tests, and user-facing behaviour has an integration/E2E round-trip (e.g. write → read-back reflects the change). A feature whose only "test" is that it compiles is under-tested; say so in the review.
 - [ ] New tests: `object XSpec extends ZIOSpecDefault`; layers via `.provide(...)`; `TestAspect.withLiveClock` for time-dependent tests
 - [ ] Test data added in the right place — self-contained fixtures next to the component preferred over additions to shared `test_data/` sets
 - [ ] When adding to a shared dataset, an actual *instance* of the scenario is added (not just relying on schema support)

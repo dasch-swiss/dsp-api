@@ -79,7 +79,7 @@ final class DspIngestClientLive(
     for {
       request <- authenticatedRequest.map {
                    _.post(uri"${projectsPath(shortcode)}/export")
-                     .readTimeout(60.minutes)
+                     .readTimeout(2.hours)
                      .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(outputFile.toFile))))
                  }
       response <- request.send(backend)
@@ -99,7 +99,7 @@ final class DspIngestClientLive(
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = for {
     request <- authenticatedRequest.map {
                  _.post(uri"${projectsPath(shortcode)}/import")
-                   .readTimeout(1.hour)
+                   .readTimeout(2.hours)
                    .contentType("application/zip")
                    .body(fileToImport.toFile)
                }

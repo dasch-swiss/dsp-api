@@ -93,12 +93,16 @@ object ChangeResourceMetadataQuery extends QueryBuilderHelper {
         List(resourceTypePattern, lastModPattern) ::: labelPattern ::: permissionsPattern
       }
 
+      // `WITH <graph>` scopes the named graph to the WHERE clause too, not just DELETE/INSERT;
+      // an ungraphed WHERE matches the default graph, which is empty (so the update no-ops) on a
+      // store without a union default graph, e.g. the in-memory test store. Safe only because the
+      // WHERE matches the resource's own data-graph triples; a cross-graph pattern (e.g. an ontology
+      // check) would need USING/GRAPH. (`with` is backticked because it is a Scala keyword.)
       val query = Queries
         .MODIFY()
         .prefix(KB.NS, RDFS.NS, XSD.NS, RDF.NS)
-        .from(dataGraph)
+        .`with`(dataGraph)
         .delete(deletePatterns: _*)
-        .into(dataGraph)
         .insert(insertPatterns: _*)
         .where(wherePatterns: _*)
 

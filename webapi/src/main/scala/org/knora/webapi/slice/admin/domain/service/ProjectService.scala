@@ -58,6 +58,9 @@ final case class ProjectService(
         knoraProject.selfjoin,
         knoraProject.allowedCopyrightHolders,
         knoraProject.enabledLicenses,
+        knoraProject.dataLicense,
+        knoraProject.dataCopyrightHolder,
+        knoraProject.defaultDataAuthorship,
       ),
     )
 
@@ -77,6 +80,9 @@ final case class ProjectService(
       restrictedView,
       project.allowedCopyrightHolders,
       project.enabledLicenses,
+      project.dataLicense,
+      project.dataCopyrightHolder,
+      project.defaultDataAuthorship,
     )
 
   def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =

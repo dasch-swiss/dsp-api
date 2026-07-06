@@ -461,6 +461,28 @@ final class ConstructResponseUtilV2(
       comment = valueCommentOption,
     )
 
+  private def makeRegionPreviewValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): Task[RegionPreviewValueContentV2] = {
+    // The `iiifUrl` is computed downstream in ReadResourcesServiceLive, where the referenced region's
+    // geometry and the still image's internal filename are available.
+    val regionIriStr = valueObject.requireIriObject(OntologyConstants.KnoraBase.IsRegionPreviewOf.toSmartIri)
+    ZIO
+      .fromEither(ResourceIri.from(regionIriStr))
+      .mapError { e =>
+        InconsistentRepositoryDataException(s"Could not parse region IRI <$regionIriStr>: $e")
+      }
+      .map { regionIri =>
+        RegionPreviewValueContentV2(
+          ontologySchema = InternalSchema,
+          regionIri = regionIri,
+          iiifUrl = None,
+          comment = valueCommentOption,
+        )
+      }
+  }
+
   /**
    * Builds a [[HierarchicalListValueContentV2]]. In the simple schema the list node label is required and
    * is fetched via [[ListsResponder]]; in the complex schema the label is omitted.
@@ -541,6 +563,8 @@ final class ConstructResponseUtilV2(
           targetSchema,
           requestingUser,
         )
+      case OntologyConstants.KnoraBase.RegionPreviewValue =>
+        makeRegionPreviewValueContentV2(valueObject, valueCommentOption)
       case fileValueClass if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
         makeFileValueContentV2(fileValueClass, valueObject, valueCommentOption)
       case other => throw NotImplementedException(s"Not implemented yet: $other")
@@ -585,16 +609,42 @@ final class ConstructResponseUtilV2(
       resourceWithValueRdfData.requireDateTimeObject(OntologyConstants.KnoraBase.CreationDate.toSmartIri)
     val resourceLastModificationDate =
       resourceWithValueRdfData.maybeDateTimeObject(OntologyConstants.KnoraBase.LastModificationDate.toSmartIri)
-    val resourceDeletionInfo = deletionInfoOf(resourceWithValueRdfData)
+    val resourceDeletionInfo  = deletionInfoOf(resourceWithValueRdfData)
+    val rawResourceAuthorship =
+      resourceWithValueRdfData
+        .maybeStringListObject(OntologyConstants.KnoraBase.HasResourceAuthorship.toSmartIri)
+        .getOrElse(Seq.empty)
 
     for {
       projectIri <- ZIO.fromEither(ProjectIri.from(resourceAttachedToProject)).mapError(BadRequestException.apply)
-      project    <-
+      // Lenient on read: per the legal-metadata two-tier validation policy (strict on write,
+      // lenient on read), invalid authorship stored out-of-band (e.g. ingested via tools) must not
+      // make the whole resource unreadable (a 500). Skip such values, but log a warning so the bad
+      // data is discoverable rather than silently disappearing.
+      resourceAuthorship <- ZIO
+                              .foreach(rawResourceAuthorship) { raw =>
+                                ZIO
+                                  .fromEither(Authorship.from(raw))
+                                  .tapError(err =>
+                                    ZIO.logWarning(
+                                      s"Ignoring invalid authorship on resource <$resourceIri>: \"$raw\" ($err)",
+                                    ),
+                                  )
+                                  .option
+                              }
+                              .map(_.flatten)
+      project <-
         projectService.findById(projectIri).someOrFail(NotFoundException(s"Project '${projectIri.value}' not found"))
       valueObjects <- ZIO.foreach(resourceWithValueRdfData.valuePropertyAssertions) { (property, valObjs) =>
                         ZIO
                           .foreach(sortValuesByOrderThenIri(valObjs)) { valObj =>
-                            buildReadValueV2(valObj, mappings, queryStandoff, targetSchema, requestingUser)
+                            buildReadValueV2(
+                              valObj,
+                              mappings,
+                              queryStandoff,
+                              targetSchema,
+                              requestingUser,
+                            )
                           }
                           .map(property -> _)
                       }
@@ -611,6 +661,7 @@ final class ConstructResponseUtilV2(
       lastModificationDate = resourceLastModificationDate,
       versionDate = versionDate,
       deletionInfo = resourceDeletionInfo,
+      resourceAuthorship = resourceAuthorship,
     )
   }
 
