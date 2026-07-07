@@ -93,6 +93,33 @@ Before transforming the data, a plugin can check whether a required manual trans
 has been carried out. If the requirement is not met, the plugin can throw
 `InconsistentRepositoryDataException` to abort the upgrade process.
 
+## Changing the Built-in Ontologies
+
+Not every change to `knora-base.ttl` / `knora-admin.ttl` needs the same treatment. Three cases:
+
+1. **Data-incompatible change** (existing data must be transformed): bump the version and add a
+   transformation plugin, as described in "Adding an Upgrade Plugin" above.
+
+2. **Compatible content change that must reach deployed repositories** (a new property or class
+   that new code reads or writes): bump the version and register the built-in-graph reload
+   plugin — no custom transformation is needed, because step 5 of the update procedure replaces
+   the built-in DSP ontologies with the current ones:
+
+    ```scala
+    // RepositoryUpdatePlan.makePluginsForVersions — how v51 and v52 shipped
+    PluginForKnoraBaseVersion(versionNumber = 52, plugin = new MigrateOnlyBuiltInGraphs()),
+    ```
+
+3. **Purely additive optional properties** can ride along without their own bump: they reach
+   deployed repositories with the *next* version's built-in-graph reload. Only do this when the
+   consuming code tolerates the property being absent until then. (Do not add a duplicate bump
+   for a change that a sibling PR already bumps for — check the PR stack.)
+
+The externally visible knora-api test fixtures (e.g.
+`knoraApiOntologyWithValueObjects.jsonld`) are **generated, never hand-edited**: they are
+rewritten on diff by `OntologyFormatsE2ESpec` (`modules/test-e2e`), which requires the Docker
+stack. After an ontology change, run that spec and commit the regenerated fixtures.
+
 ## Testing Update Plugins
 
 Each plugin should have a unit test that extends `UpgradePluginSpec`. A typical

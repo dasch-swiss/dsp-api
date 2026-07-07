@@ -42,6 +42,13 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 - [ ] No string concatenation in SPARQL — use rdf4j SparqlBuilder via the helpers in `slice/common/repo` (see `docs/development/dsp-api-sparql-queries.md`)
 - [ ] Query builders are tested with **golden snapshots** (`GoldenTest`), not scattered `q.contains(...)` / `!q.contains(...)` substring assertions (brittle on serialization, blind to clause placement) — see `docs/development/dsp-api-sparql-queries.md` § Testing Query Builders
 
+### Ontology & RDF
+
+- [ ] New overridable project-wide defaults are named `hasDefault*` (payload key `default*`) — a rename after merge is a breaking change across four repos (see `docs/development/dsp-api-conventions.md` § Ontology Conventions)
+- [ ] Reads of repeated RDF literals do not depend on store order — sorted on read; tests assert sorted lists or sets, not insertion order
+- [ ] Stored values that fail validation on read are skipped **with a logged warning** — not a 500, not a silent drop
+- [ ] Built-in ontology changes follow the version-bump rules (`docs/05-internals/development/updating-repositories.md` § Changing the Built-in Ontologies); no duplicate bump for a change a stacked sibling PR already bumps for; generated ontology fixtures regenerated via `OntologyFormatsE2ESpec`, not hand-edited
+
 ### Observability
 
 - [ ] Tracing/telemetry changes follow `docs/observability/instrumentation-recipe.md`: bounded span names, a bounded query shape on the root, **no raw query text / instance IRIs / user IDs in attributes**, failure status-mapper maps to `UNSET` (keeps `cause.prettyPrint` out of span status), interruptions set `exit_reason`
