@@ -18,7 +18,6 @@ import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 
@@ -51,53 +50,23 @@ object GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenT
                 )
   } yield prequery
 
-  /**
-   * Two-stage pipeline (prequery generation + inference pass) for the count variant, mirroring
-   * SearchResponderV2.fulltextSearchCountV2's own composition. See transformQueryWithInference in
-   * GravsearchToPrequeryTransformerE2ESpec for why the golden snapshot needs both stages.
-   */
+  /** See [[GravsearchInferencePipelineTestSupport]] for why the golden snapshot needs the full pipeline. */
   private def transformQueryWithInference(query: String): ZIO[
     AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService,
     Throwable,
     SelectQuery,
-  ] = for {
-    appConfig            <- ZIO.service[AppConfig]
-    parsedQuery          <- ZIO.attempt(GravsearchParser.parseQuery(query))
-    typeInspectionResult <- inspectionRunner(_.inspectTypes(parsedQuery.whereClause))
-    _                    <- GravsearchQueryChecker.checkConstructClause(parsedQuery.constructClause, typeInspectionResult)
-    sanitizedWhereClause <- GravsearchTypeInspectionUtil.removeTypeAnnotations(parsedQuery.whereClause)
-    querySchema          <-
-      ZIO.fromOption(parsedQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-    countTransformer = new GravsearchToCountPrequeryTransformer(
-                         parsedQuery.constructClause,
-                         typeInspectionResult,
-                         querySchema,
-                         appConfig.v2.fulltextSearch.searchValueMinLength,
-                       )
-    prequery <- queryTraverser(
-                  _.transformConstructToSelect(
-                    parsedQuery.copy(whereClause = sanitizedWhereClause, orderBy = Seq.empty),
-                    countTransformer,
-                  ),
-                )
-    ontologyInferencer     <- ZIO.service[OntologyInferencer]
-    inferenceOptimization  <- ZIO.service[InferenceOptimizationService]
-    ontologiesForInference <- inferenceOptimization.getOntologiesRelevantForInference(parsedQuery.whereClause)
-    selectTransformer       = new SelectTransformer(
-                          simulateInference = countTransformer.useInference,
-                          ontologyInferencer,
-                          countTransformer.mainResourceVariable,
-                          sf,
-                        )
-    transformedPrequery <- queryTraverser(
-                             _.transformSelectToSelect(
-                               inputQuery = prequery,
-                               transformer = selectTransformer,
-                               limitInferenceToOntologies = ontologiesForInference,
-                               limitResultsToProject = None,
-                             ),
-                           )
-  } yield transformedPrequery
+  ] =
+    GravsearchInferencePipelineTestSupport.transformQueryWithInference(
+      query,
+      (constructClause, typeInspectionResult, querySchema, appConfig) =>
+        new GravsearchToCountPrequeryTransformer(
+          constructClause,
+          typeInspectionResult,
+          querySchema,
+          appConfig.v2.fulltextSearch.searchValueMinLength,
+        ),
+      dropOrderBy = true,
+    )
 
   val queryClasslessMatchFulltext: String =
     """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>

@@ -21,7 +21,6 @@ import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 
@@ -54,60 +53,22 @@ object GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
                 )
   } yield preQuery
 
-  /**
-   * Runs the full two-stage prequery pipeline: prequery generation (transformConstructToSelect, where
-   * FILTER matchFulltext is replaced by its GroupPattern expansion) followed by the inference pass
-   * (transformSelectToSelect via SelectTransformer, where the optimizer's moveLuceneToBeginning hoists
-   * the expansion and OntologyInferencer expands rdf:type/property statements). This mirrors
-   * SearchResponderV2.gravsearchV2's own composition and is what golden-snapshotting the matchFulltext
-   * expansion needs: taking the snapshot after only the first stage (as [[transformQuery]] does) would
-   * miss the traps (BIND hoisting, rdf:type-with-variable-object rejection, join-order pessimization)
-   * that only manifest once the inference pass runs.
-   */
+  /** See [[GravsearchInferencePipelineTestSupport]] for why the golden snapshot needs the full pipeline. */
   private def transformQueryWithInference(query: String): ZIO[
     AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService,
     Throwable,
     SelectQuery,
-  ] = for {
-    parsedQuery          <- ZIO.attempt(GravsearchParser.parseQuery(query))
-    sanitizedWhereClause <- GravsearchTypeInspectionUtil.removeTypeAnnotations(parsedQuery.whereClause)
-    typeInspectionResult <- inspectionRunner(_.inspectTypes(parsedQuery.whereClause))
-    _                    <- GravsearchQueryChecker.checkConstructClause(parsedQuery.constructClause, typeInspectionResult)
-    querySchema          <-
-      ZIO.fromOption(parsedQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-    appConfig           <- ZIO.service[AppConfig]
-    prequeryTransformer <- ZIO.attempt(
-                             new GravsearchToPrequeryTransformer(
-                               constructClause = parsedQuery.constructClause,
-                               typeInspectionResult = typeInspectionResult,
-                               querySchema = querySchema,
-                               appConfig = appConfig,
-                             ),
-                           )
-    prequery <- queryTraverser(
-                  _.transformConstructToSelect(
-                    parsedQuery.copy(whereClause = sanitizedWhereClause),
-                    prequeryTransformer,
-                  ),
-                )
-    ontologyInferencer     <- ZIO.service[OntologyInferencer]
-    inferenceOptimization  <- ZIO.service[InferenceOptimizationService]
-    ontologiesForInference <- inferenceOptimization.getOntologiesRelevantForInference(parsedQuery.whereClause)
-    selectTransformer       = new SelectTransformer(
-                          simulateInference = prequeryTransformer.useInference,
-                          ontologyInferencer,
-                          prequeryTransformer.mainResourceVariable,
-                          sf,
-                        )
-    transformedPrequery <- queryTraverser(
-                             _.transformSelectToSelect(
-                               inputQuery = prequery,
-                               transformer = selectTransformer,
-                               limitInferenceToOntologies = ontologiesForInference,
-                               limitResultsToProject = None,
-                             ),
-                           )
-  } yield transformedPrequery
+  ] =
+    GravsearchInferencePipelineTestSupport.transformQueryWithInference(
+      query,
+      (constructClause, typeInspectionResult, querySchema, appConfig) =>
+        new GravsearchToPrequeryTransformer(
+          constructClause = constructClause,
+          typeInspectionResult = typeInspectionResult,
+          querySchema = querySchema,
+          appConfig = appConfig,
+        ),
+    )
 
   val inputQueryWithDateNonOptionalSortCriterion: String =
     """
