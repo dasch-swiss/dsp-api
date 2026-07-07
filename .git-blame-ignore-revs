@@ -15,3 +15,6 @@ fb8d6ba614e93997749443355c7e59cdb12edf58
 
 # Scala Steward: Reformat with scalafmt 3.10.2
 d911f56ed4fed536751e32a93437c51bac52aa39
+
+# refactor(build): move fuseki, ingest, sipi, webapi under modules/
+61d0e1bef26c0911d3968e6b8456583dbbbd7163

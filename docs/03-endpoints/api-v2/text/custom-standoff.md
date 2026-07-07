@@ -20,7 +20,7 @@ useful when the client is a web-browser expecting HTML (instead of XML).
 ### Basic Structure of a Mapping
 
 The mapping is written in XML itself (for a formal description, see
-`webapi/src/resources/mappingXMLToStandoff.xsd`). It has the following
+`modules/webapi/src/resources/mappingXMLToStandoff.xsd`). It has the following
 structure (the indentation corresponds to the nesting in XML):
 
 - `<mapping>`: the root element
@@ -421,7 +421,7 @@ internal links using the data type standoff class
 ## Validating a Mapping and sending it to DSP-API
 
 A mapping can be validated before sending it to DSP-API with the following
-XML Schema file: `webapi/src/resources/mappingXMLToStandoff.xsd`. Any
+XML Schema file: `modules/webapi/src/resources/mappingXMLToStandoff.xsd`. Any
 mapping that does not conform to this XML Schema file will be rejected
 by DSP-API.
 

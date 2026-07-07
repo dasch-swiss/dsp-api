@@ -54,14 +54,14 @@ docker-publish-dsp-api-image: # publish dsp-api image to Dockerhub
 .PHONY: docker-build-sipi-image
 docker-build-sipi-image: # build the knora-sipi image with Bazel + load it into the local Docker daemon (:latest and :<version>)
 	@TAG=$$($(MAKE) -s docker-image-tag | sed -e '/^[[:space:]]*$$/d' | tail -n1 | tr -d '[:space:]'); \
-		bazel run //sipi:load && \
+		bazel run //modules/sipi:load && \
 		docker tag daschswiss/knora-sipi:latest "daschswiss/knora-sipi:$$TAG" && \
 		echo "Loaded daschswiss/knora-sipi: latest + $$TAG"
 
 .PHONY: docker-publish-sipi-image
 docker-publish-sipi-image: # build + publish the multi-arch knora-sipi image with Bazel (tags: latest + <version>)
 	@TAG=$$($(MAKE) -s docker-image-tag | sed -e '/^[[:space:]]*$$/d' | tail -n1 | tr -d '[:space:]'); \
-		bazel run //sipi:push -- -t latest -t "$$TAG"
+		bazel run //modules/sipi:push -- -t latest -t "$$TAG"
 
 .PHONY: docker-publish-ingest-image
 docker-publish-ingest-image: # publish ingest image to Dockerhub
@@ -72,8 +72,8 @@ docker-build-ingest-image: # publish ingest image to Dockerhub
 	export DOCKER_BUILDKIT=1; $(SBTX) "ingest / Docker / publishLocal"
 
 # Lazy assignment (=): evaluated only when a Fuseki target is invoked, not at parse time.
-# This avoids errors when fuseki/Dockerfile does not yet exist (Step 1 must run first).
-FUSEKI_IMAGE_VERSION = $(shell grep "^ARG IMAGE_VERSION=" fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
+# This avoids errors when modules/fuseki/Dockerfile does not yet exist (Step 1 must run first).
+FUSEKI_IMAGE_VERSION = $(shell grep "^ARG IMAGE_VERSION=" modules/fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
 FUSEKI_DOCKER_IMAGE  = daschswiss/apache-jena-fuseki:$(FUSEKI_IMAGE_VERSION)
 
 .PHONY: docker-build-fuseki-image
@@ -81,7 +81,7 @@ docker-build-fuseki-image: # build Fuseki image into the local Docker daemon
 	export DOCKER_BUILDKIT=1; \
 	docker build \
 	  -t $(FUSEKI_DOCKER_IMAGE) \
-	  fuseki/
+	  modules/fuseki/
 
 .PHONY: docker-publish-fuseki-image
 docker-publish-fuseki-image: # publish multi-platform Fuseki image to Docker Hub
@@ -90,7 +90,7 @@ docker-publish-fuseki-image: # publish multi-platform Fuseki image to Docker Hub
 	  --platform linux/amd64,linux/arm64/v8 \
 	  -t $(FUSEKI_DOCKER_IMAGE) \
 	  --push \
-	  fuseki/
+	  modules/fuseki/
 
 .PHONY: docker-build
 docker-build: docker-build-dsp-api-image docker-build-sipi-image docker-build-ingest-image ## build dsp-api/sipi/ingest images locally (Fuseki excluded: use docker-build-fuseki-image explicitly)
@@ -109,9 +109,9 @@ docker-image-tag: ## prints the docker image tag
 .PHONY: stack-up
 stack-up: docker-build ## starts the dsp-stack: fuseki, sipi, api and app.
 	@docker compose -f docker-compose.yml up -d db
-	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
+	$(CURRENT_DIR)/modules/webapi/scripts/wait-for-db.sh
 	@docker compose -f docker-compose.yml up -d
-	$(CURRENT_DIR)/webapi/scripts/wait-for-api.sh
+	$(CURRENT_DIR)/modules/webapi/scripts/wait-for-api.sh
 
 .PHONY: stack-up-fast
 stack-up-fast: docker-build-dsp-api-image ## starts the dsp-stack by skipping rebuilding most of the images (only api image is rebuilt).
@@ -125,14 +125,14 @@ stack-up-ci: docker-build ## starts the dsp-stack using 'dsp-repo' repository: f
 stack-restart: ## re-starts the dsp-stack: fuseki, sipi, api.
 	@docker compose -f docker-compose.yml down
 	@docker compose -f docker-compose.yml up -d db
-	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
+	$(CURRENT_DIR)/modules/webapi/scripts/wait-for-db.sh
 	@docker compose -f docker-compose.yml up -d
-	$(CURRENT_DIR)/webapi/scripts/wait-for-api.sh
+	$(CURRENT_DIR)/modules/webapi/scripts/wait-for-api.sh
 
 .PHONY: stack-restart-api
 stack-restart-api: ## re-starts the api. Usually used after loading data into fuseki.
 	docker-compose -f docker-compose.yml restart api
-	@$(CURRENT_DIR)/webapi/scripts/wait-for-api.sh
+	@$(CURRENT_DIR)/modules/webapi/scripts/wait-for-api.sh
 
 .PHONY: stack-logs
 stack-logs: ## prints out and follows the logs of the running dsp-stack.
@@ -198,7 +198,7 @@ stack-without-api-and-sipi: stack-up ## starts the dsp-stack without dsp-api and
 .PHONY: stack-db-only
 stack-db-only:  ## starts only fuseki.
 	@docker compose -f docker-compose.yml up -d db
-	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
+	$(CURRENT_DIR)/modules/webapi/scripts/wait-for-db.sh
 
 #################################
 ## Test Targets
@@ -231,12 +231,12 @@ test-ingest-integration: docker-build-sipi-image docker-build-ingest-image ## ru
 .PHONY: init-db-test
 init-db-test: stack-down-delete-volumes stack-db-only ## initializes the dsp-repo repository
 	@echo $@
-	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test.sh
+	cd $(CURRENT_DIR)/modules/webapi/scripts && ./fuseki-init-knora-test.sh
 
 .PHONY: init-db-test-minimal
 init-db-test-minimal: stack-down-delete-volumes stack-db-only ## initializes the dsp-repo repository with minimal data
 	@echo $@
-	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test-minimal.sh
+	cd $(CURRENT_DIR)/modules/webapi/scripts && ./fuseki-init-knora-test-minimal.sh
 
 .PHONY: init-db-test-empty
 init-db-test-empty: stack-down-delete-volumes stack-db-only ## initializes the dsp-repo repository with minimal data
@@ -342,13 +342,13 @@ clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp ## clean build art
 .PHONY: clean-sipi-tmp
 clean-sipi-tmp: ## deletes all files in Sipi's tmp folder
 	@mkdir empty_folder_for_clean_sipi_tmp
-	@cp sipi/images/tmp/.gitignore empty_folder_for_clean_sipi_tmp/.gitignore
-	@rsync -a --delete empty_folder_for_clean_sipi_tmp/ sipi/images/tmp/ # use rsync because it can handle large number of files
+	@cp modules/sipi/images/tmp/.gitignore empty_folder_for_clean_sipi_tmp/.gitignore
+	@rsync -a --delete empty_folder_for_clean_sipi_tmp/ modules/sipi/images/tmp/ # use rsync because it can handle large number of files
 	@rm -r empty_folder_for_clean_sipi_tmp
 
 .PHONY: clean-sipi-projects
 clean-sipi-projects: ## deletes all files uploaded within a project
-	@rm -rf sipi/images/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
+	@rm -rf modules/sipi/images/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
 
 .PHONY: check
 check: ## Run code formatting check

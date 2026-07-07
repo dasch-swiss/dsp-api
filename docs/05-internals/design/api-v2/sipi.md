@@ -3,13 +3,13 @@
 ## Configuration
 
 The DSP-API specific configuration and scripts for Sipi are in the
-`sipi` subdirectory of the DSP-API source tree. See the `README.md` for
+`modules/sipi` subdirectory of the DSP-API source tree. See the `README.md` for
 instructions on how to start Sipi with DSP-API.
 
 ## Lua Scripts
 
 DSP-API v2 uses custom Lua scripts to control Sipi. These scripts can be
-found in `sipi/scripts` in the DSP-API source tree.
+found in `modules/sipi/scripts` in the DSP-API source tree.
 
 Each of these scripts expects a [JSON Web Token](https://jwt.io/) in the
 URL parameter `token`. In all cases, the token must be signed by DSP-API,

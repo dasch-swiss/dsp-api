@@ -13,7 +13,7 @@ services:
     # make sure to use the same version in ops-deploy repository when deploying new DSP releases!
     image: daschswiss/apache-jena-fuseki:6.1.0-0
     build:
-      context: ./fuseki
+      context: ./modules/fuseki
     ports:
       - "3030:3030"
     volumes:
@@ -47,10 +47,10 @@ services:
       - "1024:1024"
     volumes:
       - /tmp:/tmp
-      - ./sipi/config:/sipi/config:delegated
-      - ./sipi/images:/sipi/images:delegated
-      - ./sipi/server:/sipi/server:delegated
-      - ./sipi/scripts:/sipi/scripts:delegated
+      - ./modules/sipi/config:/sipi/config:delegated
+      - ./modules/sipi/images:/sipi/images:delegated
+      - ./modules/sipi/server:/sipi/server:delegated
+      - ./modules/sipi/scripts:/sipi/scripts:delegated
     networks:
       - knora-net
     environment:
@@ -87,8 +87,8 @@ services:
     ports:
       - "3340:3340"
     volumes:
-      - ./sipi/images:/opt/images:delegated
-      - ./sipi/tmp-dsp-ingest:/opt/temp:delegated
+      - ./modules/sipi/images:/opt/images:delegated
+      - ./modules/sipi/tmp-dsp-ingest:/opt/temp:delegated
       - ingest-db:/opt/db:delegated
     networks:
       - knora-net

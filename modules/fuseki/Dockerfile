@@ -39,7 +39,7 @@ ENV FUSEKI_SHA512=$FUSEKI_SHA512
 ENV ASF_MIRROR=http://www.apache.org/dyn/mirrors/mirrors.cgi?action=download&filename=
 ENV ASF_ARCHIVE=http://archive.apache.org/dist/
 
-LABEL org.opencontainers.image.url=https://github.com/dasch-swiss/dsp-api/tree/main/fuseki
+LABEL org.opencontainers.image.url=https://github.com/dasch-swiss/dsp-api/tree/main/modules/fuseki
 LABEL org.opencontainers.image.source=https://github.com/dasch-swiss/dsp-api
 LABEL org.opencontainers.image.documentation=https://jena.apache.org/documentation/fuseki2/
 LABEL org.opencontainers.image.title="Apache Jena Fuseki"

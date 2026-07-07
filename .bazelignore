@@ -1,12 +1,12 @@
 .claude
 .direnv
 .git
-sipi/images
-sipi/cache
-sipi/server
-sipi/tmp-dsp-ingest
+modules/sipi/images
+modules/sipi/cache
+modules/sipi/server
+modules/sipi/tmp-dsp-ingest
 target
-webapi/target
+modules/webapi/target
 modules/bagit/target
 modules/jwt/target
 modules/shacl-validator/target
@@ -14,4 +14,4 @@ modules/testkit/target
 modules/test-it/target
 modules/test-e2e/target
 modules/test-ingest-integration/target
-ingest/target
+modules/ingest/target
