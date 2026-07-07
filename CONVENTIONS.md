@@ -97,9 +97,11 @@ Breaking changes use `!` (e.g. `feat!:`). Do not use "Knora" in commit messages;
 
 An optional scope in parentheses marks the affected release artifact, e.g. `feat(dsp-api): …`, `fix(sipi): …`.
 
+For how to group commits by user-visible impact and what belongs in a commit vs. a PR description vs. a learnings doc, see `docs/development/dsp-api-commit-conventions.md`.
+
 ## PR Template
 
-See `.github/pull_request_template.md`.
+See `.github/pull_request_template.md`. For the recommended section structure (Motivation, Challenges and Decisions, Gotchas, etc.) and why it matters for `/eng:workflows:compound`, see `docs/development/dsp-api-commit-conventions.md` § PR Description Format.
 
 ## Where to go for depth
 
