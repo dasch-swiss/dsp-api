@@ -35,7 +35,6 @@ object MatchFulltextE2ESpec extends E2EZSpec {
   private def matchFulltextCountQuery(
     term: String,
     extraWhere: String = "",
-    mainResVar: String = "mainRes",
     complexSchema: Boolean = false,
   ): String = {
     val knoraApiIri =
@@ -43,11 +42,11 @@ object MatchFulltextE2ESpec extends E2EZSpec {
       else "http://api.knora.org/ontology/knora-api/simple/v2#"
     s"""PREFIX knora-api: <$knoraApiIri>
        |CONSTRUCT {
-       |    ?$mainResVar knora-api:isMainResource true .
+       |    ?mainRes knora-api:isMainResource true .
        |} WHERE {
-       |    ?$mainResVar a knora-api:Resource .
+       |    ?mainRes a knora-api:Resource .
        |    $extraWhere
-       |    FILTER knora-api:matchFulltext(?$mainResVar, "$term")
+       |    FILTER knora-api:matchFulltext(?mainRes, "$term")
        |}""".stripMargin
   }
 
@@ -283,6 +282,23 @@ object MatchFulltextE2ESpec extends E2EZSpec {
           oldResponse <- TestApiClient.getJsonLdDocument(uri"/v2/search/count/$rawTerm")
           newResponse <- TestApiClient.postJsonLdDocument(uri"/v2/searchextended/count", query)
         } yield assertTrue(oldResponse.code.code == newResponse.code.code, newResponse.code.code != 500)
+      },
+      test("escapes an embedded newline in a search term without producing invalid SPARQL (D7)") {
+        // Unlike a raw `"` or `\`, an embedded LF is not itself invalid Lucene syntax (Lucene treats
+        // it as whitespace), so this must succeed with 200 - a SPARQL-level failure here would mean
+        // escapeForSparqlLiteral let a raw LF reach the generated string literal, which SPARQL's
+        // STRING_LITERAL_QUOTE grammar disallows unescaped, exactly as it disallows a raw `"` or `\`.
+        val query =
+          """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |CONSTRUCT {
+            |    ?mainRes knora-api:isMainResource true .
+            |} WHERE {
+            |    ?mainRes a knora-api:Resource .
+            |    FILTER knora-api:matchFulltext(?mainRes, "foo\nbar")
+            |}""".stripMargin
+        for {
+          response <- TestApiClient.postJsonLdDocument(uri"/v2/searchextended/count", query)
+        } yield assertTrue(response.code.code == 200)
       },
       test("passes invalid Lucene syntax through with the same behavior as the old endpoint (D4)") {
         // A bare boolean operator is invalid Lucene query syntax; matchFulltext does not validate
