@@ -140,16 +140,29 @@ object SparqlTransformer {
   }
 
   /**
-   * Optimises a query by moving Lucene query patterns to the beginning of a block.
+   * `true` if the pattern is a Lucene query statement, or a [[GroupPattern]] containing one at its
+   * top level (e.g. the `matchFulltext` expansion) — used by [[moveLuceneToBeginning]].
+   */
+  private def containsLuceneQuery(pattern: QueryPattern): Boolean = pattern match {
+    case StatementPattern(_, IriRef(pred, _), _) => pred.toIri == OntologyConstants.Fuseki.luceneQueryPredicate
+    case groupPattern: GroupPattern              => groupPattern.patterns.exists(containsLuceneQuery)
+    case _                                       => false
+  }
+
+  /**
+   * Optimises a query by moving Lucene query patterns to the beginning of a block. This also hoists a
+   * [[GroupPattern]] whose contents include a Lucene query statement (e.g. the `matchFulltext`
+   * expansion): leaving it in place risks a class-first join order, since document order is otherwise
+   * whatever position the FILTER it replaced happened to end up in. For a classless query this is not
+   * just slow but catastrophic — the ontology-cache VALUES block for `?mainRes a knora-api:Resource`
+   * enumerates every resource class in the repository, and evaluating that before the (cheap,
+   * index-anchored) Lucene lookup measured ~300x slower in the performance spike for DEV-6715.
    *
    * @param patterns the block of patterns to be optimised.
    * @return the result of the optimisation.
    */
   def moveLuceneToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    val (luceneQueryPatterns, otherPatterns) = patterns.partition {
-      case StatementPattern(_, IriRef(pred, _), _) => pred.toIri == OntologyConstants.Fuseki.luceneQueryPredicate
-      case _                                       => false
-    }
+    val (luceneQueryPatterns, otherPatterns) = patterns.partition(containsLuceneQuery)
 
     luceneQueryPatterns ++ otherPatterns
   }
