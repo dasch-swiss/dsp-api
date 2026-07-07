@@ -36,7 +36,7 @@ test-ingest-integration:
 stack-start:
     @echo "Starting Stack"
     docker compose up -d
-    ./webapi/scripts/wait-for-db.sh
+    ./modules/webapi/scripts/wait-for-db.sh
     @echo "Stack started"
 
 # Start Stack without API for development
@@ -116,7 +116,7 @@ docs-build: docs-build-dependent docs-ingest-build
     mkdocs build --strict
 
 docs-ingest-build:
-    (cd ingest; mkdocs build --clean)
+    (cd modules/ingest; mkdocs build --clean)
 
 markdownlint:
     docker run \

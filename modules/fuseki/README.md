@@ -29,7 +29,7 @@ The `dsp-repo` dataset is created automatically on first start from `dsp-repo.tt
 
 1. Find the new version on [jena.apache.org/download](https://jena.apache.org/download/)
 2. Download the SHA512 checksum for `apache-jena-fuseki-<version>.tar.gz.sha512`
-3. Update `fuseki/Dockerfile`:
+3. Update `modules/fuseki/Dockerfile`:
    - `ARG IMAGE_VERSION` — new Docker image tag (e.g. `5.6.0-1`, increment the `-N` suffix for DaSCH revisions)
    - `ARG FUSEKI_VERSION` — new Apache Jena Fuseki version (e.g. `5.6.0`)
    - `ARG FUSEKI_SHA512` — new SHA512 checksum
@@ -40,6 +40,6 @@ The CI `check-fuseki-version-consistency` job will fail if these three are out o
 
 ## Publishing
 
-The image is published automatically by `docker-publish-fuseki.yml` on every merge to `main` that touches `fuseki/**`. No manual action is needed — open a PR with the version bump and merge it.
+The image is published automatically by `docker-publish-fuseki.yml` on every merge to `main` that touches `modules/fuseki/**`. No manual action is needed — open a PR with the version bump and merge it.
 
 To publish manually from a branch (e.g. for testing): trigger `Docker Publish from branch` via GitHub Actions `workflow_dispatch`.

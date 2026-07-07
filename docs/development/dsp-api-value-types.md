@@ -15,7 +15,7 @@ Value[A]            — base trait, provides `def value: A` and `toString` deleg
 └── BooleanValue    — type alias for Value[Boolean]
 ```
 
-Defined in `webapi/src/main/scala/org/knora/webapi/slice/common/ValueTypes.scala`.
+Defined in `modules/webapi/src/main/scala/org/knora/webapi/slice/common/ValueTypes.scala`.
 
 ## Defining a StringValue
 

@@ -3,7 +3,7 @@
 How to add per-stage tracing to a responder, using the pattern established for `SearchResponderV2`
 (Gravsearch). Follow it to instrument a second vertical without re-deriving the design. The
 reference implementation lives in
-`webapi/src/main/scala/org/knora/webapi/responders/v2/SearchResponderV2.scala`.
+`modules/webapi/src/main/scala/org/knora/webapi/responders/v2/SearchResponderV2.scala`.
 
 The pattern in one sentence: open one **root** `INTERNAL` span named after the vertical, wrap each
 pipeline stage in a child span via a small `stageSpan` helper, attach a **bounded shape fingerprint**

@@ -42,7 +42,7 @@ Use these — don't introduce a parallel set of errors.
 The most common style in the codebase. The error channel is `Throwable`; the API edge inspects the subtype and maps to an HTTP status.
 
 ```scala
-// webapi/src/main/scala/org/knora/webapi/slice/api/admin/AdminListRestService.scala:48
+// modules/webapi/src/main/scala/org/knora/webapi/slice/api/admin/AdminListRestService.scala:48
 def listChange(user: User)(iri: ListIri, request: ListChangeRequest): Task[NodeInfoGetResponseADM] =
   for {
     _       <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
@@ -60,7 +60,7 @@ Helpers: `ZIO.fail`, `.someOrFail`, `.orElseFail`.
 When the error set is small and meaningful (one or two specific cases), prefer the typed form.
 
 ```scala
-// webapi/src/main/scala/org/knora/webapi/slice/api/admin/model/ProjectsEndpointsRequestsAndResponses.scala:55
+// modules/webapi/src/main/scala/org/knora/webapi/slice/api/admin/model/ProjectsEndpointsRequestsAndResponses.scala:55
 def toRestrictedView: IO[BadRequestException, RestrictedView] =
   (size, watermark) match {
     case (Some(size), None)      => ZIO.succeed(size)
@@ -77,7 +77,7 @@ The error type appears in the signature, so callers see exactly what they need t
 V3 endpoints use `IO[V3ErrorInfo, A]` with error variants declared on the endpoint definition. The error type *is* the API contract: each variant maps to a status code and a `V3ErrorCode` enum value.
 
 ```scala
-// webapi/src/main/scala/org/knora/webapi/slice/api/v3/projects/V3ProjectsEndpoints.scala:58
+// modules/webapi/src/main/scala/org/knora/webapi/slice/api/v3/projects/V3ProjectsEndpoints.scala:58
 val postProjectIriExports = self.base
   .secured(
     oneOf(

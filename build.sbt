@@ -120,13 +120,13 @@ addCommandAlias("test-e2e", "test-e2e/test")
 
 // The `knora-sipi` image (a thin overlay that copies the Lua scripts onto the
 // upstream `daschswiss/sipi` image) is built with Bazel `rules_oci`, not sbt.
-// See sipi/BUILD.bazel (`//sipi:load` locally, `//sipi:push` to publish),
+// See modules/sipi/BUILD.bazel (`//modules/sipi:load` locally, `//modules/sipi:push` to publish),
 // driven by the Makefile docker-{build,publish}-sipi-image targets.
 // `Dependencies.sipiImage` (the base image) and `knoraSipiVersion` (consumed by
 // the dsp-ingest image below) remain here.
 
 //////////////////////////////////////
-// WEBAPI (./webapi)
+// WEBAPI (./modules/webapi)
 //////////////////////////////////////
 
 run / connectInput := true
@@ -149,7 +149,7 @@ val customScalacOptions = Seq(
   "-Dotel.java.global-autoconfigure.enabled=true",
 )
 
-lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
+lazy val webapi: Project = Project(id = "webapi", base = file("modules/webapi"))
   .dependsOn(bagit, jwt, shaclValidator)
   .settings(buildSettings)
   .settings(
@@ -189,14 +189,14 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // define folders inside container
     Universal / mappings ++= {
       // copy the scripts folder
-      directory("webapi/scripts") ++
+      directory("modules/webapi/scripts") ++
         // copy configuration files to config directory
-        contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
+        contentOf("modules/webapi/src/main/resources").toMap.mapValues("config/" + _)
     },
     // add 'config' directory to the classpath of the start script,
     Universal / scriptClasspath := Seq(
-      "webapi/scripts",
-      "webapi/src/main/resources/knora-ontologies",
+      "modules/webapi/scripts",
+      "modules/webapi/src/main/resources/knora-ontologies",
       "../config/",
     ) ++ scriptClasspath.value,
     // need this here, so that the Manifest inside the jars has the correct main class set.
@@ -417,7 +417,7 @@ lazy val e2e: Project = Project(id = "test-e2e", base = file("modules/test-e2e")
 lazy val ingest = {
   import Dependencies._
 
-  Project(id = "ingest", file("ingest"))
+  Project(id = "ingest", file("modules/ingest"))
     .dependsOn(bagit, jwt)
     .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
     .settings(

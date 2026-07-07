@@ -107,7 +107,7 @@ object JsonLDUtilSpec extends ZIOSpecDefault {
       // Read a JSON-LD file.
       val inputJsonLD: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld"),
+          Paths.get("../..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld"),
         )
 
       // Parse it to a JsonLDDocument.
@@ -119,7 +119,7 @@ object JsonLDUtilSpec extends ZIOSpecDefault {
       // Read an isomorphic Turtle file.
       val expectedTurtle: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"),
+          Paths.get("../..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"),
         )
 
       // Parse the Turtle to an RDF4J Model.
@@ -132,7 +132,7 @@ object JsonLDUtilSpec extends ZIOSpecDefault {
       // Read a Turtle file.
       val turtle =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"),
+          Paths.get("../..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"),
         )
 
       // Parse it to an RDF4J Model.
@@ -149,7 +149,7 @@ object JsonLDUtilSpec extends ZIOSpecDefault {
       // Read an isomorphic JSON-LD file.
       val expectedJsonLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld"),
+          Paths.get("../..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld"),
         )
 
       // Parse it to an RDF4J Model.
@@ -162,7 +162,7 @@ object JsonLDUtilSpec extends ZIOSpecDefault {
       // Read a JSON-LD file.
       val inputJsonLD: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
+          Paths.get("../..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
         )
 
       // Parse it to a JsonLDDocument.
@@ -177,7 +177,7 @@ object JsonLDUtilSpec extends ZIOSpecDefault {
       // Read an isomorphic Turtle file.
       val expectedTurtle =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
+          Paths.get("../..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
         )
 
       // Parse it to an RDF4J Model.
@@ -189,7 +189,7 @@ object JsonLDUtilSpec extends ZIOSpecDefault {
     test("convert an RDF4J Model representing a resource to JSON-LD") {
       // Read a Turtle file.
       val turtle = FileUtil.readTextFile(
-        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
+        Paths.get("../..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
       )
 
       // Parse it to an RDF4J Model.
@@ -204,7 +204,7 @@ object JsonLDUtilSpec extends ZIOSpecDefault {
       // Read an isomorphic JSON-LD file.
       val expectedJsonLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
+          Paths.get("../..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
         )
 
       // Parse it to a JsonLDDocument and compare it with the generated one.
