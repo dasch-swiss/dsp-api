@@ -10,6 +10,7 @@ import zio.test.*
 
 import dsp.errors.AssertionException
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
@@ -27,7 +28,8 @@ object GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec {
 
   private def transformQuery(
     query: String,
-  ): ZIO[QueryTraverser & GravsearchTypeInspectionRunner, Throwable, SelectQuery] = for {
+  ): ZIO[AppConfig & QueryTraverser & GravsearchTypeInspectionRunner, Throwable, SelectQuery] = for {
+    appConfig            <- ZIO.service[AppConfig]
     query                <- ZIO.attempt(GravsearchParser.parseQuery(query))
     inspectionResult     <- inspectionRunner(_.inspectTypes(query.whereClause))
     _                    <- GravsearchQueryChecker.checkConstructClause(query.constructClause, inspectionResult)
@@ -36,7 +38,12 @@ object GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec {
     prequery             <- queryTraverser(
                   _.transformConstructToSelect(
                     query.copy(whereClause = sanitizedWhereClause, orderBy = Seq.empty),
-                    new GravsearchToCountPrequeryTransformer(query.constructClause, inspectionResult, querySchema),
+                    new GravsearchToCountPrequeryTransformer(
+                      query.constructClause,
+                      inspectionResult,
+                      querySchema,
+                      appConfig.v2.fulltextSearch.searchValueMinLength,
+                    ),
                   ),
                 )
   } yield prequery

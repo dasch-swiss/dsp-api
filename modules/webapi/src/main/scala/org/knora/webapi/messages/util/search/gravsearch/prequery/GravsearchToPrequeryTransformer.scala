@@ -39,6 +39,7 @@ class GravsearchToPrequeryTransformer(
       constructClause = constructClause,
       typeInspectionResult = typeInspectionResult,
       querySchema = querySchema,
+      searchValueMinLength = appConfig.v2.fulltextSearch.searchValueMinLength,
     ) {
 
   /**

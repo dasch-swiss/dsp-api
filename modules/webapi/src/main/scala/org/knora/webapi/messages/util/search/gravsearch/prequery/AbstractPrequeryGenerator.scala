@@ -28,13 +28,16 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 /**
  * An abstract base class for [[WhereTransformer]] instances that generate SPARQL prequeries from Gravsearch input.
  *
- * @param typeInspectionResult the result of running type inspection on the Gravsearch input.
- * @param querySchema          the ontology schema used in the input Gravsearch query.
+ * @param typeInspectionResult  the result of running type inspection on the Gravsearch input.
+ * @param querySchema           the ontology schema used in the input Gravsearch query.
+ * @param searchValueMinLength  the minimum length required for a `matchFulltext` search term
+ *                              (`appConfig.v2.fulltextSearch.searchValueMinLength`).
  */
 abstract class AbstractPrequeryGenerator(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema,
+  searchValueMinLength: Int,
 ) extends WhereTransformer {
 
   /**
@@ -1915,6 +1918,268 @@ abstract class AbstractPrequeryGenerator(
       ),
     )
 
+  // Fixed suffix for the internal variables introduced by the matchFulltext expansion. A fixed suffix
+  // is safe because at most one matchFulltext call is allowed per query (D5 below), so there is never
+  // more than one expansion whose internal variables could collide.
+  private val matchFulltextVariableSuffix = "__matchFulltext"
+
+  // Set once handleMatchFulltextFunction has processed a call, so a second call in the same query can
+  // be rejected: the performance spike for DEV-6715 measured a second call at 17-38s, since Jena
+  // substitution-joins the second block, re-running its Lucene lookups per candidate row of the first.
+  private var matchFulltextFunctionCalled = false
+
+  /**
+   * Checks that the query is in the simple schema, then calls `handleMatchFulltextFunction`.
+   *
+   * @param functionCallExpression the function call to be handled.
+   * @param typeInspectionResult   the type inspection results.
+   * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
+   * @return a [[TransformedFilterPattern]].
+   */
+  private def handleMatchFulltextFunctionInSimpleSchema(
+    functionCallExpression: FunctionCallExpression,
+    typeInspectionResult: GravsearchTypeInspectionResult,
+    isTopLevel: Boolean,
+  ): TransformedFilterPattern = {
+    val functionIri: SmartIri = functionCallExpression.functionIri.iri
+
+    if (querySchema == ApiV2Complex) {
+      throw GravsearchException(
+        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2Complex.MatchFulltextFunction.toSmartIri.toSparql} instead",
+      )
+    }
+
+    handleMatchFulltextFunction(
+      functionCallExpression = functionCallExpression,
+      typeInspectionResult = typeInspectionResult,
+      isTopLevel = isTopLevel,
+    )
+  }
+
+  /**
+   * Checks that the query is in the complex schema, then calls `handleMatchFulltextFunction`.
+   *
+   * @param functionCallExpression the function call to be handled.
+   * @param typeInspectionResult   the type inspection results.
+   * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
+   * @return a [[TransformedFilterPattern]].
+   */
+  private def handleMatchFulltextFunctionInComplexSchema(
+    functionCallExpression: FunctionCallExpression,
+    typeInspectionResult: GravsearchTypeInspectionResult,
+    isTopLevel: Boolean,
+  ): TransformedFilterPattern = {
+    val functionIri: SmartIri = functionCallExpression.functionIri.iri
+
+    if (querySchema == ApiV2Simple) {
+      throw GravsearchException(
+        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchFulltextFunction.toSmartIri.toSparql} instead",
+      )
+    }
+
+    handleMatchFulltextFunction(
+      functionCallExpression = functionCallExpression,
+      typeInspectionResult = typeInspectionResult,
+      isTopLevel = isTopLevel,
+    )
+  }
+
+  /**
+   * Handles the function `knora-api:matchFulltext` in either schema. Replaces the FILTER with an
+   * index-anchored expansion giving exact match-semantics parity with `GET /v2/search/{term}`:
+   * the resource variable is bound only to resources for which the fulltext index matches the
+   * resource's label, one of its text values, one of its value comments, or a list node (including
+   * sub-nodes) referenced by one of its list values.
+   *
+   * @param functionCallExpression the function call to be handled.
+   * @param typeInspectionResult   the type inspection results.
+   * @param isTopLevel             if `true`, this is the top-level expression in the `FILTER`.
+   * @return a [[TransformedFilterPattern]].
+   */
+  private def handleMatchFulltextFunction(
+    functionCallExpression: FunctionCallExpression,
+    typeInspectionResult: GravsearchTypeInspectionResult,
+    isTopLevel: Boolean,
+  ): TransformedFilterPattern = {
+    val functionIri: SmartIri = functionCallExpression.functionIri.iri
+
+    // The matchFulltext function must be the top-level expression, otherwise boolean logic won't work properly.
+    if (!isTopLevel) {
+      throw GravsearchException(s"Function ${functionIri.toSparql} must be the top-level expression in a FILTER")
+    }
+
+    if (matchFulltextFunctionCalled) {
+      throw GravsearchException(s"Function ${functionIri.toSparql} may only be used once per query")
+    }
+    matchFulltextFunctionCalled = true
+
+    // Two arguments are expected:
+    // 1. a variable representing a resource
+    // 2. a string literal search term
+
+    if (functionCallExpression.args.size != 2)
+      throw GravsearchException(s"Two arguments are expected for ${functionIri.toSparql}")
+
+    // A QueryVariable expected to represent a resource.
+    val resourceVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
+
+    typeInspectionResult.getTypeOfEntity(resourceVar) match {
+      case Some(nonPropInfo: NonPropertyTypeInfo) if nonPropInfo.isResourceType => ()
+      case _                                                                    => throw GravsearchException(s"${resourceVar.toSparql} must be a knora-api:Resource")
+    }
+
+    val searchTerm: String =
+      functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri).value
+
+    // Mirrors the fulltext endpoint's own search-string validation (SearchResponderV2.validateSearchString).
+    if (searchTerm.isEmpty || searchTerm.contains("\r")) {
+      throw GravsearchException(s"Invalid search string for ${functionIri.toSparql}: '$searchTerm'")
+    }
+    if (searchTerm.length < searchValueMinLength) {
+      throw GravsearchException(
+        s"A search value for ${functionIri.toSparql} is expected to have at least length of $searchValueMinLength, but '$searchTerm' given of length ${searchTerm.length}.",
+      )
+    }
+
+    // Replace the filter with the fulltext-index-anchored expansion.
+    TransformedFilterPattern(
+      None, // The FILTER has been replaced by statements.
+      Seq(matchFulltextExpansion(resourceVar, searchTerm)),
+    )
+  }
+
+  /**
+   * Escapes a string for safe embedding in a SPARQL string literal: a raw `"` or `\` in the search
+   * term would otherwise break out of the literal, since [[XsdLiteral.toSparql]] concatenates its
+   * value without escaping. The same pre-existing gap affects `matchText`/`matchLabel`; tracked
+   * separately (fixing it here only protects `matchFulltext`).
+   */
+  private def escapeForSparqlLiteral(s: String): String =
+    s.replace("\\", "\\\\").replace("\"", "\\\"")
+
+  /**
+   * Builds the fulltext-index-anchored expansion for `matchFulltext`, mirroring the WHERE core of
+   * [[org.knora.webapi.slice.search.repo.SearchFulltextQuery]]: a Lucene hit anchors the match, and
+   * two OPTIONAL blocks resolve it to a containing resource — either the resource that owns the
+   * matched value (a text value or a value comment; the match may also be the resource itself via its
+   * label, handled by the final COALESCE fallback), or the resource that references the matched list
+   * node (including sub-nodes) via a list value. COALESCE picks whichever resolved.
+   *
+   * The whole block is wrapped in an opaque [[GroupPattern]] so it survives unmodified: the group's
+   * `rdf:type ?var` statements (a variable object) would otherwise be rejected by the inference pass,
+   * and its `BIND` would otherwise be hoisted above the `OPTIONAL`s it depends on by the optimizer
+   * passes. See docs/05-internals/design/api-v2/gravsearch.md for the full rationale.
+   *
+   * @param resourceVar the user's resource variable, bound by the group's closing `BIND`.
+   * @param searchTerm  the raw (unescaped) Lucene query string, exactly as passed to `matchFulltext`.
+   */
+  private def matchFulltextExpansion(resourceVar: QueryVariable, searchTerm: String): GroupPattern = {
+    def internalVar(name: String): QueryVariable = QueryVariable(name + matchFulltextVariableSuffix)
+
+    val matchVar          = internalVar("match")
+    val valTypeVar        = internalVar("valType")
+    val containingResVar  = internalVar("containingRes")
+    val propVar           = internalVar("prop")
+    val subNodeVar        = internalVar("subNode")
+    val listValVar        = internalVar("listVal")
+    val resWithListValVar = internalVar("resWithListVal")
+    val predVar           = internalVar("pred")
+    val resClassVar       = internalVar("resClass")
+
+    def isNotDeleted(subj: Entity): FilterNotExistsPattern =
+      FilterNotExistsPattern(
+        Seq(
+          StatementPattern(
+            subj = subj,
+            pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
+            obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
+          ),
+        ),
+      )
+
+    val luceneStatement = StatementPattern(
+      subj = matchVar,
+      pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+      obj = XsdLiteral(
+        value = escapeForSparqlLiteral(searchTerm),
+        datatype = OntologyConstants.Xsd.String.toSmartIri,
+      ),
+    )
+
+    // A text value or value comment containing the match, and the resource that owns it.
+    val valueBranch = OptionalPattern(
+      Seq(
+        StatementPattern(subj = matchVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = valTypeVar),
+        StatementPattern(
+          subj = valTypeVar,
+          pred = IriRef(OntologyConstants.Rdfs.SubClassOf.toSmartIri, propertyPathOperator = Some('*')),
+          obj = IriRef(OntologyConstants.KnoraBase.Value.toSmartIri),
+        ),
+        FilterPattern(
+          AndExpression(
+            CompareExpression(
+              valTypeVar,
+              CompareExpressionOperator.NOT_EQUALS,
+              IriRef(OntologyConstants.KnoraBase.LinkValue.toSmartIri),
+            ),
+            CompareExpression(
+              valTypeVar,
+              CompareExpressionOperator.NOT_EQUALS,
+              IriRef(OntologyConstants.KnoraBase.ListValue.toSmartIri),
+            ),
+          ),
+        ),
+        StatementPattern(subj = containingResVar, pred = propVar, obj = matchVar),
+        StatementPattern(
+          subj = propVar,
+          pred = IriRef(OntologyConstants.Rdfs.SubPropertyOf.toSmartIri, propertyPathOperator = Some('*')),
+          obj = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
+        ),
+        isNotDeleted(matchVar),
+      ),
+    )
+
+    // A list node (or one of its sub-nodes) containing the match, and the resource referencing it via a list value.
+    val listBranch = OptionalPattern(
+      Seq(
+        StatementPattern(
+          subj = matchVar,
+          pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+          obj = IriRef(OntologyConstants.KnoraBase.ListNode.toSmartIri),
+        ),
+        StatementPattern(
+          subj = matchVar,
+          pred = IriRef(OntologyConstants.KnoraBase.HasSubListNode.toSmartIri, propertyPathOperator = Some('*')),
+          obj = subNodeVar,
+        ),
+        StatementPattern(
+          subj = listValVar,
+          pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri),
+          obj = subNodeVar,
+        ),
+        StatementPattern(subj = resWithListValVar, pred = predVar, obj = listValVar),
+        isNotDeleted(matchVar),
+      ),
+    )
+
+    // Fall back to the match itself, which covers a direct label hit (the resource is its own label's subject).
+    val bindResource = BindPattern(
+      variable = resourceVar,
+      expression = CoalesceFunction(Seq(containingResVar, resWithListValVar, matchVar)),
+    )
+
+    val resourceClassCheck = Seq(
+      StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = resClassVar),
+      StatementPattern(
+        subj = resClassVar,
+        pred = IriRef(OntologyConstants.Rdfs.SubClassOf.toSmartIri, propertyPathOperator = Some('*')),
+        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri),
+      ),
+    )
+
+    GroupPattern(Seq(luceneStatement, valueBranch, listBranch, bindResource) ++ resourceClassCheck)
+  }
+
   /**
    * Handles the function `knora-api:StandoffLink`.
    *
@@ -2036,6 +2301,8 @@ abstract class AbstractPrequeryGenerator(
         case OntologyConstants.KnoraApiV2Complex.MatchTextFunction           => handleMatchTextFunctionInComplexSchema
         case OntologyConstants.KnoraApiV2Simple.MatchLabelFunction           => handleMatchLabelFunctionInSimpleSchema
         case OntologyConstants.KnoraApiV2Complex.MatchLabelFunction          => handleMatchLabelFunctionInComplexSchema
+        case OntologyConstants.KnoraApiV2Simple.MatchFulltextFunction        => handleMatchFulltextFunctionInSimpleSchema
+        case OntologyConstants.KnoraApiV2Complex.MatchFulltextFunction       => handleMatchFulltextFunctionInComplexSchema
         case OntologyConstants.KnoraApiV2Complex.MatchTextInStandoffFunction => handleMatchTextInStandoffFunction
         case OntologyConstants.KnoraApiV2Complex.StandoffLinkFunction        => handleStandoffLinkFunction
         case OntologyConstants.KnoraApiV2Complex.ToSimpleDateFunction        =>
