@@ -36,32 +36,39 @@ object GravsearchInferencePipelineTestSupport {
 
   def transformQueryWithInference(
     query: String,
-    buildTransformer: (ConstructClause, GravsearchTypeInspectionResult, ApiV2Schema, AppConfig) => AbstractPrequeryGenerator,
+    buildTransformer: (
+      ConstructClause,
+      GravsearchTypeInspectionResult,
+      ApiV2Schema,
+      AppConfig,
+    ) => AbstractPrequeryGenerator,
     dropOrderBy: Boolean = false,
-  )(implicit sf: StringFormatter): ZIO[
+  )(implicit
+    sf: StringFormatter,
+  ): ZIO[
     AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService,
     Throwable,
     SelectQuery,
   ] = for {
-    parsedQuery            <- ZIO.attempt(GravsearchParser.parseQuery(query))
-    sanitizedWhereClause   <- GravsearchTypeInspectionUtil.removeTypeAnnotations(parsedQuery.whereClause)
-    typeInspectionResult   <-
+    parsedQuery          <- ZIO.attempt(GravsearchParser.parseQuery(query))
+    sanitizedWhereClause <- GravsearchTypeInspectionUtil.removeTypeAnnotations(parsedQuery.whereClause)
+    typeInspectionResult <-
       ZIO.serviceWithZIO[GravsearchTypeInspectionRunner](_.inspectTypes(parsedQuery.whereClause))
-    _                      <- GravsearchQueryChecker.checkConstructClause(parsedQuery.constructClause, typeInspectionResult)
-    querySchema            <-
+    _           <- GravsearchQueryChecker.checkConstructClause(parsedQuery.constructClause, typeInspectionResult)
+    querySchema <-
       ZIO.fromOption(parsedQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-    appConfig              <- ZIO.service[AppConfig]
-    prequeryTransformer    <-
+    appConfig           <- ZIO.service[AppConfig]
+    prequeryTransformer <-
       ZIO.attempt(buildTransformer(parsedQuery.constructClause, typeInspectionResult, querySchema, appConfig))
     // Count queries don't need sorting (there's only ever one result row), mirroring
     // SearchResponderV2.fulltextSearchCountV2, which drops orderBy the same way.
-    queryForPrequery        = parsedQuery.copy(
+    queryForPrequery = parsedQuery.copy(
                          whereClause = sanitizedWhereClause,
                          orderBy = if (dropOrderBy) Seq.empty else parsedQuery.orderBy,
                        )
-    prequery               <- ZIO.serviceWithZIO[QueryTraverser](
-                    _.transformConstructToSelect(queryForPrequery, prequeryTransformer),
-                  )
+    prequery <- ZIO.serviceWithZIO[QueryTraverser](
+                  _.transformConstructToSelect(queryForPrequery, prequeryTransformer),
+                )
     ontologyInferencer     <- ZIO.service[OntologyInferencer]
     inferenceOptimization  <- ZIO.service[InferenceOptimizationService]
     ontologiesForInference <- inferenceOptimization.getOntologiesRelevantForInference(parsedQuery.whereClause)
@@ -71,7 +78,7 @@ object GravsearchInferencePipelineTestSupport {
                           prequeryTransformer.mainResourceVariable,
                           sf,
                         )
-    transformedPrequery    <- ZIO.serviceWithZIO[QueryTraverser](
+    transformedPrequery <- ZIO.serviceWithZIO[QueryTraverser](
                              _.transformSelectToSelect(
                                inputQuery = prequery,
                                transformer = selectTransformer,
