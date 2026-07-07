@@ -16,6 +16,7 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 ## Build System & Commands
 
 ### Core Build Tool
+
 - **Primary**: `sbt` (Scala Build Tool) - use `./sbtx` wrapper script
 - **Alternative**: `just` (command runner) for common tasks
 - **Alternative**: `make` for Docker and documentation tasks
@@ -23,6 +24,7 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 ### Essential Development Commands
 
 **Testing:**
+
 - Run a single test: `sbt "testOnly *TestClassName*"`
 - Run tests in a specific package: `sbt "testOnly org.knora.webapi.slice.admin.*"`
 - `sbt test` - Run unit tests
@@ -32,35 +34,50 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 - `make test-all` - Run all tests
 
 **Code Quality:**
+
 - `sbt fmt` - Format code with Scalafmt
 - `sbt check` - Check code formatting and linting
 - `sbt "scalafixAll --check"` - Check Scalafix rules
 
 **Building:**
+
 - `sbt compile` - Compile the project
 - `make docker-build` - Build Docker images
 - `make docker-build-dsp-api-image` - Build only the API Docker image
 
 **Local Development Stack:**
+
 - `just stack-start` - Start the full stack (Fuseki, Sipi, API)
 - `just stack-start-dev` - Start stack without API (for development)
 - `just stack-stop` - Stop the stack
 - `just stack-init-test` - Initialize with test data
 
+### Bazel & the Nix dev shell
+
+The custom Sipi Docker image is built with **Bazel** (`rules_oci`), not sbt. Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper; the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
+
+- **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command make docker-build-sipi-image`.
+- `make docker-build-sipi-image` - build the Sipi image and load it into the local Docker daemon (`:latest` plus the git-describe version tag); runs `bazel run //sipi:load`.
+- `make docker-publish-sipi-image` - build and push the multi-arch image; runs `bazel run //sipi:push`.
+- The dsp-api and dsp-ingest images stay on sbt. `make docker-build` / `make docker-publish` build all three in order (Sipi first, since dsp-ingest derives from it).
+
 ## Architecture
 
 ### Module Structure
+
 The codebase is organized into several key modules:
 
 **Core Modules:**
+
 - `webapi/` - Main API application
-- `modules/bagit/` - BagIt library for creating, reading, and validating BagIt packages (RFC 8493, https://www.rfc-editor.org/rfc/rfc8493)
+- `modules/bagit/` - BagIt library for creating, reading, and validating BagIt packages (RFC 8493, <https://www.rfc-editor.org/rfc/rfc8493>)
 - `modules/testkit/` - Shared test utilities and base classes
 - `modules/test-it/` - Integration tests (service/repo/Sipi tests)
 - `modules/test-e2e/` - End-to-end HTTP API tests
 - `sipi/` - Custom Sipi media server configuration
 
 **Slice Architecture** (`webapi/src/main/scala/org/knora/webapi/slice/`):
+
 - `admin/` - Administrative endpoints (users, groups, projects, permissions)
 - `common/` - Shared utilities and base classes
 - `infrastructure/` - Cross-cutting concerns (metrics, caching, JWT)
@@ -72,11 +89,13 @@ The codebase is organized into several key modules:
 - `shacl/` - SHACL validation
 
 Each slice typically contains:
+
 - `api/` - REST endpoints and routes
 - `domain/` - Business logic and domain models
 - `repo/` - Data access layer
 
 ### Technology Stack
+
 - **Language**: Scala 3.3.5
 - **Framework**: ZIO 2.x for functional programming
 - **HTTP**: zio-http as the HTTP server, with Tapir for endpoint definition
@@ -86,6 +105,7 @@ Each slice typically contains:
 - **JSON**: ZIO JSON for serialization
 
 ### Key Design Patterns
+
 - **Functional Programming**: Heavy use of ZIO effects
 - **Repository Pattern**: Data access abstraction
 - **Service Layer**: Business logic separation
@@ -95,10 +115,12 @@ Each slice typically contains:
 ## Testing Guidelines
 
 **If the implementation plan involves adding test data**, apply this check before choosing where to add it:
+
 1. **Verify instances, not just schema.** Confirm whether existing test data instances already exercise the scenario — finding that the schema supports a case is not sufficient.
 2. **Discover self-contained fixtures first.** Check if the component under test has its own fixture files before adding to a shared dataset. Shared datasets are loaded by many tests; a single new record can cause cascading failures across unrelated specs.
 
 ### Test Organization
+
 - Unit tests: `webapi/src/test/scala/`
 - Integration tests: `modules/test-it/src/test/scala/`
 - End-to-end tests: `modules/test-e2e/src/test/scala/`
@@ -106,10 +128,12 @@ Each slice typically contains:
 - Tests are organized by module following the main source structure
 
 ### Test Execution
+
 - Unit tests run against in-memory implementations
 - Integration tests use Testcontainers for real database/service instances
 
 ### Test Data
+
 - Test data located in `test_data/` directory
 - Project ontologies in `test_data/project_ontologies/`
 - Project data in `test_data/project_data/`
@@ -117,25 +141,31 @@ Each slice typically contains:
 ## Development Environment
 
 ### Prerequisites
+
 - JDK Temurin 25
 - sbt
 - Docker Desktop
+- Nix (with flakes) + direnv — provides the Bazel dev shell used to build the Sipi image (see "Bazel & the Nix dev shell" above)
 - just (optional)
 - Scala 3.3.X
 
 ### Local Development
+
 1. Start the development stack: `just stack-start-dev`
 2. This provides Fuseki (port 3030) and Sipi (port 1024)
 3. Run the API locally via IDE or `sbt run`
-4. API will be available at http://localhost:3333
+4. API will be available at <http://localhost:3333>
 
 ### Testing Against the Dev Database
+
 When changes are hard to test with local test data (e.g. they need realistic data), run the API against the remote dev Fuseki:
+
 1. Create a `.env` file in the repo root with `DEV_DB_PASSWORD=<password>` (this file is git-ignored). Passwords can be found in [ops-deploy/host_vars](https://github.com/dasch-swiss/ops-deploy/tree/main/host_vars).
 2. Run `just run-with-dev-db`
 3. The API will start connected to `db.dev.dasch.swiss` via HTTPS
 
 ### Configuration
+
 - Main config: `webapi/src/main/resources/application.conf`
 - Test config: `webapi/src/test/resources/test.conf`
 - Docker config: `docker-compose.yml`
@@ -152,17 +182,20 @@ caveats see `docs/development/dsp-api-metals-mcp.md`.
 ## API Structure
 
 ### Endpoint Definition
+
 - Uses Tapir for type-safe endpoint definitions
 - Endpoints defined in `*Endpoints.scala` files
 - Handlers in `*EndpointsHandler.scala` files
 - Routes in `*Routes.scala` files
 
 ### API Versions
+
 - **Admin API**: Administrative functions
 - **API v2**: Main application API
 - **Management API**: Health checks and metrics
 
 ### Authentication
+
 - JWT-based authentication
 - Scopes for authorization
 - Session management
@@ -170,12 +203,14 @@ caveats see `docs/development/dsp-api-metals-mcp.md`.
 ## Common Development Tasks
 
 ### Adding New Endpoints
+
 1. Define endpoint in the appropriate `*Endpoints.scala`
 2. Connect endpoint definition with server logic in `*ServerEndpoints.scala`
 3. Register in `CompleteApiServerEndpoints.scala`
 4. Add unit/integration tests mirroring the main structure
 
 ### Code Style
+
 - Use Scalafmt for formatting
 - Follow functional programming principles
 - Prefer ZIO effects over side effects
@@ -184,11 +219,13 @@ caveats see `docs/development/dsp-api-metals-mcp.md`.
 ## Troubleshooting
 
 ### Common Issues
+
 - **Docker**: Ensure Docker Desktop is running
 - **Database**: Check Fuseki is accessible at localhost:3030
 - **Tests**: Integration tests require built Docker images
 
 ### Debugging
+
 - Use `make stack-logs` to view all service logs
 - Check `make stack-health` for API health status
 - Use `make stack-status` to see container status
@@ -233,6 +270,7 @@ After editing any markdown files, run the `/fix-markdownlint` skill to ensure pr
 
 Universal rules for constructing typed IRI value objects (e.g. `ResourceIri`) from strings — see
 `docs/development/dsp-api-iri-handling.md`. Key rules:
+
 - Never call `unsafeFrom` in responders or RestServices — use `ZIO.fromEither(Xxx.from(...))`.
 - Map conversion errors to the right failure type per layer: `BadRequestException` in RestServices,
   domain errors in services, `InconsistentRepositoryDataException` in repos.
@@ -243,5 +281,6 @@ Universal rules for constructing typed IRI value objects (e.g. `ResourceIri`) fr
 
 When adding or modifying v3 endpoints that accept IRI parameters, follow the two-category model
 described in `docs/development/dsp-api-v3-iri-handling.md`:
+
 - **Simple IRIs** (e.g. `ProjectIri`, `UserIri`): use the typed value object directly in endpoints.
 - **SmartIri-backed IRIs** (ontology, class, property IRIs): accept as `IriDto` in endpoints, convert via `IriConverter` in the RestService.

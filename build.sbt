@@ -53,7 +53,7 @@ lazy val buildTime   = sys.env.getOrElse("BUILD_TIME", "dev")
 
 lazy val knoraSipiVersion = gitVersion
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, testkit, it, e2e, bagit, jwt, shaclValidator)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, testkit, it, e2e, bagit, jwt, shaclValidator)
 
 lazy val year           = java.time.LocalDate.now().getYear
 lazy val projectLicense = Some(
@@ -76,7 +76,6 @@ lazy val dockerImageTag = taskKey[String]("Returns the docker image tag")
 lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
     webapi,
-    sipi,
     testkit,
     it,
     e2e,
@@ -119,53 +118,12 @@ addCommandAlias("test-e2e", "test-e2e/test")
 // DSP's custom SIPI
 //////////////////////////////////////
 
-// Sipi v5.0.0 ships a distroless `daschswiss/sipi` image (rules_oci on
-// distroless_base) with the static binary at `/sbin/sipi` and the runtime
-// tree at `/sipi/{config,scripts,server,images,cache}`. This subproject is a
-// thin overlay: COPY our Lua scripts on top of `/sipi/scripts/` and set an
-// exec-form HEALTHCHECK that uses `sipi health` (no curl, no shell).
-//
-// We override `Docker / dockerCommands` wholesale because the plugin's
-// default JVM scaffolding (USER/WORKDIR/useradd/chmod/ADD universal-staging/
-// ENTRYPOINT) is irrelevant for an overlay-only image and depends on a
-// shell that distroless doesn't ship. `dockerPermissionStrategy := None`
-// makes the no-chmod intent explicit. No `USER` directive is emitted —
-// the container inherits root from the upstream base because Sipi reads
-// NFS-mounted assets owned by orchestrator-controlled uids.
-lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
-  .enablePlugins(DockerPlugin)
-  .settings(
-    Compile / packageDoc / mappings   := Seq(),
-    Compile / packageSrc / mappings   := Seq(),
-    Docker / dockerRepository         := Some("daschswiss"),
-    Docker / packageName              := "knora-sipi",
-    Docker / maintainer               := "support@dasch.swiss",
-    dockerUpdateLatest                := true,
-    dockerBuildxPlatforms             := Seq("linux/arm64/v8", "linux/amd64"),
-    Docker / dockerPermissionStrategy := DockerPermissionStrategy.None,
-    // Already declared on the upstream `daschswiss/sipi` OCI image; we
-    // re-declare here so sbt-native-packager's validation reports happy.
-    Docker / dockerExposedPorts ++= Seq(1024),
-    // Stage our Lua scripts into the Docker build context at scripts/<name>.
-    Docker / mappings := directory("sipi/scripts").map { case (f, _) =>
-      f -> s"scripts/${f.getName}"
-    },
-    Docker / dockerCommands := Seq(
-      Cmd("FROM", Dependencies.sipiImage),
-      Cmd("LABEL", "maintainer=support@dasch.swiss"),
-      Cmd("COPY", "scripts/", "/sipi/scripts/"),
-      Cmd("EXPOSE", "1024"),
-      Cmd(
-        "HEALTHCHECK",
-        "--interval=30s",
-        "--timeout=10s",
-        "--retries=3",
-        "--start-period=30s",
-        "CMD",
-        """["/sbin/sipi", "health", "--port", "1024"]""",
-      ),
-    ),
-  )
+// The `knora-sipi` image (a thin overlay that copies the Lua scripts onto the
+// upstream `daschswiss/sipi` image) is built with Bazel `rules_oci`, not sbt.
+// See sipi/BUILD.bazel (`//sipi:load` locally, `//sipi:push` to publish),
+// driven by the Makefile docker-{build,publish}-sipi-image targets.
+// `Dependencies.sipiImage` (the base image) and `knoraSipiVersion` (consumed by
+// the dsp-ingest image below) remain here.
 
 //////////////////////////////////////
 // WEBAPI (./webapi)
@@ -358,7 +316,7 @@ lazy val shaclValidator: Project = Project(id = "shacl-validator", base = file("
 run / connectInput := true
 
 lazy val testkit: Project = Project(id = "testkit", base = file("modules/testkit"))
-  .dependsOn(webapi, sipi)
+  .dependsOn(webapi)
   .settings(buildSettings)
   .settings(
     Compile / packageDoc / mappings := Seq(),
@@ -384,7 +342,7 @@ lazy val testkit: Project = Project(id = "testkit", base = file("modules/testkit
 //////////////////////////////////////
 
 lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
-  .dependsOn(webapi, sipi, testkit)
+  .dependsOn(webapi, testkit)
   .settings(buildSettings)
   .settings(
     inConfig(Test) {
@@ -430,7 +388,7 @@ lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
 //////////////////////////////////////
 
 lazy val e2e: Project = Project(id = "test-e2e", base = file("modules/test-e2e"))
-  .dependsOn(webapi, sipi, testkit)
+  .dependsOn(webapi, testkit)
   .settings(buildSettings)
   .settings(
     inConfig(Test) {
