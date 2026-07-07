@@ -526,10 +526,13 @@ to preserve insertion order most of the time.
 
 Consequences:
 
-- **Sort on read.** When a repeated property is exposed as a list, sort it by value at the
-  read boundary so round-trips are deterministic and the PUT response agrees with a later GET.
-  Precedent: `keywords` and `defaultDataAuthorship` in `KnoraProjectRepoLive.toEntity`
-  (both `.sortBy(_.value)`).
+- **If result order matters, order in the query.** Use `ORDER BY` in the SPARQL query — sorting
+  an already-fetched result set in application code does not compose with paging (`LIMIT` /
+  `OFFSET` operate on the query's order, not on what the client sorts afterwards).
+- **Small repeated-literal lists on an entity are sorted at the read boundary** so round-trips
+  are deterministic and the PUT response agrees with a later GET. Precedent: `keywords` and
+  `defaultDataAuthorship` in `KnoraProjectRepoLive.toEntity` (both `.sortBy(_.value)`). This is
+  for stable representation of small value sets — not a substitute for `ORDER BY` on result sets.
 - **Don't assert insertion order in tests.** Fixtures and assertions use the sorted order (or
   sets). A test that asserts write order passes only by luck.
 - **Unordered triples cannot carry meaning through order.** If order is semantically relevant

@@ -267,10 +267,6 @@ A property that holds a **project-wide default that can be overridden per resour
 `default_permissions` precedent (e.g. `knora-admin:hasDefaultDataAuthorship` / `defaultDataAuthorship`).
 A property that applies directly (not overridable) does not take the prefix (e.g. `hasDataLicense`).
 
-Get this right before merging: payload keys are cross-repo API. The initial `hasDataAuthorship`
-had to be renamed after merge, which took a breaking change across four repositories
-(dsp-api#4174, dsp-app, dsp-tools, dasch-specs).
-
 ### RDF name vs wire key
 
 The RDF property name and the JSON wire key may diverge when compatibility requires it.
