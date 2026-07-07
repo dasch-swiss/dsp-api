@@ -42,7 +42,7 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
       for {
         triggerResponse <-
           TestApiClient
-            .postJson[Json, Json](uri"/v3/projects/$projectIri/exports", Json.Obj(), incunabulaProjectAdminUser)
+            .postJson[Json](uri"/v3/projects/$projectIri/exports", incunabulaProjectAdminUser)
         fakeId          = "AAAAAAAAAAAAAAAAAAAAAA"
         statusResponse <- TestApiClient
                             .getJson[Json](uri"/v3/projects/$projectIri/exports/$fakeId", incunabulaProjectAdminUser)
@@ -121,7 +121,7 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
 
   private def triggerExportWithCleanup(): ZIO[TestApiClient, Throwable, DataTaskStatusResponse] =
     TestApiClient
-      .postJson[DataTaskStatusResponse, Json](uri"/v3/projects/$projectIri/exports", Json.Obj(), rootUser)
+      .postJson[DataTaskStatusResponse](uri"/v3/projects/$projectIri/exports", rootUser)
       .flatMap { response =>
         if (response.code == StatusCode.Conflict) {
           // Clean up existing export from a previous run, then retry
@@ -133,9 +133,8 @@ object ProjectMigrationExportE2ESpec extends E2EZSpec {
           } yield id
           for {
             _ <- ZIO.foreachDiscard(existingId)(id => deleteExport(DataTaskId.unsafeFrom(id)))
-            r <- TestApiClient.postJson[DataTaskStatusResponse, Json](
+            r <- TestApiClient.postJson[DataTaskStatusResponse](
                    uri"/v3/projects/$projectIri/exports",
-                   Json.Obj(),
                    rootUser,
                  )
             status <- ZIO.fromEither(r.body).mapError(new RuntimeException(_))

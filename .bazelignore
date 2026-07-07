@@ -1,0 +1,17 @@
+.claude
+.direnv
+.git
+sipi/images
+sipi/cache
+sipi/server
+sipi/tmp-dsp-ingest
+target
+webapi/target
+modules/bagit/target
+modules/jwt/target
+modules/shacl-validator/target
+modules/testkit/target
+modules/test-it/target
+modules/test-e2e/target
+modules/test-ingest-integration/target
+ingest/target
