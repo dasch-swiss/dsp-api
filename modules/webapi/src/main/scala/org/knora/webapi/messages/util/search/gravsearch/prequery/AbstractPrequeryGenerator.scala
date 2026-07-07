@@ -2049,13 +2049,15 @@ abstract class AbstractPrequeryGenerator(
   }
 
   /**
-   * Escapes a string for safe embedding in a SPARQL string literal: a raw `"` or `\` in the search
-   * term would otherwise break out of the literal, since [[XsdLiteral.toSparql]] concatenates its
-   * value without escaping. The same pre-existing gap affects `matchText`/`matchLabel`; tracked
-   * separately (fixing it here only protects `matchFulltext`).
+   * Escapes a string for safe embedding in a SPARQL string literal: a raw `"`, `\`, LF, or CR in the
+   * search term would otherwise break out of the literal (SPARQL's `STRING_LITERAL_QUOTE` grammar
+   * disallows all four unescaped), since [[XsdLiteral.toSparql]] concatenates its value without
+   * escaping. The backslash must be escaped first, or the backslashes this method inserts for the
+   * other characters would themselves be re-escaped. The same pre-existing gap affects
+   * `matchText`/`matchLabel`; tracked separately (fixing it here only protects `matchFulltext`).
    */
   private def escapeForSparqlLiteral(s: String): String =
-    s.replace("\\", "\\\\").replace("\"", "\\\"")
+    s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")
 
   /**
    * Builds the fulltext-index-anchored expansion for `matchFulltext`, mirroring the WHERE core of
@@ -2074,30 +2076,41 @@ abstract class AbstractPrequeryGenerator(
    * @param searchTerm  the raw (unescaped) Lucene query string, exactly as passed to `matchFulltext`.
    */
   private def matchFulltextExpansion(resourceVar: QueryVariable, searchTerm: String): GroupPattern = {
-    def internalVar(name: String): QueryVariable = QueryVariable(name + matchFulltextVariableSuffix)
+    val matchVar          = matchFulltextVar("match")
+    val containingResVar  = matchFulltextVar("containingRes")
+    val resWithListValVar = matchFulltextVar("resWithListVal")
 
-    val matchVar          = internalVar("match")
-    val valTypeVar        = internalVar("valType")
-    val containingResVar  = internalVar("containingRes")
-    val propVar           = internalVar("prop")
-    val subNodeVar        = internalVar("subNode")
-    val listValVar        = internalVar("listVal")
-    val resWithListValVar = internalVar("resWithListVal")
-    val predVar           = internalVar("pred")
-    val resClassVar       = internalVar("resClass")
+    val bindResource = BindPattern(
+      variable = resourceVar,
+      // Falls back to the match itself, which covers a direct label hit (the resource is its own label's subject).
+      expression = CoalesceFunction(Seq(containingResVar, resWithListValVar, matchVar)),
+    )
 
-    def isNotDeleted(subj: Entity): FilterNotExistsPattern =
-      FilterNotExistsPattern(
-        Seq(
-          StatementPattern(
-            subj = subj,
-            pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-            obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
-          ),
+    GroupPattern(
+      Seq(
+        matchFulltextLuceneStatement(matchVar, searchTerm),
+        matchFulltextValueBranch(matchVar, containingResVar),
+        matchFulltextListBranch(matchVar, resWithListValVar),
+        bindResource,
+      ) ++ matchFulltextResourceClassCheck(resourceVar),
+    )
+  }
+
+  private def matchFulltextVar(name: String): QueryVariable = QueryVariable(name + matchFulltextVariableSuffix)
+
+  private def matchFulltextIsNotDeleted(subj: Entity): FilterNotExistsPattern =
+    FilterNotExistsPattern(
+      Seq(
+        StatementPattern(
+          subj = subj,
+          pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
+          obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
         ),
-      )
+      ),
+    )
 
-    val luceneStatement = StatementPattern(
+  private def matchFulltextLuceneStatement(matchVar: QueryVariable, searchTerm: String): StatementPattern =
+    StatementPattern(
       subj = matchVar,
       pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
       obj = XsdLiteral(
@@ -2106,8 +2119,12 @@ abstract class AbstractPrequeryGenerator(
       ),
     )
 
-    // A text value or value comment containing the match, and the resource that owns it.
-    val valueBranch = OptionalPattern(
+  /** A text value or value comment containing the match, and the resource that owns it. */
+  private def matchFulltextValueBranch(matchVar: QueryVariable, containingResVar: QueryVariable): OptionalPattern = {
+    val valTypeVar = matchFulltextVar("valType")
+    val propVar    = matchFulltextVar("prop")
+
+    OptionalPattern(
       Seq(
         StatementPattern(subj = matchVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = valTypeVar),
         StatementPattern(
@@ -2135,12 +2152,18 @@ abstract class AbstractPrequeryGenerator(
           pred = IriRef(OntologyConstants.Rdfs.SubPropertyOf.toSmartIri, propertyPathOperator = Some('*')),
           obj = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
         ),
-        isNotDeleted(matchVar),
+        matchFulltextIsNotDeleted(matchVar),
       ),
     )
+  }
 
-    // A list node (or one of its sub-nodes) containing the match, and the resource referencing it via a list value.
-    val listBranch = OptionalPattern(
+  /** A list node (or one of its sub-nodes) containing the match, and the resource referencing it via a list value. */
+  private def matchFulltextListBranch(matchVar: QueryVariable, resWithListValVar: QueryVariable): OptionalPattern = {
+    val subNodeVar = matchFulltextVar("subNode")
+    val listValVar = matchFulltextVar("listVal")
+    val predVar    = matchFulltextVar("pred")
+
+    OptionalPattern(
       Seq(
         StatementPattern(
           subj = matchVar,
@@ -2158,17 +2181,15 @@ abstract class AbstractPrequeryGenerator(
           obj = subNodeVar,
         ),
         StatementPattern(subj = resWithListValVar, pred = predVar, obj = listValVar),
-        isNotDeleted(matchVar),
+        matchFulltextIsNotDeleted(matchVar),
       ),
     )
+  }
 
-    // Fall back to the match itself, which covers a direct label hit (the resource is its own label's subject).
-    val bindResource = BindPattern(
-      variable = resourceVar,
-      expression = CoalesceFunction(Seq(containingResVar, resWithListValVar, matchVar)),
-    )
+  private def matchFulltextResourceClassCheck(resourceVar: QueryVariable): Seq[StatementPattern] = {
+    val resClassVar = matchFulltextVar("resClass")
 
-    val resourceClassCheck = Seq(
+    Seq(
       StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = resClassVar),
       StatementPattern(
         subj = resClassVar,
@@ -2176,8 +2197,6 @@ abstract class AbstractPrequeryGenerator(
         obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri),
       ),
     )
-
-    GroupPattern(Seq(luceneStatement, valueBranch, listBranch, bindResource) ++ resourceClassCheck)
   }
 
   /**
