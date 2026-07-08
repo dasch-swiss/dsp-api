@@ -12,7 +12,7 @@ fluent API, and Gravsearch queries via string interpolation.
 ## Reference Implementation
 
 The dps-api project contains a helper trait and many real-world examples.
-Read `webapi/src/main/scala/org/knora/webapi/slice/common/QueryBuilderHelper.scala`
+Read `modules/webapi/src/main/scala/org/knora/webapi/slice/common/QueryBuilderHelper.scala`
 for the base trait — your query builders should extend or mix in `QueryBuilderHelper`.
 
 ## Dependency
@@ -46,7 +46,7 @@ Standard RDF vocabularies are available from `org.eclipse.rdf4j.model.vocabulary
 | `OWL`    | `owl:`        | `http://www.w3.org/2002/07/owl#`                 |
 
 The dsp-api project vocabularies are defined in
-`webapi/src/main/scala/org/knora/webapi/slice/common/repo/rdf/Vocabulary.scala`:
+`modules/webapi/src/main/scala/org/knora/webapi/slice/common/repo/rdf/Vocabulary.scala`:
 
 ```scala
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB

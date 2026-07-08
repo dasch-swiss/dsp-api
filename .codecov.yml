@@ -28,11 +28,11 @@ component_management:
     - component_id: webapi
       name: webapi
       paths:
-        - webapi/**
+        - modules/webapi/**
     - component_id: ingest
       name: ingest
       paths:
-        - ingest/**
+        - modules/ingest/**
     - component_id: modules
       name: modules
       paths:

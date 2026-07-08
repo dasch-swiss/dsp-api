@@ -57,8 +57,8 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 The custom Sipi Docker image is built with **Bazel** (`rules_oci`), not sbt. Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper; the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
 
 - **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command make docker-build-sipi-image`.
-- `make docker-build-sipi-image` - build the Sipi image and load it into the local Docker daemon (`:latest` plus the git-describe version tag); runs `bazel run //sipi:load`.
-- `make docker-publish-sipi-image` - build and push the multi-arch image; runs `bazel run //sipi:push`.
+- `make docker-build-sipi-image` - build the Sipi image and load it into the local Docker daemon (`:latest` plus the git-describe version tag); runs `bazel run //modules/sipi:load`.
+- `make docker-publish-sipi-image` - build and push the multi-arch image; runs `bazel run //modules/sipi:push`.
 - The dsp-api and dsp-ingest images stay on sbt. `make docker-build` / `make docker-publish` build all three in order (Sipi first, since dsp-ingest derives from it).
 
 ## Architecture
@@ -69,14 +69,14 @@ The codebase is organized into several key modules:
 
 **Core Modules:**
 
-- `webapi/` - Main API application
+- `modules/webapi/` - Main API application
 - `modules/bagit/` - BagIt library for creating, reading, and validating BagIt packages (RFC 8493, <https://www.rfc-editor.org/rfc/rfc8493>)
 - `modules/testkit/` - Shared test utilities and base classes
 - `modules/test-it/` - Integration tests (service/repo/Sipi tests)
 - `modules/test-e2e/` - End-to-end HTTP API tests
-- `sipi/` - Custom Sipi media server configuration
+- `modules/sipi/` - Custom Sipi media server configuration
 
-**Slice Architecture** (`webapi/src/main/scala/org/knora/webapi/slice/`):
+**Slice Architecture** (`modules/webapi/src/main/scala/org/knora/webapi/slice/`):
 
 - `admin/` - Administrative endpoints (users, groups, projects, permissions)
 - `common/` - Shared utilities and base classes
@@ -121,7 +121,7 @@ Each slice typically contains:
 
 ### Test Organization
 
-- Unit tests: `webapi/src/test/scala/`
+- Unit tests: `modules/webapi/src/test/scala/`
 - Integration tests: `modules/test-it/src/test/scala/`
 - End-to-end tests: `modules/test-e2e/src/test/scala/`
 - Shared test utilities: `modules/testkit/src/main/scala/`
@@ -166,8 +166,8 @@ When changes are hard to test with local test data (e.g. they need realistic dat
 
 ### Configuration
 
-- Main config: `webapi/src/main/resources/application.conf`
-- Test config: `webapi/src/test/resources/test.conf`
+- Main config: `modules/webapi/src/main/resources/application.conf`
+- Test config: `modules/webapi/src/test/resources/test.conf`
 - Docker config: `docker-compose.yml`
 
 ### Scala language intelligence (Metals MCP)

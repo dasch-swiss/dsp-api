@@ -96,8 +96,8 @@ TEI expresses this as `<hi rend="italic">...</hi>`.
 In the mapping, the `standoff:StandoffItalicTag` may be mapped to a temporary XML element 
 that is going to be converted to `<hi rend="italic">...</hi>` in a further step by the XSLT. 
 
-For sample data, see `webapi/_test_data/test_route/texts/beol/BEOLTEIMapping.xml` (mapping) 
-and `webapi/_test_data/test_route/texts/beol/standoffToTEI.xsl`. 
+For sample data, see `modules/webapi/_test_data/test_route/texts/beol/BEOLTEIMapping.xml` (mapping) 
+and `modules/webapi/_test_data/test_route/texts/beol/standoffToTEI.xsl`. 
 The standoff entities are defined in `beol-onto.ttl`.
 
 TEI header:

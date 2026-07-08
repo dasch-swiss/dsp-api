@@ -261,6 +261,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
         Option(getClass.getClassLoader.getResourceAsStream(path)).getOrElse(throw new Exception("can't find resource")),
       )
       .orElse(fileInputStream(Paths.get("..", path)))
+      .orElse(fileInputStream(Paths.get("../..", path)))
 
   private def checkGraphName(elem: RdfDataObject): Task[String] =
     checkGraphName(elem.name)
