@@ -50,11 +50,8 @@ object MatchFulltextE2ESpec extends E2EZSpec {
        |}""".stripMargin
   }
 
-  private def verifyCount(query: String, expectedCount: Int) = for {
-    response    <- TestApiClient.postJsonLdDocument(uri"/v2/searchextended/count", query)
-    jsonLd      <- response.assert200
-    actualCount <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
-  } yield assertTrue(actualCount == expectedCount)
+  private def verifyCount(query: String, expectedCount: Int) =
+    newEndpointCount(query).map(actualCount => assertTrue(actualCount == expectedCount))
 
   private def oldEndpointCount(term: String) = for {
     response    <- TestApiClient.getJsonLdDocument(uri"/v2/search/count/$term")
