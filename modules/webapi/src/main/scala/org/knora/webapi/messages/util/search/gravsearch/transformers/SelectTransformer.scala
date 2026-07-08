@@ -38,15 +38,18 @@ class SelectTransformer(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None,
-  ): Task[Seq[QueryPattern]] = {
-    statementCounter += 1
-    inferencer.transformStatementInWhere(
-      statementPattern = statementPattern,
-      simulateInference = simulateInference,
-      limitInferenceToOntologies = limitInferenceToOntologies,
-      queryVariableSuffix = Some(statementCounter.toString),
-    )
-  }
+  ): Task[Seq[QueryPattern]] =
+    // Defer the counter increment into the returned effect (matching AbstractPrequeryGenerator's
+    // ZIO.attempt-wrapped state updates), so the suffix is derived when the effect runs rather than
+    // as a bare side effect of building it.
+    ZIO.succeed { statementCounter += 1; statementCounter.toString }.flatMap { suffix =>
+      inferencer.transformStatementInWhere(
+        statementPattern = statementPattern,
+        simulateInference = simulateInference,
+        limitInferenceToOntologies = limitInferenceToOntologies,
+        queryVariableSuffix = Some(suffix),
+      )
+    }
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.attempt {
     moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns)))
   }
