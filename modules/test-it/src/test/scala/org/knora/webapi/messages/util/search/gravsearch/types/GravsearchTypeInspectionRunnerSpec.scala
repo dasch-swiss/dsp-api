@@ -552,6 +552,59 @@ object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       )
       inspectTypes(queryVarTypeFromFunction).map(actual => assertTrue(actual.entities == expected))
     },
+    test("infer the type of a resource variable used as the argument of matchFulltext in a FILTER") {
+      val queryVarTypeFromMatchFulltext: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    FILTER knora-api:matchFulltext(?book, "Zeitglöcklein")
+          |}
+          |""".stripMargin
+      val expected = Map(
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
+          isResourceType = true,
+        ),
+      )
+      inspectTypes(queryVarTypeFromMatchFulltext).map(actual => assertTrue(actual.entities == expected))
+    },
+    test("reject matchFulltext with an IRI instead of a variable as its first argument") {
+      val queryMatchFulltextWithIriArg: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    FILTER knora-api:matchFulltext(<http://rdfh.ch/0803/e41ab5695c>, "Zeitglöcklein")
+          |}
+          |""".stripMargin
+      inspectTypes(queryMatchFulltextWithIriArg).exit.map(actual => assert(actual)(failsWithA[GravsearchException]))
+    },
+    test("reject matchFulltext whose argument has an inconsistent (non-resource) type elsewhere in the query") {
+      val queryMatchFulltextWithInconsistentType: String =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |    ?thing anything:hasText ?text .
+          |    FILTER knora-api:matchFulltext(?text, "Zeitglöcklein")
+          |}
+          |""".stripMargin
+      inspectTypes(queryMatchFulltextWithInconsistentType).exit.map(actual =>
+        assert(actual)(failsWithA[GravsearchException]),
+      )
+    },
     test("infer the type of a non-property IRI used as the argument of a function in a FILTER") {
       val queryIriTypeFromFunction: String =
         """

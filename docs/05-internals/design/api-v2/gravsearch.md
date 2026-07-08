@@ -464,3 +464,63 @@ CONSTRUCT {
 
 In this case, the algorithm tries to break the cycles in order to sort the graph. If this is not possible,
 the query statements are not reordered.
+
+## The `matchFulltext` Function Expansion
+
+`knora-api:matchFulltext` (see
+[Filtering on Any Indexed Text of a Resource](../../../03-endpoints/api-v2/query-language.md#filtering-on-any-indexed-text-of-a-resource))
+gives the same result set as the `GET /v2/search/{term}` fulltext endpoint, expressed as a Gravsearch function.
+Its handler, `AbstractPrequeryGenerator.handleMatchFulltextFunction`, replaces the `FILTER` with a hand-proven
+SPARQL shape that mirrors the WHERE core of `SearchFulltextQuery` (the fulltext endpoint's own query builder):
+a Lucene hit anchors the match, two `OPTIONAL` blocks resolve it to a containing resource — either the resource
+that owns the matched value (a text value or a value comment), or the resource that references a matched list
+node (including sub-nodes) via a list value — and a `BIND(COALESCE(...))` picks whichever resolved, falling back
+to the match itself for a direct label hit.
+
+### Why the Expansion Needs an Opaque Group
+
+A naive expansion using ordinary `OptionalPattern`/`BindPattern`/`StatementPattern` nodes breaks in two ways once
+it goes through the passes described above:
+
+1. **The optimizer passes hoist or reorder statements independently of scoping.** `moveBindToBeginning` would
+   hoist the `BIND(COALESCE(...))` above the `OPTIONAL` blocks it depends on, leaving it referencing unbound
+   variables. `reorderPatternsByDependency` (topological sorting, above) would place the trailing
+   `?resourceVar a ?resClass` check before the `BIND` that introduces `?resourceVar`, which is illegal SPARQL
+   scoping.
+2. **The inference pass rejects `rdf:type` statements with a variable object.** `OntologyInferencer.transformStatementInWhere`
+   throws `GravsearchException` when the object of `rdf:type` is a variable rather than an IRI (see
+   [Inference](#inference), above) — but the expansion's value-type check (`?match a ?valType`) and its final
+   resource-class check (`?resourceVar a ?resClass`) both need exactly that shape, because the type isn't known
+   in advance.
+
+Both problems disappear if nothing after the handler ever looks inside the expansion. `GroupPattern` (in
+`SparqlQuery.scala`) is a `QueryPattern` that exists for exactly this: it renders its contents verbatim inside
+`{ ... }`, and every pass that matches on `QueryPattern` either has a wildcard fallback that returns it
+unchanged, or (for the two passes that match exhaustively — `QueryTraverser.transformWherePatterns` and
+`GravsearchTypeInspectionUtil.transformPattern`) has an explicit case added that does the same. The
+`OntologyInferencer`, `GravsearchQueryOptimisation`, and `InferenceOptimizationService` passes never see a
+`GroupPattern`'s interior at all, so the handler can emit the same statement shapes `SearchFulltextQuery` already
+proves correct, unmodified.
+
+### Why the Expansion Must Be Hoisted
+
+Even with an opaque group, *where* it sits in the WHERE clause matters. A classless `matchFulltext` query (no
+resource class selected) still carries the user's `?mainRes a knora-api:Resource`, and because that gives the
+relevant-ontologies inference nothing to narrow on, `OntologyInferencer` expands it into a `VALUES` block
+enumerating every resource class in the repository. Evaluating that block before the (cheap, index-anchored)
+Lucene lookup measured roughly 300× slower in the performance spike behind this feature — the classic
+join-order pessimization `moveLuceneToBeginning` (above) already exists to prevent for a bare Lucene
+`StatementPattern`. `moveLuceneToBeginning` was extended to also recognize a `GroupPattern` whose contents
+include a Lucene statement, so the whole expansion — not just a bare statement — gets hoisted ahead of
+patterns like the class-enumeration `VALUES` block.
+
+### Determinism for Snapshot Testing
+
+`OntologyInferencer` names the `VALUES` variables it introduces (e.g. `?resTypes`, `?subProp`) using
+`Random.nextInt` unless a `queryVariableSuffix` is supplied — harmless for correctness, but it means the same
+query produces different SPARQL text on every run. `SelectTransformer` now supplies a per-instance,
+per-statement counter as that suffix, so the same query always renders the same SPARQL — a prerequisite for
+`GravsearchToPrequeryTransformerE2ESpec`'s golden-snapshot tests on the matchFulltext expansion. The suffix must
+be unique per statement, not a shared constant: a constant would collapse unrelated `VALUES` variables (e.g. one
+from `?mainRes a Resource`, another from `?val a Value`) into the same variable, intersecting their blocks into
+silently empty results.

@@ -721,6 +721,7 @@ final class SearchResponderV2Live(
                                constructClause = query.constructClause,
                                typeInspectionResult = typeInspectionResult,
                                querySchema = querySchema,
+                               searchValueMinLength = appConfig.v2.fulltextSearch.searchValueMinLength,
                              ),
                            )
                          prequery <-

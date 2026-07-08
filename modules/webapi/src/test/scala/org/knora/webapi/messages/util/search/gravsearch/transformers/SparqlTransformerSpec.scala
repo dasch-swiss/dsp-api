@@ -147,5 +147,30 @@ object SparqlTransformerSpec extends ZIOSpecDefault {
       )
       assertTrue(optimisedPatterns == expectedPatterns)
     },
+    test("move a GroupPattern containing a Lucene query pattern to the beginning of a block") {
+      // Simulates the classless-query pathology from the DEV-6715 spike: a plain rdf:type statement
+      // (which the inference pass later expands into a repo-wide VALUES block of every resource class)
+      // sitting before the matchFulltext expansion in document order would otherwise force that
+      // expensive VALUES join to run before the cheap, index-anchored Lucene lookup.
+      val resourceTypeStatement = StatementPattern(
+        subj = QueryVariable("mainRes"),
+        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        obj = IriRef(thingIRI),
+      )
+      val luceneQueryPattern = StatementPattern(
+        subj = QueryVariable("match__matchFulltext"),
+        pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+        obj = XsdLiteral(value = "term", datatype = OntologyConstants.Xsd.String.toSmartIri),
+      )
+      val bindResource = BindPattern(
+        variable = QueryVariable("mainRes"),
+        expression = QueryVariable("match__matchFulltext"),
+      )
+      val groupPattern                        = GroupPattern(Seq(luceneQueryPattern, bindResource))
+      val patterns: Seq[QueryPattern]         = Seq(resourceTypeStatement, groupPattern)
+      val optimisedPatterns                   = SparqlTransformer.moveLuceneToBeginning(patterns)
+      val expectedPatterns: Seq[QueryPattern] = Seq(groupPattern, resourceTypeStatement)
+      assertTrue(optimisedPatterns == expectedPatterns)
+    },
   )
 }

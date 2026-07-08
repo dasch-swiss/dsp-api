@@ -10,15 +10,18 @@ import zio.test.*
 
 import dsp.errors.AssertionException
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.GoldenTest
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
+import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 
-object GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec {
+object GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -27,7 +30,8 @@ object GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec {
 
   private def transformQuery(
     query: String,
-  ): ZIO[QueryTraverser & GravsearchTypeInspectionRunner, Throwable, SelectQuery] = for {
+  ): ZIO[AppConfig & QueryTraverser & GravsearchTypeInspectionRunner, Throwable, SelectQuery] = for {
+    appConfig            <- ZIO.service[AppConfig]
     query                <- ZIO.attempt(GravsearchParser.parseQuery(query))
     inspectionResult     <- inspectionRunner(_.inspectTypes(query.whereClause))
     _                    <- GravsearchQueryChecker.checkConstructClause(query.constructClause, inspectionResult)
@@ -36,10 +40,42 @@ object GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec {
     prequery             <- queryTraverser(
                   _.transformConstructToSelect(
                     query.copy(whereClause = sanitizedWhereClause, orderBy = Seq.empty),
-                    new GravsearchToCountPrequeryTransformer(query.constructClause, inspectionResult, querySchema),
+                    new GravsearchToCountPrequeryTransformer(
+                      query.constructClause,
+                      inspectionResult,
+                      querySchema,
+                      appConfig.v2.fulltextSearch.searchValueMinLength,
+                    ),
                   ),
                 )
   } yield prequery
+
+  /** See [[GravsearchInferencePipelineTestSupport]] for why the golden snapshot needs the full pipeline. */
+  private def transformQueryWithInference(query: String): ZIO[
+    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService,
+    Throwable,
+    SelectQuery,
+  ] =
+    GravsearchInferencePipelineTestSupport.transformQueryWithInference(
+      query,
+      (constructClause, typeInspectionResult, querySchema, appConfig) =>
+        new GravsearchToCountPrequeryTransformer(
+          constructClause,
+          typeInspectionResult,
+          querySchema,
+          appConfig.v2.fulltextSearch.searchValueMinLength,
+        ),
+      dropOrderBy = true,
+    )
+
+  val queryClasslessMatchFulltext: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |CONSTRUCT {
+      |    ?mainRes knora-api:isMainResource true .
+      |} WHERE {
+      |    ?mainRes a knora-api:Resource .
+      |    FILTER knora-api:matchFulltext(?mainRes, "Zeitglöcklein")
+      |}""".stripMargin
 
   val inputQueryWithDecimalOptionalSortCriterionAndFilter: String =
     """
@@ -262,6 +298,10 @@ object GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec {
     )
 
   override val e2eSpec = suite("The NonTriplestoreSpecificGravsearchToCountPrequeryGenerator object")(
+    test("generate the fulltext-index-anchored matchFulltext expansion for a classless count query") {
+      transformQueryWithInference(queryClasslessMatchFulltext)
+        .map(actual => assertGolden(actual.toSparql, "classlessMatchFulltext"))
+    },
     test("transform an input query with a decimal as an optional sort criterion and a filter") {
       transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter)
         .map(actual => assertTrue(actual == transformedQueryWithDecimalOptionalSortCriterionAndFilter))

@@ -87,6 +87,26 @@ object SparqlTransformer {
     createUniqueVariableFromStatement(baseStatement, "LinkValue")
 
   /**
+   * Builds the canonical `FILTER NOT EXISTS { subj knora-base:isDeleted true }` guard for the given
+   * subject. Shared by [[optimiseIsDeletedWithFilter]] (which rewrites `isDeleted false` statements)
+   * and the `matchFulltext` expansion in
+   * [[org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator]], so both
+   * emit the same AST shape and a change to how deletion is represented lives in one place.
+   */
+  def notDeletedFilter(subj: Entity): FilterNotExistsPattern = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    FilterNotExistsPattern(
+      Seq(
+        StatementPattern(
+          subj = subj,
+          pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
+          obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
+        ),
+      ),
+    )
+  }
+
+  /**
    * Optimises a query by replacing `knora-base:isDeleted false` with a `FILTER NOT EXISTS` pattern
    * placed at the end of the block.
    *
@@ -94,8 +114,6 @@ object SparqlTransformer {
    * @return the result of the optimisation.
    */
   def optimiseIsDeletedWithFilter(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
     // Separate the knora-base:isDeleted statements from the rest of the block.
     val (isDeletedPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
       case StatementPattern(
@@ -109,16 +127,7 @@ object SparqlTransformer {
 
     // Replace the knora-base:isDeleted statements with FILTER NOT EXISTS patterns.
     val filterPatterns: Seq[FilterNotExistsPattern] = isDeletedPatterns.collect {
-      case statementPattern: StatementPattern =>
-        FilterNotExistsPattern(
-          Seq(
-            StatementPattern(
-              subj = statementPattern.subj,
-              pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-              obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
-            ),
-          ),
-        )
+      case statementPattern: StatementPattern => notDeletedFilter(statementPattern.subj)
     }
 
     otherPatterns ++ filterPatterns
@@ -140,16 +149,29 @@ object SparqlTransformer {
   }
 
   /**
-   * Optimises a query by moving Lucene query patterns to the beginning of a block.
+   * `true` if the pattern is a Lucene query statement, or a [[GroupPattern]] containing one at its
+   * top level (e.g. the `matchFulltext` expansion) — used by [[moveLuceneToBeginning]].
+   */
+  private def containsLuceneQuery(pattern: QueryPattern): Boolean = pattern match {
+    case StatementPattern(_, IriRef(pred, _), _) => pred.toIri == OntologyConstants.Fuseki.luceneQueryPredicate
+    case groupPattern: GroupPattern              => groupPattern.patterns.exists(containsLuceneQuery)
+    case _                                       => false
+  }
+
+  /**
+   * Optimises a query by moving Lucene query patterns to the beginning of a block. This also hoists a
+   * [[GroupPattern]] whose contents include a Lucene query statement (e.g. the `matchFulltext`
+   * expansion): leaving it in place risks a class-first join order, since document order is otherwise
+   * whatever position the FILTER it replaced happened to end up in. For a classless query this is not
+   * just slow but catastrophic — the ontology-cache VALUES block for `?mainRes a knora-api:Resource`
+   * enumerates every resource class in the repository, and evaluating that before the (cheap,
+   * index-anchored) Lucene lookup measured ~300x slower in the performance spike for DEV-6715.
    *
    * @param patterns the block of patterns to be optimised.
    * @return the result of the optimisation.
    */
   def moveLuceneToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    val (luceneQueryPatterns, otherPatterns) = patterns.partition {
-      case StatementPattern(_, IriRef(pred, _), _) => pred.toIri == OntologyConstants.Fuseki.luceneQueryPredicate
-      case _                                       => false
-    }
+    val (luceneQueryPatterns, otherPatterns) = patterns.partition(containsLuceneQuery)
 
     luceneQueryPatterns ++ otherPatterns
   }
