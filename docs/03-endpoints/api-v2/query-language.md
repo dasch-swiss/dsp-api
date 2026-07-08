@@ -724,8 +724,9 @@ FILTER knora-api:matchFulltext(?book, "Zeitglöcklein")
 Deleted resources, deleted text values, and deleted list nodes never match. One
 subtlety on the list path: a resource can still match via a *deleted* list value, as
 long as the list node that value points to is itself not deleted — for the list path
-the deletion check is on the matched list node, not on the intervening list value. A
-search term containing `"`, `\`, or a newline is safely escaped before being passed to
+the deletion check is on the matched list node, not on the intervening list value.
+
+A search term containing `"`, `\`, or a newline is safely escaped before being passed to
 the full-text index. As with `knora-api:matchText`, the search term is otherwise passed
 through to Lucene as-is, including its default result-count limit for very high-hit
 terms — the same limitation the fulltext endpoint has.
