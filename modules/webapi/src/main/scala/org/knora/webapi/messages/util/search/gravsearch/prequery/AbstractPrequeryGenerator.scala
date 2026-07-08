@@ -2099,15 +2099,7 @@ abstract class AbstractPrequeryGenerator(
   private def matchFulltextVar(name: String): QueryVariable = QueryVariable(name + matchFulltextVariableSuffix)
 
   private def matchFulltextIsNotDeleted(subj: Entity): FilterNotExistsPattern =
-    FilterNotExistsPattern(
-      Seq(
-        StatementPattern(
-          subj = subj,
-          pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-          obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
-        ),
-      ),
-    )
+    SparqlTransformer.notDeletedFilter(subj)
 
   private def matchFulltextLuceneStatement(matchVar: QueryVariable, searchTerm: String): StatementPattern =
     StatementPattern(
