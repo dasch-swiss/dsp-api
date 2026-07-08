@@ -306,7 +306,7 @@ private object ReorderPatternsByDependency {
           }
 
           // Sort the preferred orders to produce a deterministic result, and return one of them.
-          preferredOrders.min(TopologicalOrderOrdering)
+          preferredOrders.min(using TopologicalOrderOrdering)
         }
       }
     }

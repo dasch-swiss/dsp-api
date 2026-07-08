@@ -87,9 +87,9 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     decodeToken(token).flatMap { case (_, claims, _) => extract(claims).mapError(new Exception(_)) }
 
   private def getScopeClaimValue(token: String) =
-    getClaimZIO(token, c => ZIO.fromEither(c.content.fromJson[ScopeJs](ScopeJs.decoder))).map(_.scope)
+    getClaimZIO(token, c => ZIO.fromEither(c.content.fromJson[ScopeJs](using ScopeJs.decoder))).map(_.scope)
 
-  val spec: Spec[TestEnvironment with Scope, Any] = (suite("JwtService")(
+  val spec: Spec[TestEnvironment & Scope, Any] = (suite("JwtService")(
     test("create a token") {
       for {
         token    <- JwtService(_.createJwt(user.userIri, AuthScope.empty, Map("foo" -> Json.Str("bar"))))

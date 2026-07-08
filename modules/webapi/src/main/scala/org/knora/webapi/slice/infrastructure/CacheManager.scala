@@ -22,7 +22,7 @@ final case class EhCache[K, V](cache: org.ehcache.Cache[K, V]) {
   def clear(): Unit                     = cache.clear()
 }
 
-final case class CacheManager(manager: org.ehcache.CacheManager, knownCaches: Ref[Set[EhCache[_, _]]]) {
+final case class CacheManager(manager: org.ehcache.CacheManager, knownCaches: Ref[Set[EhCache[?, ?]]]) {
 
   def createCache[K: ClassTag, V: ClassTag](alias: String): UIO[EhCache[K, V]] =
     createCache(alias, defaultCacheConfigBuilder[K, V]().build())
@@ -56,6 +56,6 @@ object CacheManager {
 
     ZIO
       .acquireRelease(acquire)(release)
-      .flatMap(mgr => Ref.make(Set.empty[EhCache[_, _]]).map(CacheManager(mgr, _)))
+      .flatMap(mgr => Ref.make(Set.empty[EhCache[?, ?]]).map(CacheManager(mgr, _)))
   }
 }

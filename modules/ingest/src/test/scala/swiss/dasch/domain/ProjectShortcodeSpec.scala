@@ -16,7 +16,7 @@ object ProjectShortcodeSpec extends ZIOSpecDefault {
     ZStream.repeatZIO(Random.nextIntBounded(hexDigits.length)).take(4).map(hexDigits.charAt).mkString
   }
 
-  val spec: Spec[TestEnvironment with Scope, Nothing] = suite("ProjectShortcodeSpec")(
+  val spec: Spec[TestEnvironment & Scope, Nothing] = suite("ProjectShortcodeSpec")(
     test("ProjectShortcode should accept any four digit hex strings") {
       check(Gen.fromZIO(randomFourDigitHexString)) { shortcode =>
         assertTrue(ProjectShortcode.from(shortcode).map(_.value) == Right(shortcode.toUpperCase()))

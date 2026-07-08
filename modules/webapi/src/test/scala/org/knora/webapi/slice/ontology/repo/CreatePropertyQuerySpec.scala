@@ -76,7 +76,7 @@ object CreatePropertyQuerySpec extends ZIOSpecDefault {
     ),
   )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("CreatePropertyFactorySpec")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("CreatePropertyFactorySpec")(
     test("should produce the correct query with a link value property") {
       CreatePropertyQuery
         .build(testPropertyDef, testLinkValuePropertyDef, testLastModificationDate)

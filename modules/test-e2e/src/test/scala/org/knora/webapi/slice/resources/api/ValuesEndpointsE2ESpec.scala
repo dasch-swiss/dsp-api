@@ -3564,7 +3564,7 @@ object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           "@id"           -> Json.Str(resourceIri.toString),
           "@type"         -> Json.Str(anythingThing),
           anythingHasText -> Json.Obj(
-            Seq("@type" -> Json.Str(KA.TextValue), KA.ValueAsString -> Json.Str("Not important")) ++ props: _*,
+            Seq("@type" -> Json.Str(KA.TextValue), KA.ValueAsString -> Json.Str("Not important")) ++ props*,
           ),
         )
 

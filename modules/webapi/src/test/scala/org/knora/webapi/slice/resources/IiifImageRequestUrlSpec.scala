@@ -17,7 +17,7 @@ import java.net.URI
 
 object IiifImageRequestUrlSpec extends ZIOSpecDefault {
 
-  val spec: Spec[TestEnvironment with Scope, Nothing] = suite("IiifImageRequestUrl")(
+  val spec: Spec[TestEnvironment & Scope, Nothing] = suite("IiifImageRequestUrl")(
     test("should accept a IIIF image request url") {
       val validUrls =
         Seq(

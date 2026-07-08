@@ -28,6 +28,6 @@ object CsvUtilSpec extends ZIOSpecDefault {
     },
   )
 
-  def spec: Spec[TestEnvironment with Scope, Any] = suite("CsvUtilSpec")(escapeCsvValueSuite)
+  def spec: Spec[TestEnvironment & Scope, Any] = suite("CsvUtilSpec")(escapeCsvValueSuite)
 
 }

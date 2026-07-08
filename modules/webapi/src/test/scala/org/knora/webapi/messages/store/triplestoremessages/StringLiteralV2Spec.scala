@@ -228,7 +228,7 @@ object StringLiteralV2Spec extends ZIOSpecDefault {
         LanguageTaggedStringLiteralV2("apple", LanguageCode.EN),
         PlainStringLiteralV2("mango"),
       )
-      val sorted = literals.sorted(StringLiteralV2.orderByValue)
+      val sorted = literals.sorted(using StringLiteralV2.orderByValue)
       assertTrue(
         sorted(0).value == "apple",
         sorted(1).value == "mango",
@@ -242,7 +242,7 @@ object StringLiteralV2Spec extends ZIOSpecDefault {
         LanguageTaggedStringLiteralV2("test", LanguageCode.DE),
         LanguageTaggedStringLiteralV2("test", LanguageCode.EN),
       )
-      val sorted = literals.sorted(StringLiteralV2.orderByLanguage)
+      val sorted = literals.sorted(using StringLiteralV2.orderByLanguage)
       assertTrue(
         sorted(0).languageOption.isEmpty, // PlainStringLiteralV2 (empty string) comes first
         sorted(1).languageOption.contains(LanguageCode.DE),

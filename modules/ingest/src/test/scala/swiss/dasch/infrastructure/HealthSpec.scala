@@ -13,9 +13,9 @@ object HealthSpec extends ZIOSpecDefault {
     val up   = Health.up
     val down = Health.down
     assertTrue(
-      (up aggregate down) == down,
-      (down aggregate up) == down,
-      (up aggregate up) == up,
+      (up `aggregate` down) == down,
+      (down `aggregate` up) == down,
+      (up `aggregate` up) == up,
     )
   })
 }

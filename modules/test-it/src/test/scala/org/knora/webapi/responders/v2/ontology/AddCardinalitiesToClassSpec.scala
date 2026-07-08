@@ -14,7 +14,6 @@ import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*

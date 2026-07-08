@@ -47,7 +47,7 @@ final case class OntologyInferencer(
 
     // Searches for a `?v a <subClassIRI>`, or if multiple subclasses are present, then
     // a `VALUES ?resTypes { <subClassIRI> }` statement is created with a `?v a ?resTypes`.
-    val types = QueryVariable(s"resTypes${queryVariableSuffix.getOrElse(scala.util.Random.nextInt.abs)}")
+    val types = QueryVariable(s"resTypes${queryVariableSuffix.getOrElse(scala.util.Random.nextInt().abs)}")
     if (subClasses.length > 1)
       Seq(ValuesPattern(types, subClasses.map(IriRef.apply(_, None)).toSet), statementPattern.copy(obj = types))
     else
@@ -72,7 +72,7 @@ final case class OntologyInferencer(
     }
     // Searches for a `?v <propertyIRI> ?b`, or if multiple propertyIRIs are present, then
     // a `VALUES ?subProp { <propertyIRI>+ }` statement is created with a `?a ?subProp ?b`.
-    val subProp = QueryVariable(s"subProp${queryVariableSuffix.getOrElse(scala.util.Random.nextInt.abs)}")
+    val subProp = QueryVariable(s"subProp${queryVariableSuffix.getOrElse(scala.util.Random.nextInt().abs)}")
     if (subProps.length > 1) {
       Seq(ValuesPattern(subProp, subProps.map(IriRef.apply(_, None)).toSet), statementPattern.copy(pred = subProp))
     } else {

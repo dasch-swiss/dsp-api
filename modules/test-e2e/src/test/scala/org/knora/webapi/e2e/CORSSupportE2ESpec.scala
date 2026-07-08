@@ -34,12 +34,12 @@ object CORSSupportE2ESpec extends E2EZSpec {
     private val originHeader = Header(Origin, "http://example.com")
 
     def options(uri: Uri, hs: Header*): Task[Response[Either[String, String]]] = {
-      val req = basicRequest.options(uri).headers(hs :+ originHeader: _*)
+      val req = basicRequest.options(uri).headers(hs :+ originHeader*)
       backend.send(req)
     }
 
     def get(uri: Uri, hs: Header*): Task[Response[Either[String, String]]] = {
-      val req = basicRequest.get(uri).headers(hs :+ originHeader: _*)
+      val req = basicRequest.get(uri).headers(hs :+ originHeader*)
       backend.send(req)
     }
   }

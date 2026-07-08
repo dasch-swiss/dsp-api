@@ -90,9 +90,9 @@ object KnoraGroupRepoLive extends QueryBuilderHelper {
         .iri(group.id.value)
         .has(RDF.TYPE, Rdf.iri(KnoraAdmin.UserGroup))
         .andHas(groupName, Rdf.literalOf(group.groupName.value))
-        .andHas(groupDescriptions, group.groupDescriptions.value.map(toRdfLiteral): _*)
+        .andHas(groupDescriptions, group.groupDescriptions.value.map(toRdfLiteral)*)
         .andHas(status, Rdf.literalOf(group.status.value))
-        .andHas(belongsToProject, group.belongsToProject.map(p => Rdf.iri(p.value)).toList: _*)
+        .andHas(belongsToProject, group.belongsToProject.map(p => Rdf.iri(p.value)).toList*)
         .andHas(hasSelfJoinEnabled, Rdf.literalOf(group.hasSelfJoinEnabled.value))
   }
 

@@ -254,7 +254,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
             ldType(KA.StillImageFileValue),
             (KA.FileValueHasFilename, Json.Str(filename)),
             (KA.HasCopyrightHolder, Json.Str(copyrightHolder.value)),
-            (KA.HasAuthorship, Json.Arr(authorship.map(_.value).map(Json.Str.apply): _*)),
+            (KA.HasAuthorship, Json.Arr(authorship.map(_.value).map(Json.Str.apply)*)),
             (KA.HasLicense, Json.Obj(ldId(licenseIri.value))),
           ),
         ),

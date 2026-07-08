@@ -28,7 +28,7 @@ import org.knora.bagit.ChecksumAlgorithm
 
 object ProjectServiceSpec extends ZIOSpecDefault {
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("ProjectService")(
       suite("listAllProjects")(
         test("should list all projects which contain assets in the asset directory") {

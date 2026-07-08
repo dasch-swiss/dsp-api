@@ -14,7 +14,7 @@ object Dependencies {
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v5.0.1"
 
-  val ScalaVersion = "3.3.7"
+  val ScalaVersion = "3.8.4"
 
   val MonocleVersion = "3.3.0"
 

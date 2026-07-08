@@ -73,7 +73,7 @@ final case class MetadataService(
       case head :: Nil  => variable(resourceIriVar).isA(head)
       case head :: tail =>
         val pat = variable(resourceIriVar).isA(head)
-        pat.union(tail.map(c => variable(resourceIriVar).isA(c)): _*)
+        pat.union(tail.map(c => variable(resourceIriVar).isA(c))*)
     }
 
     val query = Queries

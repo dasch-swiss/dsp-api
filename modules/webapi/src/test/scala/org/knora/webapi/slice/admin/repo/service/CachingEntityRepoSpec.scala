@@ -106,7 +106,7 @@ final case class TestMapper()                         extends RdfEntityMapper[Te
   override def toEntity(resource: RdfResource): IO[Errors.RdfError, TestEntity] =
     for {
       id   <- resource.getSubjectIri
-      name <- resource.getStringLiteralOrFail[String](TestRepo.property)(Right(_))
+      name <- resource.getStringLiteralOrFail[String](TestRepo.property)(using Right(_))
     } yield TestEntity(TestId(id.value), name)
 }
 

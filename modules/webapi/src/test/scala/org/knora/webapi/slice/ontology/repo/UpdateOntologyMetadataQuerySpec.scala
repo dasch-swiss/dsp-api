@@ -27,7 +27,7 @@ object UpdateOntologyMetadataQuerySpec extends ZIOSpecDefault {
   private val testLastModificationDate: LastModificationDate =
     LastModificationDate.from(Instant.parse("2023-08-01T10:30:00Z"))
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("UpdateOntologyMetadataQuerySpec")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("UpdateOntologyMetadataQuerySpec")(
     suite("build")(
       test("should produce the correct query when changing only the label") {
         UpdateOntologyMetadataQuery

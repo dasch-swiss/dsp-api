@@ -14,7 +14,7 @@ import zio.test.*
 
 object SipiCommandSpec extends ZIOSpecDefault {
 
-  val spec: Spec[TestEnvironment with Scope, Nothing] =
+  val spec: Spec[TestEnvironment & Scope, Nothing] =
     suite("SipiCommand")(
       test("should render convert subcommand with --json for Transcode") {
         check(Gen.fromIterable(SipiImageFormat.all)) { format =>

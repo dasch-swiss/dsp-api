@@ -140,12 +140,12 @@ val customScalacOptions = Seq(
   "-feature",
   "-unchecked",
   "-deprecation",
-  "-Yresolve-term-conflict:package",
+  "-Xresolve-term-conflict:package", // renamed from -Yresolve-term-conflict on Scala 3.8
   "-Wconf:src=target/.*:s", // silence TWIRL templates unused imports warnings
   "-Wvalue-discard",
   "-Xmax-inlines:64",
   "-Wunused:all",
-  "-Xfatal-warnings",
+  "-Werror", // was -Xfatal-warnings (a deprecated alias on Scala 3.8)
   "-Dotel.java.global-autoconfigure.enabled=true",
 )
 

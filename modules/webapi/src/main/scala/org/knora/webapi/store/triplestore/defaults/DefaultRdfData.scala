@@ -65,5 +65,5 @@ object DefaultRdfData {
       path = "test_data/project_ontologies/webern-onto.ttl",
       name = "http://www.knora.org/ontology/0806/webern",
     ),
-  ) ++ Chunk(RepositoryUpdatePlan.builtInNamedGraphs.toSeq: _*)
+  ) ++ Chunk(RepositoryUpdatePlan.builtInNamedGraphs.toSeq*)
 }

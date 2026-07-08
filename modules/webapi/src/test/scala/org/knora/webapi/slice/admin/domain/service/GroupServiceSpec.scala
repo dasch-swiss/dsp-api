@@ -50,7 +50,7 @@ object GroupServiceSpec extends ZIOSpecDefault {
     hasSelfJoinEnabled = GroupSelfJoin.disabled,
   )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("GroupServiceSpec")(
       test("KnoraGroup should be transformed to Group") {
         for {

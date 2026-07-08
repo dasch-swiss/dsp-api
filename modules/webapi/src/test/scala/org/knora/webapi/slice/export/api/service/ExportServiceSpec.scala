@@ -108,7 +108,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
     ),
   ).toSet
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("ExportServiceSpec")(
       triplestoreSuite,
       streamingBehaviorSuite,

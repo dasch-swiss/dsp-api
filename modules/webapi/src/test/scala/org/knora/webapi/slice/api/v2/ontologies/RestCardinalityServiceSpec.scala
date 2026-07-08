@@ -20,7 +20,6 @@ import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubC
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubCardinalitiesService.setSuccess
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
 import org.knora.webapi.slice.ontology.domain.ReadOntologyV2Builder

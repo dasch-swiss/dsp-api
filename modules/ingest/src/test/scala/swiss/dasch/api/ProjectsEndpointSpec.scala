@@ -30,7 +30,6 @@ import zio.Chunk
 import zio.UIO
 import zio.ZIO
 import zio.ZLayer
-import zio.http
 import zio.http.*
 import zio.http.Header.ContentDisposition
 import zio.http.Header.ContentDisposition.Attachment

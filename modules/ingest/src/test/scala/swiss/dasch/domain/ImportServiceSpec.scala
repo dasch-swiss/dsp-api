@@ -27,7 +27,7 @@ import org.knora.bagit.domain.PayloadEntry
 
 object ImportServiceSpec extends ZIOSpecDefault {
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("ImportService")(
       test("import fails with ProjectAlreadyExists when project folder has files") {
         for {

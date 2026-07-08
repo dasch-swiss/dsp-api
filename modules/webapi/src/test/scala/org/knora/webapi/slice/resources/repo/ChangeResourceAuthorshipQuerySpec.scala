@@ -51,7 +51,7 @@ object ChangeResourceAuthorshipQuerySpec extends ZIOSpecDefault with GoldenTest 
   private val ada  = Authorship.unsafeFrom("Ada Lovelace")
   private val alan = Authorship.unsafeFrom("Alan Turing")
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("ChangeResourceAuthorshipQuerySpec")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("ChangeResourceAuthorshipQuerySpec")(
     suite("build")(
       // The generated query is compared against a golden file (src/test/resources/.../<suffix>.txt).
       // Regression guard for the silent no-op bug: the golden output MUST scope the named project graph

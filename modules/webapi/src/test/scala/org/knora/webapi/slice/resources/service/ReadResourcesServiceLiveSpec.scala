@@ -88,7 +88,7 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
     ),
   ).toSet
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("ReadResourcesServiceLive")(
       test("readResourcesSequence returns a ReadResourceV2 matching the triplestore data") {
         val projectADM = Project(

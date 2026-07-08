@@ -27,7 +27,7 @@ object DeleteClassQuerySpec extends ZIOSpecDefault {
   private val testLastModificationDate: LastModificationDate =
     LastModificationDate.from(Instant.parse("2023-08-01T10:30:00Z"))
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("DeleteClassQuerySpec")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("DeleteClassQuerySpec")(
     test("should produce the correct SPARQL query") {
       DeleteClassQuery
         .build(testClassIri, testLastModificationDate)

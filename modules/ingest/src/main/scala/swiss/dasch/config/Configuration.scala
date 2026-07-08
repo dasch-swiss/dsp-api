@@ -58,13 +58,13 @@ object Configuration {
   private val configDescriptor = deriveConfig[ApplicationConf].mapKey(toKebabCase)
 
   private type AllConfigs = ServiceConfig
-    with JwtConfig
-    with StorageConfig
-    with SipiConfig
-    with IngestConfig
-    with Features
-    with DbConfig
-    with DspApiConfig
+    & JwtConfig
+    & StorageConfig
+    & SipiConfig
+    & IngestConfig
+    & Features
+    & DbConfig
+    & DspApiConfig
 
   val layer: ZLayer[Any, Config.Error, AllConfigs] = {
     val applicationConf = ZLayer.fromZIO(

@@ -131,7 +131,7 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
     )
   }
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("AssetInfoServiceSpec")(findByAssetRefSuite).provide(
       AssetInfoServiceLive.layer,
       StorageServiceLive.layer,

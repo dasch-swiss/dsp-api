@@ -26,7 +26,7 @@ object AuthScope {
     case Read(projectShortcode: ProjectShortcode)
   }
 
-  def from(sv: ScopeValue*): AuthScope = AuthScope(Set(sv: _*))
+  def from(sv: ScopeValue*): AuthScope = AuthScope(Set(sv*))
 
   val Empty = AuthScope()
 
