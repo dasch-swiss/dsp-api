@@ -1,8 +1,16 @@
 # Bazel configuration for dsp-api.
 #
-# Scope today: the `knora-sipi` OCI image build (rules_oci). The Scala build
-# stays on sbt — see build.sbt and the Makefile docker-* targets. Image tags
-# are passed explicitly by the Makefile, so no workspace-status stamping here.
+# Builds the knora-sipi OCI image (rules_oci) and the Scala build (rules_scala).
+# sbt runs in parallel as the build of record during the validation period.
 
 common --incompatible_disallow_empty_glob
 build --show_timestamps
+
+# Git version/commit + image tags for stamped rules (//tools/buildinfo, image labels).
+build --workspace_status_command=tools/workspace_status.sh
+
+# JDK 25 (matches the runtime base eclipse-temurin:25-jre-noble and sbt's Temurin 25).
+# Requires rules_java >= 8.16 (remotejdk_25). Only resolved when a Java/Scala target builds.
+build --java_language_version=25
+build --java_runtime_version=remotejdk_25
+build --tool_java_runtime_version=remotejdk_25

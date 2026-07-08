@@ -1,0 +1,27 @@
+load("@rules_scala//scala:scala.bzl", "setup_scala_toolchain")
+
+# DSP's Scala toolchain: our scalac options + semanticdb, matching build.sbt's
+# `customScalacOptions` (minus the sbt-/JVM-only entries). Registered from the root
+# MODULE.bazel so it wins over the toolchain auto-registered by `scala_deps.scala()`.
+#
+# `setup_scala_toolchain` emits both the `<name>_impl` scala_toolchain and a
+# `native.toolchain(name = <name>)` gated on the Scala version — register `<name>`.
+setup_scala_toolchain(
+    name = "dsp_scala_toolchain",
+    scala_version = "3.8.4",
+    enable_semanticdb = True,  # go-to-references for Metals-over-Bazel later
+    scalacopts = [
+        "-feature",
+        "-unchecked",
+        "-deprecation",
+        "-Xresolve-term-conflict:package",
+        "-Wvalue-discard",
+        "-Xmax-inlines:64",
+        "-Wunused:all",
+        "-Werror",
+    ],
+    # `-Dotel.java.global-autoconfigure.enabled=true` is a JVM system property (it sits in
+    # build.sbt's scalacOptions only because sbt forks the compiler) — it belongs on the
+    # compiler worker JVM, not in scalacopts.
+    scalac_jvm_flags = ["-Dotel.java.global-autoconfigure.enabled=true"],
+)

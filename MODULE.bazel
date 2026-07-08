@@ -1,7 +1,8 @@
 """dsp-api Bazel module.
 
-Scope today: build the `knora-sipi` OCI image (a thin overlay on the upstream
-Sipi image). The Scala build (knora-api, dsp-ingest) stays on sbt.
+Builds the `knora-sipi` OCI image and (in progress) the full Scala build —
+knora-api, dsp-ingest, and their libraries/tests — with rules_scala. sbt runs
+in parallel as the build of record during the validation period.
 """
 
 module(
@@ -12,6 +13,153 @@ module(
 bazel_dep(name = "rules_oci", version = "2.3.0")
 bazel_dep(name = "rules_pkg", version = "1.2.0")
 bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_scala", version = "7.2.6")
+bazel_dep(name = "rules_jvm_external", version = "7.0")
+bazel_dep(name = "rules_java", version = "9.1.0")  # provides remotejdk_25; matches rules_scala's transitive
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+
+#############################################
+# Scala toolchain (rules_scala, Scala 3.8.4)
+#############################################
+
+scala_config = use_extension("@rules_scala//scala/extensions:config.bzl", "scala_config")
+scala_config.settings(scala_version = "3.8.4")
+use_repo(scala_config, "rules_scala_config")
+
+scala_deps = use_extension("@rules_scala//scala/extensions:deps.bzl", "scala_deps")
+scala_deps.settings(fetch_sources = True)
+scala_deps.scala()
+scala_deps.junit()
+use_repo(
+    scala_deps,
+    "rules_scala_toolchains",
+    "scala_compiler_sources",
+)
+
+# Our own toolchain (custom scalacopts + semanticdb) registered from the root
+# module so it wins over the one scala_deps.scala() auto-registers.
+register_toolchains("//bazel/toolchains:dsp_scala_toolchain")
+
+#############################################
+# Third-party JVM dependencies (@maven)
+#############################################
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    name = "maven",
+    artifacts = [
+        # -- ZIO (Scala 3 `_3`) --
+        "dev.zio:zio_3:2.1.26",
+        "dev.zio:zio-streams_3:2.1.26",
+        "dev.zio:zio-schema_3:1.8.5",
+        "dev.zio:zio-schema-derivation_3:1.8.5",
+        "dev.zio:zio-nio_3:2.0.2",
+        "dev.zio:zio-prelude_3:1.0.0-RC47",
+        "dev.zio:zio-config_3:4.0.7",
+        "dev.zio:zio-config-magnolia_3:4.0.7",
+        "dev.zio:zio-config-typesafe_3:4.0.7",
+        "dev.zio:zio-json_3:0.9.2",
+        "dev.zio:zio-json-interop-refined_3:0.9.2",
+        "dev.zio:zio-logging_3:2.5.3",
+        "dev.zio:zio-logging-slf4j2-bridge_3:2.5.3",
+        "dev.zio:zio-metrics-connectors_3:2.5.6",
+        "dev.zio:zio-metrics-connectors-prometheus_3:2.5.6",
+        "dev.zio:zio-opentelemetry_3:3.1.17",
+        # ZIO test (Test scope in sbt; scoped per-target in BUILD files)
+        "dev.zio:zio-test_3:2.1.26",
+        "dev.zio:zio-test-sbt_3:2.1.26",
+        "dev.zio:zio-test-junit_3:2.1.26",
+        "dev.zio:zio-test-magnolia_3:2.1.26",
+        "dev.zio:zio-mock_3:1.0.0-RC12",
+        # -- sttp client4 (`_3`) --
+        "com.softwaremill.sttp.client4:zio_3:4.0.25",
+        "com.softwaremill.sttp.client4:zio-json_3:4.0.25",
+        "com.softwaremill.sttp.client4:opentelemetry-tracing-zio-backend_3:4.0.25",
+        # -- tapir (`_3`) --
+        "com.softwaremill.sttp.tapir:tapir-zio-http-server_3:1.13.19",
+        "com.softwaremill.sttp.tapir:tapir-json-zio_3:1.13.19",
+        "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3:1.13.19",
+        "com.softwaremill.sttp.tapir:tapir-refined_3:1.13.19",
+        "com.softwaremill.sttp.tapir:tapir-zio-metrics_3:1.13.19",
+        "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3:1.13.19",
+        # -- monocle (`_3`) --
+        "dev.optics:monocle-core_3:3.3.0",
+        "dev.optics:monocle-macro_3:3.3.0",
+        "dev.optics:monocle-refined_3:3.3.0",
+        # -- other Scala (`_3`) --
+        "eu.timepit:refined_3:0.11.3",
+        "org.scala-graph:graph-core_3:2.0.2",
+        "org.scala-lang.modules:scala-xml_3:2.4.0",
+        "com.github.tototoshi:scala-csv_3:2.0.0",
+        # -- RDF / Jena / rdf4j (Java) --
+        "org.apache.jena:jena-core:6.1.0",
+        "org.apache.jena:jena-text:6.1.0",
+        "org.eclipse.rdf4j:rdf4j-client:5.3.1",
+        "org.eclipse.rdf4j:rdf4j-shacl:5.3.1",
+        "org.eclipse.rdf4j:rdf4j-sparqlbuilder:5.3.1",
+        "org.topbraid:shacl:1.5.0",
+        # -- OpenTelemetry (Java) --
+        "io.opentelemetry:opentelemetry-exporter-logging-otlp:1.62.0",
+        "io.opentelemetry:opentelemetry-exporter-otlp:1.62.0",
+        "io.opentelemetry:opentelemetry-sdk:1.62.0",
+        "io.opentelemetry:opentelemetry-sdk-testing:1.62.0",
+        "io.opentelemetry.semconv:opentelemetry-semconv:1.41.1",
+        # -- misc Java libs --
+        "org.bouncycastle:bcprov-jdk15to18:1.84",
+        "org.ehcache:ehcache:3.12.0",
+        "com.google.gwt:gwt-servlet:2.10.0",
+        "com.ibm.icu:icu4j:78.3",
+        "org.glassfish:jakarta.json:2.0.1",
+        "net.sf.saxon:Saxon-HE:13.0",
+        "com.apicatalog:titanium-json-ld:1.7.0",
+        "org.apache.commons:commons-lang3:3.20.0",
+        "commons-io:commons-io:2.22.0",
+        "org.slf4j:slf4j-api:2.0.18",
+        "org.slf4j:slf4j-simple:2.0.18",
+        # -- dsp-ingest db (Java) --
+        "org.xerial:sqlite-jdbc:3.53.2.0",
+        "org.flywaydb:flyway-core:12.7.0",
+        "com.zaxxer:HikariCP:7.0.2",
+        # -- test-only Java libs --
+        "org.xmlunit:xmlunit-core:2.12.0",
+        "net.datafaker:datafaker:2.5.4",
+        "org.testcontainers:testcontainers:2.0.5",
+        "org.wiremock:wiremock:3.13.2",
+    ],
+    repositories = ["https://repo1.maven.org/maven2"],
+    fetch_sources = True,
+    lock_file = "//:maven_install.json",
+    version_conflict_policy = "pinned",
+    # rules_scala's transitive deps also contribute to @maven; resolve together.
+    known_contributing_modules = [
+        "bazel_worker_java",
+        "protobuf",
+    ],
+)
+
+# Artifacts needing exclusions (mirror the sbt `exclude(...)` calls in Dependencies.scala).
+maven.artifact(
+    name = "maven",
+    group = "commons-validator",
+    artifact = "commons-validator",
+    version = "1.10.1",
+    exclusions = ["commons-logging:commons-logging"],
+)
+maven.artifact(
+    name = "maven",
+    group = "org.springframework.security",
+    artifact = "spring-security-core",
+    version = "7.0.5",
+    exclusions = [
+        "commons-logging:commons-logging",
+        "org.springframework:spring-aop",
+    ],
+)
+use_repo(maven, "maven")
+
+#############################################
+# knora-sipi OCI image (unchanged)
+#############################################
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 
