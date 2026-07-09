@@ -41,6 +41,15 @@ trait FindResourcesService {
     project: KnoraProject,
     classIri: ResourceClassIri,
   ): Task[Seq[(ResourceIri, String)]]
+
+  // True if any resource of the class (or its subclasses) carries `knora-base:hasResourceAuthorship`.
+  // The export uses this to decide, before streaming, whether to add the per-resource "Authorship" column —
+  // authorship is written per-resource with no dependency on the project's data-license/copyright-holder,
+  // so the project object alone cannot answer this.
+  def anyResourceHasAuthorship(
+    project: KnoraProject,
+    classIri: ResourceClassIri,
+  ): Task[Boolean]
 }
 
 final case class FindResourcesServiceLive(
@@ -135,6 +144,30 @@ final case class FindResourcesServiceLive(
                }
     } yield pairs.sortBy { case (resourceIri, label) => (label, resourceIri.value) }
 
+  def anyResourceHasAuthorship(
+    project: KnoraProject,
+    classIri: ResourceClassIri,
+  ): Task[Boolean] =
+    for {
+      sparql <- buildClassAuthorshipExistsQuery(project, classIri)
+      rows   <- triplestore.query(sparql).map(_.results.bindings)
+    } yield rows.nonEmpty
+
+  // Existence probe (LIMIT 1): mirrors `buildClassQuery`'s VALUES-based shape, adding the authorship predicate.
+  private def buildClassAuthorshipExistsQuery(project: KnoraProject, classIri: ResourceClassIri): Task[Select] =
+    valuesClauseFor(project, classIri).map { (projectGraph, valuesClause) =>
+      Select.gravsearch(
+        s"""PREFIX knora-base: <${KB.NS.getName}>
+           |SELECT ?$resourceIriVar WHERE {
+           |  GRAPH <$projectGraph> {
+           |    ?$resourceIriVar a ?$classIriVar ;
+           |                     knora-base:hasResourceAuthorship ?authorship .
+           |  }
+           |  VALUES ?$classIriVar { $valuesClause }
+           |} LIMIT 1""".stripMargin,
+      )
+    }
+
   private def buildAllResourcesQuery(project: KnoraProject): Select = {
     val selectPattern = SparqlBuilder
       .select(variable(resourceIriVar))
@@ -168,7 +201,9 @@ object FindResourcesService {
       def findResourceIrisOrderedByLabel(
         project: KnoraProject,
         classIri: ResourceClassIri,
-      ): Task[Seq[(ResourceIri, String)]] = ZIO.succeed(Seq())
+      ): Task[Seq[(ResourceIri, String)]]                                                            = ZIO.succeed(Seq())
+      def anyResourceHasAuthorship(project: KnoraProject, classIri: ResourceClassIri): Task[Boolean] =
+        ZIO.succeed(false)
     },
   )
 }
