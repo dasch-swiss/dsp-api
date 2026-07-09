@@ -25,7 +25,7 @@ Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplest
 
 - `final case class X private (value: I)` extending the appropriate `*Value` base, with `object X extends  WithFrom[I, X]` or a specialized companion e.g. StringValueCompanion[X]` in case `I` is `String`.
 - Smart constructor: `def from(value): Either[String, X]`. `unsafeFrom` is for known-good inputs only, checks invariants and throws if invalid. Codecs declared with `given`. Full pattern in `docs/development/dsp-api-value-types.md`.
--  Factory functions should be named `makeNew`
+- Factory functions should be named `makeNew`
 
 ### IRI handling
 
@@ -42,6 +42,13 @@ Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplest
 ### SPARQL
 
 Never concatenate query strings. Use rdf4j SparqlBuilder via the helpers in `slice/common/repo`. See `docs/development/dsp-api-sparql-queries.md`.
+
+### Ontology & RDF
+
+- Overridable project-wide defaults: `hasDefault*` in the ontology, `default*` as payload key (precedent `default_permissions`, `hasDefaultDataAuthorship`). Details in `docs/development/dsp-api-conventions.md` § Ontology Conventions.
+- Stored values that fail validation on read: skip + `ZIO.logWarning` — never 500 the whole read, never drop silently. See `docs/development/dsp-api-error-handling.md` § Reading persisted data leniently.
+- Changing `knora-base.ttl` / `knora-admin.ttl`: version-bump rules (incl. when *not* to bump, and `MigrateOnlyBuiltInGraphs` for reload-only changes) in `docs/05-internals/development/updating-repositories.md` § Changing the Built-in Ontologies. Generated fixtures (e.g. `knoraApiOntologyWithValueObjects.jsonld`) are rewritten by `OntologyFormatsE2ESpec` — never hand-edited.
+- Single-graph updates use `` .`with`(graph) `` so the WHERE is graph-scoped too — an ungraphed WHERE silently no-ops on stores without a union default graph. Invariant + `USING`/`GRAPH` caveat in `docs/development/dsp-api-sparql-queries.md`.
 
 ### Observability
 
@@ -74,6 +81,7 @@ Do **not** use "Knora" in free-form human-readable text — commit messages, PR 
 - `object XSpec extends ZIOSpecDefault`; `suite("X should")(test("...") { … })`; layers via `.provide(...)`. Use `TestAspect.withLiveClock` for time-dependent tests.
 - New repo traits ship an in-memory companion under `modules/webapi/src/test/.../service/<Name>InMemory.scala`.
 - Test data: prefer self-contained fixtures next to the component. Only fall back to shared `test_data/` sets when unavoidable. When adding to a shared set, verify an actual *instance* of the scenario exists — not just that the schema supports it.
+- Repeated datatype triples are **unordered** — never assert their insertion order in tests (use sorted lists or sets; entity reads sort small literal lists at the read boundary, see `keywords` / `defaultDataAuthorship` in `KnoraProjectRepoLive`). If result order matters in production, it is `ORDER BY` in the query, not post-hoc sorting. See `docs/development/dsp-api-sparql-queries.md` § Repeated Properties Have No Order.
 - Test locations: unit → `modules/webapi/src/test/scala/`; integration → `modules/test-it/`; ingest integration → `modules/test-ingest-integration/`; E2E → `modules/test-e2e/`; shared utilities → `modules/testkit/`.
 - For large or generated string output (SPARQL, serialized responses), mix in `GoldenTest` and assert with `assertGolden(actual, "suffix")`. The expected value is stored next to the spec under `src/test/resources/`; regenerate with `rewrite = true` (or `rewriteAll = true`) and inspect the `git diff`. See `modules/webapi/src/test/scala/org/knora/webapi/GoldenTest.scala`. This is the **preferred** way to test query builders — not scattered `q.contains(...)` substring assertions (see `docs/development/dsp-api-sparql-queries.md` § Testing Query Builders).
 

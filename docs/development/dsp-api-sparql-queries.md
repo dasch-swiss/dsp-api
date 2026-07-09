@@ -173,6 +173,19 @@ These are **not** semantically equivalent. `WITH` sets the default graph for DEL
 only DELETE and INSERT get GRAPH wrappers — the WHERE clause has no default graph, so you
 must use `pattern.from(graph)` explicitly to match triples in a named graph.
 
+**Why this matters for updates:** an ungraphed WHERE matches the dataset default graph. On a
+store **without** a union default graph — e.g. the in-memory triplestore used in tests — that
+default graph is empty, so the WHERE matches nothing and the whole update **silently no-ops**.
+Deployed Fuseki enables the union default graph, so `.from()`/`.into()` would work there, but at
+the cost of scanning the union of all graphs. Prefer `` .`with`(graph) `` for single-graph
+updates: it is correct regardless of the union-default-graph setting.
+
+**Invariant:** `WITH` is correct only while every WHERE pattern matches triples in that one data
+graph (the resource's own `rdf:type`, `lastModificationDate`, values, …). A pattern that needs
+another graph — e.g. an ontology class or cardinality check — will not match under `WITH` and
+requires `USING <data> USING <ontology>` or explicit `GRAPH {}` blocks. State this invariant in
+a comment when you rely on it (see `ChangeResourceAuthorshipQuery` / `ChangeResourceMetadataQuery`).
+
 ## Graph Patterns
 
 ### Triple Patterns
@@ -504,6 +517,27 @@ object MyGravsearchQuery extends QueryBuilderHelper {
 See the [Gravsearch API documentation](../03-endpoints/api-v2/query-language.md) and the
 [Gravsearch design documentation](../05-internals/design/api-v2/gravsearch.md) for full
 details on the query language and its internals.
+
+## Repeated Properties Have No Order
+
+Repeated datatype triples (`<s> <p> "a", "b", "c"`) are a **set** — SPARQL result order is not
+guaranteed, and an independent read may return the values in any order, even if the store happens
+to preserve insertion order most of the time.
+
+Consequences:
+
+- **If result order matters, order in the query.** Use `ORDER BY` in the SPARQL query — sorting
+  an already-fetched result set in application code does not compose with paging (`LIMIT` /
+  `OFFSET` operate on the query's order, not on what the client sorts afterwards).
+- **Small repeated-literal lists on an entity are sorted at the read boundary** so round-trips
+  are deterministic and the PUT response agrees with a later GET. Precedent: `keywords` and
+  `defaultDataAuthorship` in `KnoraProjectRepoLive.toEntity` (both `.sortBy(_.value)`). This is
+  for stable representation of small value sets — not a substitute for `ORDER BY` on result sets.
+- **Don't assert insertion order in tests.** Fixtures and assertions use the sorted order (or
+  sets). A test that asserts write order passes only by luck.
+- **Unordered triples cannot carry meaning through order.** If order is semantically relevant
+  (e.g. first author), repeated literals are the wrong representation — that needs an explicit
+  design (an ordering value or an encoded list), not a convention.
 
 ## Testing Query Builders
 

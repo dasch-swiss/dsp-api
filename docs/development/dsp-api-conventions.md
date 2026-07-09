@@ -258,6 +258,26 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
 | Value objects | Domain name | `GroupIri`, `GroupName` |
 | Errors | `*Exception` / `*Error` | `NotFoundException` |
 
+## Ontology Conventions
+
+### Naming overridable project-wide defaults
+
+A property that holds a **project-wide default that can be overridden per resource** is named
+`hasDefault*` in the ontology, with `default*` as the JSON payload key — following the
+`default_permissions` precedent (e.g. `knora-admin:hasDefaultDataAuthorship` / `defaultDataAuthorship`).
+A property that applies directly (not overridable) does not take the prefix (e.g. `hasDataLicense`).
+
+### RDF name vs wire key
+
+The RDF property name and the JSON wire key may diverge when compatibility requires it.
+Any divergence must be deliberate and stated at the serialization boundary, not accidental.
+
+### Changing the built-in ontologies
+
+Changes to `knora-base.ttl` / `knora-admin.ttl` follow the version-bump and upgrade-plugin
+rules in `docs/05-internals/development/updating-repositories.md` (§ Changing the Built-in
+Ontologies) — including when a bump is *not* needed and how test fixtures are regenerated.
+
 ## Import Organization
 
 ```scala

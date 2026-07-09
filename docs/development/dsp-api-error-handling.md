@@ -127,6 +127,35 @@ This applies everywhere — including at config / boot time. `ZIO.config(...).or
 
 A malformed client IRI is a 400, not a 500. Mapping rules are in [`dsp-api-iri-handling.md`](dsp-api-iri-handling.md).
 
+## Reading persisted data leniently
+
+The fail-vs-die rules above are for *client input* and *invariants*. Data **already in the
+triplestore** that fails domain validation is a third case: it must not make the containing
+entity unreadable, and it must not disappear silently.
+
+- **Never fail the whole read** over one invalid stored value — a single bad literal must not
+  500 a resource or project GET.
+- **Never drop silently.** Skip the invalid value *and* emit a `ZIO.logWarning` naming the
+  subject and the rejected value, so a "wrote 3, read back 2" situation is visible in the logs
+  instead of invisible.
+
+```scala
+// ✓ Skip + warn (real pattern: ConstructResponseUtilV2, per-resource authorship read path)
+resourceAuthorship <- ZIO
+                        .foreach(rawResourceAuthorship) { raw =>
+                          ZIO
+                            .fromEither(Authorship.from(raw))
+                            .tapError(err =>
+                              ZIO.logWarning(s"Ignoring invalid authorship on resource <$resourceIri>: \"$raw\" ($err)"),
+                            )
+                            .option
+                        }
+                        .map(_.flatten)
+```
+
+Contrast with client input, which is rejected with a 400 at the boundary: leniency applies
+only to data the client cannot fix by changing the request.
+
 ## `throw` — narrow legacy carve-out
 
 `throw` is permitted **only** inside non-effectful code that is wrapped by an upstream `ZIO.attempt`. Two real cases:

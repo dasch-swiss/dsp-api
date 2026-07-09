@@ -42,6 +42,12 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 - [ ] No string concatenation in SPARQL — use rdf4j SparqlBuilder via the helpers in `slice/common/repo` (see `docs/development/dsp-api-sparql-queries.md`)
 - [ ] Query builders are tested with **golden snapshots** (`GoldenTest`), not scattered `q.contains(...)` / `!q.contains(...)` substring assertions (brittle on serialization, blind to clause placement) — see `docs/development/dsp-api-sparql-queries.md` § Testing Query Builders
 
+### Ontology & RDF
+
+- [ ] New overridable project-wide defaults are named `hasDefault*` (payload key `default*`) — see `docs/development/dsp-api-conventions.md` § Ontology Conventions
+- [ ] Stored values that fail validation on read are skipped **with a logged warning** — not a 500, not a silent drop
+- [ ] Built-in ontology changes follow the version-bump rules (`docs/05-internals/development/updating-repositories.md` § Changing the Built-in Ontologies); no duplicate bump for a change a stacked sibling PR already bumps for; generated ontology fixtures regenerated via `OntologyFormatsE2ESpec`, not hand-edited
+
 ### Observability
 
 - [ ] Tracing/telemetry changes follow `docs/observability/instrumentation-recipe.md`: bounded span names, a bounded query shape on the root, **no raw query text / instance IRIs / user IDs in attributes**, failure status-mapper maps to `UNSET` (keeps `cause.prettyPrint` out of span status), interruptions set `exit_reason`
@@ -52,6 +58,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 - [ ] New tests: `object XSpec extends ZIOSpecDefault`; layers via `.provide(...)`; `TestAspect.withLiveClock` for time-dependent tests
 - [ ] Test data added in the right place — self-contained fixtures next to the component preferred over additions to shared `test_data/` sets
 - [ ] When adding to a shared dataset, an actual *instance* of the scenario is added (not just relying on schema support)
+- [ ] Tests do not assert insertion order of repeated RDF literals (sorted lists or sets); if result order matters in production, it is `ORDER BY` in the query, not post-hoc sorting
 
 ### Docs
 
