@@ -79,6 +79,10 @@ final case class ExportService(
   private val footnoteTagIri: SmartIri         = OntologyConstants.Standoff.StandoffFootnoteTag.toSmartIri
   private val footnoteContentPropIri: SmartIri = OntologyConstants.Standoff.StandoffFootnoteTagHasContent.toSmartIri
 
+  // Column headers, single-sourced so the header row and the per-row ListMap keys can never drift apart.
+  private val ArkUrlHeader      = "ARK URL"
+  private val ResourceIriHeader = "Resource IRI"
+  private val LabelHeader       = "Label"
   // Resource-side (data-side) legal columns, always present in the export: project-wide data license and
   // copyright holder (same on every row, blank when the project has none) plus per-resource authorship.
   private val DataLicenseHeader     = "Data License"
@@ -189,9 +193,8 @@ final case class ExportService(
     // catalog. Per-resource authorship is read off each resource in `exportSingleRow`.
     val dataLicenseLabel: String =
       project.dataLicense
-        .map(iri => License.BUILT_IN.find(_.id == iri).map(_.labelEn).getOrElse(iri.value))
-        .getOrElse("")
-    val dataCopyrightHolder: String = project.dataCopyrightHolder.map(_.value).getOrElse("")
+        .fold("")(iri => License.BUILT_IN.find(_.id == iri).fold(iri.value)(_.labelEn))
+    val dataCopyrightHolder: String = project.dataCopyrightHolder.fold("")(_.value)
 
     val setup: Task[StreamingExportContext] =
       for {
@@ -303,8 +306,8 @@ final case class ExportService(
       List(name) ++ (if (info.exists(_.isLinkValueProp) && includeIris) List(s"${name} IRI") else List.empty)
     }
       .pipe(hdrs =>
-        (if includeArkUrls then List("ARK URL") else Nil) ++
-          List("Resource IRI", "Label", DataLicenseHeader, CopyrightHolderHeader, AuthorshipHeader) ++
+        (if includeArkUrls then List(ArkUrlHeader) else Nil) ++
+          List(ResourceIriHeader, LabelHeader, DataLicenseHeader, CopyrightHolderHeader, AuthorshipHeader) ++
           hdrs.flatten,
       )
 
@@ -323,14 +326,14 @@ final case class ExportService(
         ZIO
           .attempt(sf.resourceIriToArkUrl(resource.resourceIri))
           .orDie
-          .map(url => ListMap("ARK URL" -> url))
+          .map(url => ListMap(ArkUrlHeader -> url))
       else ZIO.succeed(ListMap.empty)
 
     for arkEntry <- arkEntryTask
     yield ExportedResource(
       arkEntry ++
-        ListMap("Resource IRI" -> resource.resourceIri.toString) ++
-        ListMap("Label" -> resource.label) ++
+        ListMap(ResourceIriHeader -> resource.resourceIri.toString) ++
+        ListMap(LabelHeader -> resource.label) ++
         ListMap(
           DataLicenseHeader     -> dataLicenseLabel,
           CopyrightHolderHeader -> dataCopyrightHolder,
