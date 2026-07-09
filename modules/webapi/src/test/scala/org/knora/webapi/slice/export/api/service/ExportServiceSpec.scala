@@ -267,9 +267,10 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
                 includeArkUrls = false,
               )
               .flatMap(_.runCollect)
-          csv    = new String(bytes.toArray, StandardCharsets.UTF_8)
-          lines  = csv.trim.split("\r\n").toList
-          labels = lines.tail.map(line => line.split(",").last)
+          csv   = new String(bytes.toArray, StandardCharsets.UTF_8)
+          lines = csv.trim.split("\r\n").toList
+          // "Label" is the second column (after "Resource IRI"); read it by index since legal columns follow it.
+          labels = lines.tail.map(line => line.split(",")(1))
         } yield assertTrue(labels == List("Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Mike", "Mike"))
       },
       test("resources sharing a label are ordered by resource IRI") {
@@ -292,9 +293,9 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               .flatMap(_.runCollect)
           csv   = new String(bytes.toArray, StandardCharsets.UTF_8)
           lines = csv.trim.split("\r\n").toList
-          // The "Resource IRI" column is always the first column. Two resources share the label "Mike"
-          // and were inserted in reverse-IRI order; they must come out sorted by resource IRI ascending.
-          mikeIris = lines.tail.filter(_.endsWith(",Mike")).map(_.split(",").head)
+          // "Resource IRI" is column 0 and "Label" is column 1 (legal columns follow). Two resources share the
+          // label "Mike" and were inserted in reverse-IRI order; they must come out sorted by resource IRI asc.
+          mikeIris = lines.tail.filter(_.split(",")(1) == "Mike").map(_.split(",").head)
         } yield assertTrue(
           mikeIris == List("http://rdfh.ch/1612/ordering-Mike-1", "http://rdfh.ch/1612/ordering-Mike-2"),
         )
@@ -379,8 +380,6 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
         ZIO.succeed(Seq.empty)
       def findResourceIrisOrderedByLabel(p: KnoraProject, c: ResourceClassIri): Task[Seq[(ResourceIri, String)]] =
         ZIO.succeed(fakeIris.map(iri => (iri, "")))
-      def anyResourceHasAuthorship(p: KnoraProject, c: ResourceClassIri): Task[Boolean] =
-        ZIO.succeed(false)
     }
 
     def mkExportService(
@@ -548,8 +547,6 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
             ZIO.succeed(Seq.empty)
           def findResourceIrisOrderedByLabel(p: KnoraProject, c: ResourceClassIri): Task[Seq[(ResourceIri, String)]] =
             ZIO.fail(failure)
-          def anyResourceHasAuthorship(p: KnoraProject, c: ResourceClassIri): Task[Boolean] =
-            ZIO.succeed(false)
         }
         for {
           _              <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
@@ -577,7 +574,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
                     .exit
         } yield assertTrue(exit.isFailure)
       },
-      test("legal columns are added when resource-side legal metadata is set (per-field, per-resource authorship)") {
+      test("legal columns carry the project license/holder and per-resource authorship when set") {
         // Project-wide data license + copyright holder appear on every row; authorship is per-resource. The
         // license IRI is resolved to its human label ("CC BY 4.0"). Multi-value authorship joins with " :: ".
         val iri1 = ResourceIri.from("http://rdfh.ch/0001/legal-1").fold(e => throw new RuntimeException(e), identity)
@@ -605,8 +602,6 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
             ZIO.succeed(Seq.empty)
           def findResourceIrisOrderedByLabel(p: KnoraProject, c: ResourceClassIri): Task[Seq[(ResourceIri, String)]] =
             ZIO.succeed(Seq((iri1, "Alice"), (iri2, "Bob")))
-          def anyResourceHasAuthorship(p: KnoraProject, c: ResourceClassIri): Task[Boolean] =
-            ZIO.succeed(true)
         }
 
         for {
@@ -658,31 +653,45 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           ) &&
           assertTrue(lines.exists(l => l.contains("Bob") && l.contains("Ada Lovelace :: Alan Turing")))
       },
-      test("no legal columns are added when the project has no resource-side legal metadata") {
-        // Guards the "unchanged when unset" requirement directly at the column level: even with resources present,
-        // a project without data license / copyright holder and no authorship yields only the base columns.
+      test("legal columns are always present but blank when the project has no resource-side legal metadata") {
+        // The columns are added unconditionally: a project without data license / copyright holder and a resource
+        // without authorship still gets the three columns, with empty cells.
         val iri = ResourceIri.from("http://rdfh.ch/0001/no-legal-1").fold(e => throw new RuntimeException(e), identity)
 
         val noLegalFindResources: FindResourcesService = new FindResourcesService {
           def findResources(p: KnoraProject, c: Option[ResourceClassIri]): Task[Seq[ResourceIri]] =
             ZIO.succeed(Seq.empty)
           def findResourceIrisOrderedByLabel(p: KnoraProject, c: ResourceClassIri): Task[Seq[(ResourceIri, String)]] =
-            ZIO.succeed(Seq((iri, "Alice")))
-          def anyResourceHasAuthorship(p: KnoraProject, c: ResourceClassIri): Task[Boolean] =
-            ZIO.succeed(false)
+            ZIO.succeed(Seq((iri, "NoLegal")))
         }
 
         for {
           _              <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           project        <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          projectADM     <- ZIO.serviceWithZIO[ProjectService](_.findById(projectIri)).map(_.get)
           iriConverter   <- ZIO.service[IriConverter]
           ontologyRepo   <- ZIO.service[OntologyRepo]
           listsResponder <- ZIO.service[ListsResponder]
           csvService     <- ZIO.service[CsvService]
           sfSvc          <- ZIO.service[StringFormatter]
           appConfig      <- ZIO.service[AppConfig]
-          readStub       <- mkReadStub((_, _) => ZIO.succeed(ReadResourcesSequenceV2(Seq.empty)))
-          exportService   =
+          resource        = ReadResourceV2(
+                       resourceIri = iri,
+                       label = "NoLegal",
+                       resourceClassIri = sf.toSmartIri("http://www.knora.org/ontology/1612/Data#Class1"),
+                       attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+                       projectADM = projectADM,
+                       permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+                       userPermission = Permission.ObjectAccess.ChangeRights,
+                       values = Map.empty,
+                       creationDate = Instant.parse("2016-10-17T17:16:04.916Z"),
+                       lastModificationDate = None,
+                       versionDate = None,
+                       deletionInfo = None,
+                       resourceAuthorship = Seq.empty,
+                     )
+          readStub     <- mkReadStub((_, _) => ZIO.succeed(ReadResourcesSequenceV2(Seq(resource))))
+          exportService =
             ExportService(
               iriConverter,
               ontologyRepo,
@@ -698,7 +707,8 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
                      .flatMap(_.runCollect)
           csv   = new String(bytes.toArray, StandardCharsets.UTF_8)
           lines = csv.trim.split("\r\n").toList
-        } yield assertTrue(lines.head == "Resource IRI,Label")
+        } yield assertTrue(lines.head == "Resource IRI,Label,Data License,Copyright Holder,Authorship") &&
+          assertTrue(lines(1) == s"${iri.value},NoLegal,,,")
       },
     ).provide(
       AppConfig.layer,

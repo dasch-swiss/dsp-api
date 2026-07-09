@@ -79,35 +79,11 @@ final case class ExportService(
   private val footnoteTagIri: SmartIri         = OntologyConstants.Standoff.StandoffFootnoteTag.toSmartIri
   private val footnoteContentPropIri: SmartIri = OntologyConstants.Standoff.StandoffFootnoteTagHasContent.toSmartIri
 
-  // Resource-side (data-side) legal columns for the CSV export. Each field is included independently — as soon
-  // as one is set for the project/resources, its column appears; when none is set, nothing is added and the CSV
-  // is byte-for-byte unchanged. License + copyright holder are project-wide (same on every row); authorship is
-  // per-resource. Header/cell order is kept identical here so the streamed header and rows stay in lockstep.
+  // Resource-side (data-side) legal columns, always present in the export: project-wide data license and
+  // copyright holder (same on every row, blank when the project has none) plus per-resource authorship.
   private val DataLicenseHeader     = "Data License"
   private val CopyrightHolderHeader = "Copyright Holder"
   private val AuthorshipHeader      = "Authorship"
-
-  private case class LegalColumns(
-    includeLicense: Boolean,
-    includeCopyright: Boolean,
-    includeAuthorship: Boolean,
-    dataLicenseLabel: Option[String],
-    dataCopyrightHolder: Option[String],
-  ) {
-    def headers: List[String] =
-      (if includeLicense then List(DataLicenseHeader) else Nil) ++
-        (if includeCopyright then List(CopyrightHolderHeader) else Nil) ++
-        (if includeAuthorship then List(AuthorshipHeader) else Nil)
-
-    def cells(resource: ReadResourceV2): ListMap[String, String] =
-      (if includeLicense then ListMap(DataLicenseHeader -> dataLicenseLabel.getOrElse(""))
-       else ListMap.empty[String, String]) ++
-        (if includeCopyright then ListMap(CopyrightHolderHeader -> dataCopyrightHolder.getOrElse(""))
-         else ListMap.empty[String, String]) ++
-        (if includeAuthorship then
-           ListMap(AuthorshipHeader -> resource.resourceAuthorship.map(_.value).mkString(ValueSep))
-         else ListMap.empty[String, String])
-  }
 
   def exportResourcesOai(
     project: KnoraProject,
@@ -202,10 +178,20 @@ final case class ExportService(
       linkLabels: Map[ResourceIri, String],
       propsWithInfos: List[(PropertyIri, Option[ReadPropertyInfoV2])],
       vocabularies: Map[String, String],
-      legalColumns: LegalColumns,
+      dataLicenseLabel: String,
+      dataCopyrightHolder: String,
       rowBuilder: CsvRowBuilder[ExportedResource],
       headerBytes: Chunk[Byte],
     )
+
+    // The data license and copyright holder are project-wide, so they are resolved once and repeated on every
+    // row (blank when the project has none). The license IRI is resolved to its human label from the built-in
+    // catalog. Per-resource authorship is read off each resource in `exportSingleRow`.
+    val dataLicenseLabel: String =
+      project.dataLicense
+        .map(iri => License.BUILT_IN.find(_.id == iri).map(_.labelEn).getOrElse(iri.value))
+        .getOrElse("")
+    val dataCopyrightHolder: String = project.dataCopyrightHolder.map(_.value).getOrElse("")
 
     val setup: Task[StreamingExportContext] =
       for {
@@ -218,8 +204,7 @@ final case class ExportService(
         propertyIriInfos <- propertyIriInfos(selectedProperties)
         labelSmartIri    <- iriConverter.asSmartIri(OntologyConstants.Rdfs.Label)
         propsWithInfos    = selectedProperties.map(p => (p, propertyIriInfos.get(p)))
-        legalColumns     <- legalColumnsFor(project, classIri)
-        headers           = rowHeaders(propsWithInfos, labelSmartIri, language, includeIris, includeArkUrls, legalColumns)
+        headers           = rowHeaders(propsWithInfos, labelSmartIri, language, includeIris, includeArkUrls)
         rowBuilder        = makeRowBuilder(headers)
         rootVocabularies <- listsResponder.getLists(Some(Left(project.id)))
         vocabularies     <- ZIO.foreach(rootVocabularies.lists)(rootVocabularyLabels(_, language)).map(_.foldK)
@@ -229,7 +214,8 @@ final case class ExportService(
         linkLabels,
         propsWithInfos,
         vocabularies,
-        legalColumns,
+        dataLicenseLabel,
+        dataCopyrightHolder,
         rowBuilder,
         headerBytes,
       )
@@ -266,7 +252,8 @@ final case class ExportService(
                         includeArkUrls = includeArkUrls,
                         linkLabels = ctx.linkLabels,
                         vocabularies = ctx.vocabularies,
-                        legalColumns = ctx.legalColumns,
+                        dataLicenseLabel = ctx.dataLicenseLabel,
+                        dataCopyrightHolder = ctx.dataCopyrightHolder,
                       )
                     }
             rowBytes = rows.map { row =>
@@ -284,23 +271,6 @@ final case class ExportService(
     new CsvRowBuilder[ExportedResource] {
       def header: Seq[String]                     = headers
       def values(row: ExportedResource): Seq[Any] = row.properties.values.toList
-    }
-
-  // Decides which legal columns the export includes, computed once before streaming. License and copyright
-  // holder are read straight off the project; the license IRI is resolved to its human label from the built-in
-  // license catalog (falling back to the raw IRI if unknown). Authorship needs an existence probe over the
-  // resources, since it is written per-resource independently of the project-wide fields.
-  private def legalColumnsFor(project: KnoraProject, classIri: ResourceClassIri): Task[LegalColumns] =
-    findResources.anyResourceHasAuthorship(project, classIri).map { includeAuthorship =>
-      val dataLicenseLabel =
-        project.dataLicense.map(iri => License.BUILT_IN.find(_.id == iri).map(_.labelEn).getOrElse(iri.value))
-      LegalColumns(
-        includeLicense = project.dataLicense.isDefined,
-        includeCopyright = project.dataCopyrightHolder.isDefined,
-        includeAuthorship = includeAuthorship,
-        dataLicenseLabel = dataLicenseLabel,
-        dataCopyrightHolder = project.dataCopyrightHolder.map(_.value),
-      )
     }
 
   private def rootVocabularyLabels(list: ListRootNodeInfoADM, language: LanguageCode): Task[Map[String, String]] =
@@ -321,7 +291,6 @@ final case class ExportService(
     language: LanguageCode,
     includeIris: Boolean,
     includeArkUrls: Boolean,
-    legalColumns: LegalColumns,
   ): List[String] =
     propsWithInfo.map { (propertyIri: PropertyIri, info: Option[ReadPropertyInfoV2]) =>
       val labelsMap = info.map(_.entityInfoContent.getPredicateObjectsWithLangs(labelSmartIri)).foldK
@@ -335,8 +304,7 @@ final case class ExportService(
     }
       .pipe(hdrs =>
         (if includeArkUrls then List("ARK URL") else Nil) ++
-          List("Resource IRI", "Label") ++
-          legalColumns.headers ++
+          List("Resource IRI", "Label", DataLicenseHeader, CopyrightHolderHeader, AuthorshipHeader) ++
           hdrs.flatten,
       )
 
@@ -347,7 +315,8 @@ final case class ExportService(
     includeArkUrls: Boolean,
     linkLabels: Map[ResourceIri, String],
     vocabularies: Map[String, String],
-    legalColumns: LegalColumns,
+    dataLicenseLabel: String,
+    dataCopyrightHolder: String,
   ): Task[ExportedResource] = {
     val arkEntryTask: Task[ListMap[String, String]] =
       if includeArkUrls then
@@ -362,7 +331,11 @@ final case class ExportService(
       arkEntry ++
         ListMap("Resource IRI" -> resource.resourceIri.toString) ++
         ListMap("Label" -> resource.label) ++
-        legalColumns.cells(resource) ++
+        ListMap(
+          DataLicenseHeader     -> dataLicenseLabel,
+          CopyrightHolderHeader -> dataCopyrightHolder,
+          AuthorshipHeader      -> resource.resourceAuthorship.map(_.value).mkString(ValueSep),
+        ) ++
         ListMap.from(
           propsWithInfo.flatMap { (propertyIri: PropertyIri, info: Option[ReadPropertyInfoV2]) =>
             val valueContents = resource.values.get(propertyIri.smartIri.toInternalSchema).foldK.map(_.valueContent)

@@ -1,4 +1,4 @@
-Resource IRI,Label,Text Rich Text Label
-http://rdfh.ch/1612/FootnoteResource,FootnoteResource,"Hello[1] world[2]
+Resource IRI,Label,Data License,Copyright Holder,Authorship,Text Rich Text Label
+http://rdfh.ch/1612/FootnoteResource,FootnoteResource,,,,"Hello[1] world[2]
 [1] a note on hello
 [2] a note on world"
