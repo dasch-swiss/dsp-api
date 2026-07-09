@@ -1,2 +1,2 @@
-Resource IRI,Label
-http://rdfh.ch/1612/SubClass1Resource00001,SubResource1
+Resource IRI,Label,Data License,Copyright Holder,Authorship
+http://rdfh.ch/1612/SubClass1Resource00001,SubResource1,,,

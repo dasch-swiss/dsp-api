@@ -520,6 +520,19 @@ object GravsearchParserSpec extends ZIOSpecDefault {
       |}
         """.stripMargin
 
+  private val QueryWithMatchFulltextFunction: String =
+    """
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    FILTER(knora-api:matchFulltext(?thing, "foo"))
+      |}
+        """.stripMargin
+
   private val QueryWithFilterContainingLang: String =
     """
       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1774,6 +1787,74 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     ),
   )
 
+  private val ParsedQueryWithMatchFulltextFunction = ConstructQuery(
+    constructClause = ConstructClause(
+      statements = Vector(
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing"),
+          pred = IriRef(
+            iri = "http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri,
+            propertyPathOperator = None,
+          ),
+          obj = XsdLiteral(
+            value = "true",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri,
+          ),
+        ),
+      ),
+      querySchema = Some(ApiV2Simple),
+    ),
+    querySchema = Some(ApiV2Simple),
+    offset = 0,
+    orderBy = Nil,
+    whereClause = WhereClause(
+      patterns = Vector(
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+            propertyPathOperator = None,
+          ),
+          obj = IriRef(
+            iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+            propertyPathOperator = None,
+          ),
+        ),
+        FilterPattern(
+          expression = FunctionCallExpression(
+            functionIri = IriRef(
+              iri = "http://api.knora.org/ontology/knora-api/simple/v2#matchFulltext".toSmartIri,
+              propertyPathOperator = None,
+            ),
+            args = Vector(
+              QueryVariable(variableName = "thing"),
+              XsdLiteral(
+                value = "foo",
+                datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
+              ),
+            ),
+          ),
+        ),
+      ),
+      positiveEntities = Set(
+        QueryVariable(variableName = "thing"),
+        IriRef(
+          iri = "http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri,
+          propertyPathOperator = None,
+        ),
+        IriRef(
+          iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+          propertyPathOperator = None,
+        ),
+        IriRef(
+          iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+          propertyPathOperator = None,
+        ),
+      ),
+      querySchema = Some(ApiV2Simple),
+    ),
+  )
+
   private val ParsedQueryWithLangFunction = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
@@ -2197,6 +2278,12 @@ object GravsearchParserSpec extends ZIOSpecDefault {
       val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
       assertTrue(parsed == ParsedQueryWithMatchTextFunction, reparsed == parsed)
+    },
+    test("accept a custom 'matchFulltext' function in a FILTER") {
+      val parsed   = GravsearchParser.parseQuery(QueryWithMatchFulltextFunction)
+      val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
+
+      assertTrue(parsed == ParsedQueryWithMatchFulltextFunction, reparsed == parsed)
     },
     test("parse a Gravsearch query with a FILTER containing a lang function") {
       val parsed   = GravsearchParser.parseQuery(QueryWithFilterContainingLang)

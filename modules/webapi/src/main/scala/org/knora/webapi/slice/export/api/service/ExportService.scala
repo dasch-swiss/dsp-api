@@ -39,6 +39,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v3.`export`.FileLink
@@ -77,6 +78,16 @@ final case class ExportService(
   private given StringFormatter                = sf
   private val footnoteTagIri: SmartIri         = OntologyConstants.Standoff.StandoffFootnoteTag.toSmartIri
   private val footnoteContentPropIri: SmartIri = OntologyConstants.Standoff.StandoffFootnoteTagHasContent.toSmartIri
+
+  // Column headers, single-sourced so the header row and the per-row ListMap keys can never drift apart.
+  private val ArkUrlHeader      = "ARK URL"
+  private val ResourceIriHeader = "Resource IRI"
+  private val LabelHeader       = "Label"
+  // Resource-side (data-side) legal columns, always present in the export: project-wide data license and
+  // copyright holder (same on every row, blank when the project has none) plus per-resource authorship.
+  private val DataLicenseHeader     = "Data License"
+  private val CopyrightHolderHeader = "Copyright Holder"
+  private val AuthorshipHeader      = "Authorship"
 
   def exportResourcesOai(
     project: KnoraProject,
@@ -171,9 +182,19 @@ final case class ExportService(
       linkLabels: Map[ResourceIri, String],
       propsWithInfos: List[(PropertyIri, Option[ReadPropertyInfoV2])],
       vocabularies: Map[String, String],
+      dataLicenseLabel: String,
+      dataCopyrightHolder: String,
       rowBuilder: CsvRowBuilder[ExportedResource],
       headerBytes: Chunk[Byte],
     )
+
+    // The data license and copyright holder are project-wide, so they are resolved once and repeated on every
+    // row (blank when the project has none). The license IRI is resolved to its human label from the built-in
+    // catalog. Per-resource authorship is read off each resource in `exportSingleRow`.
+    val dataLicenseLabel: String =
+      project.dataLicense
+        .fold("")(iri => License.BUILT_IN.find(_.id == iri).fold(iri.value)(_.labelEn))
+    val dataCopyrightHolder: String = project.dataCopyrightHolder.fold("")(_.value)
 
     val setup: Task[StreamingExportContext] =
       for {
@@ -191,7 +212,16 @@ final case class ExportService(
         rootVocabularies <- listsResponder.getLists(Some(Left(project.id)))
         vocabularies     <- ZIO.foreach(rootVocabularies.lists)(rootVocabularyLabels(_, language)).map(_.foldK)
         headerBytes       = Chunk.fromArray(csvService.writeHeaderToString(rowBuilder).getBytes(StandardCharsets.UTF_8))
-      } yield StreamingExportContext(orderedIris, linkLabels, propsWithInfos, vocabularies, rowBuilder, headerBytes)
+      } yield StreamingExportContext(
+        orderedIris,
+        linkLabels,
+        propsWithInfos,
+        vocabularies,
+        dataLicenseLabel,
+        dataCopyrightHolder,
+        rowBuilder,
+        headerBytes,
+      )
 
     // `setup` runs eagerly as part of this Task so that failures during setup (ordered-IRI fetch, link-label
     // fetch, vocabulary load, header encoding) surface to the caller *before* the response status is committed
@@ -225,6 +255,8 @@ final case class ExportService(
                         includeArkUrls = includeArkUrls,
                         linkLabels = ctx.linkLabels,
                         vocabularies = ctx.vocabularies,
+                        dataLicenseLabel = ctx.dataLicenseLabel,
+                        dataCopyrightHolder = ctx.dataCopyrightHolder,
                       )
                     }
             rowBytes = rows.map { row =>
@@ -274,8 +306,8 @@ final case class ExportService(
       List(name) ++ (if (info.exists(_.isLinkValueProp) && includeIris) List(s"${name} IRI") else List.empty)
     }
       .pipe(hdrs =>
-        (if includeArkUrls then List("ARK URL") else Nil) ++
-          List("Resource IRI", "Label") ++
+        (if includeArkUrls then List(ArkUrlHeader) else Nil) ++
+          List(ResourceIriHeader, LabelHeader, DataLicenseHeader, CopyrightHolderHeader, AuthorshipHeader) ++
           hdrs.flatten,
       )
 
@@ -286,20 +318,27 @@ final case class ExportService(
     includeArkUrls: Boolean,
     linkLabels: Map[ResourceIri, String],
     vocabularies: Map[String, String],
+    dataLicenseLabel: String,
+    dataCopyrightHolder: String,
   ): Task[ExportedResource] = {
     val arkEntryTask: Task[ListMap[String, String]] =
       if includeArkUrls then
         ZIO
           .attempt(sf.resourceIriToArkUrl(resource.resourceIri))
           .orDie
-          .map(url => ListMap("ARK URL" -> url))
+          .map(url => ListMap(ArkUrlHeader -> url))
       else ZIO.succeed(ListMap.empty)
 
     for arkEntry <- arkEntryTask
     yield ExportedResource(
       arkEntry ++
-        ListMap("Resource IRI" -> resource.resourceIri.toString) ++
-        ListMap("Label" -> resource.label) ++
+        ListMap(ResourceIriHeader -> resource.resourceIri.toString) ++
+        ListMap(LabelHeader -> resource.label) ++
+        ListMap(
+          DataLicenseHeader     -> dataLicenseLabel,
+          CopyrightHolderHeader -> dataCopyrightHolder,
+          AuthorshipHeader      -> resource.resourceAuthorship.map(_.value).mkString(ValueSep),
+        ) ++
         ListMap.from(
           propsWithInfo.flatMap { (propertyIri: PropertyIri, info: Option[ReadPropertyInfoV2]) =>
             val valueContents = resource.values.get(propertyIri.smartIri.toInternalSchema).foldK.map(_.valueContent)

@@ -400,6 +400,17 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
 }
 
 /**
+ * Represents the SPARQL `COALESCE` function.
+ *
+ * @param args the candidate expressions, evaluated in order; COALESCE returns the first bound one.
+ */
+case class CoalesceFunction(args: Seq[Entity]) extends Expression {
+  override def toSparql: String = s"COALESCE(${args.map(_.toSparql).mkString(", ")})"
+
+  override def getVariables: Set[QueryVariable] = args.toSet.flatMap((arg: Entity) => arg.getVariables)
+}
+
+/**
  * Represents a FILTER pattern in a query.
  *
  * @param expression the expression in the FILTER.
@@ -468,6 +479,21 @@ case class FilterNotExistsPattern(patterns: Seq[QueryPattern]) extends QueryPatt
  */
 case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
   override def toSparql: String = s"MINUS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
+}
+
+/**
+ * Represents a fully opaque group of patterns, rendered verbatim as `{ ... }`. Every traversal pass
+ * (both [[org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchQueryOptimisation]]
+ * optimizations and the [[org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer]]
+ * inference pass) treats a `GroupPattern` as an opaque leaf and passes it through unchanged; only
+ * [[QueryTraverser]] and [[org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil]]
+ * need an explicit case for it (their matches are otherwise exhaustive). Used to emit hand-proven SPARQL
+ * shapes whose interior must survive unmodified, e.g. the `matchFulltext` function's expansion.
+ *
+ * @param patterns the patterns contained in the group, rendered verbatim in document order.
+ */
+case class GroupPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
+  override def toSparql: String = "{\n" + patterns.map(_.toSparql).mkString + "}\n"
 }
 
 /**

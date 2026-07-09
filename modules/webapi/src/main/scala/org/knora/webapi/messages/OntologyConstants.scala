@@ -861,6 +861,7 @@ object OntologyConstants {
     val MatchTextFunction: IRI           = KnoraApiV2PrefixExpansion + "matchText"
     val MatchTextInStandoffFunction: IRI = KnoraApiV2PrefixExpansion + "matchTextInStandoff"
     val MatchLabelFunction: IRI          = KnoraApiV2PrefixExpansion + "matchLabel"
+    val MatchFulltextFunction: IRI       = KnoraApiV2PrefixExpansion + "matchFulltext"
     val StandoffLinkFunction: IRI        = KnoraApiV2PrefixExpansion + "standoffLink"
 
     val GravsearchOptions: IRI = KnoraApiV2PrefixExpansion + "GravsearchOptions"
@@ -883,9 +884,10 @@ object OntologyConstants {
 
     val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
-    val IsMainResource: IRI     = KnoraApiV2PrefixExpansion + "isMainResource"
-    val MatchTextFunction: IRI  = KnoraApiV2PrefixExpansion + "matchText"
-    val MatchLabelFunction: IRI = KnoraApiV2PrefixExpansion + "matchLabel"
+    val IsMainResource: IRI        = KnoraApiV2PrefixExpansion + "isMainResource"
+    val MatchTextFunction: IRI     = KnoraApiV2PrefixExpansion + "matchText"
+    val MatchLabelFunction: IRI    = KnoraApiV2PrefixExpansion + "matchLabel"
+    val MatchFulltextFunction: IRI = KnoraApiV2PrefixExpansion + "matchFulltext"
 
     val ResourceProperty: IRI = KnoraApiV2PrefixExpansion + "resourceProperty"
 

@@ -1,0 +1,37 @@
+SELECT DISTINCT (COUNT(DISTINCT ?mainRes) AS ?count)
+WHERE {
+{
+?match__matchFulltext <http://jena.apache.org/text#query> "Zeitglöcklein"^^<http://www.w3.org/2001/XMLSchema#string> .
+OPTIONAL {
+?match__matchFulltext <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?valType__matchFulltext .
+?valType__matchFulltext <http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://www.knora.org/ontology/knora-base#Value> .
+FILTER(((?valType__matchFulltext != <http://www.knora.org/ontology/knora-base#LinkValue>) && (?valType__matchFulltext != <http://www.knora.org/ontology/knora-base#ListValue>)))
+?containingRes__matchFulltext ?prop__matchFulltext ?match__matchFulltext .
+?prop__matchFulltext <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
+FILTER NOT EXISTS {
+ ?match__matchFulltext <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+OPTIONAL {
+?match__matchFulltext <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#ListNode> .
+?match__matchFulltext <http://www.knora.org/ontology/knora-base#hasSubListNode>* ?subNode__matchFulltext .
+?listVal__matchFulltext <http://www.knora.org/ontology/knora-base#valueHasListNode> ?subNode__matchFulltext .
+?resWithListVal__matchFulltext ?pred__matchFulltext ?listVal__matchFulltext .
+FILTER NOT EXISTS {
+ ?match__matchFulltext <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+BIND(COALESCE(?containingRes__matchFulltext, ?resWithListVal__matchFulltext, ?match__matchFulltext) AS ?mainRes)
+?mainRes <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?resClass__matchFulltext .
+?resClass__matchFulltext <http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://www.knora.org/ontology/knora-base#Resource> .
+}
+VALUES ?resTypes1 { <http://www.knora.org/ontology/0801/beol#endnote> <http://www.knora.org/ontology/knora-base#XSLTransformation> <http://www.knora.org/ontology/00FF/images#bild> <http://www.knora.org/ontology/knora-base#Representation> <http://www.knora.org/ontology/0001/anything#ThingDocument> <http://www.knora.org/ontology/0001/anything#AudioThing> <http://www.knora.org/ontology/0801/beol#basicLetter> <http://www.knora.org/ontology/0803/incunabula#misc> <http://www.knora.org/ontology/0801/beol#letter> <http://www.knora.org/ontology/knora-base#AudioSegment> <http://www.knora.org/ontology/0801/biblio#Journal> <http://www.knora.org/ontology/0801/biblio#Publication> <http://www.knora.org/ontology/00FF/images#bildformat> <http://www.knora.org/ontology/0806/webern#Person> <http://www.knora.org/ontology/0801/biblio#JournalArticle> <http://www.knora.org/ontology/0801/biblio#Webpage> <http://www.knora.org/ontology/knora-base#Resource> <http://www.knora.org/ontology/0801/beol#section> <http://www.knora.org/ontology/0801/biblio#EditedBook> <http://www.knora.org/ontology/0001/anything#ThingWithRequiredInt> <http://www.knora.org/ontology/0001/anything#ThingWithSeqnum> <http://www.knora.org/ontology/knora-base#LinkObj> <http://www.knora.org/ontology/0801/beol#person> <http://www.knora.org/ontology/0801/beol#manuscriptEntry> <http://www.knora.org/ontology/0801/biblio#Publisher> <http://www.knora.org/ontology/0801/beol#page> <http://www.knora.org/ontology/0803/incunabula#book> <http://www.knora.org/ontology/0801/beol#Archive> <http://www.knora.org/ontology/0001/anything#Thing> <http://www.knora.org/ontology/0804/dokubib#person> <http://www.knora.org/ontology/0801/biblio#Collection> <http://www.knora.org/ontology/0801/biblio#Translation> <http://www.knora.org/ontology/knora-base#Region> <http://www.knora.org/ontology/knora-base#Annotation> <http://www.knora.org/ontology/0801/biblio#Article> <http://www.knora.org/ontology/0001/anything#ThingWithRepresentation> <http://www.knora.org/ontology/0001/anything#TrivialThing> <http://www.knora.org/ontology/0801/beol#writtenSource> <http://www.knora.org/ontology/0801/biblio#letter> <http://www.knora.org/ontology/0801/beol#facsimile> <http://www.knora.org/ontology/0001/anything#ThingWithRegion> <http://www.knora.org/ontology/0804/dokubib#bildformat> <http://www.knora.org/ontology/0001/anything#BlueThing> <http://www.knora.org/ontology/knora-base#TextRepresentation> <http://www.knora.org/ontology/0001/anything#ThingText> <http://www.knora.org/ontology/0803/incunabula#Sideband> <http://www.knora.org/ontology/0801/beol#figure> <http://www.knora.org/ontology/0801/biblio#CollectionArticle> <http://www.knora.org/ontology/0001/anything#ThingPicture> <http://www.knora.org/ontology/knora-base#StillImageRepresentation> <http://www.knora.org/ontology/knora-base#DeletedResource> <http://www.knora.org/ontology/0801/biblio#Book> <http://www.knora.org/ontology/0801/biblio#Organization> <http://www.knora.org/ontology/0801/beol#transcription> <http://www.knora.org/ontology/0001/something#Something> <http://www.knora.org/ontology/0001/anything#VideoThing> <http://www.knora.org/ontology/0801/beol#documentImage> <http://www.knora.org/ontology/0801/beol#manuscript> <http://www.knora.org/ontology/0801/biblio#Website> <http://www.knora.org/ontology/0801/biblio#BookContent> <http://www.knora.org/ontology/knora-base#ExternalResource> <http://www.knora.org/ontology/knora-base#AudioRepresentation> <http://www.knora.org/ontology/0803/incunabula#page> <http://www.knora.org/ontology/0801/biblio#Edition> <http://www.knora.org/ontology/00FF/images#person> <http://www.knora.org/ontology/0801/beol#introduction> <http://www.knora.org/ontology/0001/anything#ThingArchive> <http://www.knora.org/ontology/knora-base#VideoSegment> <http://www.knora.org/ontology/0801/beol#entryComment> <http://www.knora.org/ontology/knora-base#DocumentRepresentation> <http://www.knora.org/ontology/knora-base#MovingImageRepresentation> <http://www.knora.org/ontology/0801/biblio#VPArticle> <http://www.knora.org/ontology/knora-base#ArchiveRepresentation> <http://www.knora.org/ontology/0801/biblio#WebsiteArticle> <http://www.knora.org/ontology/knora-base#Segment> <http://www.knora.org/ontology/0804/dokubib#bild> <http://www.knora.org/ontology/knora-base#DDDRepresentation> }
+?mainRes <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?resTypes1 .
+FILTER NOT EXISTS {
+ ?mainRes <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+LIMIT 1

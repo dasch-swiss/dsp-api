@@ -1516,6 +1516,28 @@ final class InferringGravsearchTypeInspector(
               (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri)),
           )
 
+        case OntologyConstants.KnoraApiV2Simple.MatchFulltextFunction =>
+          // The first argument is a variable representing a resource.
+          val resourceVar                                       = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+          val currentResourceVarTypesFromFilters: Set[SmartIri] =
+            usageIndex.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty)
+
+          usageIndex.copy(
+            typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
+              (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri)),
+          )
+
+        case OntologyConstants.KnoraApiV2Complex.MatchFulltextFunction =>
+          // The first argument is a variable representing a resource.
+          val resourceVar                                       = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+          val currentResourceVarTypesFromFilters: Set[SmartIri] =
+            usageIndex.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty)
+
+          usageIndex.copy(
+            typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
+              (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri)),
+          )
+
         case OntologyConstants.KnoraApiV2Complex.MatchTextInStandoffFunction =>
           // The first argument is a variable representing a text value.
           val textVar                                       = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)

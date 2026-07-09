@@ -698,6 +698,39 @@ except that the first argument is a variable representing a resource:
 FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
 ```
 
+### Filtering on Any Indexed Text of a Resource
+
+The function `knora-api:matchFulltext` searches for matching words anywhere the
+full-text index covers for a resource: its `rdfs:label`, any of its text values, any
+of its value comments, or a list node (including sub-nodes) referenced by one of its
+list values. It gives the same result set as the `GET /v2/search/{term}` endpoint,
+expressed as a Gravsearch function so it can be combined with structured criteria in
+one query.
+
+The first argument is a variable representing a resource (main or linked). The
+second argument is a string literal containing the search terms, with the same
+[Lucene Query Parser syntax](../../07-lucene/lucene-query-parser-syntax.md) support
+as `knora-api:matchText` and the fulltext endpoint (Lucene's default operator is a
+logical OR when submitting several search terms).
+
+This function can only be used as the top-level expression in a `FILTER`, and at
+most once per query — a second call is rejected, since evaluating it twice is
+significantly slower and no known use case needs it.
+
+```sparql
+FILTER knora-api:matchFulltext(?book, "Zeitglöcklein")
+```
+
+Deleted resources, deleted text values, and deleted list nodes never match. One
+subtlety on the list path: a resource can still match via a *deleted* list value, as
+long as the list node that value points to is itself not deleted — for the list path
+the deletion check is on the matched list node, not on the intervening list value.
+
+A search term containing `"`, `\`, or a newline is safely escaped before being passed to
+the full-text index. As with `knora-api:matchText`, the search term is otherwise passed
+through to Lucene as-is, including its default result-count limit for very high-hit
+terms — the same limitation the fulltext endpoint has.
+
 ### Filtering on Resource IRIs
 
 A `FILTER` can compare a variable with another variable or IRI

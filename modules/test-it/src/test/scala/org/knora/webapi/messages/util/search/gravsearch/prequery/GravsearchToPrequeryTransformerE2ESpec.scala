@@ -12,6 +12,7 @@ import scala.collection.mutable.ArrayBuffer
 
 import dsp.errors.AssertionException
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.GoldenTest
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -19,10 +20,11 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
+import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 
-object GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec {
+object GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -50,6 +52,23 @@ object GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec {
                   _.transformConstructToSelect(query.copy(whereClause = sanitizedWhereClause), transformer),
                 )
   } yield preQuery
+
+  /** See [[GravsearchInferencePipelineTestSupport]] for why the golden snapshot needs the full pipeline. */
+  private def transformQueryWithInference(query: String): ZIO[
+    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService,
+    Throwable,
+    SelectQuery,
+  ] =
+    GravsearchInferencePipelineTestSupport.transformQueryWithInference(
+      query,
+      (constructClause, typeInspectionResult, querySchema, appConfig) =>
+        new GravsearchToPrequeryTransformer(
+          constructClause = constructClause,
+          typeInspectionResult = typeInspectionResult,
+          querySchema = querySchema,
+          appConfig = appConfig,
+        ),
+    )
 
   val inputQueryWithDateNonOptionalSortCriterion: String =
     """
@@ -2619,6 +2638,43 @@ object GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec {
     useDistinct = true,
   )
 
+  val queryClasslessMatchFulltext: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |CONSTRUCT {
+      |    ?mainRes knora-api:isMainResource true .
+      |} WHERE {
+      |    ?mainRes a knora-api:Resource .
+      |    FILTER knora-api:matchFulltext(?mainRes, "Zeitglöcklein")
+      |}""".stripMargin
+
+  val queryClassRestrictedMatchFulltext: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    FILTER knora-api:matchFulltext(?thing, "Zeitglöcklein")
+      |}""".stripMargin
+
+  val queryMatchFulltextInUnion: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    {
+      |        ?thing anything:hasInteger ?int1 .
+      |        FILTER knora-api:matchFulltext(?thing, "Zeitglöcklein")
+      |    }
+      |    UNION
+      |    {
+      |        ?thing anything:hasInteger ?int2 .
+      |        FILTER(?int2 = 1)
+      |    }
+      |}""".stripMargin
+
   val queryWithKnoraApiResource: String =
     """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
       |CONSTRUCT {
@@ -2751,6 +2807,20 @@ object GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec {
     test("reorder a query with a cycle") {
       transformQuery(queryToReorderWithCycle)
         .map(actual => assertTrue(actual == transformedQueryToReorderWithCycle))
+    },
+    test(
+      "generate the fulltext-index-anchored matchFulltext expansion for a classless query, hoisted ahead of the class-VALUES block",
+    ) {
+      transformQueryWithInference(queryClasslessMatchFulltext)
+        .map(actual => assertGolden(actual.toSparql, "classlessMatchFulltext"))
+    },
+    test("generate the fulltext-index-anchored matchFulltext expansion for a class-restricted query") {
+      transformQueryWithInference(queryClassRestrictedMatchFulltext)
+        .map(actual => assertGolden(actual.toSparql, "classRestrictedMatchFulltext"))
+    },
+    test("generate the matchFulltext expansion when the FILTER is inside a UNION block") {
+      transformQueryWithInference(queryMatchFulltextInUnion)
+        .map(actual => assertGolden(actual.toSparql, "matchFulltextInUnion"))
     },
     test("not remove rdf:type knora-api:Resource if it's needed") {
       transformQuery(queryWithKnoraApiResource)
