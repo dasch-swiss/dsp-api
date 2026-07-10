@@ -12,6 +12,11 @@ module(
 
 bazel_dep(name = "rules_oci", version = "2.3.0")
 bazel_dep(name = "rules_pkg", version = "1.2.0")
+# rules_oci depends on tar.bzl transitively (for its own oci_load); declaring it
+# directly here too makes `@tar.bzl//tar/toolchain:type` resolvable from our own
+# BUILD/bzl files (//tools/oci:defs.bzl's image_rootfs_extract rule). Same
+# version rules_oci 2.3.0 requests, so bzlmod dedupes to one copy.
+bazel_dep(name = "tar.bzl", version = "0.10.4")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_scala", version = "7.2.6")
 bazel_dep(name = "rules_jvm_external", version = "7.0")
@@ -274,4 +279,58 @@ use_repo(
     oci,
     "sipi_base_amd64",
     "sipi_base_arm64",
+)
+
+#############################################
+# knora-api / dsp-ingest base image (temurin)
+#############################################
+
+# eclipse-temurin:25-jre-noble, pinned per-arch by single-manifest digest — same
+# reason as sipi: the arm64 index entry carries a `v8` variant, which a bare
+# linux/arm64 platform request does not match. Tag mirrors build.sbt's
+# dockerBaseImage (webapi + ingest). Bump both together.
+# Re-resolve after a base bump:
+#   crane manifest eclipse-temurin:25-jre-noble | jq -r \
+#     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="amd64") | .digest'
+#   crane manifest eclipse-temurin:25-jre-noble | jq -r \
+#     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="arm64") | .digest'
+# Index digest: sha256:2f1da100788559b397bcf48c736169ea5b070bde84e55f203bbee8e83d87a175
+oci.pull(
+    name = "temurin_base_amd64",
+    digest = "sha256:7161e12dbcd2791d1fc8b9cf6f1c1519a84c4acea5706c6a0659bc254a4c55d7",
+    image = "index.docker.io/library/eclipse-temurin",
+)
+oci.pull(
+    name = "temurin_base_arm64",
+    digest = "sha256:06abf087c093e27c71ed507e87f950f055c185d2ddb1eaff8a120f4198be661e",
+    image = "index.docker.io/library/eclipse-temurin",
+)
+use_repo(
+    oci,
+    "temurin_base_amd64",
+    "temurin_base_arm64",
+)
+
+#############################################
+# Prefetched image assets (OTel agent, Pyroscope extension)
+#############################################
+
+# ADDed from a URL in the sbt images (build.sbt webapi + ingest blocks); rules_oci
+# has no ADD-from-URL, so fetch hermetically and pack into a layer instead (see
+# the *_layer pkg_tar targets in modules/webapi and modules/ingest BUILD files).
+# Versions mirror project/Dependencies.scala's otelAgentVersion/otelPyroscopeVersion.
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "otel_javaagent",
+    downloaded_file_path = "opentelemetry-javaagent.jar",
+    sha256 = "cc4af5966ab72109cacc962ba3b9f99b3e88caf064c3144a451bcfe0f4950f19",
+    urls = ["https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.26.1/opentelemetry-javaagent.jar"],
+)
+
+http_file(
+    name = "pyroscope_otel",
+    downloaded_file_path = "pyroscope-otel.jar",
+    sha256 = "e140bfb8d7f52918e74033cb6c593cf4db4151bf3eb9e0d92392b4aed859ab77",
+    urls = ["https://github.com/grafana/otel-profiling-java/releases/download/v1.1.0/pyroscope-otel.jar"],
 )

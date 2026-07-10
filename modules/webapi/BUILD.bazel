@@ -1,6 +1,10 @@
 load("@rules_java//java:defs.bzl", "java_library")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_load", "oci_push")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_junit_test", "scala_library")
 load("//tools/buildinfo:defs.bzl", "buildinfo")
+load("//tools/oci:defs.bzl", "oci_stamped_labels", "runtime_jars")
 
 # Replaces sbt-buildinfo. Fields mirror build.sbt's `buildInfoKeys` for webapi
 # (package org.knora.webapi.http.version). Source reads version, buildCommit,
@@ -129,4 +133,140 @@ scala_junit_test(
         "@maven//:dev_zio_zio_test_3",
         "@maven//:org_wiremock_wiremock",
     ],
+)
+
+# --- knora-api image (Phase 3) ----------------------------------------------
+# Lib-dir classpath, not rules_scala's implicit fat `app_deploy.jar`: a fat jar's
+# last-wins merge silently drops duplicate `META-INF/services/*` (OTel
+# autoconfigure SPI, slf4j) and `reference.conf` entries across ~200 runtime
+# jars. Packing each jar intact under /opt/docker/lib (as sbt-native-packager
+# did) preserves them; the entrypoint uses Java's own `-cp .../*` wildcard
+# expansion (no shell needed).
+runtime_jars(
+    name = "webapi_runtime_jars",
+    deps = [":webapi"],
+)
+
+pkg_files(
+    name = "webapi_lib_files",
+    srcs = [":webapi_runtime_jars"],
+    prefix = "/opt/docker/lib",
+    strip_prefix = strip_prefix.files_only(),
+)
+
+pkg_tar(
+    name = "webapi_lib_layer",
+    srcs = [":webapi_lib_files"],
+)
+
+# healthcheck.sh, fuseki-*.sh, wait-for-*.sh (build.sbt's Universal/mappings).
+pkg_tar(
+    name = "scripts_layer",
+    srcs = glob(["scripts/**"]),
+    package_dir = "/opt/docker/scripts",
+    strip_prefix = "scripts",
+)
+
+# OTel java agent + Grafana Pyroscope extension (were `ADD <url>` in build.sbt;
+# rules_oci has no ADD-from-URL, so these are prefetched in MODULE.bazel).
+pkg_tar(
+    name = "otel_layer",
+    srcs = [
+        "@otel_javaagent//file",
+        "@pyroscope_otel//file",
+    ],
+    package_dir = "/usr/local/lib",
+)
+
+# org.opencontainers.image.* labels stamped from git — oci_image's dict form
+# can't stamp, so this mirrors //tools/buildinfo's workspace-status substitution.
+oci_stamped_labels(
+    name = "image_labels",
+    labels = {
+        "maintainer": "support@dasch.swiss",
+        "org.opencontainers.image.source": "github.com/dasch-swiss/dsp-api",
+    },
+    stamp_labels = {
+        "org.opencontainers.image.revision": "STABLE_GIT_COMMIT",
+        "org.opencontainers.image.version": "STABLE_GIT_VERSION",
+    },
+)
+
+# No `user`: inherits the temurin base's default (root) — mirrors build.sbt
+# stripping the plugin's default USER directive (Sipi/NFS reasons don't apply
+# here, but ops-deploy expects the same root-uid contract knora-api has always
+# had). HEALTHCHECK isn't emitted (rules_oci can't); it's a docker-compose
+# concern (Phase 6). Do NOT bake JAVA_TOOL_OPTIONS -- compose/ops-deploy set
+# `-javaagent:... -Xmx...` at runtime.
+_KNORA_API_ENV = {
+    "OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED": "false",
+    "OTEL_INSTRUMENTATION_NETTY_ENABLED": "false",
+}
+
+oci_image(
+    name = "image_amd64",
+    base = "@temurin_base_amd64",
+    entrypoint = ["java", "-cp", "/opt/docker/lib/*", "org.knora.webapi.Main"],
+    env = _KNORA_API_ENV,
+    exposed_ports = [
+        "3333",
+        "3339",
+    ],
+    labels = ":image_labels",
+    tars = [
+        ":webapi_lib_layer",
+        ":scripts_layer",
+        ":otel_layer",
+    ],
+)
+
+oci_image(
+    name = "image_arm64",
+    base = "@temurin_base_arm64",
+    entrypoint = ["java", "-cp", "/opt/docker/lib/*", "org.knora.webapi.Main"],
+    env = _KNORA_API_ENV,
+    exposed_ports = [
+        "3333",
+        "3339",
+    ],
+    labels = ":image_labels",
+    tars = [
+        ":webapi_lib_layer",
+        ":scripts_layer",
+        ":otel_layer",
+    ],
+)
+
+# Multi-arch index for publishing.
+oci_image_index(
+    name = "index",
+    images = [
+        ":image_amd64",
+        ":image_arm64",
+    ],
+)
+
+# Host-arch image, selected for the local `oci_load` below.
+alias(
+    name = "image",
+    actual = select({
+        "@platforms//cpu:arm64": ":image_arm64",
+        "@platforms//cpu:x86_64": ":image_amd64",
+    }),
+)
+
+# `bazel run //modules/webapi:load` — load the host-arch image into the local
+# Docker daemon as :latest (what docker-compose references).
+oci_load(
+    name = "load",
+    image = ":image",
+    repo_tags = ["daschswiss/knora-api:latest"],
+)
+
+# `bazel run //modules/webapi:push -- -t latest -t <version>` — push the
+# multi-arch index.
+oci_push(
+    name = "push",
+    image = ":index",
+    repository = "index.docker.io/daschswiss/knora-api",
 )

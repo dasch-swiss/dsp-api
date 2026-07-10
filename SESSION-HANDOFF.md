@@ -4,7 +4,7 @@ Working doc for continuing the Bazel migration on another machine/session. Self-
 (the original plan lived in `~/.claude/plans/`, which does not travel between machines).
 
 **Last updated:** 2026-07-10
-**Branch:** `worktree-bazelify` (Phase 0, 0.5, 1 and 2 done + pushed — Phase 3 is next). Phase 2 = commit `176ab2f1b`.
+**Branch:** `worktree-bazelify` (Phase 0, 0.5, 1, 2 and 3 done — Phase 4 is next). Phase 2 = commit `176ab2f1b`.
 **Base:** rebased onto `origin/main` (`afa1e940a`); force-pushed. Was `d84f7edec`.
 
 ---
@@ -197,18 +197,33 @@ double-run). Regression: leaf-module tests + `//modules/sipi:image_amd64` still 
    null); real pass/fail counts live in the zio-test stdout (`OK (N tests)` / `Failures: N`). Phase 6
    must repoint `dorny/test-reporter` accordingly (already flagged).
 
-### Phase 3 — knora-api + dsp-ingest images
+### Phase 3 — knora-api + dsp-ingest images ✅ COMPLETE
 
-- Add per-arch base pulls to MODULE.bazel: `eclipse-temurin:25-jre-noble` (single-manifest
-  digests via `crane`, **not** index digest + platform — the arm64 `v8`-variant gotcha).
-- knora-api: deploy-jar at `/opt/docker/lib/webapi.jar`; `scripts/**` → `/opt/docker/scripts`;
-  otel jars → `/usr/local/lib` (**do NOT bake `JAVA_TOOL_OPTIONS`** — compose/ops-deploy set it);
-  keep the two `OTEL_INSTRUMENTATION_*_ENABLED=false` env; `/tmp` writable (`RepositoryUpdater`);
-  a static `curl` layer for the compose healthcheck (image is apt-free).
-- ingest: `swiss.dasch.version.BuildInfo` (`name, version, scalaVersion, sbtVersion="bazel",
-  knoraSipiVersion=STABLE_GIT_VERSION, gitCommit, buildTime`). Extract `/sbin/sipi`, `/sipi`
-  (incl. `/sipi/scripts` — from the **overlay** `//modules/sipi:image_{arch}`, not the base),
-  `/usr/bin/{tini,ffmpeg,ffprobe}` via a per-arch `crane export` genrule.
+Done: both images build (`bazel build //modules/{webapi,ingest}:image_{amd64,arm64}`) and were
+verified live — loaded into Docker at the `:latest` tags docker-compose already uses, brought up
+the full stack, hit both health/version endpoints, and confirmed via Tempo that real traces flow
+for both services. sbt untouched, still green.
+
+New: `tools/oci/defs.bzl` (`runtime_jars`, `oci_stamped_labels`, `image_rootfs_extract`);
+`modules/ingest/BUILD.bazel` (ingest had no Bazel targets before this — `buildinfo` +
+`scala_library` + `scala_binary` + image); image blocks appended to `modules/sipi/BUILD.bazel`
+(sipi-binary extraction, exported to ingest) and `modules/webapi/BUILD.bazel`; `MODULE.bazel` gained
+the temurin base pulls, the two OTel jar `http_file`s, and a `tar.bzl` bazel_dep.
+
+- **Lib-dir classpath, not rules_scala's fat `app_deploy.jar`.** A fat jar's last-wins merge drops
+  duplicate `META-INF/services/*` (OTel autoconfigure, sqlite's driver registration) and
+  `reference.conf`. `runtime_jars` + `pkg_files`/`pkg_tar` reproduces sbt-native-packager's `lib/`
+  dir instead; entrypoint `java -cp '.../*' <MainClass>`. Confirmed correct at runtime, not just by
+  inspection (SPI-dependent bits — sqlite driver, OTel javaagent — worked end to end).
+- **Sipi binary extraction is hermetic**: `image_rootfs_extract` uses the rules_oci crane toolchain
+  (`crane export -` reads an `oci_load` docker tarball from stdin) plus the same hermetic bsdtar
+  rules_oci itself registers (`@tar.bzl//tar/toolchain:type`) — needed its own `bazel_dep(tar.bzl)`
+  since bzlmod doesn't expose a transitive dep's repos by bare name. No usrmerge surprises on the
+  sipi base (`/sbin`, `/usr/bin` are real paths).
+- **Dropped the static-curl layer from the original sketch.** Its source
+  (`moparisthebest/static-curl`) stopped publishing an `aarch64` build after Nov 2024. Not worth
+  depending on. rules_oci can't emit `HEALTHCHECK` anyway, so this is Phase 6's problem — use a
+  bash `/dev/tcp` check there instead of curl.
 
 ### Phase 4 — testkit + test-it + test-e2e + test-ingest-integration
 
@@ -270,11 +285,12 @@ double-run). Regression: leaf-module tests + `//modules/sipi:image_amd64` still 
    - `nix develop --command bazel build //modules/sipi:image_amd64` (sipi still builds)
    - `nix develop --command bazel build //tools/buildinfo:smoke` then inspect
      `bazel-bin/tools/buildinfo/SmokeBuildInfo.scala` (stamping works)
+   - `nix develop --command bazel build //modules/webapi:image_amd64 //modules/ingest:image_amd64`
+     (both remaining images still build)
    - `./sbtx "webapi/compile"` (sbt on 3.8.4 still clean)
    - if maven needs a refetch: `nix develop --command bazel run @unpinned_maven//:pin`
-5. **Then start Phase 2** (webapi library + BuildInfo + its specs; see roadmap above). Phase 0.5 and
-   Phase 1 are done — the Scala toolchain, hermetic LLVM C toolchain, and the custom JUnit runner
-   (`//modules/test-runner`) are in place and green.
+5. **Then start Phase 4** (testkit + test-it + test-e2e + test-ingest-integration; see roadmap
+   above).
 
 ## Useful commands
 
@@ -288,4 +304,10 @@ bazel run @unpinned_maven//:pin          # re-pin maven after changing deps
 bazel build //tools/buildinfo:smoke      # verify buildinfo + stamping
 bazel build //modules/sipi:image_amd64   # sipi image (regression check)
 make docker-build-sipi-image             # sipi image via Makefile (bazel under the hood)
+
+# Phase 3 images — build, load into local Docker as :latest, bring up the stack
+bazel build //modules/{sipi,webapi,ingest}:image_{amd64,arm64}
+bazel run //modules/sipi:load && bazel run //modules/webapi:load && bazel run //modules/ingest:load
+docker compose up -d db sipi ingest api alloy
+curl http://localhost:3333/health && curl http://localhost:3340/health
 ```

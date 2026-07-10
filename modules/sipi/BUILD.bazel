@@ -1,5 +1,6 @@
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_load", "oci_push")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//tools/oci:defs.bzl", "image_rootfs_extract")
 
 # The `knora-sipi` image is a thin overlay on the upstream Sipi image: copy the
 # DSP Lua scripts onto /sipi/scripts. Each per-arch base already runs as root
@@ -65,3 +66,46 @@ oci_push(
     image = ":index",
     repository = "index.docker.io/daschswiss/knora-sipi",
 )
+
+# --- Sipi runtime bits, extracted for the dsp-ingest image (Phase 3) ---------
+# dsp-ingest's base moved off `daschswiss/knora-sipi` (Sipi v5 is distroless; see
+# build.sbt's ingest dockerCommands comment), so it needs the sipi binary, the
+# whole `/sipi` tree (incl. `/sipi/scripts`, added by this file's overlay — not
+# present in `@sipi_base_*`), and ffmpeg/ffprobe/tini extracted onto its own
+# eclipse-temurin base. `image_{arch}` is package-private, so the extraction
+# lives here and exports only the flattened result to //modules/ingest.
+[
+    (
+        oci_load(
+            name = "runtime_load_" + arch,
+            image = ":image_" + arch,
+            repo_tags = ["daschswiss/knora-sipi:extract-" + arch],
+        ),
+        filegroup(
+            name = "runtime_tar_" + arch,
+            srcs = [":runtime_load_" + arch],
+            output_group = "tarball",
+        ),
+        image_rootfs_extract(
+            name = "runtime_fs_" + arch,
+            image_tar = ":runtime_tar_" + arch,
+            paths = [
+                "sbin/sipi",
+                "sipi",
+                "usr/bin/tini",
+                "usr/bin/ffmpeg",
+                "usr/bin/ffprobe",
+            ],
+            top_level = [
+                "sbin",
+                "sipi",
+                "usr",
+            ],
+            visibility = ["//modules/ingest:__pkg__"],
+        ),
+    )
+    for arch in [
+        "amd64",
+        "arm64",
+    ]
+]
