@@ -5,7 +5,7 @@ Working doc for continuing the Bazel migration on another machine/session. Self-
 
 **Last updated:** 2026-07-10
 **Branch:** `worktree-bazelify` (pushed; Phase 0, 0.5 and 1 done — Phase 2 is next)
-**Base:** `d84f7edec` on `main`
+**Base:** rebased onto `origin/main` (`afa1e940a`); force-pushed. Was `d84f7edec`.
 
 ---
 
@@ -136,6 +136,13 @@ first real Scala compile needed:
   and `-Wconf:src=.*external/.*:s` (exempt rules_scala's own from-source helpers from `-Werror`).
 - `maven.install(excluded_artifacts = [scala3-library_3, scala-library, tasty-core_3])` — the toolchain
   provides the 3.8.4 stdlib; maven pulls 3.3.7 transitively → `scala.caps` package/object clash.
+- **CI coverage** (`.github/workflows/build-and-test.yml`) hard-coded `target/scala-3.3.7/coverage-report/
+  cobertura.xml`; the 3.8.4 bump made sbt write to `scala-3.8.4/…`, so the codacy upload failed
+  "cobertura.xml does not exist" (advisory, non-blocking — red since the migration). Fixed without
+  re-hard-coding the version: a `copyCoverageReport` sbt task copies the aggregated report from the
+  version-specific `crossTarget` to a stable `target/coverage-report/cobertura.xml`; CI and the Makefile
+  coverage targets run `coverageAggregate copyCoverageReport` and upload only the stable path. **Lesson:
+  never hard-code `target/scala-<version>/…` in CI/Make — route through an sbt task so sbt owns the version.**
 
 ### Phase 2 — webapi library + BuildInfo + its 153 specs
 
