@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.resources.repo.service
 
 import org.apache.jena.update.UpdateFactory
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
@@ -13,6 +14,7 @@ import java.time.Instant
 import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -444,7 +446,8 @@ object TestData {
     )
 }
 
-object ResourcesRepoLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourcesRepoLiveSpec extends ZIOSpecDefault {
   import TestData.*
 
   private def assertUpdateQueriesEqual(expected: Update, actual: Update) = {

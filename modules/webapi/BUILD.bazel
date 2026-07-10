@@ -1,0 +1,132 @@
+load("@rules_java//java:defs.bzl", "java_library")
+load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_junit_test", "scala_library")
+load("//tools/buildinfo:defs.bzl", "buildinfo")
+
+# Replaces sbt-buildinfo. Fields mirror build.sbt's `buildInfoKeys` for webapi
+# (package org.knora.webapi.http.version). Source reads version, buildCommit,
+# buildTime, fuseki, scalaVersion, sipi; ManagementEndpoints splits fuseki/scala/
+# sipi on ':' so those must carry the full "repo:tag" / version strings.
+buildinfo(
+    name = "buildinfo",
+    out = "BuildInfo.scala",
+    package_name = "org.knora.webapi.http.version",
+    stamp_fields = {
+        "version": "STABLE_GIT_VERSION",
+        "buildCommit": "STABLE_GIT_SHORT",
+        "buildTime": "STABLE_BUILD_TIME",
+        "sipi": "STABLE_SIPI_IMAGE",
+        "fuseki": "STABLE_FUSEKI_IMAGE",
+    },
+    string_fields = {
+        "name": "webapi",
+        "scalaVersion": "3.8.4",
+    },
+)
+
+# The scalac options, dependency_mode=transitive and strict_deps_mode=off come from
+# //bazel/toolchains:dsp_scala_toolchain, so deps below list only webapi's direct
+# third-party deps (the set in project/Dependencies.scala `webapiDependencies`).
+scala_library(
+    name = "webapi",
+    srcs = glob(["src/main/scala/**/*.scala"]) + [":buildinfo"],
+    resource_strip_prefix = "modules/webapi/src/main/resources",
+    resources = glob(["src/main/resources/**"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//modules/bagit",
+        "//modules/jwt",
+        "//modules/shacl-validator",
+        "@maven//:com_apicatalog_titanium_json_ld",
+        "@maven//:com_github_tototoshi_scala_csv_3",
+        "@maven//:org_gwtproject_gwt_servlet",  # com.google.gwt:gwt-servlet relocates to org.gwtproject
+        "@maven//:com_ibm_icu_icu4j",
+        "@maven//:com_softwaremill_sttp_client4_opentelemetry_tracing_zio_backend_3",
+        "@maven//:com_softwaremill_sttp_client4_zio_3",
+        "@maven//:com_softwaremill_sttp_client4_zio_json_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_json_zio_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_opentelemetry_tracing_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_refined_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_swagger_ui_bundle_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_zio_http_server_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_zio_metrics_3",
+        "@maven//:commons_validator_commons_validator",
+        "@maven//:dev_optics_monocle_core_3",
+        "@maven//:dev_optics_monocle_macro_3",
+        "@maven//:dev_optics_monocle_refined_3",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_config_3",
+        "@maven//:dev_zio_zio_config_magnolia_3",
+        "@maven//:dev_zio_zio_config_typesafe_3",
+        "@maven//:dev_zio_zio_json_3",
+        "@maven//:dev_zio_zio_json_interop_refined_3",
+        "@maven//:dev_zio_zio_logging_3",
+        "@maven//:dev_zio_zio_logging_slf4j2_bridge_3",
+        "@maven//:dev_zio_zio_metrics_connectors_3",
+        "@maven//:dev_zio_zio_metrics_connectors_prometheus_3",
+        "@maven//:dev_zio_zio_nio_3",
+        "@maven//:dev_zio_zio_opentelemetry_3",
+        "@maven//:dev_zio_zio_prelude_3",
+        "@maven//:eu_timepit_refined_3",
+        "@maven//:io_opentelemetry_opentelemetry_exporter_logging_otlp",
+        "@maven//:io_opentelemetry_opentelemetry_exporter_otlp",
+        "@maven//:io_opentelemetry_opentelemetry_sdk",
+        "@maven//:io_opentelemetry_semconv_opentelemetry_semconv",
+        "@maven//:net_sf_saxon_Saxon_HE",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_jena_jena_text",
+        "@maven//:org_bouncycastle_bcprov_jdk15to18",
+        "@maven//:org_ehcache_ehcache",
+        "@maven//:org_eclipse_rdf4j_rdf4j_shacl",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sparqlbuilder",
+        "@maven//:org_glassfish_jakarta_json",
+        "@maven//:org_scala_graph_graph_core_3",
+        "@maven//:org_scala_lang_modules_scala_xml_3",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_security_spring_security_core",
+        "@maven//:org_topbraid_shacl",
+    ],
+)
+
+scala_binary(
+    name = "app",
+    main_class = "org.knora.webapi.Main",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":webapi"],
+)
+
+# ExportServiceSpec loads these fixtures by the RdfDataObject path
+# "webapi/src/test/resources/org/knora/...", which is also the getResourceAsStream
+# key. Stripping only "modules" puts them on the classpath at exactly that key, so
+# the in-memory loader resolves them without changing the RdfDataObject paths (whose
+# hashCodes determine the export's ordering against the golden file).
+java_library(
+    name = "export_spec_fixtures",
+    resource_strip_prefix = "modules",
+    resources = glob(["src/test/resources/org/knora/webapi/slice/export/api/service/*.ttl"]),
+)
+
+# One test target for the whole module → one shared JVM (matches the migration's
+# runner decision). suffixes restricts discovery to *Spec/*IT/*Test, so the ~20
+# non-spec helper files (fakes, TestDataFactory, the ApplyUpgradePluginToTestData
+# ZIOAppDefault utility) are compiled but not run.
+scala_junit_test(
+    name = "test",
+    srcs = glob(["src/test/scala/**/*.scala"]),
+    resource_strip_prefix = "modules/webapi/src/test/resources",
+    resources = glob(["src/test/resources/**"]),
+    suffixes = [
+        "Spec",
+        "IT",
+        "Test",
+    ],
+    deps = [
+        ":webapi",
+        ":export_spec_fixtures",  # ExportServiceSpec .ttl at the webapi/src/test/resources/... key
+        "//modules/test-runner",
+        "//test_data:fixtures",  # RDF fixtures on the classpath (see test_data/BUILD.bazel)
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_json_3",
+        "@maven//:dev_zio_zio_test_3",
+        "@maven//:org_wiremock_wiremock",
+    ],
+)

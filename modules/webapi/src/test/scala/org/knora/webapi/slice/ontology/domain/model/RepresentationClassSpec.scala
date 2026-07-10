@@ -5,14 +5,17 @@
 
 package org.knora.webapi.slice.ontology.domain.model
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 
-object RepresentationClassSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class RepresentationClassSpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

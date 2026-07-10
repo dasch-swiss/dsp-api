@@ -5,15 +5,18 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
-object OntologyCacheFakeSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyCacheFakeSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Throwable] = suite("OntologyCacheFake")(
     suite("with empty cache")(test("should return empty") {
       for {

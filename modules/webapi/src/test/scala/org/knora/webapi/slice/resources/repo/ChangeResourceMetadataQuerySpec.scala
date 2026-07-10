@@ -5,12 +5,14 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.NonEmptyChunk
 import zio.test.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
@@ -22,7 +24,8 @@ import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
 
-object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault with GoldenTest {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ChangeResourceMetadataQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

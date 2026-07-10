@@ -5,9 +5,11 @@
 
 package org.knora.webapi.slice.api.v3.projects.domain
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.DataTaskPersistence
@@ -19,7 +21,8 @@ import org.knora.webapi.slice.`export`.domain.StateInProgressError
 import org.knora.webapi.slice.`export`.domain.StatesExistError
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
-object DataTaskStateSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class DataTaskStateSpec extends ZIOSpecDefault {
 
   private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val user       = TestDataFactory.User.rootUser

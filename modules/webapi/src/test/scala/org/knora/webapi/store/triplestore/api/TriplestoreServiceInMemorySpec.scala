@@ -4,8 +4,10 @@
  */
 
 package org.knora.webapi.store.triplestore.api
+
 import org.apache.jena.query.Dataset
 import org.apache.jena.query.ReadWrite
+import org.junit.runner.RunWith
 import zio.Ref
 import zio.ZIO
 import zio.test.*
@@ -14,6 +16,7 @@ import zio.test.Assertion.hasSameElements
 import java.nio.file.Files
 import java.util.UUID
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
@@ -30,7 +33,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 
-object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
 
   private val testDataSet =
     s"""
@@ -267,7 +271,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                    _.insertDataIntoTriplestore(
                      List(
                        RdfDataObject(
-                         path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
+                         path = "knora-ontologies/knora-base.ttl",
                          name = "http://www.knora.org/ontology/knora-admin",
                        ),
                      ),
@@ -290,7 +294,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                    _.insertDataIntoTriplestore(
                      List(
                        RdfDataObject(
-                         path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
+                         path = "knora-ontologies/knora-base.ttl",
                          name = "http://www.knora.org/ontology/knora-base",
                        ),
                      ),

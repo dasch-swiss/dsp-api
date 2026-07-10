@@ -5,12 +5,14 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 import zio.test.Assertion.*
 
 import java.time.Instant
 
 import dsp.errors.SparqlGenerationException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -23,7 +25,8 @@ import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
-object DeleteValueQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class DeleteValueQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

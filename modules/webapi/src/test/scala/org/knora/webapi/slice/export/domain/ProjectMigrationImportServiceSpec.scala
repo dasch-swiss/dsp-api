@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -17,6 +18,7 @@ import org.knora.bagit.BagIt
 import org.knora.bagit.domain.BagInfo
 import org.knora.bagit.domain.Compression
 import org.knora.bagit.domain.PayloadEntry
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.core.TestAppConfig
@@ -30,7 +32,8 @@ import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
 
   // === Test Constants ===
   private val testProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/9999")

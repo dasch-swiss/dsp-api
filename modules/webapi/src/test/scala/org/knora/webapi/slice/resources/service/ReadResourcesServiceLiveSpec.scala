@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.service
 
+import org.junit.runner.RunWith
 import zio.Scope
 import zio.ZIO
 import zio.json.DecoderOps
@@ -14,6 +15,7 @@ import zio.test.*
 import java.time.Instant
 import java.util.UUID
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.TestDataFactory
@@ -67,7 +69,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.builtInNamedGraphs
 
-object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
 
   given sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

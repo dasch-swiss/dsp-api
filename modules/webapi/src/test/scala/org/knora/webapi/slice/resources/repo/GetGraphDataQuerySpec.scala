@@ -5,12 +5,15 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 
-object GetGraphDataQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GetGraphDataQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

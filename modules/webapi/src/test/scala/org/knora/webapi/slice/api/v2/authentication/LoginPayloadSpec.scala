@@ -5,14 +5,17 @@
 
 package org.knora.webapi.slice.api.v2.authentication
 
+import org.junit.runner.RunWith
 import zio.json.*
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.LoginPayload
 
-object LoginPayloadSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class LoginPayloadSpec extends ZIOSpecDefault {
 
   val spec = suiteAll("LoginPayload") {
 

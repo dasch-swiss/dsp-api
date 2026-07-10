@@ -169,18 +169,21 @@ val customScalacOptions = Seq(
 )
 
 lazy val webapi: Project = Project(id = "webapi", base = file("modules/webapi"))
-  .dependsOn(bagit, jwt, shaclValidator)
+  .dependsOn(bagit, jwt, shaclValidator, testRunner % Test)
   .settings(buildSettings)
   .settings(
     inConfig(Test) {
       Defaults.testSettings
     },
-    Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    // Specs run through the custom DspZTestJUnitRunner (junit-interface) so sbt and
+    // Bazel share one runner. Replaces the ZTestFramework registration.
+    testFrameworks            := Seq(new TestFramework("com.novocode.junit.JUnitFramework")),
     run / fork                := true, // run in a forked JVM so Ctrl+C shuts down cleanly
     Test / fork               := true, // run tests in a forked JVM
     Test / testForkedParallel := true, // run tests in parallel
     Test / parallelExecution  := true, // run tests in parallel
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies,
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++
+      Seq(Dependencies.junitInterface % Test),
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(

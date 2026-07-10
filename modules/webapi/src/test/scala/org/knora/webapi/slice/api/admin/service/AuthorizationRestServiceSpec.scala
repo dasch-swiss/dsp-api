@@ -5,12 +5,14 @@
 
 package org.knora.webapi.slice.api.admin.service
 
+import org.junit.runner.RunWith
 import zio.Exit
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.failsWithA
 
 import dsp.errors.ForbiddenException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
@@ -35,7 +37,8 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 
-object AuthorizationRestServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AuthorizationRestServiceSpec extends ZIOSpecDefault {
 
   private val authorizationRestService = ZIO.serviceWithZIO[AuthorizationRestService]
 

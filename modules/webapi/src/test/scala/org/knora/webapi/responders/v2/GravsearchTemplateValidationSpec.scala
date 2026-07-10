@@ -5,9 +5,11 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import zio.test.*
 import zio.test.Assertion.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
@@ -15,7 +17,8 @@ import org.knora.webapi.slice.common.PlaceholderIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 
-object GravsearchTemplateValidationSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GravsearchTemplateValidationSpec extends ZIOSpecDefault {
 
   private val templateIri  = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing")
   private val fileValueIri =

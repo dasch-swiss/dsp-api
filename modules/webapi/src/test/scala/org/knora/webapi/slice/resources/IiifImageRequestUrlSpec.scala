@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources
 
+import org.junit.runner.RunWith
 import zio.Scope
 import zio.test.Gen
 import zio.test.Spec
@@ -15,7 +16,10 @@ import zio.test.check
 
 import java.net.URI
 
-object IiifImageRequestUrlSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class IiifImageRequestUrlSpec extends ZIOSpecDefault {
 
   val spec: Spec[TestEnvironment & Scope, Nothing] = suite("IiifImageRequestUrl")(
     test("should accept a IIIF image request url") {

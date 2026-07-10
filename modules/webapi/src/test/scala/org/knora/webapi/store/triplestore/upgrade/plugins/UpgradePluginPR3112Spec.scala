@@ -5,11 +5,15 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-object UpgradePluginPR3112Spec extends ZIOSpecDefault with UpgradePluginTestOps {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class UpgradePluginPR3112Spec extends ZIOSpecDefault with UpgradePluginTestOps {
 
   val spec: Spec[Any, Nothing] = suite("UpgradePluginPR3111")(
     test(

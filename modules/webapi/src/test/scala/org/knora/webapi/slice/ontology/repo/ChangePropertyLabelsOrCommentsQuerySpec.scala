@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -19,7 +21,8 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object ChangePropertyLabelsOrCommentsQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ChangePropertyLabelsOrCommentsQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

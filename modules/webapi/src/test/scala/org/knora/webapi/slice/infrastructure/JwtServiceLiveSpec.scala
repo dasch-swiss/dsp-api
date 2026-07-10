@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.infrastructure
 
+import org.junit.runner.RunWith
 import zio.IO
 import zio.Scope
 import zio.ZIO
@@ -30,6 +31,7 @@ import dsp.valueobjects.UuidUtil
 import org.knora.jwt.JwtClaim
 import org.knora.jwt.JwtCodec
 import org.knora.jwt.JwtHeader
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -43,7 +45,8 @@ object ScopeJs {
   implicit val decoder: JsonDecoder[ScopeJs] = DeriveJsonDecoder.gen[ScopeJs]
 }
 
-object JwtServiceLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class JwtServiceLiveSpec extends ZIOSpecDefault {
 
   private val JwtService = ZIO.serviceWithZIO[JwtService]
 

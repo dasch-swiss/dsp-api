@@ -5,11 +5,14 @@
 
 package org.knora.webapi.slice.ontology.domain.model
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.api.v2.IriDto
 
-object OntologyMappingExternalIriSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyMappingExternalIriSpec extends ZIOSpecDefault {
   val spec = suite("OntologyMappingExternalIri")(
     suite("from(String)")(
       test("should accept valid external IRIs") {

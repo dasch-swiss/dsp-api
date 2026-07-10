@@ -27,8 +27,14 @@ version="${version//+/-}"
 sipi="$(sed -n 's/.*val sipiImage *= *"\(.*\)".*/\1/p' project/Dependencies.scala)"
 fuseki="$(sed -n 's/.*val fusekiImage *= *"\(.*\)".*/\1/p' project/Dependencies.scala)"
 
+# Mirrors build.sbt's `buildTime = sys.env.getOrElse("BUILD_TIME", "dev")`: a fixed
+# value per build (CI sets BUILD_TIME; local dev falls back to "dev"), so it stays
+# stable within a build and does not needlessly bust the buildinfo cache.
+build_time="${BUILD_TIME:-dev}"
+
 echo "STABLE_GIT_VERSION ${version}"
 echo "STABLE_GIT_COMMIT ${commit}"
 echo "STABLE_GIT_SHORT ${short}"
 echo "STABLE_SIPI_IMAGE ${sipi}"
 echo "STABLE_FUSEKI_IMAGE ${fuseki}"
+echo "STABLE_BUILD_TIME ${build_time}"

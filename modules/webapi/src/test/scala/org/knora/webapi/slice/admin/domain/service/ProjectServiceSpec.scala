@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import org.junit.runner.RunWith
 import zio.NonEmptyChunk
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
@@ -17,7 +19,8 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 
-object ProjectServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectServiceSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Nothing] =
     suite("projectDataNamedGraphV2 should return the data named graph of a project with shortcode for")(

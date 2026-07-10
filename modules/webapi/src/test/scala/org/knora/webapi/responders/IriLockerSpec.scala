@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders
 
+import org.junit.runner.RunWith
 import zio.Promise
 import zio.Task
 import zio.ZIO
@@ -18,12 +19,14 @@ import zio.test.assertTrue
 import java.util.UUID
 
 import dsp.errors.ApplicationLockException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.IRI
 
 /**
  * Tests [[IriLocker]].
  */
-object IriLockerSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class IriLockerSpec extends ZIOSpecDefault {
 
   private val SUCCESS = "success"
   private val FAILURE = "failure"

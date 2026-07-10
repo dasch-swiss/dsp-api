@@ -4,7 +4,7 @@ Working doc for continuing the Bazel migration on another machine/session. Self-
 (the original plan lived in `~/.claude/plans/`, which does not travel between machines).
 
 **Last updated:** 2026-07-10
-**Branch:** `worktree-bazelify` (pushed; Phase 0, 0.5 and 1 done — Phase 2 is next)
+**Branch:** `worktree-bazelify` (Phase 0, 0.5, 1 and 2 done — Phase 3 is next; Phase 2 not yet committed)
 **Base:** rebased onto `origin/main` (`afa1e940a`); force-pushed. Was `d84f7edec`.
 
 ---
@@ -144,14 +144,58 @@ first real Scala compile needed:
   coverage targets run `coverageAggregate copyCoverageReport` and upload only the stable path. **Lesson:
   never hard-code `target/scala-<version>/…` in CI/Make — route through an sbt task so sbt owns the version.**
 
-### Phase 2 — webapi library + BuildInfo + its 153 specs
+### Phase 2 — webapi library + BuildInfo + its 153 specs ✅ COMPLETE
 
-- `modules/webapi/BUILD.bazel`: `scala_library` (srcs = main glob + generated `:buildinfo`;
-  resources include `knora-ontologies`, `shacl`, `application.conf` with `resource_strip_prefix`)
-  on `//modules/{bagit,jwt,shacl-validator}` + the webapi `@maven` group; `scala_binary` `app`
-  (`org.knora.webapi.Main`). BuildInfo object `org.knora.webapi.http.version.BuildInfo` with
-  fields `name, version, scalaVersion, sbtVersion, sipi, fuseki, buildCommit, buildTime`.
-- Convert webapi's specs; verify `bazel build` compiles all ~609 files; `sbt`/`bazel test` agree.
+Done: `bazel build //modules/webapi:{webapi,app}` compile clean (436 main files + generated
+BuildInfo), and **`bazel test //modules/webapi:test` → OK (1602 tests)** matching
+**`sbt "webapi/test"` → Passed 1602, Failed 0** exactly (153 spec classes, each run once, no
+double-run). Regression: leaf-module tests + `//modules/sipi:image_amd64` still green.
+
+- `modules/webapi/BUILD.bazel`: `buildinfo` target → `org.knora.webapi.http.version.BuildInfo`
+  (`name`, `scalaVersion` as `string_fields`; `version`→`STABLE_GIT_VERSION`,
+  `buildCommit`→`STABLE_GIT_SHORT`, `buildTime`→`STABLE_BUILD_TIME`, `sipi`→`STABLE_SIPI_IMAGE`,
+  `fuseki`→`STABLE_FUSEKI_IMAGE` as `stamp_fields`). `scala_library webapi` (srcs = main glob +
+  `:buildinfo`; `resources = glob(src/main/resources/**)` with
+  `resource_strip_prefix = "modules/webapi/src/main/resources"` so `application.conf`/
+  `knora-ontologies`/`shacl` land at classpath root) on `//modules/{bagit,jwt,shacl-validator}` +
+  the webapi `@maven` deps. `scala_binary app` (`org.knora.webapi.Main`). `scala_junit_test test`
+  (one JVM, `suffixes=["Spec","IT","Test"]`) + a `java_library export_spec_fixtures`.
+- `tools/workspace_status.sh`: added `STABLE_BUILD_TIME` (`${BUILD_TIME:-dev}`, mirrors sbt).
+- `test_data/BUILD.bazel` (new): `java_library fixtures` puts the referenced RDF fixtures
+  (`project_ontologies/*`, the DefaultRdfData `project_data/*`, and the JsonLD `generated_test_data/*`)
+  on the test classpath at their `test_data/...` path.
+- sbt (`build.sbt` webapi block): `dependsOn(..., testRunner % Test)`,
+  `testFrameworks := Seq(JUnitFramework)` (replaced `ZTestFramework`), `+ junitInterface % Test`.
+- 153 specs `object X extends ZIOSpecDefault` → `@RunWith(classOf[DspZTestJUnitRunner]) class X …`
+  (script over `*.scala` only, per gotcha #5).
+
+**Phase 2 gotchas (save the rediscovery):**
+1. **`com.google.gwt:gwt-servlet` relocates to `org.gwtproject:gwt-servlet`** — the `@maven` label
+   is `org_gwtproject_gwt_servlet`, not `com_google_gwt_gwt_servlet`. rules_jvm_external names the
+   target by the *resolved* coordinate. Grep the generated `@maven` `BUILD` for the real label when
+   a `@maven//:...` target "not declared".
+2. **`object`→`class` breaks nested-member static paths.** Specs whose nested `object`/`class` was
+   referenced as `SpecName.Member` (self- or cross-import) stop compiling. Fixed by moving the member
+   to a **companion `object SpecName`** (companions keep mutual `private` access): `CardinalitySpec`
+   (`Generator`), `RestCardinalityServiceSpec` (`StubCardinalitiesService`). `KnoraIrisSpec.test` was
+   just a redundant self-import of the inherited zio-test `test` DSL — deleted. Find them with
+   `grep -E "^import .*Spec(\.[A-Za-z_]+)+$"` over the test tree; the compiler catches the rest.
+3. **File I/O in specs is CWD/classpath-sensitive under Bazel.** sbt runs webapi tests with
+   CWD=`modules/webapi`; the in-memory triplestore loader (`TriplestoreServiceInMemory.loadRdfUrl`)
+   and `FileUtil` try `getResourceAsStream(path)` **first**, then `../`/`../..` filesystem fallbacks.
+   Under the Bazel sandbox the fallbacks miss, so the fixture must be on the classpath at the *exact*
+   key the spec passes. Fixes: `GoldenTest` reads the golden `.txt` via classpath (macro now also
+   emits the resource-relative path) with the filesystem path kept only for `rewrite`; `JsonLDUtilSpec`
+   uses a classpath-first `readFixture` helper; `TriplestoreServiceInMemorySpec` uses the production
+   `knora-ontologies/knora-base.ttl` key.
+4. **RdfDataObject ordering is hashCode-fragile.** `ExportServiceSpec.exportResourcesOai` compares a
+   golden whose resource order comes from `Set[RdfDataObject]` iteration → the case-class hashCode.
+   Editing a `RdfDataObject.path` string reorders the Set and breaks the golden **under sbt too**. So
+   do NOT rewrite those path strings for Bazel; instead expose the fixtures at the spec's existing
+   `webapi/src/test/resources/...` key via `java_library(resource_strip_prefix="modules")`.
+5. The DspZTestJUnitRunner reports **coarse** JUnit XML (one testcase per spec class, `classname`
+   null); real pass/fail counts live in the zio-test stdout (`OK (N tests)` / `Failures: N`). Phase 6
+   must repoint `dorny/test-reporter` accordingly (already flagged).
 
 ### Phase 3 — knora-api + dsp-ingest images
 

@@ -5,18 +5,21 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 
-object DeleteClassQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class DeleteClassQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

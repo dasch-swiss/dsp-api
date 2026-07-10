@@ -5,18 +5,21 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.transformers
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
-object ConstructTransformerSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ConstructTransformerSpec extends ZIOSpecDefault {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

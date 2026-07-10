@@ -5,17 +5,20 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.common.domain.LanguageCode
 
 /**
  * Tests for [[StringLiteralV2]] JSON serialization/deserialization and schema.
  */
-object StringLiteralV2Spec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class StringLiteralV2Spec extends ZIOSpecDefault {
 
   def spec: Spec[Any, Any] = suite("StringLiteralV2Spec")(
     jsonEncodingTests,

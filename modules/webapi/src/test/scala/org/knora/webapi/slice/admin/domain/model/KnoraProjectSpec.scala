@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import org.junit.runner.RunWith
 import zio.Scope
 import zio.test.*
 
 import scala.util.Random
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
@@ -17,7 +19,8 @@ import org.knora.webapi.slice.common.domain.LanguageCode.EN
 /**
  * This spec is used to test the [[org.knora.webapi.slice.admin.domain.model.KnoraProject]] value objects creation.
  */
-object KnoraProjectSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class KnoraProjectSpec extends ZIOSpecDefault {
 
   def spec: Spec[TestEnvironment & Scope, Nothing] = suite("KnoraProjectSpec")(
     projectIriSuite,

@@ -5,12 +5,15 @@
 
 package org.knora.webapi.slice.common.repo.service
 
+import org.junit.runner.RunWith
 import zio.Chunk
 import zio.Ref
 import zio.ZIO
 import zio.ZLayer
 import zio.test.*
 import zio.test.Assertion.hasSameElements
+
+import org.knora.testrunner.DspZTestJUnitRunner
 
 final case class SomeEntity(id: Int, name: String)
 final case class InMemoryRepository(entities: Ref[Chunk[SomeEntity]])
@@ -20,7 +23,8 @@ object InMemoryRepository {
     ZLayer.fromZIO(Ref.make(Chunk.empty[SomeEntity]).map(InMemoryRepository(_)))
 }
 
-object InMemoryCrudRepositorySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class InMemoryCrudRepositorySpec extends ZIOSpecDefault {
 
   private def repo        = ZIO.serviceWithZIO[InMemoryRepository]
   private val someEntity  = SomeEntity(1, "name")

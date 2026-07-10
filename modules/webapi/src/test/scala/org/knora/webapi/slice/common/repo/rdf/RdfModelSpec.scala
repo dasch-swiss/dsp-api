@@ -5,14 +5,17 @@
 
 package org.knora.webapi.slice.common.repo.rdf
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Errors.*
 
-object RdfModelSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class RdfModelSpec extends ZIOSpecDefault {
 
   private case class StringContainer(value: String)
   private implicit val stringContainerConverter: String => Either[String, StringContainer] =
