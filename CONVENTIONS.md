@@ -54,6 +54,10 @@ Never concatenate query strings. Use rdf4j SparqlBuilder via the helpers in `sli
 
 When adding or changing tracing/telemetry (spans, span attributes, metrics), read `docs/observability/` first — don't re-derive the pattern. Follow `docs/observability/instrumentation-recipe.md`: one root `INTERNAL` span per vertical plus bounded-name stage spans, a **bounded** query shape on the root (never raw query text, instance IRIs, or user IDs as attributes), and the load-bearing `UNSET` failure status-mapper that keeps `cause.prettyPrint` (user data) out of the span status. `docs/observability/using-grafana.md` covers reading/querying traces in Grafana and from Claude Code via the Grafana MCP server.
 
+### Scala idioms
+
+- Collapse an `Option` with `opt.fold(default)(f)`, not `opt.map(f).getOrElse(default)`. Details + argument-order note in `docs/development/dsp-api-conventions.md` § Scala Idioms.
+
 ### Imports & formatting
 
 - No fully-qualified class names in code bodies — import at the top of the file.
