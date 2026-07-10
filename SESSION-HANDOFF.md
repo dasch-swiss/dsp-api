@@ -4,7 +4,7 @@ Working doc for continuing the Bazel migration on another machine/session. Self-
 (the original plan lived in `~/.claude/plans/`, which does not travel between machines).
 
 **Last updated:** 2026-07-10
-**Branch:** `worktree-bazelify` (Phase 0, 0.5, 1 and 2 done — Phase 3 is next; Phase 2 not yet committed)
+**Branch:** `worktree-bazelify` (Phase 0, 0.5, 1 and 2 done + pushed — Phase 3 is next). Phase 2 = commit `176ab2f1b`.
 **Base:** rebased onto `origin/main` (`afa1e940a`); force-pushed. Was `d84f7edec`.
 
 ---
