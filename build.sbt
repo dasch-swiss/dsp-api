@@ -74,6 +74,15 @@ lazy val rootBaseDir = ThisBuild / baseDirectory
 
 lazy val dockerImageTag = taskKey[String]("Returns the docker image tag")
 
+// `coverageAggregate` writes the cobertura report under the Scala-version-specific
+// crossTarget (e.g. target/scala-3.8.4/coverage-report). CI must not hard-code that
+// version (it silently drifts on every Scala bump), so publish the report to a
+// stable, version-independent path and have CI upload only that. Run right after
+// `coverageAggregate`, e.g. `sbt coverageAggregate copyCoverageReport`.
+lazy val coverageReportFile =
+  settingKey[File]("Stable, Scala-version-independent path of the aggregated cobertura report")
+lazy val copyCoverageReport = taskKey[File]("Copy the aggregated cobertura report to `coverageReportFile`")
+
 lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
     webapi,
@@ -98,7 +107,15 @@ lazy val root: Project = Project(id = "root", file("."))
     Global / scalaVersion := Dependencies.ScalaVersion,
     // override generated version string because docker hub rejects '+' in tags
     ThisBuild / version ~= (_.replace('+', '-')),
-    dockerImageTag := (ThisBuild / version).value,
+    dockerImageTag     := (ThisBuild / version).value,
+    coverageReportFile := target.value / "coverage-report" / "cobertura.xml",
+    copyCoverageReport := {
+      val src = crossTarget.value / "coverage-report" / "cobertura.xml"
+      val dst = coverageReportFile.value
+      sbt.io.IO.copyFile(src, dst)
+      streams.value.log.info(s"Copied aggregated coverage report to $dst")
+      dst
+    },
     publish / skip := true,
     name           := "dsp-api",
   )
