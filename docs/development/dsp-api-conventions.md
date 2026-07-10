@@ -298,6 +298,24 @@ When writing SPARQL queries do not use String concatenation.
 Instead use rdf4j and the query helper in dsp-api.
 For more details see `dsp-api-sparql-queries.md`.
 
+## Scala Idioms
+
+### Option: prefer `fold` over `map` + `getOrElse`
+
+Collapse an `Option` to a plain value with `fold`, not `map(...).getOrElse(...)` — one combinator instead of two, with the default sitting next to the transform:
+
+```scala
+// ✓ Correct
+opt.fold(default)(f)
+project.dataCopyrightHolder.fold("")(_.value)
+
+// ✗ Incorrect — two combinators for a single collapse
+opt.map(f).getOrElse(default)
+project.dataCopyrightHolder.map(_.value).getOrElse("")
+```
+
+Note the argument order: `fold` takes the empty-case value first, then the mapping function.
+
 ## Formatting 
 
 Run `sbt fmt` before pushing to the remote branch. Scalafmt reformats all Scala sources in-place.
