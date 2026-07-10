@@ -93,9 +93,10 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
     def toEntity(resource: RdfResource): IO[RdfError, KnoraProject] = {
       def getRestrictedView =
         for {
-          size      <- resource.getStringLiteral[RestrictedView.Size](ProjectRestrictedViewSize)(using RestrictedView.Size.from)
-          watermark <- resource.getBooleanLiteral[RestrictedView.Watermark](ProjectRestrictedViewWatermark)(using b =>
-                         Right(RestrictedView.Watermark.from(b)),
+          size <-
+            resource.getStringLiteral[RestrictedView.Size](ProjectRestrictedViewSize)(using RestrictedView.Size.from)
+          watermark <- resource.getBooleanLiteral[RestrictedView.Watermark](ProjectRestrictedViewWatermark)(using
+                         b => Right(RestrictedView.Watermark.from(b)),
                        )
         } yield size.orElse(watermark).getOrElse(RestrictedView.default)
 

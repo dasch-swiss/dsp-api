@@ -255,12 +255,14 @@ object PlainStringLiteralV2 {
 
 object StringLiteralV2 {
   given JsonCodec[StringLiteralV2] = JsonCodec(
-    JsonEncoder[StringLiteralV2](using { (a, indent, out) =>
-      a match {
-        case p: PlainStringLiteralV2          => JsonEncoder[PlainStringLiteralV2].unsafeEncode(p, indent, out)
-        case l: LanguageTaggedStringLiteralV2 => JsonEncoder[LanguageTaggedStringLiteralV2].unsafeEncode(l, indent, out)
-      }
-    }),
+    JsonEncoder[StringLiteralV2](using
+      (a, indent, out) =>
+        a match {
+          case p: PlainStringLiteralV2          => JsonEncoder[PlainStringLiteralV2].unsafeEncode(p, indent, out)
+          case l: LanguageTaggedStringLiteralV2 =>
+            JsonEncoder[LanguageTaggedStringLiteralV2].unsafeEncode(l, indent, out)
+        },
+    ),
     JsonDecoder[Json].mapOrFail { json =>
       json.asObject match {
         case Some(obj) if obj.get("language").isDefined =>

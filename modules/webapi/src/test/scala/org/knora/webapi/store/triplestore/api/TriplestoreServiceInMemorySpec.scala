@@ -108,7 +108,8 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             sf       <- ZIO.service[StringFormatter]
-            response <- ZIO.serviceWithZIO[TriplestoreService](_.query(Construct(query))).flatMap(_.asExtended(using sf))
+            response <-
+              ZIO.serviceWithZIO[TriplestoreService](_.query(Construct(query))).flatMap(_.asExtended(using sf))
           } yield {
             val subject: SubjectV2 = IriSubjectV2(value = "http://anArticle")
             assertTrue(
